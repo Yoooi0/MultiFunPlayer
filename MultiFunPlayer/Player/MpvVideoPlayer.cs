@@ -88,8 +88,6 @@ namespace MultiFunPlayer.Player
                         if (message == null)
                             continue;
 
-                        //Debug.WriteLine(message);
-
                         var document = JsonDocument.Parse(message);
                         if (!document.RootElement.TryGetProperty("event", out var eventProperty)
                             || !document.RootElement.TryGetProperty("name", out var nameProperty)
@@ -100,21 +98,28 @@ namespace MultiFunPlayer.Player
                         switch (eventProperty.GetString())
                         {
                             case "property-change":
-                                switch (nameProperty.GetString())
                                 {
-                                    case "path":
-                                        _eventAggregator.Publish(new VideoFileChangedMessage(new FileInfo(dataProperty.GetString())));
-                                        break;
-                                    case "time-pos":
-                                        var seconds = double.Parse(dataProperty.GetString(), NumberStyles.Any, CultureInfo.InvariantCulture);
-                                        _eventAggregator.Publish(new VideoPositionMessage(TimeSpan.FromSeconds(seconds)));
-                                        break;
-                                    case "pause":
-                                        _eventAggregator.Publish(new VideoPlayingMessage(isPlaying: dataProperty.GetString() != "yes"));
-                                        break;
-                                    default: break;
+                                    switch (nameProperty.GetString())
+                                    {
+                                        case "path":
+                                            _eventAggregator.Publish(new VideoFileChangedMessage(new FileInfo(dataProperty.GetString())));
+                                            break;
+                                        case "time-pos":
+                                            var seconds = double.Parse(dataProperty.GetString(), NumberStyles.Any, CultureInfo.InvariantCulture);
+                                            _eventAggregator.Publish(new VideoPositionMessage(TimeSpan.FromSeconds(seconds)));
+                                            break;
+                                        case "pause":
+                                            _eventAggregator.Publish(new VideoPlayingMessage(isPlaying: dataProperty.GetString() != "yes"));
+                                            break;
+                                        default: break;
+                                    }
+                                    break;
                                 }
-                                break;
+                            case "end-file":
+                                {
+                                    _eventAggregator.Publish(new VideoFileChangedMessage(null));
+                                    break;
+                                }
                             default: break;
                         }
                     }
