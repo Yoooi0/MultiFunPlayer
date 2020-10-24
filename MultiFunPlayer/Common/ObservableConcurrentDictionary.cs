@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using PropertyChanged;
+using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Specialized;
@@ -7,6 +8,7 @@ using System.Threading;
 
 namespace MultiFunPlayer.Common
 {
+    [DoNotNotify]
     public class ObservableConcurrentDictionary<TKey, TValue> : IDictionary<TKey, TValue>, INotifyCollectionChanged, INotifyPropertyChanged
     {
         private readonly SynchronizationContext _context;

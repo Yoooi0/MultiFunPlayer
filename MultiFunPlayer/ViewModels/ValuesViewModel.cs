@@ -12,6 +12,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows;
 using System.IO.Compression;
+using PropertyChanged;
 
 namespace MultiFunPlayer.ViewModels
 {
@@ -308,6 +309,7 @@ namespace MultiFunPlayer.ViewModels
             }
         }
 
+        [SuppressPropertyChangedWarnings]
         public void OnAxisSettingsSelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (SelectedAxisSettings == null)
