@@ -1,4 +1,4 @@
-using MultiFunPlayer.Common;
+﻿using MultiFunPlayer.Common;
 using Stylet;
 using System;
 using System.Collections.Generic;
@@ -277,8 +277,9 @@ namespace MultiFunPlayer.ViewModels
                 else
                 {
                     var document = JsonDocument.Parse(file.Data);
-                    if (!document.RootElement.TryGetProperty("rawActions", out var actions) && !document.RootElement.TryGetProperty("actions", out actions))
-                        continue;
+                    if (!document.RootElement.TryGetProperty("rawActions", out var actions) || actions.GetArrayLength() == 0)
+                        if(!document.RootElement.TryGetProperty("actions", out actions) || actions.GetArrayLength() == 0)
+                            continue;
 
                     var keyframes = new List<Keyframe>();
                     foreach (var child in actions.EnumerateArray())
