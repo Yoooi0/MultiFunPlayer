@@ -1,4 +1,4 @@
-﻿using MultiFunPlayer.Common;
+using MultiFunPlayer.Common;
 using Stylet;
 using System;
 using System.Collections.Generic;
@@ -151,7 +151,7 @@ namespace MultiFunPlayer.ViewModels
             if (VideoFile == null && message.VideoFile == null)
                 return;
             if (VideoFile != null && message.VideoFile != null)
-                if (string.Equals(VideoFile.Name, message.VideoFile.Name, StringComparison.OrdinalIgnoreCase))
+                if (string.Equals(VideoFile.FullName, message.VideoFile.FullName, StringComparison.OrdinalIgnoreCase))
                    return;
 
             VideoFile = message.VideoFile;
