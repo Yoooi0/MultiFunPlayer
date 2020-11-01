@@ -89,16 +89,18 @@ namespace MultiFunPlayer.Player
                             continue;
 
                         var document = JsonDocument.Parse(message);
-                        if (!document.RootElement.TryGetProperty("event", out var eventProperty)
-                            || !document.RootElement.TryGetProperty("name", out var nameProperty)
-                            || !document.RootElement.TryGetProperty("data", out var dataProperty)
-                            || dataProperty.ValueKind == JsonValueKind.Null)
+                        if (!document.RootElement.TryGetProperty("event", out var eventProperty))
                             continue;
 
                         switch (eventProperty.GetString())
                         {
                             case "property-change":
                                 {
+                                    if (!document.RootElement.TryGetProperty("name", out var nameProperty)
+                                     || !document.RootElement.TryGetProperty("data", out var dataProperty)
+                                     || dataProperty.ValueKind == JsonValueKind.Null)
+                                        continue;
+
                                     switch (nameProperty.GetString())
                                     {
                                         case "path":
@@ -113,11 +115,6 @@ namespace MultiFunPlayer.Player
                                             break;
                                         default: break;
                                     }
-                                    break;
-                                }
-                            case "end-file":
-                                {
-                                    _eventAggregator.Publish(new VideoFileChangedMessage(null));
                                     break;
                                 }
                             default: break;
