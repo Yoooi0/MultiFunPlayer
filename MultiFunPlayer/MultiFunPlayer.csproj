@@ -16,7 +16,7 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="MaterialDesignExtensions" Version="3.2.0" />
+    <PackageReference Include="MaterialDesignExtensions" Version="3.3.0-a01" />
     <PackageReference Include="MaterialDesignThemes" Version="4.0.0-ci2063" />
     <PackageReference Include="MaterialDesignThemes.MahApps" Version="0.1.6-ci2063" />
     <PackageReference Include="NETStandard.Library" Version="2.0.3" />

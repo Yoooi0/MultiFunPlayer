@@ -13,6 +13,8 @@ using System.Windows.Input;
 using System.Windows;
 using System.IO.Compression;
 using PropertyChanged;
+using MaterialDesignExtensions.Controls;
+using System.Threading.Tasks;
 
 namespace MultiFunPlayer.ViewModels
 {
@@ -176,7 +178,7 @@ namespace MultiFunPlayer.ViewModels
                     TryMatchFile(funscriptFile.Name, () => ScriptFile.FromFileInfo(funscriptFile));
             }
 
-            UpdateFiles(EnumUtils.GetValues<DeviceAxis>(), AxisFilesChangeType.Reset);
+            UpdateFiles(AxisFilesChangeType.Update, null);
         }
 
         public void Handle(VideoPlayingMessage message)
@@ -247,50 +249,68 @@ namespace MultiFunPlayer.ViewModels
             }
         }
 
-        private void UpdateFiles(IEnumerable<DeviceAxis> changedAxes, AxisFilesChangeType changeType)
+        private void UpdateFiles(AxisFilesChangeType changeType, params DeviceAxis[] changedAxes)
         {
-            if (changeType == AxisFilesChangeType.Reset)
+            void Clear(DeviceAxis axis)
             {
-                foreach (var axis in EnumUtils.GetValues<DeviceAxis>())
+                _scripKeyframes.TryRemove(axis, out var _);
+
+                var wasSelected = SelectedAxisSettings == AxisSettings[axis];
+                AxisSettings[axis] = new AxisSettings();
+                if (wasSelected)
+                    SelectedAxisSettings = AxisSettings[axis];
+
+                if (AxisStates.TryGetValue(axis, out var state))
                 {
-                    _scripKeyframes.TryRemove(axis, out var _);
-                    if(AxisStates.TryGetValue(axis, out var state))
-                    {
-                        lock (state)
-                            state.Invalidate();
-                    }
+                    lock (state)
+                        state.Invalidate();
                 }
             }
 
-            foreach (var axis in changedAxes)
+            bool Load(DeviceAxis axis, IScriptFile file)
+            {
+                var document = JsonDocument.Parse(file.Data);
+                if (!document.RootElement.TryGetProperty("rawActions", out var actions) || actions.GetArrayLength() == 0)
+                    if (!document.RootElement.TryGetProperty("actions", out actions) || actions.GetArrayLength() == 0)
+                        return false;
+
+                var keyframes = new List<Keyframe>();
+                foreach (var child in actions.EnumerateArray())
+                {
+                    var position = child.GetProperty("at").GetInt64() / 1000.0f;
+                    var value = (float)child.GetProperty("pos").GetDouble() / 100;
+                    keyframes.Add(new Keyframe(position, value));
+                }
+
+                _scripKeyframes.AddOrUpdate(axis, keyframes, (key, oldValue) => keyframes);
+                if (AxisStates.TryGetValue(axis, out var state))
+                {
+                    lock (state)
+                        state.Invalidate();
+                }
+
+                return true;
+            }
+
+            void Update(DeviceAxis axis)
             {
                 var file = AxisSettings[axis].File;
                 if (file == null)
-                {
-                    _scripKeyframes.TryRemove(axis, out var _);
-                    if (AxisStates.TryGetValue(axis, out var state))
-                    {
-                        lock (state)
-                            state.Invalidate();
-                    }
-                }
+                    Clear(axis);
                 else
-                {
-                    var document = JsonDocument.Parse(file.Data);
-                    if (!document.RootElement.TryGetProperty("rawActions", out var actions) || actions.GetArrayLength() == 0)
-                        if(!document.RootElement.TryGetProperty("actions", out actions) || actions.GetArrayLength() == 0)
-                            continue;
+                    Load(axis, file);
+            }
 
-                    var keyframes = new List<Keyframe>();
-                    foreach (var child in actions.EnumerateArray())
-                    {
-                        var position = child.GetProperty("at").GetInt64() / 1000.0f;
-                        var value = (float)child.GetProperty("pos").GetDouble() / 100;
-                        keyframes.Add(new Keyframe(position, value));
-                    }
-
-                    _scripKeyframes.TryAdd(axis, keyframes);
-                }
+            changedAxes ??= EnumUtils.GetValues<DeviceAxis>();
+            if (changeType == AxisFilesChangeType.Clear)
+            {
+                foreach (var axis in changedAxes)
+                    Clear(axis);
+            }
+            else if(changeType == AxisFilesChangeType.Update)
+            {
+                foreach (var axis in changedAxes)
+                    Update(axis);
             }
         }
 
@@ -306,9 +326,31 @@ namespace MultiFunPlayer.ViewModels
             {
                 var path = paths.FirstOrDefault(p => Path.GetExtension(p) == ".funscript");
                 AxisSettings[axis].File = ScriptFile.FromPath(path);
-                UpdateFiles(new[] { axis }, AxisFilesChangeType.Update);
+                UpdateFiles(AxisFilesChangeType.Update, axis);
             }
         }
+
+        public async Task OnAxisOpen(DeviceAxis axis)
+        {
+            var dialogArgs = new OpenFileDialogArguments()
+            {
+                Width = 600,
+                Height = 730,
+                Filters = "Funscript files|*.funscript",
+                CreateNewDirectoryEnabled = true,
+                CurrentDirectory = Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName)
+            };
+
+            var result = await OpenFileDialog.ShowDialogAsync("RootDialog", dialogArgs);
+            if (!result.Confirmed || !result.FileInfo.Exists)
+                return;
+
+            AxisSettings[axis].File = ScriptFile.FromFileInfo(result.FileInfo);
+            UpdateFiles(AxisFilesChangeType.Update, axis);
+        }
+
+        public void OnAxisClear(DeviceAxis axis) => UpdateFiles(AxisFilesChangeType.Clear, axis);
+        public void OnAxisReload(DeviceAxis axis) => UpdateFiles(AxisFilesChangeType.Update, axis);
 
         [SuppressPropertyChangedWarnings]
         public void OnAxisSettingsSelectionChanged(object sender, SelectionChangedEventArgs e)

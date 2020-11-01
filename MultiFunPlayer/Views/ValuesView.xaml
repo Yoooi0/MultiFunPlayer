@@ -73,7 +73,7 @@
                                      Padding="1"
                                      HorizontalAlignment="Stretch"
                                      ItemsSource="{Binding Path=DataContext.AxisSettings, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}"
-                                     SelectedValue="{Binding Path=DataContext.SelectedAxisSettings, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}"
+                                     SelectedValue="{Binding Path=DataContext.SelectedAxisSettings, Mode=TwoWay, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}"
                                      SelectedValuePath="Value"
                                      SelectionMode="Single"
                                      SelectionChanged="{s:Action OnAxisSettingsSelectionChanged}">
@@ -107,6 +107,25 @@
                                             <TextBlock.ToolTip>
                                                 <TextBlock Text="{Binding Converter={StaticResource DeviceAxisFriendlyNameConverter}}"/>
                                             </TextBlock.ToolTip>
+                                            <TextBlock.ContextMenu>
+                                                <ContextMenu>
+                                                    <MenuItem Header="Open" Command="{s:Action OnAxisOpen}" CommandParameter="{Binding}">
+                                                        <MenuItem.Icon>
+                                                            <material:PackIcon Kind="FolderOpen"/>
+                                                        </MenuItem.Icon>
+                                                    </MenuItem>
+                                                    <MenuItem Header="Clear" Command="{s:Action OnAxisClear}" CommandParameter="{Binding}">
+                                                        <MenuItem.Icon>
+                                                            <material:PackIcon Kind="Close"/>
+                                                        </MenuItem.Icon>
+                                                    </MenuItem>
+                                                    <MenuItem Header="Reload" Command="{s:Action OnAxisReload}" CommandParameter="{Binding}">
+                                                        <MenuItem.Icon>
+                                                            <material:PackIcon Kind="Reload"/>
+                                                        </MenuItem.Icon>
+                                                    </MenuItem>
+                                                </ContextMenu>
+                                            </TextBlock.ContextMenu>
                                         </TextBlock>
                                     </DataTemplate>
                                 </ListBox.ItemTemplate>

@@ -5,7 +5,7 @@ namespace MultiFunPlayer.Common
 {
     public enum AxisFilesChangeType
     {
-        Reset,
+        Clear,
         Update
     }
 

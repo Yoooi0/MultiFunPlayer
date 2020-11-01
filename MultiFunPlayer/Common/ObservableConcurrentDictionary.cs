@@ -4,6 +4,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.ComponentModel;
+using System.Linq;
 using System.Threading;
 
 namespace MultiFunPlayer.Common
@@ -29,38 +30,64 @@ namespace MultiFunPlayer.Common
         public event NotifyCollectionChangedEventHandler CollectionChanged;
         public event PropertyChangedEventHandler PropertyChanged;
 
-        private void NotifyObserversOfChange()
+        private void NotifyObserversOfChange(NotifyCollectionChangedEventArgs collectionChangedArgs)
         {
-            _context.Post(_ =>
+            _context.Send(_ =>
             {
-                CollectionChanged?.Invoke(this, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
+                CollectionChanged?.Invoke(this, collectionChangedArgs);
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("Count"));
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("Keys"));
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("Values"));
             }, null);
         }
 
+        private void NotifyObserversOfChange(NotifyCollectionChangedAction action, TKey key, TValue value, int index)
+            => NotifyObserversOfChange(new NotifyCollectionChangedEventArgs(action, new KeyValuePair<TKey, TValue>(key, value), index));
+
+        private void NotifyObserversOfChange(NotifyCollectionChangedAction action, TKey key, TValue oldValue, TValue newValue, int index)
+            => NotifyObserversOfChange(new NotifyCollectionChangedEventArgs(action, new KeyValuePair<TKey, TValue>(key, newValue), new KeyValuePair<TKey, TValue>(key, oldValue), index));
+
         private bool TryAddWithNotification(KeyValuePair<TKey, TValue> item) => TryAddWithNotification(item.Key, item.Value);
 
         private bool TryAddWithNotification(TKey key, TValue value)
         {
-            bool result = _dictionary.TryAdd(key, value);
+            var result = _dictionary.TryAdd(key, value);
             if (result)
-                NotifyObserversOfChange();
+                NotifyObserversOfChange(NotifyCollectionChangedAction.Add, key, value, IndexOf(key));
             return result;
         }
 
         private bool TryRemoveWithNotification(TKey key, out TValue value)
         {
-            bool result = _dictionary.TryRemove(key, out value);
-            if (result) NotifyObserversOfChange();
+            var index = IndexOf(key);
+            var result = _dictionary.TryRemove(key, out value);
+            if (result)
+                NotifyObserversOfChange(NotifyCollectionChangedAction.Remove, key, value, index);
             return result;
         }
 
         private void UpdateWithNotification(TKey key, TValue value)
         {
+            var updated = _dictionary.TryGetValue(key, out var oldValue);
             _dictionary[key] = value;
-            NotifyObserversOfChange();
+;
+            if(!updated)
+                NotifyObserversOfChange(NotifyCollectionChangedAction.Add, key, value, IndexOf(key));
+            else
+                NotifyObserversOfChange(NotifyCollectionChangedAction.Replace, key, oldValue, value, IndexOf(key));
+        }
+
+        private int IndexOf(TKey key)
+        {
+            var index = -1;
+            foreach(var current in _dictionary.Keys)
+            {
+                index++;
+                if (EqualityComparer<TKey>.Default.Equals(current, key))
+                    return index;
+            }
+
+            return -1;
         }
 
         #region ICollection<KeyValuePair<TKey,TValue>> Members
@@ -69,7 +96,7 @@ namespace MultiFunPlayer.Common
         void ICollection<KeyValuePair<TKey, TValue>>.Clear()
         {
             _dictionary.Clear();
-            NotifyObserversOfChange();
+            NotifyObserversOfChange(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
         }
 
         bool ICollection<KeyValuePair<TKey, TValue>>.Contains(KeyValuePair<TKey, TValue> item) => ((ICollection<KeyValuePair<TKey, TValue>>)_dictionary).Contains(item);
