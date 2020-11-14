@@ -1,4 +1,4 @@
-﻿using MaterialDesignThemes.Wpf;
+using MaterialDesignThemes.Wpf;
 using MultiFunPlayer.Common;
 using MultiFunPlayer.Common.Controls;
 using Stylet;
@@ -45,7 +45,7 @@ namespace MultiFunPlayer.Player
 
         private async Task RunAsync(CancellationToken token)
         {
-            async Task<string> ReadStringAsync(NetworkStream stream, CancellationToken token)
+            static async Task<string> ReadStringAsync(NetworkStream stream, CancellationToken token)
             {
                 var result = 0;
                 var buffer = new ArraySegment<byte>(new byte[1024]);
@@ -53,7 +53,7 @@ namespace MultiFunPlayer.Player
                 do
                 {
                     result = await stream.ReadAsync(buffer, token);
-                    await memory.WriteAsync(buffer.Array, buffer.Offset, result, token);
+                    await memory.WriteAsync(buffer.AsMemory(buffer.Offset, result), token);
                 }
                 while (result > 0 && stream.DataAvailable);
 
@@ -71,7 +71,7 @@ namespace MultiFunPlayer.Player
                         FileName = "steam://launch/837380/VR",
                         UseShellExecute = true
                     });
-                    await Task.Delay(10000);
+                    await Task.Delay(10000, token);
                 }
 
                 using var client = new TcpClient("localhost", 23554);

@@ -282,7 +282,7 @@ namespace MultiFunPlayer.ViewModels
                     keyframes.Add(new Keyframe(position, value));
                 }
 
-                _scripKeyframes.AddOrUpdate(axis, keyframes, (key, oldValue) => keyframes);
+                _scripKeyframes.AddOrUpdate(axis, keyframes, (_, _) => keyframes);
                 if (AxisStates.TryGetValue(axis, out var state))
                 {
                     lock (state)

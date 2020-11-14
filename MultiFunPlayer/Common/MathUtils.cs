@@ -22,6 +22,5 @@ namespace MultiFunPlayer.Common
             a = b;
             b = temp;
         }
-
     }
 }

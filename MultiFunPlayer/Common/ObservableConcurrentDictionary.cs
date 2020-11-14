@@ -36,8 +36,8 @@ namespace MultiFunPlayer.Common
             {
                 CollectionChanged?.Invoke(this, collectionChangedArgs);
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("Count"));
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("Keys"));
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("Values"));
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Keys)));
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Values)));
             }, null);
         }
 
@@ -70,7 +70,7 @@ namespace MultiFunPlayer.Common
         {
             var updated = _dictionary.TryGetValue(key, out var oldValue);
             _dictionary[key] = value;
-;
+
             if(!updated)
                 NotifyObserversOfChange(NotifyCollectionChangedAction.Add, key, value, IndexOf(key));
             else

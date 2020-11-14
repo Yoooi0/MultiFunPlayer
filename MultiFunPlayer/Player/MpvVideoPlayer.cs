@@ -1,4 +1,4 @@
-﻿using MaterialDesignThemes.Wpf;
+using MaterialDesignThemes.Wpf;
 using MultiFunPlayer.Common;
 using MultiFunPlayer.Common.Controls;
 using Stylet;
@@ -52,7 +52,7 @@ namespace MultiFunPlayer.Player
 
                 try
                 {
-                    await client.ConnectAsync(500);
+                    await client.ConnectAsync(500, token);
                 }
                 catch (TimeoutException)
                 {
@@ -65,8 +65,8 @@ namespace MultiFunPlayer.Player
 
                     Process.Start(processInfo);
 
-                    await Task.Delay(1000);
-                    await client.ConnectAsync(500);
+                    await Task.Delay(1000, token);
+                    await client.ConnectAsync(500, token);
                 }
 
                 using var reader = new StreamReader(client);
