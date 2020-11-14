@@ -1,4 +1,4 @@
-using MaterialDesignThemes.Wpf;
+﻿using MaterialDesignThemes.Wpf;
 using MultiFunPlayer.Common;
 using MultiFunPlayer.Common.Controls;
 using Stylet;
@@ -102,7 +102,7 @@ namespace MultiFunPlayer.Player
                     data = data[4..];
                     var document = JsonDocument.Parse(data);
                     if (document.RootElement.TryGetProperty("path", out var pathProperty))
-                        _eventAggregator.Publish(new VideoFileChangedMessage(new FileInfo(pathProperty.GetString())));
+                        _eventAggregator.Publish(new VideoFileChangedMessage(pathProperty.GetString()));
 
                     if (document.RootElement.TryGetProperty("currentTime", out var timeProperty))
                         _eventAggregator.Publish(new VideoPositionMessage(TimeSpan.FromSeconds(timeProperty.GetDouble())));

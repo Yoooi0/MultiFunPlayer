@@ -1,4 +1,4 @@
-using MaterialDesignThemes.Wpf;
+﻿using MaterialDesignThemes.Wpf;
 using MultiFunPlayer.Common;
 using MultiFunPlayer.Common.Controls;
 using Stylet;
@@ -104,7 +104,7 @@ namespace MultiFunPlayer.Player
                                     switch (nameProperty.GetString())
                                     {
                                         case "path":
-                                            _eventAggregator.Publish(new VideoFileChangedMessage(new FileInfo(dataProperty.GetString())));
+                                            _eventAggregator.Publish(new VideoFileChangedMessage(dataProperty.GetString()));
                                             break;
                                         case "time-pos":
                                             var seconds = double.Parse(dataProperty.GetString(), NumberStyles.Any, CultureInfo.InvariantCulture);
