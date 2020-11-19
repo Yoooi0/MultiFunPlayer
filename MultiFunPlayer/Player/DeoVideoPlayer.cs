@@ -29,18 +29,29 @@ namespace MultiFunPlayer.Player
 
         public void Start()
         {
-            if (_cancellationSource != null)
-            {
-                _cancellationSource?.Cancel();
-                _task?.Wait();
-                _cancellationSource?.Dispose();
-            }
+            if (Status != VideoPlayerStatus.Disconnected)
+                Stop();
 
             _cancellationSource = new CancellationTokenSource();
             _task = Task.Factory.StartNew(async () => await RunAsync(_cancellationSource.Token),
                 _cancellationSource.Token,
                 TaskCreationOptions.LongRunning,
                 TaskScheduler.Default);
+        }
+
+        public void Stop()
+        {
+            if (Status != VideoPlayerStatus.Connected)
+                return;
+
+            Status = VideoPlayerStatus.Disconnected;
+
+            _cancellationSource?.Cancel();
+            _task?.Wait();
+            _cancellationSource?.Dispose();
+
+            _cancellationSource = null;
+            _task = null;
         }
 
         private async Task RunAsync(CancellationToken token)
@@ -116,11 +127,11 @@ namespace MultiFunPlayer.Player
             catch (Exception e)
             {
                 _ = Execute.OnUIThreadAsync(() => DialogHost.Show(new ErrorMessageDialog($"DeoVR failed with exception:\n\n{e}")));
+
+                Status = VideoPlayerStatus.Disconnected;
+                _cancellationSource?.Dispose();
             }
 
-            Status = VideoPlayerStatus.Disconnected;
-            _cancellationSource?.Dispose();
-            _cancellationSource = null;
 
             _eventAggregator.Publish(new VideoFileChangedMessage(null));
             _eventAggregator.Publish(new VideoPlayingMessage(isPlaying: false));
@@ -128,14 +139,7 @@ namespace MultiFunPlayer.Player
 
         protected virtual void Dispose(bool disposing)
         {
-            Status = VideoPlayerStatus.Disconnected;
-
-            _cancellationSource?.Cancel();
-            _task?.Wait();
-            _cancellationSource?.Dispose();
-
-            _cancellationSource = null;
-            _task = null;
+            Stop();
         }
 
         public void Dispose()

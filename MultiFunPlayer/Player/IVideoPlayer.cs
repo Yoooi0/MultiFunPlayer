@@ -13,5 +13,6 @@ namespace MultiFunPlayer.Player
         string Name { get; }
         VideoPlayerStatus Status { get; }
         void Start();
+        void Stop();
     }
 }

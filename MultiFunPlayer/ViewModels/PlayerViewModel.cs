@@ -17,6 +17,7 @@ namespace MultiFunPlayer.ViewModels
 
         public void OnPlayerClick(object sender, RoutedEventArgs e)
         {
+            Players.ForEach(p => p.Stop());
             if (sender is FrameworkElement element && element.DataContext is IVideoPlayer player)
                 player.Start();
         }
