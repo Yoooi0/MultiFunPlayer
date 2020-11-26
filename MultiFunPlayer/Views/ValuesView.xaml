@@ -132,6 +132,15 @@
                                             </TextBlock.ToolTip>
                                             <TextBlock.ContextMenu>
                                                 <ContextMenu>
+                                                    <MenuItem IsEnabled="False">
+                                                        <MenuItem.Template>
+                                                            <ControlTemplate>
+                                                                <TextBlock Text="{Binding Converter={StaticResource DeviceAxisFriendlyNameConverter}}"
+                                                                           HorizontalAlignment="Center"/>
+                                                            </ControlTemplate>
+                                                        </MenuItem.Template>
+                                                    </MenuItem>
+                                                    <Separator />
                                                     <MenuItem Header="Open" Command="{s:Action OnAxisOpen}" CommandParameter="{Binding}">
                                                         <MenuItem.Icon>
                                                             <material:PackIcon Kind="FolderOpen"/>
