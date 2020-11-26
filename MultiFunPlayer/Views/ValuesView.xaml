@@ -15,52 +15,75 @@
     </UserControl.Resources>
     <material:Card material:ShadowAssist.ShadowDepth="Depth1" Margin="0 0 0 20">
         <StackPanel Margin="20">
-            <DockPanel LastChildFill="True" Margin="0 0 0 15">
-                <TextBlock Text="Video:"
+            <material:Card material:ShadowAssist.ShadowDepth="Depth1"
+                      Margin="0 0 0 20">
+                <StackPanel Margin="20">
+                    <DockPanel LastChildFill="True" Margin="0 0 0 15">
+                        <TextBlock Text="Video:"
                            DockPanel.Dock="Left"
                            VerticalAlignment="Center"/>
 
-                <material:PackIcon DockPanel.Dock="Right"
+                        <material:PackIcon DockPanel.Dock="Right"
                                    Width="24" Height="24" 
                                    Kind="FastForward"
                                    VerticalAlignment="Center">
-                    <material:PackIcon.Style>
-                        <Style TargetType="material:PackIcon">
-                            <Setter Property="Foreground" Value="{StaticResource PrimaryHueLightBrush}"/>
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding IsSyncing}" Value="True">
-                                    <Setter Property="Foreground" Value="Red"/>
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </material:PackIcon.Style>
-                </material:PackIcon>
-                
-                <material:PackIcon DockPanel.Dock="Right"
+                            <material:PackIcon.Style>
+                                <Style TargetType="material:PackIcon">
+                                    <Setter Property="Foreground" Value="{StaticResource PrimaryHueLightBrush}"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsSyncing}" Value="True">
+                                            <Setter Property="Foreground" Value="Red"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </material:PackIcon.Style>
+                        </material:PackIcon>
+
+                        <material:PackIcon DockPanel.Dock="Right"
                                 Width="24" Height="24" 
                                 VerticalAlignment="Center">
-                    <material:PackIcon.Style>
-                        <Style TargetType="material:PackIcon">
-                            <Setter Property="Foreground" Value="{StaticResource PrimaryHueLightBrush}"/>
-                            <Setter Property="Kind" Value="Pause"/>
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding IsPlaying}" Value="True">
-                                    <Setter Property="Foreground" Value="Green"/>
-                                    <Setter Property="Kind" Value="Play"/>
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </material:PackIcon.Style>
-                </material:PackIcon>
-                
-                <TextBox IsReadOnly="True"
+                            <material:PackIcon.Style>
+                                <Style TargetType="material:PackIcon">
+                                    <Setter Property="Foreground" Value="{StaticResource PrimaryHueLightBrush}"/>
+                                    <Setter Property="Kind" Value="Pause"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsPlaying}" Value="True">
+                                            <Setter Property="Foreground" Value="Green"/>
+                                            <Setter Property="Kind" Value="Play"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </material:PackIcon.Style>
+                        </material:PackIcon>
+
+                        <TextBox IsReadOnly="True"
                          DockPanel.Dock="Left"
                          Margin="5 0 10 0"
                          Style="{StaticResource MaterialDesignTextBox}"
                          VerticalAlignment="Center"
                          Text="{Binding VideoFile.Name, Mode=OneWay}"/>
-            </DockPanel>
-            
+                    </DockPanel>
+                    <DockPanel LastChildFill="True" Margin="0 0 0 10">
+                        <TextBlock Text="Global Offset: " DockPanel.Dock="Left" Margin="0 0 10 0" VerticalAlignment="Center"/>
+                        <TextBlock Text="{Binding GlobalOffset, StringFormat={}{0:0.00}s}" 
+                                   VerticalAlignment="Center"
+                                   DockPanel.Dock="Right" 
+                                   Width="60"
+                                   Margin="10 0 0 0"
+                                   TextAlignment="Right"/>
+
+                        <Slider Value="{Binding GlobalOffset}" 
+                                DockPanel.Dock="Left"
+                                Minimum="-5" 
+                                Maximum="5"
+                                TickFrequency="0.01"
+                                IsSnapToTickEnabled="True"
+                                MouseDoubleClick="{s:Action OnSliderDoubleClick}"
+                                ValueChanged="{s:Action OnOffsetSliderValueChanged}"/>
+                    </DockPanel>
+                </StackPanel>
+            </material:Card>
+
             <GroupBox Header="Settings" 
                       Style="{DynamicResource MaterialDesignCardGroupBox}" 
                       Padding="0"
@@ -159,7 +182,8 @@
                                 Maximum="5"
                                 TickFrequency="0.01"
                                 IsSnapToTickEnabled="True"
-                                MouseDoubleClick="{s:Action OnAxisSettingsOffsetSliderDoubleClick}"/>
+                                MouseDoubleClick="{s:Action OnSliderDoubleClick}"
+                                ValueChanged="{s:Action OnOffsetSliderValueChanged}"/>
                     </DockPanel>
                     <StackPanel Orientation="Horizontal">
                         <TextBlock Text="Inverted:" Margin="0 0 10 0" VerticalAlignment="Center"/>

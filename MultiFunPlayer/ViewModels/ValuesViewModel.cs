@@ -30,6 +30,7 @@ namespace MultiFunPlayer.ViewModels
         public bool IsPlaying { get; set; }
         public bool IsSyncing { get; set; }
         public float CurrentPosition { get; set; }
+        public float GlobalOffset { get; set; }
         public ObservableConcurrentDictionary<DeviceAxis, AxisState> AxisStates { get; set; }
         public ObservableConcurrentDictionary<DeviceAxis, AxisSettings> AxisSettings { get; set; }
         public AxisSettings SelectedAxisSettings { get; set; }
@@ -84,8 +85,8 @@ namespace MultiFunPlayer.ViewModels
                         if (!state.Valid)
                             continue;
 
-                        var settings = AxisSettings[axis];
-                        while (state.NextIndex < keyframes.Count - 1 && keyframes[state.NextIndex].Position < CurrentPosition + settings.Offset)
+                        var axisPosition = GetAxisPosition(axis);
+                        while (state.NextIndex < keyframes.Count - 1 && keyframes[state.NextIndex].Position < axisPosition)
                             state.PrevIndex = state.NextIndex++;
 
                         if (!keyframes.ValidateIndex(state.PrevIndex) || !keyframes.ValidateIndex(state.NextIndex))
@@ -93,16 +94,10 @@ namespace MultiFunPlayer.ViewModels
 
                         var prev = keyframes[state.PrevIndex];
                         var next = keyframes[state.NextIndex];
-
-                        if ((CurrentPosition <= prev.Position || CurrentPosition >= next.Position)
-                         && (Math.Abs(CurrentPosition - prev.Position) > 1.0 || Math.Abs(CurrentPosition - next.Position) > 1.0))
-                            continue;
-
-                        var newValue = float.NaN;
-                        if (settings.Inverted)
-                            newValue = MathUtils.Map(CurrentPosition + settings.Offset, prev.Position, next.Position, 1 - prev.Value, 1 - next.Value);
-                        else
-                            newValue = MathUtils.Map(CurrentPosition + settings.Offset, prev.Position, next.Position, prev.Value, next.Value);
+                        var settings = AxisSettings[axis];
+                        var newValue = MathUtils.Map(axisPosition, prev.Position, next.Position,
+                            settings.Inverted ? 1 - prev.Value : prev.Value,
+                            settings.Inverted ? 1 - next.Value : next.Value);
 
                         if (IsSyncing)
                             newValue = MathUtils.Lerp(!float.IsFinite(state.Value) ? axis.DefaultValue() : state.Value, newValue, (float)Math.Pow(_syncTime / _syncDuration, 3));
@@ -213,37 +208,39 @@ namespace MultiFunPlayer.ViewModels
 
             foreach (var axis in EnumUtils.GetValues<DeviceAxis>())
             {
-                if (!_scripKeyframes.TryGetValue(axis, out var keyframes))
-                    continue;
-
                 if (!AxisStates.TryGetValue(axis, out var state))
                     continue;
 
                 if (wasSeek || !state.Valid)
+                    SearchForValidIndices(axis, state);
+            }
+        }
+
+        private void SearchForValidIndices(DeviceAxis axis, AxisState state)
+        {
+            if (!_scripKeyframes.TryGetValue(axis, out var keyframes))
+                return;
+
+            lock (state)
+            {
+                var bestIndex = keyframes.BinarySearch(new Keyframe(GetAxisPosition(axis)), new KeyframePositionComparer());
+                if (bestIndex >= 0)
                 {
-                    lock (state)
+                    state.PrevIndex = bestIndex;
+                    state.NextIndex = bestIndex + 1;
+                }
+                else
+                {
+                    bestIndex = ~bestIndex;
+                    if (bestIndex == keyframes.Count)
                     {
-                        var settings = AxisSettings[axis];
-                        var current = keyframes.BinarySearch(new Keyframe(CurrentPosition + settings.Offset), new KeyframePositionComparer());
-                        if (current >= 0)
-                        {
-                            state.PrevIndex = current;
-                            state.NextIndex = current + 1;
-                        }
-                        else
-                        {
-                            current = ~current;
-                            if (current == keyframes.Count)
-                            {
-                                state.PrevIndex = keyframes.Count;
-                                state.NextIndex = keyframes.Count;
-                            }
-                            else
-                            {
-                                state.PrevIndex = current - 1;
-                                state.NextIndex = current;
-                            }
-                        }
+                        state.PrevIndex = keyframes.Count;
+                        state.NextIndex = keyframes.Count;
+                    }
+                    else
+                    {
+                        state.PrevIndex = bestIndex - 1;
+                        state.NextIndex = bestIndex;
                     }
                 }
             }
@@ -314,6 +311,7 @@ namespace MultiFunPlayer.ViewModels
             }
         }
 
+        private float GetAxisPosition(DeviceAxis axis) => CurrentPosition + GlobalOffset + AxisSettings[axis].Offset;
         public float GetValue(DeviceAxis axis) => MathUtils.Clamp01(AxisStates[axis].Value);
 
         public void OnDrop(object sender, DragEventArgs e)
@@ -359,10 +357,24 @@ namespace MultiFunPlayer.ViewModels
                 SelectedAxisSettings = ((KeyValuePair<DeviceAxis, AxisSettings>)e.RemovedItems[0]).Value;
         }
 
-        public void OnAxisSettingsOffsetSliderDoubleClick(object sender, MouseButtonEventArgs e)
+        public void OnSliderDoubleClick(object sender, MouseButtonEventArgs e)
         {
             if (sender is Slider slider)
                 slider.Value = 0;
+        }
+
+        public void OnOffsetSliderValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            IsSyncing = true;
+            Interlocked.Exchange(ref _syncTime, 0);
+
+            foreach (var axis in EnumUtils.GetValues<DeviceAxis>())
+            {
+                if (!AxisStates.TryGetValue(axis, out var state))
+                    continue;
+
+                SearchForValidIndices(axis, state);
+            }
         }
 
         public void OnPreviewDragOver(object sender, DragEventArgs e)
