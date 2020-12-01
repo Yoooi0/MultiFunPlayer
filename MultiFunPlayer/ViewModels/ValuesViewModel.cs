@@ -1,4 +1,4 @@
-using MultiFunPlayer.Common;
+﻿using MultiFunPlayer.Common;
 using Stylet;
 using System;
 using System.Collections.Generic;
@@ -29,6 +29,7 @@ namespace MultiFunPlayer.ViewModels
 
         public bool IsPlaying { get; set; }
         public bool IsSyncing { get; set; }
+        public float SyncProgress => !IsSyncing ? 100 : MathUtils.Clamp01(_syncTime / _syncDuration) * 100;
         public float CurrentPosition { get; set; }
         public float GlobalOffset { get; set; }
         public ObservableConcurrentDictionary<DeviceAxis, AxisState> AxisStates { get; set; }
@@ -114,6 +115,7 @@ namespace MultiFunPlayer.ViewModels
                 {
                     _syncTime += (float)stopwatch.Elapsed.TotalSeconds;
                     IsSyncing = _syncTime < _syncDuration;
+                    NotifyOfPropertyChange(nameof(SyncProgress));
                 }
 
                 stopwatch.Restart();
@@ -157,6 +159,7 @@ namespace MultiFunPlayer.ViewModels
 
             IsSyncing = VideoFile != null;
             Interlocked.Exchange(ref _syncTime, 0);
+            NotifyOfPropertyChange(nameof(SyncProgress));
 
             if (VideoFile != null)
             {
@@ -182,6 +185,7 @@ namespace MultiFunPlayer.ViewModels
             {
                 IsSyncing = true;
                 Interlocked.Exchange(ref _syncTime, 0);
+                NotifyOfPropertyChange(nameof(SyncProgress));
             }
 
             IsPlaying = message.IsPlaying;
@@ -204,6 +208,7 @@ namespace MultiFunPlayer.ViewModels
             {
                 IsSyncing = true;
                 Interlocked.Exchange(ref _syncTime, 0);
+                NotifyOfPropertyChange(nameof(SyncProgress));
             }
 
             foreach (var axis in EnumUtils.GetValues<DeviceAxis>())
@@ -367,6 +372,7 @@ namespace MultiFunPlayer.ViewModels
         {
             IsSyncing = true;
             Interlocked.Exchange(ref _syncTime, 0);
+            NotifyOfPropertyChange(nameof(SyncProgress));
 
             foreach (var axis in EnumUtils.GetValues<DeviceAxis>())
             {

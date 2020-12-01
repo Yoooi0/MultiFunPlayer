@@ -23,28 +23,54 @@
                            DockPanel.Dock="Left"
                            VerticalAlignment="Center"/>
 
-                        <material:PackIcon DockPanel.Dock="Right"
-                                   Width="24" Height="24" 
-                                   Kind="FastForward"
-                                   VerticalAlignment="Center">
-                            <material:PackIcon.Style>
-                                <Style TargetType="material:PackIcon">
-                                    <Setter Property="Foreground" Value="{StaticResource PrimaryHueLightBrush}"/>
-                                    <Style.Triggers>
-                                        <DataTrigger Binding="{Binding IsSyncing}" Value="True">
-                                            <Setter Property="Foreground" Value="Red"/>
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </material:PackIcon.Style>
-                        </material:PackIcon>
+                        <Grid DockPanel.Dock="Right" Width="24" Height="24">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="24" />
+                                <RowDefinition Height="24" />
+                            </Grid.RowDefinitions>
+                            
+                            <material:PackIcon Grid.Row="0"
+                                               Width="16" 
+                                               Height="16"
+                                               VerticalAlignment="Center"
+                                               HorizontalAlignment="Center"
+                                               Kind="FastForward">
+                                <material:PackIcon.Style>
+                                    <Style TargetType="material:PackIcon">
+                                        <Setter Property="Foreground" Value="{StaticResource PrimaryHueLightBrush}"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsSyncing}" Value="True">
+                                                <Setter Property="Foreground" Value="Red"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </material:PackIcon.Style>
+                            </material:PackIcon>
+                            <ProgressBar Value="{Binding SyncProgress, Mode=OneWay}"
+                                         VerticalAlignment="Center"
+                                         Grid.Row="1"
+                                         Width="24"
+                                         Height="24"
+                                         Margin="0 -24 0 24">
+                                <ProgressBar.Style>
+                                    <Style TargetType="ProgressBar" BasedOn="{StaticResource MaterialDesignCircularProgressBar}">
+                                        <Setter Property="Foreground" Value="{StaticResource PrimaryHueLightBrush}"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsSyncing}" Value="True">
+                                                <Setter Property="Foreground" Value="Red"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </ProgressBar.Style>
+                            </ProgressBar>
+                        </Grid>
 
                         <material:PackIcon DockPanel.Dock="Right"
                                 Width="24" Height="24" 
                                 VerticalAlignment="Center">
                             <material:PackIcon.Style>
                                 <Style TargetType="material:PackIcon">
-                                    <Setter Property="Foreground" Value="{StaticResource PrimaryHueLightBrush}"/>
+                                    <Setter Property="Foreground" Value="Red"/>
                                     <Setter Property="Kind" Value="Pause"/>
                                     <Style.Triggers>
                                         <DataTrigger Binding="{Binding IsPlaying}" Value="True">
