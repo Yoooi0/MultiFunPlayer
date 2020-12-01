@@ -7,12 +7,12 @@ namespace MultiFunPlayer.Common
         L0,
         L1,
         L2,
-        L3,
         R0,
         R1,
         R2,
         V0,
-        V1
+        V1,
+        L3,
     }
 
     public static class DeviceAxisExtensions
@@ -23,12 +23,12 @@ namespace MultiFunPlayer.Common
                 DeviceAxis.L0 => 0.5f,
                 DeviceAxis.L1 => 0.5f,
                 DeviceAxis.L2 => 0.5f,
-                DeviceAxis.L3 => 0.5f,
                 DeviceAxis.R0 => 0.5f,
                 DeviceAxis.R1 => 0.5f,
                 DeviceAxis.R2 => 0.5f,
                 DeviceAxis.V0 => 0.0f,
                 DeviceAxis.V1 => 0.0f,
+                DeviceAxis.L3 => 0.5f,
                 _ => throw new NotImplementedException()
             };
 
@@ -39,12 +39,12 @@ namespace MultiFunPlayer.Common
                 DeviceAxis.L0 => "stroke",
                 DeviceAxis.L1 => "surge",
                 DeviceAxis.L2 => "sway",
-                DeviceAxis.L3 => "suck",
                 DeviceAxis.R0 => "twist",
                 DeviceAxis.R1 => "roll",
                 DeviceAxis.R2 => "pitch",
                 DeviceAxis.V0 => "vib",
                 DeviceAxis.V1 => "pump",
+                DeviceAxis.L3 => "suck",
                 _ => throw new NotImplementedException()
             };
 
@@ -54,12 +54,12 @@ namespace MultiFunPlayer.Common
                 DeviceAxis.L0 => "Up/Down",
                 DeviceAxis.L1 => "Forward/Backward",
                 DeviceAxis.L2 => "Left/Right",
-                DeviceAxis.L3 => "Suction",
                 DeviceAxis.R0 => "Twist",
                 DeviceAxis.R1 => "Roll",
                 DeviceAxis.R2 => "Pitch",
                 DeviceAxis.V0 => "Vibrate",
                 DeviceAxis.V1 => "Pump",
+                DeviceAxis.L3 => "Suction",
                 _ => throw new NotImplementedException()
             };
         }
