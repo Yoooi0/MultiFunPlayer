@@ -14,7 +14,7 @@ namespace MultiFunPlayer.ViewModels
     {
         private readonly IEventAggregator _eventAggregator;
 
-        [Inject] public ValuesViewModel Values { get; set; }
+        [Inject] public ScriptViewModel Script { get; set; }
         [Inject] public PlayerViewModel Player { get; set; }
         [Inject] public DeviceViewModel Device { get; set; }
 

@@ -18,7 +18,7 @@ using System.Threading.Tasks;
 
 namespace MultiFunPlayer.ViewModels
 {
-    public class ValuesViewModel : PropertyChangedBase, IDeviceAxisValueProvider, IHandle<VideoPositionMessage>, IHandle<VideoPlayingMessage>, IHandle<VideoFileChangedMessage>, IDisposable
+    public class ScriptViewModel : PropertyChangedBase, IDeviceAxisValueProvider, IHandle<VideoPositionMessage>, IHandle<VideoPlayingMessage>, IHandle<VideoFileChangedMessage>, IDisposable
     {
         private readonly float _syncDuration = 4;
 
@@ -37,7 +37,7 @@ namespace MultiFunPlayer.ViewModels
         public AxisSettings SelectedAxisSettings { get; set; }
         public FileInfo VideoFile { get; set; }
 
-        public ValuesViewModel(IEventAggregator eventAggregator)
+        public ScriptViewModel(IEventAggregator eventAggregator)
         {
             eventAggregator.Subscribe(this);
 

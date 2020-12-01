@@ -27,7 +27,7 @@ namespace MultiFunPlayer.ViewModels
         public ComPortModel SelectedComPort { get; set; }
         public int UpdateRate { get; set; }
 
-        public DeviceViewModel(IEventAggregator eventAggregator, ValuesViewModel valueProvider)
+        public DeviceViewModel(IEventAggregator eventAggregator, ScriptViewModel valueProvider)
         {
             eventAggregator.Subscribe(this);
             _valueProvider = valueProvider;

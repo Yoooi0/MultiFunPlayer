@@ -9,7 +9,7 @@ namespace MultiFunPlayer
     {
         protected override void ConfigureIoC(IStyletIoCBuilder builder)
         {
-            builder.Bind<ValuesViewModel>().ToSelf().InSingletonScope();
+            builder.Bind<ScriptViewModel>().ToSelf().InSingletonScope();
             //builder.Bind<IDeviceAxisValueProvider>().To<ValuesViewModel>().InSingletonScope(); //TODO:
             builder.Bind<IVideoPlayer>().ToAllImplementations();
         }
