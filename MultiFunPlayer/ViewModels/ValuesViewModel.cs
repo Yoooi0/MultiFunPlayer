@@ -1,4 +1,4 @@
-﻿using MultiFunPlayer.Common;
+using MultiFunPlayer.Common;
 using Stylet;
 using System;
 using System.Collections.Generic;
@@ -20,7 +20,7 @@ namespace MultiFunPlayer.ViewModels
 {
     public class ValuesViewModel : PropertyChangedBase, IDeviceAxisValueProvider, IHandle<VideoPositionMessage>, IHandle<VideoPlayingMessage>, IHandle<VideoFileChangedMessage>, IDisposable
     {
-        private readonly float _syncDuration = 5;
+        private readonly float _syncDuration = 4;
 
         private readonly ConcurrentDictionary<DeviceAxis, List<Keyframe>> _scripKeyframes;
         private readonly Thread _updateThread;
@@ -100,7 +100,7 @@ namespace MultiFunPlayer.ViewModels
                             settings.Inverted ? 1 - next.Value : next.Value);
 
                         if (IsSyncing)
-                            newValue = MathUtils.Lerp(!float.IsFinite(state.Value) ? axis.DefaultValue() : state.Value, newValue, (float)Math.Pow(_syncTime / _syncDuration, 3));
+                            newValue = MathUtils.Lerp(!float.IsFinite(state.Value) ? axis.DefaultValue() : state.Value, newValue, (float)Math.Pow(2, 10 * (_syncTime / _syncDuration - 1)));
 
                         Execute.OnUIThread(() => state.Value = newValue);
                     }
