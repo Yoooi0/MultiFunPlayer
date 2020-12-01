@@ -33,10 +33,7 @@ namespace MultiFunPlayer.ViewModels
             _valueProvider = valueProvider;
 
             ComPorts = new BindableCollection<ComPortModel>(SerialPort.GetPortNames().Select(p => new ComPortModel(p)));
-            AxisSettings = new ObservableConcurrentDictionary<DeviceAxis, AxisSettingsModel>();
-            foreach (var axis in EnumUtils.GetValues<DeviceAxis>())
-                AxisSettings.Add(axis, new AxisSettingsModel());
-
+            AxisSettings = new ObservableConcurrentDictionary<DeviceAxis, AxisSettingsModel>(EnumUtils.GetValues<DeviceAxis>().ToDictionary(a => a, _ => new AxisSettingsModel()));
             UpdateRate = 60;
         }
 
