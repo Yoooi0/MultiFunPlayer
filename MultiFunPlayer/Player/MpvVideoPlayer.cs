@@ -138,10 +138,10 @@ namespace MultiFunPlayer.Player
             catch (Exception e)
             {
                 _ = Execute.OnUIThreadAsync(() => DialogHost.Show(new ErrorMessageDialog($"MPV failed with exception:\n\n{e}")));
-
-                Status = VideoPlayerStatus.Disconnected;
-                _cancellationSource?.Dispose();
             }
+
+            Status = VideoPlayerStatus.Disconnected;
+            _cancellationSource?.Dispose();
 
             _eventAggregator.Publish(new VideoFileChangedMessage(null));
             _eventAggregator.Publish(new VideoPlayingMessage(isPlaying: false));
