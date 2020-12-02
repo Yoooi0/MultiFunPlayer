@@ -77,6 +77,14 @@ namespace MultiFunPlayer.Common
                 NotifyObserversOfChange(NotifyCollectionChangedAction.Replace, key, oldValue, value, IndexOf(key));
         }
 
+        public void AddOrUpdate(TKey key, TValue value)
+        {
+            if (ContainsKey(key))
+                UpdateWithNotification(key, value);
+            else
+                TryAddWithNotification(key, value);
+        }
+
         private int IndexOf(TKey key)
         {
             var index = -1;
