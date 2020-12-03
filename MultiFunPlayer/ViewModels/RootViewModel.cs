@@ -7,6 +7,8 @@ using StyletIoC;
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Windows;
+using System.Windows.Input;
 
 namespace MultiFunPlayer.ViewModels
 {
@@ -51,6 +53,17 @@ namespace MultiFunPlayer.ViewModels
 
             var path = Path.Join(Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName), "MultiFunPlayer.config.json");
             File.WriteAllText(path, settings.ToString());
+        }
+
+        public void OnMouseDown(object sender, MouseButtonEventArgs e)
+        {
+            if (sender is not Window window)
+                return;
+
+            if (e.LeftButton != MouseButtonState.Pressed)
+                return;
+
+            window.DragMove();
         }
     }
 }
