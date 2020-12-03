@@ -11,7 +11,8 @@
             <RowDefinition />
             <RowDefinition />
         </Grid.RowDefinitions>
-        <TextBlock x:Name="Message" Grid.Row="0" 
+        <TextBlock Grid.Row="0"
+                   Text="{Binding Message, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}"
                    Margin="0 0 0 20"
                    TextWrapping="Wrap"
                    MaxWidth="800"/>

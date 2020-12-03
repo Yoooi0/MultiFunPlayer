@@ -7,10 +7,12 @@ namespace MultiFunPlayer.Common.Controls
     /// </summary>
     public partial class ErrorMessageDialog : UserControl
     {
+        public string Message { get; set; }
+
         public ErrorMessageDialog(string message)
         {
             InitializeComponent();
-            Message.Text = message;
+            Message = message;
         }
     }
 }
