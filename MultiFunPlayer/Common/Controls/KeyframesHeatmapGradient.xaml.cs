@@ -1,4 +1,4 @@
-using MultiFunPlayer.ViewModels;
+﻿using MultiFunPlayer.ViewModels;
 using PropertyChanged;
 using System;
 using System.Collections.Generic;
@@ -17,7 +17,9 @@ namespace MultiFunPlayer.Common.Controls
     public partial class KeyframesHeatmapGradient : UserControl, INotifyPropertyChanged
     {
         public GradientStopCollection Stops { get; set; }
-        public float ScrubberPosition => float.IsFinite(Duration) && Duration > 0 ? Position / Duration * (float)ActualWidth : float.NegativeInfinity;
+
+        public float ScrubberPosition => ShowScrubber ? Position / Duration * (float)ActualWidth : 0;
+        public bool ShowScrubber => float.IsFinite(Duration) && Duration > 0;
 
         [DoNotNotify]
         public ObservableConcurrentDictionary<DeviceAxis, List<Keyframe>> Keyframes

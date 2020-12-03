@@ -7,6 +7,9 @@
              xmlns:material="http://materialdesigninxaml.net/winfx/xaml/themes"
              mc:Ignorable="d" 
              d:DesignHeight="50" d:DesignWidth="800">
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+    </UserControl.Resources>
     <material:Card UniformCornerRadius="5" 
                    Background="{StaticResource MaterialDesignLightBackground}"
                    material:ShadowAssist.ShadowDepth="Depth1">
@@ -26,6 +29,7 @@
                     BorderThickness="1 0 1 0"
                     Width="4"
                     SnapsToDevicePixels="True"
+                    Visibility="{Binding ShowScrubber, Converter={StaticResource BooleanToVisibilityConverter}, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}"
                     Canvas.Left="{Binding ScrubberPosition, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}"
                     Height="{Binding ActualHeight, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}"/>
         </Canvas>
