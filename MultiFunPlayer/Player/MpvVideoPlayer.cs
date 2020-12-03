@@ -68,23 +68,30 @@ namespace MultiFunPlayer.Player
                 catch (TimeoutException)
                 {
                     var mpvPath = Path.Join(Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName), "mpv.exe");
-                    var processInfo = new ProcessStartInfo()
+                    if (!File.Exists(mpvPath))
                     {
-                        FileName = mpvPath,
-                        Arguments = $"--input-ipc-server={pipeName} --keep-open=always --pause"
-                    };
+                        _ = Execute.OnUIThreadAsync(() => DialogHost.Show(new ErrorMessageDialog($"Could not find mpv executable!\n\nPlease download or copy it to:\n\"{mpvPath}\"")));
+                    }
+                    else
+                    {
+                        var processInfo = new ProcessStartInfo()
+                        {
+                            FileName = mpvPath,
+                            Arguments = $"--input-ipc-server={pipeName} --keep-open=always --pause"
+                        };
 
-                    Process.Start(processInfo);
+                        Process.Start(processInfo);
 
-                    await Task.Delay(1000, token);
-                    await client.ConnectAsync(500, token);
+                        await Task.Delay(1000, token);
+                        await client.ConnectAsync(500, token);
+                    }
                 }
-
-                using var reader = new StreamReader(client);
-                using var writer = new StreamWriter(client) { AutoFlush = true };
 
                 if (client.IsConnected)
                 {
+                    using var reader = new StreamReader(client);
+                    using var writer = new StreamWriter(client) { AutoFlush = true };
+
                     await writer.WriteLineAsync("{ \"command\": [\"observe_property_string\", 1, \"pause\"] }");
                     await reader.ReadLineAsync();
                     await writer.WriteLineAsync("{ \"command\": [\"observe_property_string\", 2, \"duration\"] }");
