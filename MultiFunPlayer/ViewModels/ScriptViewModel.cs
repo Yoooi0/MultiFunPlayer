@@ -18,24 +18,27 @@ using System.Threading.Tasks;
 
 namespace MultiFunPlayer.ViewModels
 {
-    public class ScriptViewModel : PropertyChangedBase, IDeviceAxisValueProvider, IHandle<VideoPositionMessage>, IHandle<VideoPlayingMessage>, IHandle<VideoFileChangedMessage>, IDisposable
+    public class ScriptViewModel : PropertyChangedBase, IDeviceAxisValueProvider, IDisposable,
+        IHandle<VideoPositionMessage>, IHandle<VideoPlayingMessage>, IHandle<VideoFileChangedMessage>, IHandle<VideoDurationMessage>
     {
         private readonly float _syncDuration = 4;
 
-        private readonly ConcurrentDictionary<DeviceAxis, List<Keyframe>> _scripKeyframes;
         private readonly Thread _updateThread;
         private readonly CancellationTokenSource _cancellationSource;
         private float _syncTime;
 
         public bool IsPlaying { get; set; }
         public bool IsSyncing { get; set; }
-        public float SyncProgress => !IsSyncing ? 100 : MathUtils.Clamp01(_syncTime / _syncDuration) * 100;
         public float CurrentPosition { get; set; }
+        public float VideoDuration { get; set; }
         public float GlobalOffset { get; set; }
         public ObservableConcurrentDictionary<DeviceAxis, AxisState> AxisStates { get; set; }
         public ObservableConcurrentDictionary<DeviceAxis, AxisSettings> AxisSettings { get; set; }
+        public ObservableConcurrentDictionary<DeviceAxis, List<Keyframe>> ScriptKeyframes { get; }
         public AxisSettings SelectedAxisSettings { get; set; }
         public FileInfo VideoFile { get; set; }
+
+        public float SyncProgress => !IsSyncing ? 100 : MathUtils.Clamp01(_syncTime / _syncDuration) * 100;
 
         public ScriptViewModel(IEventAggregator eventAggregator)
         {
@@ -51,7 +54,7 @@ namespace MultiFunPlayer.ViewModels
             IsSyncing = false;
 
             _syncTime = 0;
-            _scripKeyframes = new ConcurrentDictionary<DeviceAxis, List<Keyframe>>();
+            ScriptKeyframes = new ObservableConcurrentDictionary<DeviceAxis, List<Keyframe>>();
             _cancellationSource = new CancellationTokenSource();
 
             _updateThread = new Thread(UpdateThread) { IsBackground = true };
@@ -75,7 +78,7 @@ namespace MultiFunPlayer.ViewModels
 
                 foreach (var axis in EnumUtils.GetValues<DeviceAxis>())
                 {
-                    if (!_scripKeyframes.TryGetValue(axis, out var keyframes))
+                    if (!ScriptKeyframes.TryGetValue(axis, out var keyframes))
                         continue;
 
                     if (!AxisStates.TryGetValue(axis, out var state))
@@ -175,6 +178,11 @@ namespace MultiFunPlayer.ViewModels
                 foreach (var funscriptFile in VideoFile.Directory.EnumerateFiles($"{videoWithoutExtension}*.funscript"))
                     TryMatchFile(funscriptFile.Name, () => ScriptFile.FromFileInfo(funscriptFile));
             }
+            else
+            {
+                VideoDuration = float.NaN;
+                CurrentPosition = float.NaN;
+            }
 
             UpdateFiles(AxisFilesChangeType.Update, null);
         }
@@ -191,9 +199,14 @@ namespace MultiFunPlayer.ViewModels
             IsPlaying = message.IsPlaying;
         }
 
+        public void Handle(VideoDurationMessage message)
+        {
+            VideoDuration = (float)(message.Duration?.TotalSeconds ?? float.NaN);
+        }
+
         public void Handle(VideoPositionMessage message)
         {
-            var newPosition = (float)message.Position.TotalSeconds;
+            var newPosition = (float)(message.Position?.TotalSeconds ?? float.NaN);
 
             var error = float.IsFinite(CurrentPosition) ? newPosition - CurrentPosition : 0;
             var wasSeek = Math.Abs(error) > 1.0;
@@ -223,7 +236,7 @@ namespace MultiFunPlayer.ViewModels
 
         private void SearchForValidIndices(DeviceAxis axis, AxisState state)
         {
-            if (!_scripKeyframes.TryGetValue(axis, out var keyframes))
+            if (!ScriptKeyframes.TryGetValue(axis, out var keyframes))
                 return;
 
             lock (state)
@@ -255,7 +268,7 @@ namespace MultiFunPlayer.ViewModels
         {
             void Clear(DeviceAxis axis)
             {
-                _scripKeyframes.TryRemove(axis, out var _);
+                ScriptKeyframes.Remove(axis);
 
                 var wasSelected = SelectedAxisSettings == AxisSettings[axis];
                 AxisSettings[axis] = new AxisSettings();
@@ -284,7 +297,7 @@ namespace MultiFunPlayer.ViewModels
                     keyframes.Add(new Keyframe(position, value));
                 }
 
-                _scripKeyframes.AddOrUpdate(axis, keyframes, (_, _) => keyframes);
+                ScriptKeyframes.AddOrUpdate(axis, keyframes);
                 if (AxisStates.TryGetValue(axis, out var state))
                 {
                     lock (state)
@@ -314,6 +327,8 @@ namespace MultiFunPlayer.ViewModels
                 foreach (var axis in changedAxes)
                     Update(axis);
             }
+
+            NotifyOfPropertyChange(nameof(ScriptKeyframes));
         }
 
         private float GetAxisPosition(DeviceAxis axis) => CurrentPosition + GlobalOffset + AxisSettings[axis].Offset;
@@ -368,6 +383,7 @@ namespace MultiFunPlayer.ViewModels
                 slider.Value = 0;
         }
 
+        [SuppressPropertyChangedWarnings]
         public void OnOffsetSliderValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
             IsSyncing = true;

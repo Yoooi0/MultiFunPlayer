@@ -112,14 +112,18 @@ namespace MultiFunPlayer.Player
 
                     data = data[4..];
                     var document = JsonDocument.Parse(data);
-                    if (document.RootElement.TryGetProperty("path", out var pathProperty))
-                        _eventAggregator.Publish(new VideoFileChangedMessage(pathProperty.GetString()));
+
+                    if (document.RootElement.TryGetProperty("playerState", out var stateProperty))
+                        _eventAggregator.Publish(new VideoPlayingMessage(isPlaying: stateProperty.GetInt32() == 0));
+
+                    if (document.RootElement.TryGetProperty("duration", out var durationProperty))
+                        _eventAggregator.Publish(new VideoDurationMessage(TimeSpan.FromSeconds(durationProperty.GetDouble())));
 
                     if (document.RootElement.TryGetProperty("currentTime", out var timeProperty))
                         _eventAggregator.Publish(new VideoPositionMessage(TimeSpan.FromSeconds(timeProperty.GetDouble())));
 
-                    if (document.RootElement.TryGetProperty("playerState", out var stateProperty))
-                        _eventAggregator.Publish(new VideoPlayingMessage(isPlaying: stateProperty.GetInt32() == 0));
+                    if (document.RootElement.TryGetProperty("path", out var pathProperty))
+                        _eventAggregator.Publish(new VideoFileChangedMessage(pathProperty.GetString()));
                 }
             }
             catch (OperationCanceledException) { }

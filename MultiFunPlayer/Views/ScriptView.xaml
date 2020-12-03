@@ -7,6 +7,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:common="clr-namespace:MultiFunPlayer.Common" 
              xmlns:converters="clr-namespace:MultiFunPlayer.Common.Converters"
+             xmlns:controls="clr-namespace:MultiFunPlayer.Common.Controls"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
     <UserControl.Resources>
@@ -107,10 +108,14 @@
                                 MouseDoubleClick="{s:Action OnSliderDoubleClick}"
                                 ValueChanged="{s:Action OnOffsetSliderValueChanged}"/>
                     </DockPanel>
+                    <controls:KeyframesHeatmapGradient Height="30" 
+                                                       Keyframes="{Binding ScriptKeyframes, Mode=OneWay}"
+                                                       Duration="{Binding VideoDuration, Mode=OneWay}"
+                                                       Position="{Binding CurrentPosition, Mode=OneWay}"/>
                 </StackPanel>
             </material:Card>
 
-            <GroupBox Header="Settings" 
+            <GroupBox Header="" 
                       Style="{DynamicResource MaterialDesignCardGroupBox}" 
                       Padding="0"
                       Margin="0 0 0 20">
@@ -245,7 +250,7 @@
                                                  Minimum="0"
                                                  Maximum="100"
                                                  Margin="0 0 10 0"
-                                                 Height="8"
+                                                 Height="10"
                                                  Value="{Binding Value.Value, Mode=OneWay, Converter={StaticResource DeviceAxisValueToPercentConverter}}"/>
                                 </DockPanel>
                             </DataTemplate>

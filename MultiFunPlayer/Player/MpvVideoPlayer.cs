@@ -85,11 +85,13 @@ namespace MultiFunPlayer.Player
 
                 if (client.IsConnected)
                 {
-                    await writer.WriteLineAsync("{ \"command\": [\"observe_property_string\", 1, \"path\"] }");
+                    await writer.WriteLineAsync("{ \"command\": [\"observe_property_string\", 1, \"pause\"] }");
                     await reader.ReadLineAsync();
-                    await writer.WriteLineAsync("{ \"command\": [\"observe_property_string\", 2, \"time-pos\"] }");
+                    await writer.WriteLineAsync("{ \"command\": [\"observe_property_string\", 2, \"duration\"] }");
                     await reader.ReadLineAsync();
-                    await writer.WriteLineAsync("{ \"command\": [\"observe_property_string\", 3, \"pause\"] }");
+                    await writer.WriteLineAsync("{ \"command\": [\"observe_property_string\", 3, \"time-pos\"] }");
+                    await reader.ReadLineAsync();
+                    await writer.WriteLineAsync("{ \"command\": [\"observe_property_string\", 4, \"path\"] }");
                     await reader.ReadLineAsync();
 
                     Status = VideoPlayerStatus.Connected;
@@ -108,21 +110,26 @@ namespace MultiFunPlayer.Player
                             case "property-change":
                                 {
                                     if (!document.RootElement.TryGetProperty("name", out var nameProperty)
-                                     || !document.RootElement.TryGetProperty("data", out var dataProperty)
-                                     || dataProperty.ValueKind == JsonValueKind.Null)
+                                     || !document.RootElement.TryGetProperty("data", out var dataProperty))
                                         continue;
 
+                                    var isNull = dataProperty.ValueKind == JsonValueKind.Null;
                                     switch (nameProperty.GetString())
                                     {
                                         case "path":
-                                            _eventAggregator.Publish(new VideoFileChangedMessage(dataProperty.GetString()));
+                                            var path = isNull ? null : dataProperty.GetString();
+                                            _eventAggregator.Publish(new VideoFileChangedMessage(path));
                                             break;
                                         case "time-pos":
-                                            var seconds = double.Parse(dataProperty.GetString(), NumberStyles.Any, CultureInfo.InvariantCulture);
-                                            _eventAggregator.Publish(new VideoPositionMessage(TimeSpan.FromSeconds(seconds)));
+                                            var position = isNull ? double.NaN : double.Parse(dataProperty.GetString(), NumberStyles.Any, CultureInfo.InvariantCulture);
+                                            _eventAggregator.Publish(new VideoPositionMessage(double.IsFinite(position) ? TimeSpan.FromSeconds(position) : null));
                                             break;
                                         case "pause":
-                                            _eventAggregator.Publish(new VideoPlayingMessage(isPlaying: dataProperty.GetString() != "yes"));
+                                            _eventAggregator.Publish(new VideoPlayingMessage(isPlaying: isNull ? false : dataProperty.GetString() != "yes"));
+                                            break;
+                                        case "duration":
+                                            var duration = isNull ? double.NaN : double.Parse(dataProperty.GetString(), NumberStyles.Any, CultureInfo.InvariantCulture);
+                                            _eventAggregator.Publish(new VideoDurationMessage(double.IsFinite(duration) ? TimeSpan.FromSeconds(duration) : null));
                                             break;
                                         default: break;
                                     }

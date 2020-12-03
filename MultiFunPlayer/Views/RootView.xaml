@@ -19,7 +19,7 @@
         BorderThickness="1"
         ResizeMode="NoResize"
         Title="MultiFunPlayer" 
-        Height="830"
+        Height="850"
         Width="600"
         Loaded="{s:Action OnLoaded}"
         Closing="{s:Action OnClosing}">
