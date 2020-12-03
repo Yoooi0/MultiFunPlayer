@@ -10,12 +10,24 @@
     <material:Card UniformCornerRadius="5" 
                    Background="{StaticResource MaterialDesignLightBackground}"
                    material:ShadowAssist.ShadowDepth="Depth1">
-        <Rectangle VerticalAlignment="Stretch" HorizontalAlignment="Stretch"
-                   RadiusX="5" RadiusY="5">
-            <Rectangle.Fill>
-                <LinearGradientBrush StartPoint="0,0" EndPoint="1,0"
-                                     GradientStops="{Binding Stops, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}"/>
-            </Rectangle.Fill>
-        </Rectangle>
+        <Canvas>
+            <Rectangle VerticalAlignment="Stretch" HorizontalAlignment="Stretch"
+                       RadiusX="5" RadiusY="5"
+                       SnapsToDevicePixels="True"
+                       Width="{Binding ActualWidth, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}"
+                       Height="{Binding ActualHeight, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}">
+                <Rectangle.Fill>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,0"
+                                         GradientStops="{Binding Stops, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}"/>
+                </Rectangle.Fill>
+            </Rectangle>
+            <Border Background="White"
+                    BorderBrush="Black"
+                    BorderThickness="1 0 1 0"
+                    Width="4"
+                    SnapsToDevicePixels="True"
+                    Canvas.Left="{Binding ScrubberPosition, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}"
+                    Height="{Binding ActualHeight, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}"/>
+        </Canvas>
     </material:Card>
 </UserControl>

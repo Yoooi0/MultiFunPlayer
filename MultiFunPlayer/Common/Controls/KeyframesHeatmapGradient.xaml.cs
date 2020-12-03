@@ -25,6 +25,7 @@ namespace MultiFunPlayer.Common.Controls
     public partial class KeyframesHeatmapGradient : UserControl, INotifyPropertyChanged
     {
         public GradientStopCollection Stops { get; set; }
+        public float ScrubberPosition => float.IsFinite(Duration) && Duration > 0 ? Position / Duration * (float)ActualWidth : float.NegativeInfinity;
 
         [DoNotNotify]
         public ObservableConcurrentDictionary<DeviceAxis, List<Keyframe>> Keyframes
@@ -90,7 +91,7 @@ namespace MultiFunPlayer.Common.Controls
             if (d is not KeyframesHeatmapGradient @this)
                 return;
 
-            //@this.Refresh();
+            @this.PropertyChanged?.Invoke(@this, new PropertyChangedEventArgs(nameof(ScrubberPosition)));
         }
 
         public KeyframesHeatmapGradient()
