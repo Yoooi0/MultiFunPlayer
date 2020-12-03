@@ -1,21 +1,13 @@
-﻿using MultiFunPlayer.ViewModels;
+using MultiFunPlayer.ViewModels;
 using PropertyChanged;
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 
 namespace MultiFunPlayer.Common.Controls
 {
@@ -39,6 +31,7 @@ namespace MultiFunPlayer.Common.Controls
                 typeof(KeyframesHeatmapGradient), new FrameworkPropertyMetadata(null, 
                     new PropertyChangedCallback(OnKeyframesChanged)));
 
+        [SuppressPropertyChangedWarnings]
         private static void OnKeyframesChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
             if (d is not KeyframesHeatmapGradient @this)
@@ -52,6 +45,7 @@ namespace MultiFunPlayer.Common.Controls
             @this.Refresh();
         }
 
+        [SuppressPropertyChangedWarnings]
         private void OnKeyframesCollectionChanged(object sender, NotifyCollectionChangedEventArgs e) => Refresh();
 
         [DoNotNotify]
@@ -66,12 +60,14 @@ namespace MultiFunPlayer.Common.Controls
                 typeof(KeyframesHeatmapGradient), new FrameworkPropertyMetadata(float.NaN,
                     new PropertyChangedCallback(OnDurationChanged)));
 
+        [SuppressPropertyChangedWarnings]
         private static void OnDurationChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
             if (d is not KeyframesHeatmapGradient @this)
                 return;
 
             @this.Refresh();
+            @this.PropertyChanged?.Invoke(@this, new PropertyChangedEventArgs(nameof(ShowScrubber)));
         }
 
         [DoNotNotify]
@@ -86,6 +82,7 @@ namespace MultiFunPlayer.Common.Controls
                 typeof(KeyframesHeatmapGradient), new FrameworkPropertyMetadata(float.NaN,
                     new PropertyChangedCallback(OnPositionChanged)));
 
+        [SuppressPropertyChangedWarnings]
         private static void OnPositionChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
             if (d is not KeyframesHeatmapGradient @this)
