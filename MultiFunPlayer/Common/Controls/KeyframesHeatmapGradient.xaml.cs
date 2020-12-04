@@ -137,28 +137,26 @@ namespace MultiFunPlayer.Common.Controls
                         continue;
 
                     var length = (float)Math.Sqrt(dx * dx + dy * dy);
-                    var tangent = Math.Abs(dy / dx * (float)Math.PI / 180);
 
-                    if (!float.IsFinite(length) || !float.IsFinite(tangent))
-                        continue;
+                    var startBucket = (int)Math.Floor(prev.Position / bucketSize);
+                    var endBucket = (int)Math.Floor(next.Position / bucketSize);
 
-                    var bucket = (int)Math.Floor(((prev.Position + next.Position) / 2) / bucketSize);
-                    //while (bucket >= buckets.Count)
-                    //    buckets.Add(0);
-
-                    buckets[bucket] += length;
+                    for (var bucket = startBucket; bucket <= endBucket; bucket++)
+                        buckets[bucket] += length / (endBucket - startBucket + 1);
                 }
             }
 
             var normalizationFactor = 1.0f / buckets.Max();
-            for (var i = 0; i < buckets.Length; i++)
+            if (float.IsFinite(normalizationFactor))
             {
-                var heat = MathUtils.Clamp01(buckets[i] * normalizationFactor);
-                var color = heat < 0.001f ? Color.FromRgb(0, 0, 0) : colors[(int)Math.Round(heat * (colors.Length - 1))];
-                //var offset = MathUtils.Lerp(0, buckets.Count * bucketSize, buckets.Count == 1 ? 0 : i / (buckets.Count - 1.0f)) / duration;
-                AddStop(color, i * bucketSize / duration);
-                if(i < buckets.Length - 1)
-                    AddStop(color, (i + 1) * bucketSize / duration);
+                for (var i = 0; i < buckets.Length; i++)
+                {
+                    var heat = MathUtils.Clamp01(buckets[i] * normalizationFactor);
+                    var color = heat < 0.001f ? Color.FromRgb(0, 0, 0) : colors[(int)Math.Round(heat * (colors.Length - 1))];
+                    AddStop(color, i * bucketSize / duration);
+                    if (i < buckets.Length - 1)
+                        AddStop(color, (i + 1) * bucketSize / duration);
+                }
             }
 
             AddStop(Color.FromRgb(0, 0, 0), 1);
