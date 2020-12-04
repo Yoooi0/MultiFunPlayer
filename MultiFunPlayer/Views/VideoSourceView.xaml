@@ -1,4 +1,4 @@
-﻿<UserControl x:Class="MultiFunPlayer.Views.PlayerView"
+﻿<UserControl x:Class="MultiFunPlayer.Views.VideoSourceView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:material="http://materialdesigninxaml.net/winfx/xaml/themes"
              xmlns:s="https://github.com/canton7/Stylet"
@@ -10,7 +10,7 @@
              d:DesignHeight="450" d:DesignWidth="800">
     <material:Card material:ShadowAssist.ShadowDepth="Depth1" Margin="0 0 0 20">
         <StackPanel Margin="20">
-            <ItemsControl ItemsSource="{Binding Players, Mode=OneTime}">
+            <ItemsControl ItemsSource="{Binding Sources, Mode=OneTime}">
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>
                         <UniformGrid Columns="4" Rows="1" IsItemsHost="True"/>
@@ -24,7 +24,7 @@
                                     Height="24"
                                     Content="{Binding Name}" 
                                     DockPanel.Dock="Top"
-                                    Click="{s:Action OnPlayerClick}"/>
+                                    Click="{s:Action OnSourceClick}"/>
                             <TextBlock Text="{Binding Status}" 
                                        DockPanel.Dock="Bottom"
                                        TextAlignment="Center"/>

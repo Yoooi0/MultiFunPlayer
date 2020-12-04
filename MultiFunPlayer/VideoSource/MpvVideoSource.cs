@@ -11,25 +11,25 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace MultiFunPlayer.Player
+namespace MultiFunPlayer.VideoSource
 {
-    public class MpvVideoPlayer : PropertyChangedBase, IVideoPlayer
+    public class MpvVideoSource : PropertyChangedBase, IVideoSource
     {
         private readonly IEventAggregator _eventAggregator;
         private CancellationTokenSource _cancellationSource;
         private Task _task;
 
         public string Name => "MPV";
-        public VideoPlayerStatus Status { get; private set; }
+        public VideoSourceStatus Status { get; private set; }
 
-        public MpvVideoPlayer(IEventAggregator eventAggregator)
+        public MpvVideoSource(IEventAggregator eventAggregator)
         {
             _eventAggregator = eventAggregator;
         }
 
         public void Start()
         {
-            if (Status != VideoPlayerStatus.Disconnected)
+            if (Status != VideoSourceStatus.Disconnected)
                 Stop();
 
             _cancellationSource = new CancellationTokenSource();
@@ -41,10 +41,10 @@ namespace MultiFunPlayer.Player
 
         public void Stop()
         {
-            if (Status != VideoPlayerStatus.Connected)
+            if (Status != VideoSourceStatus.Connected)
                 return;
 
-            Status = VideoPlayerStatus.Disconnected;
+            Status = VideoSourceStatus.Disconnected;
 
             _cancellationSource?.Cancel();
             _task?.Wait();
@@ -101,7 +101,7 @@ namespace MultiFunPlayer.Player
                     await writer.WriteLineAsync("{ \"command\": [\"observe_property_string\", 4, \"path\"] }");
                     await reader.ReadLineAsync();
 
-                    Status = VideoPlayerStatus.Connected;
+                    Status = VideoSourceStatus.Connected;
                     while (!token.IsCancellationRequested && client.IsConnected)
                     {
                         var message = await reader.ReadLineAsync().WithCancellation(token);
@@ -161,7 +161,7 @@ namespace MultiFunPlayer.Player
                 _cancellationSource.Dispose();
             }
 
-            Status = VideoPlayerStatus.Disconnected;
+            Status = VideoSourceStatus.Disconnected;
 
             _eventAggregator.Publish(new VideoFileChangedMessage(null));
             _eventAggregator.Publish(new VideoPlayingMessage(isPlaying: false));
