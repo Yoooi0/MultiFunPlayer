@@ -1,4 +1,4 @@
-using MaterialDesignThemes.Wpf;
+﻿using MaterialDesignThemes.Wpf;
 using MultiFunPlayer.Common;
 using MultiFunPlayer.Common.Controls;
 using Stylet;
@@ -124,11 +124,16 @@ namespace MultiFunPlayer.Player
             catch (Exception e)
             {
                 _ = Execute.OnUIThreadAsync(() => DialogHost.Show(new ErrorMessageDialog($"DeoVR failed with exception:\n\n{e}")));
-
-                Status = VideoPlayerStatus.Disconnected;
-                _cancellationSource?.Dispose();
             }
 
+            if (_cancellationSource != null)
+            {
+                _cancellationSource.Cancel();
+                await Task.Delay(1000);
+                _cancellationSource.Dispose();
+            }
+
+            Status = VideoPlayerStatus.Disconnected;
 
             _eventAggregator.Publish(new VideoFileChangedMessage(null));
             _eventAggregator.Publish(new VideoPlayingMessage(isPlaying: false));
