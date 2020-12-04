@@ -129,7 +129,7 @@ namespace MultiFunPlayer.VideoSource
             if (_cancellationSource != null)
             {
                 _cancellationSource.Cancel();
-                await Task.Delay(1000);
+                await Task.Delay(500);
                 _cancellationSource.Dispose();
             }
 

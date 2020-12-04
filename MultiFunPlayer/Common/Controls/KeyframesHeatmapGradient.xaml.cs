@@ -30,7 +30,7 @@ namespace MultiFunPlayer.Common.Controls
 
         public static readonly DependencyProperty KeyframesProperty =
             DependencyProperty.Register("Keyframes", typeof(ObservableConcurrentDictionary<DeviceAxis, List<Keyframe>>),
-                typeof(KeyframesHeatmapGradient), new FrameworkPropertyMetadata(null, 
+                typeof(KeyframesHeatmapGradient), new FrameworkPropertyMetadata(null,
                     new PropertyChangedCallback(OnKeyframesChanged)));
 
         [SuppressPropertyChangedWarnings]
@@ -107,7 +107,7 @@ namespace MultiFunPlayer.Common.Controls
             void AddStop(Color color, float offset) => Stops.Add(new GradientStop(color, offset));
 
             var duration = Math.Max(Duration, Keyframes.SelectMany(x => x.Value).Max(x => x.Position));
-            var bucketSize = 5f;
+            const float bucketSize = 5f;
 
             var colors = new Color[]
             {
