@@ -1,4 +1,4 @@
-﻿using MaterialDesignThemes.Wpf;
+using MaterialDesignThemes.Wpf;
 using MultiFunPlayer.Common;
 using MultiFunPlayer.Common.Controls;
 using Stylet;
@@ -76,14 +76,7 @@ namespace MultiFunPlayer.Player
             try
             {
                 if (Process.GetProcessesByName("DeoVR").Length == 0)
-                {
-                    Process.Start(new ProcessStartInfo()
-                    {
-                        FileName = "steam://launch/837380/VR",
-                        UseShellExecute = true
-                    });
-                    await Task.Delay(10000, token);
-                }
+                    throw new Exception("Could not find a running DeoVR process.");
 
                 using var client = new TcpClient("localhost", 23554);
                 using var stream = client.GetStream();
