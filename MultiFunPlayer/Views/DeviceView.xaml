@@ -9,6 +9,9 @@
              xmlns:local="clr-namespace:MultiFunPlayer.Views"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+    </UserControl.Resources>
     <material:Card material:ShadowAssist.ShadowDepth="Depth1" Margin="0 0 0 20">
         <StackPanel Margin="20">
             <DockPanel LastChildFill="True" Margin="0 0 0 20">
@@ -36,8 +39,21 @@
                         DockPanel.Dock="Right"
                         Height="24"
                         Width="24"
+                        Command="{s:Action RefreshPorts}"
+                        IsEnabled="{Binding CanRefreshPorts, Converter={StaticResource BooleanToVisibilityConverter}}"
+                        material:ButtonProgressAssist.IsIndicatorVisible="{Binding IsRefreshBusy}"
+                        material:ButtonProgressAssist.Value="-1"
+                        material:ButtonProgressAssist.IsIndeterminate="True">
+                        <material:PackIcon Kind="Refresh"/>
+                    </Button>
+                    
+                    <Button Style="{StaticResource MaterialDesignFloatingActionLightButton}" 
+                        DockPanel.Dock="Right"
+                        Height="24"
+                        Width="24"
+                        Margin="0 0 10 0"
                         Command="{s:Action ToggleConnect}"
-                        material:ButtonProgressAssist.IsIndicatorVisible="{Binding IsBusy}"
+                        material:ButtonProgressAssist.IsIndicatorVisible="{Binding IsConnectBusy}"
                         material:ButtonProgressAssist.Value="-1"
                         material:ButtonProgressAssist.IsIndeterminate="True">
                         <material:PackIcon>

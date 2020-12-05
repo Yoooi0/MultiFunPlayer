@@ -37,12 +37,32 @@ namespace MultiFunPlayer.ViewModels
             UpdateRate = 60;
         }
 
+        public bool IsRefreshBusy { get; set; }
+        public bool CanRefreshPorts => !IsRefreshBusy && !IsConnectBusy && !IsConnected;
+        public async Task RefreshPorts()
+        {
+            IsRefreshBusy = true;
+            await Task.Delay(750);
+
+            ComPorts.Clear();
+            SelectedComPort = null;
+            try
+            {
+                ComPorts.AddRange(SerialPort.GetPortNames().Select(p => new ComPortModel(p)));
+            }
+            catch { }
+
+            await Task.Delay(250);
+            IsRefreshBusy = false;
+        }
+        
+
         public bool IsConnected { get; set; }
-        public bool IsBusy { get; set; }
-        public bool CanToggleConnect => !IsBusy && SelectedComPort != null;
+        public bool IsConnectBusy { get; set; }
+        public bool CanToggleConnect => !IsConnectBusy && SelectedComPort != null;
         public async Task ToggleConnect()
         {
-            IsBusy = true;
+            IsConnectBusy = true;
 
             if (IsConnected)
             {
@@ -54,7 +74,7 @@ namespace MultiFunPlayer.ViewModels
                 IsConnected = await Connect();
             }
 
-            IsBusy = false;
+            IsConnectBusy = false;
         }
 
         public async Task<bool> Connect()
