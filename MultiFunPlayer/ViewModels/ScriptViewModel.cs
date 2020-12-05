@@ -37,7 +37,7 @@ namespace MultiFunPlayer.ViewModels
         public AxisSettings SelectedAxisSettings { get; set; }
         public FileInfo VideoFile { get; set; }
 
-        public float SyncProgress => !IsSyncing ? 100 : MathUtils.Clamp01(_syncTime / _syncDuration) * 100;
+        public float SyncProgress => !IsSyncing ? 100 : ((float)Math.Pow(2, 10 * (_syncTime / _syncDuration - 1)) * 100);
 
         public ScriptViewModel(IEventAggregator eventAggregator)
         {
@@ -103,7 +103,7 @@ namespace MultiFunPlayer.ViewModels
                             settings.Inverted ? 1 - next.Value : next.Value);
 
                         if (IsSyncing)
-                            newValue = MathUtils.Lerp(!float.IsFinite(state.Value) ? axis.DefaultValue() : state.Value, newValue, (float)Math.Pow(2, 10 * (_syncTime / _syncDuration - 1)));
+                            newValue = MathUtils.Lerp(!float.IsFinite(state.Value) ? axis.DefaultValue() : state.Value, newValue, SyncProgress / 100);
 
                         Execute.OnUIThread(() => state.Value = newValue);
                     }
