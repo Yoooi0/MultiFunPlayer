@@ -55,7 +55,6 @@ namespace MultiFunPlayer.ViewModels
             await Task.Delay(250);
             IsRefreshBusy = false;
         }
-        
 
         public bool IsConnected { get; set; }
         public bool IsConnectBusy { get; set; }

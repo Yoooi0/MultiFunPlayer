@@ -123,8 +123,8 @@ namespace MultiFunPlayer.Common.Controls
             AddStop(Color.FromRgb(0, 0, 0), 0);
             foreach (var (axis, keyframes) in Keyframes)
             {
-                var startTime = keyframes.First().Position;
-                var endTime = keyframes.Last().Position;
+                var startTime = keyframes[0].Position;
+                var endTime = keyframes[^1].Position;
 
                 for (int i = 0, j = 1; j < keyframes.Count; i = j++)
                 {
