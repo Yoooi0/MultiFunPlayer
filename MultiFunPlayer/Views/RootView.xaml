@@ -27,8 +27,7 @@
     <materialExtensions:MaterialWindow.TitleTemplate>
         <DataTemplate>
             <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
-                <material:PackIcon Style="{StaticResource WindowButtonIconStyle}"
-                                   Foreground="White"
+                <material:PackIcon Foreground="White"
                                    Kind="Play" 
                                    Width="30"
                                    Height="30"
