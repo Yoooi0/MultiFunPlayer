@@ -341,7 +341,7 @@ namespace MultiFunPlayer.ViewModels
             NotifyOfPropertyChange(nameof(ScriptKeyframes));
         }
 
-        private float GetAxisPosition(DeviceAxis axis) => CurrentPosition + GlobalOffset + AxisSettings[axis].Offset;
+        private float GetAxisPosition(DeviceAxis axis) => CurrentPosition - GlobalOffset - AxisSettings[axis].Offset;
         public float GetValue(DeviceAxis axis) => MathUtils.Clamp01(AxisStates[axis].Value);
 
         public void OnDrop(object sender, DragEventArgs e)
