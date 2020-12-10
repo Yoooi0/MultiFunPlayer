@@ -1,4 +1,4 @@
-﻿using MultiFunPlayer.Common;
+using MultiFunPlayer.Common;
 using Stylet;
 using System;
 using System.Collections.Generic;
@@ -18,7 +18,7 @@ using System.Threading.Tasks;
 namespace MultiFunPlayer.ViewModels
 {
     public class ScriptViewModel : PropertyChangedBase, IDeviceAxisValueProvider, IDisposable,
-        IHandle<VideoPositionMessage>, IHandle<VideoPlayingMessage>, IHandle<VideoFileChangedMessage>, IHandle<VideoDurationMessage>
+        IHandle<VideoPositionMessage>, IHandle<VideoPlayingMessage>, IHandle<VideoFileChangedMessage>, IHandle<VideoDurationMessage>, IHandle<VideoSpeedMessage>
     {
         private readonly float _syncDuration = 4;
 
@@ -29,6 +29,7 @@ namespace MultiFunPlayer.ViewModels
         public bool IsPlaying { get; set; }
         public bool IsSyncing { get; set; }
         public float CurrentPosition { get; set; }
+        public float PlaybackSpeed { get; set; }
         public float VideoDuration { get; set; }
         public float GlobalOffset { get; set; }
         public ObservableConcurrentDictionary<DeviceAxis, AxisState> AxisStates { get; set; }
@@ -48,7 +49,11 @@ namespace MultiFunPlayer.ViewModels
             SelectedAxisSettings = AxisSettings[DeviceAxis.L0];
 
             VideoFile = null;
+
+            VideoDuration = float.NaN;
             CurrentPosition = float.NaN;
+            PlaybackSpeed = 1;
+
             IsPlaying = false;
             IsSyncing = false;
 
@@ -112,7 +117,7 @@ namespace MultiFunPlayer.ViewModels
                 //stopwatch.PreciseSleep(3, token);
 
                 Thread.Sleep(2);
-                CurrentPosition += (float)stopwatch.Elapsed.TotalSeconds;
+                CurrentPosition += (float)stopwatch.Elapsed.TotalSeconds * PlaybackSpeed;
                 if (IsSyncing)
                 {
                     _syncTime += (float)stopwatch.Elapsed.TotalSeconds;
@@ -181,6 +186,7 @@ namespace MultiFunPlayer.ViewModels
             {
                 VideoDuration = float.NaN;
                 CurrentPosition = float.NaN;
+                PlaybackSpeed = 1;
             }
 
             UpdateFiles(AxisFilesChangeType.Update, null);
@@ -201,6 +207,11 @@ namespace MultiFunPlayer.ViewModels
         public void Handle(VideoDurationMessage message)
         {
             VideoDuration = (float)(message.Duration?.TotalSeconds ?? float.NaN);
+        }
+
+        public void Handle(VideoSpeedMessage message)
+        {
+            PlaybackSpeed = message.Speed;
         }
 
         public void Handle(VideoPositionMessage message)

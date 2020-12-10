@@ -1,4 +1,4 @@
-﻿using MaterialDesignThemes.Wpf;
+using MaterialDesignThemes.Wpf;
 using MultiFunPlayer.Common;
 using MultiFunPlayer.Common.Controls;
 using Stylet;
@@ -100,6 +100,16 @@ namespace MultiFunPlayer.VideoSource
                     await reader.ReadLineAsync();
                     await writer.WriteLineAsync("{ \"command\": [\"observe_property_string\", 4, \"path\"] }");
                     await reader.ReadLineAsync();
+                    await writer.WriteLineAsync("{ \"command\": [\"observe_property_string\", 5, \"speed\"] }");
+                    await reader.ReadLineAsync();
+
+                    static bool TryReadDouble(JsonElement element, out double value)
+                    {
+                        value = double.NaN;
+                        if (element.ValueKind == JsonValueKind.Null)
+                            return false;
+                        return double.TryParse(element.GetString(), NumberStyles.Any, CultureInfo.InvariantCulture, out value);
+                    }
 
                     Status = VideoSourceStatus.Connected;
                     while (!token.IsCancellationRequested && client.IsConnected)
@@ -128,15 +138,17 @@ namespace MultiFunPlayer.VideoSource
                                             _eventAggregator.Publish(new VideoFileChangedMessage(path));
                                             break;
                                         case "time-pos":
-                                            var position = isNull ? double.NaN : double.Parse(dataProperty.GetString(), NumberStyles.Any, CultureInfo.InvariantCulture);
-                                            _eventAggregator.Publish(new VideoPositionMessage(double.IsFinite(position) ? TimeSpan.FromSeconds(position) : null));
+                                            _eventAggregator.Publish(new VideoPositionMessage(TryReadDouble(dataProperty, out var position) ? TimeSpan.FromSeconds(position) : null));
                                             break;
                                         case "pause":
                                             _eventAggregator.Publish(new VideoPlayingMessage(isPlaying: isNull ? false : dataProperty.GetString() != "yes"));
                                             break;
                                         case "duration":
-                                            var duration = isNull ? double.NaN : double.Parse(dataProperty.GetString(), NumberStyles.Any, CultureInfo.InvariantCulture);
-                                            _eventAggregator.Publish(new VideoDurationMessage(double.IsFinite(duration) ? TimeSpan.FromSeconds(duration) : null));
+                                            _eventAggregator.Publish(new VideoDurationMessage(TryReadDouble(dataProperty, out var duration) ? TimeSpan.FromSeconds(duration) : null));
+                                            break;
+                                        case "speed":
+                                            if(TryReadDouble(dataProperty, out var speed))
+                                                _eventAggregator.Publish(new VideoSpeedMessage((float)speed));
                                             break;
                                         default: break;
                                     }

@@ -9,6 +9,7 @@ using System.Net.Sockets;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows.Media;
 
 namespace MultiFunPlayer.VideoSource
 {
@@ -116,6 +117,9 @@ namespace MultiFunPlayer.VideoSource
 
                         if (document.RootElement.TryGetProperty("path", out var pathProperty))
                             _eventAggregator.Publish(new VideoFileChangedMessage(pathProperty.GetString()));
+
+                        if (document.RootElement.TryGetProperty("playbackSpeed", out var speedProperty))
+                            _eventAggregator.Publish(new VideoSpeedMessage((float)speedProperty.GetDouble()));
                     }
                     catch (JsonException) { }
                 }
