@@ -439,7 +439,6 @@ namespace MultiFunPlayer.ViewModels
         public void Invalidate()
         {
             PrevIndex = NextIndex = -1;
-            Value = float.NaN;
         }
     }
 
