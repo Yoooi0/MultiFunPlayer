@@ -1,4 +1,4 @@
-using MaterialDesignThemes.Wpf;
+﻿using MaterialDesignThemes.Wpf;
 using MultiFunPlayer.Common;
 using MultiFunPlayer.Common.Controls;
 using Stylet;
@@ -93,15 +93,10 @@ namespace MultiFunPlayer.VideoSource
                     using var writer = new StreamWriter(client) { AutoFlush = true };
 
                     await writer.WriteLineAsync("{ \"command\": [\"observe_property_string\", 1, \"pause\"] }");
-                    await reader.ReadLineAsync();
                     await writer.WriteLineAsync("{ \"command\": [\"observe_property_string\", 2, \"duration\"] }");
-                    await reader.ReadLineAsync();
                     await writer.WriteLineAsync("{ \"command\": [\"observe_property_string\", 3, \"time-pos\"] }");
-                    await reader.ReadLineAsync();
                     await writer.WriteLineAsync("{ \"command\": [\"observe_property_string\", 4, \"path\"] }");
-                    await reader.ReadLineAsync();
                     await writer.WriteLineAsync("{ \"command\": [\"observe_property_string\", 5, \"speed\"] }");
-                    await reader.ReadLineAsync();
 
                     static bool TryReadDouble(JsonElement element, out double value)
                     {
