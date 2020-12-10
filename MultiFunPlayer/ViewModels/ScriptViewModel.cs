@@ -118,7 +118,7 @@ namespace MultiFunPlayer.ViewModels
 
                 Thread.Sleep(2);
                 CurrentPosition += (float)stopwatch.Elapsed.TotalSeconds * PlaybackSpeed;
-                if (IsSyncing)
+                if (IsSyncing && AxisStates.Values.Any(x => x.Valid))
                 {
                     _syncTime += (float)stopwatch.Elapsed.TotalSeconds;
                     IsSyncing = _syncTime < _syncDuration;
