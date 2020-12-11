@@ -159,8 +159,8 @@ namespace MultiFunPlayer.ViewModels
                 if (_serialPort?.IsOpen == true && !string.IsNullOrWhiteSpace(commands))
                     _serialPort?.WriteLine(commands);
 
-                //stopwatch.PreciseSleep((float)Math.Round(1000.0f / UpdateRate), token);
-                Thread.Sleep((int)Math.Max(1, Math.Floor(Math.Round(1000.0f / UpdateRate))));
+                //stopwatch.PreciseSleep(MathF.Round(1000.0f / UpdateRate), token);
+                Thread.Sleep((int)MathF.Max(1, MathF.Floor(MathF.Round(1000.0f / UpdateRate))));
             }
         }
 

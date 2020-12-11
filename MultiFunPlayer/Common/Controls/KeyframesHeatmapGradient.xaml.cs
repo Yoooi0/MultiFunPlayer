@@ -106,7 +106,7 @@ namespace MultiFunPlayer.Common.Controls
 
             void AddStop(Color color, float offset) => Stops.Add(new GradientStop(color, offset));
 
-            var duration = Math.Max(Duration, Keyframes.SelectMany(x => x.Value).Max(x => x.Position));
+            var duration = MathF.Max(Duration, Keyframes.SelectMany(x => x.Value).Max(x => x.Position));
             const float bucketSize = 5f;
 
             var colors = new Color[]
@@ -118,7 +118,7 @@ namespace MultiFunPlayer.Common.Controls
                 Color.FromRgb(0xf5, 0x3e, 0x2e),
             };
 
-            var buckets = new float[(int) Math.Ceiling(duration / bucketSize)];
+            var buckets = new float[(int)MathF.Ceiling(duration / bucketSize)];
 
             AddStop(Color.FromRgb(0, 0, 0), 0);
             foreach (var (axis, keyframes) in Keyframes)
@@ -133,13 +133,13 @@ namespace MultiFunPlayer.Common.Controls
 
                     var dx = next.Position - prev.Position;
                     var dy = next.Value - prev.Value;
-                    if (Math.Abs(dx) < 0.001f || Math.Abs(dy) < 0.001f)
+                    if (MathF.Abs(dx) < 0.001f || MathF.Abs(dy) < 0.001f)
                         continue;
 
-                    var length = (float)Math.Sqrt(dx * dx + dy * dy);
+                    var length = MathF.Sqrt(dx * dx + dy * dy);
 
-                    var startBucket = (int)Math.Floor(prev.Position / bucketSize);
-                    var endBucket = (int)Math.Floor(next.Position / bucketSize);
+                    var startBucket = (int)MathF.Floor(prev.Position / bucketSize);
+                    var endBucket = (int)MathF.Floor(next.Position / bucketSize);
 
                     for (var bucket = startBucket; bucket <= endBucket; bucket++)
                         buckets[bucket] += length / (endBucket - startBucket + 1);
@@ -152,7 +152,7 @@ namespace MultiFunPlayer.Common.Controls
                 for (var i = 0; i < buckets.Length; i++)
                 {
                     var heat = MathUtils.Clamp01(buckets[i] * normalizationFactor);
-                    var color = heat < 0.001f ? Color.FromRgb(0, 0, 0) : colors[(int)Math.Round(heat * (colors.Length - 1))];
+                    var color = heat < 0.001f ? Color.FromRgb(0, 0, 0) : colors[(int)MathF.Round(heat * (colors.Length - 1))];
                     AddStop(color, i * bucketSize / duration);
                     if (i < buckets.Length - 1)
                         AddStop(color, (i + 1) * bucketSize / duration);

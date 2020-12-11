@@ -5,9 +5,7 @@ namespace MultiFunPlayer.Common
     public static class MathUtils
     {
         public static float Clamp(float x, float from, float to)
-                    => from <= to ? Math.Max(Math.Min(x, to), from) : Math.Min(Math.Max(x, to), from);
-        public static int Clamp(int x, int from, int to)
-                    => from <= to ? Math.Max(Math.Min(x, to), from) : Math.Min(Math.Max(x, to), from);
+                    => from <= to ? MathF.Max(MathF.Min(x, to), from) : MathF.Min(MathF.Max(x, to), from);
 
         public static float Clamp01(float x) => Clamp(x, 0, 1);
         public static float Lerp(float from, float to, float t) => Clamp(LerpUnclamped(from, to, t), from, to);

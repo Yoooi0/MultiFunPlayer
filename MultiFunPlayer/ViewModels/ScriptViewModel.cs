@@ -38,7 +38,7 @@ namespace MultiFunPlayer.ViewModels
         public AxisSettings SelectedAxisSettings { get; set; }
         public FileInfo VideoFile { get; set; }
 
-        public float SyncProgress => !IsSyncing ? 100 : ((float)Math.Pow(2, 10 * (_syncTime / _syncDuration - 1)) * 100);
+        public float SyncProgress => !IsSyncing ? 100 : (MathF.Pow(2, 10 * (_syncTime / _syncDuration - 1)) * 100);
 
         public ScriptViewModel(IEventAggregator eventAggregator)
         {
@@ -219,10 +219,10 @@ namespace MultiFunPlayer.ViewModels
             var newPosition = (float)(message.Position?.TotalSeconds ?? float.NaN);
 
             var error = float.IsFinite(CurrentPosition) ? newPosition - CurrentPosition : 0;
-            var wasSeek = Math.Abs(error) > 1.0;
+            var wasSeek = MathF.Abs(error) > 1.0f;
             CurrentPosition = newPosition;
-            if (error < 1.0)
-                CurrentPosition -= MathUtils.Map(Math.Abs(error), 1, 0, 0, 0.75f) * error;
+            if (error < 1.0f)
+                CurrentPosition -= MathUtils.Map(MathF.Abs(error), 1, 0, 0, 0.75f) * error;
 
             if (!float.IsFinite(CurrentPosition))
                 return;
