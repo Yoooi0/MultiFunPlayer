@@ -76,6 +76,15 @@ namespace MultiFunPlayer.VideoSource
                         return double.TryParse(element.GetString(), NumberStyles.Any, CultureInfo.InvariantCulture, out value);
                     }
 
+                    static bool TryReadString(JsonElement element, out string value)
+                    {
+                        value = null;
+                        if (element.ValueKind == JsonValueKind.Null)
+                            return false;
+                        value = element.GetString();
+                        return true;
+                    }
+
                     Status = VideoSourceStatus.Connected;
                     while (!token.IsCancellationRequested && client.IsConnected)
                     {
@@ -95,18 +104,16 @@ namespace MultiFunPlayer.VideoSource
                                      || !document.RootElement.TryGetProperty("data", out var dataProperty))
                                         continue;
 
-                                    var isNull = dataProperty.ValueKind == JsonValueKind.Null;
                                     switch (nameProperty.GetString())
                                     {
                                         case "path":
-                                            var path = isNull ? null : dataProperty.GetString();
-                                            _eventAggregator.Publish(new VideoFileChangedMessage(path));
+                                            _eventAggregator.Publish(new VideoFileChangedMessage(TryReadString(dataProperty, out var path) ? path : null));
                                             break;
                                         case "time-pos":
                                             _eventAggregator.Publish(new VideoPositionMessage(TryReadDouble(dataProperty, out var position) ? TimeSpan.FromSeconds(position) : null));
                                             break;
                                         case "pause":
-                                            _eventAggregator.Publish(new VideoPlayingMessage(isPlaying: isNull ? false : dataProperty.GetString() != "yes"));
+                                            _eventAggregator.Publish(new VideoPlayingMessage(TryReadString(dataProperty, out var paused) && paused != "yes"));
                                             break;
                                         case "duration":
                                             _eventAggregator.Publish(new VideoDurationMessage(TryReadDouble(dataProperty, out var duration) ? TimeSpan.FromSeconds(duration) : null));
@@ -128,7 +135,7 @@ namespace MultiFunPlayer.VideoSource
             catch (IOException) { }
             catch (Exception e)
             {
-                _ = Execute.OnUIThreadAsync(() => DialogHost.Show(new ErrorMessageDialog($"MPV failed with exception:\n\n{e}")));
+                _ = Execute.OnUIThreadAsync(() => DialogHost.Show(new ErrorMessageDialog($"{Name} failed with exception:\n\n{e}")));
             }
 
             Status = VideoSourceStatus.Disconnected;

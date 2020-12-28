@@ -7,10 +7,8 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net.Sockets;
-using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Windows.Media;
 
 namespace MultiFunPlayer.VideoSource
 {
@@ -30,7 +28,7 @@ namespace MultiFunPlayer.VideoSource
             try
             {
                 if (!Process.GetProcesses().Any(p => p.ProcessName.StartsWith("Whirligig")))
-                    throw new Exception("Could not find a running Whirligig process.");
+                    throw new Exception($"Could not find a running {Name} process.");
 
                 using var client = new TcpClient("localhost", 2000);
                 using var stream = client.GetStream();
@@ -67,7 +65,7 @@ namespace MultiFunPlayer.VideoSource
             catch (IOException) { }
             catch (Exception e)
             {
-                _ = Execute.OnUIThreadAsync(() => DialogHost.Show(new ErrorMessageDialog($"Whirligig failed with exception:\n\n{e}")));
+                _ = Execute.OnUIThreadAsync(() => DialogHost.Show(new ErrorMessageDialog($"{Name} failed with exception:\n\n{e}")));
             }
 
             Status = VideoSourceStatus.Disconnected;

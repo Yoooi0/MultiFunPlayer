@@ -9,7 +9,6 @@ using System.Net.Sockets;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Windows.Media;
 
 namespace MultiFunPlayer.VideoSource
 {
@@ -45,7 +44,7 @@ namespace MultiFunPlayer.VideoSource
             try
             {
                 if (Process.GetProcessesByName("DeoVR").Length == 0)
-                    throw new Exception("Could not find a running DeoVR process.");
+                    throw new Exception($"Could not find a running {Name} process.");
 
                 using var client = new TcpClient("localhost", 23554);
                 using var stream = client.GetStream();
@@ -98,7 +97,7 @@ namespace MultiFunPlayer.VideoSource
             catch (IOException) { }
             catch (Exception e)
             {
-                _ = Execute.OnUIThreadAsync(() => DialogHost.Show(new ErrorMessageDialog($"DeoVR failed with exception:\n\n{e}")));
+                _ = Execute.OnUIThreadAsync(() => DialogHost.Show(new ErrorMessageDialog($"{Name} failed with exception:\n\n{e}")));
             }
 
             Status = VideoSourceStatus.Disconnected;
