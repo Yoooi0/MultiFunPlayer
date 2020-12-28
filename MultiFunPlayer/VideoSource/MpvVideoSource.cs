@@ -13,46 +13,18 @@ using System.Threading.Tasks;
 
 namespace MultiFunPlayer.VideoSource
 {
-    public class MpvVideoSource : PropertyChangedBase, IVideoSource
+    public class MpvVideoSource : AbstractVideoSource
     {
         private readonly IEventAggregator _eventAggregator;
-        private CancellationTokenSource _cancellationSource;
-        private Task _task;
 
-        public string Name => "MPV";
-        public VideoSourceStatus Status { get; private set; }
+        public override string Name => "MPV";
 
         public MpvVideoSource(IEventAggregator eventAggregator)
         {
             _eventAggregator = eventAggregator;
         }
 
-        public void Start()
-        {
-            Stop();
-
-            _cancellationSource = new CancellationTokenSource();
-            _task = Task.Factory.StartNew(() => RunAsync(_cancellationSource.Token),
-                _cancellationSource.Token,
-                TaskCreationOptions.LongRunning,
-                TaskScheduler.Default)
-                .Unwrap();
-            _ = _task.ContinueWith(_ => Stop());
-        }
-
-        public void Stop()
-        {
-            Status = VideoSourceStatus.Disconnected;
-
-            _cancellationSource?.Cancel();
-            _task?.Wait();
-            _cancellationSource?.Dispose();
-
-            _cancellationSource = null;
-            _task = null;
-        }
-
-        private async Task RunAsync(CancellationToken token)
+        protected override async Task RunAsync(CancellationToken token)
         {
             try
             {
@@ -163,17 +135,6 @@ namespace MultiFunPlayer.VideoSource
 
             _eventAggregator.Publish(new VideoFileChangedMessage(null));
             _eventAggregator.Publish(new VideoPlayingMessage(isPlaying: false));
-        }
-
-        protected virtual void Dispose(bool disposing)
-        {
-            Stop();
-        }
-
-        public void Dispose()
-        {
-            Dispose(disposing: true);
-            GC.SuppressFinalize(this);
         }
     }
 }
