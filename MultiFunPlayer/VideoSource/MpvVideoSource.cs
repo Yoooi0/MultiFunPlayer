@@ -29,21 +29,19 @@ namespace MultiFunPlayer.VideoSource
 
         public void Start()
         {
-            if (Status != VideoSourceStatus.Disconnected)
-                Stop();
+            Stop();
 
             _cancellationSource = new CancellationTokenSource();
-            _task = Task.Factory.StartNew(async () => await RunAsync(_cancellationSource.Token),
+            _task = Task.Factory.StartNew(() => RunAsync(_cancellationSource.Token),
                 _cancellationSource.Token,
                 TaskCreationOptions.LongRunning,
-                TaskScheduler.Default);
+                TaskScheduler.Default)
+                .Unwrap();
+            _ = _task.ContinueWith(_ => Stop());
         }
 
         public void Stop()
         {
-            if (Status != VideoSourceStatus.Connected)
-                return;
-
             Status = VideoSourceStatus.Disconnected;
 
             _cancellationSource?.Cancel();
@@ -159,13 +157,6 @@ namespace MultiFunPlayer.VideoSource
             catch (Exception e)
             {
                 _ = Execute.OnUIThreadAsync(() => DialogHost.Show(new ErrorMessageDialog($"MPV failed with exception:\n\n{e}")));
-            }
-
-            if (_cancellationSource != null)
-            {
-                _cancellationSource.Cancel();
-                await Task.Delay(500);
-                _cancellationSource.Dispose();
             }
 
             Status = VideoSourceStatus.Disconnected;
