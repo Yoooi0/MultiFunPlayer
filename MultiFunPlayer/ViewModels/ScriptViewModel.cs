@@ -429,6 +429,12 @@ namespace MultiFunPlayer.ViewModels
         }
     }
 
+    public enum AxisFilesChangeType
+    {
+        Clear,
+        Update
+    }
+
     public class AxisState : PropertyChangedBase
     {
         public int PrevIndex { get; set; } = -1;
