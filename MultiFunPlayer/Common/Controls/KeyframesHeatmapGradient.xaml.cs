@@ -107,7 +107,8 @@ namespace MultiFunPlayer.Common.Controls
             void AddStop(Color color, float offset) => Stops.Add(new GradientStop(color, offset));
 
             var duration = MathF.Max(Duration, Keyframes.SelectMany(x => x.Value).Max(x => x.Position));
-            const float bucketSize = 5f;
+            const int bucketCount = 333;
+            var bucketSize = (int)MathF.Ceiling(duration / bucketCount);
 
             var colors = new Color[]
             {
