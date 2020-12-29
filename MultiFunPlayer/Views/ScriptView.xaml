@@ -251,7 +251,17 @@
                                                  Maximum="100"
                                                  Margin="0 0 10 0"
                                                  Height="10"
-                                                 Value="{Binding Value.Value, Mode=OneWay, Converter={StaticResource DeviceAxisValueToPercentConverter}}"/>
+                                                 Value="{Binding Value.Value, Mode=OneWay, Converter={StaticResource DeviceAxisValueToPercentConverter}}">
+                                        <ProgressBar.Style>
+                                            <Style TargetType="ProgressBar" BasedOn="{StaticResource MaterialDesignLinearProgressBar}">
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding Value.Valid}" Value="False">
+                                                        <Setter Property="Foreground" Value="{StaticResource IdealForegroundDisabledBrush}"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </ProgressBar.Style>
+                                    </ProgressBar>
                                 </DockPanel>
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
