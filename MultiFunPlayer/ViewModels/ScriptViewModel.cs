@@ -82,35 +82,41 @@ namespace MultiFunPlayer.ViewModels
 
                 foreach (var axis in EnumUtils.GetValues<DeviceAxis>())
                 {
-                    if (!ScriptKeyframes.TryGetValue(axis, out var keyframes))
-                        continue;
-
                     if (!AxisStates.TryGetValue(axis, out var state))
                         continue;
 
                     lock (state)
                     {
-                        if (!state.Valid)
-                            continue;
+                        if (state.Valid)
+                        {
+                            if (!ScriptKeyframes.TryGetValue(axis, out var keyframes))
+                                continue;
 
-                        var axisPosition = GetAxisPosition(axis);
-                        while (state.NextIndex < keyframes.Count - 1 && keyframes[state.NextIndex].Position < axisPosition)
-                            state.PrevIndex = state.NextIndex++;
+                            var axisPosition = GetAxisPosition(axis);
+                            while (state.NextIndex < keyframes.Count - 1 && keyframes[state.NextIndex].Position < axisPosition)
+                                state.PrevIndex = state.NextIndex++;
 
-                        if (!keyframes.ValidateIndex(state.PrevIndex) || !keyframes.ValidateIndex(state.NextIndex))
-                            continue;
+                            if (!keyframes.ValidateIndex(state.PrevIndex) || !keyframes.ValidateIndex(state.NextIndex))
+                                continue;
 
-                        var prev = keyframes[state.PrevIndex];
-                        var next = keyframes[state.NextIndex];
-                        var settings = AxisSettings[axis];
-                        var newValue = MathUtils.Map(axisPosition, prev.Position, next.Position,
-                            settings.Inverted ? 1 - prev.Value : prev.Value,
-                            settings.Inverted ? 1 - next.Value : next.Value);
+                            var prev = keyframes[state.PrevIndex];
+                            var next = keyframes[state.NextIndex];
+                            var settings = AxisSettings[axis];
+                            var newValue = MathUtils.Map(axisPosition, prev.Position, next.Position,
+                                settings.Inverted ? 1 - prev.Value : prev.Value,
+                                settings.Inverted ? 1 - next.Value : next.Value);
 
-                        if (IsSyncing)
-                            newValue = MathUtils.Lerp(!float.IsFinite(state.Value) ? axis.DefaultValue() : state.Value, newValue, SyncProgress / 100);
-
-                        Execute.OnUIThread(() => state.Value = newValue);
+                            if (IsSyncing)
+                                newValue = MathUtils.Lerp(!float.IsFinite(state.Value) ? axis.DefaultValue() : state.Value, newValue, SyncProgress / 100);
+                            Execute.OnUIThread(() => state.Value = newValue);
+                        }
+                        else
+                        {
+                            var newValue = axis.DefaultValue();
+                            if (IsSyncing)
+                                newValue = MathUtils.Lerp(!float.IsFinite(state.Value) ? axis.DefaultValue() : state.Value, newValue, SyncProgress / 100);
+                            Execute.OnUIThread(() => state.Value = newValue);
+                        }
                     }
                 }
 
