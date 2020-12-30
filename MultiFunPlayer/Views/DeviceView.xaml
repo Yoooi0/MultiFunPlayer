@@ -12,7 +12,7 @@
     <UserControl.Resources>
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
     </UserControl.Resources>
-    <material:Card material:ShadowAssist.ShadowDepth="Depth1" Margin="0 0 0 20">
+    <material:Card material:ShadowAssist.ShadowDepth="Depth1">
         <StackPanel Margin="20">
             <DockPanel LastChildFill="True" Margin="0 0 0 20">
                 <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
