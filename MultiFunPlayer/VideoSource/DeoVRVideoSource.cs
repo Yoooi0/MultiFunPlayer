@@ -32,8 +32,8 @@ namespace MultiFunPlayer.VideoSource
                 using var memory = new MemoryStream();
                 do
                 {
-                    result = await stream.ReadAsync(buffer, token);
-                    await memory.WriteAsync(buffer.AsMemory(buffer.Offset, result), token);
+                    result = await stream.ReadAsync(buffer, token).ConfigureAwait(false);
+                    await memory.WriteAsync(buffer.AsMemory(buffer.Offset, result), token).ConfigureAwait(false);
                 }
                 while (result > 0 && stream.DataAvailable);
 
@@ -54,16 +54,16 @@ namespace MultiFunPlayer.VideoSource
                     var pingBuffer = new byte[4];
                     while (!token.IsCancellationRequested)
                     {
-                        await Task.Delay(500, token);
-                        await stream.WriteAsync(pingBuffer, token);
-                        await stream.FlushAsync(token);
+                        await Task.Delay(500, token).ConfigureAwait(false);
+                        await stream.WriteAsync(pingBuffer, token).ConfigureAwait(false);
+                        await stream.FlushAsync(token).ConfigureAwait(false);
                     }
                 }, token);
 
                 Status = VideoSourceStatus.Connected;
                 while (!token.IsCancellationRequested && client.Connected)
                 {
-                    var data = await ReadAllBytesAsync(stream, token);
+                    var data = await ReadAllBytesAsync(stream, token).ConfigureAwait(false);
                     if (data.Length <= 4)
                         continue;
 

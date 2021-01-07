@@ -33,7 +33,7 @@ namespace MultiFunPlayer.VideoSource
 
                 try
                 {
-                    await client.ConnectAsync(500, token);
+                    await client.ConnectAsync(500, token).ConfigureAwait(false);
                 }
                 catch (TimeoutException)
                 {
@@ -52,8 +52,8 @@ namespace MultiFunPlayer.VideoSource
 
                         Process.Start(processInfo);
 
-                        await Task.Delay(1000, token);
-                        await client.ConnectAsync(500, token);
+                        await Task.Delay(1000, token).ConfigureAwait(false);
+                        await client.ConnectAsync(500, token).ConfigureAwait(false);
                     }
                 }
 
@@ -62,11 +62,11 @@ namespace MultiFunPlayer.VideoSource
                     using var reader = new StreamReader(client);
                     using var writer = new StreamWriter(client) { AutoFlush = true };
 
-                    await writer.WriteLineAsync("{ \"command\": [\"observe_property_string\", 1, \"pause\"] }");
-                    await writer.WriteLineAsync("{ \"command\": [\"observe_property_string\", 2, \"duration\"] }");
-                    await writer.WriteLineAsync("{ \"command\": [\"observe_property_string\", 3, \"time-pos\"] }");
-                    await writer.WriteLineAsync("{ \"command\": [\"observe_property_string\", 4, \"path\"] }");
-                    await writer.WriteLineAsync("{ \"command\": [\"observe_property_string\", 5, \"speed\"] }");
+                    await writer.WriteLineAsync("{ \"command\": [\"observe_property_string\", 1, \"pause\"] }").ConfigureAwait(false);
+                    await writer.WriteLineAsync("{ \"command\": [\"observe_property_string\", 2, \"duration\"] }").ConfigureAwait(false);
+                    await writer.WriteLineAsync("{ \"command\": [\"observe_property_string\", 3, \"time-pos\"] }").ConfigureAwait(false);
+                    await writer.WriteLineAsync("{ \"command\": [\"observe_property_string\", 4, \"path\"] }").ConfigureAwait(false);
+                    await writer.WriteLineAsync("{ \"command\": [\"observe_property_string\", 5, \"speed\"] }").ConfigureAwait(false);
 
                     static bool TryReadDouble(JsonElement element, out double value)
                     {
@@ -88,7 +88,7 @@ namespace MultiFunPlayer.VideoSource
                     Status = VideoSourceStatus.Connected;
                     while (!token.IsCancellationRequested && client.IsConnected)
                     {
-                        var message = await reader.ReadLineAsync().WithCancellation(token);
+                        var message = await reader.ReadLineAsync().WithCancellation(token).ConfigureAwait(false);
                         if (message == null)
                             continue;
 

@@ -37,7 +37,7 @@ namespace MultiFunPlayer.VideoSource
                 Status = VideoSourceStatus.Connected;
                 while (!token.IsCancellationRequested && client.Connected && !reader.EndOfStream)
                 {
-                    var message = await reader.ReadLineAsync().WithCancellation(token);
+                    var message = await reader.ReadLineAsync().WithCancellation(token).ConfigureAwait(false);
                     if (string.IsNullOrWhiteSpace(message))
                         continue;
 

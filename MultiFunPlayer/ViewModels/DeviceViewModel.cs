@@ -42,7 +42,7 @@ namespace MultiFunPlayer.ViewModels
         public async Task RefreshPorts()
         {
             IsRefreshBusy = true;
-            await Task.Delay(750);
+            await Task.Delay(750).ConfigureAwait(true);
 
             ComPorts.Clear();
             SelectedComPort = null;
@@ -52,7 +52,7 @@ namespace MultiFunPlayer.ViewModels
             }
             catch { }
 
-            await Task.Delay(250);
+            await Task.Delay(250).ConfigureAwait(true);
             IsRefreshBusy = false;
         }
 
@@ -65,12 +65,12 @@ namespace MultiFunPlayer.ViewModels
 
             if (IsConnected)
             {
-                await Disconnect();
+                await Disconnect().ConfigureAwait(true);
                 IsConnected = false;
             }
             else
             {
-                IsConnected = await Connect();
+                IsConnected = await Connect().ConfigureAwait(true);
             }
 
             IsConnectBusy = false;
@@ -81,7 +81,7 @@ namespace MultiFunPlayer.ViewModels
             if (SelectedComPort == null)
                 return false;
 
-            await Task.Delay(1000);
+            await Task.Delay(1000).ConfigureAwait(true);
 
             try
             {
@@ -124,7 +124,7 @@ namespace MultiFunPlayer.ViewModels
                 _serialPort?.Close();
             _cancellationSource?.Dispose();
 
-            await Task.Delay(1000);
+            await Task.Delay(1000).ConfigureAwait(false);
 
             _cancellationSource = null;
             _deviceThread = null;

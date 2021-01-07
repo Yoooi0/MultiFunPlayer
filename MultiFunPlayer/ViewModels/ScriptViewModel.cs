@@ -375,7 +375,7 @@ namespace MultiFunPlayer.ViewModels
                 CurrentDirectory = Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName)
             };
 
-            var result = await OpenFileDialog.ShowDialogAsync("RootDialog", dialogArgs);
+            var result = await OpenFileDialog.ShowDialogAsync("RootDialog", dialogArgs).ConfigureAwait(true);
             if (!result.Confirmed || !result.FileInfo.Exists)
                 return;
 

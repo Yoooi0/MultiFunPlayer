@@ -1,6 +1,7 @@
 ﻿using MultiFunPlayer.VideoSource;
 using Stylet;
 using System.Collections.Generic;
+using System.Diagnostics.Tracing;
 using System.Linq;
 using System.Windows;
 
@@ -8,18 +9,37 @@ namespace MultiFunPlayer.ViewModels
 {
     public class VideoSourceViewModel : PropertyChangedBase
     {
+        private IVideoSource _currentSource;
+
         public List<IVideoSource> Sources { get; }
 
         public VideoSourceViewModel(IEnumerable<IVideoSource> sources)
         {
             Sources = sources.ToList();
+            _currentSource = null;
         }
 
-        public void OnSourceClick(object sender, RoutedEventArgs e)
+        public async void OnSourceClick(object sender, RoutedEventArgs e)
         {
-            Sources.ForEach(p => p.Stop());
-            if (sender is FrameworkElement element && element.DataContext is IVideoSource source)
-                source.Start();
+            var source = (sender as FrameworkElement)?.DataContext as IVideoSource;
+            if (_currentSource == source)
+            {
+                if (_currentSource == null)
+                    return;
+
+                if(_currentSource.Status == VideoSourceStatus.Connected)
+                    await _currentSource.StopAsync().ConfigureAwait(false);
+                else if (_currentSource.Status == VideoSourceStatus.Disconnected)
+                    await _currentSource.StartAsync().ConfigureAwait(false);
+            }
+            else if (_currentSource != source)
+            {
+                if(_currentSource != null)
+                    await _currentSource.StopAsync().ConfigureAwait(false);
+                if(source != null)
+                    await source.StartAsync().ConfigureAwait(false);
+                _currentSource = source;
+            }
         }
     }
 }

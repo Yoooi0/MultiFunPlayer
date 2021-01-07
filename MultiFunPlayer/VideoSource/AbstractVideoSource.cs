@@ -17,9 +17,9 @@ namespace MultiFunPlayer.VideoSource
         public abstract string Name { get; }
         protected abstract Task RunAsync(CancellationToken token);
 
-        public virtual void Start()
+        public async virtual Task StartAsync()
         {
-            Stop();
+            await StopAsync().ConfigureAwait(false);
 
             _cancellationSource = new CancellationTokenSource();
             _task = Task.Factory.StartNew(() => RunAsync(_cancellationSource.Token),
@@ -27,24 +27,27 @@ namespace MultiFunPlayer.VideoSource
                 TaskCreationOptions.LongRunning,
                 TaskScheduler.Default)
                 .Unwrap();
-            _ = _task.ContinueWith(_ => Stop());
+            _ = _task.ContinueWith(_ => StopAsync()).Unwrap();
         }
 
-        public virtual void Stop()
+        public async virtual Task StopAsync()
         {
             Status = VideoSourceStatus.Disconnected;
 
             _cancellationSource?.Cancel();
-            _task?.Wait();
+
+            if (_task != null)
+                await _task.ConfigureAwait(false);
+
             _cancellationSource?.Dispose();
 
             _cancellationSource = null;
             _task = null;
         }
 
-        protected virtual void Dispose(bool disposing)
+        protected async virtual void Dispose(bool disposing)
         {
-            Stop();
+            await StopAsync().ConfigureAwait(false);
         }
 
         public void Dispose()

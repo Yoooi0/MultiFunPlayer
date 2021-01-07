@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 
 namespace MultiFunPlayer.VideoSource
 {
@@ -12,7 +13,7 @@ namespace MultiFunPlayer.VideoSource
     {
         string Name { get; }
         VideoSourceStatus Status { get; }
-        void Start();
-        void Stop();
+        Task StartAsync();
+        Task StopAsync();
     }
 }
