@@ -132,6 +132,9 @@ namespace MultiFunPlayer.Common.Controls
                     var prev = keyframes[i];
                     var next = keyframes[j];
 
+                    if (next.Position < 0 || prev.Position < 0)
+                        continue;
+
                     var dx = next.Position - prev.Position;
                     var dy = next.Value - prev.Value;
                     if (MathF.Abs(dx) < 0.001f || MathF.Abs(dy) < 0.001f)

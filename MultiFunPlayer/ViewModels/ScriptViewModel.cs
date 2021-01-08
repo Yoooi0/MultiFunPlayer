@@ -300,27 +300,40 @@ namespace MultiFunPlayer.ViewModels
 
             bool Load(DeviceAxis axis, IScriptFile file)
             {
-                var document = JsonDocument.Parse(file.Data);
-                if (!document.RootElement.TryGetProperty("rawActions", out var actions) || actions.GetArrayLength() == 0)
-                    if (!document.RootElement.TryGetProperty("actions", out actions) || actions.GetArrayLength() == 0)
-                        return false;
-
-                var keyframes = new List<Keyframe>();
-                foreach (var child in actions.EnumerateArray())
+                var result = true;
+                try
                 {
-                    var position = child.GetProperty("at").GetInt64() / 1000.0f;
-                    var value = (float)child.GetProperty("pos").GetDouble() / 100;
-                    keyframes.Add(new Keyframe(position, value));
+                    var document = JsonDocument.Parse(file.Data);
+                    if (!document.RootElement.TryGetProperty("rawActions", out var actions) || actions.GetArrayLength() == 0)
+                        if (!document.RootElement.TryGetProperty("actions", out actions) || actions.GetArrayLength() == 0)
+                            return false;
+
+                    var keyframes = new List<Keyframe>();
+                    foreach (var child in actions.EnumerateArray())
+                    {
+                        var position = child.GetProperty("at").GetInt64() / 1000.0f;
+                        if (position < 0)
+                            continue;
+
+                        var value = (float)child.GetProperty("pos").GetDouble() / 100;
+                        keyframes.Add(new Keyframe(position, value));
+                    }
+
+                    ScriptKeyframes.AddOrUpdate(axis, keyframes);
+                }
+                catch
+                {
+                    ScriptKeyframes.Remove(axis);
+                    result = false;
                 }
 
-                ScriptKeyframes.AddOrUpdate(axis, keyframes);
                 if (AxisStates.TryGetValue(axis, out var state))
                 {
                     lock (state)
                         state.Invalidate();
                 }
 
-                return true;
+                return result;
             }
 
             void Update(DeviceAxis axis)
