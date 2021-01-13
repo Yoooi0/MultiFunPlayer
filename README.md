@@ -1,9 +1,5 @@
 <div align="center">
-    <div>
-        <img style="vertical-align:middle; margin-right: 15px" src="Assets/icon.svg" height="62"/>
-        <span style="vertical-align:middle; font-size: 2em; font-weight: 600">MultiFunPlayer</span>
-    </div>
-    <hr/>
+    <h1>MultiFunPlayer</h1>
     <br/>
     <img src="Assets/screenshot.png"/>
 </div>
