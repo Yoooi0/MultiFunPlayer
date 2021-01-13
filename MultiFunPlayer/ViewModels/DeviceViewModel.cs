@@ -6,6 +6,7 @@ using Newtonsoft.Json.Linq;
 using Stylet;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.IO.Ports;
 using System.Linq;
 using System.Text;
@@ -117,18 +118,8 @@ namespace MultiFunPlayer.ViewModels
 
         public async Task Disconnect()
         {
-            _cancellationSource?.Cancel();
-            _deviceThread?.Join();
-
-            if (_serialPort?.IsOpen == true)
-                _serialPort?.Close();
-            _cancellationSource?.Dispose();
-
+            Dispose(disposing: false);
             await Task.Delay(1000).ConfigureAwait(false);
-
-            _cancellationSource = null;
-            _deviceThread = null;
-            _serialPort = null;
         }
 
         private void UpdateDevice(object state)
@@ -138,29 +129,43 @@ namespace MultiFunPlayer.ViewModels
             //var stopwatch = new Stopwatch();
 
             //stopwatch.Start();
-            while (!token.IsCancellationRequested)
+            try
             {
-                sb.Clear();
-                foreach (var axis in EnumUtils.GetValues<DeviceAxis>())
+                while (!token.IsCancellationRequested)
                 {
-                    var value = _valueProvider?.GetValue(axis) ?? float.NaN;
-                    if (!float.IsFinite(value))
-                        value = axis.DefaultValue();
+                    sb.Clear();
+                    foreach (var axis in EnumUtils.GetValues<DeviceAxis>())
+                    {
+                        var value = _valueProvider?.GetValue(axis) ?? float.NaN;
+                        if (!float.IsFinite(value))
+                            value = axis.DefaultValue();
 
-                    if (AxisSettings.TryGetValue(axis, out var axisSettings))
-                        value = MathUtils.Lerp(axisSettings.Minimum / 100.0f, axisSettings.Maximum / 100.0f, value);
+                        if (AxisSettings.TryGetValue(axis, out var axisSettings))
+                            value = MathUtils.Lerp(axisSettings.Minimum / 100.0f, axisSettings.Maximum / 100.0f, value);
 
-                    sb.Append(axis)
-                      .AppendFormat("{0:000}", value * 999)
-                      .Append(' ');
+                        sb.Append(axis)
+                          .AppendFormat("{0:000}", value * 999)
+                          .Append(' ');
+                    }
+
+                    var commands = sb.ToString().Trim();
+                    if (_serialPort?.IsOpen == true && !string.IsNullOrWhiteSpace(commands))
+                        _serialPort?.WriteLine(commands);
+
+                    //stopwatch.PreciseSleep(MathF.Round(1000.0f / UpdateRate), token);
+                    Thread.Sleep((int)MathF.Max(1, MathF.Floor(MathF.Round(1000.0f / UpdateRate))));
                 }
-
-                var commands = sb.ToString().Trim();
-                if (_serialPort?.IsOpen == true && !string.IsNullOrWhiteSpace(commands))
-                    _serialPort?.WriteLine(commands);
-
-                //stopwatch.PreciseSleep(MathF.Round(1000.0f / UpdateRate), token);
-                Thread.Sleep((int)MathF.Max(1, MathF.Floor(MathF.Round(1000.0f / UpdateRate))));
+            }
+            catch (Exception e)
+            when (e is TimeoutException || e is IOException)
+            {
+                _ = Execute.OnUIThreadAsync(async () =>
+                {
+                    _ = DialogHost.Show(new ErrorMessageDialog($"Unhandled error while updating device:\n\n{e}"));
+                    if (IsConnected)
+                        await ToggleConnect().ConfigureAwait(true);
+                    await RefreshPorts().ConfigureAwait(true);
+                });
             }
         }
 
@@ -194,7 +199,21 @@ namespace MultiFunPlayer.ViewModels
 
         protected virtual void Dispose(bool disposing)
         {
-            Disconnect().Wait();
+            _cancellationSource?.Cancel();
+            _deviceThread?.Join();
+
+            try
+            {
+                if (_serialPort?.IsOpen == true)
+                    _serialPort?.Close();
+            }
+            catch (IOException) { }
+
+            _cancellationSource?.Dispose();
+
+            _cancellationSource = null;
+            _deviceThread = null;
+            _serialPort = null;
         }
 
         public void Dispose()
