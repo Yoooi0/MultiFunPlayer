@@ -15,7 +15,7 @@ using System.Threading.Tasks;
 
 namespace MultiFunPlayer.ViewModels
 {
-    public class DeviceViewModel : PropertyChangedBase, IHandle<AppSettingsMessage>, IDisposable
+    public class DeviceViewModel : Screen, IHandle<AppSettingsMessage>, IDisposable
     {
         private readonly IDeviceAxisValueProvider _valueProvider;
         private CancellationTokenSource _cancellationSource;

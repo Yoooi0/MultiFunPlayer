@@ -17,13 +17,13 @@ using System.Threading.Tasks;
 
 namespace MultiFunPlayer.ViewModels
 {
-    public class ScriptViewModel : PropertyChangedBase, IDeviceAxisValueProvider, IDisposable,
+    public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         IHandle<VideoPositionMessage>, IHandle<VideoPlayingMessage>, IHandle<VideoFileChangedMessage>, IHandle<VideoDurationMessage>, IHandle<VideoSpeedMessage>
     {
         private readonly float _syncDuration = 4;
 
-        private readonly Thread _updateThread;
-        private readonly CancellationTokenSource _cancellationSource;
+        private Thread _updateThread;
+        private CancellationTokenSource _cancellationSource;
         private float _syncTime;
 
         public bool IsPlaying { get; set; }
@@ -436,9 +436,12 @@ namespace MultiFunPlayer.ViewModels
 
         protected virtual void Dispose(bool disposing)
         {
-            _cancellationSource.Cancel();
-            _updateThread.Join();
-            _cancellationSource.Dispose();
+            _cancellationSource?.Cancel();
+            _updateThread?.Join();
+            _cancellationSource?.Dispose();
+
+            _cancellationSource = null;
+            _updateThread = null;
         }
 
         public void Dispose()

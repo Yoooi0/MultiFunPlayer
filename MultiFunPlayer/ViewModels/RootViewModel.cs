@@ -12,7 +12,7 @@ using System.Windows.Input;
 
 namespace MultiFunPlayer.ViewModels
 {
-    public class RootViewModel : PropertyChangedBase
+    public class RootViewModel : Conductor<IScreen>.Collection.AllActive
     {
         private readonly IEventAggregator _eventAggregator;
 
@@ -34,6 +34,16 @@ namespace MultiFunPlayer.ViewModels
                 settings.Converters.Add(new StringEnumConverter());
                 return settings;
             };
+        }
+
+        protected override void OnActivate()
+        {
+            Items.Add(Script);
+            Items.Add(VideoSource);
+            Items.Add(Device);
+
+            ActivateAndSetParent(Items);
+            base.OnActivate();
         }
 
         public void OnLoaded(object sender, EventArgs e)
