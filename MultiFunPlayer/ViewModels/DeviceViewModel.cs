@@ -180,7 +180,7 @@ namespace MultiFunPlayer.ViewModels
                     { nameof(AxisSettings), JObject.FromObject(AxisSettings) }
                 };
 
-                message.Settings.Add("Device", settings);
+                message.Settings["Device"] = settings;
             }
             else if (message.Type == AppSettingsMessageType.Loading)
             {

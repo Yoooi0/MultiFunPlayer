@@ -1,4 +1,6 @@
-﻿using MultiFunPlayer.Common.Messages;
+﻿using MaterialDesignThemes.Wpf;
+using MultiFunPlayer.Common.Controls;
+using MultiFunPlayer.Common.Messages;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;
@@ -46,21 +48,43 @@ namespace MultiFunPlayer.ViewModels
             base.OnActivate();
         }
 
+        public void OnInformationClick()
+            => _ = Execute.OnUIThreadAsync(() => DialogHost.Show(new InformationMessageDialog(showCheckbox: false)));
+
         public void OnLoaded(object sender, EventArgs e)
         {
-            var path = Path.Join(Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName), "MultiFunPlayer.config.json");
-            if (!File.Exists(path))
-                return;
-
-            var settings = JObject.Parse(File.ReadAllText(path));
+            var settings = ReadSettings();
             _eventAggregator.Publish(new AppSettingsMessage(settings, AppSettingsMessageType.Loading));
+
+            if(!settings.TryGetValue("DisablePopup", out var disablePopupToken) || !disablePopupToken.Value<bool>())
+                Execute.PostToUIThread(async () => {
+                    var result = await DialogHost.Show(new InformationMessageDialog(showCheckbox: true)).ConfigureAwait(true);
+                    if (result is not bool disablePopup || !disablePopup)
+                        return;
+
+                    settings["DisablePopup"] = true;
+                    WriteSettings(settings);
+                });
         }
 
         public void OnClosing(object sender, EventArgs e)
         {
-            var settings = new JObject();
+            var settings = ReadSettings();
             _eventAggregator.Publish(new AppSettingsMessage(settings, AppSettingsMessageType.Saving));
+            WriteSettings(settings);
+        }
 
+        private JObject ReadSettings()
+        {
+            var path = Path.Join(Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName), "MultiFunPlayer.config.json");
+            if (!File.Exists(path))
+                return new JObject();
+
+            return JObject.Parse(File.ReadAllText(path));
+        }
+
+        private void WriteSettings(JObject settings)
+        {
             var path = Path.Join(Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName), "MultiFunPlayer.config.json");
             File.WriteAllText(path, settings.ToString());
         }
