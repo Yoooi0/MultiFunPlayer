@@ -28,17 +28,13 @@ jobs:
       run: dotnet restore
     - name: Build
       run: dotnet publish --configuration Release /p:AssemblyVersion=${{ steps.gitversion.outputs.assemblySemVer }} /p:FileVersion=${{ steps.gitversion.outputs.assemblySemFileVer }} /p:InformationalVersion=${{ steps.gitversion.outputs.informationalVersion }}
+    - name: Pack
+      run: 7z a MultiFunPlayer-${{ steps.gitversion.outputs.semVer }}.zip MultiFunPlayer\bin\Release\win-x64\publish\*
     - name: Upload Artifact
       uses: actions/upload-artifact@v2
       with:
         name: MultiFunPlayer-${{ steps.gitversion.outputs.semVer }}.zip
-        path: MultiFunPlayer\bin\Release\win-x64\publish
-    - name: Download Artifact
-      id: artifact-download
-      uses: actions/download-artifact@v2
-      with:
-        name: MultiFunPlayer-${{ steps.gitversion.outputs.semVer }}.zip
-        path: ./
+        path: MultiFunPlayer-${{ steps.gitversion.outputs.semVer }}.zip
     - name: Create Release
       id: create-release
       uses: actions/create-release@v1
@@ -56,5 +52,5 @@ jobs:
       with:
         upload_url: ${{ steps.create-release.outputs.upload_url }}
         asset_name: MultiFunPlayer-${{ steps.gitversion.outputs.semVer }}.zip
-        asset_path: ${{ steps.artifact-download.outputs.download-path }}
+        asset_path: ./
         asset_content_type: application/zip
