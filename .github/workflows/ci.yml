@@ -27,9 +27,9 @@ jobs:
     - name: Install dependencies
       run: dotnet restore
     - name: Build
-      run: dotnet build --configuration Debug /p:AssemblyVersion=${{ steps.gitversion.outputs.assemblySemVer }} /p:FileVersion=${{ steps.gitversion.outputs.assemblySemFileVer }} /p:InformationalVersion=${{ steps.gitversion.outputs.informationalVersion }}
+      run: dotnet publish --configuration Debug /p:AssemblyVersion=${{ steps.gitversion.outputs.assemblySemVer }} /p:FileVersion=${{ steps.gitversion.outputs.assemblySemFileVer }} /p:InformationalVersion=${{ steps.gitversion.outputs.informationalVersion }}
     - name: Upload artifact
       uses: actions/upload-artifact@v2
       with:
         name: MultiFunPlayer-${{ steps.gitversion.outputs.fullSemVer }}.Branch.${{ steps.gitversion.outputs.escapedBranchName }}
-        path: MultiFunPlayer\bin\Debug
+        path: MultiFunPlayer\bin\Debug\win-x64\publish
