@@ -31,8 +31,13 @@ jobs:
     - name: Upload Artifact
       uses: actions/upload-artifact@v2
       with:
-        name: MultiFunPlayer-${{ steps.gitversion.outputs.semVer }}
+        name: MultiFunPlayer-${{ steps.gitversion.outputs.semVer }}.zip
         path: MultiFunPlayer\bin\Release\win-x64\publish
+    - name: Download Artifact
+    - uses: actions/download-artifact@v2
+      with:
+        name: MultiFunPlayer-${{ steps.gitversion.outputs.semVer }}.zip
+        path: .\MultiFunPlayer-${{ steps.gitversion.outputs.semVer }}.zip
     - name: Create Release
       id: create_release
       uses: actions/create-release@v1
@@ -49,6 +54,6 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: MultiFunPlayer\bin\Release\win-x64\publish\MultiFunPlayer-${{ steps.gitversion.outputs.semVer }}.zip
         asset_name: MultiFunPlayer-${{ steps.gitversion.outputs.semVer }}.zip
+        asset_path: .\MultiFunPlayer-${{ steps.gitversion.outputs.semVer }}.zip
         asset_content_type: application/zip
