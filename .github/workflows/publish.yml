@@ -34,7 +34,7 @@ jobs:
       uses: actions/upload-artifact@v2
       with:
         name: MultiFunPlayer-${{ steps.gitversion.outputs.semVer }}.zip
-        path: MultiFunPlayer-${{ steps.gitversion.outputs.semVer }}.zip
+        path: MultiFunPlayer\bin\Release\win-x64\publish
     - name: Create Release
       id: create-release
       uses: actions/create-release@v1
@@ -52,5 +52,5 @@ jobs:
       with:
         upload_url: ${{ steps.create-release.outputs.upload_url }}
         asset_name: MultiFunPlayer-${{ steps.gitversion.outputs.semVer }}.zip
-        asset_path: ./
+        asset_path: ./MultiFunPlayer-${{ steps.gitversion.outputs.semVer }}.zip
         asset_content_type: application/zip
