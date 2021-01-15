@@ -40,7 +40,7 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         tag_name: ${{ github.ref }}
-        release_name: MultiFunPlayer ${{ steps.gitversion.outputs.semVer }}
+        release_name: MultiFunPlayer v${{ steps.gitversion.outputs.semVer }}
         draft: false
         prerelease: false
     - name: Upload Release Artifact
@@ -49,6 +49,6 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./MultiFunPlayer-${{ steps.gitversion.outputs.semVer }}.zip
+        asset_path: MultiFunPlayer\bin\Release\win-x64\publish\MultiFunPlayer-${{ steps.gitversion.outputs.semVer }}.zip
         asset_name: MultiFunPlayer-${{ steps.gitversion.outputs.semVer }}.zip
         asset_content_type: application/zip
