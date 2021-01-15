@@ -29,12 +29,7 @@ jobs:
     - name: Build
       run: dotnet publish --configuration Release /p:AssemblyVersion=${{ steps.gitversion.outputs.assemblySemVer }} /p:FileVersion=${{ steps.gitversion.outputs.assemblySemFileVer }} /p:InformationalVersion=${{ steps.gitversion.outputs.informationalVersion }}
     - name: Pack
-      run: 7z a MultiFunPlayer-${{ steps.gitversion.outputs.semVer }}.zip MultiFunPlayer\bin\Release\win-x64\publish\*
-    - name: Upload Artifact
-      uses: actions/upload-artifact@v2
-      with:
-        name: MultiFunPlayer-${{ steps.gitversion.outputs.semVer }}.zip
-        path: MultiFunPlayer\bin\Release\win-x64\publish
+      run: 7z a MultiFunPlayer-${{ steps.gitversion.outputs.semVer }}.zip .\MultiFunPlayer\bin\Release\win-x64\publish\*
     - name: Create Release
       id: create-release
       uses: actions/create-release@v1
