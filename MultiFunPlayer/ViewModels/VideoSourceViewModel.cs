@@ -45,8 +45,13 @@ namespace MultiFunPlayer.ViewModels
                     await _currentSource.WaitForStatus(new[] { VideoSourceStatus.Disconnected }, 100, _cancellationSource.Token).ConfigureAwait(false);
                     _currentSource = null;
                 }
+                else if(_currentSource?.Status == VideoSourceStatus.Disconnected)
+                {
+                    _currentSource = null;
+                }
             }
-            else if (_currentSource != source)
+            
+            if (_currentSource != source)
             {
                 if (_currentSource != null)
                 {
