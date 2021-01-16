@@ -1,13 +1,13 @@
 ﻿using MultiFunPlayer.VideoSource;
 using Stylet;
+using System;
 using System.Collections.Generic;
-using System.Diagnostics.Tracing;
 using System.Linq;
 using System.Windows;
 
 namespace MultiFunPlayer.ViewModels
 {
-    public class VideoSourceViewModel : PropertyChangedBase
+    public class VideoSourceViewModel : Screen, IDisposable
     {
         private IVideoSource _currentSource;
 
@@ -40,6 +40,18 @@ namespace MultiFunPlayer.ViewModels
                     await source.StartAsync().ConfigureAwait(false);
                 _currentSource = source;
             }
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            _currentSource?.Dispose();
+            _currentSource = null;
+        }
+
+        public void Dispose()
+        {
+            Dispose(disposing: true);
+            GC.SuppressFinalize(this);
         }
     }
 }

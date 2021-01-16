@@ -15,7 +15,7 @@ using System.Threading.Tasks;
 
 namespace MultiFunPlayer.ViewModels
 {
-    public class DeviceViewModel : PropertyChangedBase, IHandle<AppSettingsMessage>, IDisposable
+    public class DeviceViewModel : Screen, IHandle<AppSettingsMessage>, IDisposable
     {
         private readonly IDeviceAxisValueProvider _valueProvider;
         private CancellationTokenSource _cancellationSource;
@@ -180,7 +180,7 @@ namespace MultiFunPlayer.ViewModels
                     { nameof(AxisSettings), JObject.FromObject(AxisSettings) }
                 };
 
-                message.Settings.Add("Device", settings);
+                message.Settings["Device"] = settings;
             }
             else if (message.Type == AppSettingsMessageType.Loading)
             {
