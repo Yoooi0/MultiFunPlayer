@@ -1,7 +1,10 @@
-﻿using Stylet;
+using Stylet;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows.Controls;
 
 namespace MultiFunPlayer.VideoSource
 {
@@ -10,7 +13,7 @@ namespace MultiFunPlayer.VideoSource
         private CancellationTokenSource _cancellationSource;
         private Task _task;
 
-        public VideoSourceStatus Status { get; protected set; }
+        public VideoSourceStatus Status { get; protected set; } = VideoSourceStatus.Disconnected;
 
         protected AbstractVideoSource() { }
 
@@ -21,6 +24,7 @@ namespace MultiFunPlayer.VideoSource
         {
             await StopAsync().ConfigureAwait(false);
 
+            Status = VideoSourceStatus.Connecting;
             _cancellationSource = new CancellationTokenSource();
             _task = Task.Factory.StartNew(() => RunAsync(_cancellationSource.Token),
                 _cancellationSource.Token,
@@ -32,7 +36,7 @@ namespace MultiFunPlayer.VideoSource
 
         public async virtual Task StopAsync()
         {
-            Status = VideoSourceStatus.Disconnected;
+            Status = VideoSourceStatus.Disconnecting;
 
             _cancellationSource?.Cancel();
 
@@ -43,6 +47,19 @@ namespace MultiFunPlayer.VideoSource
 
             _cancellationSource = null;
             _task = null;
+
+            Status = VideoSourceStatus.Disconnected;
+        }
+
+        public async virtual ValueTask<bool> CanStartAsync(CancellationToken token) => await ValueTask.FromResult(false).ConfigureAwait(false);
+        public async Task WaitForStatus(IEnumerable<VideoSourceStatus> statuses, int checkFrequency, CancellationToken token)
+        {
+            if (statuses.Contains(Status))
+                return;
+
+            //TODO: not great, not terrible
+            while (!statuses.Contains(Status))
+                await Task.Delay(checkFrequency, token).ConfigureAwait(false);
         }
 
         protected async virtual void Dispose(bool disposing)
