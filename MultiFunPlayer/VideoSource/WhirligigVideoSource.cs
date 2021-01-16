@@ -68,8 +68,6 @@ namespace MultiFunPlayer.VideoSource
                 _ = Execute.OnUIThreadAsync(() => DialogHost.Show(new ErrorMessageDialog($"{Name} failed with exception:\n\n{e}")));
             }
 
-            Status = VideoSourceStatus.Disconnected;
-
             _eventAggregator.Publish(new VideoFileChangedMessage(null));
             _eventAggregator.Publish(new VideoPlayingMessage(isPlaying: false));
         }

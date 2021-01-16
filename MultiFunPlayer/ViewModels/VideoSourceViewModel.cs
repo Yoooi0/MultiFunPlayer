@@ -34,9 +34,9 @@ namespace MultiFunPlayer.ViewModels
 
         public async void OnSourceClick(object sender, RoutedEventArgs e)
         {
-            await _semaphore.WaitAsync(_cancellationSource.Token).ConfigureAwait(false);
-
             var source = (sender as FrameworkElement)?.DataContext as IVideoSource;
+
+            await _semaphore.WaitAsync(_cancellationSource.Token).ConfigureAwait(false);
             if (_currentSource == source)
             {
                 if (_currentSource?.Status == VideoSourceStatus.Connected)
@@ -47,11 +47,11 @@ namespace MultiFunPlayer.ViewModels
                 }
                 else if(_currentSource?.Status == VideoSourceStatus.Disconnected)
                 {
-                    _currentSource = null;
+                    await _currentSource.StartAsync().ConfigureAwait(false);
+                    await _currentSource.WaitForStatus(new[] { VideoSourceStatus.Connected, VideoSourceStatus.Disconnected }, 100, _cancellationSource.Token).ConfigureAwait(false);
                 }
             }
-            
-            if (_currentSource != source)
+            else if (_currentSource != source)
             {
                 if (_currentSource != null)
                 {

@@ -1,6 +1,7 @@
 using Stylet;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -22,7 +23,8 @@ namespace MultiFunPlayer.VideoSource
 
         public async virtual Task StartAsync()
         {
-            await StopAsync().ConfigureAwait(false);
+            if (Status != VideoSourceStatus.Disconnected)
+                return;
 
             Status = VideoSourceStatus.Connecting;
             _cancellationSource = new CancellationTokenSource();
@@ -32,10 +34,15 @@ namespace MultiFunPlayer.VideoSource
                 TaskScheduler.Default)
                 .Unwrap();
             _ = _task.ContinueWith(_ => StopAsync()).Unwrap();
+
+            await Task.CompletedTask.ConfigureAwait(false);
         }
 
         public async virtual Task StopAsync()
         {
+            if (Status == VideoSourceStatus.Disconnected || Status == VideoSourceStatus.Disconnecting)
+                return;
+
             Status = VideoSourceStatus.Disconnecting;
 
             _cancellationSource?.Cancel();
@@ -43,6 +50,7 @@ namespace MultiFunPlayer.VideoSource
             if (_task != null)
                 await _task.ConfigureAwait(false);
 
+            await Task.Delay(250).ConfigureAwait(false);
             _cancellationSource?.Dispose();
 
             _cancellationSource = null;
