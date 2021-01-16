@@ -73,5 +73,23 @@ namespace MultiFunPlayer.VideoSource
             _eventAggregator.Publish(new VideoFileChangedMessage(null));
             _eventAggregator.Publish(new VideoPlayingMessage(isPlaying: false));
         }
+
+        public override async ValueTask<bool> CanStartAsync(CancellationToken token)
+        {
+            try
+            {
+                if (!Process.GetProcesses().Any(p => p.ProcessName.StartsWith("Whirligig")))
+                    return await ValueTask.FromResult(false).ConfigureAwait(false);
+
+                using var client = new TcpClient("localhost", 2000);
+                using var stream = client.GetStream();
+
+                return await ValueTask.FromResult(client.Connected).ConfigureAwait(false);
+            }
+            catch
+            {
+                return await ValueTask.FromResult(false).ConfigureAwait(false);
+            }
+        }
     }
 }

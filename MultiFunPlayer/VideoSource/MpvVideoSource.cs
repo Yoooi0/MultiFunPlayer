@@ -15,6 +15,7 @@ namespace MultiFunPlayer.VideoSource
 {
     public class MpvVideoSource : AbstractVideoSource
     {
+        private readonly string _pipeName = "multifunplayer-mpv";
         private readonly IEventAggregator _eventAggregator;
 
         public override string Name => "MPV";
@@ -28,8 +29,7 @@ namespace MultiFunPlayer.VideoSource
         {
             try
             {
-                const string pipeName = "/tmp/mfp-mpv";
-                using var client = new NamedPipeClientStream(pipeName);
+                using var client = new NamedPipeClientStream(_pipeName);
 
                 try
                 {
@@ -47,13 +47,12 @@ namespace MultiFunPlayer.VideoSource
                         var processInfo = new ProcessStartInfo()
                         {
                             FileName = mpvPath,
-                            Arguments = $"--input-ipc-server={pipeName} --keep-open=always --pause"
+                            Arguments = $"--input-ipc-server={_pipeName} --keep-open=always --pause"
                         };
 
                         Process.Start(processInfo);
 
-                        await Task.Delay(1000, token).ConfigureAwait(false);
-                        await client.ConnectAsync(500, token).ConfigureAwait(false);
+                        await client.ConnectAsync(2000, token).ConfigureAwait(false);
                     }
                 }
 
@@ -143,5 +142,7 @@ namespace MultiFunPlayer.VideoSource
             _eventAggregator.Publish(new VideoFileChangedMessage(null));
             _eventAggregator.Publish(new VideoPlayingMessage(isPlaying: false));
         }
+
+        public override async ValueTask<bool> CanStartAsync(CancellationToken token) => await ValueTask.FromResult(File.Exists(@$"\\.\\pipe\\{_pipeName}")).ConfigureAwait(false);
     }
 }
