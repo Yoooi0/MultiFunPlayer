@@ -12,8 +12,8 @@ using System.Windows.Input;
 using System.Windows;
 using System.IO.Compression;
 using PropertyChanged;
-using MaterialDesignExtensions.Controls;
 using System.Threading.Tasks;
+using Microsoft.Win32;
 
 namespace MultiFunPlayer.ViewModels
 {
@@ -377,22 +377,18 @@ namespace MultiFunPlayer.ViewModels
             }
         }
 
-        public async Task OnAxisOpen(DeviceAxis axis)
+        public void OnAxisOpen(DeviceAxis axis)
         {
-            var dialogArgs = new OpenFileDialogArguments()
+            var dialog = new OpenFileDialog()
             {
-                Width = 600,
-                Height = 730,
-                Filters = "Funscript files|*.funscript",
-                CreateNewDirectoryEnabled = true,
-                CurrentDirectory = Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName)
+                InitialDirectory = VideoFile?.FullName ?? string.Empty,
+                Filter = "Funscript files|*.funscript",
             };
 
-            var result = await OpenFileDialog.ShowDialogAsync("RootDialog", dialogArgs).ConfigureAwait(true);
-            if (!result.Confirmed || !result.FileInfo.Exists)
+            if (dialog.ShowDialog() == false || !File.Exists(dialog.FileName))
                 return;
 
-            AxisSettings[axis].File = ScriptFile.FromFileInfo(result.FileInfo);
+            AxisSettings[axis].File = ScriptFile.FromFileInfo(new FileInfo(dialog.FileName));
             UpdateFiles(AxisFilesChangeType.Update, axis);
         }
 
