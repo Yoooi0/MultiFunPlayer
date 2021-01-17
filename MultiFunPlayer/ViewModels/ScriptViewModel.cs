@@ -35,7 +35,10 @@ namespace MultiFunPlayer.ViewModels
         public ObservableConcurrentDictionary<DeviceAxis, AxisState> AxisStates { get; set; }
         public ObservableConcurrentDictionary<DeviceAxis, AxisSettings> AxisSettings { get; set; }
         public ObservableConcurrentDictionary<DeviceAxis, List<Keyframe>> ScriptKeyframes { get; }
+
         public AxisSettings SelectedAxisSettings { get; set; }
+        public DeviceAxis SelectedAxis => SelectedAxisSettings == null ? DeviceAxis.L0 : AxisSettings.FirstOrDefault(x => x.Value == SelectedAxisSettings).Key;
+
         public FileInfo VideoFile { get; set; }
 
         public float SyncProgress => !IsSyncing ? 100 : (MathF.Pow(2, 10 * (_syncTime / _syncDuration - 1)) * 100);

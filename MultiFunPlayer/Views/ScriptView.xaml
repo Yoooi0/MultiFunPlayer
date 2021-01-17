@@ -1,4 +1,4 @@
-﻿<UserControl x:Class="MultiFunPlayer.Views.ScriptView"
+<UserControl x:Class="MultiFunPlayer.Views.ScriptView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:material="http://materialdesigninxaml.net/winfx/xaml/themes"
              xmlns:s="https://github.com/canton7/Stylet"
@@ -13,6 +13,7 @@
     <UserControl.Resources>
         <converters:DeviceAxisValueToPercentConverter x:Key="DeviceAxisValueToPercentConverter"/>
         <converters:DeviceAxisFriendlyNameConverter x:Key="DeviceAxisFriendlyNameConverter"/>
+        <material:NullableToVisibilityConverter x:Key="NullableToVisibilityConverter"/>
     </UserControl.Resources>
     <material:Card material:ShadowAssist.ShadowDepth="Depth1" Margin="0 0 0 20">
         <StackPanel Margin="20">
@@ -122,9 +123,9 @@
                 <GroupBox.HeaderTemplate>
                     <DataTemplate>
                         <DockPanel LastChildFill="True" Background="White">
-                            <ListBox Style="{StaticResource MaterialDesignToolToggleListBox}" 
+                            <ListBox Style="{StaticResource MaterialDesignToolToggleListBox}"
+                                     Margin="-1"
                                      DockPanel.Dock="Right"
-                                     Padding="1"
                                      HorizontalAlignment="Stretch"
                                      ItemsSource="{Binding Path=DataContext.AxisSettings, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}"
                                      SelectedValue="{Binding Path=DataContext.SelectedAxisSettings, Mode=TwoWay, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}"
@@ -161,34 +162,6 @@
                                             <TextBlock.ToolTip>
                                                 <TextBlock Text="{Binding Converter={StaticResource DeviceAxisFriendlyNameConverter}}"/>
                                             </TextBlock.ToolTip>
-                                            <TextBlock.ContextMenu>
-                                                <ContextMenu>
-                                                    <MenuItem IsEnabled="False">
-                                                        <MenuItem.Template>
-                                                            <ControlTemplate>
-                                                                <TextBlock Text="{Binding Converter={StaticResource DeviceAxisFriendlyNameConverter}}"
-                                                                           HorizontalAlignment="Center"/>
-                                                            </ControlTemplate>
-                                                        </MenuItem.Template>
-                                                    </MenuItem>
-                                                    <Separator />
-                                                    <MenuItem Header="Open" Command="{s:Action OnAxisOpen}" CommandParameter="{Binding}">
-                                                        <MenuItem.Icon>
-                                                            <material:PackIcon Kind="FolderOpen"/>
-                                                        </MenuItem.Icon>
-                                                    </MenuItem>
-                                                    <MenuItem Header="Clear" Command="{s:Action OnAxisClear}" CommandParameter="{Binding}">
-                                                        <MenuItem.Icon>
-                                                            <material:PackIcon Kind="Close"/>
-                                                        </MenuItem.Icon>
-                                                    </MenuItem>
-                                                    <MenuItem Header="Reload" Command="{s:Action OnAxisReload}" CommandParameter="{Binding}">
-                                                        <MenuItem.Icon>
-                                                            <material:PackIcon Kind="Reload"/>
-                                                        </MenuItem.Icon>
-                                                    </MenuItem>
-                                                </ContextMenu>
-                                            </TextBlock.ContextMenu>
                                         </TextBlock>
                                     </DataTemplate>
                                 </ListBox.ItemTemplate>
@@ -199,6 +172,36 @@
                 <StackPanel Margin="20">
                     <DockPanel LastChildFill="True" Margin="0 0 0 10">
                         <TextBlock Text="File: " DockPanel.Dock="Left" Margin="0 0 10 0" VerticalAlignment="Center"/>
+                        
+                        <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" Margin="10 0 10 0">
+                            <Button Style="{StaticResource MaterialDesignFloatingActionMiniLightButton}"
+                                    Command="{s:Action OnAxisOpen}"
+                                    CommandParameter="{Binding SelectedAxis}"
+                                    Height="24"
+                                    Width="24"
+                                    Margin="0 0 2 0">
+                                <material:PackIcon Kind="FolderOpen"/>
+                            </Button>
+                            <Button Style="{StaticResource MaterialDesignFloatingActionMiniLightButton}"
+                                    Command="{s:Action OnAxisClear}"
+                                    CommandParameter="{Binding SelectedAxis}"
+                                    Visibility="{Binding SelectedAxisSettings.File, Converter={StaticResource NullableToVisibilityConverter}}"
+                                    Height="24"
+                                    Width="24"
+                                    Margin="2 0 2 0">
+                                <material:PackIcon Kind="Close"/>
+                            </Button>
+                            <Button Style="{StaticResource MaterialDesignFloatingActionMiniLightButton}"
+                                    Command="{s:Action OnAxisReload}"
+                                    CommandParameter="{Binding SelectedAxis}"
+                                    Visibility="{Binding SelectedAxisSettings.File, Converter={StaticResource NullableToVisibilityConverter}}"
+                                    Height="24"
+                                    Width="24"
+                                    Margin="2 0 0 0">
+                                <material:PackIcon Kind="Reload"/>
+                            </Button>
+                        </StackPanel>
+                        
                         <TextBox Text="{Binding SelectedAxisSettings.File.Name, Mode=OneWay}" 
                                  Style="{StaticResource MaterialDesignTextBox}"
                                  IsReadOnly="True"
