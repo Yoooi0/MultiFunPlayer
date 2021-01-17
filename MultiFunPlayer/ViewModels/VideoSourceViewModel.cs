@@ -77,6 +77,7 @@ namespace MultiFunPlayer.ViewModels
         {
             try
             {
+                await Task.Delay(2500, token).ConfigureAwait(false);
                 while (!token.IsCancellationRequested)
                 {
                     if (_currentSource != null)

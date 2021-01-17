@@ -53,12 +53,12 @@ namespace MultiFunPlayer.ViewModels
 
         public void OnLoaded(object sender, EventArgs e)
         {
-            var settings = ReadSettings();
-            _eventAggregator.Publish(new AppSettingsMessage(settings, AppSettingsMessageType.Loading));
-
-            if (!settings.TryGetValue("DisablePopup", out var disablePopupToken) || !disablePopupToken.Value<bool>())
+            Execute.PostToUIThread(async () =>
             {
-                Execute.PostToUIThread(async () =>
+                var settings = ReadSettings();
+                _eventAggregator.Publish(new AppSettingsMessage(settings, AppSettingsMessageType.Loading));
+
+                if (!settings.TryGetValue("DisablePopup", out var disablePopupToken) || !disablePopupToken.Value<bool>())
                 {
                     var result = await DialogHost.Show(new InformationMessageDialog(showCheckbox: true)).ConfigureAwait(true);
                     if (result is not bool disablePopup || !disablePopup)
@@ -66,8 +66,8 @@ namespace MultiFunPlayer.ViewModels
 
                     settings["DisablePopup"] = true;
                     WriteSettings(settings);
-                });
-            }
+                }
+            });
         }
 
         public void OnClosing(object sender, EventArgs e)
