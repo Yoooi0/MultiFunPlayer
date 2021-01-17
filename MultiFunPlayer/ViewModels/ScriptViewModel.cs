@@ -384,7 +384,7 @@ namespace MultiFunPlayer.ViewModels
         {
             var dialog = new OpenFileDialog()
             {
-                InitialDirectory = VideoFile?.FullName ?? string.Empty,
+                InitialDirectory = Path.GetDirectoryName(VideoFile?.FullName) ?? string.Empty,
                 Filter = "Funscript files|*.funscript",
             };
 
