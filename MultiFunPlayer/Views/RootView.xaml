@@ -39,11 +39,12 @@
                                Text="{Binding Path=Title, RelativeSource={RelativeSource AncestorType={x:Type materialExtensions:MaterialWindow}}}"/>
                 <Button Style="{StaticResource WindowButtonStyle}"
                         Click="{s:Action OnInformationClick}"
-                        DockPanel.Dock="Right">
+                        DockPanel.Dock="Right"
+                        Margin="0 -1 0 -1">
                     <material:PackIcon Foreground="White"
                                        Kind="InformationOutline"
-                                       Width="30"
-                                       Height="30"
+                                       Width="24"
+                                       Height="24"
                                        Margin="0"/>
                 </Button>
             </DockPanel>

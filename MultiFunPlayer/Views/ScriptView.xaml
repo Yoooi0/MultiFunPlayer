@@ -20,7 +20,7 @@
             <material:Card material:ShadowAssist.ShadowDepth="Depth1"
                       Margin="0 0 0 20">
                 <StackPanel Margin="20">
-                    <DockPanel LastChildFill="True" Margin="0 0 0 15">
+                    <DockPanel LastChildFill="True" Margin="0 0 0 10">
                         <TextBlock Text="Video:"
                            DockPanel.Dock="Left"
                            VerticalAlignment="Center"/>
@@ -173,7 +173,7 @@
                     <DockPanel LastChildFill="True" Margin="0 0 0 10">
                         <TextBlock Text="File: " DockPanel.Dock="Left" Margin="0 0 10 0" VerticalAlignment="Center"/>
                         
-                        <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" Margin="10 0 10 0">
+                        <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" Margin="10 0 0 0">
                             <Button Style="{StaticResource MaterialDesignFloatingActionMiniLightButton}"
                                     Command="{s:Action OnAxisOpen}"
                                     CommandParameter="{Binding SelectedAxis}"
