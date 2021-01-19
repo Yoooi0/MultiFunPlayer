@@ -14,6 +14,8 @@ using System.IO.Compression;
 using PropertyChanged;
 using System.Threading.Tasks;
 using Microsoft.Win32;
+using System.Dynamic;
+using Microsoft.Xaml.Behaviors.Core;
 
 namespace MultiFunPlayer.ViewModels
 {
@@ -36,9 +38,6 @@ namespace MultiFunPlayer.ViewModels
         public ObservableConcurrentDictionary<DeviceAxis, AxisSettings> AxisSettings { get; set; }
         public ObservableConcurrentDictionary<DeviceAxis, List<Keyframe>> ScriptKeyframes { get; }
 
-        public AxisSettings SelectedAxisSettings { get; set; }
-        public DeviceAxis SelectedAxis => SelectedAxisSettings == null ? DeviceAxis.L0 : AxisSettings.FirstOrDefault(x => x.Value == SelectedAxisSettings).Key;
-
         public FileInfo VideoFile { get; set; }
 
         public float SyncProgress => !IsSyncing ? 100 : (MathF.Pow(2, 10 * (_syncTime / _syncDuration - 1)) * 100);
@@ -49,7 +48,6 @@ namespace MultiFunPlayer.ViewModels
 
             AxisStates = new ObservableConcurrentDictionary<DeviceAxis, AxisState>(EnumUtils.GetValues<DeviceAxis>().ToDictionary(a => a, _ => new AxisState()));
             AxisSettings = new ObservableConcurrentDictionary<DeviceAxis, AxisSettings>(EnumUtils.GetValues<DeviceAxis>().ToDictionary(a => a, _ => new AxisSettings()));
-            SelectedAxisSettings = AxisSettings[DeviceAxis.L0];
 
             VideoFile = null;
 
@@ -85,9 +83,7 @@ namespace MultiFunPlayer.ViewModels
 
                 foreach (var axis in EnumUtils.GetValues<DeviceAxis>())
                 {
-                    if (!AxisStates.TryGetValue(axis, out var state))
-                        continue;
-
+                    var state = AxisStates[axis];
                     lock (state)
                     {
                         if (state.Valid)
@@ -146,7 +142,7 @@ namespace MultiFunPlayer.ViewModels
                 var funscriptWithoutExtension = Path.GetFileNameWithoutExtension(fileName);
                 if (string.Equals(funscriptWithoutExtension, videoWithoutExtension, StringComparison.OrdinalIgnoreCase))
                 {
-                    AxisSettings[DeviceAxis.L0].File = generator();
+                    AxisSettings[DeviceAxis.L0].Script = generator();
                     return true;
                 }
 
@@ -155,7 +151,7 @@ namespace MultiFunPlayer.ViewModels
                     if (funscriptWithoutExtension.EndsWith(axis.Name(), StringComparison.OrdinalIgnoreCase)
                      || funscriptWithoutExtension.EndsWith(axis.AltName(), StringComparison.OrdinalIgnoreCase))
                     {
-                        AxisSettings[axis].File = generator();
+                        AxisSettings[axis].Script = generator();
                         return true;
                     }
                 }
@@ -171,11 +167,9 @@ namespace MultiFunPlayer.ViewModels
 
             VideoFile = message.VideoFile;
             foreach (var axis in EnumUtils.GetValues<DeviceAxis>())
-                AxisSettings[axis].File = null;
+                AxisSettings[axis].Script = null;
 
-            IsSyncing = VideoFile != null;
-            Interlocked.Exchange(ref _syncTime, 0);
-            NotifyOfPropertyChange(nameof(SyncProgress));
+            ResetSync(isSyncing: VideoFile != null);
 
             if (VideoFile != null)
             {
@@ -204,11 +198,7 @@ namespace MultiFunPlayer.ViewModels
         public void Handle(VideoPlayingMessage message)
         {
             if (!IsPlaying && message.IsPlaying)
-            {
-                IsSyncing = true;
-                Interlocked.Exchange(ref _syncTime, 0);
-                NotifyOfPropertyChange(nameof(SyncProgress));
-            }
+                ResetSync();
 
             IsPlaying = message.IsPlaying;
         }
@@ -237,17 +227,11 @@ namespace MultiFunPlayer.ViewModels
                 return;
 
             if (wasSeek)
-            {
-                IsSyncing = true;
-                Interlocked.Exchange(ref _syncTime, 0);
-                NotifyOfPropertyChange(nameof(SyncProgress));
-            }
+                ResetSync();
 
             foreach (var axis in EnumUtils.GetValues<DeviceAxis>())
             {
-                if (!AxisStates.TryGetValue(axis, out var state))
-                    continue;
-
+                var state = AxisStates[axis];
                 if (wasSeek || !state.Valid)
                     SearchForValidIndices(axis, state);
             }
@@ -288,17 +272,11 @@ namespace MultiFunPlayer.ViewModels
             void Clear(DeviceAxis axis)
             {
                 ScriptKeyframes.Remove(axis);
+                AxisSettings[axis].Script = null;
 
-                var wasSelected = SelectedAxisSettings == AxisSettings[axis];
-                AxisSettings[axis] = new AxisSettings();
-                if (wasSelected)
-                    SelectedAxisSettings = AxisSettings[axis];
-
-                if (AxisStates.TryGetValue(axis, out var state))
-                {
-                    lock (state)
-                        state.Invalidate();
-                }
+                var state = AxisStates[axis];
+                lock (state)
+                    state.Invalidate();
             }
 
             bool Load(DeviceAxis axis, IScriptFile file)
@@ -330,18 +308,16 @@ namespace MultiFunPlayer.ViewModels
                     result = false;
                 }
 
-                if (AxisStates.TryGetValue(axis, out var state))
-                {
-                    lock (state)
-                        state.Invalidate();
-                }
+                var state = AxisStates[axis];
+                lock (state)
+                    state.Invalidate();
 
                 return result;
             }
 
             void Update(DeviceAxis axis)
             {
-                var file = AxisSettings[axis].File;
+                var file = AxisSettings[axis].Script;
                 if (file == null)
                     Clear(axis);
                 else
@@ -360,6 +336,12 @@ namespace MultiFunPlayer.ViewModels
                     Update(axis);
             }
 
+            foreach (var (axis, settings) in AxisSettings.Where(x => x.Value.LinkAxis != null))
+            {
+                settings.Script = AxisSettings[settings.LinkAxis.Value].Script;
+                Update(axis);
+            }
+
             NotifyOfPropertyChange(nameof(ScriptKeyframes));
         }
 
@@ -368,15 +350,18 @@ namespace MultiFunPlayer.ViewModels
 
         public void OnDrop(object sender, DragEventArgs e)
         {
-            if (!(sender is FrameworkElement element && element.DataContext is DeviceAxis axis))
+            if (!(sender is FrameworkElement element && element.DataContext is KeyValuePair<DeviceAxis, AxisSettings> pair))
                 return;
 
             var drop = e.Data.GetData(DataFormats.FileDrop);
             if (drop is string[] paths)
             {
                 var path = paths.FirstOrDefault(p => Path.GetExtension(p) == ".funscript");
-                AxisSettings[axis].File = ScriptFile.FromPath(path);
-                UpdateFiles(AxisFilesChangeType.Update, axis);
+                if (path == null)
+                    return;
+
+                pair.Value.Script = ScriptFile.FromPath(path);
+                UpdateFiles(AxisFilesChangeType.Update, pair.Key);
             }
         }
 
@@ -391,19 +376,12 @@ namespace MultiFunPlayer.ViewModels
             if (dialog.ShowDialog() == false || !File.Exists(dialog.FileName))
                 return;
 
-            AxisSettings[axis].File = ScriptFile.FromFileInfo(new FileInfo(dialog.FileName));
+            AxisSettings[axis].Script = ScriptFile.FromFileInfo(new FileInfo(dialog.FileName));
             UpdateFiles(AxisFilesChangeType.Update, axis);
         }
 
         public void OnAxisClear(DeviceAxis axis) => UpdateFiles(AxisFilesChangeType.Clear, axis);
         public void OnAxisReload(DeviceAxis axis) => UpdateFiles(AxisFilesChangeType.Update, axis);
-
-        [SuppressPropertyChangedWarnings]
-        public void OnAxisSettingsSelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            if (SelectedAxisSettings == null)
-                SelectedAxisSettings = ((KeyValuePair<DeviceAxis, AxisSettings>)e.RemovedItems[0]).Value;
-        }
 
         public void OnSliderDoubleClick(object sender, MouseButtonEventArgs e)
         {
@@ -412,19 +390,52 @@ namespace MultiFunPlayer.ViewModels
         }
 
         [SuppressPropertyChangedWarnings]
+        public void OnLinkAxisStrengthSliderValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            if (!(sender is FrameworkElement element && element.DataContext is KeyValuePair<DeviceAxis, AxisSettings> pair))
+                return;
+
+            if (pair.Value.LinkAxis == null)
+                return;
+
+            ResetSync();
+        }
+
+        [SuppressPropertyChangedWarnings]
+        public void OnSelectedLinkAxisChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (!(sender is FrameworkElement element && element.DataContext is KeyValuePair<DeviceAxis, AxisSettings> pair))
+                return;
+
+            var axis = pair.Key;
+            var settings = pair.Value;
+            if(settings.LinkAxis == null)
+            {
+                UpdateFiles(AxisFilesChangeType.Clear, axis);
+            }
+            else if(settings.LinkAxis != null)
+            {
+                settings.Script = AxisSettings[settings.LinkAxis.Value].Script;
+                UpdateFiles(AxisFilesChangeType.Update, axis);
+            }
+
+            ResetSync();
+        }
+
+        [SuppressPropertyChangedWarnings]
         public void OnOffsetSliderValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
-            IsSyncing = true;
-            Interlocked.Exchange(ref _syncTime, 0);
-            NotifyOfPropertyChange(nameof(SyncProgress));
+            ResetSync();
 
             foreach (var axis in EnumUtils.GetValues<DeviceAxis>())
-            {
-                if (!AxisStates.TryGetValue(axis, out var state))
-                    continue;
+                SearchForValidIndices(axis, AxisStates[axis]);
+        }
 
-                SearchForValidIndices(axis, state);
-            }
+        private void ResetSync(bool isSyncing = true)
+        {
+            IsSyncing = isSyncing;
+            Interlocked.Exchange(ref _syncTime, 0);
+            NotifyOfPropertyChange(nameof(SyncProgress));
         }
 
         public void OnPreviewDragOver(object sender, DragEventArgs e)
@@ -471,7 +482,9 @@ namespace MultiFunPlayer.ViewModels
 
     public class AxisSettings : PropertyChangedBase
     {
-        public IScriptFile File { get; set; } = null;
+        public IScriptFile Script { get; set; } = null;
+        public DeviceAxis? LinkAxis { get; set; } = null;
+        public float LinkAxisStrength { get; set; } = 0;
         public bool Inverted { get; set; } = false;
         public float Offset { get; set; } = 0;
     }

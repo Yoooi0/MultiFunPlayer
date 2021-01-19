@@ -8,11 +8,13 @@
              xmlns:common="clr-namespace:MultiFunPlayer.Common" 
              xmlns:converters="clr-namespace:MultiFunPlayer.Common.Converters"
              xmlns:controls="clr-namespace:MultiFunPlayer.Common.Controls"
+             xmlns:behaviours="clr-namespace:MultiFunPlayer.Common.Behaviours"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
     <UserControl.Resources>
         <converters:DeviceAxisValueToPercentConverter x:Key="DeviceAxisValueToPercentConverter"/>
         <converters:DeviceAxisFriendlyNameConverter x:Key="DeviceAxisFriendlyNameConverter"/>
+        <converters:NullableToBooleanConverter x:Key="NullableToBooleanConverter"/>
         <material:NullableToVisibilityConverter x:Key="NullableToVisibilityConverter"/>
     </UserControl.Resources>
     <material:Card material:ShadowAssist.ShadowDepth="Depth1" Margin="0 0 0 20">
@@ -116,126 +118,230 @@
                 </StackPanel>
             </material:Card>
 
-            <GroupBox Header="" 
-                      Style="{DynamicResource MaterialDesignCardGroupBox}" 
-                      Padding="0"
-                      Margin="0 0 0 20">
-                <GroupBox.HeaderTemplate>
-                    <DataTemplate>
-                        <DockPanel LastChildFill="True" Background="White">
-                            <ListBox Style="{StaticResource MaterialDesignToolToggleListBox}"
-                                     Margin="-1"
-                                     DockPanel.Dock="Right"
-                                     HorizontalAlignment="Stretch"
-                                     ItemsSource="{Binding Path=DataContext.AxisSettings, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}"
-                                     SelectedValue="{Binding Path=DataContext.SelectedAxisSettings, Mode=TwoWay, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}"
-                                     SelectedValuePath="Value"
-                                     SelectionMode="Single"
-                                     SelectionChanged="{s:Action OnAxisSettingsSelectionChanged}">
-                                <ListBox.ItemContainerStyle>
-                                    <Style TargetType="ListBoxItem" BasedOn="{StaticResource MaterialDesignToolToggleListBoxItem}">
-                                        <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
-                                        <Setter Property="HorizontalAlignment" Value="Stretch"/>
-                                        <Setter Property="Height" Value="35"/>
-                                        <Setter Property="FontSize" Value="14"/>
-                                        <Setter Property="Padding" Value="0"/>
-                                        <Setter Property="FontWeight" Value="Bold"/>
-                                        <Setter Property="Content" Value="{Binding Key}"/>
+
+            <material:Card material:ShadowAssist.ShadowDepth="Depth1" Margin="0 0 0 20">
+                <TabControl ItemsSource="{Binding AxisSettings}" behaviours:TabContent.IsCached="True">
+                    <TabControl.Resources>
+                        <Style TargetType="{x:Type TabControl}">
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="TabControl">
+                                        <Grid UseLayoutRounding="True">
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="*" />
+                                            </Grid.RowDefinitions>
+                                            <TabPanel IsItemsHost="True"
+                                                      Grid.Row="0"
+                                                      Panel.ZIndex="100" 
+                                                      Background="{StaticResource MaterialDesignToolBarBackground}">
+                                                <TabPanel.Effect>
+                                                    <DropShadowEffect ShadowDepth="0" Direction="270"/>
+                                                </TabPanel.Effect>
+                                            </TabPanel>
+                                            <ContentPresenter Panel.ZIndex="0" Grid.Row="1" ContentSource="SelectedContent" />
+                                        </Grid>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                        <Style TargetType="{x:Type TabItem}">
+                            <Setter Property="Background" Value="{DynamicResource PrimaryHueMidBrush}"/>
+                            <Setter Property="BorderBrush" Value="{DynamicResource PrimaryHueMidBrush}"/>
+                            <Setter Property="Padding" Value="0"/>
+                            <Setter Property="Height" Value="35" />
+                            <Setter Property="material:RippleAssist.Feedback" Value="{DynamicResource MaterialDesignFlatButtonRipple}" />
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="{x:Type TabItem}">
+                                        <Grid x:Name="Root">
+                                            <VisualStateManager.VisualStateGroups>
+                                                <VisualStateGroup x:Name="SelectionStates">
+                                                    <VisualState x:Name="Selected">
+                                                        <Storyboard>
+                                                            <DoubleAnimation Storyboard.TargetProperty="ScaleX" Storyboard.TargetName="ScaleTransform" From="0" To="1" Duration="0:0:0.2">
+                                                                <DoubleAnimation.EasingFunction>
+                                                                    <SineEase EasingMode="EaseOut" />
+                                                                </DoubleAnimation.EasingFunction>
+                                                            </DoubleAnimation>
+                                                            <DoubleAnimation Storyboard.TargetProperty="Opacity" Storyboard.TargetName="PART_BackgroundSelection" To="0.12" BeginTime="0:0:0.2" Duration="0" />
+                                                        </Storyboard>
+                                                    </VisualState>
+                                                    <VisualState x:Name="Unselected">
+                                                        <Storyboard>
+                                                            <DoubleAnimation Storyboard.TargetProperty="ScaleX" Storyboard.TargetName="ScaleTransform" To="0" Duration="0" />
+                                                            <DoubleAnimation Storyboard.TargetProperty="Opacity" Storyboard.TargetName="PART_BackgroundSelection" To="0" Duration="0" />
+                                                        </Storyboard>
+                                                    </VisualState>
+                                                </VisualStateGroup>
+                                            </VisualStateManager.VisualStateGroups>
+                                            <material:ColorZone Grid.RowSpan="2" x:Name="tabitemcz"
+                                                               HorizontalAlignment="Stretch"
+                                                               VerticalAlignment="Stretch"
+                                                               Focusable="False"
+                                                               Background="{x:Null}">
+                                                <material:Ripple Focusable="False"
+                                                                 Content="{TemplateBinding Header}" 
+                                                                 ContentTemplate="{TemplateBinding HeaderTemplate}"
+                                                                 ContentTemplateSelector="{TemplateBinding ContentTemplateSelector}"
+                                                                 ContentStringFormat="{TemplateBinding HeaderStringFormat}"
+                                                                 HorizontalContentAlignment="Center"
+                                                                 VerticalContentAlignment="Center"
+                                                                 RecognizesAccessKey="True"
+                                                                 x:Name="contentPresenter"
+                                                                 Opacity=".82"
+                                                                 SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" 
+                                                                 Padding="{TemplateBinding Padding}"
+                                                                 TextBlock.FontWeight="Bold"
+                                                                 TextBlock.FontSize="14"
+                                                                 TextOptions.TextFormattingMode="Ideal" 
+                                                                 TextOptions.TextRenderingMode="Auto">
+                                                </material:Ripple>
+                                            </material:ColorZone>
+                                            <Border x:Name="SelectionHighlightBorder" 
+                                                    BorderBrush="{TemplateBinding BorderBrush}" 
+                                                    BorderThickness="0 0 0 2"
+                                                    Visibility="Hidden" RenderTransformOrigin="0.5 0.5">
+                                                <Border.RenderTransform>
+                                                    <ScaleTransform x:Name="ScaleTransform" ScaleX="0" ScaleY="1" />
+                                                </Border.RenderTransform>
+                                                <Rectangle x:Name="PART_BackgroundSelection" Fill="{TemplateBinding Background}" Opacity="0.12"/>
+                                            </Border>
+                                        </Grid>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsEnabled" Value="False">
+                                                <Setter Property="Opacity" Value="0.23"/>
+                                            </Trigger>
+                                            <Trigger Property="IsSelected" Value="True">
+                                                <Setter TargetName="contentPresenter" Property="Opacity" Value="1"/>
+                                                <Setter TargetName="SelectionHighlightBorder" Property="Visibility" Value="Visible" />
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                    </TabControl.Resources>
+                    <TabControl.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding Key}"
+                                    material:ButtonAssist.CornerRadius="0 0 0 0"
+                                    Padding="15 10 15 10"
+                                    ToolTipService.Placement="Top">
+                                <TextBlock.Resources>
+                                    <Style TargetType="TextBlock">
                                         <Style.Triggers>
-                                            <DataTrigger Binding="{Binding Value.File}" Value="{x:Null}">
+                                            <DataTrigger Binding="{Binding Value.Script}" Value="{x:Null}">
                                                 <Setter Property="Foreground" Value="{StaticResource PrimaryHueLightBrush}"/>
                                             </DataTrigger>
                                         </Style.Triggers>
                                     </Style>
-                                </ListBox.ItemContainerStyle>
-                                <ListBox.ItemTemplate>
-                                    <DataTemplate>
-                                        <TextBlock Text="{Binding}"
-                                                   Grid.Column="1"
-                                                   Grid.Row="1"
-                                                   AllowDrop="True"
-                                                   Padding="15 10 15 10"
-                                                   Drop="{s:Action OnDrop}"
-                                                   PreviewDragEnter="{s:Action OnPreviewDragOver}"
-                                                   PreviewDragOver="{s:Action OnPreviewDragOver}"
-                                                   ToolTipService.Placement="Top">
-                                            <TextBlock.ToolTip>
-                                                <TextBlock Text="{Binding Converter={StaticResource DeviceAxisFriendlyNameConverter}}"/>
-                                            </TextBlock.ToolTip>
-                                        </TextBlock>
-                                    </DataTemplate>
-                                </ListBox.ItemTemplate>
-                            </ListBox>
-                        </DockPanel>
-                    </DataTemplate>
-                </GroupBox.HeaderTemplate>
-                <StackPanel Margin="20">
-                    <DockPanel LastChildFill="True" Margin="0 0 0 10">
-                        <TextBlock Text="File: " DockPanel.Dock="Left" Margin="0 0 10 0" VerticalAlignment="Center"/>
-                        
-                        <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" Margin="10 0 0 0">
-                            <Button Style="{StaticResource MaterialDesignFloatingActionMiniLightButton}"
-                                    Command="{s:Action OnAxisOpen}"
-                                    CommandParameter="{Binding SelectedAxis}"
-                                    Height="24"
-                                    Width="24"
-                                    Margin="0 0 2 0">
-                                <material:PackIcon Kind="FolderOpen"/>
-                            </Button>
-                            <Button Style="{StaticResource MaterialDesignFloatingActionMiniLightButton}"
-                                    Command="{s:Action OnAxisClear}"
-                                    CommandParameter="{Binding SelectedAxis}"
-                                    Visibility="{Binding SelectedAxisSettings.File, Converter={StaticResource NullableToVisibilityConverter}}"
-                                    Height="24"
-                                    Width="24"
-                                    Margin="2 0 2 0">
-                                <material:PackIcon Kind="Close"/>
-                            </Button>
-                            <Button Style="{StaticResource MaterialDesignFloatingActionMiniLightButton}"
-                                    Command="{s:Action OnAxisReload}"
-                                    CommandParameter="{Binding SelectedAxis}"
-                                    Visibility="{Binding SelectedAxisSettings.File, Converter={StaticResource NullableToVisibilityConverter}}"
-                                    Height="24"
-                                    Width="24"
-                                    Margin="2 0 0 0">
-                                <material:PackIcon Kind="Reload"/>
-                            </Button>
-                        </StackPanel>
-                        
-                        <TextBox Text="{Binding SelectedAxisSettings.File.Name, Mode=OneWay}" 
-                                 Style="{StaticResource MaterialDesignTextBox}"
-                                 IsReadOnly="True"
-                                 VerticalAlignment="Center"
-                                 DockPanel.Dock="Right" 
-                                 Margin="10 0 0 0"
-                                 TextAlignment="Left"/>
-                    </DockPanel>
-                    <DockPanel LastChildFill="True" Margin="0 0 0 10">
-                        <TextBlock Text="Offset: " DockPanel.Dock="Left" Margin="0 0 10 0" VerticalAlignment="Center"/>
-                        <TextBlock Text="{Binding SelectedAxisSettings.Offset, StringFormat={}{0:0.00}s}" 
-                                   VerticalAlignment="Center"
-                                   DockPanel.Dock="Right" 
-                                   Width="60"
-                                   Margin="10 0 0 0"
-                                   TextAlignment="Right"/>
-                        
-                        <Slider Value="{Binding SelectedAxisSettings.Offset}" 
-                                DockPanel.Dock="Left"
-                                Minimum="-5" 
-                                Maximum="5"
-                                TickFrequency="0.01"
-                                IsSnapToTickEnabled="True"
-                                MouseDoubleClick="{s:Action OnSliderDoubleClick}"
-                                ValueChanged="{s:Action OnOffsetSliderValueChanged}"/>
-                    </DockPanel>
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="Inverted:" Margin="0 0 10 0" VerticalAlignment="Center"/>
-                        <ToggleButton Style="{StaticResource MaterialDesignSwitchToggleButton}"
-                                      IsChecked="{Binding SelectedAxisSettings.Inverted}"/>
-                    </StackPanel>
-                </StackPanel>
-            </GroupBox>
+                                </TextBlock.Resources>
+                                <TextBlock.ToolTip>
+                                    <TextBlock Text="{Binding Key, Converter={StaticResource DeviceAxisFriendlyNameConverter}}"/>
+                                </TextBlock.ToolTip>
+                            </TextBlock>
+                        </DataTemplate>
+                    </TabControl.ItemTemplate>
+                    <behaviours:TabContent.Template>
+                        <DataTemplate>
+                            <StackPanel Margin="20">
+                                <DockPanel LastChildFill="True" Margin="0 0 0 10" IsEnabled="{Binding Value.LinkAxis, Converter={StaticResource NullableToBooleanConverter}}">
+                                    <TextBlock Text="File: " 
+                                               DockPanel.Dock="Left" 
+                                               Margin="0 0 10 0" 
+                                               VerticalAlignment="Center"/>
 
+
+                                    <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" Margin="10 0 0 0">
+                                        <Button Style="{StaticResource MaterialDesignFloatingActionMiniLightButton}"
+                                                Command="{s:Action OnAxisOpen}"
+                                                CommandParameter="{Binding Key}"
+                                                Height="24"
+                                                Width="24"
+                                                Margin="0 0 2 0">
+                                            <material:PackIcon Kind="FolderOpen"/>
+                                        </Button>
+                                        <Button Style="{StaticResource MaterialDesignFloatingActionMiniLightButton}"
+                                                Command="{s:Action OnAxisClear}"
+                                                CommandParameter="{Binding Key}"
+                                                Visibility="{Binding Value.Script, Converter={StaticResource NullableToVisibilityConverter}}"
+                                                Height="24"
+                                                Width="24"
+                                                Margin="2 0 2 0">
+                                            <material:PackIcon Kind="Close"/>
+                                        </Button>
+                                        <Button Style="{StaticResource MaterialDesignFloatingActionMiniLightButton}"
+                                                Command="{s:Action OnAxisReload}"
+                                                CommandParameter="{Binding Key}"
+                                                Visibility="{Binding Value.Script, Converter={StaticResource NullableToVisibilityConverter}}"
+                                                Height="24"
+                                                Width="24"
+                                                Margin="2 0 0 0">
+                                            <material:PackIcon Kind="Reload"/>
+                                        </Button>
+                                    </StackPanel>
+
+                                    <TextBox Text="{Binding Value.Script.Name, Mode=OneWay}" 
+                                             Style="{StaticResource MaterialDesignTextBox}"
+                                             Drop="{s:Action OnDrop}"
+                                             PreviewDragEnter="{s:Action OnPreviewDragOver}"
+                                             PreviewDragOver="{s:Action OnPreviewDragOver}"
+                                             IsReadOnly="True"
+                                             VerticalAlignment="Center"
+                                             DockPanel.Dock="Right" 
+                                             Margin="10 0 0 0"
+                                             TextAlignment="Left"/>
+                                </DockPanel>
+                                <DockPanel Margin="0 0 0 10">
+                                    <TextBlock Text="Link: " DockPanel.Dock="Left" Margin="0 0 10 0" VerticalAlignment="Center"/>
+                                    <ComboBox DockPanel.Dock="Left"
+                                              Margin="0 0 100 0" 
+                                              material:TextFieldAssist.HasClearButton="True"
+                                              Width="50" 
+                                              ItemsSource="{Binding Source={controls:EnumBindingSource {x:Type common:DeviceAxis}}}" 
+                                              SelectedItem="{Binding Value.LinkAxis}"
+                                              SelectionChanged="{s:Action OnSelectedLinkAxisChanged}"/>
+                                    <TextBlock Text="Strength: " DockPanel.Dock="Left" Margin="0 0 10 0" VerticalAlignment="Center"/>
+                                    <Slider Value="{Binding Value.LinkAxisStrength}"
+                                            DockPanel.Dock="Right" 
+                                            Minimum="0" 
+                                            Maximum="1"
+                                            TickFrequency="0.01"
+                                            VerticalAlignment="Center"
+                                            IsSnapToTickEnabled="True"
+                                            MouseDoubleClick="{s:Action OnSliderDoubleClick}"
+                                            ValueChanged="{s:Action OnLinkAxisStrengthSliderValueChanged}"/>
+                                </DockPanel>
+                                <DockPanel LastChildFill="True" Margin="0 0 0 10">
+                                    <TextBlock Text="Offset: " DockPanel.Dock="Left" Margin="0 0 10 0" VerticalAlignment="Center"/>
+                                    <TextBlock Text="{Binding Value.Offset, StringFormat={}{0:0.00}s}" 
+                                               VerticalAlignment="Center"
+                                               DockPanel.Dock="Right" 
+                                               Width="60"
+                                               Margin="10 0 0 0"
+                                               TextAlignment="Right"/>
+
+                                    <Slider Value="{Binding Value.Offset}" 
+                                            DockPanel.Dock="Left"
+                                            Minimum="-5" 
+                                            Maximum="5"
+                                            TickFrequency="0.01"
+                                            IsSnapToTickEnabled="True"
+                                            MouseDoubleClick="{s:Action OnSliderDoubleClick}"
+                                            ValueChanged="{s:Action OnOffsetSliderValueChanged}"/>
+                                </DockPanel>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="Inverted:" Margin="0 0 10 0" VerticalAlignment="Center"/>
+                                    <ToggleButton Style="{StaticResource MaterialDesignSwitchToggleButton}"
+                                                  IsChecked="{Binding Value.Inverted}"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </DataTemplate>
+                    </behaviours:TabContent.Template>
+                </TabControl>
+            </material:Card>
+            
             <material:Card material:ShadowAssist.ShadowDepth="Depth1">
                 <StackPanel Margin="20">
                     <ItemsControl ItemsSource="{Binding AxisStates}">
