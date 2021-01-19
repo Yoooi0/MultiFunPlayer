@@ -106,9 +106,8 @@ namespace MultiFunPlayer.Common.Controls
 
             void AddStop(Color color, float offset) => Stops.Add(new GradientStop(color, offset));
 
-            var duration = MathF.Max(Duration, Keyframes.SelectMany(x => x.Value).Max(x => x.Position));
             const int bucketCount = 333;
-            var bucketSize = (int)MathF.Ceiling(duration / bucketCount);
+            var bucketSize = (int)MathF.Ceiling(Duration / bucketCount);
 
             var colors = new Color[]
             {
@@ -119,7 +118,7 @@ namespace MultiFunPlayer.Common.Controls
                 Color.FromRgb(0xf5, 0x3e, 0x2e),
             };
 
-            var buckets = new float[(int)MathF.Ceiling(duration / bucketSize)];
+            var buckets = new float[(int)MathF.Ceiling(Duration / bucketSize)];
 
             AddStop(Color.FromRgb(0, 0, 0), 0);
             foreach (var (axis, keyframes) in Keyframes)
@@ -145,7 +144,7 @@ namespace MultiFunPlayer.Common.Controls
                     var startBucket = (int)MathF.Floor(prev.Position / bucketSize);
                     var endBucket = (int)MathF.Floor(next.Position / bucketSize);
 
-                    for (var bucket = startBucket; bucket <= endBucket; bucket++)
+                    for (var bucket = startBucket; bucket < buckets.Length && bucket <= endBucket; bucket++)
                         buckets[bucket] += length / (endBucket - startBucket + 1);
                 }
             }
@@ -157,9 +156,9 @@ namespace MultiFunPlayer.Common.Controls
                 {
                     var heat = MathUtils.Clamp01(buckets[i] * normalizationFactor);
                     var color = heat < 0.001f ? Color.FromRgb(0, 0, 0) : colors[(int)MathF.Round(heat * (colors.Length - 1))];
-                    AddStop(color, i * bucketSize / duration);
+                    AddStop(color, i * bucketSize / Duration);
                     if (i < buckets.Length - 1)
-                        AddStop(color, (i + 1) * bucketSize / duration);
+                        AddStop(color, (i + 1) * bucketSize / Duration);
                 }
             }
 
