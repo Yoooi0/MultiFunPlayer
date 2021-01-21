@@ -98,8 +98,7 @@
                         <TextBlock Text="{Binding GlobalOffset, StringFormat={}{0:0.00}s}" 
                                    VerticalAlignment="Center"
                                    DockPanel.Dock="Right" 
-                                   Width="60"
-                                   Margin="10 0 0 0"
+                                   Width="50"
                                    TextAlignment="Right"/>
 
                         <Slider Value="{Binding GlobalOffset}" 
@@ -318,8 +317,7 @@
                                     <TextBlock Text="{Binding Value.Offset, StringFormat={}{0:0.00}s}" 
                                                VerticalAlignment="Center"
                                                DockPanel.Dock="Right" 
-                                               Width="60"
-                                               Margin="10 0 0 0"
+                                               Width="50"
                                                TextAlignment="Right"/>
 
                                     <Slider Value="{Binding Value.Offset}" 
@@ -347,18 +345,22 @@
                     <ItemsControl ItemsSource="{Binding AxisStates}">
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate>
-                                <UniformGrid Columns="3" Rows="3" IsItemsHost="True"/>
+                                <UniformGrid Columns="3" Rows="3" IsItemsHost="True" Margin="-5 0 -5 0"/>
                             </ItemsPanelTemplate>
                         </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemContainerStyle>
+                            <Style>
+                                <Setter Property="FrameworkElement.Margin" Value="5 0 5 0"/>
+                            </Style>
+                        </ItemsControl.ItemContainerStyle>
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
                                 <DockPanel Margin="2" LastChildFill="True">
-                                    <TextBlock DockPanel.Dock="Left" Margin="0 0 10 0" Text="{Binding Key, Mode=OneWay}"/>
+                                    <TextBlock DockPanel.Dock="Left" Margin="0 0 5 0" Text="{Binding Key, Mode=OneWay}"/>
                                     <ProgressBar material:TransitionAssist.DisableTransitions="True"
                                                  DockPanel.Dock="Right"
                                                  Minimum="0"
                                                  Maximum="100"
-                                                 Margin="0 0 10 0"
                                                  Height="10"
                                                  Value="{Binding Value.Value, Mode=OneWay, Converter={StaticResource DeviceAxisValueToPercentConverter}}">
                                         <ProgressBar.Style>
