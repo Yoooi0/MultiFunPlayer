@@ -72,6 +72,8 @@ namespace MultiFunPlayer.ViewModels
             var stopwatch = new Stopwatch();
 
             stopwatch.Start();
+
+            var randomizer = new OpenSimplex(0);
             while (!token.IsCancellationRequested)
             {
                 if (!IsPlaying)
@@ -104,6 +106,13 @@ namespace MultiFunPlayer.ViewModels
                             var newValue = MathUtils.Map(axisPosition, prev.Position, next.Position,
                                 settings.Inverted ? 1 - prev.Value : prev.Value,
                                 settings.Inverted ? 1 - next.Value : next.Value);
+
+                            if (settings.LinkAxis != null)
+                            {
+                                var speed = MathUtils.Map(settings.RandomizerSpeed, 100, 0, 0.25f, 4);
+                                var randomizerValue = (float)(randomizer.Calculate2D(axisPosition / speed, settings.RandomizerSeed) + 1) / 2;
+                                newValue = MathUtils.Lerp(newValue, randomizerValue, settings.RandomizerStrength / 100.0f);
+                            }
 
                             if (IsSyncing)
                                 newValue = MathUtils.Lerp(!float.IsFinite(state.Value) ? axis.DefaultValue() : state.Value, newValue, SyncProgress / 100);
@@ -339,6 +348,7 @@ namespace MultiFunPlayer.ViewModels
             foreach (var (axis, settings) in AxisSettings.Where(x => x.Value.LinkAxis != null))
             {
                 settings.Script = AxisSettings[settings.LinkAxis.Value].Script;
+                settings.RandomizerSeed = MathUtils.Random(short.MinValue, short.MaxValue);
                 Update(axis);
             }
 
@@ -390,7 +400,7 @@ namespace MultiFunPlayer.ViewModels
         }
 
         [SuppressPropertyChangedWarnings]
-        public void OnLinkAxisStrengthSliderValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        public void OnRandomizerSliderValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
             if (!(sender is FrameworkElement element && element.DataContext is KeyValuePair<DeviceAxis, AxisSettings> pair))
                 return;
@@ -489,7 +499,9 @@ namespace MultiFunPlayer.ViewModels
     {
         public IScriptFile Script { get; set; } = null;
         public DeviceAxis? LinkAxis { get; set; } = null;
-        public float LinkAxisStrength { get; set; } = 0;
+        public int RandomizerSeed { get; set; } = 0;
+        public int RandomizerStrength { get; set; } = 0;
+        public int RandomizerSpeed { get; set; } = 0;
         public bool Inverted { get; set; } = false;
         public float Offset { get; set; } = 0;
     }

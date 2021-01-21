@@ -295,22 +295,38 @@
                                 <DockPanel Margin="0 0 0 10">
                                     <TextBlock Text="Link: " DockPanel.Dock="Left" Margin="0 0 10 0" VerticalAlignment="Center"/>
                                     <ComboBox DockPanel.Dock="Left"
-                                              Margin="0 0 100 0" 
+                                              Margin="0 0 10 0" 
                                               material:TextFieldAssist.HasClearButton="True"
                                               Width="50" 
                                               ItemsSource="{Binding Source={controls:EnumBindingSource {x:Type common:DeviceAxis}}}" 
                                               SelectedItem="{Binding Value.LinkAxis}"
                                               SelectionChanged="{s:Action OnSelectedLinkAxisChanged}"/>
-                                    <TextBlock Text="Strength: " DockPanel.Dock="Left" Margin="0 0 10 0" VerticalAlignment="Center"/>
-                                    <Slider Value="{Binding Value.LinkAxisStrength}"
-                                            DockPanel.Dock="Right" 
+                                    <TextBlock Text="Speed: " DockPanel.Dock="Left" Margin="0 0 10 0" VerticalAlignment="Center"/>
+                                    <Slider Value="{Binding Value.RandomizerSpeed}"    
+                                            Style="{StaticResource MaterialDesignDiscreteSlider}"
+                                            Margin="0 -38 10 0"
+                                            DockPanel.Dock="Left" 
+                                            Width="140"
                                             Minimum="0" 
-                                            Maximum="1"
-                                            TickFrequency="0.01"
+                                            Maximum="100"
+                                            TickFrequency="1"
                                             VerticalAlignment="Center"
                                             IsSnapToTickEnabled="True"
                                             MouseDoubleClick="{s:Action OnSliderDoubleClick}"
-                                            ValueChanged="{s:Action OnLinkAxisStrengthSliderValueChanged}"/>
+                                            ValueChanged="{s:Action OnRandomizerSliderValueChanged}"/>
+
+                                    <TextBlock Text="Strength: " DockPanel.Dock="Left" Margin="0 0 10 0" VerticalAlignment="Center"/>
+                                    <Slider Value="{Binding Value.RandomizerStrength}"
+                                            Style="{StaticResource MaterialDesignDiscreteSlider}"
+                                            Margin="0 -38 0 0"
+                                            DockPanel.Dock="Left" 
+                                            Minimum="0" 
+                                            Maximum="100"
+                                            TickFrequency="1"
+                                            VerticalAlignment="Center"
+                                            IsSnapToTickEnabled="True"
+                                            MouseDoubleClick="{s:Action OnSliderDoubleClick}"
+                                            ValueChanged="{s:Action OnRandomizerSliderValueChanged}"/>
                                 </DockPanel>
                                 <DockPanel LastChildFill="True" Margin="0 0 0 10">
                                     <TextBlock Text="Offset: " DockPanel.Dock="Left" Margin="0 0 10 0" VerticalAlignment="Center"/>
