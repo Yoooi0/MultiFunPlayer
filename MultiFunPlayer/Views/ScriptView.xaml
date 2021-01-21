@@ -15,6 +15,7 @@
         <converters:DeviceAxisValueToPercentConverter x:Key="DeviceAxisValueToPercentConverter"/>
         <converters:DeviceAxisFriendlyNameConverter x:Key="DeviceAxisFriendlyNameConverter"/>
         <converters:NullableToBooleanConverter x:Key="NullableToBooleanConverter"/>
+        <converters:InvertedNullableToBooleanConverter x:Key="InvertedNullableToBooleanConverter"/>
         <material:NullableToVisibilityConverter x:Key="NullableToVisibilityConverter"/>
     </UserControl.Resources>
     <material:Card material:ShadowAssist.ShadowDepth="Depth1" Margin="0 0 0 20">
@@ -304,6 +305,7 @@
                                     <TextBlock Text="Speed: " DockPanel.Dock="Left" Margin="0 0 10 0" VerticalAlignment="Center"/>
                                     <Slider Value="{Binding Value.RandomizerSpeed}"    
                                             Style="{StaticResource MaterialDesignDiscreteSlider}"
+                                            IsEnabled="{Binding Value.LinkAxis, Converter={StaticResource InvertedNullableToBooleanConverter}}"
                                             Margin="0 -38 10 0"
                                             DockPanel.Dock="Left" 
                                             Width="140"
@@ -318,6 +320,7 @@
                                     <TextBlock Text="Strength: " DockPanel.Dock="Left" Margin="0 0 10 0" VerticalAlignment="Center"/>
                                     <Slider Value="{Binding Value.RandomizerStrength}"
                                             Style="{StaticResource MaterialDesignDiscreteSlider}"
+                                            IsEnabled="{Binding Value.LinkAxis, Converter={StaticResource InvertedNullableToBooleanConverter}}"
                                             Margin="0 -38 0 0"
                                             DockPanel.Dock="Left" 
                                             Minimum="0" 
