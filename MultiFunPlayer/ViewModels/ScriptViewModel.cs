@@ -409,7 +409,12 @@ namespace MultiFunPlayer.ViewModels
 
             var axis = pair.Key;
             var settings = pair.Value;
-            if(settings.LinkAxis == null)
+
+            if (e.AddedItems.TryGet<DeviceAxis>(0, out var added) && added == axis)
+            {
+                settings.LinkAxis = e.RemovedItems.TryGet<DeviceAxis>(0, out var removed) ? removed : null;
+            }
+            else if(settings.LinkAxis == null)
             {
                 UpdateFiles(AxisFilesChangeType.Clear, axis);
             }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
@@ -21,8 +22,35 @@ namespace MultiFunPlayer.Common
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool ValidateIndex<T>(this ICollection<T> collection, int index)
+        public static bool ValidateIndex<T>(this ICollection<T> collection, int index) 
             => index >= 0 && index < collection.Count;
+
+        public static bool TryGet<T>(this IList list, int index, out T value)
+        {
+            value = default;
+            if (index < 0 || index >= list.Count)
+                return false;
+
+            var o = list[index];
+            if(o == null)
+                return true;
+
+            if (o is not T)
+                return false;
+
+            value = (T) o;
+            return true;
+        }
+
+        public static bool TryGet<T>(this IList<T> list, int index, out T value)
+        {
+            value = default;
+            if (!list.ValidateIndex(index))
+                return false;
+
+            value = list[index];
+            return true;
+        }
 
         public static void PreciseSleep(this Stopwatch stopwatch, float interval, CancellationToken token)
         {
