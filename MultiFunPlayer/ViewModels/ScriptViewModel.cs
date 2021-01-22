@@ -13,11 +13,13 @@ using System.IO.Compression;
 using PropertyChanged;
 using Microsoft.Win32;
 using Newtonsoft.Json.Linq;
+using MultiFunPlayer.Common.Messages;
+using Newtonsoft.Json;
 
 namespace MultiFunPlayer.ViewModels
 {
     public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
-        IHandle<VideoPositionMessage>, IHandle<VideoPlayingMessage>, IHandle<VideoFileChangedMessage>, IHandle<VideoDurationMessage>, IHandle<VideoSpeedMessage>
+        IHandle<VideoPositionMessage>, IHandle<VideoPlayingMessage>, IHandle<VideoFileChangedMessage>, IHandle<VideoDurationMessage>, IHandle<VideoSpeedMessage>, IHandle<AppSettingsMessage>
     {
         private readonly float _syncDuration = 4;
 
@@ -32,7 +34,7 @@ namespace MultiFunPlayer.ViewModels
         public float VideoDuration { get; set; }
         public float GlobalOffset { get; set; }
         public ObservableConcurrentDictionary<DeviceAxis, AxisState> AxisStates { get; set; }
-        public ObservableConcurrentDictionary<DeviceAxis, AxisSettings> AxisSettings { get; set; }
+        public ObservableConcurrentDictionary<DeviceAxis, ScriptAxisSettings> AxisSettings { get; set; }
         public ObservableConcurrentDictionary<DeviceAxis, List<Keyframe>> ScriptKeyframes { get; }
 
         public FileInfo VideoFile { get; set; }
@@ -44,7 +46,7 @@ namespace MultiFunPlayer.ViewModels
             eventAggregator.Subscribe(this);
 
             AxisStates = new ObservableConcurrentDictionary<DeviceAxis, AxisState>(EnumUtils.GetValues<DeviceAxis>().ToDictionary(a => a, _ => new AxisState()));
-            AxisSettings = new ObservableConcurrentDictionary<DeviceAxis, AxisSettings>(EnumUtils.GetValues<DeviceAxis>().ToDictionary(a => a, _ => new AxisSettings()));
+            AxisSettings = new ObservableConcurrentDictionary<DeviceAxis, ScriptAxisSettings>(EnumUtils.GetValues<DeviceAxis>().ToDictionary(a => a, _ => new ScriptAxisSettings()));
 
             VideoFile = null;
 
@@ -243,6 +245,41 @@ namespace MultiFunPlayer.ViewModels
             }
         }
 
+        public void Handle(AppSettingsMessage message)
+        {
+            if (message.Type == AppSettingsMessageType.Saving)
+            {
+                var settings = new JObject
+                {
+                    { nameof(AxisSettings), JObject.FromObject(AxisSettings) }
+                };
+
+                message.Settings["Script"] = settings;
+            }
+            else if (message.Type == AppSettingsMessageType.Loading)
+            {
+                if (!message.Settings.ContainsKey("Script"))
+                    return;
+
+                var settings = message.Settings["Script"] as JObject;
+                if (settings.TryGetValue(nameof(AxisSettings), out var axisSettingsToken))
+                {
+                    foreach (var (axis, axisSettings) in axisSettingsToken.ToObject<Dictionary<DeviceAxis, ScriptAxisSettings>>())
+                    {
+                        //TODO: persistent tab content breaks when replacing objects
+                        // AxisSettings[axis] = axisSettings;
+
+                        AxisSettings[axis].LinkAxis = axisSettings.LinkAxis;
+                        AxisSettings[axis].RandomizerSeed = axisSettings.RandomizerSeed;
+                        AxisSettings[axis].RandomizerStrength = axisSettings.RandomizerStrength;
+                        AxisSettings[axis].RandomizerSpeed = axisSettings.RandomizerSpeed;
+                        AxisSettings[axis].Inverted = axisSettings.Inverted;
+                        AxisSettings[axis].Offset = axisSettings.Offset;
+                    }
+                }
+            }
+        }
+
         private void SearchForValidIndices(DeviceAxis axis, AxisState state)
         {
             if (!ScriptKeyframes.TryGetValue(axis, out var keyframes))
@@ -357,7 +394,7 @@ namespace MultiFunPlayer.ViewModels
 
         public void OnDrop(object sender, DragEventArgs e)
         {
-            if (!(sender is FrameworkElement element && element.DataContext is KeyValuePair<DeviceAxis, AxisSettings> pair))
+            if (!(sender is FrameworkElement element && element.DataContext is KeyValuePair<DeviceAxis, ScriptAxisSettings> pair))
                 return;
 
             var drop = e.Data.GetData(DataFormats.FileDrop);
@@ -399,7 +436,7 @@ namespace MultiFunPlayer.ViewModels
         [SuppressPropertyChangedWarnings]
         public void OnRandomizerSliderValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
-            if (!(sender is FrameworkElement element && element.DataContext is KeyValuePair<DeviceAxis, AxisSettings> pair))
+            if (!(sender is FrameworkElement element && element.DataContext is KeyValuePair<DeviceAxis, ScriptAxisSettings> pair))
                 return;
 
             if (pair.Value.LinkAxis == null)
@@ -411,7 +448,7 @@ namespace MultiFunPlayer.ViewModels
         [SuppressPropertyChangedWarnings]
         public void OnSelectedLinkAxisChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (!(sender is FrameworkElement element && element.DataContext is KeyValuePair<DeviceAxis, AxisSettings> pair))
+            if (!(sender is FrameworkElement element && element.DataContext is KeyValuePair<DeviceAxis, ScriptAxisSettings> pair))
                 return;
 
             var axis = pair.Key;
@@ -492,15 +529,16 @@ namespace MultiFunPlayer.ViewModels
         }
     }
 
-    public class AxisSettings : PropertyChangedBase
+    [JsonObject(MemberSerialization.OptIn)]
+    public class ScriptAxisSettings : PropertyChangedBase
     {
-        public IScriptFile Script { get; set; } = null;
-        public DeviceAxis? LinkAxis { get; set; } = null;
-        public int RandomizerSeed { get; set; } = 0;
-        public int RandomizerStrength { get; set; } = 0;
-        public int RandomizerSpeed { get; set; } = 0;
-        public bool Inverted { get; set; } = false;
-        public float Offset { get; set; } = 0;
+        [JsonIgnore] public IScriptFile Script { get; set; } = null;
+        [JsonProperty] public DeviceAxis? LinkAxis { get; set; } = null;
+        [JsonProperty] public int RandomizerSeed { get; set; } = 0;
+        [JsonProperty] public int RandomizerStrength { get; set; } = 0;
+        [JsonProperty] public int RandomizerSpeed { get; set; } = 0;
+        [JsonProperty] public bool Inverted { get; set; } = false;
+        [JsonProperty] public float Offset { get; set; } = 0;
     }
 
     [DebuggerDisplay("[{Position}, {Value}]")]
