@@ -234,6 +234,13 @@
                                             <DataTrigger Binding="{Binding Value.Script}" Value="{x:Null}">
                                                 <Setter Property="Foreground" Value="{StaticResource PrimaryHueLightBrush}"/>
                                             </DataTrigger>
+                                            <MultiDataTrigger>
+                                                <MultiDataTrigger.Conditions>
+                                                    <Condition Binding="{Binding Value.Script}" Value="{x:Null}"/>
+                                                    <Condition Binding="{Binding Value.LinkAxis, Converter={StaticResource InvertedNullableToBooleanConverter}}" Value="True"/>
+                                                </MultiDataTrigger.Conditions>
+                                                <Setter Property="Foreground" Value="{StaticResource PrimaryHueMidBrush}"/>
+                                            </MultiDataTrigger>
                                         </Style.Triggers>
                                     </Style>
                                 </TextBlock.Resources>
