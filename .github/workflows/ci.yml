@@ -8,6 +8,9 @@ on:
 jobs:
   build:
     runs-on: windows-latest
+    strategy:
+      matrix:
+        build_type: [Release, Debug]
     steps:
     - name: Checkout
       uses: actions/checkout@v2        
@@ -26,10 +29,10 @@ jobs:
       uses: gittools/actions/gitversion/execute@v0.9.7
     - name: Install dependencies
       run: dotnet restore
-    - name: Build
-      run: dotnet publish --configuration Debug /p:AssemblyVersion=${{ steps.gitversion.outputs.assemblySemVer }} /p:FileVersion=${{ steps.gitversion.outputs.assemblySemFileVer }} /p:InformationalVersion=${{ steps.gitversion.outputs.informationalVersion }}
-    - name: Upload artifact
+    - name: Build ${{ matrix.build_type }}
+      run: dotnet publish --configuration ${{ matrix.build_type }} /p:AssemblyVersion=${{ steps.gitversion.outputs.assemblySemVer }} /p:FileVersion=${{ steps.gitversion.outputs.assemblySemFileVer }} /p:InformationalVersion=${{ steps.gitversion.outputs.informationalVersion }}
+    - name: Upload ${{ matrix.build_type }} artifact
       uses: actions/upload-artifact@v2
       with:
-        name: MultiFunPlayer-${{ steps.gitversion.outputs.fullSemVer }}.Branch.${{ steps.gitversion.outputs.escapedBranchName }}
-        path: MultiFunPlayer\bin\Debug\win-x64\publish
+        name: MultiFunPlayer-${{ steps.gitversion.outputs.fullSemVer }}.Branch.${{ steps.gitversion.outputs.escapedBranchName }}.zip
+        path: MultiFunPlayer\bin\${{ matrix.build_type }}\win-x64\publish
