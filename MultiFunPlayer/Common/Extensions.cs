@@ -1,4 +1,5 @@
-﻿using System;
+using Newtonsoft.Json.Linq;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -10,6 +11,24 @@ namespace MultiFunPlayer.Common
 {
     public static class Extensions
     {
+        public static bool TryToObject<T>(this JToken token, out T value)
+        {
+            value = default;
+
+            try
+            {
+                if (token.Type == JTokenType.Null)
+                    return false;
+
+                value = token.ToObject<T>();
+                return true;
+            }
+            catch(FormatException)
+            {
+                return false;
+            }
+        }
+
         public static Task<T> WithCancellation<T>(this Task<T> task, CancellationToken cancellationToken)
         {
             return task.IsCompleted

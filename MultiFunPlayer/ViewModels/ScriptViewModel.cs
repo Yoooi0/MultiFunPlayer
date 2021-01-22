@@ -5,17 +5,14 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Text.Json;
 using System.Threading;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows;
 using System.IO.Compression;
 using PropertyChanged;
-using System.Threading.Tasks;
 using Microsoft.Win32;
-using System.Dynamic;
-using Microsoft.Xaml.Behaviors.Core;
+using Newtonsoft.Json.Linq;
 
 namespace MultiFunPlayer.ViewModels
 {
@@ -293,19 +290,19 @@ namespace MultiFunPlayer.ViewModels
                 var result = true;
                 try
                 {
-                    var document = JsonDocument.Parse(file.Data);
-                    if (!document.RootElement.TryGetProperty("rawActions", out var actions) || actions.GetArrayLength() == 0)
-                        if (!document.RootElement.TryGetProperty("actions", out actions) || actions.GetArrayLength() == 0)
+                    var document = JObject.Parse(file.Data);
+                    if (!document.TryGetValue("rawActions", out var actions) || (actions as JArray)?.Count == 0)
+                        if (!document.TryGetValue("actions", out actions) || (actions as JArray)?.Count == 0)
                             return false;
 
                     var keyframes = new List<Keyframe>();
-                    foreach (var child in actions.EnumerateArray())
+                    foreach (var child in actions)
                     {
-                        var position = child.GetProperty("at").GetInt64() / 1000.0f;
+                        var position = child["at"].ToObject<long>() / 1000.0f;
                         if (position < 0)
                             continue;
 
-                        var value = (float)child.GetProperty("pos").GetDouble() / 100;
+                        var value = child["pos"].ToObject<float>() / 100;
                         keyframes.Add(new Keyframe(position, value));
                     }
 

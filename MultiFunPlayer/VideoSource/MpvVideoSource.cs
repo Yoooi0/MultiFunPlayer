@@ -1,13 +1,14 @@
 ﻿using MaterialDesignThemes.Wpf;
 using MultiFunPlayer.Common;
 using MultiFunPlayer.Common.Controls;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using Stylet;
 using System;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.IO.Pipes;
-using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -67,23 +68,6 @@ namespace MultiFunPlayer.VideoSource
                     await writer.WriteLineAsync("{ \"command\": [\"observe_property_string\", 4, \"path\"] }").ConfigureAwait(false);
                     await writer.WriteLineAsync("{ \"command\": [\"observe_property_string\", 5, \"speed\"] }").ConfigureAwait(false);
 
-                    static bool TryReadDouble(JsonElement element, out double value)
-                    {
-                        value = double.NaN;
-                        if (element.ValueKind == JsonValueKind.Null)
-                            return false;
-                        return double.TryParse(element.GetString(), NumberStyles.Any, CultureInfo.InvariantCulture, out value);
-                    }
-
-                    static bool TryReadString(JsonElement element, out string value)
-                    {
-                        value = null;
-                        if (element.ValueKind == JsonValueKind.Null)
-                            return false;
-                        value = element.GetString();
-                        return true;
-                    }
-
                     Status = VideoSourceStatus.Connected;
                     while (!token.IsCancellationRequested && client.IsConnected)
                     {
@@ -91,42 +75,46 @@ namespace MultiFunPlayer.VideoSource
                         if (message == null)
                             continue;
 
-                        var document = JsonDocument.Parse(message);
-                        if (!document.RootElement.TryGetProperty("event", out var eventProperty))
-                            continue;
-
-                        switch (eventProperty.GetString())
+                        try
                         {
-                            case "property-change":
-                                {
-                                    if (!document.RootElement.TryGetProperty("name", out var nameProperty)
-                                     || !document.RootElement.TryGetProperty("data", out var dataProperty))
-                                        continue;
+                            var document = JObject.Parse(message);
+                            if (!document.TryGetValue("event", out var eventToken))
+                                continue;
 
-                                    switch (nameProperty.GetString())
+                            switch (eventToken.ToObject<string>())
+                            {
+                                case "property-change":
                                     {
-                                        case "path":
-                                            _eventAggregator.Publish(new VideoFileChangedMessage(TryReadString(dataProperty, out var path) ? path : null));
-                                            break;
-                                        case "time-pos":
-                                            _eventAggregator.Publish(new VideoPositionMessage(TryReadDouble(dataProperty, out var position) ? TimeSpan.FromSeconds(position) : null));
-                                            break;
-                                        case "pause":
-                                            _eventAggregator.Publish(new VideoPlayingMessage(TryReadString(dataProperty, out var paused) && paused != "yes"));
-                                            break;
-                                        case "duration":
-                                            _eventAggregator.Publish(new VideoDurationMessage(TryReadDouble(dataProperty, out var duration) ? TimeSpan.FromSeconds(duration) : null));
-                                            break;
-                                        case "speed":
-                                            if(TryReadDouble(dataProperty, out var speed))
-                                                _eventAggregator.Publish(new VideoSpeedMessage((float)speed));
-                                            break;
-                                        default: break;
+                                        if (!document.TryGetValue("name", out var nameToken)
+                                         || !document.TryGetValue("data", out var dataToken))
+                                            continue;
+
+                                        switch (nameToken.ToObject<string>())
+                                        {
+                                            case "path":
+                                                _eventAggregator.Publish(new VideoFileChangedMessage(dataToken.TryToObject<string>(out var path) ? path : null));
+                                                break;
+                                            case "time-pos":
+                                                _eventAggregator.Publish(new VideoPositionMessage(dataToken.TryToObject<double>(out var position) ? TimeSpan.FromSeconds(position) : null));
+                                                break;
+                                            case "pause":
+                                                _eventAggregator.Publish(new VideoPlayingMessage(dataToken.TryToObject<string>(out var paused) && paused != "yes"));
+                                                break;
+                                            case "duration":
+                                                _eventAggregator.Publish(new VideoDurationMessage(dataToken.TryToObject<double>(out var duration) ? TimeSpan.FromSeconds(duration) : null));
+                                                break;
+                                            case "speed":
+                                                if (dataToken.TryToObject<double>(out var speed))
+                                                    _eventAggregator.Publish(new VideoSpeedMessage((float)speed));
+                                                break;
+                                            default: break;
+                                        }
+                                        break;
                                     }
-                                    break;
-                                }
-                            default: break;
+                                default: break;
+                            }
                         }
+                        catch (JsonException) { }
                     }
                 }
             }

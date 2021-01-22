@@ -1,12 +1,13 @@
 ﻿using MaterialDesignThemes.Wpf;
 using MultiFunPlayer.Common;
 using MultiFunPlayer.Common.Controls;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using Stylet;
 using System;
 using System.Diagnostics;
 using System.IO;
 using System.Net.Sockets;
-using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -73,22 +74,22 @@ namespace MultiFunPlayer.VideoSource
 
                     try
                     {
-                        var document = JsonDocument.Parse(data.AsMemory(4..(length+4)));
+                        var document = JObject.Parse(data.AsMemory(4..(length+4)).ToString());
 
-                        if (document.RootElement.TryGetProperty("playerState", out var stateProperty))
-                            _eventAggregator.Publish(new VideoPlayingMessage(isPlaying: stateProperty.GetInt32() == 0));
+                        if (document.TryGetValue("playerState", out var stateToken) && stateToken.TryToObject<int>(out var state))
+                            _eventAggregator.Publish(new VideoPlayingMessage(isPlaying: state == 0));
 
-                        if (document.RootElement.TryGetProperty("duration", out var durationProperty))
-                            _eventAggregator.Publish(new VideoDurationMessage(TimeSpan.FromSeconds(durationProperty.GetDouble())));
+                        if (document.TryGetValue("duration", out var durationToken) && durationToken.TryToObject<float>(out var duration))
+                            _eventAggregator.Publish(new VideoDurationMessage(TimeSpan.FromSeconds(duration)));
 
-                        if (document.RootElement.TryGetProperty("currentTime", out var timeProperty))
-                            _eventAggregator.Publish(new VideoPositionMessage(TimeSpan.FromSeconds(timeProperty.GetDouble())));
+                        if (document.TryGetValue("currentTime", out var timeToken) && timeToken.TryToObject<float>(out var time))
+                            _eventAggregator.Publish(new VideoPositionMessage(TimeSpan.FromSeconds(time)));
 
-                        if (document.RootElement.TryGetProperty("path", out var pathProperty))
-                            _eventAggregator.Publish(new VideoFileChangedMessage(pathProperty.GetString()));
+                        if (document.TryGetValue("path", out var pathToken) && pathToken.TryToObject<string>(out var path))
+                            _eventAggregator.Publish(new VideoFileChangedMessage(path));
 
-                        if (document.RootElement.TryGetProperty("playbackSpeed", out var speedProperty))
-                            _eventAggregator.Publish(new VideoSpeedMessage((float)speedProperty.GetDouble()));
+                        if (document.TryGetValue("playbackSpeed", out var speedToken) && speedToken.TryToObject<float>(out var speed))
+                            _eventAggregator.Publish(new VideoSpeedMessage(speed));
                     }
                     catch (JsonException) { }
                 }
