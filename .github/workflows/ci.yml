@@ -34,5 +34,5 @@ jobs:
     - name: Upload ${{ matrix.build_type }} artifact
       uses: actions/upload-artifact@v2
       with:
-        name: MultiFunPlayer-${{ steps.gitversion.outputs.fullSemVer }}.Branch.${{ steps.gitversion.outputs.escapedBranchName }}.zip
+        name: MultiFunPlayer-${{ steps.gitversion.outputs.fullSemVer }}.Branch.${{ steps.gitversion.outputs.escapedBranchName }}.zip (${{ matrix.build_type }})
         path: MultiFunPlayer\bin\${{ matrix.build_type }}\win-x64\publish
