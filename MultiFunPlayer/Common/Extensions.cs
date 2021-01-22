@@ -1,4 +1,4 @@
-using Newtonsoft.Json.Linq;
+﻿using Newtonsoft.Json.Linq;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -41,7 +41,7 @@ namespace MultiFunPlayer.Common
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool ValidateIndex<T>(this ICollection<T> collection, int index) 
+        public static bool ValidateIndex<T>(this ICollection<T> collection, int index)
             => index >= 0 && index < collection.Count;
 
         public static bool TryGet<T>(this IList list, int index, out T value)
@@ -52,7 +52,7 @@ namespace MultiFunPlayer.Common
 
             var o = list[index];
             if(o == null)
-                return true;
+                return !typeof(T).IsValueType || Nullable.GetUnderlyingType(typeof(T)) != null;
 
             if (o is not T)
                 return false;

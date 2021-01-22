@@ -5,7 +5,7 @@ namespace MultiFunPlayer.Common
 {
     public static class MathUtils
     {
-        private static Random _random;
+        private static readonly Random _random;
 
         static MathUtils()
         {
@@ -66,7 +66,6 @@ namespace MultiFunPlayer.Common
                 source[r] = source[i];
             }
         }
-
 
         static OpenSimplex()
         {
@@ -168,7 +167,6 @@ namespace MultiFunPlayer.Common
             return value;
         }
 
-
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static int FastFloor(double x)
         {
@@ -201,5 +199,4 @@ namespace MultiFunPlayer.Common
             }
         }
     }
-
 }

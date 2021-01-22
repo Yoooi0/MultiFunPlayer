@@ -24,7 +24,7 @@ namespace MultiFunPlayer.ViewModels
 
         public BindableCollection<ComPortModel> ComPorts { get; set; }
 
-        public ObservableConcurrentDictionary<DeviceAxis, AxisSettingsModel> AxisSettings { get; set; }
+        public ObservableConcurrentDictionary<DeviceAxis, DeviceAxisSettings> AxisSettings { get; set; }
         public ComPortModel SelectedComPort { get; set; }
         public int UpdateRate { get; set; }
 
@@ -34,7 +34,7 @@ namespace MultiFunPlayer.ViewModels
             _valueProvider = valueProvider;
 
             ComPorts = new BindableCollection<ComPortModel>(SerialPort.GetPortNames().Select(p => new ComPortModel(p)));
-            AxisSettings = new ObservableConcurrentDictionary<DeviceAxis, AxisSettingsModel>(EnumUtils.GetValues<DeviceAxis>().ToDictionary(a => a, _ => new AxisSettingsModel()));
+            AxisSettings = new ObservableConcurrentDictionary<DeviceAxis, DeviceAxisSettings>(EnumUtils.GetValues<DeviceAxis>().ToDictionary(a => a, _ => new DeviceAxisSettings()));
             UpdateRate = 60;
         }
 
@@ -193,7 +193,7 @@ namespace MultiFunPlayer.ViewModels
                 if (settings.TryGetValue(nameof(SelectedComPort), out var selectedComPortToken))
                     SelectedComPort = ComPorts.FirstOrDefault(x => string.Equals(x.Name, selectedComPortToken.ToObject<string>(), StringComparison.OrdinalIgnoreCase));
                 if (settings.TryGetValue(nameof(AxisSettings), out var axisSettingsToken))
-                    AxisSettings = new ObservableConcurrentDictionary<DeviceAxis, AxisSettingsModel>(axisSettingsToken.ToObject<Dictionary<DeviceAxis, AxisSettingsModel>>());
+                    AxisSettings = new ObservableConcurrentDictionary<DeviceAxis, DeviceAxisSettings>(axisSettingsToken.ToObject<Dictionary<DeviceAxis, DeviceAxisSettings>>());
             }
         }
 
@@ -223,12 +223,12 @@ namespace MultiFunPlayer.ViewModels
         }
     }
 
-    public class AxisSettingsModel
+    public class DeviceAxisSettings
     {
         public int Minimum { get; set; }
         public int Maximum { get; set; }
 
-        public AxisSettingsModel()
+        public DeviceAxisSettings()
         {
             Minimum = 0;
             Maximum = 100;
