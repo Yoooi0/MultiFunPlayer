@@ -9,7 +9,9 @@
              d:DesignHeight="450" d:DesignWidth="800">
     <Grid Margin="20" Width="500" MaxHeight="400">            
         <Button DockPanel.Dock="Top"
-                Style="{StaticResource MaterialDesignIconButton}"
+                Style="{StaticResource MaterialDesignFlatButton}"
+                material:RippleAssist.Feedback="Black"
+                Foreground="Black"
                 Height="24"
                 Width="24"
                 Padding="0"
@@ -36,28 +38,30 @@
                 <material:PackIcon Kind="Plus"
                                    Width="24"
                                    Height="24"/>
-            </Button>            
+            </Button>
 
+            <material:Card material:ShadowAssist.ShadowDepth="Depth1" Margin="0 0 0 10">
             <ItemsControl DockPanel.Dock="Bottom"
-                          Margin="0 0 0 10"
                           ItemsSource="{Binding Directories, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}">
                 <ItemsControl.Template>
                     <ControlTemplate>
                         <ScrollViewer VerticalScrollBarVisibility="Visible" 
-                                      HorizontalScrollBarVisibility="Disabled"
-                                      Margin="-5 0 0 0">
+                                      HorizontalScrollBarVisibility="Disabled">
                             <ItemsPresenter/>
                         </ScrollViewer>
                     </ControlTemplate>
                 </ItemsControl.Template>
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
-                        <material:Card Padding="5" Margin="5 5 5 5" material:ShadowAssist.ShadowDepth="Depth1" ClipToBounds="False">
+                        <Border Padding="5" Background="{StaticResource MaterialDesignLightBackground}">
                             <DockPanel LastChildFill="True">
                                 <Button DockPanel.Dock="Right"   
                                         Style="{StaticResource MaterialDesignFlatButton}"
-                                        material:RippleAssist.Feedback="red"
-                                        Foreground="red"
+                                        ToolTip="Remove"
+                                        ToolTipService.InitialShowDelay="0"
+                                        ToolTipService.Placement="Top"
+                                        material:RippleAssist.Feedback="Red"
+                                        Foreground="Red"
                                         Height="24" 
                                         Width="24" 
                                         Padding="0"
@@ -66,6 +70,9 @@
                                 </Button>
                                 <Button DockPanel.Dock="Right"   
                                         Style="{StaticResource MaterialDesignFlatButton}"
+                                        ToolTip="Open location"
+                                        ToolTipService.InitialShowDelay="0"
+                                        ToolTipService.Placement="Top"
                                         Height="24" 
                                         Width="24" 
                                         Padding="0"
@@ -73,13 +80,15 @@
                                     <material:PackIcon Kind="FolderOpen"/>
                                 </Button>
                                 <TextBlock Text="{Binding FullName}"
-                                               VerticalAlignment="Center"
-                                               DockPanel.Dock="Left"/>
+                                           VerticalAlignment="Center"
+                                           FontSize="12"
+                                           DockPanel.Dock="Left"/>
                             </DockPanel>
-                        </material:Card>
+                        </Border>
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>
             </ItemsControl>
+            </material:Card>
         </DockPanel>
     </Grid>
 </UserControl>

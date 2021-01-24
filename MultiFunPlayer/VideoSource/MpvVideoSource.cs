@@ -6,7 +6,6 @@ using Newtonsoft.Json.Linq;
 using Stylet;
 using System;
 using System.Diagnostics;
-using System.Globalization;
 using System.IO;
 using System.IO.Pipes;
 using System.Threading;
