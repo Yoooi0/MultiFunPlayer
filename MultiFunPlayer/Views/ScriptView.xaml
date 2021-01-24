@@ -16,6 +16,7 @@
         <converters:DeviceAxisFriendlyNameConverter x:Key="DeviceAxisFriendlyNameConverter"/>
         <converters:NullableToBooleanConverter x:Key="NullableToBooleanConverter"/>
         <converters:InvertedNullableToBooleanConverter x:Key="InvertedNullableToBooleanConverter"/>
+        <converters:MultiBooleanToBooleanAndConverter x:Key="MultiBooleanToBooleanAndConverter"/>
         <material:NullableToVisibilityConverter x:Key="NullableToVisibilityConverter"/>
     </UserControl.Resources>
     <material:Card material:ShadowAssist.ShadowDepth="Depth1" Margin="0 0 0 20">
@@ -113,8 +114,9 @@
                     <StackPanel Margin="20" DockPanel.Dock="Bottom">
                         <DockPanel LastChildFill="True" Margin="0 0 0 10">
                             <TextBlock Text="Video:"
-                               DockPanel.Dock="Left"
-                               VerticalAlignment="Center"/>
+                                       DockPanel.Dock="Left"
+                                       Margin="0 0 10 0"
+                                       VerticalAlignment="Center"/>
 
                             <TextBox IsReadOnly="True"
                                      Text="{Binding VideoFile.Name, Mode=OneWay}"
@@ -283,115 +285,149 @@
                     </TabControl.ItemTemplate>
                     <behaviours:TabContent.Template>
                         <DataTemplate>
-                            <StackPanel Margin="20">
-                                <DockPanel LastChildFill="True" Margin="0 0 0 10" IsEnabled="{Binding Value.LinkAxis, Converter={StaticResource NullableToBooleanConverter}}">
-                                    <TextBlock Text="File:" 
-                                               DockPanel.Dock="Left" 
-                                               Margin="0 0 10 0" 
-                                               VerticalAlignment="Center"/>
+                            <DockPanel LastChildFill="True">
+                                <DockPanel DockPanel.Dock="Top" LastChildFill="True">
+                                    <Border BorderThickness="0 0 0 1"
+                                            Height="35"
+                                            BorderBrush="{StaticResource PrimaryHueLightBrush}">
+                                        <ToolBarTray DockPanel.Dock="Left" IsLocked="True">
+                                            <ToolBar Style="{DynamicResource MaterialDesignToolBar}"
+                                                     ClipToBounds="False">
+                                                <Button Command="{s:Action OnAxisOpenFolder}"
+                                                        CommandParameter="{Binding Key}"
+                                                        IsEnabled="{Binding Value.Script, Converter={StaticResource InvertedNullableToBooleanConverter}}"
+                                                        ToolTipService.InitialShowDelay="0"
+                                                        ToolTipService.Placement="Top"
+                                                        ToolTip="Open script location"
+                                                        Padding="8"
+                                                        Margin="0 0 2 0">
+                                                    <material:PackIcon Kind="FolderOpen" Width="19" Height="19"/>
+                                                </Button>
+                                                <Button Command="{s:Action OnAxisLoad}"
+                                                        CommandParameter="{Binding Key}"
+                                                        IsEnabled="{Binding Value.LinkAxis, Converter={StaticResource NullableToBooleanConverter}}"
+                                                        ToolTipService.InitialShowDelay="0"
+                                                        ToolTipService.Placement="Top"
+                                                        ToolTip="Load script"
+                                                        Padding="8"
+                                                        Margin="0 0 2 0">
+                                                    <material:PackIcon Kind="FileDownload" Width="19" Height="19"/>
+                                                </Button>
+                                                <Button Command="{s:Action OnAxisClear}"
+                                                        CommandParameter="{Binding Key}"
+                                                        ToolTipService.InitialShowDelay="0"
+                                                        ToolTipService.Placement="Top"
+                                                        ToolTip="Clear script"
+                                                        Padding="8"
+                                                        Margin="2 0 2 0">
+                                                    <Button.IsEnabled>
+                                                        <MultiBinding Converter="{StaticResource MultiBooleanToBooleanAndConverter}">
+                                                            <Binding Path="Value.LinkAxis" Converter="{StaticResource NullableToBooleanConverter}"/>
+                                                            <Binding Path="Value.Script" Converter="{StaticResource InvertedNullableToBooleanConverter}"/>
+                                                        </MultiBinding>
+                                                    </Button.IsEnabled>
+                                                    <material:PackIcon Kind="Close" Width="19" Height="19"/>
+                                                </Button>
+                                                <Button Command="{s:Action OnAxisReload}"
+                                                        CommandParameter="{Binding Key}"
+                                                        ToolTipService.InitialShowDelay="0"
+                                                        ToolTipService.Placement="Top"
+                                                        ToolTip="Reload script"
+                                                        Padding="8"
+                                                        Margin="2 0 0 0">
+                                                    <Button.IsEnabled>
+                                                        <MultiBinding Converter="{StaticResource MultiBooleanToBooleanAndConverter}">
+                                                            <Binding Path="Value.LinkAxis" Converter="{StaticResource NullableToBooleanConverter}"/>
+                                                            <Binding Path="Value.Script" Converter="{StaticResource InvertedNullableToBooleanConverter}"/>
+                                                        </MultiBinding>
+                                                    </Button.IsEnabled>
+                                                    <material:PackIcon Kind="Reload" Width="19" Height="19"/>
+                                                </Button>
+                                            </ToolBar>
+                                        </ToolBarTray>
+                                    </Border>
+                                </DockPanel>
+                                <StackPanel DockPanel.Dock="Bottom" Margin="20">
+                                    <DockPanel LastChildFill="True" Margin="0 0 0 10" IsEnabled="{Binding Value.LinkAxis, Converter={StaticResource NullableToBooleanConverter}}">
+                                        <TextBlock Text="File:" 
+                                                   DockPanel.Dock="Left" 
+                                                   Margin="0 0 10 0" 
+                                                   VerticalAlignment="Center"/>
 
-                                    <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" Margin="10 0 0 0">
-                                        <Button Style="{StaticResource MaterialDesignFloatingActionMiniLightButton}"
-                                                Command="{s:Action OnAxisOpen}"
-                                                CommandParameter="{Binding Key}"
-                                                Height="24"
-                                                Width="24"
-                                                Margin="0 0 2 0">
-                                            <material:PackIcon Kind="FolderOpen"/>
-                                        </Button>
-                                        <Button Style="{StaticResource MaterialDesignFloatingActionMiniLightButton}"
-                                                Command="{s:Action OnAxisClear}"
-                                                CommandParameter="{Binding Key}"
-                                                Visibility="{Binding Value.Script, Converter={StaticResource NullableToVisibilityConverter}}"
-                                                Height="24"
-                                                Width="24"
-                                                Margin="2 0 2 0">
-                                            <material:PackIcon Kind="Close"/>
-                                        </Button>
-                                        <Button Style="{StaticResource MaterialDesignFloatingActionMiniLightButton}"
-                                                Command="{s:Action OnAxisReload}"
-                                                CommandParameter="{Binding Key}"
-                                                Visibility="{Binding Value.Script, Converter={StaticResource NullableToVisibilityConverter}}"
-                                                Height="24"
-                                                Width="24"
-                                                Margin="2 0 0 0">
-                                            <material:PackIcon Kind="Reload"/>
-                                        </Button>
+                                        <TextBox Text="{Binding Value.Script.Name, Mode=OneWay}"
+                                                 Style="{StaticResource MaterialDesignFloatingHintTextBox}"
+                                                 material:HintAssist.Hint="{Binding Value.Script.Source.DirectoryName}"
+                                                 Drop="{s:Action OnDrop}"
+                                                 PreviewDragEnter="{s:Action OnPreviewDragOver}"
+                                                 PreviewDragOver="{s:Action OnPreviewDragOver}"
+                                                 IsReadOnly="True"
+                                                 VerticalAlignment="Center"
+                                                 DockPanel.Dock="Right" 
+                                                 Margin="0 -10 0 0"
+                                                 TextAlignment="Left"/>
+                                    </DockPanel>
+                                    <DockPanel Margin="0 0 0 10">
+                                        <TextBlock Text="Link:" DockPanel.Dock="Left" Margin="0 0 10 0" VerticalAlignment="Center"/>
+                                        <ComboBox DockPanel.Dock="Left"
+                                                  Margin="0 0 10 0" 
+                                                  material:TextFieldAssist.HasClearButton="True"
+                                                  Width="50" 
+                                                  ItemsSource="{Binding Source={controls:EnumBindingSource {x:Type common:DeviceAxis}}}" 
+                                                  SelectedItem="{Binding Value.LinkAxis}"
+                                                  SelectionChanged="{s:Action OnSelectedLinkAxisChanged}"/>
+                                        <TextBlock Text="Speed:" DockPanel.Dock="Left" Margin="0 0 10 0" VerticalAlignment="Center"/>
+                                        <Slider Value="{Binding Value.RandomizerSpeed}"    
+                                                Style="{StaticResource MaterialDesignDiscreteSlider}"
+                                                IsEnabled="{Binding Value.LinkAxis, Converter={StaticResource InvertedNullableToBooleanConverter}}"
+                                                Margin="0 -38 10 0"
+                                                DockPanel.Dock="Left" 
+                                                Width="140"
+                                                Minimum="0" 
+                                                Maximum="100"
+                                                TickFrequency="1"
+                                                VerticalAlignment="Center"
+                                                IsSnapToTickEnabled="True"
+                                                MouseDoubleClick="{s:Action OnSliderDoubleClick}"
+                                                ValueChanged="{s:Action OnRandomizerSliderValueChanged}"/>
+
+                                        <TextBlock Text="Strength:" DockPanel.Dock="Left" Margin="0 0 10 0" VerticalAlignment="Center"/>
+                                        <Slider Value="{Binding Value.RandomizerStrength}"
+                                                Style="{StaticResource MaterialDesignDiscreteSlider}"
+                                                IsEnabled="{Binding Value.LinkAxis, Converter={StaticResource InvertedNullableToBooleanConverter}}"
+                                                Margin="0 -38 0 0"
+                                                DockPanel.Dock="Left" 
+                                                Minimum="0" 
+                                                Maximum="100"
+                                                TickFrequency="1"
+                                                VerticalAlignment="Center"
+                                                IsSnapToTickEnabled="True"
+                                                MouseDoubleClick="{s:Action OnSliderDoubleClick}"
+                                                ValueChanged="{s:Action OnRandomizerSliderValueChanged}"/>
+                                    </DockPanel>
+                                    <DockPanel LastChildFill="True" Margin="0 0 0 10">
+                                        <TextBlock Text="Offset:" DockPanel.Dock="Left" Margin="0 0 10 0" VerticalAlignment="Center"/>
+                                        <TextBlock Text="{Binding Value.Offset, StringFormat={}{0:0.00}s}" 
+                                                   VerticalAlignment="Center"
+                                                   DockPanel.Dock="Right" 
+                                                   Width="50"
+                                                   TextAlignment="Right"/>
+
+                                        <Slider Value="{Binding Value.Offset}" 
+                                                DockPanel.Dock="Left"
+                                                Minimum="-5" 
+                                                Maximum="5"
+                                                TickFrequency="0.01"
+                                                IsSnapToTickEnabled="True"
+                                                MouseDoubleClick="{s:Action OnSliderDoubleClick}"
+                                                ValueChanged="{s:Action OnOffsetSliderValueChanged}"/>
+                                    </DockPanel>
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="Inverted:" Margin="0 0 10 0" VerticalAlignment="Center"/>
+                                        <ToggleButton Style="{StaticResource MaterialDesignSwitchToggleButton}"
+                                                      IsChecked="{Binding Value.Inverted}"/>
                                     </StackPanel>
-
-                                    <TextBox Text="{Binding Value.Script.Name, Mode=OneWay}"
-                                             Style="{StaticResource MaterialDesignFloatingHintTextBox}"
-                                             material:HintAssist.Hint="{Binding Value.Script.Source.DirectoryName}"
-                                             Drop="{s:Action OnDrop}"
-                                             PreviewDragEnter="{s:Action OnPreviewDragOver}"
-                                             PreviewDragOver="{s:Action OnPreviewDragOver}"
-                                             IsReadOnly="True"
-                                             VerticalAlignment="Center"
-                                             DockPanel.Dock="Right" 
-                                             Margin="10 -10 0 0"
-                                             TextAlignment="Left"/>
-                                </DockPanel>
-                                <DockPanel Margin="0 0 0 10">
-                                    <TextBlock Text="Link:" DockPanel.Dock="Left" Margin="0 0 10 0" VerticalAlignment="Center"/>
-                                    <ComboBox DockPanel.Dock="Left"
-                                              Margin="0 0 10 0" 
-                                              material:TextFieldAssist.HasClearButton="True"
-                                              Width="50" 
-                                              ItemsSource="{Binding Source={controls:EnumBindingSource {x:Type common:DeviceAxis}}}" 
-                                              SelectedItem="{Binding Value.LinkAxis}"
-                                              SelectionChanged="{s:Action OnSelectedLinkAxisChanged}"/>
-                                    <TextBlock Text="Speed:" DockPanel.Dock="Left" Margin="0 0 10 0" VerticalAlignment="Center"/>
-                                    <Slider Value="{Binding Value.RandomizerSpeed}"    
-                                            Style="{StaticResource MaterialDesignDiscreteSlider}"
-                                            IsEnabled="{Binding Value.LinkAxis, Converter={StaticResource InvertedNullableToBooleanConverter}}"
-                                            Margin="0 -38 10 0"
-                                            DockPanel.Dock="Left" 
-                                            Width="140"
-                                            Minimum="0" 
-                                            Maximum="100"
-                                            TickFrequency="1"
-                                            VerticalAlignment="Center"
-                                            IsSnapToTickEnabled="True"
-                                            MouseDoubleClick="{s:Action OnSliderDoubleClick}"
-                                            ValueChanged="{s:Action OnRandomizerSliderValueChanged}"/>
-
-                                    <TextBlock Text="Strength:" DockPanel.Dock="Left" Margin="0 0 10 0" VerticalAlignment="Center"/>
-                                    <Slider Value="{Binding Value.RandomizerStrength}"
-                                            Style="{StaticResource MaterialDesignDiscreteSlider}"
-                                            IsEnabled="{Binding Value.LinkAxis, Converter={StaticResource InvertedNullableToBooleanConverter}}"
-                                            Margin="0 -38 0 0"
-                                            DockPanel.Dock="Left" 
-                                            Minimum="0" 
-                                            Maximum="100"
-                                            TickFrequency="1"
-                                            VerticalAlignment="Center"
-                                            IsSnapToTickEnabled="True"
-                                            MouseDoubleClick="{s:Action OnSliderDoubleClick}"
-                                            ValueChanged="{s:Action OnRandomizerSliderValueChanged}"/>
-                                </DockPanel>
-                                <DockPanel LastChildFill="True" Margin="0 0 0 10">
-                                    <TextBlock Text="Offset:" DockPanel.Dock="Left" Margin="0 0 10 0" VerticalAlignment="Center"/>
-                                    <TextBlock Text="{Binding Value.Offset, StringFormat={}{0:0.00}s}" 
-                                               VerticalAlignment="Center"
-                                               DockPanel.Dock="Right" 
-                                               Width="50"
-                                               TextAlignment="Right"/>
-
-                                    <Slider Value="{Binding Value.Offset}" 
-                                            DockPanel.Dock="Left"
-                                            Minimum="-5" 
-                                            Maximum="5"
-                                            TickFrequency="0.01"
-                                            IsSnapToTickEnabled="True"
-                                            MouseDoubleClick="{s:Action OnSliderDoubleClick}"
-                                            ValueChanged="{s:Action OnOffsetSliderValueChanged}"/>
-                                </DockPanel>
-                                <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="Inverted:" Margin="0 0 10 0" VerticalAlignment="Center"/>
-                                    <ToggleButton Style="{StaticResource MaterialDesignSwitchToggleButton}"
-                                                  IsChecked="{Binding Value.Inverted}"/>
                                 </StackPanel>
-                            </StackPanel>
+                            </DockPanel>
                         </DataTemplate>
                     </behaviours:TabContent.Template>
                 </TabControl>

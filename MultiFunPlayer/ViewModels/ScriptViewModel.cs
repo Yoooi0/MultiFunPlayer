@@ -460,7 +460,15 @@ namespace MultiFunPlayer.ViewModels
             }
         }
 
-        public void OnAxisOpen(DeviceAxis axis)
+        public void OnAxisOpenFolder(DeviceAxis axis)
+        {
+            if (AxisSettings[axis].Script == null)
+                return;
+
+            Process.Start("explorer.exe", AxisSettings[axis].Script.Source.DirectoryName);
+        }
+
+        public void OnAxisLoad(DeviceAxis axis)
         {
             var dialog = new CommonOpenFileDialog()
             {
