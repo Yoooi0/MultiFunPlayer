@@ -11,10 +11,12 @@ using System.Windows.Input;
 using System.Windows;
 using System.IO.Compression;
 using PropertyChanged;
-using Microsoft.Win32;
 using Newtonsoft.Json.Linq;
 using MultiFunPlayer.Common.Messages;
 using Newtonsoft.Json;
+using MaterialDesignThemes.Wpf;
+using MultiFunPlayer.Common.Controls;
+using Microsoft.WindowsAPICodePack.Dialogs;
 
 namespace MultiFunPlayer.ViewModels
 {
@@ -36,6 +38,7 @@ namespace MultiFunPlayer.ViewModels
         public ObservableConcurrentDictionary<DeviceAxis, AxisState> AxisStates { get; set; }
         public ObservableConcurrentDictionary<DeviceAxis, ScriptAxisSettings> AxisSettings { get; set; }
         public ObservableConcurrentDictionary<DeviceAxis, List<Keyframe>> ScriptKeyframes { get; }
+        public BindableCollection<DirectoryInfo> ScriptDirectories { get; }
 
         public FileInfo VideoFile { get; set; }
 
@@ -47,6 +50,7 @@ namespace MultiFunPlayer.ViewModels
 
             AxisStates = new ObservableConcurrentDictionary<DeviceAxis, AxisState>(EnumUtils.GetValues<DeviceAxis>().ToDictionary(a => a, _ => new AxisState()));
             AxisSettings = new ObservableConcurrentDictionary<DeviceAxis, ScriptAxisSettings>(EnumUtils.GetValues<DeviceAxis>().ToDictionary(a => a, _ => new ScriptAxisSettings()));
+            ScriptDirectories = new BindableCollection<DirectoryInfo>();
 
             VideoFile = null;
 
@@ -182,12 +186,15 @@ namespace MultiFunPlayer.ViewModels
             if (VideoFile != null)
             {
                 var videoWithoutExtension = Path.GetFileNameWithoutExtension(VideoFile.Name);
+                foreach (var funscriptFile in ScriptDirectories.SelectMany(x => x.EnumerateFiles($"{videoWithoutExtension}*.funscript")))
+                    TryMatchFile(funscriptFile.Name, () => ScriptFile.FromFileInfo(funscriptFile));
+
                 var zipPath = Path.Join(VideoFile.DirectoryName, $"{videoWithoutExtension}.zip");
                 if (File.Exists(zipPath))
                 {
                     using var zip = ZipFile.OpenRead(zipPath);
                     foreach (var entry in zip.Entries.Where(e => string.Equals(Path.GetExtension(e.FullName), ".funscript", StringComparison.OrdinalIgnoreCase)))
-                        TryMatchFile(entry.Name, () => ScriptFile.FromZipArchiveEntry(entry));
+                        TryMatchFile(entry.Name, () => ScriptFile.FromZipArchiveEntry(zipPath, entry));
                 }
 
                 foreach (var funscriptFile in VideoFile.Directory.EnumerateFiles($"{videoWithoutExtension}*.funscript"))
@@ -251,7 +258,8 @@ namespace MultiFunPlayer.ViewModels
             {
                 var settings = new JObject
                 {
-                    { nameof(AxisSettings), JObject.FromObject(AxisSettings) }
+                    { nameof(AxisSettings), JObject.FromObject(AxisSettings) },
+                    { nameof(ScriptDirectories), JArray.FromObject(ScriptDirectories.Select(x => x.FullName)) }
                 };
 
                 message.Settings["Script"] = settings;
@@ -275,6 +283,17 @@ namespace MultiFunPlayer.ViewModels
                         AxisSettings[axis].RandomizerSpeed = axisSettings.RandomizerSpeed;
                         AxisSettings[axis].Inverted = axisSettings.Inverted;
                         AxisSettings[axis].Offset = axisSettings.Offset;
+                    }
+                }
+
+                if(settings.TryGetValue(nameof(ScriptDirectories), out var scriptDirectoriesToken))
+                {
+                    foreach (var directory in scriptDirectoriesToken.ToObject<List<string>>())
+                    {
+                        if (!Directory.Exists(directory) || ScriptDirectories.Any(x => string.Equals(x.FullName, directory)))
+                            continue;
+
+                        ScriptDirectories.Add(new DirectoryInfo(directory));
                     }
                 }
             }
@@ -392,6 +411,19 @@ namespace MultiFunPlayer.ViewModels
         private float GetAxisPosition(DeviceAxis axis) => CurrentPosition - GlobalOffset - AxisSettings[axis].Offset;
         public float GetValue(DeviceAxis axis) => MathUtils.Clamp01(AxisStates[axis].Value);
 
+        public void OnOpenVideoLocation()
+        {
+            if (VideoFile == null)
+                return;
+
+            Process.Start("explorer.exe", VideoFile.DirectoryName);
+        }
+
+        public void OnOpenScriptDirectories()
+        {
+            _ = DialogHost.Show(new ScriptDirectoriesDialog(ScriptDirectories));
+        }
+
         public void OnDrop(object sender, DragEventArgs e)
         {
             if (!(sender is FrameworkElement element && element.DataContext is KeyValuePair<DeviceAxis, ScriptAxisSettings> pair))
@@ -411,13 +443,14 @@ namespace MultiFunPlayer.ViewModels
 
         public void OnAxisOpen(DeviceAxis axis)
         {
-            var dialog = new OpenFileDialog()
+            var dialog = new CommonOpenFileDialog()
             {
                 InitialDirectory = Path.GetDirectoryName(VideoFile?.FullName) ?? string.Empty,
-                Filter = "Funscript files|*.funscript",
+                EnsureFileExists = true
             };
+            dialog.Filters.Add(new CommonFileDialogFilter("Funscript files", "*.funscript"));
 
-            if (dialog.ShowDialog() == false || !File.Exists(dialog.FileName))
+            if (dialog.ShowDialog() != CommonFileDialogResult.Ok)
                 return;
 
             AxisSettings[axis].Script = ScriptFile.FromFileInfo(new FileInfo(dialog.FileName));

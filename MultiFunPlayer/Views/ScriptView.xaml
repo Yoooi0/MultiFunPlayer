@@ -22,100 +22,131 @@
         <StackPanel Margin="20">
             <material:Card material:ShadowAssist.ShadowDepth="Depth1"
                       Margin="0 0 0 20">
-                <StackPanel Margin="20">
-                    <DockPanel LastChildFill="True" Margin="0 0 0 10">
-                        <TextBlock Text="Video:"
-                           DockPanel.Dock="Left"
-                           VerticalAlignment="Center"/>
-
-                        <Grid DockPanel.Dock="Right" Width="24" Height="24">
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="24" />
-                                <RowDefinition Height="24" />
-                            </Grid.RowDefinitions>
-                            
-                            <material:PackIcon Grid.Row="0"
-                                               Width="16" 
-                                               Height="16"
-                                               VerticalAlignment="Center"
-                                               HorizontalAlignment="Center"
-                                               Kind="FastForward">
-                                <material:PackIcon.Style>
-                                    <Style TargetType="material:PackIcon">
-                                        <Setter Property="Foreground" Value="{StaticResource PrimaryHueLightBrush}"/>
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding IsSyncing}" Value="True">
+                <DockPanel LastChildFill="True">
+                    <DockPanel DockPanel.Dock="Top" LastChildFill="True">
+                        <DockPanel.Effect>
+                            <DropShadowEffect ShadowDepth="0" Direction="270"/>
+                        </DockPanel.Effect>
+                        <ToolBarTray DockPanel.Dock="Right" IsLocked="True">
+                            <ToolBar HorizontalAlignment="Right">
+                                <DockPanel Height="35">
+                                    <material:PackIcon DockPanel.Dock="Left" 
+                                                       Width="28" 
+                                                       Height="28" 
+                                                       VerticalAlignment="Center">
+                                        <material:PackIcon.Style>
+                                            <Style TargetType="material:PackIcon">
                                                 <Setter Property="Foreground" Value="Red"/>
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </material:PackIcon.Style>
-                            </material:PackIcon>
-                            <ProgressBar Value="{Binding SyncProgress, Mode=OneWay}"
-                                         VerticalAlignment="Center"
-                                         Grid.Row="1"
-                                         Width="24"
-                                         Height="24"
-                                         Margin="0 -24 0 24">
-                                <ProgressBar.Style>
-                                    <Style TargetType="ProgressBar" BasedOn="{StaticResource MaterialDesignCircularProgressBar}">
-                                        <Setter Property="Foreground" Value="{StaticResource PrimaryHueLightBrush}"/>
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding IsSyncing}" Value="True">
-                                                <Setter Property="Foreground" Value="Red"/>
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </ProgressBar.Style>
-                            </ProgressBar>
-                        </Grid>
+                                                <Setter Property="Kind" Value="Pause"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsPlaying}" Value="True">
+                                                        <Setter Property="Foreground" Value="Green"/>
+                                                        <Setter Property="Kind" Value="Play"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </material:PackIcon.Style>
+                                    </material:PackIcon>
+                                
+                                    <Grid DockPanel.Dock="Right" Width="24" Height="24">
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="24" />
+                                            <RowDefinition Height="24" />
+                                        </Grid.RowDefinitions>
 
-                        <material:PackIcon DockPanel.Dock="Right"
-                                Width="24" Height="24" 
-                                VerticalAlignment="Center">
-                            <material:PackIcon.Style>
-                                <Style TargetType="material:PackIcon">
-                                    <Setter Property="Foreground" Value="Red"/>
-                                    <Setter Property="Kind" Value="Pause"/>
-                                    <Style.Triggers>
-                                        <DataTrigger Binding="{Binding IsPlaying}" Value="True">
-                                            <Setter Property="Foreground" Value="Green"/>
-                                            <Setter Property="Kind" Value="Play"/>
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </material:PackIcon.Style>
-                        </material:PackIcon>
-
-                        <TextBox IsReadOnly="True"
-                         DockPanel.Dock="Left"
-                         Margin="5 0 10 0"
-                         Style="{StaticResource MaterialDesignTextBox}"
-                         VerticalAlignment="Center"
-                         Text="{Binding VideoFile.Name, Mode=OneWay}"/>
+                                        <material:PackIcon Grid.Row="0"
+                                                           Width="16" 
+                                                           Height="16"
+                                                           VerticalAlignment="Center"
+                                                           HorizontalAlignment="Center"
+                                                           Kind="FastForward">
+                                            <material:PackIcon.Style>
+                                                <Style TargetType="material:PackIcon">
+                                                    <Setter Property="Foreground" Value="{StaticResource PrimaryHueLightBrush}"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsSyncing}" Value="True">
+                                                            <Setter Property="Foreground" Value="Red"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </material:PackIcon.Style>
+                                        </material:PackIcon>
+                                        <ProgressBar Value="{Binding SyncProgress, Mode=OneWay}"
+                                                     VerticalAlignment="Center"
+                                                     Grid.Row="1"
+                                                     Width="24"
+                                                     Height="24"
+                                                     Margin="0 -24 0 24">
+                                            <ProgressBar.Style>
+                                                <Style TargetType="ProgressBar" BasedOn="{StaticResource MaterialDesignCircularProgressBar}">
+                                                    <Setter Property="Foreground" Value="{StaticResource PrimaryHueLightBrush}"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsSyncing}" Value="True">
+                                                            <Setter Property="Foreground" Value="Red"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </ProgressBar.Style>
+                                        </ProgressBar>
+                                    </Grid>
+                                </DockPanel>
+                            </ToolBar>
+                        </ToolBarTray>
+                        <ToolBarTray DockPanel.Dock="Left" IsLocked="True">
+                            <ToolBar Style="{DynamicResource MaterialDesignToolBar}"
+                                    ClipToBounds="False">
+                                <Button Click="{s:Action OnOpenVideoLocation}" ToolTip="Open video location" 
+                                        ToolTipService.InitialShowDelay="0" 
+                                        ToolTipService.Placement="Top" 
+                                        Padding="8">
+                                    <material:PackIcon Kind="FolderOpen" Height="19" Width="19"/>
+                                </Button>
+                                <Button Click="{s:Action OnOpenScriptDirectories}" ToolTip="Script directories" 
+                                        ToolTipService.InitialShowDelay="0" 
+                                        ToolTipService.Placement="Top" 
+                                        Padding="8">
+                                    <material:PackIcon Kind="FolderSearch" Height="19" Width="19"/>
+                                </Button>
+                            </ToolBar>
+                        </ToolBarTray>
                     </DockPanel>
-                    <DockPanel LastChildFill="True" Margin="0 0 0 10">
-                        <TextBlock Text="Global Offset: " DockPanel.Dock="Left" Margin="0 0 10 0" VerticalAlignment="Center"/>
-                        <TextBlock Text="{Binding GlobalOffset, StringFormat={}{0:0.00}s}" 
-                                   VerticalAlignment="Center"
-                                   DockPanel.Dock="Right" 
-                                   Width="50"
-                                   TextAlignment="Right"/>
+                    <StackPanel Margin="20" DockPanel.Dock="Bottom">
+                        <DockPanel LastChildFill="True" Margin="0 0 0 10">
+                            <TextBlock Text="Video:"
+                               DockPanel.Dock="Left"
+                               VerticalAlignment="Center"/>
 
-                        <Slider Value="{Binding GlobalOffset}" 
-                                DockPanel.Dock="Left"
-                                Minimum="-5" 
-                                Maximum="5"
-                                TickFrequency="0.01"
-                                IsSnapToTickEnabled="True"
-                                MouseDoubleClick="{s:Action OnSliderDoubleClick}"
-                                ValueChanged="{s:Action OnOffsetSliderValueChanged}"/>
-                    </DockPanel>
-                    <controls:KeyframesHeatmapGradient Height="30" 
-                                                       Keyframes="{Binding ScriptKeyframes, Mode=OneWay}"
-                                                       Duration="{Binding VideoDuration, Mode=OneWay}"
-                                                       Position="{Binding CurrentPosition, Mode=OneWay}"/>
-                </StackPanel>
+                            <TextBox IsReadOnly="True"
+                                     Text="{Binding VideoFile.Name, Mode=OneWay}"
+                                     Style="{StaticResource MaterialDesignFloatingHintTextBox}"
+                                     material:HintAssist.Hint="{Binding VideoFile.DirectoryName}"
+                                     DockPanel.Dock="Left"
+                                     Margin="5 -10 0 0"
+                                     VerticalAlignment="Center"/>
+                        </DockPanel>
+                        <DockPanel LastChildFill="True" Margin="0 0 0 10">
+                            <TextBlock Text="Global Offset:" DockPanel.Dock="Left" Margin="0 0 10 0" VerticalAlignment="Center"/>
+                            <TextBlock Text="{Binding GlobalOffset, StringFormat={}{0:0.00}s}" 
+                                       VerticalAlignment="Center"
+                                       DockPanel.Dock="Right" 
+                                       Width="50"
+                                       TextAlignment="Right"/>
+
+                            <Slider Value="{Binding GlobalOffset}" 
+                                    DockPanel.Dock="Left"
+                                    Minimum="-5" 
+                                    Maximum="5"
+                                    TickFrequency="0.01"
+                                    IsSnapToTickEnabled="True"
+                                    MouseDoubleClick="{s:Action OnSliderDoubleClick}"
+                                    ValueChanged="{s:Action OnOffsetSliderValueChanged}"/>
+                        </DockPanel>
+                        <controls:KeyframesHeatmapGradient Height="30" 
+                                                           Keyframes="{Binding ScriptKeyframes, Mode=OneWay}"
+                                                           Duration="{Binding VideoDuration, Mode=OneWay}"
+                                                           Position="{Binding CurrentPosition, Mode=OneWay}"/>
+                    </StackPanel>
+                </DockPanel>
             </material:Card>
 
 
@@ -254,11 +285,10 @@
                         <DataTemplate>
                             <StackPanel Margin="20">
                                 <DockPanel LastChildFill="True" Margin="0 0 0 10" IsEnabled="{Binding Value.LinkAxis, Converter={StaticResource NullableToBooleanConverter}}">
-                                    <TextBlock Text="File: " 
+                                    <TextBlock Text="File:" 
                                                DockPanel.Dock="Left" 
                                                Margin="0 0 10 0" 
                                                VerticalAlignment="Center"/>
-
 
                                     <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" Margin="10 0 0 0">
                                         <Button Style="{StaticResource MaterialDesignFloatingActionMiniLightButton}"
@@ -289,19 +319,20 @@
                                         </Button>
                                     </StackPanel>
 
-                                    <TextBox Text="{Binding Value.Script.Name, Mode=OneWay}" 
-                                             Style="{StaticResource MaterialDesignTextBox}"
+                                    <TextBox Text="{Binding Value.Script.Name, Mode=OneWay}"
+                                             Style="{StaticResource MaterialDesignFloatingHintTextBox}"
+                                             material:HintAssist.Hint="{Binding Value.Script.Source.DirectoryName}"
                                              Drop="{s:Action OnDrop}"
                                              PreviewDragEnter="{s:Action OnPreviewDragOver}"
                                              PreviewDragOver="{s:Action OnPreviewDragOver}"
                                              IsReadOnly="True"
                                              VerticalAlignment="Center"
                                              DockPanel.Dock="Right" 
-                                             Margin="10 0 0 0"
+                                             Margin="10 -10 0 0"
                                              TextAlignment="Left"/>
                                 </DockPanel>
                                 <DockPanel Margin="0 0 0 10">
-                                    <TextBlock Text="Link: " DockPanel.Dock="Left" Margin="0 0 10 0" VerticalAlignment="Center"/>
+                                    <TextBlock Text="Link:" DockPanel.Dock="Left" Margin="0 0 10 0" VerticalAlignment="Center"/>
                                     <ComboBox DockPanel.Dock="Left"
                                               Margin="0 0 10 0" 
                                               material:TextFieldAssist.HasClearButton="True"
@@ -309,7 +340,7 @@
                                               ItemsSource="{Binding Source={controls:EnumBindingSource {x:Type common:DeviceAxis}}}" 
                                               SelectedItem="{Binding Value.LinkAxis}"
                                               SelectionChanged="{s:Action OnSelectedLinkAxisChanged}"/>
-                                    <TextBlock Text="Speed: " DockPanel.Dock="Left" Margin="0 0 10 0" VerticalAlignment="Center"/>
+                                    <TextBlock Text="Speed:" DockPanel.Dock="Left" Margin="0 0 10 0" VerticalAlignment="Center"/>
                                     <Slider Value="{Binding Value.RandomizerSpeed}"    
                                             Style="{StaticResource MaterialDesignDiscreteSlider}"
                                             IsEnabled="{Binding Value.LinkAxis, Converter={StaticResource InvertedNullableToBooleanConverter}}"
@@ -324,7 +355,7 @@
                                             MouseDoubleClick="{s:Action OnSliderDoubleClick}"
                                             ValueChanged="{s:Action OnRandomizerSliderValueChanged}"/>
 
-                                    <TextBlock Text="Strength: " DockPanel.Dock="Left" Margin="0 0 10 0" VerticalAlignment="Center"/>
+                                    <TextBlock Text="Strength:" DockPanel.Dock="Left" Margin="0 0 10 0" VerticalAlignment="Center"/>
                                     <Slider Value="{Binding Value.RandomizerStrength}"
                                             Style="{StaticResource MaterialDesignDiscreteSlider}"
                                             IsEnabled="{Binding Value.LinkAxis, Converter={StaticResource InvertedNullableToBooleanConverter}}"
@@ -339,7 +370,7 @@
                                             ValueChanged="{s:Action OnRandomizerSliderValueChanged}"/>
                                 </DockPanel>
                                 <DockPanel LastChildFill="True" Margin="0 0 0 10">
-                                    <TextBlock Text="Offset: " DockPanel.Dock="Left" Margin="0 0 10 0" VerticalAlignment="Center"/>
+                                    <TextBlock Text="Offset:" DockPanel.Dock="Left" Margin="0 0 10 0" VerticalAlignment="Center"/>
                                     <TextBlock Text="{Binding Value.Offset, StringFormat={}{0:0.00}s}" 
                                                VerticalAlignment="Center"
                                                DockPanel.Dock="Right" 
