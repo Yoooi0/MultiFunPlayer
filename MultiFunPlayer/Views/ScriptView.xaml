@@ -102,7 +102,7 @@
                                         Padding="8">
                                     <material:PackIcon Kind="FolderOpen" Height="19" Width="19"/>
                                 </Button>
-                                <Button Click="{s:Action OnOpenScriptDirectories}" ToolTip="Script directories" 
+                                <Button Click="{s:Action OnOpenScriptLibraries}" ToolTip="Script libraries" 
                                         ToolTipService.InitialShowDelay="0" 
                                         ToolTipService.Placement="Top" 
                                         Padding="8">

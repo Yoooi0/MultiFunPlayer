@@ -38,7 +38,7 @@ namespace MultiFunPlayer.ViewModels
         public ObservableConcurrentDictionary<DeviceAxis, AxisState> AxisStates { get; set; }
         public ObservableConcurrentDictionary<DeviceAxis, ScriptAxisSettings> AxisSettings { get; set; }
         public ObservableConcurrentDictionary<DeviceAxis, List<Keyframe>> ScriptKeyframes { get; }
-        public BindableCollection<DirectoryInfo> ScriptDirectories { get; }
+        public BindableCollection<ScriptLibrary> ScriptLibraries { get; }
 
         public FileInfo VideoFile { get; set; }
 
@@ -50,7 +50,7 @@ namespace MultiFunPlayer.ViewModels
 
             AxisStates = new ObservableConcurrentDictionary<DeviceAxis, AxisState>(EnumUtils.GetValues<DeviceAxis>().ToDictionary(a => a, _ => new AxisState()));
             AxisSettings = new ObservableConcurrentDictionary<DeviceAxis, ScriptAxisSettings>(EnumUtils.GetValues<DeviceAxis>().ToDictionary(a => a, _ => new ScriptAxisSettings()));
-            ScriptDirectories = new BindableCollection<DirectoryInfo>();
+            ScriptLibraries = new BindableCollection<ScriptLibrary>();
 
             VideoFile = null;
 
@@ -209,7 +209,7 @@ namespace MultiFunPlayer.ViewModels
             }
 
             var videoWithoutExtension = Path.GetFileNameWithoutExtension(VideoFile.Name);
-            foreach (var funscriptFile in ScriptDirectories.SelectMany(x => x.EnumerateFiles($"{videoWithoutExtension}*.funscript")))
+            foreach (var funscriptFile in ScriptLibraries.SelectMany(x => x.EnumerateFiles($"{videoWithoutExtension}*.funscript")))
                 TryMatchFile(funscriptFile.Name, () => ScriptFile.FromFileInfo(funscriptFile));
 
             var zipPath = Path.Join(VideoFile.DirectoryName, $"{videoWithoutExtension}.zip");
@@ -275,7 +275,7 @@ namespace MultiFunPlayer.ViewModels
                 var settings = new JObject
                 {
                     { nameof(AxisSettings), JObject.FromObject(AxisSettings) },
-                    { nameof(ScriptDirectories), JArray.FromObject(ScriptDirectories.Select(x => x.FullName)) }
+                    { nameof(ScriptLibraries), JArray.FromObject(ScriptLibraries) }
                 };
 
                 message.Settings["Script"] = settings;
@@ -302,14 +302,14 @@ namespace MultiFunPlayer.ViewModels
                     }
                 }
 
-                if(settings.TryGetValue(nameof(ScriptDirectories), out var scriptDirectoriesToken))
+                if(settings.TryGetValue(nameof(ScriptLibraries), out var scriptDirectoriesToken))
                 {
-                    foreach (var directory in scriptDirectoriesToken.ToObject<List<string>>())
+                    foreach (var library in scriptDirectoriesToken.ToObject<List<ScriptLibrary>>())
                     {
-                        if (!Directory.Exists(directory) || ScriptDirectories.Any(x => string.Equals(x.FullName, directory)))
+                        if (!library.Directory.Exists || ScriptLibraries.Any(x => string.Equals(x.Directory.FullName, library.Directory.FullName)))
                             continue;
 
-                        ScriptDirectories.Add(new DirectoryInfo(directory));
+                        ScriptLibraries.Add(library);
                     }
                 }
             }
@@ -435,9 +435,9 @@ namespace MultiFunPlayer.ViewModels
             Process.Start("explorer.exe", VideoFile.DirectoryName);
         }
 
-        public async void OnOpenScriptDirectories()
+        public async void OnOpenScriptLibraries()
         {
-            _ = await DialogHost.Show(new ScriptDirectoriesDialog(ScriptDirectories)).ConfigureAwait(true);
+            _ = await DialogHost.Show(new ScriptLibrariesDialog(ScriptLibraries)).ConfigureAwait(true);
 
             var updated = TryMatchFiles(overwrite: false);
             UpdateFiles(AxisFilesChangeType.Update, updated.ToArray());
@@ -599,6 +599,24 @@ namespace MultiFunPlayer.ViewModels
         [JsonProperty] public int RandomizerSpeed { get; set; } = 0;
         [JsonProperty] public bool Inverted { get; set; } = false;
         [JsonProperty] public float Offset { get; set; } = 0;
+    }
+
+    [JsonObject(MemberSerialization.OptIn)]
+    public class ScriptLibrary : PropertyChangedBase
+    {
+        public ScriptLibrary(DirectoryInfo directory)
+        {
+            if (directory?.Exists == false)
+                throw new DirectoryNotFoundException();
+
+            Directory = directory;
+        }
+
+        [JsonProperty] public DirectoryInfo Directory { get; }
+        [JsonProperty] public bool Recursive { get; set; }
+
+        internal IEnumerable<FileInfo> EnumerateFiles(string searchPattern)
+            => Directory.EnumerateFiles(searchPattern, Recursive ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly);
     }
 
     [DebuggerDisplay("[{Position}, {Value}]")]

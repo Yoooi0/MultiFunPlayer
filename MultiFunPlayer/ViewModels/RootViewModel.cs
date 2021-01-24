@@ -1,5 +1,6 @@
 ﻿using MaterialDesignThemes.Wpf;
 using MultiFunPlayer.Common.Controls;
+using MultiFunPlayer.Common.Converters;
 using MultiFunPlayer.Common.Messages;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
@@ -33,6 +34,7 @@ namespace MultiFunPlayer.ViewModels
                     Formatting = Formatting.Indented
                 };
 
+                settings.Converters.Add(new FileSystemInfoConverter());
                 settings.Converters.Add(new StringEnumConverter());
                 return settings;
             };

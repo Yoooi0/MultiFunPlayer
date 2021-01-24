@@ -1,4 +1,4 @@
-﻿<UserControl x:Class="MultiFunPlayer.Common.Controls.ScriptDirectoriesDialog"
+﻿<UserControl x:Class="MultiFunPlayer.Common.Controls.ScriptLibrariesDialog"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:material="http://materialdesigninxaml.net/winfx/xaml/themes"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -24,14 +24,16 @@
                                Width="20"/>
         </Button>
         <DockPanel LastChildFill="True">
-            <TextBlock Text="Script directories:"
+            <TextBlock Text="Libraries:"
                        DockPanel.Dock="Top"
                        FontSize="16"
                        FontWeight="Bold"
                        Margin="0 0 0 10"/>
 
             <Button DockPanel.Dock="Bottom"
-                    Width="100"
+                    Style="{StaticResource MaterialDesignFloatingActionMiniLightButton}"
+                    Width="32"
+                    Height="32"
                     Margin="0 0 0 10"
                     Padding="0"
                     Click="OnAdd">
@@ -42,7 +44,7 @@
 
             <material:Card material:ShadowAssist.ShadowDepth="Depth1" Margin="0 0 0 10">
             <ItemsControl DockPanel.Dock="Bottom"
-                          ItemsSource="{Binding Directories, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}">
+                          ItemsSource="{Binding Libraries, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}">
                 <ItemsControl.Template>
                     <ControlTemplate>
                         <ScrollViewer VerticalScrollBarVisibility="Visible" 
@@ -79,7 +81,13 @@
                                         Click="OnOpenFolder">
                                     <material:PackIcon Kind="FolderOpen"/>
                                 </Button>
-                                <TextBlock Text="{Binding FullName}"
+                                    <CheckBox IsChecked="{Binding Recursive}"
+                                              DockPanel.Dock="Right"
+                                              Width="24"
+                                              ToolTip="Recursive"
+                                              ToolTipService.InitialShowDelay="0"
+                                              ToolTipService.Placement="Top"/>
+                                    <TextBlock Text="{Binding Directory.FullName}"
                                            VerticalAlignment="Center"
                                            FontSize="12"
                                            DockPanel.Dock="Left"/>

@@ -1,4 +1,5 @@
 ﻿using Microsoft.WindowsAPICodePack.Dialogs;
+using MultiFunPlayer.ViewModels;
 using Stylet;
 using System.Diagnostics;
 using System.IO;
@@ -9,15 +10,15 @@ using System.Windows.Controls;
 namespace MultiFunPlayer.Common.Controls
 {
     /// <summary>
-    /// Interaction logic for ScriptDirectoriesDialog.xaml
+    /// Interaction logic for ScriptLibrariesDialog.xaml
     /// </summary>
-    public partial class ScriptDirectoriesDialog : UserControl
+    public partial class ScriptLibrariesDialog : UserControl
     {
-        public BindableCollection<DirectoryInfo> Directories { get; }
+        public BindableCollection<ScriptLibrary> Libraries { get; }
 
-        public ScriptDirectoriesDialog(BindableCollection<DirectoryInfo> directories)
+        public ScriptLibrariesDialog(BindableCollection<ScriptLibrary> libraries)
         {
-            Directories = directories;
+            Libraries = libraries;
 
             InitializeComponent();
         }
@@ -34,26 +35,26 @@ namespace MultiFunPlayer.Common.Controls
                 return;
 
             var directory = new DirectoryInfo(dialog.FileName);
-            if (Directories.Any(x => string.Equals(x.FullName, directory.FullName)))
+            if (Libraries.Any(x => string.Equals(x.Directory.FullName, directory.FullName)))
                 return;
 
-            Directories.Add(directory);
+            Libraries.Add(new ScriptLibrary(directory));
         }
 
         public void OnDelete(object sender, RoutedEventArgs e)
         {
-            if (sender is not FrameworkElement element || element.DataContext is not DirectoryInfo directory)
+            if (sender is not FrameworkElement element || element.DataContext is not ScriptLibrary library)
                 return;
 
-            Directories.Remove(directory);
+            Libraries.Remove(library);
         }
 
         public void OnOpenFolder(object sender, RoutedEventArgs e)
         {
-            if (sender is not FrameworkElement element || element.DataContext is not DirectoryInfo directory)
+            if (sender is not FrameworkElement element || element.DataContext is not ScriptLibrary library)
                 return;
 
-            Process.Start("explorer.exe", directory.FullName);
+            Process.Start("explorer.exe", library.Directory.FullName);
         }
     }
 }
