@@ -131,6 +131,7 @@ namespace MultiFunPlayer.ViewModels
             //stopwatch.Start();
             try
             {
+                var interval = (int)MathF.Max(1, MathF.Floor(MathF.Round(1000.0f / UpdateRate)));
                 while (!token.IsCancellationRequested)
                 {
                     sb.Clear();
@@ -145,6 +146,7 @@ namespace MultiFunPlayer.ViewModels
 
                         sb.Append(axis)
                           .AppendFormat("{0:000}", value * 999)
+                          .AppendFormat("I{0}", interval)
                           .Append(' ');
                     }
 
@@ -152,8 +154,9 @@ namespace MultiFunPlayer.ViewModels
                     if (_serialPort?.IsOpen == true && !string.IsNullOrWhiteSpace(commands))
                         _serialPort?.WriteLine(commands);
 
+                    //TODO: add as toggle
                     //stopwatch.PreciseSleep(MathF.Round(1000.0f / UpdateRate), token);
-                    Thread.Sleep((int)MathF.Max(1, MathF.Floor(MathF.Round(1000.0f / UpdateRate))));
+                    Thread.Sleep(interval);
                 }
             }
             catch (Exception e)
