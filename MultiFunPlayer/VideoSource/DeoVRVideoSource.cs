@@ -8,6 +8,7 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Net.Sockets;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -74,7 +75,7 @@ namespace MultiFunPlayer.VideoSource
 
                     try
                     {
-                        var document = JObject.Parse(data.AsMemory(4..(length+4)).ToString());
+                        var document = JObject.Parse(Encoding.UTF8.GetString(data[4..(length+4)]));
 
                         if (document.TryGetValue("playerState", out var stateToken) && stateToken.TryToObject<int>(out var state))
                             _eventAggregator.Publish(new VideoPlayingMessage(isPlaying: state == 0));
