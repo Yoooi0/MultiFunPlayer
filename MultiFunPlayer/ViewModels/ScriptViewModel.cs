@@ -146,6 +146,7 @@ namespace MultiFunPlayer.ViewModels
             }
         }
 
+        #region Events
         public void Handle(VideoFileChangedMessage message)
         {
             if (VideoFile == null && message.VideoFile == null)
@@ -169,61 +170,6 @@ namespace MultiFunPlayer.ViewModels
             }
 
             UpdateFiles(AxisFilesChangeType.Update, null);
-        }
-
-        private IEnumerable<DeviceAxis> TryMatchFiles(bool overwrite)
-        {
-            if (VideoFile == null)
-                return Enumerable.Empty<DeviceAxis>();
-
-            var updated = new List<DeviceAxis>();
-            bool TryMatchFile(string fileName, Func<IScriptFile> generator)
-            {
-                var videoWithoutExtension = Path.GetFileNameWithoutExtension(VideoFile.Name);
-                var funscriptWithoutExtension = Path.GetFileNameWithoutExtension(fileName);
-                if (string.Equals(funscriptWithoutExtension, videoWithoutExtension, StringComparison.OrdinalIgnoreCase))
-                {
-                    if (AxisSettings[DeviceAxis.L0].Script == null || overwrite)
-                    {
-                        AxisSettings[DeviceAxis.L0].Script = generator();
-                        updated.Add(DeviceAxis.L0);
-                    }
-                    return true;
-                }
-
-                foreach (var axis in EnumUtils.GetValues<DeviceAxis>())
-                {
-                    if (funscriptWithoutExtension.EndsWith(axis.Name(), StringComparison.OrdinalIgnoreCase)
-                     || funscriptWithoutExtension.EndsWith(axis.AltName(), StringComparison.OrdinalIgnoreCase))
-                    {
-                        if (AxisSettings[axis].Script == null || overwrite)
-                        {
-                            AxisSettings[axis].Script = generator();
-                            updated.Add(axis);
-                        }
-                        return true;
-                    }
-                }
-
-                return false;
-            }
-
-            var videoWithoutExtension = Path.GetFileNameWithoutExtension(VideoFile.Name);
-            foreach (var funscriptFile in ScriptLibraries.SelectMany(x => x.EnumerateFiles($"{videoWithoutExtension}*.funscript")))
-                TryMatchFile(funscriptFile.Name, () => ScriptFile.FromFileInfo(funscriptFile));
-
-            var zipPath = Path.Join(VideoFile.DirectoryName, $"{videoWithoutExtension}.zip");
-            if (File.Exists(zipPath))
-            {
-                using var zip = ZipFile.OpenRead(zipPath);
-                foreach (var entry in zip.Entries.Where(e => string.Equals(Path.GetExtension(e.FullName), ".funscript", StringComparison.OrdinalIgnoreCase)))
-                    TryMatchFile(entry.Name, () => ScriptFile.FromZipArchiveEntry(zipPath, entry));
-            }
-
-            foreach (var funscriptFile in VideoFile.Directory.EnumerateFiles($"{videoWithoutExtension}*.funscript"))
-                TryMatchFile(funscriptFile.Name, () => ScriptFile.FromFileInfo(funscriptFile));
-
-            return updated.Distinct();
         }
 
         public void Handle(VideoPlayingMessage message)
@@ -314,7 +260,9 @@ namespace MultiFunPlayer.ViewModels
                 }
             }
         }
+        #endregion
 
+        #region Common
         private void SearchForValidIndices(DeviceAxis axis, AxisState state)
         {
             if (!ScriptKeyframes.TryGetValue(axis, out var keyframes))
@@ -424,9 +372,84 @@ namespace MultiFunPlayer.ViewModels
             NotifyOfPropertyChange(nameof(ScriptKeyframes));
         }
 
+        private IEnumerable<DeviceAxis> TryMatchFiles(bool overwrite)
+        {
+            if (VideoFile == null)
+                return Enumerable.Empty<DeviceAxis>();
+
+            var updated = new List<DeviceAxis>();
+            bool TryMatchFile(string fileName, Func<IScriptFile> generator)
+            {
+                var videoWithoutExtension = Path.GetFileNameWithoutExtension(VideoFile.Name);
+                var funscriptWithoutExtension = Path.GetFileNameWithoutExtension(fileName);
+                if (string.Equals(funscriptWithoutExtension, videoWithoutExtension, StringComparison.OrdinalIgnoreCase))
+                {
+                    if (AxisSettings[DeviceAxis.L0].Script == null || overwrite)
+                    {
+                        AxisSettings[DeviceAxis.L0].Script = generator();
+                        updated.Add(DeviceAxis.L0);
+                    }
+                    return true;
+                }
+
+                foreach (var axis in EnumUtils.GetValues<DeviceAxis>())
+                {
+                    if (funscriptWithoutExtension.EndsWith(axis.Name(), StringComparison.OrdinalIgnoreCase)
+                     || funscriptWithoutExtension.EndsWith(axis.AltName(), StringComparison.OrdinalIgnoreCase))
+                    {
+                        if (AxisSettings[axis].Script == null || overwrite)
+                        {
+                            AxisSettings[axis].Script = generator();
+                            updated.Add(axis);
+                        }
+                        return true;
+                    }
+                }
+
+                return false;
+            }
+
+            var videoWithoutExtension = Path.GetFileNameWithoutExtension(VideoFile.Name);
+            foreach (var funscriptFile in ScriptLibraries.SelectMany(x => x.EnumerateFiles($"{videoWithoutExtension}*.funscript")))
+                TryMatchFile(funscriptFile.Name, () => ScriptFile.FromFileInfo(funscriptFile));
+
+            var zipPath = Path.Join(VideoFile.DirectoryName, $"{videoWithoutExtension}.zip");
+            if (File.Exists(zipPath))
+            {
+                using var zip = ZipFile.OpenRead(zipPath);
+                foreach (var entry in zip.Entries.Where(e => string.Equals(Path.GetExtension(e.FullName), ".funscript", StringComparison.OrdinalIgnoreCase)))
+                    TryMatchFile(entry.Name, () => ScriptFile.FromZipArchiveEntry(zipPath, entry));
+            }
+
+            foreach (var funscriptFile in VideoFile.Directory.EnumerateFiles($"{videoWithoutExtension}*.funscript"))
+                TryMatchFile(funscriptFile.Name, () => ScriptFile.FromFileInfo(funscriptFile));
+
+            return updated.Distinct();
+        }
+
         private float GetAxisPosition(DeviceAxis axis) => CurrentPosition - GlobalOffset - AxisSettings[axis].Offset;
         public float GetValue(DeviceAxis axis) => MathUtils.Clamp01(AxisStates[axis].Value);
 
+        private void ResetSync(bool isSyncing = true)
+        {
+            IsSyncing = isSyncing;
+            Interlocked.Exchange(ref _syncTime, 0);
+            NotifyOfPropertyChange(nameof(SyncProgress));
+        }
+        #endregion
+
+        #region UI Common
+        [SuppressPropertyChangedWarnings]
+        public void OnOffsetSliderValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            ResetSync();
+
+            foreach (var axis in EnumUtils.GetValues<DeviceAxis>())
+                SearchForValidIndices(axis, AxisStates[axis]);
+        }
+        #endregion
+
+        #region Video
         public void OnOpenVideoLocation()
         {
             if (VideoFile == null)
@@ -434,16 +457,10 @@ namespace MultiFunPlayer.ViewModels
 
             Process.Start("explorer.exe", VideoFile.DirectoryName);
         }
+        #endregion
 
-        public async void OnOpenScriptLibraries()
-        {
-            _ = await DialogHost.Show(new ScriptLibrariesDialog(ScriptLibraries)).ConfigureAwait(true);
-
-            var updated = TryMatchFiles(overwrite: false);
-            UpdateFiles(AxisFilesChangeType.Update, updated.ToArray());
-        }
-
-        public void OnDrop(object sender, DragEventArgs e)
+        #region AxisSettings
+        public void OnAxisDrop(object sender, DragEventArgs e)
         {
             if (!(sender is FrameworkElement element && element.DataContext is KeyValuePair<DeviceAxis, ScriptAxisSettings> pair))
                 return;
@@ -458,6 +475,12 @@ namespace MultiFunPlayer.ViewModels
                 pair.Value.Script = ScriptFile.FromPath(path);
                 UpdateFiles(AxisFilesChangeType.Update, pair.Key);
             }
+        }
+
+        public void OnPreviewDragOver(object sender, DragEventArgs e)
+        {
+            e.Handled = true;
+            e.Effects = DragDropEffects.Link;
         }
 
         public void OnAxisOpenFolder(DeviceAxis axis)
@@ -530,28 +553,43 @@ namespace MultiFunPlayer.ViewModels
 
             ResetSync();
         }
+        #endregion
 
-        [SuppressPropertyChangedWarnings]
-        public void OnOffsetSliderValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        #region ScriptLibrary
+        public void OnLibraryAdd(object sender, RoutedEventArgs e)
         {
-            ResetSync();
+            //TODO: remove dependency once /dotnet/wpf/issues/438 is resolved
+            var dialog = new CommonOpenFileDialog()
+            {
+                IsFolderPicker = true
+            };
 
-            foreach (var axis in EnumUtils.GetValues<DeviceAxis>())
-                SearchForValidIndices(axis, AxisStates[axis]);
+            if (dialog.ShowDialog() != CommonFileDialogResult.Ok)
+                return;
+
+            var directory = new DirectoryInfo(dialog.FileName);
+            if (ScriptLibraries.Any(x => string.Equals(x.Directory.FullName, directory.FullName)))
+                return;
+
+            ScriptLibraries.Add(new ScriptLibrary(directory));
         }
 
-        private void ResetSync(bool isSyncing = true)
+        public void OnLibraryDelete(object sender, RoutedEventArgs e)
         {
-            IsSyncing = isSyncing;
-            Interlocked.Exchange(ref _syncTime, 0);
-            NotifyOfPropertyChange(nameof(SyncProgress));
+            if (sender is not FrameworkElement element || element.DataContext is not ScriptLibrary library)
+                return;
+
+            ScriptLibraries.Remove(library);
         }
 
-        public void OnPreviewDragOver(object sender, DragEventArgs e)
+        public void OnLibraryOpenFolder(object sender, RoutedEventArgs e)
         {
-            e.Handled = true;
-            e.Effects = DragDropEffects.Link;
+            if (sender is not FrameworkElement element || element.DataContext is not ScriptLibrary library)
+                return;
+
+            Process.Start("explorer.exe", library.Directory.FullName);
         }
+        #endregion
 
         protected virtual void Dispose(bool disposing)
         {
