@@ -8,7 +8,7 @@ namespace MultiFunPlayer.Common.Controls
         private Type _enumType;
         public Type EnumType
         {
-            get { return _enumType; }
+            get => _enumType;
             set
             {
                 if (value == null)

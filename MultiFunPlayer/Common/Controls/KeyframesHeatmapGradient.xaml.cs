@@ -24,12 +24,12 @@ namespace MultiFunPlayer.Common.Controls
         [DoNotNotify]
         public ObservableConcurrentDictionary<DeviceAxis, List<Keyframe>> Keyframes
         {
-            get { return (ObservableConcurrentDictionary<DeviceAxis, List<Keyframe>>)GetValue(KeyframesProperty); }
-            set { SetValue(KeyframesProperty, value); }
+            get => (ObservableConcurrentDictionary<DeviceAxis, List<Keyframe>>)GetValue(KeyframesProperty);
+            set => SetValue(KeyframesProperty, value);
         }
 
         public static readonly DependencyProperty KeyframesProperty =
-            DependencyProperty.Register("Keyframes", typeof(ObservableConcurrentDictionary<DeviceAxis, List<Keyframe>>),
+            DependencyProperty.Register(nameof(Keyframes), typeof(ObservableConcurrentDictionary<DeviceAxis, List<Keyframe>>),
                 typeof(KeyframesHeatmapGradient), new FrameworkPropertyMetadata(null,
                     new PropertyChangedCallback(OnKeyframesChanged)));
 
@@ -53,12 +53,12 @@ namespace MultiFunPlayer.Common.Controls
         [DoNotNotify]
         public float Duration
         {
-            get { return (float)GetValue(DurationProperty); }
-            set { SetValue(DurationProperty, value); }
+            get => (float)GetValue(DurationProperty);
+            set => SetValue(DurationProperty, value);
         }
 
         public static readonly DependencyProperty DurationProperty =
-            DependencyProperty.Register("Duration", typeof(float),
+            DependencyProperty.Register(nameof(Duration), typeof(float),
                 typeof(KeyframesHeatmapGradient), new FrameworkPropertyMetadata(float.NaN,
                     new PropertyChangedCallback(OnDurationChanged)));
 
@@ -75,12 +75,12 @@ namespace MultiFunPlayer.Common.Controls
         [DoNotNotify]
         public float Position
         {
-            get { return (float)GetValue(PositionProperty); }
-            set { SetValue(PositionProperty, value); }
+            get => (float)GetValue(PositionProperty);
+            set => SetValue(PositionProperty, value);
         }
 
         public static readonly DependencyProperty PositionProperty =
-            DependencyProperty.Register("Position", typeof(float),
+            DependencyProperty.Register(nameof(Position), typeof(float),
                 typeof(KeyframesHeatmapGradient), new FrameworkPropertyMetadata(float.NaN,
                     new PropertyChangedCallback(OnPositionChanged)));
 

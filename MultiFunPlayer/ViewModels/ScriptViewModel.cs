@@ -14,8 +14,6 @@ using PropertyChanged;
 using Newtonsoft.Json.Linq;
 using MultiFunPlayer.Common.Messages;
 using Newtonsoft.Json;
-using MaterialDesignThemes.Wpf;
-using MultiFunPlayer.Common.Controls;
 using Microsoft.WindowsAPICodePack.Dialogs;
 
 namespace MultiFunPlayer.ViewModels
