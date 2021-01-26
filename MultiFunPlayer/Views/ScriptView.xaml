@@ -110,7 +110,7 @@
                                         Command="{x:Static material:DialogHost.OpenDialogCommand}">
                                     <Button.CommandParameter>
                                         <Grid Margin="20" Width="500" MaxHeight="400"
-                                              s:View.ActionTarget="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}">            
+                                              s:View.ActionTarget="{Binding}">            
                                             <Button DockPanel.Dock="Top"
                                                     Style="{StaticResource MaterialDesignFlatButton}"
                                                     material:RippleAssist.Feedback="Black"
