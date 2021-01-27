@@ -13,10 +13,10 @@ The player's main feature is the ability to play multiple funscripts at the same
 
 # How To
 
-To synchronize with the video player, click on the button with the player you want to use to start the connection *(note: DeoVR and Whirligig require you to enable remote support)*. Once connected, the funscripts can be loaded in several ways:
+To synchronize with videos, start your desired video player and wait for automatic connection or click on the button with the player name to connect manually *(NOTE: DeoVR and Whirligig require you to enable remote support in their settings)*. Once connected, the funscripts can be loaded in several ways:
 
-* Manually, by dragging a funscript file from windows explorer and dropping it on one of the axis buttons. The file will be attached to the axis you drop it on.
-* Manually, by using the open file dialog in axis options.
+* Manually, by dragging a funscript file from windows explorer and dropping it on the desired axis `File` text box.
+* Manually, by using the `Load script` button in the axis settings toolbar.
 * Automatically, based on the currently played video file name if the funscripts are named correctly:
 
 | Axis | Description | File Name |
@@ -30,6 +30,8 @@ To synchronize with the video player, click on the button with the player you wa
 | V0 | Vibrate | `<video name>.vib.funscript` |
 | V1 | Pump | `<video name>.pump.funscript` |
 | L3 | Suction | `<video name>.valve.funscript` |
+
+The above file names are matched in all script libraries and in the currently plaing video directory.
 
 # Requirements
 
