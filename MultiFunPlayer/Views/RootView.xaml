@@ -50,7 +50,7 @@
             </DockPanel>
         </DataTemplate>
     </materialExtensions:MaterialWindow.TitleTemplate>
-    <material:DialogHost Identifier="RootDialog" DialogTheme="Inherit">
+    <material:DialogHost Identifier="RootDialog" DialogTheme="Inherit" UseLayoutRounding="True">
         <StackPanel Orientation="Vertical" Margin="10">
             <ContentControl s:View.Model="{Binding VideoSource}"/>
             <ContentControl s:View.Model="{Binding Script}"/>

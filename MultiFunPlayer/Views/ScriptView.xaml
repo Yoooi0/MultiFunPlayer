@@ -24,134 +24,132 @@
             <material:Card material:ShadowAssist.ShadowDepth="Depth1"
                       Margin="0 0 0 20">
                 <DockPanel LastChildFill="True">
-                    <DockPanel DockPanel.Dock="Top" LastChildFill="True">
+                    <DockPanel DockPanel.Dock="Top" 
+                               LastChildFill="True" 
+                               Height="35"
+                               Background="{StaticResource MaterialDesignToolBarBackground}">
                         <DockPanel.Effect>
                             <DropShadowEffect ShadowDepth="0" Direction="270"/>
                         </DockPanel.Effect>
-                        <ToolBarTray DockPanel.Dock="Right" IsLocked="True">
-                            <ToolBar HorizontalAlignment="Right">
-                                <DockPanel Height="35">
-                                    <material:PackIcon DockPanel.Dock="Left" 
-                                                       Width="28" 
-                                                       Height="28" 
-                                                       VerticalAlignment="Center">
-                                        <material:PackIcon.Style>
-                                            <Style TargetType="material:PackIcon">
-                                                <Setter Property="Foreground" Value="Red"/>
-                                                <Setter Property="Kind" Value="Pause"/>
-                                                <Style.Triggers>
-                                                    <DataTrigger Binding="{Binding IsPlaying}" Value="True">
-                                                        <Setter Property="Foreground" Value="Green"/>
-                                                        <Setter Property="Kind" Value="Play"/>
-                                                    </DataTrigger>
-                                                </Style.Triggers>
-                                            </Style>
-                                        </material:PackIcon.Style>
-                                    </material:PackIcon>
-                                
-                                    <Grid DockPanel.Dock="Right" Width="24" Height="24">
-                                        <Grid.RowDefinitions>
-                                            <RowDefinition Height="24" />
-                                            <RowDefinition Height="24" />
-                                        </Grid.RowDefinitions>
+                        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Margin="0 0 8 0">
+                            <material:PackIcon Width="28" 
+                                               Height="28" 
+                                               VerticalAlignment="Center">
+                                <material:PackIcon.Style>
+                                    <Style TargetType="material:PackIcon">
+                                        <Setter Property="Foreground" Value="Red"/>
+                                        <Setter Property="Kind" Value="Pause"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsPlaying}" Value="True">
+                                                <Setter Property="Foreground" Value="Green"/>
+                                                <Setter Property="Kind" Value="Play"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </material:PackIcon.Style>
+                            </material:PackIcon>
 
-                                        <material:PackIcon Grid.Row="0"
-                                                           Width="16" 
-                                                           Height="16"
-                                                           VerticalAlignment="Center"
-                                                           HorizontalAlignment="Center"
-                                                           Kind="FastForward">
-                                            <material:PackIcon.Style>
-                                                <Style TargetType="material:PackIcon">
-                                                    <Setter Property="Foreground" Value="{StaticResource PrimaryHueLightBrush}"/>
-                                                    <Style.Triggers>
-                                                        <DataTrigger Binding="{Binding IsSyncing}" Value="True">
-                                                            <Setter Property="Foreground" Value="Red"/>
-                                                        </DataTrigger>
-                                                    </Style.Triggers>
-                                                </Style>
-                                            </material:PackIcon.Style>
-                                        </material:PackIcon>
-                                        <ProgressBar Value="{Binding SyncProgress, Mode=OneWay}"
-                                                     VerticalAlignment="Center"
-                                                     Grid.Row="1"
-                                                     Width="24"
-                                                     Height="24"
-                                                     Margin="0 -24 0 24">
-                                            <ProgressBar.Style>
-                                                <Style TargetType="ProgressBar" BasedOn="{StaticResource MaterialDesignCircularProgressBar}">
-                                                    <Setter Property="Foreground" Value="{StaticResource PrimaryHueLightBrush}"/>
-                                                    <Style.Triggers>
-                                                        <DataTrigger Binding="{Binding IsSyncing}" Value="True">
-                                                            <Setter Property="Foreground" Value="Red"/>
-                                                        </DataTrigger>
-                                                    </Style.Triggers>
-                                                </Style>
-                                            </ProgressBar.Style>
-                                        </ProgressBar>
-                                    </Grid>
-                                </DockPanel>
-                            </ToolBar>
-                        </ToolBarTray>
-                        <ToolBarTray DockPanel.Dock="Left" IsLocked="True">
-                            <ToolBar Style="{DynamicResource MaterialDesignToolBar}"
-                                    ClipToBounds="False">
-                                <Button Click="{s:Action OnOpenVideoLocation}" 
-                                        ToolTip="Open video location" 
-                                        ToolTipService.InitialShowDelay="0" 
-                                        ToolTipService.Placement="Top" 
-                                        Padding="8">
-                                    <material:PackIcon Kind="FolderOpen" Height="19" Width="19"/>
-                                </Button>
-                                <Button ToolTip="Script libraries" 
-                                        ToolTipService.InitialShowDelay="0" 
-                                        ToolTipService.Placement="Top" 
-                                        Padding="8"
-                                        Command="{x:Static material:DialogHost.OpenDialogCommand}">
-                                    <Button.CommandParameter>
-                                        <Grid Margin="20" Width="500" MaxHeight="400"
-                                              s:View.ActionTarget="{Binding}">            
-                                            <Button DockPanel.Dock="Top"
-                                                    Style="{StaticResource MaterialDesignFlatButton}"
-                                                    material:RippleAssist.Feedback="Black"
-                                                    Foreground="Black"
-                                                    Height="24"
+                            <Grid Width="24" Height="24">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="24" />
+                                    <RowDefinition Height="24" />
+                                </Grid.RowDefinitions>
+
+                                <material:PackIcon Grid.Row="0"
+                                                   Width="16" 
+                                                   Height="16"
+                                                   VerticalAlignment="Center"
+                                                   HorizontalAlignment="Center"
+                                                   Kind="FastForward">
+                                    <material:PackIcon.Style>
+                                        <Style TargetType="material:PackIcon">
+                                            <Setter Property="Foreground" Value="{StaticResource PrimaryHueLightBrush}"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsSyncing}" Value="True">
+                                                    <Setter Property="Foreground" Value="Red"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </material:PackIcon.Style>
+                                </material:PackIcon>
+                                <ProgressBar Value="{Binding SyncProgress, Mode=OneWay}"
+                                                    VerticalAlignment="Center"
+                                                    Grid.Row="1"
                                                     Width="24"
+                                                    Height="24"
+                                                    Margin="0 -24 0 24">
+                                    <ProgressBar.Style>
+                                        <Style TargetType="ProgressBar" BasedOn="{StaticResource MaterialDesignCircularProgressBar}">
+                                            <Setter Property="Foreground" Value="{StaticResource PrimaryHueLightBrush}"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsSyncing}" Value="True">
+                                                    <Setter Property="Foreground" Value="Red"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </ProgressBar.Style>
+                                </ProgressBar>
+                            </Grid>
+                        </StackPanel>
+                        <StackPanel DockPanel.Dock="Left" Orientation="Horizontal">
+                            <Button Click="{s:Action OnOpenVideoLocation}" 
+                                    Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}"
+                                    ToolTip="Open video location" 
+                                    ToolTipService.InitialShowDelay="0" 
+                                    ToolTipService.Placement="Top" 
+                                    Padding="8">
+                                <material:PackIcon Kind="FolderOpen" Height="19" Width="19"/>
+                            </Button>
+                            <Button Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}"
+                                    ToolTip="Script libraries" 
+                                    ToolTipService.InitialShowDelay="0" 
+                                    ToolTipService.Placement="Top" 
+                                    Padding="8"
+                                    Command="{x:Static material:DialogHost.OpenDialogCommand}">
+                                <Button.CommandParameter>
+                                    <Grid Margin="20" Width="500" MaxHeight="400"
+                                          s:View.ActionTarget="{Binding}">
+                                        <Button DockPanel.Dock="Top"
+                                                Style="{StaticResource MaterialDesignFlatButton}"
+                                                material:RippleAssist.Feedback="Black"
+                                                Foreground="Black"
+                                                Height="24"
+                                                Width="24"
+                                                Padding="0"
+                                                HorizontalAlignment="Right"
+                                                VerticalAlignment="Top"
+                                                Margin="0 -15 -15 0"
+                                                Command="{x:Static material:DialogHost.CloseDialogCommand}">
+                                            <material:PackIcon Kind="Close" 
+                                                                Height="20" 
+                                                                Width="20"/>
+                                        </Button>
+                                        <DockPanel LastChildFill="True">
+                                            <TextBlock Text="Libraries:"
+                                                        DockPanel.Dock="Top"
+                                                        FontSize="16"
+                                                        FontWeight="Bold"
+                                                        Margin="0 0 0 10"/>
+
+                                            <Button DockPanel.Dock="Bottom"
+                                                    Style="{StaticResource MaterialDesignFloatingActionMiniLightButton}"
+                                                    Width="32"
+                                                    Height="32"
+                                                    Margin="0 0 0 10"
                                                     Padding="0"
-                                                    HorizontalAlignment="Right"
-                                                    VerticalAlignment="Top"
-                                                    Margin="0 -15 -15 0"
-                                                    Command="{x:Static material:DialogHost.CloseDialogCommand}">
-                                                <material:PackIcon Kind="Close" 
-                                                                   Height="20" 
-                                                                   Width="20"/>
+                                                    Click="{s:Action OnLibraryAdd}">
+                                                <material:PackIcon Kind="Plus"
+                                                                    Width="24"
+                                                                    Height="24"/>
                                             </Button>
-                                            <DockPanel LastChildFill="True">
-                                                <TextBlock Text="Libraries:"
-                                                           DockPanel.Dock="Top"
-                                                           FontSize="16"
-                                                           FontWeight="Bold"
-                                                           Margin="0 0 0 10"/>
 
-                                                <Button DockPanel.Dock="Bottom"
-                                                        Style="{StaticResource MaterialDesignFloatingActionMiniLightButton}"
-                                                        Width="32"
-                                                        Height="32"
-                                                        Margin="0 0 0 10"
-                                                        Padding="0"
-                                                        Click="{s:Action OnLibraryAdd}">
-                                                    <material:PackIcon Kind="Plus"
-                                                                       Width="24"
-                                                                       Height="24"/>
-                                                </Button>
-
-                                                <material:Card material:ShadowAssist.ShadowDepth="Depth1" Margin="0 0 0 10">
+                                            <material:Card material:ShadowAssist.ShadowDepth="Depth1" Margin="0 0 0 10">
                                                 <ItemsControl DockPanel.Dock="Bottom"
-                                                              ItemsSource="{Binding ScriptLibraries}">
+                                                            ItemsSource="{Binding ScriptLibraries}">
                                                     <ItemsControl.Template>
                                                         <ControlTemplate>
                                                             <ScrollViewer VerticalScrollBarVisibility="Visible" 
-                                                                          HorizontalScrollBarVisibility="Disabled">
+                                                                        HorizontalScrollBarVisibility="Disabled">
                                                                 <ItemsPresenter/>
                                                             </ScrollViewer>
                                                         </ControlTemplate>
@@ -161,52 +159,51 @@
                                                             <Border Padding="5" Background="{StaticResource MaterialDesignLightBackground}">
                                                                 <DockPanel LastChildFill="True">
                                                                     <Button DockPanel.Dock="Right"   
-                                                                            Style="{StaticResource MaterialDesignFlatButton}"
-                                                                            ToolTip="Remove"
-                                                                            ToolTipService.InitialShowDelay="0"
-                                                                            ToolTipService.Placement="Top"
-                                                                            material:RippleAssist.Feedback="Red"
-                                                                            Foreground="Red"
-                                                                            Height="24" 
-                                                                            Width="24" 
-                                                                            Padding="0"
-                                                                            Click="{s:Action OnLibraryDelete}" >
+                                                                        Style="{StaticResource MaterialDesignFlatButton}"
+                                                                        ToolTip="Remove"
+                                                                        ToolTipService.InitialShowDelay="0"
+                                                                        ToolTipService.Placement="Top"
+                                                                        material:RippleAssist.Feedback="Red"
+                                                                        Foreground="Red"
+                                                                        Height="24" 
+                                                                        Width="24" 
+                                                                        Padding="0"
+                                                                        Click="{s:Action OnLibraryDelete}" >
                                                                         <material:PackIcon Kind="Delete"/>
                                                                     </Button>
                                                                     <Button DockPanel.Dock="Right"   
-                                                                            Style="{StaticResource MaterialDesignFlatButton}"
-                                                                            ToolTip="Open location"
-                                                                            ToolTipService.InitialShowDelay="0"
-                                                                            ToolTipService.Placement="Top"
-                                                                            Height="24" 
-                                                                            Width="24" 
-                                                                            Padding="0"
-                                                                            Click="{s:Action OnLibraryOpenFolder}">
+                                                                        Style="{StaticResource MaterialDesignFlatButton}"
+                                                                        ToolTip="Open location"
+                                                                        ToolTipService.InitialShowDelay="0"
+                                                                        ToolTipService.Placement="Top"
+                                                                        Height="24" 
+                                                                        Width="24" 
+                                                                        Padding="0"
+                                                                        Click="{s:Action OnLibraryOpenFolder}">
                                                                         <material:PackIcon Kind="FolderOpen"/>
                                                                     </Button>
-                                                                        <CheckBox IsChecked="{Binding Recursive}"
-                                                                                  DockPanel.Dock="Right"
-                                                                                  Width="24"
-                                                                                  ToolTip="Recursive"
-                                                                                  ToolTipService.InitialShowDelay="0"
-                                                                                  ToolTipService.Placement="Top"/>
-                                                                        <TextBlock Text="{Binding Directory.FullName}"
-                                                                               VerticalAlignment="Center"
-                                                                               FontSize="12"
-                                                                               DockPanel.Dock="Left"/>
+                                                                    <CheckBox IsChecked="{Binding Recursive}"
+                                                                                DockPanel.Dock="Right"
+                                                                                Width="24"
+                                                                                ToolTip="Recursive"
+                                                                                ToolTipService.InitialShowDelay="0"
+                                                                                ToolTipService.Placement="Top"/>
+                                                                    <TextBlock Text="{Binding Directory.FullName}"
+                                                                            VerticalAlignment="Center"
+                                                                            FontSize="12"
+                                                                            DockPanel.Dock="Left"/>
                                                                 </DockPanel>
                                                             </Border>
                                                         </DataTemplate>
                                                     </ItemsControl.ItemTemplate>
                                                 </ItemsControl>
-                                                </material:Card>
-                                            </DockPanel>
-                                        </Grid>
-                                    </Button.CommandParameter>
-                                    <material:PackIcon Kind="FolderSearch" Height="19" Width="19"/>
-                                </Button>
-                            </ToolBar>
-                        </ToolBarTray>
+                                            </material:Card>
+                                        </DockPanel>
+                                    </Grid>
+                                </Button.CommandParameter>
+                                <material:PackIcon Kind="FolderSearch" Height="19" Width="19"/>
+                            </Button>
+                        </StackPanel>
                     </DockPanel>
                     <StackPanel Margin="20" DockPanel.Dock="Bottom">
                         <DockPanel LastChildFill="True" Margin="0 0 0 10">
@@ -256,7 +253,7 @@
                             <Setter Property="Template">
                                 <Setter.Value>
                                     <ControlTemplate TargetType="TabControl">
-                                        <Grid UseLayoutRounding="True">
+                                        <Grid>
                                             <Grid.RowDefinitions>
                                                 <RowDefinition Height="Auto" />
                                                 <RowDefinition Height="*" />
@@ -383,75 +380,68 @@
                                     <Border BorderThickness="0 0 0 1"
                                             Height="35"
                                             BorderBrush="{StaticResource PrimaryHueLightBrush}">
-                                        <DockPanel LastChildFill="True">
-                                            <ToolBarTray DockPanel.Dock="Right" IsLocked="True"
-                                                         VerticalAlignment="Stretch">
-                                                <ToolBar Style="{DynamicResource MaterialDesignToolBar}">
-                                                    <Border Height="35" VerticalAlignment="Stretch">
-                                                        <TextBlock Text="{Binding Key, Converter={StaticResource DeviceAxisFriendlyNameConverter}}"
-                                                                   Foreground="{StaticResource PrimaryHueLightBrush}"
-                                                                   VerticalAlignment="Center"
-                                                                   FontSize="14"
-                                                                   FontWeight="Bold"
-                                                                   Typography.Capitals="AllSmallCaps"/>
-                                                    </Border>
-                                                </ToolBar>
-                                            </ToolBarTray>
-                                            <ToolBarTray DockPanel.Dock="Left" IsLocked="True">
-                                                <ToolBar Style="{DynamicResource MaterialDesignToolBar}"
-                                                     ClipToBounds="False">
-                                                    <Button Command="{s:Action OnAxisOpenFolder}"
+                                        <DockPanel LastChildFill="True"
+                                                   Background="{StaticResource MaterialDesignToolBarBackground}">
+                                            <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" Margin="0 0 8 0">
+                                                <TextBlock Text="{Binding Key, Converter={StaticResource DeviceAxisFriendlyNameConverter}}"
+                                                           Foreground="{StaticResource PrimaryHueLightBrush}"
+                                                           VerticalAlignment="Center"
+                                                           FontSize="14"
+                                                           FontWeight="Bold"
+                                                           Typography.Capitals="AllSmallCaps"/>
+                                            </StackPanel>
+                                            <StackPanel Orientation="Horizontal" DockPanel.Dock="Left">
+                                                <Button Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}"
+                                                        Command="{s:Action OnAxisOpenFolder}"
                                                         CommandParameter="{Binding Key}"
                                                         IsEnabled="{Binding Value.Script, Converter={StaticResource InvertedNullableToBooleanConverter}}"
                                                         ToolTipService.InitialShowDelay="0"
                                                         ToolTipService.Placement="Top"
                                                         ToolTip="Open script location"
-                                                        Padding="8"
-                                                        Margin="0 0 2 0">
+                                                        Padding="8">
                                                         <material:PackIcon Kind="FolderOpen" Width="19" Height="19"/>
-                                                    </Button>
-                                                    <Button Command="{s:Action OnAxisLoad}"
+                                                </Button>
+                                                <Button Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}"
+                                                        Command="{s:Action OnAxisLoad}"
                                                         CommandParameter="{Binding Key}"
                                                         IsEnabled="{Binding Value.LinkAxis, Converter={StaticResource NullableToBooleanConverter}}"
                                                         ToolTipService.InitialShowDelay="0"
                                                         ToolTipService.Placement="Top"
                                                         ToolTip="Load script"
-                                                        Padding="8"
-                                                        Margin="0 0 2 0">
-                                                        <material:PackIcon Kind="FileDownload" Width="19" Height="19"/>
-                                                    </Button>
-                                                    <Button Command="{s:Action OnAxisClear}"
+                                                        Padding="8">
+                                                    <material:PackIcon Kind="FileDownload" Width="19" Height="19"/>
+                                                </Button>
+                                                <Button Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}"
+                                                        Command="{s:Action OnAxisClear}"
                                                         CommandParameter="{Binding Key}"
                                                         ToolTipService.InitialShowDelay="0"
                                                         ToolTipService.Placement="Top"
                                                         ToolTip="Clear script"
-                                                        Padding="8"
-                                                        Margin="2 0 2 0">
-                                                        <Button.IsEnabled>
-                                                            <MultiBinding Converter="{StaticResource MultiBooleanToBooleanAndConverter}">
-                                                                <Binding Path="Value.LinkAxis" Converter="{StaticResource NullableToBooleanConverter}"/>
-                                                                <Binding Path="Value.Script" Converter="{StaticResource InvertedNullableToBooleanConverter}"/>
-                                                            </MultiBinding>
-                                                        </Button.IsEnabled>
-                                                        <material:PackIcon Kind="Close" Width="19" Height="19"/>
-                                                    </Button>
-                                                    <Button Command="{s:Action OnAxisReload}"
+                                                        Padding="8">
+                                                    <Button.IsEnabled>
+                                                        <MultiBinding Converter="{StaticResource MultiBooleanToBooleanAndConverter}">
+                                                            <Binding Path="Value.LinkAxis" Converter="{StaticResource NullableToBooleanConverter}"/>
+                                                            <Binding Path="Value.Script" Converter="{StaticResource InvertedNullableToBooleanConverter}"/>
+                                                        </MultiBinding>
+                                                    </Button.IsEnabled>
+                                                    <material:PackIcon Kind="Close" Width="19" Height="19"/>
+                                                </Button>
+                                                <Button Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}"
+                                                        Command="{s:Action OnAxisReload}"
                                                         CommandParameter="{Binding Key}"
                                                         ToolTipService.InitialShowDelay="0"
                                                         ToolTipService.Placement="Top"
                                                         ToolTip="Reload script"
-                                                        Padding="8"
-                                                        Margin="2 0 0 0">
-                                                        <Button.IsEnabled>
-                                                            <MultiBinding Converter="{StaticResource MultiBooleanToBooleanAndConverter}">
-                                                                <Binding Path="Value.LinkAxis" Converter="{StaticResource NullableToBooleanConverter}"/>
-                                                                <Binding Path="Value.Script" Converter="{StaticResource InvertedNullableToBooleanConverter}"/>
-                                                            </MultiBinding>
-                                                        </Button.IsEnabled>
-                                                        <material:PackIcon Kind="Reload" Width="19" Height="19"/>
-                                                    </Button>
-                                                </ToolBar>
-                                            </ToolBarTray>
+                                                        Padding="8">
+                                                    <Button.IsEnabled>
+                                                        <MultiBinding Converter="{StaticResource MultiBooleanToBooleanAndConverter}">
+                                                            <Binding Path="Value.LinkAxis" Converter="{StaticResource NullableToBooleanConverter}"/>
+                                                            <Binding Path="Value.Script" Converter="{StaticResource InvertedNullableToBooleanConverter}"/>
+                                                        </MultiBinding>
+                                                    </Button.IsEnabled>
+                                                    <material:PackIcon Kind="Reload" Width="19" Height="19"/>
+                                                </Button>
+                                            </StackPanel>
                                         </DockPanel>
                                     </Border>
                                 </DockPanel>
