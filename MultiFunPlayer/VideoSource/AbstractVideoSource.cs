@@ -1,3 +1,7 @@
+using MultiFunPlayer.Common.Controls;
+using MultiFunPlayer.Common.Messages;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using Stylet;
 using System;
 using System.Collections.Generic;
@@ -7,14 +11,18 @@ using System.Threading.Tasks;
 
 namespace MultiFunPlayer.VideoSource
 {
-    public abstract class AbstractVideoSource : PropertyChangedBase, IVideoSource
+    public abstract class AbstractVideoSource : PropertyChangedBase, IVideoSource, IHandle<AppSettingsMessage>
     {
         private CancellationTokenSource _cancellationSource;
         private Task _task;
 
         public VideoSourceStatus Status { get; protected set; } = VideoSourceStatus.Disconnected;
+        public virtual object SettingsViewModel { get; } = null;
 
-        protected AbstractVideoSource() { }
+        protected AbstractVideoSource(IEventAggregator eventAggregator)
+        {
+            eventAggregator.Subscribe(this);
+        }
 
         public abstract string Name { get; }
         protected abstract Task RunAsync(CancellationToken token);
@@ -66,6 +74,24 @@ namespace MultiFunPlayer.VideoSource
             //TODO: not great, not terrible
             while (!statuses.Contains(Status))
                 await Task.Delay(checkFrequency, token).ConfigureAwait(false);
+        }
+
+        public void Handle(AppSettingsMessage message)
+        {
+            if (message.Type == AppSettingsMessageType.Saving)
+            {
+                if(SettingsViewModel != null)
+                    message.Settings[Name] = JObject.FromObject(SettingsViewModel);
+            }
+            else if (message.Type == AppSettingsMessageType.Loading)
+            {
+                if (!message.Settings.ContainsKey(Name))
+                    return;
+
+                var settings = message.Settings[Name];
+                using var reader = settings.CreateReader();
+                JsonSerializer.CreateDefault().Populate(reader, SettingsViewModel);
+            }
         }
 
         protected async virtual void Dispose(bool disposing)

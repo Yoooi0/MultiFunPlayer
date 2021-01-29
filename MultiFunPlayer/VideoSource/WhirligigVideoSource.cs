@@ -19,7 +19,7 @@ namespace MultiFunPlayer.VideoSource
 
         public override string Name => "Whirligig";
 
-        public WhirligigVideoSource(IEventAggregator eventAggregator)
+        public WhirligigVideoSource(IEventAggregator eventAggregator) : base(eventAggregator)
         {
             _eventAggregator = eventAggregator;
         }

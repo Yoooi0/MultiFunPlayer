@@ -1,6 +1,7 @@
 ﻿using MaterialDesignThemes.Wpf;
 using MultiFunPlayer.Common;
 using MultiFunPlayer.Common.Controls;
+using MultiFunPlayer.VideoSource.Settings;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Stylet;
@@ -17,12 +18,15 @@ namespace MultiFunPlayer.VideoSource
     {
         private readonly string _pipeName = "multifunplayer-mpv";
         private readonly IEventAggregator _eventAggregator;
+        private readonly MpvVideoSourceSettingsViewModel _settings;
 
         public override string Name => "MPV";
+        public override object SettingsViewModel => _settings;
 
-        public MpvVideoSource(IEventAggregator eventAggregator)
+        public MpvVideoSource(IEventAggregator eventAggregator) : base(eventAggregator)
         {
             _eventAggregator = eventAggregator;
+            _settings = new MpvVideoSourceSettingsViewModel();
         }
 
         protected override async Task RunAsync(CancellationToken token)
@@ -37,16 +41,16 @@ namespace MultiFunPlayer.VideoSource
                 }
                 catch (TimeoutException)
                 {
-                    var mpvPath = Path.Join(Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName), "mpv.exe");
-                    if (!File.Exists(mpvPath))
+                    var executable = _settings.Executable ?? new FileInfo(Path.Join(Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName), "mpv.exe"));
+                    if (!executable.Exists)
                     {
-                        _ = Execute.OnUIThreadAsync(() => DialogHost.Show(new ErrorMessageDialog($"Could not find mpv executable!\n\nPlease download or copy it to:\n\"{mpvPath}\"")));
+                        _ = Execute.OnUIThreadAsync(() => DialogHost.Show(new ErrorMessageDialog($"Could not find mpv executable!\n\nPlease download or copy it to:\n\"{executable.FullName}\"")));
                     }
                     else
                     {
                         var processInfo = new ProcessStartInfo()
                         {
-                            FileName = mpvPath,
+                            FileName = executable.FullName,
                             Arguments = $"--input-ipc-server={_pipeName} --keep-open=always --pause"
                         };
 

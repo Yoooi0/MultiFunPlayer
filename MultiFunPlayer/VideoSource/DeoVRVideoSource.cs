@@ -1,6 +1,7 @@
 ﻿using MaterialDesignThemes.Wpf;
 using MultiFunPlayer.Common;
 using MultiFunPlayer.Common.Controls;
+using MultiFunPlayer.VideoSource.Settings;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Stylet;
@@ -17,12 +18,15 @@ namespace MultiFunPlayer.VideoSource
     public class DeoVRVideoSource : AbstractVideoSource
     {
         private readonly IEventAggregator _eventAggregator;
+        private readonly DeoVRVideoSourceSettingsViewModel _settings;
 
         public override string Name => "DeoVR";
+        public override object SettingsViewModel => _settings;
 
-        public DeoVRVideoSource(IEventAggregator eventAggregator)
+        public DeoVRVideoSource(IEventAggregator eventAggregator) : base(eventAggregator)
         {
             _eventAggregator = eventAggregator;
+            _settings = new DeoVRVideoSourceSettingsViewModel();
         }
 
         protected override async Task RunAsync(CancellationToken token)
@@ -48,7 +52,7 @@ namespace MultiFunPlayer.VideoSource
                 if (Process.GetProcessesByName("DeoVR").Length == 0)
                     throw new Exception($"Could not find a running {Name} process.");
 
-                using var client = new TcpClient("localhost", 23554);
+                using var client = new TcpClient(_settings.Address, _settings.Port);
                 using var stream = client.GetStream();
 
                 _ = Task.Factory.StartNew(async () =>

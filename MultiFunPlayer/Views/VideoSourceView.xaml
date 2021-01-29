@@ -11,6 +11,7 @@
              d:DesignHeight="450" d:DesignWidth="800">
     <UserControl.Resources>
         <converters:VideoSourceStatusToBrushConverter x:Key="VideoSourceStatusToBrushConverter"/>
+        <converters:NullableToBooleanConverter x:Key="NullableToBooleanConverter"/>
     </UserControl.Resources>
     <material:Card material:ShadowAssist.ShadowDepth="Depth1" Margin="0 0 0 20">
         <StackPanel Margin="20">
@@ -23,12 +24,49 @@
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
                         <DockPanel LastChildFill="True" Margin="10 0 10 0">
-                            <Button Style="{StaticResource MaterialDesignRaisedLightButton}"
-                                    Margin="0 0 0 5"
-                                    Height="24"
-                                    Content="{Binding Name}" 
-                                    DockPanel.Dock="Top"
-                                    Click="{s:Action OnSourceClick}"/>
+                            <material:Badged DockPanel.Dock="Top" 
+                                             BadgeColorZoneMode="PrimaryMid"
+                                             HorizontalAlignment="Stretch"
+                                             HorizontalContentAlignment="Stretch"
+                                             CornerRadius="3"
+                                             Margin="0 0 0 5">
+                                <material:Badged.Resources>
+                                    <Style TargetType="{x:Type material:Badged}" BasedOn="{StaticResource {x:Type material:Badged}}">
+                                        <Setter Property="Badge" Value="{x:Null}"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding SettingsViewModel, Converter={StaticResource NullableToBooleanConverter}}" Value="False">
+                                                <Setter Property="Badge">
+                                                    <Setter.Value>
+                                                        <Button Style="{StaticResource MaterialDesignFlatButton}"
+                                                                Foreground="{StaticResource PrimaryHueMidForegroundBrush}"
+                                                                Height="14"
+                                                                Width="14"
+                                                                Padding="0"
+                                                                Command="{x:Static material:DialogHost.OpenDialogCommand}">
+                                                            <Button.CommandParameter>
+                                                                <ContentControl s:View.Model="{Binding SettingsViewModel}"/>
+                                                            </Button.CommandParameter>
+                                                            <material:PackIcon Kind="Gear" Height="12" Width="12"/>
+                                                        </Button>
+                                                    </Setter.Value>
+                                                </Setter>
+                                            </DataTrigger>
+                                            <Trigger Property="IsEnabled" Value="False">
+                                                <Setter Property="BadgeBackground">
+                                                    <Setter.Value>
+                                                        <SolidColorBrush Color="{StaticResource Primary500}"
+                                                                         Opacity="0.23"/>
+                                                    </Setter.Value>
+                                                </Setter>
+                                            </Trigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </material:Badged.Resources>
+                                <Button Style="{StaticResource MaterialDesignRaisedLightButton}"
+                                        Height="24"
+                                        Content="{Binding Name}" 
+                                        Click="{s:Action OnSourceClick}"/>
+                            </material:Badged>
                             <TextBlock Text="{Binding Status}"
                                        Foreground="{Binding Status, Converter={StaticResource VideoSourceStatusToBrushConverter}}"
                                        DockPanel.Dock="Bottom"
