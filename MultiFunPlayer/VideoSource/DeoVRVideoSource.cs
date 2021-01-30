@@ -49,10 +49,18 @@ namespace MultiFunPlayer.VideoSource
 
             try
             {
-                if (Process.GetProcessesByName("DeoVR").Length == 0)
-                    throw new Exception($"Could not find a running {Name} process.");
+                if(string.Equals(_settings.Address, "localhost") || string.Equals(_settings.Address, "127.0.0.1"))
+                    if (Process.GetProcessesByName("DeoVR").Length == 0)
+                        throw new Exception($"Could not find a running {Name} process.");
 
-                using var client = new TcpClient(_settings.Address, _settings.Port);
+                using var client = new TcpClient();
+                {
+                    using var timeoutCancellationSource = new CancellationTokenSource(1000);
+                    using var connectCancellationSource = CancellationTokenSource.CreateLinkedTokenSource(token, timeoutCancellationSource.Token);
+
+                    await client.ConnectAsync(_settings.Address, _settings.Port, connectCancellationSource.Token).ConfigureAwait(false);
+                }
+
                 using var stream = client.GetStream();
 
                 _ = Task.Factory.StartNew(async () =>
@@ -114,10 +122,18 @@ namespace MultiFunPlayer.VideoSource
         {
             try
             {
-                if (Process.GetProcessesByName("DeoVR").Length == 0)
-                    return await ValueTask.FromResult(false).ConfigureAwait(false);
+                if(string.Equals(_settings.Address, "localhost") || string.Equals(_settings.Address, "127.0.0.1"))
+                    if (Process.GetProcessesByName("DeoVR").Length == 0)
+                        return await ValueTask.FromResult(false).ConfigureAwait(false);
 
-                using var client = new TcpClient("localhost", 23554);
+                using var client = new TcpClient();
+                {
+                    using var timeoutCancellationSource = new CancellationTokenSource(1000);
+                    using var connectCancellationSource = CancellationTokenSource.CreateLinkedTokenSource(token, timeoutCancellationSource.Token);
+
+                    await client.ConnectAsync(_settings.Address, _settings.Port, connectCancellationSource.Token).ConfigureAwait(false);
+                }
+
                 using var stream = client.GetStream();
 
                 return await ValueTask.FromResult(client.Connected).ConfigureAwait(false);
