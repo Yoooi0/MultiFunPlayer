@@ -35,9 +35,9 @@ namespace MultiFunPlayer.Common.Controls
             if (actualEnumType == _enumType)
                 return enumValues;
 
-            var tempArray = Array.CreateInstance(actualEnumType, enumValues.Length + 1);
-            enumValues.CopyTo(tempArray, 1);
-            return tempArray;
+            var result = Array.CreateInstance(actualEnumType, enumValues.Length + 1);
+            enumValues.CopyTo(result, 1);
+            return result;
         }
     }
 }

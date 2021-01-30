@@ -67,8 +67,7 @@
                                                                                FontSize="16"
                                                                                FontWeight="Bold"/>
                                                                         <ContentControl DockPanel.Dock="Bottom" 
-                                                                                        s:View.Model="{Binding SettingsViewModel}"
-                                                                                        s:View.ActionTarget="{Binding SettingsViewModel}"/>
+                                                                                        s:View.Model="{Binding SettingsViewModel}"/>
                                                                     </DockPanel>
                                                                 </Grid>
                                                             </Button.CommandParameter>

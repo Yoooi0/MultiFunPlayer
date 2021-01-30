@@ -32,7 +32,7 @@ namespace MultiFunPlayer.Common
             return new ScriptFile(Path.GetFileName(path), file, File.ReadAllText(path));
         }
 
-        public static ScriptFile FromPath(string path) => FromFileInfo(new FileInfo(path));        
+        public static ScriptFile FromPath(string path) => FromFileInfo(new FileInfo(path));
 
         public static ScriptFile FromZipArchiveEntry(string archivePath, ZipArchiveEntry entry)
         {
