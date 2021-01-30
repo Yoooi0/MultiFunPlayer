@@ -50,7 +50,9 @@ namespace MultiFunPlayer.VideoSource
                     {
                         var parts = message.Split(' ', 2);
                         _eventAggregator.Publish(new VideoPlayingMessage(isPlaying: true));
-                        _eventAggregator.Publish(new VideoPositionMessage(parts.Length == 2 && double.TryParse(parts[1], NumberStyles.Any, NumberFormatInfo.InvariantInfo, out var position) ? TimeSpan.FromSeconds(position) : null));
+                        _eventAggregator.Publish(new VideoPositionMessage(
+                            parts.Length == 2 && double.TryParse(parts[1].Replace(',', '.'), NumberStyles.Any, NumberFormatInfo.InvariantInfo, out var position)
+                                ? TimeSpan.FromSeconds(position) : null));
                     }
                     else if(message.Length >= 1 && message[0] == 'C')
                     {
@@ -60,7 +62,9 @@ namespace MultiFunPlayer.VideoSource
                     else if(message.Length >= 8 && message[..8] == "duration")
                     {
                         var parts = message.Split('=', 2, StringSplitOptions.TrimEntries);
-                        _eventAggregator.Publish(new VideoDurationMessage(parts.Length == 2 && double.TryParse(parts[1], NumberStyles.Any, NumberFormatInfo.InvariantInfo, out var duration) ? TimeSpan.FromSeconds(duration) : null));
+                        _eventAggregator.Publish(new VideoDurationMessage(
+                            parts.Length == 2 && double.TryParse(parts[1].Replace(',', '.'), NumberStyles.Any, NumberFormatInfo.InvariantInfo, out var duration)
+                                ? TimeSpan.FromSeconds(duration) : null));
                     }
                 }
             }
