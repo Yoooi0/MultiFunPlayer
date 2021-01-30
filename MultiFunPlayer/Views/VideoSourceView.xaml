@@ -26,10 +26,12 @@
                         <DockPanel LastChildFill="True" Margin="10 0 10 0">
                             <material:Badged DockPanel.Dock="Top" 
                                              BadgeColorZoneMode="PrimaryMid"
+                                             BadgePlacementMode="Right"
                                              HorizontalAlignment="Stretch"
                                              HorizontalContentAlignment="Stretch"
                                              CornerRadius="3"
-                                             Margin="0 0 0 5">
+                                             Padding="0 0 -13 0"
+                                             Margin="0 0 13 5">
                                 <material:Badged.Resources>
                                     <Style TargetType="{x:Type material:Badged}" BasedOn="{StaticResource {x:Type material:Badged}}">
                                         <Setter Property="Badge" Value="{x:Null}"/>
