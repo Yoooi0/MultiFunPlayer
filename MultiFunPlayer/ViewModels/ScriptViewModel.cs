@@ -407,20 +407,34 @@ namespace MultiFunPlayer.ViewModels
                 return false;
             }
 
+            bool TryMatchArchive(string path)
+            {
+                if (File.Exists(path))
+                {
+                    using var zip = ZipFile.OpenRead(path);
+                    foreach (var entry in zip.Entries.Where(e => string.Equals(Path.GetExtension(e.FullName), ".funscript", StringComparison.OrdinalIgnoreCase)))
+                        TryMatchFile(entry.Name, () => ScriptFile.FromZipArchiveEntry(path, entry));
+
+                    return true;
+                }
+
+                return false;
+            }
+
             var videoWithoutExtension = Path.GetFileNameWithoutExtension(VideoFile.Name);
-            foreach (var funscriptFile in ScriptLibraries.SelectMany(x => x.EnumerateFiles($"{videoWithoutExtension}*.funscript")))
-                TryMatchFile(funscriptFile.Name, () => ScriptFile.FromFileInfo(funscriptFile));
+            foreach (var library in ScriptLibraries)
+            {
+                foreach (var zipFile in library.EnumerateFiles($"{videoWithoutExtension}.zip"))
+                    TryMatchArchive(zipFile.FullName);
+
+                foreach (var funscriptFile in library.EnumerateFiles($"{videoWithoutExtension}*.funscript"))
+                    TryMatchFile(funscriptFile.Name, () => ScriptFile.FromFileInfo(funscriptFile));
+            }
 
             if (Directory.Exists(VideoFile.Source))
             {
                 var sourceDirectory = new DirectoryInfo(VideoFile.Source);
-                var zipPath = Path.Join(sourceDirectory.FullName, $"{videoWithoutExtension}.zip");
-                if (File.Exists(zipPath))
-                {
-                    using var zip = ZipFile.OpenRead(zipPath);
-                    foreach (var entry in zip.Entries.Where(e => string.Equals(Path.GetExtension(e.FullName), ".funscript", StringComparison.OrdinalIgnoreCase)))
-                        TryMatchFile(entry.Name, () => ScriptFile.FromZipArchiveEntry(zipPath, entry));
-                }
+                TryMatchArchive(Path.Join(sourceDirectory.FullName, $"{videoWithoutExtension}.zip"));
 
                 foreach (var funscriptFile in sourceDirectory.EnumerateFiles($"{videoWithoutExtension}*.funscript"))
                     TryMatchFile(funscriptFile.Name, () => ScriptFile.FromFileInfo(funscriptFile));
