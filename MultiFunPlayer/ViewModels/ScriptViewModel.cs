@@ -38,7 +38,7 @@ namespace MultiFunPlayer.ViewModels
         public ObservableConcurrentDictionary<DeviceAxis, List<Keyframe>> ScriptKeyframes { get; }
         public BindableCollection<ScriptLibrary> ScriptLibraries { get; }
 
-        public FileInfo VideoFile { get; set; }
+        public VideoFile VideoFile { get; set; }
 
         public float SyncProgress => !IsSyncing ? 100 : (MathF.Pow(2, 10 * (_syncTime / _syncDuration - 1)) * 100);
 
@@ -150,7 +150,7 @@ namespace MultiFunPlayer.ViewModels
             if (VideoFile == null && message.VideoFile == null)
                 return;
             if (VideoFile != null && message.VideoFile != null)
-                if (string.Equals(VideoFile.FullName, message.VideoFile.FullName, StringComparison.OrdinalIgnoreCase))
+                if (string.Equals(VideoFile.Name, message.VideoFile.Name, StringComparison.OrdinalIgnoreCase))
                    return;
 
             VideoFile = message.VideoFile;
@@ -411,16 +411,20 @@ namespace MultiFunPlayer.ViewModels
             foreach (var funscriptFile in ScriptLibraries.SelectMany(x => x.EnumerateFiles($"{videoWithoutExtension}*.funscript")))
                 TryMatchFile(funscriptFile.Name, () => ScriptFile.FromFileInfo(funscriptFile));
 
-            var zipPath = Path.Join(VideoFile.DirectoryName, $"{videoWithoutExtension}.zip");
-            if (File.Exists(zipPath))
+            if (Directory.Exists(VideoFile.Source))
             {
-                using var zip = ZipFile.OpenRead(zipPath);
-                foreach (var entry in zip.Entries.Where(e => string.Equals(Path.GetExtension(e.FullName), ".funscript", StringComparison.OrdinalIgnoreCase)))
-                    TryMatchFile(entry.Name, () => ScriptFile.FromZipArchiveEntry(zipPath, entry));
-            }
+                var sourceDirectory = new DirectoryInfo(VideoFile.Source);
+                var zipPath = Path.Join(sourceDirectory.FullName, $"{videoWithoutExtension}.zip");
+                if (File.Exists(zipPath))
+                {
+                    using var zip = ZipFile.OpenRead(zipPath);
+                    foreach (var entry in zip.Entries.Where(e => string.Equals(Path.GetExtension(e.FullName), ".funscript", StringComparison.OrdinalIgnoreCase)))
+                        TryMatchFile(entry.Name, () => ScriptFile.FromZipArchiveEntry(zipPath, entry));
+                }
 
-            foreach (var funscriptFile in VideoFile.Directory.EnumerateFiles($"{videoWithoutExtension}*.funscript"))
-                TryMatchFile(funscriptFile.Name, () => ScriptFile.FromFileInfo(funscriptFile));
+                foreach (var funscriptFile in sourceDirectory.EnumerateFiles($"{videoWithoutExtension}*.funscript"))
+                    TryMatchFile(funscriptFile.Name, () => ScriptFile.FromFileInfo(funscriptFile));
+            }
 
             return updated.Distinct();
         }
@@ -453,7 +457,8 @@ namespace MultiFunPlayer.ViewModels
             if (VideoFile == null)
                 return;
 
-            Process.Start("explorer.exe", VideoFile.DirectoryName);
+            if(Directory.Exists(VideoFile.Source))
+                Process.Start("explorer.exe", VideoFile.Source);
         }
         #endregion
 
@@ -493,7 +498,7 @@ namespace MultiFunPlayer.ViewModels
         {
             var dialog = new CommonOpenFileDialog()
             {
-                InitialDirectory = Path.GetDirectoryName(VideoFile?.FullName) ?? string.Empty,
+                InitialDirectory = Directory.Exists(VideoFile?.Source) ? VideoFile.Source : string.Empty,
                 EnsureFileExists = true
             };
             dialog.Filters.Add(new CommonFileDialogFilter("Funscript files", "*.funscript"));

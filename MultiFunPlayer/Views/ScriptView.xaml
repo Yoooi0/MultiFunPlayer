@@ -215,7 +215,7 @@
                             <TextBox IsReadOnly="True"
                                      Text="{Binding VideoFile.Name, Mode=OneWay}"
                                      Style="{StaticResource MaterialDesignFloatingHintTextBox}"
-                                     material:HintAssist.Hint="{Binding VideoFile.DirectoryName}"
+                                     material:HintAssist.Hint="{Binding VideoFile.Source}"
                                      DockPanel.Dock="Left"
                                      Margin="5 -10 0 0"
                                      VerticalAlignment="Center"/>
