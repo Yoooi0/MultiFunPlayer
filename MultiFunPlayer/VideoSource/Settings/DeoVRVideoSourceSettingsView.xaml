@@ -9,48 +9,30 @@
              xmlns:local="clr-namespace:MultiFunPlayer.VideoSource.Settings"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
-    <Grid Margin="20" Width="400" MaxHeight="400"
-          s:View.ActionTarget="{Binding}">
-        <Button DockPanel.Dock="Top"
-                Style="{StaticResource MaterialDesignFlatButton}"
-                material:RippleAssist.Feedback="Black"
-                Foreground="Black"
-                Height="24"
-                Width="24"
-                Padding="0"
-                HorizontalAlignment="Right"
-                VerticalAlignment="Top"
-                Margin="0 -15 -15 0"
-                Command="{x:Static material:DialogHost.CloseDialogCommand}">
-            <material:PackIcon Kind="Close" 
-                                Height="20" 
-                                Width="20"/>
-        </Button>
-        <DockPanel LastChildFill="True">
-            <DockPanel Margin="0 10 0 0">
-                <TextBlock Text="Address:"
+    <DockPanel LastChildFill="True" Width="400">
+        <DockPanel Margin="0 10 0 0">
+            <TextBlock Text="Address:"
                            DockPanel.Dock="Left"
                            Margin="0 0 10 0"
                            VerticalAlignment="Center"/>
 
-                <TextBox Text="{Binding Address}"
+            <TextBox Text="{Binding Address}"
                          DockPanel.Dock="Left"
                          Width="150"
                          Margin="5 0 20 0"
                          VerticalAlignment="Center"/>
-                
-                <TextBlock Text="Port:"
+
+            <TextBlock Text="Port:"
                            DockPanel.Dock="Left"
                            Margin="0 0 10 0"
                            VerticalAlignment="Center"/>
 
-                <metro:NumericUpDown DockPanel.Dock="Left"
+            <metro:NumericUpDown DockPanel.Dock="Left"
                                      Margin="5 0 0 0"
                                      Value="{Binding Port}"
                                      Minimum="0"
                                      Maximum="65535"
                                      VerticalAlignment="Center"/>
-            </DockPanel>
         </DockPanel>
-    </Grid>
+    </DockPanel>
 </UserControl>
