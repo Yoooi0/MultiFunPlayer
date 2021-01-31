@@ -83,7 +83,10 @@ namespace MultiFunPlayer.ViewModels
                     if (_currentSource != null)
                     {
                         await _currentSource.WaitForStatus(new[] { VideoSourceStatus.Disconnected }, 5000, _cancellationSource.Token).ConfigureAwait(false);
-                        _currentSource = null;
+                        await _semaphore.WaitAsync(_cancellationSource.Token).ConfigureAwait(false);
+                        if(_currentSource?.Status == VideoSourceStatus.Disconnected)
+                            _currentSource = null;
+                        _semaphore.Release();
                     }
 
                     foreach(var source in Sources)
