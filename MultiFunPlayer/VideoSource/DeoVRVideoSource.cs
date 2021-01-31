@@ -1,4 +1,4 @@
-﻿using MaterialDesignThemes.Wpf;
+using MaterialDesignThemes.Wpf;
 using MultiFunPlayer.Common;
 using MultiFunPlayer.Common.Controls;
 using MultiFunPlayer.VideoSource.Settings;
@@ -55,7 +55,7 @@ namespace MultiFunPlayer.VideoSource
 
                 using var client = new TcpClient();
                 {
-                    using var timeoutCancellationSource = new CancellationTokenSource(1000);
+                    using var timeoutCancellationSource = new CancellationTokenSource(5000);
                     using var connectCancellationSource = CancellationTokenSource.CreateLinkedTokenSource(token, timeoutCancellationSource.Token);
 
                     await client.ConnectAsync(_settings.Address, _settings.Port, connectCancellationSource.Token).ConfigureAwait(false);
@@ -128,7 +128,7 @@ namespace MultiFunPlayer.VideoSource
 
                 using var client = new TcpClient();
                 {
-                    using var timeoutCancellationSource = new CancellationTokenSource(1000);
+                    using var timeoutCancellationSource = new CancellationTokenSource(2500);
                     using var connectCancellationSource = CancellationTokenSource.CreateLinkedTokenSource(token, timeoutCancellationSource.Token);
 
                     await client.ConnectAsync(_settings.Address, _settings.Port, connectCancellationSource.Token).ConfigureAwait(false);
