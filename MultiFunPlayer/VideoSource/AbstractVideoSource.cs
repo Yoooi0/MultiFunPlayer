@@ -1,3 +1,4 @@
+using MultiFunPlayer.Common;
 using MultiFunPlayer.Common.Messages;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -87,9 +88,7 @@ namespace MultiFunPlayer.VideoSource
                 if (!message.Settings.ContainsKey(Name))
                     return;
 
-                var settings = message.Settings[Name];
-                using var reader = settings.CreateReader();
-                JsonSerializer.CreateDefault().Populate(reader, SettingsViewModel);
+                message.Settings[Name].Populate(SettingsViewModel);
             }
         }
 

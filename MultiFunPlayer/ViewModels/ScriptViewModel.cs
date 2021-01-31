@@ -232,17 +232,12 @@ namespace MultiFunPlayer.ViewModels
                 var settings = message.Settings["Script"] as JObject;
                 if (settings.TryGetValue(nameof(AxisSettings), out var axisSettingsToken))
                 {
-                    foreach (var (axis, axisSettings) in axisSettingsToken.ToObject<Dictionary<DeviceAxis, ScriptAxisSettings>>())
+                    foreach(var property in axisSettingsToken.Children<JProperty>())
                     {
-                        //TODO: persistent tab content breaks when replacing objects
-                        // AxisSettings[axis] = axisSettings;
+                        if (!Enum.TryParse<DeviceAxis>(property.Name, out var axis))
+                            continue;
 
-                        AxisSettings[axis].LinkAxis = axisSettings.LinkAxis;
-                        AxisSettings[axis].RandomizerSeed = axisSettings.RandomizerSeed;
-                        AxisSettings[axis].RandomizerStrength = axisSettings.RandomizerStrength;
-                        AxisSettings[axis].RandomizerSpeed = axisSettings.RandomizerSpeed;
-                        AxisSettings[axis].Inverted = axisSettings.Inverted;
-                        AxisSettings[axis].Offset = axisSettings.Offset;
+                        property.Value.Populate(AxisSettings[axis]);
                     }
                 }
 

@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json.Linq;
+﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -69,6 +70,12 @@ namespace MultiFunPlayer.Common
 
             value = list[index];
             return true;
+        }
+
+        public static void Populate(this JToken token, object target)
+        {
+            using var reader = token.CreateReader();
+            JsonSerializer.CreateDefault().Populate(reader, target);
         }
 
         public static void PreciseSleep(this Stopwatch stopwatch, float interval, CancellationToken token)
