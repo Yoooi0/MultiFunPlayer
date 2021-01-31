@@ -1,4 +1,4 @@
-﻿using MaterialDesignThemes.Wpf;
+using MaterialDesignThemes.Wpf;
 using MultiFunPlayer.Common;
 using MultiFunPlayer.Common.Controls;
 using MultiFunPlayer.Common.Messages;
@@ -196,7 +196,8 @@ namespace MultiFunPlayer.ViewModels
                 if (settings.TryGetValue(nameof(SelectedComPort), out var selectedComPortToken))
                     SelectedComPort = ComPorts.FirstOrDefault(x => string.Equals(x.Name, selectedComPortToken.ToObject<string>(), StringComparison.OrdinalIgnoreCase));
                 if (settings.TryGetValue(nameof(AxisSettings), out var axisSettingsToken))
-                    AxisSettings = new ObservableConcurrentDictionary<DeviceAxis, DeviceAxisSettings>(axisSettingsToken.ToObject<Dictionary<DeviceAxis, DeviceAxisSettings>>());
+                    foreach (var (axis, axisSettings) in axisSettingsToken.ToObject<Dictionary<DeviceAxis, DeviceAxisSettings>>())
+                        AxisSettings[axis] = axisSettings;
             }
         }
 
