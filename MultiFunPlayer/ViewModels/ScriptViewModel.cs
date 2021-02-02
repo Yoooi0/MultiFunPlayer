@@ -28,7 +28,6 @@ namespace MultiFunPlayer.ViewModels
         private float _syncTime;
 
         public bool IsPlaying { get; set; }
-        public bool IsSyncing { get; set; }
         public float CurrentPosition { get; set; }
         public float PlaybackSpeed { get; set; }
         public float VideoDuration { get; set; }
@@ -40,6 +39,7 @@ namespace MultiFunPlayer.ViewModels
 
         public VideoFile VideoFile { get; set; }
 
+        public bool IsSyncing => _syncTime < _syncDuration;
         public float SyncProgress => !IsSyncing ? 100 : (MathF.Pow(2, 10 * (_syncTime / _syncDuration - 1)) * 100);
 
         public ScriptViewModel(IEventAggregator eventAggregator)
@@ -57,7 +57,6 @@ namespace MultiFunPlayer.ViewModels
             PlaybackSpeed = 1;
 
             IsPlaying = false;
-            IsSyncing = false;
 
             _syncTime = 0;
             ScriptKeyframes = new ObservableConcurrentDictionary<DeviceAxis, List<Keyframe>>();
@@ -136,7 +135,7 @@ namespace MultiFunPlayer.ViewModels
                 if (IsSyncing && AxisStates.Values.Any(x => x.Valid))
                 {
                     _syncTime += (float)stopwatch.Elapsed.TotalSeconds;
-                    IsSyncing = _syncTime < _syncDuration;
+                    NotifyOfPropertyChange(nameof(IsSyncing));
                     NotifyOfPropertyChange(nameof(SyncProgress));
                 }
 
@@ -449,8 +448,8 @@ namespace MultiFunPlayer.ViewModels
 
         private void ResetSync(bool isSyncing = true)
         {
-            IsSyncing = isSyncing;
-            Interlocked.Exchange(ref _syncTime, 0);
+            Interlocked.Exchange(ref _syncTime, isSyncing ? 0 : _syncDuration);
+            NotifyOfPropertyChange(nameof(IsSyncing));
             NotifyOfPropertyChange(nameof(SyncProgress));
         }
         #endregion
@@ -532,7 +531,7 @@ namespace MultiFunPlayer.ViewModels
             if (updated.Any())
             {
                 UpdateFiles(AxisFilesChangeType.Update, axis);
-                ResetSync(isSyncing: true);
+                ResetSync();
             }
         }
 
@@ -603,7 +602,7 @@ namespace MultiFunPlayer.ViewModels
             if (updated.Any())
             {
                 UpdateFiles(AxisFilesChangeType.Update, updated.ToArray());
-                ResetSync(isSyncing: true);
+                ResetSync();
             }
         }
 
@@ -618,7 +617,7 @@ namespace MultiFunPlayer.ViewModels
             if (updated.Any())
             {
                 UpdateFiles(AxisFilesChangeType.Update, updated.ToArray());
-                ResetSync(isSyncing: true);
+                ResetSync();
             }
         }
 
