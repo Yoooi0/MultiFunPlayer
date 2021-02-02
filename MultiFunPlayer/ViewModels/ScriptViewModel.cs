@@ -526,7 +526,15 @@ namespace MultiFunPlayer.ViewModels
         }
 
         public void OnAxisClear(DeviceAxis axis) => UpdateFiles(AxisFilesChangeType.Clear, axis);
-        public void OnAxisReload(DeviceAxis axis) => UpdateFiles(AxisFilesChangeType.Update, axis);
+        public void OnAxisReload(DeviceAxis axis)
+        {
+            var updated = TryMatchFiles(overwrite: true, axis);
+            if (updated.Any())
+            {
+                UpdateFiles(AxisFilesChangeType.Update, axis);
+                ResetSync(isSyncing: true);
+            }
+        }
 
         public void OnSliderDoubleClick(object sender, MouseButtonEventArgs e)
         {
