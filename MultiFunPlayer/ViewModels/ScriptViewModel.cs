@@ -355,7 +355,7 @@ namespace MultiFunPlayer.ViewModels
                     Update(axis);
             }
 
-            foreach (var (axis, settings) in AxisSettings.Where(x => x.Value.LinkAxis != null))
+            foreach (var (axis, settings) in AxisSettings.Where(x => Array.Exists(changedAxes, a => a == x.Value.LinkAxis)))
             {
                 settings.Script = AxisSettings[settings.LinkAxis.Value].Script;
                 settings.RandomizerSeed = MathUtils.Random(short.MinValue, short.MaxValue);
@@ -383,9 +383,9 @@ namespace MultiFunPlayer.ViewModels
                     if (string.Equals(funscriptWithoutExtension, videoWithoutExtension, StringComparison.OrdinalIgnoreCase))
                     {
                         if (AxisSettings[DeviceAxis.L0].Script == null || overwrite)
-                    {
-                        AxisSettings[DeviceAxis.L0].Script = generator();
-                        updated.Add(DeviceAxis.L0);
+                        {
+                            AxisSettings[DeviceAxis.L0].Script = generator();
+                            updated.Add(DeviceAxis.L0);
                         }
                         return true;
                     }
