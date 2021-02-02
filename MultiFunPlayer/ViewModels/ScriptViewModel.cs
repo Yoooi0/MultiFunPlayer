@@ -158,7 +158,7 @@ namespace MultiFunPlayer.ViewModels
                 AxisSettings[axis].Script = null;
 
             ResetSync(isSyncing: VideoFile != null);
-            TryMatchFiles(overwrite: true);
+            TryMatchFiles(overwrite: true, null);
 
             if (VideoFile == null)
             {
@@ -365,27 +365,33 @@ namespace MultiFunPlayer.ViewModels
             NotifyOfPropertyChange(nameof(ScriptKeyframes));
         }
 
-        private IEnumerable<DeviceAxis> TryMatchFiles(bool overwrite)
+        private IEnumerable<DeviceAxis> TryMatchFiles(bool overwrite, params DeviceAxis[] axes)
         {
             if (VideoFile == null)
                 return Enumerable.Empty<DeviceAxis>();
+
+            if (axes == null)
+                axes = EnumUtils.GetValues<DeviceAxis>();
 
             var updated = new List<DeviceAxis>();
             bool TryMatchFile(string fileName, Func<IScriptFile> generator)
             {
                 var videoWithoutExtension = Path.GetFileNameWithoutExtension(VideoFile.Name);
                 var funscriptWithoutExtension = Path.GetFileNameWithoutExtension(fileName);
-                if (string.Equals(funscriptWithoutExtension, videoWithoutExtension, StringComparison.OrdinalIgnoreCase))
+                if (axes.Contains(DeviceAxis.L0))
                 {
-                    if (AxisSettings[DeviceAxis.L0].Script == null || overwrite)
+                    if (string.Equals(funscriptWithoutExtension, videoWithoutExtension, StringComparison.OrdinalIgnoreCase))
+                    {
+                        if (AxisSettings[DeviceAxis.L0].Script == null || overwrite)
                     {
                         AxisSettings[DeviceAxis.L0].Script = generator();
                         updated.Add(DeviceAxis.L0);
+                        }
+                        return true;
                     }
-                    return true;
                 }
 
-                foreach (var axis in EnumUtils.GetValues<DeviceAxis>())
+                foreach (var axis in axes)
                 {
                     if (funscriptWithoutExtension.EndsWith(axis.Name(), StringComparison.OrdinalIgnoreCase)
                      || funscriptWithoutExtension.EndsWith(axis.AltName(), StringComparison.OrdinalIgnoreCase))
@@ -584,6 +590,13 @@ namespace MultiFunPlayer.ViewModels
                 return;
 
             ScriptLibraries.Add(new ScriptLibrary(directory));
+
+            var updated = TryMatchFiles(overwrite: false, null);
+            if (updated.Any())
+            {
+                UpdateFiles(AxisFilesChangeType.Update, updated.ToArray());
+                ResetSync(isSyncing: true);
+            }
         }
 
         public void OnLibraryDelete(object sender, RoutedEventArgs e)
@@ -592,6 +605,13 @@ namespace MultiFunPlayer.ViewModels
                 return;
 
             ScriptLibraries.Remove(library);
+
+            var updated = TryMatchFiles(overwrite: false, null);
+            if (updated.Any())
+            {
+                UpdateFiles(AxisFilesChangeType.Update, updated.ToArray());
+                ResetSync(isSyncing: true);
+            }
         }
 
         public void OnLibraryOpenFolder(object sender, RoutedEventArgs e)
