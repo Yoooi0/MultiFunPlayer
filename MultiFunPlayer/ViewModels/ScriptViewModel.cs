@@ -58,12 +58,13 @@ namespace MultiFunPlayer.ViewModels
 
             IsPlaying = false;
 
-            _syncTime = 0;
             ScriptKeyframes = new ObservableConcurrentDictionary<DeviceAxis, List<Keyframe>>();
             _cancellationSource = new CancellationTokenSource();
 
             _updateThread = new Thread(UpdateThread) { IsBackground = true };
             _updateThread.Start(_cancellationSource.Token);
+
+            ResetSync(false);
         }
 
         private void UpdateThread(object parameter)
