@@ -41,30 +41,29 @@ namespace MultiFunPlayer.VideoSource
                     var message = await reader.ReadLineAsync().WithCancellation(token).ConfigureAwait(false);
                     if (string.IsNullOrWhiteSpace(message))
                         continue;
-
-                    if (message.Length >= 1 && message[0] == 'S')
+                    
+                    if (message.Length >= 1 && message[0] == 'C')
+                    {
+                        var parts = message.Split(' ', 2);
+                        _eventAggregator.Publish(new VideoFileChangedMessage(parts.Length == 2 && !string.IsNullOrWhiteSpace(parts[1]) ? parts[1].Trim('"') : null));
+                    }
+                    else if (message.Length >= 1 && message[0] == 'S')
                     {
                         _eventAggregator.Publish(new VideoPlayingMessage(isPlaying: false));
+                    }
+                    else if (message.Length >= 8 && message[..8] == "duration")
+                    {
+                        var parts = message.Split('=', 2, StringSplitOptions.TrimEntries);
+                        if (parts.Length == 2 && float.TryParse(parts[1].Replace(',', '.'), NumberStyles.Any, NumberFormatInfo.InvariantInfo, out var duration) && duration >= 0)
+                            _eventAggregator.Publish(new VideoDurationMessage(TimeSpan.FromSeconds(duration)));
                     }
                     else if(message.Length >= 1 && message[0] == 'P')
                     {
                         var parts = message.Split(' ', 2);
                         _eventAggregator.Publish(new VideoPlayingMessage(isPlaying: true));
-                        _eventAggregator.Publish(new VideoPositionMessage(
-                            parts.Length == 2 && double.TryParse(parts[1].Replace(',', '.'), NumberStyles.Any, NumberFormatInfo.InvariantInfo, out var position)
-                                ? TimeSpan.FromSeconds(position) : null));
-                    }
-                    else if(message.Length >= 1 && message[0] == 'C')
-                    {
-                        var parts = message.Split(' ', 2);
-                        _eventAggregator.Publish(new VideoFileChangedMessage(parts.Length == 2 && !string.IsNullOrWhiteSpace(parts[1]) ? parts[1].Trim('"') : null));
-                    }
-                    else if(message.Length >= 8 && message[..8] == "duration")
-                    {
-                        var parts = message.Split('=', 2, StringSplitOptions.TrimEntries);
-                        _eventAggregator.Publish(new VideoDurationMessage(
-                            parts.Length == 2 && double.TryParse(parts[1].Replace(',', '.'), NumberStyles.Any, NumberFormatInfo.InvariantInfo, out var duration)
-                                ? TimeSpan.FromSeconds(duration) : null));
+
+                        if(parts.Length == 2 && float.TryParse(parts[1].Replace(',', '.'), NumberStyles.Any, NumberFormatInfo.InvariantInfo, out var position) && position >= 0)
+                            _eventAggregator.Publish(new VideoPositionMessage(TimeSpan.FromSeconds(position)));
                     }
                 }
             }

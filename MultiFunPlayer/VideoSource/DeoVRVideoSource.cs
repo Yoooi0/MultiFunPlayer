@@ -89,19 +89,19 @@ namespace MultiFunPlayer.VideoSource
                     {
                         var document = JObject.Parse(Encoding.UTF8.GetString(data[4..(length+4)]));
 
-                        if (document.TryGetValue("playerState", out var stateToken) && stateToken.TryToObject<int>(out var state))
-                            _eventAggregator.Publish(new VideoPlayingMessage(isPlaying: state == 0));
+                        if (document.TryGetValue("path", out var pathToken))
+                            _eventAggregator.Publish(new VideoFileChangedMessage(pathToken.TryToObject<string>(out var path) && !string.IsNullOrWhiteSpace(path) ? path : null));
 
-                        if (document.TryGetValue("duration", out var durationToken) && durationToken.TryToObject<float>(out var duration))
+                        if (document.TryGetValue("playerState", out var stateToken) && stateToken.TryToObject<int>(out var state))
+                            _eventAggregator.Publish(new VideoPlayingMessage(state == 0));
+
+                        if (document.TryGetValue("duration", out var durationToken) && durationToken.TryToObject<float>(out var duration) && duration >= 0)
                             _eventAggregator.Publish(new VideoDurationMessage(TimeSpan.FromSeconds(duration)));
 
-                        if (document.TryGetValue("currentTime", out var timeToken) && timeToken.TryToObject<float>(out var time))
-                            _eventAggregator.Publish(new VideoPositionMessage(TimeSpan.FromSeconds(time)));
+                        if (document.TryGetValue("currentTime", out var timeToken) && timeToken.TryToObject<float>(out var position) && position >= 0)
+                            _eventAggregator.Publish(new VideoPositionMessage(TimeSpan.FromSeconds(position)));
 
-                        if (document.TryGetValue("path", out var pathToken) && pathToken.TryToObject<string>(out var path))
-                            _eventAggregator.Publish(new VideoFileChangedMessage(path));
-
-                        if (document.TryGetValue("playbackSpeed", out var speedToken) && speedToken.TryToObject<float>(out var speed))
+                        if (document.TryGetValue("playbackSpeed", out var speedToken) && speedToken.TryToObject<float>(out var speed) && speed > 0)
                             _eventAggregator.Publish(new VideoSpeedMessage(speed));
                     }
                     catch (JsonException) { }
