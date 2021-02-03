@@ -14,6 +14,7 @@ namespace MultiFunPlayer.VideoSource.Settings
     public class MpvVideoSourceSettingsViewModel : Screen
     {
         [JsonProperty] public FileInfo Executable { get; set; } = null;
+        [JsonProperty] public string Arguments { get; set; } = "--keep-open=always --pause";
 
         public bool IsDownloading { get; set; } = false;
 

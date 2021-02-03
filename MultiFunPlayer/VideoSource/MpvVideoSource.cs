@@ -51,7 +51,7 @@ namespace MultiFunPlayer.VideoSource
                         var processInfo = new ProcessStartInfo()
                         {
                             FileName = executable.FullName,
-                            Arguments = $"--input-ipc-server={_pipeName} --keep-open=always --pause"
+                            Arguments = $"--input-ipc-server={_pipeName} {_settings.Arguments}"
                         };
 
                         Process.Start(processInfo);
