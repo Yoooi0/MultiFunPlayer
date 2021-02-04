@@ -532,43 +532,51 @@
             </material:Card>
             
             <material:Card material:ShadowAssist.ShadowDepth="Depth1">
-                <StackPanel Margin="20">
-                    <ItemsControl ItemsSource="{Binding AxisStates}">
-                        <ItemsControl.ItemsPanel>
-                            <ItemsPanelTemplate>
-                                <UniformGrid Columns="3" Rows="3" IsItemsHost="True" Margin="-5 0 -5 0"/>
-                            </ItemsPanelTemplate>
-                        </ItemsControl.ItemsPanel>
-                        <ItemsControl.ItemContainerStyle>
-                            <Style>
-                                <Setter Property="FrameworkElement.Margin" Value="5 0 5 0"/>
-                            </Style>
-                        </ItemsControl.ItemContainerStyle>
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate>
-                                <DockPanel Margin="2" LastChildFill="True">
-                                    <TextBlock DockPanel.Dock="Left" Margin="0 0 5 0" Text="{Binding Key, Mode=OneWay}"/>
-                                    <ProgressBar material:TransitionAssist.DisableTransitions="True"
-                                                 DockPanel.Dock="Right"
-                                                 Minimum="0"
-                                                 Maximum="100"
-                                                 Height="10"
-                                                 Value="{Binding Value.Value, Mode=OneWay, Converter={StaticResource DeviceAxisValueToPercentConverter}}">
-                                        <ProgressBar.Style>
-                                            <Style TargetType="ProgressBar" BasedOn="{StaticResource MaterialDesignLinearProgressBar}">
-                                                <Style.Triggers>
-                                                    <DataTrigger Binding="{Binding Value.Valid}" Value="False">
-                                                        <Setter Property="Foreground" Value="{StaticResource IdealForegroundDisabledBrush}"/>
-                                                    </DataTrigger>
-                                                </Style.Triggers>
-                                            </Style>
-                                        </ProgressBar.Style>
-                                    </ProgressBar>
-                                </DockPanel>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-                </StackPanel>
+                <Expander IsExpanded="{Binding IsValuesPanelExpanded}">
+                    <Expander.Header>
+                        <TextBlock Text="Script values" 
+                                   FontSize="14"
+                                   FontWeight="Bold"
+                                   Typography.Capitals="AllSmallCaps"/>
+                    </Expander.Header>
+                    <StackPanel Margin="20 0 20 10">
+                        <ItemsControl ItemsSource="{Binding AxisStates}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <UniformGrid Columns="3" Rows="3" IsItemsHost="True" Margin="-5 0 -5 0"/>
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemContainerStyle>
+                                <Style>
+                                    <Setter Property="FrameworkElement.Margin" Value="5 0 5 0"/>
+                                </Style>
+                            </ItemsControl.ItemContainerStyle>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <DockPanel Margin="2" LastChildFill="True">
+                                        <TextBlock DockPanel.Dock="Left" Margin="0 0 5 0" Text="{Binding Key, Mode=OneWay}"/>
+                                        <ProgressBar material:TransitionAssist.DisableTransitions="True"
+                                                     DockPanel.Dock="Right"
+                                                     Minimum="0"
+                                                     Maximum="100"
+                                                     Height="10"
+                                                     Value="{Binding Value.Value, Mode=OneWay, Converter={StaticResource DeviceAxisValueToPercentConverter}}">
+                                            <ProgressBar.Style>
+                                                <Style TargetType="ProgressBar" BasedOn="{StaticResource MaterialDesignLinearProgressBar}">
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding Value.Valid}" Value="False">
+                                                            <Setter Property="Foreground" Value="{StaticResource IdealForegroundDisabledBrush}"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </ProgressBar.Style>
+                                        </ProgressBar>
+                                    </DockPanel>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Expander>
             </material:Card>
         </StackPanel>
     </material:Card>

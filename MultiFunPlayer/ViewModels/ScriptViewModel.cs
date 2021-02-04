@@ -29,6 +29,7 @@ namespace MultiFunPlayer.ViewModels
         private float _syncTime;
 
         public bool IsPlaying { get; set; }
+        public bool IsValuesPanelExpanded { get; set; }
         public float CurrentPosition { get; set; }
         public float PlaybackSpeed { get; set; }
         public float VideoDuration { get; set; }
@@ -138,11 +139,14 @@ namespace MultiFunPlayer.ViewModels
                 if (uiUpdateTime >= uiUpdateInterval)
                 {
                     uiUpdateTime = 0;
-                    Execute.OnUIThread(() =>
+                    if (IsValuesPanelExpanded)
                     {
-                        foreach (var axis in EnumUtils.GetValues<DeviceAxis>())
-                            AxisStates[axis].Notify();
-                    });
+                        Execute.OnUIThread(() =>
+                        {
+                            foreach (var axis in EnumUtils.GetValues<DeviceAxis>())
+                                AxisStates[axis].Notify();
+                        });
+                    }
                 }
 
                 CurrentPosition += (float)stopwatch.Elapsed.TotalSeconds * PlaybackSpeed;
@@ -232,7 +236,8 @@ namespace MultiFunPlayer.ViewModels
                 var settings = new JObject
                 {
                     { nameof(AxisSettings), JObject.FromObject(AxisSettings) },
-                    { nameof(ScriptLibraries), JArray.FromObject(ScriptLibraries) }
+                    { nameof(ScriptLibraries), JArray.FromObject(ScriptLibraries) },
+                    { nameof(IsValuesPanelExpanded), JToken.FromObject(IsValuesPanelExpanded) }
                 };
 
                 message.Settings["Script"] = settings;
@@ -264,6 +269,9 @@ namespace MultiFunPlayer.ViewModels
                         ScriptLibraries.Add(library);
                     }
                 }
+
+                if (settings.TryGetValue(nameof(IsValuesPanelExpanded), out var isValuesPanelExpandedToken))
+                    IsValuesPanelExpanded = isValuesPanelExpandedToken.ToObject<bool>();
             }
         }
         #endregion
