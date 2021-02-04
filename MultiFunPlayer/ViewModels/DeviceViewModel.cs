@@ -126,27 +126,29 @@ namespace MultiFunPlayer.ViewModels
         {
             var token = (CancellationToken)state;
             var sb = new StringBuilder(256);
-            //var stopwatch = new Stopwatch();
 
-            //stopwatch.Start();
             try
             {
-                var interval = (int)MathF.Max(1, MathF.Floor(MathF.Round(1000.0f / UpdateRate)));
+                var values = EnumUtils.GetValues<DeviceAxis>().ToDictionary(axis => axis, axis => axis.DefaultValue());
                 while (!token.IsCancellationRequested)
                 {
-                    sb.Clear();
+                    var interval = MathF.Max(1, 1000.0f / UpdateRate);
                     foreach (var axis in EnumUtils.GetValues<DeviceAxis>())
                     {
                         var value = _valueProvider?.GetValue(axis) ?? float.NaN;
                         if (!float.IsFinite(value))
                             value = axis.DefaultValue();
 
-                        if (AxisSettings.TryGetValue(axis, out var axisSettings))
-                            value = MathUtils.Lerp(axisSettings.Minimum / 100.0f, axisSettings.Maximum / 100.0f, value);
+                        var settings = AxisSettings[axis];
+                        values[axis] = MathUtils.Lerp(settings.Minimum / 100f, settings.Maximum / 100f, value);
+                    }
 
+                    sb.Clear();
+                    foreach (var (axis, value) in values)
+                    {
                         sb.Append(axis)
                           .AppendFormat("{0:000}", value * 999)
-                          .AppendFormat("I{0}", interval)
+                          .AppendFormat("I{0}", (int)interval)
                           .Append(' ');
                     }
 
@@ -154,9 +156,7 @@ namespace MultiFunPlayer.ViewModels
                     if (_serialPort?.IsOpen == true && !string.IsNullOrWhiteSpace(commands))
                         _serialPort?.WriteLine(commands);
 
-                    //TODO: add as toggle
-                    //stopwatch.PreciseSleep(MathF.Round(1000.0f / UpdateRate), token);
-                    Thread.Sleep(interval);
+                    Thread.Sleep((int)interval);
                 }
             }
             catch (Exception e)
