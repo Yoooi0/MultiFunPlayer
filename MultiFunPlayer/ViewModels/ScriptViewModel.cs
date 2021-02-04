@@ -15,6 +15,7 @@ using Newtonsoft.Json.Linq;
 using MultiFunPlayer.Common.Messages;
 using Newtonsoft.Json;
 using Microsoft.WindowsAPICodePack.Dialogs;
+using System.ComponentModel;
 
 namespace MultiFunPlayer.ViewModels
 {
@@ -71,6 +72,8 @@ namespace MultiFunPlayer.ViewModels
         {
             var token = (CancellationToken)parameter;
             var stopwatch = new Stopwatch();
+            var uiUpdateInterval = 1f / 60f;
+            var uiUpdateTime = 0f;
 
             stopwatch.Start();
 
@@ -117,21 +120,31 @@ namespace MultiFunPlayer.ViewModels
 
                             if (IsSyncing)
                                 newValue = MathUtils.Lerp(!float.IsFinite(state.Value) ? axis.DefaultValue() : state.Value, newValue, SyncProgress / 100);
-                            Execute.OnUIThread(() => state.Value = newValue);
+                            state.Value = newValue;
                         }
                         else
                         {
                             var newValue = axis.DefaultValue();
                             if (IsSyncing)
                                 newValue = MathUtils.Lerp(!float.IsFinite(state.Value) ? axis.DefaultValue() : state.Value, newValue, SyncProgress / 100);
-                            Execute.OnUIThread(() => state.Value = newValue);
+                            state.Value = newValue;
                         }
                     }
                 }
 
-                //stopwatch.PreciseSleep(3, token);
-
                 Thread.Sleep(2);
+
+                uiUpdateTime += (float)stopwatch.Elapsed.TotalSeconds;
+                if (uiUpdateTime >= uiUpdateInterval)
+                {
+                    uiUpdateTime = 0;
+                    Execute.OnUIThread(() =>
+                    {
+                        foreach (var axis in EnumUtils.GetValues<DeviceAxis>())
+                            AxisStates[axis].Notify();
+                    });
+                }
+
                 CurrentPosition += (float)stopwatch.Elapsed.TotalSeconds * PlaybackSpeed;
                 if (IsSyncing && AxisStates.Values.Any(x => x.Valid))
                 {
@@ -654,16 +667,23 @@ namespace MultiFunPlayer.ViewModels
         Update
     }
 
-    public class AxisState : PropertyChangedBase
+    [DoNotNotify]
+    public class AxisState : INotifyPropertyChanged
     {
         public int PrevIndex { get; set; } = -1;
         public int NextIndex { get; set; } = -1;
         public float Value { get; set; } = float.NaN;
 
         public bool Valid => PrevIndex >= 0 && NextIndex >= 0;
-        public void Invalidate()
+
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        public void Invalidate() => PrevIndex = NextIndex = -1;
+
+        public void Notify()
         {
-            PrevIndex = NextIndex = -1;
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Valid)));
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Value)));
         }
     }
 
