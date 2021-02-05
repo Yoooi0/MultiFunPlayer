@@ -40,7 +40,7 @@
                         Height="24"
                         Width="24"
                         Command="{s:Action RefreshPorts}"
-                        IsEnabled="{Binding CanRefreshPorts, Converter={StaticResource BooleanToVisibilityConverter}}"
+                        IsEnabled="{Binding CanRefreshPorts}"
                         material:ButtonProgressAssist.IsIndicatorVisible="{Binding IsRefreshBusy}"
                         material:ButtonProgressAssist.Value="-1"
                         material:ButtonProgressAssist.IsIndeterminate="True">

@@ -73,7 +73,7 @@ namespace MultiFunPlayer.ViewModels
         {
             var token = (CancellationToken)parameter;
             var stopwatch = new Stopwatch();
-            var uiUpdateInterval = 1f / 60f;
+            const float uiUpdateInterval = 1f / 60f;
             var uiUpdateTime = 0f;
 
             stopwatch.Start();

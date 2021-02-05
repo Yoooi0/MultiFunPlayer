@@ -2,6 +2,7 @@ using MaterialDesignThemes.Wpf;
 using MultiFunPlayer.Common;
 using MultiFunPlayer.Common.Controls;
 using MultiFunPlayer.Common.Messages;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Stylet;
 using System;
@@ -22,10 +23,10 @@ namespace MultiFunPlayer.ViewModels
         private Thread _deviceThread;
         private SerialPort _serialPort;
 
-        public BindableCollection<ComPortModel> ComPorts { get; set; }
+        public BindableCollection<string> ComPorts { get; set; }
 
         public ObservableConcurrentDictionary<DeviceAxis, DeviceAxisSettings> AxisSettings { get; set; }
-        public ComPortModel SelectedComPort { get; set; }
+        public string SelectedComPort { get; set; }
         public int UpdateRate { get; set; }
 
         public DeviceViewModel(IEventAggregator eventAggregator, IDeviceAxisValueProvider valueProvider)
@@ -33,7 +34,7 @@ namespace MultiFunPlayer.ViewModels
             eventAggregator.Subscribe(this);
             _valueProvider = valueProvider;
 
-            ComPorts = new BindableCollection<ComPortModel>(SerialPort.GetPortNames().Select(p => new ComPortModel(p)));
+            ComPorts = new BindableCollection<string>(SerialPort.GetPortNames());
             AxisSettings = new ObservableConcurrentDictionary<DeviceAxis, DeviceAxisSettings>(EnumUtils.GetValues<DeviceAxis>().ToDictionary(a => a, _ => new DeviceAxisSettings()));
             UpdateRate = 60;
         }
@@ -49,7 +50,7 @@ namespace MultiFunPlayer.ViewModels
             SelectedComPort = null;
             try
             {
-                ComPorts.AddRange(SerialPort.GetPortNames().Select(p => new ComPortModel(p)));
+                ComPorts.AddRange(SerialPort.GetPortNames());
             }
             catch { }
 
@@ -86,7 +87,7 @@ namespace MultiFunPlayer.ViewModels
 
             try
             {
-                _serialPort = new SerialPort(SelectedComPort.Name, 115200)
+                _serialPort = new SerialPort(SelectedComPort, 115200)
                 {
                     ReadTimeout = 1000,
                     WriteTimeout = 1000,
@@ -179,7 +180,7 @@ namespace MultiFunPlayer.ViewModels
                 var settings = new JObject
                 {
                     { nameof(UpdateRate), new JValue(UpdateRate) },
-                    { nameof(SelectedComPort), new JValue(SelectedComPort?.Name) },
+                    { nameof(SelectedComPort), new JValue(SelectedComPort) },
                     { nameof(AxisSettings), JObject.FromObject(AxisSettings) }
                 };
 
@@ -194,7 +195,7 @@ namespace MultiFunPlayer.ViewModels
                 if (settings.TryGetValue(nameof(UpdateRate), out var updateRateToken))
                     UpdateRate = updateRateToken.ToObject<int>();
                 if (settings.TryGetValue(nameof(SelectedComPort), out var selectedComPortToken))
-                    SelectedComPort = ComPorts.FirstOrDefault(x => string.Equals(x.Name, selectedComPortToken.ToObject<string>(), StringComparison.OrdinalIgnoreCase));
+                    SelectedComPort = ComPorts.FirstOrDefault(x => string.Equals(x, selectedComPortToken.ToObject<string>(), StringComparison.OrdinalIgnoreCase));
                 if (settings.TryGetValue(nameof(AxisSettings), out var axisSettingsToken))
                     foreach (var (axis, axisSettings) in axisSettingsToken.ToObject<Dictionary<DeviceAxis, DeviceAxisSettings>>())
                         AxisSettings[axis] = axisSettings;
@@ -227,31 +228,16 @@ namespace MultiFunPlayer.ViewModels
         }
     }
 
-    public class DeviceAxisSettings
+    [JsonObject(MemberSerialization.OptIn)]
+    public class DeviceAxisSettings : PropertyChangedBase
     {
-        public int Minimum { get; set; }
-        public int Maximum { get; set; }
+        [JsonProperty] public int Minimum { get; set; }
+        [JsonProperty] public int Maximum { get; set; }
 
         public DeviceAxisSettings()
         {
             Minimum = 0;
             Maximum = 100;
         }
-    }
-
-    public class ComPortModel
-    {
-        public string Name { get; }
-        public string Description { get; }
-
-        public ComPortModel(string name) : this(name, null) { }
-
-        public ComPortModel(string name, string description)
-        {
-            Name = name;
-            Description = description;
-        }
-
-        public override string ToString() => Description != null ? $"{Name} ({Description})" : Name;
     }
 }
