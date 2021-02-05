@@ -41,6 +41,9 @@
             </Button>
             <Button Style="{StaticResource MaterialDesignFloatingActionMiniLightButton}"
                     Click="{s:Action OnDownload}"
+                    material:ButtonProgressAssist.IsIndicatorVisible="{Binding IsDownloading}"
+                    material:ButtonProgressAssist.Value="-1"
+                    material:ButtonProgressAssist.IsIndeterminate="True"
                     ToolTip="Download MPV" 
                     ToolTipService.InitialShowDelay="0" 
                     ToolTipService.Placement="Top" 
