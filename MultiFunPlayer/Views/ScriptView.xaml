@@ -16,6 +16,7 @@
         <converters:DeviceAxisFriendlyNameConverter x:Key="DeviceAxisFriendlyNameConverter"/>
         <converters:NullableToBooleanConverter x:Key="NullableToBooleanConverter"/>
         <converters:InvertedNullableToBooleanConverter x:Key="InvertedNullableToBooleanConverter"/>
+        <converters:MultiObjectToArrayConverter x:Key="MultiObjectToArrayConverter"/>
         <converters:MultiBooleanToBooleanAndConverter x:Key="MultiBooleanToBooleanAndConverter"/>
         <material:NullableToVisibilityConverter x:Key="NullableToVisibilityConverter"/>
     </UserControl.Resources>
@@ -441,6 +442,61 @@
                                                     </Button.IsEnabled>
                                                     <material:PackIcon Kind="Reload" Width="19" Height="19"/>
                                                 </Button>
+                                                <Menu>
+                                                    <MenuItem Padding="0" 
+                                                              IsEnabled="{Binding Value.Script, Converter={StaticResource InvertedNullableToBooleanConverter}}"
+                                                              Height="35"
+                                                              Background="{StaticResource MaterialDesignToolBarBackground}"
+                                                              ToolTipService.InitialShowDelay="0"
+                                                              ToolTipService.Placement="Top"
+                                                              ToolTip="Move script">
+                                                        <MenuItem.Header>
+                                                            <Grid Width="35">
+                                                                <Grid.RowDefinitions>
+                                                                    <RowDefinition Height="35"/>
+                                                                </Grid.RowDefinitions>
+                                                                <material:PackIcon Grid.Row="0"
+                                                                                   Kind="FileMove"
+                                                                                   Foreground="{DynamicResource MaterialDesignBody}" 
+                                                                                   Width="19" 
+                                                                                   Height="19" 
+                                                                                   HorizontalAlignment="Center"
+                                                                                   VerticalAlignment="Center"/>
+                                                            </Grid>
+                                                        </MenuItem.Header>
+                                                        <MenuItem Header="_Video location" 
+                                                                  Command="{s:Action OnAxisMoveToVideo}"
+                                                                  CommandParameter="{Binding Key}"
+                                                                  IsEnabled="{Binding DataContext.VideoFile, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}, Converter={StaticResource InvertedNullableToBooleanConverter}}"/>
+                                                        <MenuItem Header="_Library location" 
+                                                                  ItemsSource="{Binding DataContext.ScriptLibraries, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}">
+                                                            <MenuItem.Resources>
+                                                                <Style TargetType="{x:Type MenuItem}" BasedOn="{StaticResource MaterialDesignMenuItem}">
+                                                                    <Style.Triggers>
+                                                                        <DataTrigger Binding="{Binding DataContext.ScriptLibraries.Count, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}"
+                                                                                     Value="0">
+                                                                            <Setter Property="IsEnabled" Value="False"/>
+                                                                        </DataTrigger>
+                                                                    </Style.Triggers>
+                                                                </Style>
+                                                            </MenuItem.Resources>
+                                                            <MenuItem.ItemContainerStyle>
+                                                                <Style TargetType="{x:Type MenuItem}" BasedOn="{StaticResource MaterialDesignMenuItem}">
+                                                                    <Setter Property="Header" Value="{Binding Directory}"/>
+                                                                    <Setter Property="Command" Value="{Binding DataContext.OnAxisMoveToLibraryCommand, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}"/>
+                                                                    <Setter Property="CommandParameter">
+                                                                        <Setter.Value>
+                                                                            <MultiBinding Converter="{StaticResource MultiObjectToArrayConverter}">
+                                                                                <Binding Path="DataContext.Key" RelativeSource="{RelativeSource FindAncestor, AncestorType={x:Type Menu}}"/>
+                                                                                <Binding/>
+                                                                            </MultiBinding>
+                                                                        </Setter.Value>
+                                                                    </Setter>
+                                                                </Style>
+                                                            </MenuItem.ItemContainerStyle>
+                                                        </MenuItem>
+                                                    </MenuItem>
+                                                </Menu>
                                             </StackPanel>
                                         </DockPanel>
                                     </Border>

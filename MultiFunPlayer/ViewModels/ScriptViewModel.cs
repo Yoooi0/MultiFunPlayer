@@ -557,6 +557,41 @@ namespace MultiFunPlayer.ViewModels
             }
         }
 
+        private bool MoveScript(DeviceAxis axis, DirectoryInfo directory)
+        {
+            if (!directory.Exists || AxisSettings[axis].Script == null)
+                return false;
+
+            try
+            {
+                var sourceFile = AxisSettings[axis].Script.Source;
+                File.Move(sourceFile.FullName, Path.Join(directory.FullName, sourceFile.Name));
+            }
+            catch { return false; }
+            return true;
+        }
+
+        public void OnAxisMoveToVideo(DeviceAxis axis)
+        {
+            if (VideoFile != null && MoveScript(axis, new DirectoryInfo(VideoFile.Source)))
+            {
+                var updated = TryMatchFiles(true, axis);
+                if (updated.Any())
+                    UpdateFiles(AxisFilesChangeType.Update, axis);
+            }
+        }
+
+        public RelayCommand<DeviceAxis, ScriptLibrary> OnAxisMoveToLibraryCommand => new RelayCommand<DeviceAxis, ScriptLibrary>(OnAxisMoveToLibrary);
+        public void OnAxisMoveToLibrary(DeviceAxis axis, ScriptLibrary library)
+        {
+            if (library?.Directory.Exists == true && MoveScript(axis, library.Directory))
+            {
+                var updated = TryMatchFiles(true, axis);
+                if (updated.Any())
+                    UpdateFiles(AxisFilesChangeType.Update, axis);
+            }
+        }
+
         public void OnSliderDoubleClick(object sender, MouseButtonEventArgs e)
         {
             if (sender is Slider slider)
