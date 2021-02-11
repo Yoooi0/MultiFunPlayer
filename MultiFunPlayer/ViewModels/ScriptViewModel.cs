@@ -39,7 +39,7 @@ namespace MultiFunPlayer.ViewModels
         public ObservableConcurrentDictionary<DeviceAxis, List<Keyframe>> ScriptKeyframes { get; }
         public BindableCollection<ScriptLibrary> ScriptLibraries { get; }
 
-        public VideoFile VideoFile { get; set; }
+        public VideoFileInfo VideoFile { get; set; }
 
         public bool IsSyncing => _syncTime < _syncDuration;
         public float SyncProgress => !IsSyncing ? 100 : (MathF.Pow(2, 10 * (_syncTime / _syncDuration - 1)) * 100);

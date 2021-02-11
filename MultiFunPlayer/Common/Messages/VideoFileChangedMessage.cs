@@ -1,24 +1,35 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace MultiFunPlayer.Common
 {
-    public class VideoFile
+    public class VideoFileInfo
     {
-        public string Source { get; init; }
-        public string Name { get; init; }
+        public string Source { get; }
+        public string Name { get; }
+
+        public VideoFileInfo(string source, string name)
+        {
+            Source = source;
+            Name = name;
+        }
     }
 
     public class VideoFileChangedMessage
     {
-        public VideoFile VideoFile { get; }
+        public VideoFileInfo VideoFile { get; }
 
         public VideoFileChangedMessage(string path)
         {
+            if(path == null)
+                return;
+
             if (TryParseUri(path, out var source, out var name) || TryParsePath(path, out source, out name))
-                VideoFile = new VideoFile() { Source = source, Name = name };
+                VideoFile = new VideoFileInfo(source, name);
         }
 
         private bool TryParseUri(string path, out string source, out string name)
@@ -27,10 +38,30 @@ namespace MultiFunPlayer.Common
 
             try
             {
+                var postprocess = new Dictionary<string, string>()
+                {
+                    {@"(.*pornhub.com\/)view_video.php\?viewkey=(.+)", "$1$2"},
+                };
+
+                foreach (var (pattern, replacement) in postprocess)
+                {
+                    var replaced = Regex.Replace(path, pattern, replacement);
+                    if (replaced != path)
+                        path = replaced;
+                }
+
                 var uri = new Uri(new Uri("file://"), path);
                 if (!string.Equals(uri.Scheme, "file", StringComparison.OrdinalIgnoreCase))
                 {
-                    name = uri.Segments.Last();
+                    name = uri.Segments.Last()
+                                       .TrimEnd('/')
+                                       .Replace(".html", null)
+                                       .Replace(".php", null);
+
+                    foreach (var c in Path.GetInvalidFileNameChars())
+                        name = name.Replace(c, '_');
+
+                    name = name.Trim('_');
 
                     var sb = new StringBuilder();
                     sb.Append(uri.Scheme).Append("://").Append(uri.Host);
