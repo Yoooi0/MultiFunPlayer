@@ -462,6 +462,15 @@ namespace MultiFunPlayer.ViewModels
                     TryMatchFile(funscriptFile.Name, () => ScriptFile.FromFileInfo(funscriptFile));
             }
 
+            foreach (var axis in axes.Except(updated))
+            {
+                if (overwrite && AxisSettings[axis].Script != null)
+                {
+                    AxisSettings[axis].Script = null;
+                    updated.Add(axis);
+                }
+            }
+
             return updated.Distinct();
         }
 
