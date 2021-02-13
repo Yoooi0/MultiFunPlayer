@@ -2,8 +2,8 @@
 using MultiFunPlayer.Common;
 using MultiFunPlayer.Common.Controls;
 using MultiFunPlayer.Common.Messages;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using PropertyChanged;
 using Stylet;
 using System;
 using System.Collections.Generic;
@@ -23,20 +23,15 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
         private SerialPort _serialPort;
 
         public override string Name => "Serial";
-        public BindableCollection<string> ComPorts { get; set; }
+        public override OutputTargetStatus Status { get; protected set; }
 
-        public ObservableConcurrentDictionary<DeviceAxis, DeviceAxisSettings> AxisSettings { get; set; }
+        public BindableCollection<string> ComPorts { get; set; }
         public string SelectedComPort { get; set; }
-        public int UpdateRate { get; set; }
 
         public SerialOutputTargetViewModel(IEventAggregator eventAggregator, IDeviceAxisValueProvider valueProvider)
-            : base(valueProvider)
+            : base(eventAggregator, valueProvider)
         {
-            eventAggregator.Subscribe(this);
-
             ComPorts = new BindableCollection<string>(SerialPort.GetPortNames());
-            AxisSettings = new ObservableConcurrentDictionary<DeviceAxis, DeviceAxisSettings>(EnumUtils.GetValues<DeviceAxis>().ToDictionary(a => a, _ => new DeviceAxisSettings()));
-            UpdateRate = 60;
         }
 
         public bool IsRefreshBusy { get; set; }
@@ -58,24 +53,26 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
             IsRefreshBusy = false;
         }
 
-        public bool IsConnected { get; set; }
-        public bool IsConnectBusy { get; set; }
+        public bool IsConnected => Status == OutputTargetStatus.Connected;
+        public bool IsConnectBusy => Status == OutputTargetStatus.Connecting || Status == OutputTargetStatus.Disconnecting;
         public bool CanToggleConnect => !IsConnectBusy && SelectedComPort != null;
+
         public async Task ToggleConnect()
         {
-            IsConnectBusy = true;
-
             if (IsConnected)
             {
+                Status = OutputTargetStatus.Disconnecting;
                 await Disconnect().ConfigureAwait(true);
-                IsConnected = false;
+                Status = OutputTargetStatus.Disconnected;
             }
             else
             {
-                IsConnected = await Connect().ConfigureAwait(true);
+                Status = OutputTargetStatus.Connecting;
+                if (await Connect().ConfigureAwait(true))
+                    Status = OutputTargetStatus.Connected;
+                else
+                    Status = OutputTargetStatus.Disconnected;
             }
-
-            IsConnectBusy = false;
         }
 
         public async Task<bool> Connect()
@@ -173,32 +170,16 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
             }
         }
 
-        public override void Handle(AppSettingsMessage message)
+        protected override void HandleSettings(JObject settings, AppSettingsMessageType type)
         {
-            if (message.Type == AppSettingsMessageType.Saving)
+            if (type == AppSettingsMessageType.Saving)
             {
-                var settings = new JObject
-                {
-                    { nameof(UpdateRate), new JValue(UpdateRate) },
-                    { nameof(SelectedComPort), new JValue(SelectedComPort) },
-                    { nameof(AxisSettings), JObject.FromObject(AxisSettings) }
-                };
-
-                message.Settings[Name] = settings;
+                settings[nameof(SelectedComPort)] = new JValue(SelectedComPort);
             }
-            else if (message.Type == AppSettingsMessageType.Loading)
+            else if (type == AppSettingsMessageType.Loading)
             {
-                if (!message.Settings.ContainsKey(Name))
-                    return;
-
-                var settings = message.Settings[Name] as JObject;
-                if (settings.TryGetValue(nameof(UpdateRate), out var updateRateToken))
-                    UpdateRate = updateRateToken.ToObject<int>();
                 if (settings.TryGetValue(nameof(SelectedComPort), out var selectedComPortToken))
                     SelectedComPort = ComPorts.FirstOrDefault(x => string.Equals(x, selectedComPortToken.ToObject<string>(), StringComparison.OrdinalIgnoreCase));
-                if (settings.TryGetValue(nameof(AxisSettings), out var axisSettingsToken))
-                    foreach (var (axis, axisSettings) in axisSettingsToken.ToObject<Dictionary<DeviceAxis, DeviceAxisSettings>>())
-                        AxisSettings[axis] = axisSettings;
             }
         }
 
@@ -221,19 +202,6 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
             _cancellationSource = null;
             _deviceThread = null;
             _serialPort = null;
-        }
-    }
-
-    [JsonObject(MemberSerialization.OptIn)]
-    public class DeviceAxisSettings : PropertyChangedBase
-    {
-        [JsonProperty] public int Minimum { get; set; }
-        [JsonProperty] public int Maximum { get; set; }
-
-        public DeviceAxisSettings()
-        {
-            Minimum = 0;
-            Maximum = 100;
         }
     }
 }
