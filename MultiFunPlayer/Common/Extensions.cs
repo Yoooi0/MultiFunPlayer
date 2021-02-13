@@ -72,6 +72,12 @@ namespace MultiFunPlayer.Common
             return true;
         }
 
+        public static void EnsureContains<T>(this JObject o, string propertyName) where T : JToken, new()
+        {
+            if (!o.ContainsKey(propertyName))
+                o[propertyName] = new T();
+        }
+
         public static void Populate(this JToken token, object target)
         {
             using var reader = token.CreateReader();

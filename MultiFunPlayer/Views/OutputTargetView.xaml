@@ -15,7 +15,7 @@
     </UserControl.Resources>
     <material:Card material:ShadowAssist.ShadowDepth="Depth1">
         <StackPanel>
-            <TabControl ItemsSource="{Binding Items}">
+            <TabControl ItemsSource="{Binding Items}" SelectedItem="{Binding SelectedItem}">
                 <TabControl.Resources>
                     <Style TargetType="{x:Type TabControl}">
                         <Setter Property="Template">
