@@ -16,6 +16,7 @@ using MultiFunPlayer.Common.Messages;
 using Newtonsoft.Json;
 using Microsoft.WindowsAPICodePack.Dialogs;
 using System.ComponentModel;
+using MultiFunPlayer.OutputTarget;
 
 namespace MultiFunPlayer.ViewModels
 {

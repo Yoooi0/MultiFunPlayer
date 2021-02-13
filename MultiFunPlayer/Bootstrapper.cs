@@ -1,4 +1,5 @@
 ﻿using MultiFunPlayer.Common;
+using MultiFunPlayer.OutputTarget;
 using MultiFunPlayer.VideoSource;
 using MultiFunPlayer.ViewModels;
 using Stylet;
@@ -12,6 +13,7 @@ namespace MultiFunPlayer
         {
             builder.Bind<ScriptViewModel>().And<IDeviceAxisValueProvider>().To<ScriptViewModel>().InSingletonScope();
             builder.Bind<IVideoSource>().ToAllImplementations();
+            builder.Bind<IOutputTarget>().ToAllImplementations();
         }
     }
 }

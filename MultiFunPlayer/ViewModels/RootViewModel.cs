@@ -21,7 +21,7 @@ namespace MultiFunPlayer.ViewModels
 
         [Inject] public ScriptViewModel Script { get; set; }
         [Inject] public VideoSourceViewModel VideoSource { get; set; }
-        [Inject] public DeviceViewModel Device { get; set; }
+        [Inject] public OutputTargetViewModel OutputTarget { get; set; }
 
         public RootViewModel(IEventAggregator eventAggregator)
         {
@@ -44,7 +44,7 @@ namespace MultiFunPlayer.ViewModels
         {
             Items.Add(Script);
             Items.Add(VideoSource);
-            Items.Add(Device);
+            Items.Add(OutputTarget);
 
             ActivateAndSetParent(Items);
             base.OnActivate();

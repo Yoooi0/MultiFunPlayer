@@ -1,4 +1,4 @@
-using MaterialDesignThemes.Wpf;
+﻿using MaterialDesignThemes.Wpf;
 using MultiFunPlayer.Common;
 using MultiFunPlayer.Common.Controls;
 using MultiFunPlayer.Common.Messages;
@@ -14,25 +14,25 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace MultiFunPlayer.ViewModels
+namespace MultiFunPlayer.OutputTarget.ViewModels
 {
-    public class DeviceViewModel : Screen, IHandle<AppSettingsMessage>, IDisposable
+    public class SerialOutputTargetViewModel : AbstractOutputTarget
     {
-        private readonly IDeviceAxisValueProvider _valueProvider;
         private CancellationTokenSource _cancellationSource;
         private Thread _deviceThread;
         private SerialPort _serialPort;
 
+        public override string Name => "Serial";
         public BindableCollection<string> ComPorts { get; set; }
 
         public ObservableConcurrentDictionary<DeviceAxis, DeviceAxisSettings> AxisSettings { get; set; }
         public string SelectedComPort { get; set; }
         public int UpdateRate { get; set; }
 
-        public DeviceViewModel(IEventAggregator eventAggregator, IDeviceAxisValueProvider valueProvider)
+        public SerialOutputTargetViewModel(IEventAggregator eventAggregator, IDeviceAxisValueProvider valueProvider)
+            : base(valueProvider)
         {
             eventAggregator.Subscribe(this);
-            _valueProvider = valueProvider;
 
             ComPorts = new BindableCollection<string>(SerialPort.GetPortNames());
             AxisSettings = new ObservableConcurrentDictionary<DeviceAxis, DeviceAxisSettings>(EnumUtils.GetValues<DeviceAxis>().ToDictionary(a => a, _ => new DeviceAxisSettings()));
@@ -136,7 +136,7 @@ namespace MultiFunPlayer.ViewModels
                     var interval = MathF.Max(1, 1000.0f / UpdateRate);
                     foreach (var axis in EnumUtils.GetValues<DeviceAxis>())
                     {
-                        var value = _valueProvider?.GetValue(axis) ?? float.NaN;
+                        var value = ValueProvider?.GetValue(axis) ?? float.NaN;
                         if (!float.IsFinite(value))
                             value = axis.DefaultValue();
 
@@ -173,7 +173,7 @@ namespace MultiFunPlayer.ViewModels
             }
         }
 
-        public void Handle(AppSettingsMessage message)
+        public override void Handle(AppSettingsMessage message)
         {
             if (message.Type == AppSettingsMessageType.Saving)
             {
@@ -184,14 +184,14 @@ namespace MultiFunPlayer.ViewModels
                     { nameof(AxisSettings), JObject.FromObject(AxisSettings) }
                 };
 
-                message.Settings["Device"] = settings;
+                message.Settings[Name] = settings;
             }
             else if (message.Type == AppSettingsMessageType.Loading)
             {
-                if (!message.Settings.ContainsKey("Device"))
+                if (!message.Settings.ContainsKey(Name))
                     return;
 
-                var settings = message.Settings["Device"] as JObject;
+                var settings = message.Settings[Name] as JObject;
                 if (settings.TryGetValue(nameof(UpdateRate), out var updateRateToken))
                     UpdateRate = updateRateToken.ToObject<int>();
                 if (settings.TryGetValue(nameof(SelectedComPort), out var selectedComPortToken))
@@ -202,8 +202,10 @@ namespace MultiFunPlayer.ViewModels
             }
         }
 
-        protected virtual void Dispose(bool disposing)
+        protected override void Dispose(bool disposing)
         {
+            base.Dispose(disposing);
+
             _cancellationSource?.Cancel();
             _deviceThread?.Join();
 
@@ -219,12 +221,6 @@ namespace MultiFunPlayer.ViewModels
             _cancellationSource = null;
             _deviceThread = null;
             _serialPort = null;
-        }
-
-        public void Dispose()
-        {
-            Dispose(disposing: true);
-            GC.SuppressFinalize(this);
         }
     }
 

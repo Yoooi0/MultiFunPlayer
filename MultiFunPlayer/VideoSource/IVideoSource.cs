@@ -7,8 +7,8 @@ namespace MultiFunPlayer.VideoSource
 {
     public enum VideoSourceStatus
     {
-        Disconnecting,
         Disconnected,
+        Disconnecting,
         Connecting,
         Connected
     }
