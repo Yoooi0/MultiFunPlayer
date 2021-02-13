@@ -16,8 +16,6 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
 {
     public class SerialOutputTargetViewModel : AbstractOutputTarget
     {
-        private CancellationTokenSource _cancellationSource;
-        private Thread _deviceThread;
         private SerialPort _serialPort;
 
         public override string Name => "Serial";
@@ -55,30 +53,9 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
         public bool IsConnectBusy => Status == OutputTargetStatus.Connecting || Status == OutputTargetStatus.Disconnecting;
         public bool CanToggleConnect => !IsConnectBusy && SelectedComPort != null;
 
-        public async Task ToggleConnectAsync()
+        protected override void Run(CancellationToken token)
         {
-            if (IsConnected)
-            {
-                Status = OutputTargetStatus.Disconnecting;
-                await DisconnectAsync().ConfigureAwait(true);
-                Status = OutputTargetStatus.Disconnected;
-            }
-            else
-            {
-                Status = OutputTargetStatus.Connecting;
-                if (await ConnectAsync().ConfigureAwait(true))
-                    Status = OutputTargetStatus.Connected;
-                else
-                    Status = OutputTargetStatus.Disconnected;
-            }
-        }
-
-        public async Task<bool> ConnectAsync()
-        {
-            if (SelectedComPort == null)
-                return false;
-
-            await Task.Delay(1000).ConfigureAwait(true);
+            var sb = new StringBuilder(256);
 
             try
             {
@@ -92,36 +69,22 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
 
                 _serialPort.Open();
                 _serialPort.ReadExisting();
+                Status = OutputTargetStatus.Connected;
             }
             catch (Exception e)
             {
                 if (_serialPort?.IsOpen == true)
                     _serialPort.Close();
 
-                _ = Execute.OnUIThreadAsync(() => DialogHost.Show(new ErrorMessageDialog($"Error when opening serial port:\n\n{e}")));
-                return false;
+                _ = Execute.OnUIThreadAsync(async () =>
+                {
+                    _ = DialogHost.Show(new ErrorMessageDialog($"Error when opening serial port:\n\n{e}"));
+                    await DisconnectAsync().ConfigureAwait(true);
+                    await RefreshPorts().ConfigureAwait(true);
+                });
+
+                return;
             }
-
-            _cancellationSource = new CancellationTokenSource();
-            _deviceThread = new Thread(Run)
-            {
-                IsBackground = true
-            };
-            _deviceThread.Start(_cancellationSource.Token);
-
-            return true;
-        }
-
-        public async Task DisconnectAsync()
-        {
-            Dispose(disposing: false);
-            await Task.Delay(1000).ConfigureAwait(false);
-        }
-
-        private void Run(object state)
-        {
-            var token = (CancellationToken)state;
-            var sb = new StringBuilder(256);
 
             try
             {
@@ -155,17 +118,16 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
                     Thread.Sleep((int)interval);
                 }
             }
-            catch (Exception e)
-            when (e is TimeoutException || e is IOException)
+            catch (Exception e) when (e is TimeoutException || e is IOException)
             {
                 _ = Execute.OnUIThreadAsync(async () =>
                 {
                     _ = DialogHost.Show(new ErrorMessageDialog($"Unhandled error while updating device:\n\n{e}"));
-                    if (IsConnected)
-                        await ToggleConnectAsync().ConfigureAwait(true);
+                    await DisconnectAsync().ConfigureAwait(true);
                     await RefreshPorts().ConfigureAwait(true);
                 });
             }
+            catch (Exception e) { }
         }
 
         protected override void HandleSettings(JObject settings, AppSettingsMessageType type)
@@ -185,9 +147,6 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
         {
             base.Dispose(disposing);
 
-            _cancellationSource?.Cancel();
-            _deviceThread?.Join();
-
             try
             {
                 if (_serialPort?.IsOpen == true)
@@ -195,10 +154,6 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
             }
             catch (IOException) { }
 
-            _cancellationSource?.Dispose();
-
-            _cancellationSource = null;
-            _deviceThread = null;
             _serialPort = null;
         }
     }

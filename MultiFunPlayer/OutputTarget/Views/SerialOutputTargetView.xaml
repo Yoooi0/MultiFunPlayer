@@ -52,6 +52,7 @@
                     Width="24"
                     Margin="0 0 10 0"
                     Command="{s:Action ToggleConnectAsync}"
+                    IsEnabled="{Binding CanToggleConnect}"
                     material:ButtonProgressAssist.IsIndicatorVisible="{Binding IsConnectBusy}"
                     material:ButtonProgressAssist.Value="-1"
                     material:ButtonProgressAssist.IsIndeterminate="True">

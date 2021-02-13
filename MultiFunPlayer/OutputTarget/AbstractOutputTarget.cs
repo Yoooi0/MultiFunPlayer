@@ -5,11 +5,16 @@ using Stylet;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace MultiFunPlayer.OutputTarget
 {
     public abstract class AbstractOutputTarget : Screen, IHandle<AppSettingsMessage>, IDisposable, IOutputTarget
     {
+        private CancellationTokenSource _cancellationSource;
+        private Thread _thread;
+
         public abstract string Name { get; }
         public abstract OutputTargetStatus Status { get; protected set; }
 
@@ -24,6 +29,47 @@ namespace MultiFunPlayer.OutputTarget
 
             AxisSettings = new ObservableConcurrentDictionary<DeviceAxis, DeviceAxisSettings>(EnumUtils.GetValues<DeviceAxis>().ToDictionary(a => a, _ => new DeviceAxisSettings()));
             UpdateRate = 60;
+        }
+
+        protected abstract void Run(CancellationToken token);
+
+        public async Task ToggleConnectAsync()
+        {
+            if (Status == OutputTargetStatus.Connected || Status == OutputTargetStatus.Connecting)
+                await DisconnectAsync().ConfigureAwait(true);
+            else
+                await ConnectAsync().ConfigureAwait(true);
+        }
+
+        protected virtual async Task ConnectAsync()
+        {
+            if (Status != OutputTargetStatus.Disconnected)
+                return;
+
+            Status = OutputTargetStatus.Connecting;
+            await Task.Delay(1000).ConfigureAwait(true);
+
+            _cancellationSource = new CancellationTokenSource();
+            _thread = new Thread(() =>
+            {
+                Run(_cancellationSource.Token);
+                _ = Execute.OnUIThreadAsync(async () => await DisconnectAsync().ConfigureAwait(false));
+            })
+            {
+                IsBackground = true
+            };
+            _thread.Start();
+        }
+
+        protected virtual async Task DisconnectAsync()
+        {
+            if (Status == OutputTargetStatus.Disconnected || Status == OutputTargetStatus.Disconnecting)
+                return;
+
+            Status = OutputTargetStatus.Disconnecting;
+            Dispose(disposing: false);
+            await Task.Delay(1000).ConfigureAwait(false);
+            Status = OutputTargetStatus.Disconnected;
         }
 
         protected abstract void HandleSettings(JObject settings, AppSettingsMessageType type);
@@ -56,7 +102,15 @@ namespace MultiFunPlayer.OutputTarget
             }
         }
 
-        protected virtual void Dispose(bool disposing) { }
+        protected virtual void Dispose(bool disposing)
+        {
+            _cancellationSource?.Cancel();
+            _thread?.Join();
+            _cancellationSource?.Dispose();
+
+            _cancellationSource = null;
+            _thread = null;
+        }
 
         public void Dispose()
         {
