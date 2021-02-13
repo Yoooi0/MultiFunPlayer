@@ -15,8 +15,8 @@ namespace MultiFunPlayer.VideoSource
         private CancellationTokenSource _cancellationSource;
         private Task _task;
 
-        public VideoSourceStatus Status { get; protected set; } = VideoSourceStatus.Disconnected;
-        public virtual object SettingsViewModel { get; } = null;
+        public VideoSourceStatus Status { get; protected set; }
+        public virtual object SettingsViewModel { get; }
 
         protected AbstractVideoSource(IEventAggregator eventAggregator)
         {
@@ -26,7 +26,7 @@ namespace MultiFunPlayer.VideoSource
         public abstract string Name { get; }
         protected abstract Task RunAsync(CancellationToken token);
 
-        public async virtual Task StartAsync()
+        public async virtual Task ConnectAsync()
         {
             if (Status != VideoSourceStatus.Disconnected)
                 return;
@@ -38,12 +38,12 @@ namespace MultiFunPlayer.VideoSource
                 TaskCreationOptions.LongRunning,
                 TaskScheduler.Default)
                 .Unwrap();
-            _ = _task.ContinueWith(_ => StopAsync()).Unwrap();
+            _ = _task.ContinueWith(_ => DisconnectAsync()).Unwrap();
 
             await Task.CompletedTask.ConfigureAwait(false);
         }
 
-        public async virtual Task StopAsync()
+        public async virtual Task DisconnectAsync()
         {
             if (Status == VideoSourceStatus.Disconnected || Status == VideoSourceStatus.Disconnecting)
                 return;
@@ -64,7 +64,7 @@ namespace MultiFunPlayer.VideoSource
             Status = VideoSourceStatus.Disconnected;
         }
 
-        public async virtual ValueTask<bool> CanStartAsync(CancellationToken token) => await ValueTask.FromResult(false).ConfigureAwait(false);
+        public async virtual ValueTask<bool> CanConnectAsync(CancellationToken token) => await ValueTask.FromResult(false).ConfigureAwait(false);
         public async Task WaitForStatus(IEnumerable<VideoSourceStatus> statuses, int checkFrequency, CancellationToken token)
         {
             if (statuses.Contains(Status))
@@ -93,7 +93,7 @@ namespace MultiFunPlayer.VideoSource
 
         protected async virtual void Dispose(bool disposing)
         {
-            await StopAsync().ConfigureAwait(false);
+            await DisconnectAsync().ConfigureAwait(false);
         }
 
         public void Dispose()

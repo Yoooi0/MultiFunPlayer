@@ -1,5 +1,4 @@
 ﻿using MultiFunPlayer.OutputTarget;
-using MultiFunPlayer.VideoSource;
 using System;
 using System.Globalization;
 using System.Windows.Data;
@@ -13,7 +12,7 @@ namespace MultiFunPlayer.Common.Converters
             => value switch
             {
                 OutputTargetStatus.Connected => new SolidColorBrush(Color.FromRgb(0x00, 0x80, 0x00)),
-                OutputTargetStatus.Disconnected => new SolidColorBrush(Color.FromRgb(0x00, 0x00, 0x00)),
+                OutputTargetStatus.Disconnected => new SolidColorBrush(Color.FromRgb(0xf5, 0x3e, 0x2e)),
                 OutputTargetStatus.Connecting or OutputTargetStatus.Disconnecting => new SolidColorBrush(Color.FromRgb(0xb3, 0x9c, 0x09)),
                 _ => null
             };

@@ -27,10 +27,10 @@
                         TickFrequency="10" 
                         Orientation="Horizontal"/>
                 <TextBlock VerticalAlignment="Center" 
-                            HorizontalAlignment="Right" 
-                            Width="40"
-                            Text="{Binding UpdateRate, StringFormat={}{0} hz}" 
-                            Margin="0 0 20 0"/>
+                           HorizontalAlignment="Right" 
+                           TextAlignment="Right"
+                           Width="40"
+                           Text="{Binding UpdateRate, StringFormat={}{0} hz}"/>
             </StackPanel>
 
             <DockPanel DockPanel.Dock="Left">
@@ -51,7 +51,7 @@
                     Height="24"
                     Width="24"
                     Margin="0 0 10 0"
-                    Command="{s:Action ToggleConnect}"
+                    Command="{s:Action ToggleConnectAsync}"
                     material:ButtonProgressAssist.IsIndicatorVisible="{Binding IsConnectBusy}"
                     material:ButtonProgressAssist.Value="-1"
                     material:ButtonProgressAssist.IsIndeterminate="True">
@@ -89,7 +89,7 @@
         <ItemsControl ItemsSource="{Binding AxisSettings}">
             <ItemsControl.ItemsPanel>
                 <ItemsPanelTemplate>
-                    <UniformGrid Columns="3" Rows="3" IsItemsHost="True" Margin="-5 0 -5 0"/>
+                    <UniformGrid Columns="3" Rows="3" IsItemsHost="True" Margin="-3 0 -10 0"/>
                 </ItemsPanelTemplate>
             </ItemsControl.ItemsPanel>
             <ItemsControl.ItemTemplate>

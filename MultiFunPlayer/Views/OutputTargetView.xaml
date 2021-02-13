@@ -119,7 +119,7 @@
                 </TabControl.Resources>
                 <TabControl.ItemTemplate>
                     <DataTemplate>
-                        <StackPanel Orientation="Vertical" Margin="10 0 10 0">
+                        <StackPanel Orientation="Vertical" Margin="10 0 10 0" Width="75">
                             <TextBlock Text="{Binding Name}" 
                                        HorizontalAlignment="Center"/>
                             <TextBlock Text="{Binding Status}" 

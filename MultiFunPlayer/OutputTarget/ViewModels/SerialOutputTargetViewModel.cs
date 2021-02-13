@@ -3,10 +3,8 @@ using MultiFunPlayer.Common;
 using MultiFunPlayer.Common.Controls;
 using MultiFunPlayer.Common.Messages;
 using Newtonsoft.Json.Linq;
-using PropertyChanged;
 using Stylet;
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.IO.Ports;
 using System.Linq;
@@ -57,25 +55,25 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
         public bool IsConnectBusy => Status == OutputTargetStatus.Connecting || Status == OutputTargetStatus.Disconnecting;
         public bool CanToggleConnect => !IsConnectBusy && SelectedComPort != null;
 
-        public async Task ToggleConnect()
+        public async Task ToggleConnectAsync()
         {
             if (IsConnected)
             {
                 Status = OutputTargetStatus.Disconnecting;
-                await Disconnect().ConfigureAwait(true);
+                await DisconnectAsync().ConfigureAwait(true);
                 Status = OutputTargetStatus.Disconnected;
             }
             else
             {
                 Status = OutputTargetStatus.Connecting;
-                if (await Connect().ConfigureAwait(true))
+                if (await ConnectAsync().ConfigureAwait(true))
                     Status = OutputTargetStatus.Connected;
                 else
                     Status = OutputTargetStatus.Disconnected;
             }
         }
 
-        public async Task<bool> Connect()
+        public async Task<bool> ConnectAsync()
         {
             if (SelectedComPort == null)
                 return false;
@@ -105,7 +103,7 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
             }
 
             _cancellationSource = new CancellationTokenSource();
-            _deviceThread = new Thread(UpdateDevice)
+            _deviceThread = new Thread(Run)
             {
                 IsBackground = true
             };
@@ -114,13 +112,13 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
             return true;
         }
 
-        public async Task Disconnect()
+        public async Task DisconnectAsync()
         {
             Dispose(disposing: false);
             await Task.Delay(1000).ConfigureAwait(false);
         }
 
-        private void UpdateDevice(object state)
+        private void Run(object state)
         {
             var token = (CancellationToken)state;
             var sb = new StringBuilder(256);
@@ -164,7 +162,7 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
                 {
                     _ = DialogHost.Show(new ErrorMessageDialog($"Unhandled error while updating device:\n\n{e}"));
                     if (IsConnected)
-                        await ToggleConnect().ConfigureAwait(true);
+                        await ToggleConnectAsync().ConfigureAwait(true);
                     await RefreshPorts().ConfigureAwait(true);
                 });
             }

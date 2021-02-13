@@ -78,7 +78,7 @@ namespace MultiFunPlayer.VideoSource
             _eventAggregator.Publish(new VideoPlayingMessage(isPlaying: false));
         }
 
-        public override async ValueTask<bool> CanStartAsync(CancellationToken token)
+        public override async ValueTask<bool> CanConnectAsync(CancellationToken token)
         {
             try
             {

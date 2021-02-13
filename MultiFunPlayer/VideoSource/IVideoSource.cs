@@ -19,9 +19,9 @@ namespace MultiFunPlayer.VideoSource
         VideoSourceStatus Status { get; }
         object SettingsViewModel { get; }
 
-        Task StartAsync();
-        Task StopAsync();
-        ValueTask<bool> CanStartAsync(CancellationToken token);
+        Task ConnectAsync();
+        Task DisconnectAsync();
+        ValueTask<bool> CanConnectAsync(CancellationToken token);
         Task WaitForStatus(IEnumerable<VideoSourceStatus> statuses, int checkFrequency, CancellationToken token);
     }
 }

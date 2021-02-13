@@ -1,7 +1,6 @@
 using MultiFunPlayer.OutputTarget;
 using Stylet;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 
 namespace MultiFunPlayer.ViewModels

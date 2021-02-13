@@ -1,5 +1,4 @@
-﻿using MultiFunPlayer.Common;
-using MultiFunPlayer.OutputTarget;
+﻿using MultiFunPlayer.OutputTarget;
 using MultiFunPlayer.VideoSource;
 using MultiFunPlayer.ViewModels;
 using Stylet;
