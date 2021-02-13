@@ -85,7 +85,14 @@ namespace MultiFunPlayer.ViewModels
             if (!File.Exists(path))
                 return new JObject();
 
-            return JObject.Parse(File.ReadAllText(path));
+            try
+            {
+                return JObject.Parse(File.ReadAllText(path));
+            }
+            catch (JsonException)
+            {
+                return new JObject();
+            }
         }
 
         private void WriteSettings(JObject settings)

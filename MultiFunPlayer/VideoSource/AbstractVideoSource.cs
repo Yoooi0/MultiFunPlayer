@@ -79,15 +79,20 @@ namespace MultiFunPlayer.VideoSource
         {
             if (message.Type == AppSettingsMessageType.Saving)
             {
+                if (!message.Settings.EnsureContainsObjects("VideoSource")
+                 || !message.Settings.TryGetObject(out var settings, "VideoSource"))
+                    return;
+
                 if(SettingsViewModel != null)
-                    message.Settings[Name] = JObject.FromObject(SettingsViewModel);
+                    settings[Name] = JObject.FromObject(SettingsViewModel);
             }
             else if (message.Type == AppSettingsMessageType.Loading)
             {
-                if (!message.Settings.ContainsKey(Name))
+                if (!message.Settings.TryGetObject(out var settings, "VideoSource"))
                     return;
 
-                message.Settings[Name].Populate(SettingsViewModel);
+                if(settings.TryGetObject(out var videoSourceSettings, Name))
+                    videoSourceSettings.Populate(SettingsViewModel);
             }
         }
 

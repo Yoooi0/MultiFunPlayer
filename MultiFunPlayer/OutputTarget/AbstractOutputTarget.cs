@@ -77,10 +77,10 @@ namespace MultiFunPlayer.OutputTarget
         {
             if (message.Type == AppSettingsMessageType.Saving)
             {
-                if (!message.Settings.ContainsKey(Name))
-                    message.Settings[Name] = new JObject();
+                if (!message.Settings.EnsureContainsObjects("OutputTarget", Name)
+                 || !message.Settings.TryGetObject(out var settings, "OutputTarget", Name))
+                    return;
 
-                var settings = message.Settings[Name] as JObject;
                 settings[nameof(UpdateRate)] = new JValue(UpdateRate);
                 settings[nameof(AxisSettings)] = JObject.FromObject(AxisSettings);
 
@@ -88,10 +88,9 @@ namespace MultiFunPlayer.OutputTarget
             }
             else if (message.Type == AppSettingsMessageType.Loading)
             {
-                if (!message.Settings.ContainsKey(Name))
+                if (!message.Settings.TryGetObject(out var settings, "OutputTarget", Name))
                     return;
 
-                var settings = message.Settings[Name] as JObject;
                 if (settings.TryGetValue(nameof(UpdateRate), out var updateRateToken))
                     UpdateRate = updateRateToken.ToObject<int>();
                 if (settings.TryGetValue(nameof(AxisSettings), out var axisSettingsToken))

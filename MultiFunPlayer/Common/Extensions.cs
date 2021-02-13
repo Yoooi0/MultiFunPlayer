@@ -72,10 +72,41 @@ namespace MultiFunPlayer.Common
             return true;
         }
 
-        public static void EnsureContains<T>(this JObject o, string propertyName) where T : JToken, new()
+        public static bool EnsureContainsObjects(this JToken token, params string[] propertyNames)
         {
-            if (!o.ContainsKey(propertyName))
-                o[propertyName] = new T();
+            if (token is not JObject o)
+                return false;
+
+            foreach (var propertyName in propertyNames)
+            {
+                if (!o.ContainsKey(propertyName))
+                    o[propertyName] = new JObject();
+
+                if (o[propertyName] is JObject child)
+                    o = child;
+                else
+                    return false;
+            }
+
+            return true;
+        }
+
+        public static bool TryGetObject(this JToken token, out JObject result, params string[] propertyNames)
+        {
+            result = null;
+            if (token is not JObject o)
+                return false;
+
+            foreach(var propertyName in propertyNames)
+            {
+                if (!o.ContainsKey(propertyName) || o[propertyName] is not JObject child)
+                    return false;
+
+                o = child;
+            }
+
+            result = o;
+            return true;
         }
 
         public static void Populate(this JToken token, object target)

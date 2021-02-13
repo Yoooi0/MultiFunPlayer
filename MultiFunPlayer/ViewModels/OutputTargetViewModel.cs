@@ -4,6 +4,7 @@ using MultiFunPlayer.OutputTarget;
 using Newtonsoft.Json.Linq;
 using Stylet;
 using System;
+using System.CodeDom;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -30,15 +31,19 @@ namespace MultiFunPlayer.ViewModels
         {
             if (message.Type == AppSettingsMessageType.Saving)
             {
-                message.Settings.EnsureContains<JObject>("OutputTarget");
-                message.Settings["OutputTarget"][nameof(SelectedItem)] = SelectedItem.Name;
+                if (!message.Settings.EnsureContainsObjects("OutputTarget")
+                 || !message.Settings.TryGetObject(out var settings, "OutputTarget"))
+                    return;
+
+                settings[nameof(SelectedItem)] = SelectedItem.Name;
             }
             else if (message.Type == AppSettingsMessageType.Loading)
             {
-                if (!message.Settings.ContainsKey("OutputTarget"))
+                if (!message.Settings.TryGetObject(out var settings, "OutputTarget"))
                     return;
 
-                SelectedItem = Items.FirstOrDefault(x => string.Equals(x.Name, message.Settings["OutputTarget"][nameof(SelectedItem)].ToObject<string>())) ?? Items.First();
+                if (settings.TryGetValue(nameof(SelectedItem), out var selectedItemToken))
+                    SelectedItem = Items.FirstOrDefault(x => string.Equals(x.Name, selectedItemToken.ToObject<string>())) ?? Items.First();
             }
         }
 
