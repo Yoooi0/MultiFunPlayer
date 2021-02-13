@@ -41,7 +41,7 @@ namespace MultiFunPlayer.VideoSource
                     var message = await reader.ReadLineAsync().WithCancellation(token).ConfigureAwait(false);
                     if (string.IsNullOrWhiteSpace(message))
                         continue;
-                    
+
                     if (message.Length >= 1 && message[0] == 'C')
                     {
                         var parts = message.Split(' ', 2);
