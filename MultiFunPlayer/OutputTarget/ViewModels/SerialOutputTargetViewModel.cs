@@ -90,7 +90,7 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
             try
             {
                 var sb = new StringBuilder(256);
-                while (!token.IsCancellationRequested)
+                while (!token.IsCancellationRequested && serialPort?.IsOpen == true)
                 {
                     var interval = MathF.Max(1, 1000.0f / UpdateRate);
                     UpdateValues();

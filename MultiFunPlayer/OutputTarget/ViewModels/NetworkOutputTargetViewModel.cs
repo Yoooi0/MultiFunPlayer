@@ -51,7 +51,7 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
             {
                 var sb = new StringBuilder(256);
                 using var stream = new StreamWriter(client.GetStream(), Encoding.ASCII);
-                while (!token.IsCancellationRequested)
+                while (!token.IsCancellationRequested && client?.Connected == true)
                 {
                     var interval = MathF.Max(1, 1000.0f / UpdateRate);
                     UpdateValues();
@@ -67,7 +67,7 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
 
                     var commands = sb.ToString().Trim();
                     if (client?.Connected == true && !string.IsNullOrWhiteSpace(commands))
-                        stream.WriteLine(commands);
+                        stream?.WriteLine(commands);
 
                     Thread.Sleep((int)interval);
                 }

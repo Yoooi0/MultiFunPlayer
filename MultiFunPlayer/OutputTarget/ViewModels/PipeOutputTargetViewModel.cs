@@ -52,7 +52,7 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
             {
                 var sb = new StringBuilder(256);
                 var buffer = new byte[256];
-                while (!token.IsCancellationRequested)
+                while (!token.IsCancellationRequested && client?.IsConnected == true)
                 {
                     var interval = MathF.Max(1, 1000.0f / UpdateRate);
                     UpdateValues();
