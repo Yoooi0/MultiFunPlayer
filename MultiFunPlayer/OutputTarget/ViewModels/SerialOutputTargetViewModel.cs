@@ -55,8 +55,6 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
 
         protected override void Run(CancellationToken token)
         {
-            var sb = new StringBuilder(256);
-
             try
             {
                 _serialPort = new SerialPort(SelectedComPort, 115200)
@@ -88,22 +86,14 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
 
             try
             {
-                var values = EnumUtils.GetValues<DeviceAxis>().ToDictionary(axis => axis, axis => axis.DefaultValue());
+                var sb = new StringBuilder(256);
                 while (!token.IsCancellationRequested)
                 {
                     var interval = MathF.Max(1, 1000.0f / UpdateRate);
-                    foreach (var axis in EnumUtils.GetValues<DeviceAxis>())
-                    {
-                        var value = ValueProvider?.GetValue(axis) ?? float.NaN;
-                        if (!float.IsFinite(value))
-                            value = axis.DefaultValue();
-
-                        var settings = AxisSettings[axis];
-                        values[axis] = MathUtils.Lerp(settings.Minimum / 100f, settings.Maximum / 100f, value);
-                    }
+                    UpdateValues();
 
                     sb.Clear();
-                    foreach (var (axis, value) in values)
+                    foreach (var (axis, value) in Values)
                     {
                         sb.Append(axis)
                           .AppendFormat("{0:000}", value * 999)
@@ -122,7 +112,7 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
             {
                 _ = Execute.OnUIThreadAsync(async () =>
                 {
-                    _ = DialogHost.Show(new ErrorMessageDialog($"Unhandled error while updating device:\n\n{e}"));
+                    _ = DialogHost.Show(new ErrorMessageDialog($"Unhandled error:\n\n{e}"));
                     await DisconnectAsync().ConfigureAwait(true);
                     await RefreshPorts().ConfigureAwait(true);
                 });

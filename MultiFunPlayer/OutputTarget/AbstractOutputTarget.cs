@@ -22,12 +22,14 @@ namespace MultiFunPlayer.OutputTarget
         public ObservableConcurrentDictionary<DeviceAxis, DeviceAxisSettings> AxisSettings { get; protected set; }
         public int UpdateRate { get; set; }
         protected IDeviceAxisValueProvider ValueProvider { get; }
+        protected Dictionary<DeviceAxis, float> Values { get; }
 
         protected AbstractOutputTarget(IEventAggregator eventAggregator, IDeviceAxisValueProvider valueProvider)
         {
             eventAggregator.Subscribe(this);
             ValueProvider = valueProvider;
 
+            Values = EnumUtils.GetValues<DeviceAxis>().ToDictionary(axis => axis, axis => axis.DefaultValue());
             AxisSettings = new ObservableConcurrentDictionary<DeviceAxis, DeviceAxisSettings>(EnumUtils.GetValues<DeviceAxis>().ToDictionary(a => a, _ => new DeviceAxisSettings()));
             UpdateRate = 60;
         }
@@ -71,6 +73,19 @@ namespace MultiFunPlayer.OutputTarget
             Dispose(disposing: false);
             await Task.Delay(1000).ConfigureAwait(false);
             Status = OutputTargetStatus.Disconnected;
+        }
+
+        protected void UpdateValues()
+        {
+            foreach (var axis in EnumUtils.GetValues<DeviceAxis>())
+            {
+                var value = ValueProvider?.GetValue(axis) ?? float.NaN;
+                if (!float.IsFinite(value))
+                    value = axis.DefaultValue();
+
+                var settings = AxisSettings[axis];
+                Values[axis] = MathUtils.Lerp(settings.Minimum / 100f, settings.Maximum / 100f, value);
+            }
         }
 
         protected abstract void HandleSettings(JObject settings, AppSettingsMessageType type);
