@@ -82,7 +82,7 @@ namespace MultiFunPlayer.VideoSource.Settings
                 foreach (var file in downloadRoot.EnumerateFiles("mpv*.7z"))
                     file.Delete();
 
-                if (!Executable.Exists)
+                if (Executable?.Exists == false)
                     Executable = null;
             }
             catch { }
