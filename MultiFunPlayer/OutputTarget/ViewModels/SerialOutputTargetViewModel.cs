@@ -127,7 +127,7 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
                     await RefreshPorts().ConfigureAwait(true);
                 });
             }
-            catch (Exception e) { }
+            catch (Exception) { }
         }
 
         protected override void HandleSettings(JObject settings, AppSettingsMessageType type)

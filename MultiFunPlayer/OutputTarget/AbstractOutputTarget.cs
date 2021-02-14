@@ -1,6 +1,7 @@
 ﻿using MultiFunPlayer.Common;
 using MultiFunPlayer.Common.Messages;
 using Newtonsoft.Json.Linq;
+using PropertyChanged;
 using Stylet;
 using System;
 using System.Collections.Generic;
@@ -16,7 +17,7 @@ namespace MultiFunPlayer.OutputTarget
         private Thread _thread;
 
         public abstract string Name { get; }
-        public abstract OutputTargetStatus Status { get; protected set; }
+        [SuppressPropertyChangedWarnings] public abstract OutputTargetStatus Status { get; protected set; }
 
         public ObservableConcurrentDictionary<DeviceAxis, DeviceAxisSettings> AxisSettings { get; protected set; }
         public int UpdateRate { get; set; }
