@@ -81,7 +81,6 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
                 _ = Execute.OnUIThreadAsync(async () =>
                 {
                     _ = DialogHost.Show(new ErrorMessageDialog($"Error when opening serial port:\n\n{e}"));
-                    await DisconnectAsync().ConfigureAwait(true);
                     await RefreshPorts().ConfigureAwait(true);
                 });
 
@@ -117,7 +116,6 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
                 _ = Execute.OnUIThreadAsync(async () =>
                 {
                     _ = DialogHost.Show(new ErrorMessageDialog($"Unhandled error:\n\n{e}"));
-                    await DisconnectAsync().ConfigureAwait(true);
                     await RefreshPorts().ConfigureAwait(true);
                 });
             }
