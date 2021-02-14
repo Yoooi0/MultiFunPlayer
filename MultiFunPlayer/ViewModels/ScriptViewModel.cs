@@ -16,6 +16,7 @@ using MultiFunPlayer.Common.Messages;
 using Newtonsoft.Json;
 using Microsoft.WindowsAPICodePack.Dialogs;
 using System.ComponentModel;
+using MultiFunPlayer.OutputTarget;
 
 namespace MultiFunPlayer.ViewModels
 {
@@ -233,21 +234,18 @@ namespace MultiFunPlayer.ViewModels
         {
             if (message.Type == AppSettingsMessageType.Saving)
             {
-                var settings = new JObject
+                message.Settings["Script"] = new JObject
                 {
                     { nameof(AxisSettings), JObject.FromObject(AxisSettings) },
                     { nameof(ScriptLibraries), JArray.FromObject(ScriptLibraries) },
                     { nameof(IsValuesPanelExpanded), JToken.FromObject(IsValuesPanelExpanded) }
                 };
-
-                message.Settings["Script"] = settings;
             }
             else if (message.Type == AppSettingsMessageType.Loading)
             {
-                if (!message.Settings.ContainsKey("Script"))
+                if (!message.Settings.TryGetObject(out var settings, "Script"))
                     return;
 
-                var settings = message.Settings["Script"] as JObject;
                 if (settings.TryGetValue(nameof(AxisSettings), out var axisSettingsToken))
                 {
                     foreach(var property in axisSettingsToken.Children<JProperty>())
