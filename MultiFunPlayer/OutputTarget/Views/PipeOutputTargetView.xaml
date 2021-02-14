@@ -1,0 +1,126 @@
+﻿<UserControl x:Class="MultiFunPlayer.OutputTarget.Views.PipeOutputTargetView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:material="http://materialdesigninxaml.net/winfx/xaml/themes"
+             xmlns:metro="http://metro.mahapps.com/winfx/xaml/controls"
+             xmlns:s="https://github.com/canton7/Stylet"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:MultiFunPlayer.OutputTarget.Views"
+             mc:Ignorable="d" 
+             d:DesignHeight="450" d:DesignWidth="800">
+    <StackPanel Margin="20">
+        <DockPanel LastChildFill="True" Margin="0 0 0 20">
+            <DockPanel DockPanel.Dock="Left" LastChildFill="False" Margin="0 1 0 0">
+                <TextBlock Text="Pipe name"
+                           DockPanel.Dock="Left"
+                           Margin="0 0 15 0"
+                           VerticalAlignment="Center"/>
+
+                <TextBox Text="{Binding PipeName}"
+                         DockPanel.Dock="Left"
+                         Width="150"
+                         Margin="0 0 20 0"
+                         VerticalAlignment="Center"/>
+
+                <Button Style="{StaticResource MaterialDesignFloatingActionLightButton}" 
+                        DockPanel.Dock="Left"
+                        Height="24"
+                        Width="24"
+                        Command="{s:Action ToggleConnectAsync}"
+                        IsEnabled="{Binding CanToggleConnect}"
+                        material:ButtonProgressAssist.IsIndicatorVisible="{Binding IsConnectBusy}"
+                        material:ButtonProgressAssist.Value="-1"
+                        material:ButtonProgressAssist.IsIndeterminate="True">
+                    <material:PackIcon>
+                        <material:PackIcon.Style>
+                            <Style TargetType="material:PackIcon" BasedOn="{StaticResource {x:Type material:PackIcon}}">
+                                <Setter Property="Kind" Value="Play" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsConnected}" Value="True">
+                                        <Setter Property="Kind" Value="Stop" />
+                                        <DataTrigger.EnterActions>
+                                            <BeginStoryboard>
+                                                <Storyboard>
+                                                    <DoubleAnimation Storyboard.TargetProperty="Opacity" From="0" To="1" Duration="0:0:0.8" />
+                                                </Storyboard>
+                                            </BeginStoryboard>
+                                        </DataTrigger.EnterActions>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </material:PackIcon.Style>
+                    </material:PackIcon>
+                </Button>
+            </DockPanel>
+        </DockPanel>
+        
+        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Margin="0 0 0 10">
+            <TextBlock VerticalAlignment="Center" Text="Update rate" Margin="0 0 10 0"/>
+            <Slider Value="{Binding UpdateRate, Mode=TwoWay}"
+                    HorizontalAlignment="Stretch"
+                    VerticalAlignment="Top"
+                    Margin="0 0 10 0"
+                    Width="100"
+                    Minimum="30" 
+                    Maximum="330" 
+                    Interval="10" 
+                    IsSnapToTickEnabled="True" 
+                    TickFrequency="10" 
+                    Orientation="Horizontal"/>
+            <TextBlock VerticalAlignment="Center" 
+                        HorizontalAlignment="Right" 
+                        TextAlignment="Right"
+                        Width="40"
+                        Text="{Binding UpdateRate, StringFormat={}{0} hz}"/>
+        </StackPanel>
+        
+        <ItemsControl ItemsSource="{Binding AxisSettings}">
+            <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <UniformGrid Columns="3" Rows="3" IsItemsHost="True" Margin="-3 0 -10 0"/>
+                </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                    <DockPanel Margin="2" LastChildFill="True">
+                        <TextBlock DockPanel.Dock="Left" 
+                                    VerticalAlignment="Center" 
+                                    Text="{Binding Key}"/>
+                        <metro:RangeSlider Style="{StaticResource MaterialDesignRangeSlider}" 
+                                            DockPanel.Dock="Right"
+                                            HorizontalAlignment="Stretch"
+                                            Margin="5 0 10 0"
+                                            Minimum="0" 
+                                            Maximum="100" 
+                                            MinRangeWidth="10" 
+                                            MinRange="1"
+                                            AutoToolTipPlacement="TopLeft" 
+                                            LowerValue="{Binding Value.Minimum, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
+                                            UpperValue="{Binding Value.Maximum, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                            <metro:RangeSlider.AutoToolTipLowerValueTemplate>
+                                <DataTemplate>
+                                    <TextBlock HorizontalAlignment="Right" Text="{Binding StringFormat='{}{0:D}%'}" />
+                                </DataTemplate>
+                            </metro:RangeSlider.AutoToolTipLowerValueTemplate>
+                            <metro:RangeSlider.AutoToolTipUpperValueTemplate>
+                                <DataTemplate>
+                                    <TextBlock HorizontalAlignment="Right" Text="{Binding StringFormat='{}{0:D}%'}" />
+                                </DataTemplate>
+                            </metro:RangeSlider.AutoToolTipUpperValueTemplate>
+                            <metro:RangeSlider.AutoToolTipRangeValuesTemplate>
+                                <DataTemplate DataType="mah:RangeSliderAutoTooltipValues">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="{Binding LowerValue, StringFormat='{}{0:D}%'}" />
+                                        <TextBlock Text=" - " />
+                                        <TextBlock Text="{Binding UpperValue, StringFormat='{}{0:D}%'}" />
+                                    </StackPanel>
+                                </DataTemplate>
+                            </metro:RangeSlider.AutoToolTipRangeValuesTemplate>
+                        </metro:RangeSlider>
+                    </DockPanel>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+    </StackPanel>
+</UserControl>
