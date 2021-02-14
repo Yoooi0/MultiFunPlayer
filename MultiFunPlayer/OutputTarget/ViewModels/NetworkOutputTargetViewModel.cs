@@ -15,8 +15,6 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
 {
     public class NetworkOutputTargetViewModel : AbstractOutputTarget
     {
-        private TcpClient _client;
-
         public override string Name => "Network";
         public override OutputTargetStatus Status { get; protected set; }
 
@@ -32,17 +30,18 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
 
         protected override void Run(CancellationToken token)
         {
+            using var client = new TcpClient();
+
             try
             {
-                _client = new TcpClient();
-                _client.Connect(Address, Port);
+                client.Connect(Address, Port);
 
                 Status = OutputTargetStatus.Connected;
             }
             catch (Exception e)
             {
-                if (_client?.Connected == true)
-                    _client.Close();
+                if (client?.Connected == true)
+                    client.Close();
 
                 _ = Execute.OnUIThreadAsync(() => _ = DialogHost.Show(new ErrorMessageDialog($"Error when connecting to server:\n\n{e}")));
                 return;
@@ -51,7 +50,7 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
             try
             {
                 var sb = new StringBuilder(256);
-                using var stream = new StreamWriter(_client.GetStream(), Encoding.ASCII);
+                using var stream = new StreamWriter(client.GetStream(), Encoding.ASCII);
                 while (!token.IsCancellationRequested)
                 {
                     var interval = MathF.Max(1, 1000.0f / UpdateRate);
@@ -67,7 +66,7 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
                     }
 
                     var commands = sb.ToString().Trim();
-                    if (_client?.Connected == true && !string.IsNullOrWhiteSpace(commands))
+                    if (client?.Connected == true && !string.IsNullOrWhiteSpace(commands))
                         stream.WriteLine(commands);
 
                     Thread.Sleep((int)interval);
@@ -77,6 +76,9 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
             {
                 _ = Execute.OnUIThreadAsync(() => _ = DialogHost.Show(new ErrorMessageDialog($"Unhandled error:\n\n{e}")));
             }
+
+            if (client?.Connected == true)
+                client.Close();
         }
 
         protected override void HandleSettings(JObject settings, AppSettingsMessageType type)
@@ -94,15 +96,6 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
                 if (settings.TryGetValue(nameof(Port), out var portToken))
                     Port = portToken.ToObject<int>();
             }
-        }
-
-        protected override void Dispose(bool disposing)
-        {
-            base.Dispose(disposing);
-            if (_client?.Connected == true)
-                _client?.Close();
-
-            _client = null;
         }
     }
 }

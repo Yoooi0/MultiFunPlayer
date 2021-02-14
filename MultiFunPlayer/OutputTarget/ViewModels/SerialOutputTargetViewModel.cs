@@ -16,8 +16,6 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
 {
     public class SerialOutputTargetViewModel : AbstractOutputTarget
     {
-        private SerialPort _serialPort;
-
         public override string Name => "Serial";
         public override OutputTargetStatus Status { get; protected set; }
 
@@ -55,9 +53,11 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
 
         protected override void Run(CancellationToken token)
         {
+            var serialPort = default(SerialPort);
+
             try
             {
-                _serialPort = new SerialPort(SelectedComPort, 115200)
+                serialPort = new SerialPort(SelectedComPort, 115200)
                 {
                     ReadTimeout = 1000,
                     WriteTimeout = 1000,
@@ -65,14 +65,18 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
                     RtsEnable = true
                 };
 
-                _serialPort.Open();
-                _serialPort.ReadExisting();
+                serialPort.Open();
+                serialPort.ReadExisting();
                 Status = OutputTargetStatus.Connected;
             }
             catch (Exception e)
             {
-                if (_serialPort?.IsOpen == true)
-                    _serialPort.Close();
+                try
+                {
+                    if (serialPort?.IsOpen == true)
+                        serialPort.Close();
+                }
+                catch (IOException) { }
 
                 _ = Execute.OnUIThreadAsync(async () =>
                 {
@@ -102,8 +106,8 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
                     }
 
                     var commands = sb.ToString().Trim();
-                    if (_serialPort?.IsOpen == true && !string.IsNullOrWhiteSpace(commands))
-                        _serialPort?.WriteLine(commands);
+                    if (serialPort?.IsOpen == true && !string.IsNullOrWhiteSpace(commands))
+                        serialPort?.WriteLine(commands);
 
                     Thread.Sleep((int)interval);
                 }
@@ -118,6 +122,13 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
                 });
             }
             catch (Exception) { }
+
+            try
+            {
+                if (serialPort?.IsOpen == true)
+                    serialPort?.Close();
+            }
+            catch (IOException) { }
         }
 
         protected override void HandleSettings(JObject settings, AppSettingsMessageType type)
@@ -131,20 +142,6 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
                 if (settings.TryGetValue(nameof(SelectedComPort), out var selectedComPortToken))
                     SelectedComPort = ComPorts.FirstOrDefault(x => string.Equals(x, selectedComPortToken.ToObject<string>(), StringComparison.OrdinalIgnoreCase));
             }
-        }
-
-        protected override void Dispose(bool disposing)
-        {
-            base.Dispose(disposing);
-
-            try
-            {
-                if (_serialPort?.IsOpen == true)
-                    _serialPort?.Close();
-            }
-            catch (IOException) { }
-
-            _serialPort = null;
         }
     }
 }
