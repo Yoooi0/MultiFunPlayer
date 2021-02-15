@@ -35,7 +35,7 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
             try
             {
                 client = new NamedPipeClientStream(".", PipeName, PipeDirection.Out);
-                client.Connect();
+                client.Connect(2500);
 
                 Status = OutputTargetStatus.Connected;
             }

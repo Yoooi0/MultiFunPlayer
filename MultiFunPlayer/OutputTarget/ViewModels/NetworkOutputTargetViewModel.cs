@@ -7,6 +7,7 @@ using Stylet;
 using System;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
@@ -18,8 +19,7 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
         public override string Name => "Network";
         public override OutputTargetStatus Status { get; protected set; }
 
-        public string Address { get; set; } = "localhost";
-        public int Port { get; set; } = 8080;
+        public IPEndPoint Endpoint { get; set; } = new IPEndPoint(IPAddress.Loopback, 8080);
 
         public NetworkOutputTargetViewModel(IEventAggregator eventAggregator, IDeviceAxisValueProvider valueProvider)
             : base(eventAggregator, valueProvider) { }
@@ -30,11 +30,14 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
 
         protected override void Run(CancellationToken token)
         {
+            if (Endpoint == null)
+                return;
+
             using var client = new TcpClient();
 
             try
             {
-                client.Connect(Address, Port);
+                client.Connect(Endpoint);
 
                 Status = OutputTargetStatus.Connected;
             }
@@ -85,16 +88,12 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
         {
             if (type == AppSettingsMessageType.Saving)
             {
-                settings[nameof(Address)] = new JValue(Address);
-                settings[nameof(Port)] = new JValue(Port);
+                settings[nameof(Endpoint)] = new JValue(Endpoint.ToString());
             }
             else if (type == AppSettingsMessageType.Loading)
             {
-                if (settings.TryGetValue(nameof(Address), out var addressToken))
-                    Address = addressToken.ToObject<string>();
-
-                if (settings.TryGetValue(nameof(Port), out var portToken))
-                    Port = portToken.ToObject<int>();
+                if (settings.TryGetValue(nameof(Endpoint), out var endpointToken) && IPEndPoint.TryParse(endpointToken.ToObject<string>(), out var endpoint))
+                    Endpoint = endpoint;
             }
         }
     }

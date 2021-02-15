@@ -28,6 +28,7 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
             ComPorts = new BindableCollection<string>(SerialPort.GetPortNames());
         }
 
+        public bool CanChangePort => !IsRefreshBusy && !IsConnectBusy && !IsConnected;
         public bool IsRefreshBusy { get; set; }
         public bool CanRefreshPorts => !IsRefreshBusy && !IsConnectBusy && !IsConnected;
         public async Task RefreshPorts()

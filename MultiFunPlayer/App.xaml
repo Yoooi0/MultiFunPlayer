@@ -22,6 +22,7 @@
 
                 <ResourceDictionary Source="pack://application:,,,/MaterialDesignExtensions;component/Themes/Generic.xaml" />
                 <ResourceDictionary Source="pack://application:,,,/MaterialDesignExtensions;component/Themes/MaterialDesignLightTheme.xaml" />
+                <ResourceDictionary Source="pack://application:,,,/CustomTheme.xaml" />
 
                 <s:ApplicationLoader>
                     <s:ApplicationLoader.Bootstrapper>
