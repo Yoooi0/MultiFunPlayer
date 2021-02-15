@@ -95,6 +95,7 @@
                         <StackPanel DockPanel.Dock="Left" Orientation="Horizontal">
                             <Button Click="{s:Action OnOpenVideoLocation}" 
                                     Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}"
+                                    IsEnabled="{Binding CanOpenVideoLocation}"
                                     ToolTip="Open video location" 
                                     ToolTipService.InitialShowDelay="0" 
                                     ToolTipService.Placement="Top" 

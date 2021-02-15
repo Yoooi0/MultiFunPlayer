@@ -495,6 +495,8 @@ namespace MultiFunPlayer.ViewModels
         #endregion
 
         #region Video
+        public bool CanOpenVideoLocation => VideoFile != null && Directory.Exists(VideoFile.Source);
+
         public void OnOpenVideoLocation()
         {
             if (VideoFile == null)
