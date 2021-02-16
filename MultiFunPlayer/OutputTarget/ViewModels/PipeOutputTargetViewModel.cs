@@ -1,14 +1,10 @@
 ﻿using MaterialDesignThemes.Wpf;
-using MultiFunPlayer.Common;
 using MultiFunPlayer.Common.Controls;
 using MultiFunPlayer.Common.Messages;
 using Newtonsoft.Json.Linq;
 using Stylet;
 using System;
-using System.IO;
 using System.IO.Pipes;
-using System.Linq;
-using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 

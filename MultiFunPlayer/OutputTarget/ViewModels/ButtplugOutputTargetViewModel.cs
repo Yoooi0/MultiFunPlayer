@@ -6,8 +6,6 @@ using MultiFunPlayer.Common.Messages;
 using Newtonsoft.Json.Linq;
 using Stylet;
 using System;
-using System.Collections.Generic;
-using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Net;
@@ -107,7 +105,7 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
                         return d.SendVibrateCmd(value);
                     })).ConfigureAwait(false);
 
-                    await Task.Delay((int)interval).ConfigureAwait(false);
+                    await Task.Delay((int)interval, token).ConfigureAwait(false);
                 }
             }
             catch (OperationCanceledException) { }
