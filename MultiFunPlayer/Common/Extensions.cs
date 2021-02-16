@@ -30,15 +30,36 @@ namespace MultiFunPlayer.Common
             }
         }
 
-        public static Task<T> WithCancellation<T>(this Task<T> task, CancellationToken cancellationToken)
+        public static Task WithCancellation(this Task task, CancellationToken cancellationToken)
         {
-            return task.IsCompleted
-                ? task
-                : task.ContinueWith(
-                    completedTask => completedTask.GetAwaiter().GetResult(),
-                    cancellationToken,
-                    TaskContinuationOptions.ExecuteSynchronously,
-                    TaskScheduler.Default);
+            static async Task DoWaitAsync(Task task, CancellationToken cancellationToken)
+            {
+                var tcs = new TaskCompletionSource();
+                using var registration = cancellationToken.Register(() => tcs.TrySetCanceled(cancellationToken), useSynchronizationContext: false);
+                await await Task.WhenAny(task, tcs.Task).ConfigureAwait(false);
+            }
+
+            if (!cancellationToken.CanBeCanceled)
+                return task;
+            if (cancellationToken.IsCancellationRequested)
+                return Task.FromCanceled(cancellationToken);
+            return DoWaitAsync(task, cancellationToken);
+        }
+
+        public static Task<TResult> WithCancellation<TResult>(this Task<TResult> task, CancellationToken cancellationToken)
+        {
+            static async Task<T> DoWaitAsync<T>(Task<T> task, CancellationToken cancellationToken)
+            {
+                var tcs = new TaskCompletionSource<T>();
+                using var registration = cancellationToken.Register(() => tcs.TrySetCanceled(cancellationToken), useSynchronizationContext: false);
+                return await await Task.WhenAny(task, tcs.Task).ConfigureAwait(false);
+            }
+
+            if (!cancellationToken.CanBeCanceled)
+                return task;
+            if (cancellationToken.IsCancellationRequested)
+                return Task.FromCanceled<TResult>(cancellationToken);
+            return DoWaitAsync(task, cancellationToken);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -14,7 +14,7 @@ using System.Threading;
 
 namespace MultiFunPlayer.OutputTarget.ViewModels
 {
-    public class NetworkOutputTargetViewModel : AbstractOutputTarget
+    public class NetworkOutputTargetViewModel : ThreadAbstractOutputTarget
     {
         public override string Name => "Network";
         public override OutputTargetStatus Status { get; protected set; }

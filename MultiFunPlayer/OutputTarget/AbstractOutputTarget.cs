@@ -1,4 +1,4 @@
-﻿using MultiFunPlayer.Common;
+using MultiFunPlayer.Common;
 using MultiFunPlayer.Common.Messages;
 using Newtonsoft.Json.Linq;
 using PropertyChanged;
@@ -13,28 +13,24 @@ namespace MultiFunPlayer.OutputTarget
 {
     public abstract class AbstractOutputTarget : Screen, IHandle<AppSettingsMessage>, IDisposable, IOutputTarget
     {
-        private CancellationTokenSource _cancellationSource;
-        private Thread _thread;
+        private readonly IDeviceAxisValueProvider _valueProvider;
 
         public abstract string Name { get; }
         [SuppressPropertyChangedWarnings] public abstract OutputTargetStatus Status { get; protected set; }
 
         public ObservableConcurrentDictionary<DeviceAxis, DeviceAxisSettings> AxisSettings { get; protected set; }
         public int UpdateRate { get; set; }
-        protected IDeviceAxisValueProvider ValueProvider { get; }
         protected Dictionary<DeviceAxis, float> Values { get; }
 
         protected AbstractOutputTarget(IEventAggregator eventAggregator, IDeviceAxisValueProvider valueProvider)
         {
             eventAggregator.Subscribe(this);
-            ValueProvider = valueProvider;
+            _valueProvider = valueProvider;
 
             Values = EnumUtils.GetValues<DeviceAxis>().ToDictionary(axis => axis, axis => axis.DefaultValue());
             AxisSettings = new ObservableConcurrentDictionary<DeviceAxis, DeviceAxisSettings>(EnumUtils.GetValues<DeviceAxis>().ToDictionary(a => a, _ => new DeviceAxisSettings()));
             UpdateRate = 60;
         }
-
-        protected abstract void Run(CancellationToken token);
 
         public async Task ToggleConnectAsync()
         {
@@ -44,25 +40,7 @@ namespace MultiFunPlayer.OutputTarget
                 await ConnectAsync().ConfigureAwait(true);
         }
 
-        protected virtual async Task ConnectAsync()
-        {
-            if (Status != OutputTargetStatus.Disconnected)
-                return;
-
-            Status = OutputTargetStatus.Connecting;
-            await Task.Delay(1000).ConfigureAwait(true);
-
-            _cancellationSource = new CancellationTokenSource();
-            _thread = new Thread(() =>
-            {
-                Run(_cancellationSource.Token);
-                _ = Execute.OnUIThreadAsync(async () => await DisconnectAsync().ConfigureAwait(false));
-            })
-            {
-                IsBackground = true
-            };
-            _thread.Start();
-        }
+        protected abstract Task ConnectAsync();
 
         protected virtual async Task DisconnectAsync()
         {
@@ -79,7 +57,7 @@ namespace MultiFunPlayer.OutputTarget
         {
             foreach (var axis in EnumUtils.GetValues<DeviceAxis>())
             {
-                var value = ValueProvider?.GetValue(axis) ?? float.NaN;
+                var value = _valueProvider?.GetValue(axis) ?? float.NaN;
                 if (!float.IsFinite(value))
                     value = axis.DefaultValue();
 
@@ -117,8 +95,49 @@ namespace MultiFunPlayer.OutputTarget
             }
         }
 
-        protected virtual void Dispose(bool disposing)
+        protected virtual void Dispose(bool disposing) { }
+
+        public void Dispose()
         {
+            Dispose(disposing: true);
+            GC.SuppressFinalize(this);
+        }
+    }
+
+    public abstract class ThreadAbstractOutputTarget : AbstractOutputTarget
+    {
+        private CancellationTokenSource _cancellationSource;
+        private Thread _thread;
+
+        protected ThreadAbstractOutputTarget(IEventAggregator eventAggregator, IDeviceAxisValueProvider valueProvider)
+            : base(eventAggregator, valueProvider) { }
+
+        protected abstract void Run(CancellationToken token);
+
+        protected override async Task ConnectAsync()
+        {
+            if (Status != OutputTargetStatus.Disconnected)
+                return;
+
+            Status = OutputTargetStatus.Connecting;
+            await Task.Delay(1000).ConfigureAwait(true);
+
+            _cancellationSource = new CancellationTokenSource();
+            _thread = new Thread(() =>
+            {
+                Run(_cancellationSource.Token);
+                _ = Execute.OnUIThreadAsync(async () => await DisconnectAsync().ConfigureAwait(true));
+            })
+            {
+                IsBackground = true
+            };
+            _thread.Start();
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            base.Dispose(disposing);
+
             _cancellationSource?.Cancel();
             _thread?.Join();
             _cancellationSource?.Dispose();
@@ -126,11 +145,48 @@ namespace MultiFunPlayer.OutputTarget
             _cancellationSource = null;
             _thread = null;
         }
+    }
 
-        public void Dispose()
+    public abstract class AsyncAbstractOutputTarget : AbstractOutputTarget
+    {
+        private CancellationTokenSource _cancellationSource;
+        private Task _task;
+
+        protected AsyncAbstractOutputTarget(IEventAggregator eventAggregator, IDeviceAxisValueProvider valueProvider)
+            : base(eventAggregator, valueProvider) { }
+
+        protected abstract Task RunAsync(CancellationToken token);
+
+        protected override async Task ConnectAsync()
         {
-            Dispose(disposing: true);
-            GC.SuppressFinalize(this);
+            if (Status != OutputTargetStatus.Disconnected)
+                return;
+
+            Status = OutputTargetStatus.Connecting;
+            await Task.Delay(1000).ConfigureAwait(true);
+
+            _cancellationSource = new CancellationTokenSource();
+            _task = Task.Factory.StartNew(() => RunAsync(_cancellationSource.Token),
+                _cancellationSource.Token,
+                TaskCreationOptions.LongRunning,
+                TaskScheduler.Default)
+                .Unwrap();
+            _ = _task.ContinueWith(_ => Execute.OnUIThreadAsync(async () => await DisconnectAsync().ConfigureAwait(true))).Unwrap();
+        }
+
+        protected override async void Dispose(bool disposing)
+        {
+            base.Dispose(disposing);
+
+            _cancellationSource?.Cancel();
+
+            if (_task != null)
+                await _task.ConfigureAwait(false);
+
+            _cancellationSource?.Dispose();
+
+            _cancellationSource = null;
+            _task = null;
         }
     }
 }

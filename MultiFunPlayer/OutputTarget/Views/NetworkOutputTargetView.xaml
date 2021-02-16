@@ -21,12 +21,21 @@
                 <DockPanel LastChildFill="True"
                            Background="{StaticResource MaterialDesignToolBarBackground}">
                     <StackPanel Orientation="Horizontal" DockPanel.Dock="Left">
-                        <Button Style="{StaticResource MaterialDesignProgressToolBarButton}"
-                                Command="{s:Action ToggleConnectAsync}"
+                        <Button Command="{s:Action ToggleConnectAsync}"
                                 IsEnabled="{Binding CanToggleConnect}"
                                 material:ButtonProgressAssist.IsIndicatorVisible="{Binding IsConnectBusy}"
                                 material:ButtonProgressAssist.Value="-1"
                                 material:ButtonProgressAssist.IsIndeterminate="True">
+                            <Button.Style>
+                                <Style TargetType="{x:Type ButtonBase}" BasedOn="{StaticResource MaterialDesignProgressToolBarButton}">
+                                    <Setter Property="ToolTip" Value="Connect" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsConnected}" Value="True">
+                                            <Setter Property="ToolTip" Value="Disconnect" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Style>
                             <material:PackIcon Width="19" Height="19">
                                 <material:PackIcon.Style>
                                     <Style TargetType="material:PackIcon" BasedOn="{StaticResource {x:Type material:PackIcon}}">

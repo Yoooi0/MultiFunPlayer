@@ -14,7 +14,7 @@ using System.Threading;
 
 namespace MultiFunPlayer.OutputTarget.ViewModels
 {
-    public class PipeOutputTargetViewModel : AbstractOutputTarget
+    public class PipeOutputTargetViewModel : ThreadAbstractOutputTarget
     {
         public override string Name => "Pipe";
         public override OutputTargetStatus Status { get; protected set; }

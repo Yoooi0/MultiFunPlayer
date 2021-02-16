@@ -14,7 +14,7 @@ using System.Threading.Tasks;
 
 namespace MultiFunPlayer.OutputTarget.ViewModels
 {
-    public class SerialOutputTargetViewModel : AbstractOutputTarget
+    public class SerialOutputTargetViewModel : ThreadAbstractOutputTarget
     {
         public override string Name => "Serial";
         public override OutputTargetStatus Status { get; protected set; }
