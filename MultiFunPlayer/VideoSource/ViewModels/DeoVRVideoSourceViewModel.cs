@@ -1,33 +1,38 @@
 using MaterialDesignThemes.Wpf;
 using MultiFunPlayer.Common;
 using MultiFunPlayer.Common.Controls;
-using MultiFunPlayer.VideoSource.Settings;
+using MultiFunPlayer.Common.Messages;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Stylet;
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace MultiFunPlayer.VideoSource
+namespace MultiFunPlayer.VideoSource.ViewModels
 {
-    public class DeoVRVideoSource : AbstractVideoSource
+    public class DeoVRVideoSourceViewModel : AbstractVideoSource
     {
         private readonly IEventAggregator _eventAggregator;
-        private readonly DeoVRVideoSourceSettingsViewModel _settings;
 
         public override string Name => "DeoVR";
-        public override object SettingsViewModel => _settings;
+        public override VideoSourceStatus Status { get; protected set; }
 
-        public DeoVRVideoSource(IEventAggregator eventAggregator) : base(eventAggregator)
+        public IPEndPoint Endpoint { get; set; } = new IPEndPoint(IPAddress.Loopback, 23554);
+
+        public DeoVRVideoSourceViewModel(IEventAggregator eventAggregator) : base(eventAggregator)
         {
             _eventAggregator = eventAggregator;
-            _settings = new DeoVRVideoSourceSettingsViewModel();
         }
+
+        public bool IsConnected => Status == VideoSourceStatus.Connected;
+        public bool IsConnectBusy => Status == VideoSourceStatus.Connecting || Status == VideoSourceStatus.Disconnecting;
+        public bool CanToggleConnect => !IsConnectBusy;
 
         protected override async Task RunAsync(CancellationToken token)
         {
@@ -49,7 +54,10 @@ namespace MultiFunPlayer.VideoSource
 
             try
             {
-                if(string.Equals(_settings.Address, "localhost") || string.Equals(_settings.Address, "127.0.0.1"))
+                if (Endpoint == null)
+                    throw new Exception($"Endpoint cannot be null.");
+
+                if (string.Equals(Endpoint.Address, "localhost") || string.Equals(Endpoint.Address, "127.0.0.1"))
                     if (Process.GetProcessesByName("DeoVR").Length == 0)
                         throw new Exception($"Could not find a running {Name} process.");
 
@@ -58,7 +66,7 @@ namespace MultiFunPlayer.VideoSource
                     using var timeoutCancellationSource = new CancellationTokenSource(5000);
                     using var connectCancellationSource = CancellationTokenSource.CreateLinkedTokenSource(token, timeoutCancellationSource.Token);
 
-                    await client.ConnectAsync(_settings.Address, _settings.Port, connectCancellationSource.Token).ConfigureAwait(false);
+                    await client.ConnectAsync(Endpoint.Address, Endpoint.Port, connectCancellationSource.Token).ConfigureAwait(false);
                 }
 
                 using var stream = client.GetStream();
@@ -118,11 +126,27 @@ namespace MultiFunPlayer.VideoSource
             _eventAggregator.Publish(new VideoPlayingMessage(isPlaying: false));
         }
 
+        protected override void HandleSettings(JObject settings, AppSettingsMessageType type)
+        {
+            if (type == AppSettingsMessageType.Saving)
+            {
+                settings[nameof(Endpoint)] = new JValue(Endpoint.ToString());
+            }
+            else if (type == AppSettingsMessageType.Loading)
+            {
+                if (settings.TryGetValue(nameof(Endpoint), out var endpointToken) && IPEndPoint.TryParse(endpointToken.ToObject<string>(), out var endpoint))
+                    Endpoint = endpoint;
+            }
+        }
+
         public override async ValueTask<bool> CanConnectAsync(CancellationToken token)
         {
             try
             {
-                if(string.Equals(_settings.Address, "localhost") || string.Equals(_settings.Address, "127.0.0.1"))
+                if (Endpoint == null)
+                    return await ValueTask.FromResult(false).ConfigureAwait(false);
+
+                if(string.Equals(Endpoint.Address.ToString(), "localhost") || string.Equals(Endpoint.Address.ToString(), "127.0.0.1"))
                     if (Process.GetProcessesByName("DeoVR").Length == 0)
                         return await ValueTask.FromResult(false).ConfigureAwait(false);
 
@@ -131,7 +155,7 @@ namespace MultiFunPlayer.VideoSource
                     using var timeoutCancellationSource = new CancellationTokenSource(2500);
                     using var connectCancellationSource = CancellationTokenSource.CreateLinkedTokenSource(token, timeoutCancellationSource.Token);
 
-                    await client.ConnectAsync(_settings.Address, _settings.Port, connectCancellationSource.Token).ConfigureAwait(false);
+                    await client.ConnectAsync(Endpoint.Address, Endpoint.Port, connectCancellationSource.Token).ConfigureAwait(false);
                 }
 
                 using var stream = client.GetStream();

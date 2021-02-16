@@ -1,4 +1,4 @@
-using MultiFunPlayer.Common;
+﻿using MultiFunPlayer.Common;
 using MultiFunPlayer.Common.Messages;
 using Newtonsoft.Json.Linq;
 using PropertyChanged;
@@ -63,6 +63,14 @@ namespace MultiFunPlayer.OutputTarget
 
                 var settings = AxisSettings[axis];
                 Values[axis] = MathUtils.Lerp(settings.Minimum / 100f, settings.Maximum / 100f, value);
+            }
+
+            {
+                var settings = AxisSettings[DeviceAxis.L0];
+                var value = MathUtils.UnLerp(settings.Minimum / 100f, settings.Maximum / 100f, Values[DeviceAxis.L0]);
+                var factor = MathUtils.Map(value, 0.25f, 0.9f, 1f, 0f);
+                Values[DeviceAxis.R1] = MathUtils.Lerp(DeviceAxis.R1.DefaultValue(), Values[DeviceAxis.R1], factor);
+                Values[DeviceAxis.R2] = MathUtils.Lerp(DeviceAxis.R2.DefaultValue(), Values[DeviceAxis.R2], factor);
             }
         }
 

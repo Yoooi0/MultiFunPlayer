@@ -1,6 +1,7 @@
 using MultiFunPlayer.Common;
 using MultiFunPlayer.Common.Messages;
 using Newtonsoft.Json.Linq;
+using PropertyChanged;
 using Stylet;
 using System;
 using System.Collections.Generic;
@@ -10,13 +11,12 @@ using System.Threading.Tasks;
 
 namespace MultiFunPlayer.VideoSource
 {
-    public abstract class AbstractVideoSource : PropertyChangedBase, IVideoSource, IHandle<AppSettingsMessage>
+    public abstract class AbstractVideoSource : Screen, IVideoSource, IHandle<AppSettingsMessage>
     {
         private CancellationTokenSource _cancellationSource;
         private Task _task;
 
-        public VideoSourceStatus Status { get; protected set; }
-        public virtual object SettingsViewModel { get; }
+        [SuppressPropertyChangedWarnings] public abstract VideoSourceStatus Status { get; protected set; }
 
         protected AbstractVideoSource(IEventAggregator eventAggregator)
         {
@@ -75,24 +75,23 @@ namespace MultiFunPlayer.VideoSource
                 await Task.Delay(checkFrequency, token).ConfigureAwait(false);
         }
 
+        protected abstract void HandleSettings(JObject settings, AppSettingsMessageType type);
         public void Handle(AppSettingsMessage message)
         {
             if (message.Type == AppSettingsMessageType.Saving)
             {
-                if (!message.Settings.EnsureContainsObjects("VideoSource")
-                 || !message.Settings.TryGetObject(out var settings, "VideoSource"))
+                if (!message.Settings.EnsureContainsObjects("VideoSource", Name)
+                 || !message.Settings.TryGetObject(out var settings, "VideoSource", Name))
                     return;
 
-                if(SettingsViewModel != null)
-                    settings[Name] = JObject.FromObject(SettingsViewModel);
+                HandleSettings(settings, message.Type);
             }
             else if (message.Type == AppSettingsMessageType.Loading)
             {
-                if (!message.Settings.TryGetObject(out var settings, "VideoSource"))
+                if (!message.Settings.TryGetObject(out var settings, "VideoSource", Name))
                     return;
 
-                if(settings.TryGetObject(out var videoSourceSettings, Name))
-                    videoSourceSettings.Populate(SettingsViewModel);
+                HandleSettings(settings, message.Type);
             }
         }
 

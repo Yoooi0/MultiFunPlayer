@@ -17,7 +17,6 @@ namespace MultiFunPlayer.VideoSource
     {
         string Name { get; }
         VideoSourceStatus Status { get; }
-        object SettingsViewModel { get; }
 
         Task ConnectAsync();
         Task DisconnectAsync();

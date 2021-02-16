@@ -11,95 +11,32 @@
              d:DesignHeight="450" d:DesignWidth="800">
     <UserControl.Resources>
         <converters:VideoSourceStatusToBrushConverter x:Key="VideoSourceStatusToBrushConverter"/>
-        <converters:NullableToBooleanConverter x:Key="NullableToBooleanConverter"/>
     </UserControl.Resources>
     <material:Card material:ShadowAssist.ShadowDepth="Depth1" Margin="0 0 0 20">
-        <StackPanel Margin="20">
-            <ItemsControl ItemsSource="{Binding Sources, Mode=OneTime}">
-                <ItemsControl.ItemsPanel>
-                    <ItemsPanelTemplate>
-                        <UniformGrid Columns="4" Rows="1" IsItemsHost="True"/>
-                    </ItemsPanelTemplate>
-                </ItemsControl.ItemsPanel>
-                <ItemsControl.ItemTemplate>
+        <StackPanel>
+            <TabControl ItemsSource="{Binding Items}" 
+                        SelectedItem="{Binding SelectedItem}">
+                <TabControl.ItemTemplate>
                     <DataTemplate>
-                        <DockPanel LastChildFill="True" Margin="10 0 10 0">
-                            <material:Badged DockPanel.Dock="Top" 
-                                             BadgeColorZoneMode="PrimaryMid"
-                                             BadgePlacementMode="Right"
-                                             HorizontalAlignment="Stretch"
-                                             HorizontalContentAlignment="Stretch"
-                                             CornerRadius="3"
-                                             Padding="0 0 -13 0"
-                                             Margin="0 0 13 5">
-                                <material:Badged.Resources>
-                                    <Style TargetType="{x:Type material:Badged}" BasedOn="{StaticResource {x:Type material:Badged}}">
-                                        <Setter Property="Badge" Value="{x:Null}"/>
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding SettingsViewModel, Converter={StaticResource NullableToBooleanConverter}}" Value="False">
-                                                <Setter Property="Badge">
-                                                    <Setter.Value>
-                                                        <Button Style="{StaticResource MaterialDesignFlatButton}"
-                                                                Foreground="{StaticResource PrimaryHueMidForegroundBrush}"
-                                                                Height="14"
-                                                                Width="14"
-                                                                Padding="0"
-                                                                Command="{x:Static material:DialogHost.OpenDialogCommand}">
-                                                            <Button.CommandParameter>
-                                                                <Grid Margin="20">
-                                                                    <Button Style="{StaticResource MaterialDesignFlatButton}"
-                                                                            material:RippleAssist.Feedback="Black"
-                                                                            Foreground="Black"
-                                                                            Height="24"
-                                                                            Width="24"
-                                                                            Padding="0"
-                                                                            HorizontalAlignment="Right"
-                                                                            VerticalAlignment="Top"
-                                                                            Margin="0 -15 -15 0"
-                                                                            Command="{x:Static material:DialogHost.CloseDialogCommand}">
-                                                                        <material:PackIcon Kind="Close" 
-                                                                                            Height="20" 
-                                                                                            Width="20"/>
-                                                                    </Button>
-                                                                    <DockPanel LastChildFill="True">
-                                                                        <TextBlock Text="{Binding Name, StringFormat={}{0} Settings:}"
-                                                                               DockPanel.Dock="Top"
-                                                                               FontSize="16"
-                                                                               FontWeight="Bold"/>
-                                                                        <ContentControl DockPanel.Dock="Bottom" 
-                                                                                        s:View.Model="{Binding SettingsViewModel}"/>
-                                                                    </DockPanel>
-                                                                </Grid>
-                                                            </Button.CommandParameter>
-                                                            <material:PackIcon Kind="Gear" Height="12" Width="12"/>
-                                                        </Button>
-                                                    </Setter.Value>
-                                                </Setter>
-                                            </DataTrigger>
-                                            <Trigger Property="IsEnabled" Value="False">
-                                                <Setter Property="BadgeBackground">
-                                                    <Setter.Value>
-                                                        <SolidColorBrush Color="{StaticResource Primary500}"
-                                                                         Opacity="0.23"/>
-                                                    </Setter.Value>
-                                                </Setter>
-                                            </Trigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </material:Badged.Resources>
-                                <Button Style="{StaticResource MaterialDesignRaisedLightButton}"
-                                        Height="24"
-                                        Content="{Binding Name}" 
-                                        Click="{s:Action OnSourceClick}"/>
-                            </material:Badged>
-                            <TextBlock Text="{Binding Status}"
-                                       Foreground="{Binding Status, Converter={StaticResource VideoSourceStatusToBrushConverter}}"
-                                       DockPanel.Dock="Bottom"
-                                       TextAlignment="Center"/>
+                        <StackPanel Orientation="Vertical" Margin="10 0 10 0" Width="75">
+                            <TextBlock Text="{Binding Name}" 
+                                       HorizontalAlignment="Center"/>
+                            <TextBlock Text="{Binding Status}" 
+                                       HorizontalAlignment="Center"
+                                       FontWeight="Light"
+                                       FontSize="10" 
+                                       Foreground="{Binding Status, Converter={StaticResource VideoSourceStatusToBrushConverter}}"/>
+                        </StackPanel>
+                    </DataTemplate>
+                </TabControl.ItemTemplate>
+                <TabControl.ContentTemplate>
+                    <DataTemplate>
+                        <DockPanel LastChildFill="True">
+                            <ContentControl DockPanel.Dock="Bottom" s:View.Model="{Binding}"/>
                         </DockPanel>
                     </DataTemplate>
-                </ItemsControl.ItemTemplate>
-            </ItemsControl>
+                </TabControl.ContentTemplate>
+            </TabControl>
         </StackPanel>
     </material:Card>
 </UserControl>

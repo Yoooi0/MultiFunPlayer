@@ -12,7 +12,7 @@ namespace MultiFunPlayer.Common.Converters
             => value switch
             {
                 VideoSourceStatus.Connected => new SolidColorBrush(Color.FromRgb(0x00, 0x80, 0x00)),
-                VideoSourceStatus.Disconnected => new SolidColorBrush(Color.FromRgb(0x00, 0x00, 0x00)),
+                VideoSourceStatus.Disconnected => new SolidColorBrush(Color.FromRgb(0xf5, 0x3e, 0x2e)),
                 VideoSourceStatus.Connecting or VideoSourceStatus.Disconnecting => new SolidColorBrush(Color.FromRgb(0xb3, 0x9c, 0x09)),
                 _ => null
             };

@@ -1,4 +1,6 @@
-﻿using MultiFunPlayer.VideoSource;
+﻿using MultiFunPlayer.Common;
+using MultiFunPlayer.Common.Messages;
+using MultiFunPlayer.VideoSource;
 using Stylet;
 using System;
 using System.Collections.Generic;
@@ -9,18 +11,21 @@ using System.Windows;
 
 namespace MultiFunPlayer.ViewModels
 {
-    public class VideoSourceViewModel : Screen, IDisposable
+    public class VideoSourceViewModel : Conductor<IVideoSource>.Collection.AllActive, IHandle<AppSettingsMessage>, IDisposable
     {
         private Task _task;
         private CancellationTokenSource _cancellationSource;
         private IVideoSource _currentSource;
         private SemaphoreSlim _semaphore;
 
-        public List<IVideoSource> Sources { get; }
+        public IVideoSource SelectedItem { get; set; }
 
-        public VideoSourceViewModel(IEnumerable<IVideoSource> sources)
+        public VideoSourceViewModel(IEventAggregator eventAggregator, IEnumerable<IVideoSource> sources)
         {
-            Sources = sources.ToList();
+            eventAggregator.Subscribe(this);
+            foreach (var source in sources)
+                Items.Add(source);
+
             _currentSource = null;
 
             _semaphore = new SemaphoreSlim(1, 1);
@@ -32,10 +37,34 @@ namespace MultiFunPlayer.ViewModels
                 .Unwrap();
         }
 
-        public async void OnSourceClick(object sender, RoutedEventArgs e)
+        protected override void OnActivate()
         {
-            var source = (sender as FrameworkElement)?.DataContext as IVideoSource;
+            ActivateAndSetParent(Items);
+            base.OnActivate();
+        }
 
+        public void Handle(AppSettingsMessage message)
+        {
+            if (message.Type == AppSettingsMessageType.Saving)
+            {
+                if (!message.Settings.EnsureContainsObjects("VideoSource")
+                 || !message.Settings.TryGetObject(out var settings, "VideoSource"))
+                    return;
+
+                settings[nameof(SelectedItem)] = SelectedItem.Name;
+            }
+            else if (message.Type == AppSettingsMessageType.Loading)
+            {
+                if (!message.Settings.TryGetObject(out var settings, "VideoSource"))
+                    return;
+
+                if (settings.TryGetValue(nameof(SelectedItem), out var selectedItemToken))
+                    SelectedItem = Items.FirstOrDefault(x => string.Equals(x.Name, selectedItemToken.ToObject<string>())) ?? Items.First();
+            }
+        }
+
+        public async void ToggleConnectAsync(IVideoSource source)
+        {
             await _semaphore.WaitAsync(_cancellationSource.Token).ConfigureAwait(false);
             if (_currentSource == source)
             {
@@ -89,7 +118,7 @@ namespace MultiFunPlayer.ViewModels
                         _semaphore.Release();
                     }
 
-                    foreach(var source in Sources)
+                    foreach(var source in Items)
                     {
                         if (_currentSource != null)
                             break;

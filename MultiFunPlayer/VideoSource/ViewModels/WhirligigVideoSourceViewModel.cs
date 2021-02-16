@@ -1,6 +1,8 @@
 ﻿using MaterialDesignThemes.Wpf;
 using MultiFunPlayer.Common;
 using MultiFunPlayer.Common.Controls;
+using MultiFunPlayer.Common.Messages;
+using Newtonsoft.Json.Linq;
 using Stylet;
 using System;
 using System.Diagnostics;
@@ -11,18 +13,23 @@ using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace MultiFunPlayer.VideoSource
+namespace MultiFunPlayer.VideoSource.ViewModels
 {
-    public class WhirligigVideoSource : AbstractVideoSource
+    public class WhirligigVideoSourceViewModel : AbstractVideoSource
     {
         private readonly IEventAggregator _eventAggregator;
 
         public override string Name => "Whirligig";
+        public override VideoSourceStatus Status { get; protected set; }
 
-        public WhirligigVideoSource(IEventAggregator eventAggregator) : base(eventAggregator)
+        public WhirligigVideoSourceViewModel(IEventAggregator eventAggregator) : base(eventAggregator)
         {
             _eventAggregator = eventAggregator;
         }
+
+        public bool IsConnected => Status == VideoSourceStatus.Connected;
+        public bool IsConnectBusy => Status == VideoSourceStatus.Connecting || Status == VideoSourceStatus.Disconnecting;
+        public bool CanToggleConnect => !IsConnectBusy;
 
         protected override async Task RunAsync(CancellationToken token)
         {
@@ -57,12 +64,12 @@ namespace MultiFunPlayer.VideoSource
                         if (parts.Length == 2 && float.TryParse(parts[1].Replace(',', '.'), NumberStyles.Any, NumberFormatInfo.InvariantInfo, out var duration) && duration >= 0)
                             _eventAggregator.Publish(new VideoDurationMessage(TimeSpan.FromSeconds(duration)));
                     }
-                    else if(message.Length >= 1 && message[0] == 'P')
+                    else if (message.Length >= 1 && message[0] == 'P')
                     {
                         var parts = message.Split(' ', 2);
                         _eventAggregator.Publish(new VideoPlayingMessage(isPlaying: true));
 
-                        if(parts.Length == 2 && float.TryParse(parts[1].Replace(',', '.'), NumberStyles.Any, NumberFormatInfo.InvariantInfo, out var position) && position >= 0)
+                        if (parts.Length == 2 && float.TryParse(parts[1].Replace(',', '.'), NumberStyles.Any, NumberFormatInfo.InvariantInfo, out var position) && position >= 0)
                             _eventAggregator.Publish(new VideoPositionMessage(TimeSpan.FromSeconds(position)));
                     }
                 }
@@ -76,6 +83,10 @@ namespace MultiFunPlayer.VideoSource
 
             _eventAggregator.Publish(new VideoFileChangedMessage(null));
             _eventAggregator.Publish(new VideoPlayingMessage(isPlaying: false));
+        }
+
+        protected override void HandleSettings(JObject settings, AppSettingsMessageType type)
+        {
         }
 
         public override async ValueTask<bool> CanConnectAsync(CancellationToken token)
