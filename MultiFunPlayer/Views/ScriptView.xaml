@@ -18,6 +18,7 @@
         <converters:InvertedNullableToBooleanConverter x:Key="InvertedNullableToBooleanConverter"/>
         <converters:MultiObjectToArrayConverter x:Key="MultiObjectToArrayConverter"/>
         <converters:MultiBooleanToBooleanAndConverter x:Key="MultiBooleanToBooleanAndConverter"/>
+        <converters:MultiBooleanToBooleanOrConverter x:Key="MultiBooleanToBooleanOrConverter"/>
         <material:NullableToVisibilityConverter x:Key="NullableToVisibilityConverter"/>
     </UserControl.Resources>
     <material:Card material:ShadowAssist.ShadowDepth="Depth1" Margin="0 0 0 20">
@@ -402,7 +403,9 @@
                                     </Border>
                                 </DockPanel>
                                 <StackPanel DockPanel.Dock="Bottom" Margin="20">
-                                    <DockPanel LastChildFill="True" Margin="0 0 0 10" IsEnabled="{Binding Value.LinkAxis, Converter={StaticResource NullableToBooleanConverter}}">
+                                    <DockPanel LastChildFill="True" 
+                                               Margin="0 0 0 10" 
+                                               IsEnabled="{Binding Value.LinkAxis, Converter={StaticResource NullableToBooleanConverter}}">
                                         <TextBlock Text="File:" 
                                                    DockPanel.Dock="Left" 
                                                    Margin="0 0 10 0" 
@@ -421,6 +424,12 @@
                                                  TextAlignment="Left"/>
                                     </DockPanel>
                                     <DockPanel Margin="0 0 0 10">
+                                        <DockPanel.IsEnabled>
+                                            <MultiBinding Converter="{StaticResource MultiBooleanToBooleanOrConverter}">
+                                                <Binding Path="Value.LinkAxis" Converter="{StaticResource InvertedNullableToBooleanConverter}"/>
+                                                <Binding Path="Value.Script" Converter="{StaticResource NullableToBooleanConverter}"/>
+                                            </MultiBinding>
+                                        </DockPanel.IsEnabled>
                                         <TextBlock Text="Link:" DockPanel.Dock="Left" Margin="0 0 10 0" VerticalAlignment="Center"/>
                                         <ComboBox DockPanel.Dock="Left"
                                                   Margin="0 0 10 0" 
