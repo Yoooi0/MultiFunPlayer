@@ -8,21 +8,13 @@ using System.Linq;
 
 namespace MultiFunPlayer.ViewModels
 {
-    public class OutputTargetViewModel : Conductor<IOutputTarget>.Collection.AllActive, IHandle<AppSettingsMessage>, IDisposable
+    public class OutputTargetViewModel : Conductor<IOutputTarget>.Collection.OneActive, IHandle<AppSettingsMessage>, IDisposable
     {
-        public IOutputTarget SelectedItem { get; set; }
-
         public OutputTargetViewModel(IEventAggregator eventAggregator, IEnumerable<IOutputTarget> targets)
         {
             eventAggregator.Subscribe(this);
             foreach (var target in targets)
                 Items.Add(target);
-        }
-
-        protected override void OnActivate()
-        {
-            ActivateAndSetParent(Items);
-            base.OnActivate();
         }
 
         public void Handle(AppSettingsMessage message)
@@ -33,16 +25,27 @@ namespace MultiFunPlayer.ViewModels
                  || !message.Settings.TryGetObject(out var settings, "OutputTarget"))
                     return;
 
-                settings[nameof(SelectedItem)] = SelectedItem.Name;
+                settings[nameof(ActiveItem)] = ActiveItem.Name;
             }
             else if (message.Type == AppSettingsMessageType.Loading)
             {
                 if (!message.Settings.TryGetObject(out var settings, "OutputTarget"))
                     return;
 
-                if (settings.TryGetValue(nameof(SelectedItem), out var selectedItemToken))
-                    SelectedItem = Items.FirstOrDefault(x => string.Equals(x.Name, selectedItemToken.ToObject<string>())) ?? Items.First();
+                if (settings.TryGetValue(nameof(ActiveItem), out var selectedItemToken))
+                    ChangeActiveItem(Items.FirstOrDefault(x => string.Equals(x.Name, selectedItemToken.ToObject<string>())) ?? Items.First(), closePrevious: false);
             }
+        }
+
+        protected override void ChangeActiveItem(IOutputTarget newItem, bool closePrevious)
+        {
+            if (ActiveItem != null && newItem != null)
+            {
+                newItem.ContentVisible = ActiveItem.ContentVisible;
+                ActiveItem.ContentVisible = false;
+            }
+
+            base.ChangeActiveItem(newItem, closePrevious);
         }
 
         protected virtual void Dispose(bool disposing) { }

@@ -22,8 +22,9 @@
                     BorderBrush="{StaticResource PrimaryHueLightBrush}">
                 <DockPanel LastChildFill="True"
                            Background="{StaticResource MaterialDesignToolBarBackground}">
-                    <StackPanel Orientation="Horizontal" DockPanel.Dock="Left">
-                        <Button Command="{s:Action ToggleConnectAsync}"
+                    <DockPanel DockPanel.Dock="Left" LastChildFill="False">
+                        <Button DockPanel.Dock="Left"
+                                Command="{s:Action ToggleConnectAsync}"
                                 IsEnabled="{Binding CanToggleConnect}"                                           
                                 ToolTipService.InitialShowDelay="0"
                                 ToolTipService.Placement="Top"
@@ -60,7 +61,8 @@
                                 </material:PackIcon.Style>
                             </material:PackIcon>
                         </Button>
-                        <material:PopupBox StaysOpen="True" 
+                        <material:PopupBox DockPanel.Dock="Left"
+                                           StaysOpen="True" 
                                            Style="{StaticResource MaterialDesignToolBarPopupBox}"
                                            IsEnabled="{Binding DeviceSettings.Count, Converter={StaticResource NotZeroConverter}}"
                                            ToolTipService.InitialShowDelay="0"
@@ -95,11 +97,40 @@
                                 </ItemsControl>
                             </Grid>
                         </material:PopupBox>
-                    </StackPanel>
+                        
+                        <ToggleButton DockPanel.Dock="Right"
+                                      IsChecked="{Binding ContentVisible}"                                
+                                      ToolTipService.InitialShowDelay="0"
+                                      ToolTipService.Placement="Top"
+                                      material:ToggleButtonAssist.OnContent="a">
+                            <ToggleButton.Resources>
+                                <Style TargetType="{x:Type ToggleButton}" BasedOn="{StaticResource MaterialDesignProgressToolBarButton}">
+                                    <Setter Property="ToolTip" Value="Open settings" />
+                                    <Setter Property="Content">
+                                        <Setter.Value>
+                                            <material:PackIcon Kind="ChevronDown" Width="19" Height="19"/>
+                                        </Setter.Value>
+                                    </Setter>
+                                    <Style.Triggers>
+                                        <Trigger Property="IsChecked" Value="True">
+                                            <Setter Property="ToolTip" Value="Close settings" />
+                                            <Setter Property="Content">
+                                                <Setter.Value>
+                                                    <material:PackIcon Kind="ChevronUp" Width="19" Height="19"/>
+                                                </Setter.Value>
+                                            </Setter>
+                                        </Trigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </ToggleButton.Resources>
+                        </ToggleButton>
+                    </DockPanel>
                 </DockPanel>
             </Border>
         </DockPanel>
-        <StackPanel DockPanel.Dock="Bottom" Margin="20">
+        <StackPanel DockPanel.Dock="Bottom" 
+                    Margin="20"
+                    Visibility="{Binding ContentVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
             <DockPanel LastChildFill="True" Margin="0 0 0 20">
                 <DockPanel DockPanel.Dock="Left" LastChildFill="False">
                     <TextBox Text="{Binding Endpoint, Converter={StaticResource IPEndPointToStringConverter}}"

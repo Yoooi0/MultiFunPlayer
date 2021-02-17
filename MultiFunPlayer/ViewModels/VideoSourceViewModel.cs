@@ -10,14 +10,12 @@ using System.Threading.Tasks;
 
 namespace MultiFunPlayer.ViewModels
 {
-    public class VideoSourceViewModel : Conductor<IVideoSource>.Collection.AllActive, IHandle<AppSettingsMessage>, IDisposable
+    public class VideoSourceViewModel : Conductor<IVideoSource>.Collection.OneActive, IHandle<AppSettingsMessage>, IDisposable
     {
         private Task _task;
         private CancellationTokenSource _cancellationSource;
         private IVideoSource _currentSource;
         private SemaphoreSlim _semaphore;
-
-        public IVideoSource SelectedItem { get; set; }
 
         public VideoSourceViewModel(IEventAggregator eventAggregator, IEnumerable<IVideoSource> sources)
         {
@@ -36,12 +34,6 @@ namespace MultiFunPlayer.ViewModels
                 .Unwrap();
         }
 
-        protected override void OnActivate()
-        {
-            ActivateAndSetParent(Items);
-            base.OnActivate();
-        }
-
         public void Handle(AppSettingsMessage message)
         {
             if (message.Type == AppSettingsMessageType.Saving)
@@ -50,15 +42,15 @@ namespace MultiFunPlayer.ViewModels
                  || !message.Settings.TryGetObject(out var settings, "VideoSource"))
                     return;
 
-                settings[nameof(SelectedItem)] = SelectedItem.Name;
+                settings[nameof(ActiveItem)] = ActiveItem.Name;
             }
             else if (message.Type == AppSettingsMessageType.Loading)
             {
                 if (!message.Settings.TryGetObject(out var settings, "VideoSource"))
                     return;
 
-                if (settings.TryGetValue(nameof(SelectedItem), out var selectedItemToken))
-                    SelectedItem = Items.FirstOrDefault(x => string.Equals(x.Name, selectedItemToken.ToObject<string>())) ?? Items.First();
+                if (settings.TryGetValue(nameof(ActiveItem), out var selectedItemToken))
+                    ChangeActiveItem(Items.FirstOrDefault(x => string.Equals(x.Name, selectedItemToken.ToObject<string>())) ?? Items.First(), closePrevious: false);
             }
         }
 
@@ -141,6 +133,17 @@ namespace MultiFunPlayer.ViewModels
                 }
             }
             catch (OperationCanceledException) { }
+        }
+
+        protected override void ChangeActiveItem(IVideoSource newItem, bool closePrevious)
+        {
+            if(ActiveItem != null && newItem != null)
+            {
+                newItem.ContentVisible = ActiveItem.ContentVisible;
+                ActiveItem.ContentVisible = false;
+            }
+
+            base.ChangeActiveItem(newItem, closePrevious);
         }
 
         protected async virtual void Dispose(bool disposing)

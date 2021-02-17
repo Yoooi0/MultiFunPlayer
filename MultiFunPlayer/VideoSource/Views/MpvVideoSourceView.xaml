@@ -15,8 +15,9 @@
                     BorderBrush="{StaticResource PrimaryHueLightBrush}">
                 <DockPanel LastChildFill="True"
                            Background="{StaticResource MaterialDesignToolBarBackground}">
-                    <StackPanel Orientation="Horizontal" DockPanel.Dock="Left">
-                        <Button Command="{s:Action ToggleConnectAsync}"
+                    <DockPanel DockPanel.Dock="Left" LastChildFill="False">
+                        <Button DockPanel.Dock="Left"
+                                Command="{s:Action ToggleConnectAsync}"
                                 CommandParameter="{Binding}"
                                 s:View.ActionTarget="{Binding DataContext.Parent, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}"
                                 IsEnabled="{Binding CanToggleConnect}"                                           
@@ -55,14 +56,42 @@
                                 </material:PackIcon.Style>
                             </material:PackIcon>
                         </Button>
-                    </StackPanel>
+                        
+                        <ToggleButton DockPanel.Dock="Right"
+                                      IsChecked="{Binding ContentVisible}"                                
+                                      ToolTipService.InitialShowDelay="0"
+                                      ToolTipService.Placement="Top"
+                                      material:ToggleButtonAssist.OnContent="a">
+                            <ToggleButton.Resources>
+                                <Style TargetType="{x:Type ToggleButton}" BasedOn="{StaticResource MaterialDesignProgressToolBarButton}">
+                                    <Setter Property="ToolTip" Value="Open settings" />
+                                    <Setter Property="Content">
+                                        <Setter.Value>
+                                            <material:PackIcon Kind="ChevronDown" Width="19" Height="19"/>
+                                        </Setter.Value>
+                                    </Setter>
+                                    <Style.Triggers>
+                                        <Trigger Property="IsChecked" Value="True">
+                                            <Setter Property="ToolTip" Value="Close settings" />
+                                            <Setter Property="Content">
+                                                <Setter.Value>
+                                                    <material:PackIcon Kind="ChevronUp" Width="19" Height="19"/>
+                                                </Setter.Value>
+                                            </Setter>
+                                        </Trigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </ToggleButton.Resources>
+                        </ToggleButton>
+                    </DockPanel>
                 </DockPanel>
             </Border>
         </DockPanel>
-        <StackPanel DockPanel.Dock="Bottom" Margin="20">
+        <StackPanel DockPanel.Dock="Bottom" 
+                    Margin="20"
+                    Visibility="{Binding ContentVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
             <DockPanel LastChildFill="True" 
                        DockPanel.Dock="Top"
-                       Margin="0 10 0 0" 
                        IsEnabled="{Binding IsDownloading, Converter={StaticResource NotConverter}}">
                 <TextBlock Text="Executable:"
                            DockPanel.Dock="Left"

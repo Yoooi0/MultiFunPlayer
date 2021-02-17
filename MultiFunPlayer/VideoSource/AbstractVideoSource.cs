@@ -17,6 +17,7 @@ namespace MultiFunPlayer.VideoSource
         private Task _task;
 
         [SuppressPropertyChangedWarnings] public abstract VideoSourceStatus Status { get; protected set; }
+        public bool ContentVisible { get; set; }
 
         protected AbstractVideoSource(IEventAggregator eventAggregator)
         {

@@ -14,6 +14,7 @@ namespace MultiFunPlayer.OutputTarget
     {
         string Name { get; }
         OutputTargetStatus Status { get; }
+        bool ContentVisible { get; set; }
 
         Task ToggleConnectAsync();
     }

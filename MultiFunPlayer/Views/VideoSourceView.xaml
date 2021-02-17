@@ -15,7 +15,7 @@
     <material:Card material:ShadowAssist.ShadowDepth="Depth1" Margin="0 0 0 20">
         <StackPanel>
             <TabControl ItemsSource="{Binding Items}" 
-                        SelectedItem="{Binding SelectedItem}">
+                        SelectedItem="{Binding ActiveItem}">
                 <TabControl.ItemTemplate>
                     <DataTemplate>
                         <StackPanel Orientation="Vertical" Margin="10 0 10 0" Width="75">
@@ -31,9 +31,7 @@
                 </TabControl.ItemTemplate>
                 <TabControl.ContentTemplate>
                     <DataTemplate>
-                        <DockPanel LastChildFill="True">
-                            <ContentControl DockPanel.Dock="Bottom" s:View.Model="{Binding}"/>
-                        </DockPanel>
+                        <ContentControl s:View.Model="{Binding}"/>
                     </DataTemplate>
                 </TabControl.ContentTemplate>
             </TabControl>
