@@ -398,6 +398,125 @@
                                                         </MenuItem>
                                                     </MenuItem>
                                                 </Menu>
+
+                                                <material:PopupBox DockPanel.Dock="Left"
+                                                                   StaysOpen="True" 
+                                                                   Style="{StaticResource MaterialDesignToolBarPopupBox}"
+                                                                   ToolTipService.InitialShowDelay="0"
+                                                                   ToolTipService.Placement="Top"
+                                                                   ToolTip="Link axis">
+                                                    <material:PopupBox.IsEnabled>
+                                                        <MultiBinding Converter="{StaticResource MultiBooleanToBooleanOrConverter}">
+                                                            <Binding Path="Value.LinkAxis" Converter="{StaticResource InvertedNullableToBooleanConverter}"/>
+                                                            <Binding Path="Value.Script" Converter="{StaticResource NullableToBooleanConverter}"/>
+                                                        </MultiBinding>
+                                                    </material:PopupBox.IsEnabled>
+                                                    <material:PopupBox.ToggleContent>
+                                                        <Border Width="35" Height="35">
+                                                            <material:PackIcon Kind="LinkVariant" 
+                                                                               Width="19" 
+                                                                               Height="19" 
+                                                                               HorizontalAlignment="Center" 
+                                                                               VerticalAlignment="Center"/>
+                                                        </Border>
+                                                    </material:PopupBox.ToggleContent>
+                                                    <Grid Width="300" Margin="10">
+                                                        <StackPanel>
+                                                            <StackPanel.IsEnabled>
+                                                                <MultiBinding Converter="{StaticResource MultiBooleanToBooleanOrConverter}">
+                                                                    <Binding Path="Value.LinkAxis" Converter="{StaticResource InvertedNullableToBooleanConverter}"/>
+                                                                    <Binding Path="Value.Script" Converter="{StaticResource NullableToBooleanConverter}"/>
+                                                                </MultiBinding>
+                                                            </StackPanel.IsEnabled>
+                                                            <DockPanel Margin="0 0 0 10" LastChildFill="False">
+                                                                <TextBlock Text="Target:" 
+                                                                           DockPanel.Dock="Left"
+                                                                           Margin="0 0 10 0" 
+                                                                           VerticalAlignment="Center"/>
+                                                                <ComboBox DockPanel.Dock="Left"
+                                                                          Margin="0 0 10 0" 
+                                                                          material:TextFieldAssist.HasClearButton="True"
+                                                                          Width="50" 
+                                                                          ItemsSource="{Binding Source={controls:EnumBindingSource {x:Type common:DeviceAxis}}}" 
+                                                                          SelectedItem="{Binding Value.LinkAxis}"
+                                                                          SelectionChanged="{s:Action OnSelectedLinkAxisChanged}"/>
+                                                            </DockPanel>
+
+                                                            <DockPanel LastChildFill="False">
+                                                                <TextBlock DockPanel.Dock="Left"
+                                                                           Text="Randomizer:"
+                                                                           Typography.Capitals="AllSmallCaps"
+                                                                           FontWeight="Bold"
+                                                                           Margin="0 0 5 0"
+                                                                           VerticalAlignment="Center"
+                                                                           HorizontalAlignment="Left"/>
+                                                                <material:ColorZone DockPanel.Dock="Left"
+                                                                                    VerticalAlignment="Center"
+                                                                                    CornerRadius="7"
+                                                                                    Mode="PrimaryLight"
+                                                                                    Width="14"
+                                                                                    Height="14"
+                                                                                    ToolTipService.InitialShowDelay="0"
+                                                                                    ToolTipService.ShowDuration="99999"
+                                                                                    ToolTipService.Placement="Top">
+                                                                    <material:ColorZone.ToolTip>
+                                                                        <TextBlock>
+                                                                            Strength: mixes the target axis values with<LineBreak/>randomly generated values where:<LineBreak/>
+                                                                            0=target axis script values<LineBreak/>
+                                                                            100=randomly generated values<LineBreak/><LineBreak/>
+                                                                            Speed: determines the rate of change of<LineBreak/>the randomly generated values
+                                                                        </TextBlock>
+                                                                    </material:ColorZone.ToolTip>
+                                                                    <material:PackIcon Kind="Help"
+                                                                                       Width="10"
+                                                                                       Height="10"
+                                                                                       HorizontalAlignment="Center"
+                                                                                       VerticalAlignment="Center"/>
+                                                                </material:ColorZone>
+                                                            </DockPanel>
+                                                        
+                                                            <DockPanel Margin="0 0 0 10">
+                                                                <TextBlock Text="Strength:" 
+                                                                           DockPanel.Dock="Left"
+                                                                           Width="60"
+                                                                           Margin="0 0 10 0" 
+                                                                           VerticalAlignment="Center"/>
+                                                                <Slider DockPanel.Dock="Right"
+                                                                        Value="{Binding Value.RandomizerStrength}"
+                                                                        Style="{StaticResource MaterialDesignDiscreteSlider}"
+                                                                        IsEnabled="{Binding Value.LinkAxis, Converter={StaticResource InvertedNullableToBooleanConverter}}"
+                                                                        Margin="0 -38 0 0"
+                                                                        Minimum="0" 
+                                                                        Maximum="100"
+                                                                        TickFrequency="1"
+                                                                        VerticalAlignment="Center"
+                                                                        IsSnapToTickEnabled="True"
+                                                                        MouseDoubleClick="{s:Action OnSliderDoubleClick}"
+                                                                        ValueChanged="{s:Action OnRandomizerSliderValueChanged}"/>
+                                                            </DockPanel>
+                                                            
+                                                            <DockPanel>
+                                                                <TextBlock Text="Speed:" 
+                                                                           DockPanel.Dock="Left"
+                                                                           Width="60"
+                                                                           Margin="0 0 10 0"
+                                                                           VerticalAlignment="Center"/>
+                                                                <Slider DockPanel.Dock="Right"
+                                                                        Value="{Binding Value.RandomizerSpeed}"    
+                                                                        Style="{StaticResource MaterialDesignDiscreteSlider}"
+                                                                        IsEnabled="{Binding Value.LinkAxis, Converter={StaticResource InvertedNullableToBooleanConverter}}"
+                                                                        Margin="0 -38 0 0"
+                                                                        Minimum="0" 
+                                                                        Maximum="100"
+                                                                        TickFrequency="1"
+                                                                        VerticalAlignment="Center"
+                                                                        IsSnapToTickEnabled="True"
+                                                                        MouseDoubleClick="{s:Action OnSliderDoubleClick}"
+                                                                        ValueChanged="{s:Action OnRandomizerSliderValueChanged}"/>
+                                                            </DockPanel>
+                                                        </StackPanel>
+                                                    </Grid>
+                                                </material:PopupBox>
                                             </StackPanel>
                                         </DockPanel>
                                     </Border>
@@ -422,50 +541,6 @@
                                                  DockPanel.Dock="Right" 
                                                  Margin="0 -10 0 0"
                                                  TextAlignment="Left"/>
-                                    </DockPanel>
-                                    <DockPanel Margin="0 0 0 10">
-                                        <DockPanel.IsEnabled>
-                                            <MultiBinding Converter="{StaticResource MultiBooleanToBooleanOrConverter}">
-                                                <Binding Path="Value.LinkAxis" Converter="{StaticResource InvertedNullableToBooleanConverter}"/>
-                                                <Binding Path="Value.Script" Converter="{StaticResource NullableToBooleanConverter}"/>
-                                            </MultiBinding>
-                                        </DockPanel.IsEnabled>
-                                        <TextBlock Text="Link:" DockPanel.Dock="Left" Margin="0 0 10 0" VerticalAlignment="Center"/>
-                                        <ComboBox DockPanel.Dock="Left"
-                                                  Margin="0 0 10 0" 
-                                                  material:TextFieldAssist.HasClearButton="True"
-                                                  Width="50" 
-                                                  ItemsSource="{Binding Source={controls:EnumBindingSource {x:Type common:DeviceAxis}}}" 
-                                                  SelectedItem="{Binding Value.LinkAxis}"
-                                                  SelectionChanged="{s:Action OnSelectedLinkAxisChanged}"/>
-                                        <TextBlock Text="Speed:" DockPanel.Dock="Left" Margin="0 0 10 0" VerticalAlignment="Center"/>
-                                        <Slider Value="{Binding Value.RandomizerSpeed}"    
-                                                Style="{StaticResource MaterialDesignDiscreteSlider}"
-                                                IsEnabled="{Binding Value.LinkAxis, Converter={StaticResource InvertedNullableToBooleanConverter}}"
-                                                Margin="0 -38 10 0"
-                                                DockPanel.Dock="Left" 
-                                                Width="140"
-                                                Minimum="0" 
-                                                Maximum="100"
-                                                TickFrequency="1"
-                                                VerticalAlignment="Center"
-                                                IsSnapToTickEnabled="True"
-                                                MouseDoubleClick="{s:Action OnSliderDoubleClick}"
-                                                ValueChanged="{s:Action OnRandomizerSliderValueChanged}"/>
-
-                                        <TextBlock Text="Strength:" DockPanel.Dock="Left" Margin="0 0 10 0" VerticalAlignment="Center"/>
-                                        <Slider Value="{Binding Value.RandomizerStrength}"
-                                                Style="{StaticResource MaterialDesignDiscreteSlider}"
-                                                IsEnabled="{Binding Value.LinkAxis, Converter={StaticResource InvertedNullableToBooleanConverter}}"
-                                                Margin="0 -38 0 0"
-                                                DockPanel.Dock="Left" 
-                                                Minimum="0" 
-                                                Maximum="100"
-                                                TickFrequency="1"
-                                                VerticalAlignment="Center"
-                                                IsSnapToTickEnabled="True"
-                                                MouseDoubleClick="{s:Action OnSliderDoubleClick}"
-                                                ValueChanged="{s:Action OnRandomizerSliderValueChanged}"/>
                                     </DockPanel>
                                     <DockPanel LastChildFill="True" Margin="0 0 0 10">
                                         <TextBlock Text="Offset:" DockPanel.Dock="Left" Margin="0 0 10 0" VerticalAlignment="Center"/>

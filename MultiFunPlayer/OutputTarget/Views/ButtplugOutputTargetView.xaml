@@ -77,7 +77,7 @@
                                                        VerticalAlignment="Center"/>
                                 </Border>
                             </material:PopupBox.ToggleContent>
-                            <Grid Width="300" Margin="8,8,8,8">
+                            <Grid Width="300" Margin="10">
                                 <ItemsControl ItemsSource="{Binding DeviceSettings}">
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>
