@@ -23,8 +23,6 @@ namespace MultiFunPlayer.ViewModels
     public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         IHandle<VideoPositionMessage>, IHandle<VideoPlayingMessage>, IHandle<VideoFileChangedMessage>, IHandle<VideoDurationMessage>, IHandle<VideoSpeedMessage>, IHandle<AppSettingsMessage>
     {
-        private readonly float _syncDuration = 4;
-
         private Thread _updateThread;
         private CancellationTokenSource _cancellationSource;
         private float _syncTime;
@@ -39,11 +37,12 @@ namespace MultiFunPlayer.ViewModels
         public ObservableConcurrentDictionary<DeviceAxis, ScriptAxisSettings> AxisSettings { get; set; }
         public ObservableConcurrentDictionary<DeviceAxis, List<Keyframe>> ScriptKeyframes { get; }
         public BindableCollection<ScriptLibrary> ScriptLibraries { get; }
+        public SyncSettings SyncSettings { get; set; }
 
         public VideoFileInfo VideoFile { get; set; }
 
-        public bool IsSyncing => _syncTime < _syncDuration;
-        public float SyncProgress => !IsSyncing ? 100 : (MathF.Pow(2, 10 * (_syncTime / _syncDuration - 1)) * 100);
+        public bool IsSyncing => _syncTime < SyncSettings.Duration;
+        public float SyncProgress => !IsSyncing ? 100 : (MathF.Pow(2, 10 * (_syncTime / SyncSettings.Duration - 1)) * 100);
 
         public ScriptViewModel(IEventAggregator eventAggregator)
         {
@@ -52,6 +51,7 @@ namespace MultiFunPlayer.ViewModels
             AxisStates = new ObservableConcurrentDictionary<DeviceAxis, AxisState>(EnumUtils.GetValues<DeviceAxis>().ToDictionary(a => a, _ => new AxisState()));
             AxisSettings = new ObservableConcurrentDictionary<DeviceAxis, ScriptAxisSettings>(EnumUtils.GetValues<DeviceAxis>().ToDictionary(a => a, _ => new ScriptAxisSettings()));
             ScriptLibraries = new BindableCollection<ScriptLibrary>();
+            SyncSettings = new SyncSettings();
 
             VideoFile = null;
 
@@ -193,7 +193,8 @@ namespace MultiFunPlayer.ViewModels
             foreach (var axis in EnumUtils.GetValues<DeviceAxis>())
                 AxisSettings[axis].Script = null;
 
-            ResetSync(isSyncing: VideoFile != null);
+            if(SyncSettings.SyncOnVideoFileChanged)
+                ResetSync(isSyncing: VideoFile != null);
             TryMatchFiles(overwrite: true, null);
 
             if (VideoFile == null)
@@ -209,7 +210,8 @@ namespace MultiFunPlayer.ViewModels
         public void Handle(VideoPlayingMessage message)
         {
             if (!IsPlaying && message.IsPlaying)
-                ResetSync();
+                if(SyncSettings.SyncOnVideoResume)
+                    ResetSync();
 
             IsPlaying = message.IsPlaying;
         }
@@ -238,7 +240,8 @@ namespace MultiFunPlayer.ViewModels
                 return;
 
             if (wasSeek)
-                ResetSync();
+                if(SyncSettings.SyncOnSeek)
+                    ResetSync();
 
             foreach (var axis in EnumUtils.GetValues<DeviceAxis>())
             {
@@ -256,7 +259,8 @@ namespace MultiFunPlayer.ViewModels
                 {
                     { nameof(AxisSettings), JObject.FromObject(AxisSettings) },
                     { nameof(ScriptLibraries), JArray.FromObject(ScriptLibraries) },
-                    { nameof(IsValuesPanelExpanded), JToken.FromObject(IsValuesPanelExpanded) }
+                    { nameof(IsValuesPanelExpanded), JToken.FromObject(IsValuesPanelExpanded) },
+                    { nameof(SyncSettings), JObject.FromObject(SyncSettings) }
                 };
             }
             else if (message.Type == AppSettingsMessageType.Loading)
@@ -288,6 +292,9 @@ namespace MultiFunPlayer.ViewModels
 
                 if (settings.TryGetValue(nameof(IsValuesPanelExpanded), out var isValuesPanelExpandedToken))
                     IsValuesPanelExpanded = isValuesPanelExpandedToken.ToObject<bool>();
+
+                if (settings.TryGetValue(nameof(SyncSettings), out var syncSettingsToken))
+                    syncSettingsToken.Populate(SyncSettings);
             }
         }
         #endregion
@@ -495,7 +502,7 @@ namespace MultiFunPlayer.ViewModels
 
         private void ResetSync(bool isSyncing = true)
         {
-            Interlocked.Exchange(ref _syncTime, isSyncing ? 0 : _syncDuration);
+            Interlocked.Exchange(ref _syncTime, isSyncing ? 0 : SyncSettings.Duration);
             NotifyOfPropertyChange(nameof(IsSyncing));
             NotifyOfPropertyChange(nameof(SyncProgress));
         }
@@ -774,6 +781,15 @@ namespace MultiFunPlayer.ViewModels
         [JsonProperty] public int RandomizerSpeed { get; set; } = 0;
         [JsonProperty] public bool Inverted { get; set; } = false;
         [JsonProperty] public float Offset { get; set; } = 0;
+    }
+
+    [JsonObject(MemberSerialization.OptIn)]
+    public class SyncSettings : PropertyChangedBase
+    {
+        [JsonProperty] public float Duration { get; set; } = 4;
+        [JsonProperty] public bool SyncOnVideoFileChanged { get; set; } = true;
+        [JsonProperty] public bool SyncOnVideoResume { get; set; } = true;
+        [JsonProperty] public bool SyncOnSeek { get; set; } = true;
     }
 
     [JsonObject(MemberSerialization.OptIn)]

@@ -128,16 +128,16 @@
                             </Grid>
                         </AdornerDecorator>
                         <ToggleButton x:Name="PART_Toggle" 
-                                        Style="{StaticResource ToggleButtonStyle}" 
-                                        IsChecked="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=IsPopupOpen, Mode=TwoWay}"
-                                        Content="{TemplateBinding ToggleContent}" 
-                                        ContentTemplate="{TemplateBinding ToggleContentTemplate}"
-                                        Cursor="Hand" 
-                                        TabIndex="{TemplateBinding TabIndex}" 
-                                        VerticalAlignment="Center" 
-                                        IsTabStop="{TemplateBinding IsTabStop}"
-                                        HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}" 
-                                        VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}" />
+                                      Style="{StaticResource ToggleButtonStyle}" 
+                                      IsChecked="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=IsPopupOpen, Mode=TwoWay}"
+                                      Content="{TemplateBinding ToggleContent}" 
+                                      ContentTemplate="{TemplateBinding ToggleContentTemplate}"
+                                      Cursor="Hand" 
+                                      TabIndex="{TemplateBinding TabIndex}" 
+                                      VerticalAlignment="Center" 
+                                      IsTabStop="{TemplateBinding IsTabStop}"
+                                      HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}" 
+                                      VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}"/>
                         <material:PopupEx x:Name="PART_Popup" 
                                             IsOpen="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=IsPopupOpen, Mode=TwoWay}"
                                             CustomPopupPlacementCallback="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=PopupPlacementMethod}"

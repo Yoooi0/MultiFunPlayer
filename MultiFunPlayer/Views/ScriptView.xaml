@@ -33,7 +33,7 @@
                         <DockPanel.Effect>
                             <DropShadowEffect ShadowDepth="0" Direction="270"/>
                         </DockPanel.Effect>
-                        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Margin="0 0 8 0">
+                        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
                             <material:PackIcon Width="28" 
                                                Height="28" 
                                                VerticalAlignment="Center">
@@ -51,47 +51,124 @@
                                 </material:PackIcon.Style>
                             </material:PackIcon>
 
-                            <Grid Width="24" Height="24">
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="24" />
-                                    <RowDefinition Height="24" />
-                                </Grid.RowDefinitions>
+                            <material:PopupBox StaysOpen="True" 
+                                               PlacementMode="BottomAndAlignRightEdges"
+                                               Style="{StaticResource MaterialDesignToolBarPopupBox}"
+                                               ToolTipService.InitialShowDelay="0"
+                                               ToolTipService.Placement="Top"
+                                               ToolTip="Sync settings">
+                                <material:PopupBox.ToggleContent>
+                                    <Border Width="35" 
+                                            Height="35" 
+                                            VerticalAlignment="Center"
+                                            HorizontalAlignment="Center">
+                                        <Grid Width="24" Height="24">
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="24" />
+                                                <RowDefinition Height="24" />
+                                            </Grid.RowDefinitions>
 
-                                <material:PackIcon Grid.Row="0"
-                                                   Width="16" 
-                                                   Height="16"
-                                                   VerticalAlignment="Center"
-                                                   HorizontalAlignment="Center"
-                                                   Kind="FastForward">
-                                    <material:PackIcon.Style>
-                                        <Style TargetType="material:PackIcon">
-                                            <Setter Property="Foreground" Value="{StaticResource PrimaryHueLightBrush}"/>
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding IsSyncing}" Value="True">
-                                                    <Setter Property="Foreground" Value="Red"/>
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </material:PackIcon.Style>
-                                </material:PackIcon>
-                                <ProgressBar Value="{Binding SyncProgress, Mode=OneWay}"
+                                            <material:PackIcon Grid.Row="0"
+                                                               Width="16" 
+                                                               Height="16"
+                                                               VerticalAlignment="Center"
+                                                               HorizontalAlignment="Center"
+                                                               Kind="FastForward">
+                                                <material:PackIcon.Style>
+                                                    <Style TargetType="material:PackIcon">
+                                                        <Setter Property="Foreground" Value="{StaticResource PrimaryHueLightBrush}"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding IsSyncing}" Value="True">
+                                                                <Setter Property="Foreground" Value="Red"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </material:PackIcon.Style>
+                                            </material:PackIcon>
+                                            <ProgressBar Value="{Binding SyncProgress, Mode=OneWay}"
+                                                         VerticalAlignment="Center"
+                                                         Grid.Row="1"
+                                                         Width="24"
+                                                         Height="24"
+                                                         Margin="0 -24 0 24">
+                                                <ProgressBar.Style>
+                                                    <Style TargetType="ProgressBar" BasedOn="{StaticResource MaterialDesignCircularProgressBar}">
+                                                        <Setter Property="Foreground" Value="{StaticResource PrimaryHueLightBrush}"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding IsSyncing}" Value="True">
+                                                                <Setter Property="Foreground" Value="Red"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </ProgressBar.Style>
+                                            </ProgressBar>
+                                        </Grid>
+                                    </Border>
+                                </material:PopupBox.ToggleContent>
+                                
+                                <Grid Width="300" Margin="10">
+                                    <StackPanel Orientation="Vertical">                                        
+                                        <DockPanel LastChildFill="False">
+                                            <TextBlock DockPanel.Dock="Left"
+                                                       Text="Sync when:"
+                                                       Typography.Capitals="AllSmallCaps"
+                                                       FontWeight="Bold"
+                                                       Margin="0 0 5 0"
+                                                       VerticalAlignment="Center"
+                                                       HorizontalAlignment="Left"/>
+                                            <material:ColorZone DockPanel.Dock="Left"
+                                                                VerticalAlignment="Center"
+                                                                CornerRadius="7"
+                                                                Mode="Custom"
+                                                                Background="#ffcc00"
+                                                                Width="14"
+                                                                Height="14"
+                                                                ToolTipService.InitialShowDelay="0"
+                                                                ToolTipService.ShowDuration="99999"
+                                                                ToolTipService.Placement="Top">
+                                                <material:ColorZone.ToolTip>
+                                                    <TextBlock>
+                                                        The sync feature is there to prevent<LineBreak/>sudden unwanted motion.<LineBreak/>
+                                                        These settings are for advanced usage only.
+                                                    </TextBlock>
+                                                </material:ColorZone.ToolTip>
+                                                <material:PackIcon Kind="ExclamationBold"
+                                                                   Foreground="Black"
+                                                                   Width="10"
+                                                                   Height="10"
+                                                                   HorizontalAlignment="Center"
+                                                                   VerticalAlignment="Center"/>
+                                            </material:ColorZone>
+                                        </DockPanel>
+                                        <DockPanel LastChildFill="False" Margin="0 0 0 10">
+                                            <TextBlock Text="Video file changed:" Width="120"/>
+                                            <ToggleButton IsChecked="{Binding SyncSettings.SyncOnVideoFileChanged}"/>
+                                        </DockPanel>
+                                        
+                                        <DockPanel LastChildFill="False" Margin="0 0 0 10">
+                                            <TextBlock Text="Video resume:" Width="120"/>
+                                            <ToggleButton IsChecked="{Binding SyncSettings.SyncOnVideoResume}"/>
+                                        </DockPanel>
+                                        
+                                        <DockPanel LastChildFill="False" Margin="0 0 0 20">
+                                            <TextBlock Text="Seek:" Width="120"/>
+                                            <ToggleButton IsChecked="{Binding SyncSettings.SyncOnSeek}"/>
+                                        </DockPanel>
+                                        <DockPanel LastChildFill="True">
+                                            <TextBlock Text="Duration:" Width="120"/>
+                                            <Slider DockPanel.Dock="Right"
+                                                    Value="{Binding SyncSettings.Duration}"
+                                                    Style="{StaticResource MaterialDesignDiscreteSlider}"
+                                                    Margin="0 -38 0 0"
+                                                    Minimum="2" 
+                                                    Maximum="8"
+                                                    TickFrequency="0.5"
                                                     VerticalAlignment="Center"
-                                                    Grid.Row="1"
-                                                    Width="24"
-                                                    Height="24"
-                                                    Margin="0 -24 0 24">
-                                    <ProgressBar.Style>
-                                        <Style TargetType="ProgressBar" BasedOn="{StaticResource MaterialDesignCircularProgressBar}">
-                                            <Setter Property="Foreground" Value="{StaticResource PrimaryHueLightBrush}"/>
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding IsSyncing}" Value="True">
-                                                    <Setter Property="Foreground" Value="Red"/>
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </ProgressBar.Style>
-                                </ProgressBar>
-                            </Grid>
+                                                    IsSnapToTickEnabled="True"/>
+                                        </DockPanel>
+                                    </StackPanel>
+                                </Grid>
+                            </material:PopupBox>
                         </StackPanel>
                         <StackPanel DockPanel.Dock="Left" Orientation="Horizontal">
                             <Button Click="{s:Action OnOpenVideoLocation}" 
@@ -124,15 +201,15 @@
                                                 Margin="0 -15 -15 0"
                                                 Command="{x:Static material:DialogHost.CloseDialogCommand}">
                                             <material:PackIcon Kind="Close" 
-                                                                Height="20" 
-                                                                Width="20"/>
+                                                               Height="20" 
+                                                               Width="20"/>
                                         </Button>
                                         <DockPanel LastChildFill="True">
                                             <TextBlock Text="Libraries:"
-                                                        DockPanel.Dock="Top"
-                                                        FontSize="16"
-                                                        FontWeight="Bold"
-                                                        Margin="0 0 0 10"/>
+                                                       DockPanel.Dock="Top"
+                                                       FontSize="16"
+                                                       FontWeight="Bold"
+                                                       Margin="0 0 0 10"/>
 
                                             <Button DockPanel.Dock="Bottom"
                                                     Style="{StaticResource MaterialDesignFloatingActionMiniLightButton}"
@@ -142,8 +219,8 @@
                                                     Padding="0"
                                                     Click="{s:Action OnLibraryAdd}">
                                                 <material:PackIcon Kind="Plus"
-                                                                    Width="24"
-                                                                    Height="24"/>
+                                                                   Width="24"
+                                                                   Height="24"/>
                                             </Button>
 
                                             <material:Card material:ShadowAssist.ShadowDepth="Depth1" Margin="0 0 0 10">
@@ -152,7 +229,7 @@
                                                     <ItemsControl.Template>
                                                         <ControlTemplate>
                                                             <ScrollViewer VerticalScrollBarVisibility="Visible" 
-                                                                        HorizontalScrollBarVisibility="Disabled">
+                                                                          HorizontalScrollBarVisibility="Disabled">
                                                                 <ItemsPresenter/>
                                                             </ScrollViewer>
                                                         </ControlTemplate>
@@ -162,39 +239,39 @@
                                                             <Border Padding="5" Background="{StaticResource MaterialDesignLightBackground}">
                                                                 <DockPanel LastChildFill="True">
                                                                     <Button DockPanel.Dock="Right"   
-                                                                        Style="{StaticResource MaterialDesignFlatButton}"
-                                                                        ToolTip="Remove"
-                                                                        ToolTipService.InitialShowDelay="0"
-                                                                        ToolTipService.Placement="Top"
-                                                                        material:RippleAssist.Feedback="Red"
-                                                                        Foreground="Red"
-                                                                        Height="24" 
-                                                                        Width="24" 
-                                                                        Padding="0"
-                                                                        Click="{s:Action OnLibraryDelete}" >
+                                                                            Style="{StaticResource MaterialDesignFlatButton}"
+                                                                            ToolTip="Remove"
+                                                                            ToolTipService.InitialShowDelay="0"
+                                                                            ToolTipService.Placement="Top"
+                                                                            material:RippleAssist.Feedback="Red"
+                                                                            Foreground="Red"
+                                                                            Height="24" 
+                                                                            Width="24" 
+                                                                            Padding="0"
+                                                                            Click="{s:Action OnLibraryDelete}" >
                                                                         <material:PackIcon Kind="Delete"/>
                                                                     </Button>
                                                                     <Button DockPanel.Dock="Right"   
-                                                                        Style="{StaticResource MaterialDesignFlatButton}"
-                                                                        ToolTip="Open location"
-                                                                        ToolTipService.InitialShowDelay="0"
-                                                                        ToolTipService.Placement="Top"
-                                                                        Height="24" 
-                                                                        Width="24" 
-                                                                        Padding="0"
-                                                                        Click="{s:Action OnLibraryOpenFolder}">
+                                                                            Style="{StaticResource MaterialDesignFlatButton}"
+                                                                            ToolTip="Open location"
+                                                                            ToolTipService.InitialShowDelay="0"
+                                                                            ToolTipService.Placement="Top"
+                                                                            Height="24" 
+                                                                            Width="24" 
+                                                                            Padding="0"
+                                                                            Click="{s:Action OnLibraryOpenFolder}">
                                                                         <material:PackIcon Kind="FolderOpen"/>
                                                                     </Button>
                                                                     <CheckBox IsChecked="{Binding Recursive}"
-                                                                                DockPanel.Dock="Right"
-                                                                                Width="24"
-                                                                                ToolTip="Recursive"
-                                                                                ToolTipService.InitialShowDelay="0"
-                                                                                ToolTipService.Placement="Top"/>
+                                                                              DockPanel.Dock="Right"
+                                                                              Width="24"
+                                                                              ToolTip="Recursive"
+                                                                              ToolTipService.InitialShowDelay="0"
+                                                                              ToolTipService.Placement="Top"/>
                                                                     <TextBlock Text="{Binding Directory.FullName}"
-                                                                            VerticalAlignment="Center"
-                                                                            FontSize="12"
-                                                                            DockPanel.Dock="Left"/>
+                                                                               VerticalAlignment="Center"
+                                                                               FontSize="12"
+                                                                               DockPanel.Dock="Left"/>
                                                                 </DockPanel>
                                                             </Border>
                                                         </DataTemplate>
