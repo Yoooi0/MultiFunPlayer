@@ -118,7 +118,19 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
                 await client.DisconnectAsync().ConfigureAwait(false);
         }
 
-        protected override void HandleSettings(JObject settings, AppSettingsMessageType type) { }
+        protected override void HandleSettings(JObject settings, AppSettingsMessageType type)
+        {
+            if (type == AppSettingsMessageType.Saving)
+            {
+                if (Endpoint != null)
+                    settings[nameof(Endpoint)] = new JValue(Endpoint.ToString());
+            }
+            else if (type == AppSettingsMessageType.Loading)
+            {
+                if (settings.TryGetValue(nameof(Endpoint), out var endpointToken) && IPEndPoint.TryParse(endpointToken.ToObject<string>(), out var endpoint))
+                    Endpoint = endpoint;
+            }
+        }
     }
 
     public class ButtplugClientDeviceSettings
