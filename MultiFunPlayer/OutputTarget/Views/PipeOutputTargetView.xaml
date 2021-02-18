@@ -19,7 +19,9 @@
                     <DockPanel DockPanel.Dock="Left" LastChildFill="False">
                         <Button DockPanel.Dock="Left"
                                 Command="{s:Action ToggleConnectAsync}"
-                                IsEnabled="{Binding CanToggleConnect}"
+                                IsEnabled="{Binding CanToggleConnect}"                                          
+                                ToolTipService.InitialShowDelay="0"
+                                ToolTipService.Placement="Top"
                                 material:ButtonProgressAssist.IsIndicatorVisible="{Binding IsConnectBusy}"
                                 material:ButtonProgressAssist.Value="-1"
                                 material:ButtonProgressAssist.IsIndeterminate="True">
