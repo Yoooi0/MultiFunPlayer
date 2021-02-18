@@ -172,6 +172,73 @@
             </Setter.Value>
         </Setter>
     </Style>
+
+    <Style x:Key="MaterialDesignToolBarToggleButton" TargetType="{x:Type ToggleButton}">
+        <Setter Property="Padding" Value="0"/>
+        <Setter Property="Foreground" Value="{DynamicResource MaterialDesignBody}"/>
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderBrush" Value="Transparent"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="Height" Value="35"/>
+        <Setter Property="Width" Value="35"/>
+        <Setter Property="HorizontalContentAlignment" Value="Center"/>
+        <Setter Property="VerticalContentAlignment" Value="Center"/>
+        <Setter Property="TextBlock.FontWeight" Value="DemiBold"/>
+        <Setter Property="material:ShadowAssist.ShadowDepth" Value="Depth0"/>
+        <Setter Property="material:TransitionAssist.DisableTransitions" Value="True"/>
+        <Setter Property="material:RippleAssist.Feedback" Value="{DynamicResource MaterialDesignFlatButtonRipple}"/>
+        <Setter Property="Focusable" Value="True" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type ToggleButton}">
+                    <Grid>
+                        <AdornerDecorator>
+                            <Grid>
+                                <Border Background="Transparent" 
+                                        CornerRadius="3"
+                                        x:Name="border"/>
+                            </Grid>
+                        </AdornerDecorator>
+                        <material:Ripple x:Name="ContentPresenter" 
+                                         Content="{TemplateBinding Content}" 
+                                         ContentTemplate="{TemplateBinding ContentTemplate}" 
+                                         Focusable="False"
+                                         ContentStringFormat="{TemplateBinding ContentStringFormat}"
+                                         HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                         VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}"
+                                         Padding="{TemplateBinding Padding}"
+                                         SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}">
+                            <material:Ripple.Clip>
+                                <MultiBinding Converter="{StaticResource BorderClipConverter}">
+                                    <Binding ElementName="border" Path="ActualWidth" />
+                                    <Binding ElementName="border" Path="ActualHeight" />
+                                    <Binding ElementName="border" Path="CornerRadius" />
+                                    <Binding ElementName="border" Path="BorderThickness" />
+                                </MultiBinding>
+                            </material:Ripple.Clip>
+                        </material:Ripple>
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <MultiTrigger>
+                            <MultiTrigger.Conditions>
+                                <Condition Property="IsChecked" Value="True" />
+                                <Condition Property="material:ToggleButtonAssist.HasOnContent" Value="True" />
+                            </MultiTrigger.Conditions>
+                            <Setter TargetName="ContentPresenter" Property="Content" Value="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=(material:ToggleButtonAssist.OnContent)}" />
+                            <Setter TargetName="ContentPresenter" Property="ContentTemplate" Value="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=(material:ToggleButtonAssist.OnContentTemplate)}" />
+                        </MultiTrigger>
+                        <Trigger Property="IsEnabled" Value="false">
+                            <Setter Property="Opacity" Value=".56"/>
+                        </Trigger>
+                        <Trigger Property="IsMouseOver" Value="true">
+                            <Setter Property="BorderBrush" TargetName="border" Value="{DynamicResource MaterialDesignFlatButtonClick}"/>
+                            <Setter Property="Background" TargetName="border" Value="{DynamicResource MaterialDesignFlatButtonClick}"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
     
     <Style TargetType="{x:Type TabControl}">
         <Setter Property="Template">

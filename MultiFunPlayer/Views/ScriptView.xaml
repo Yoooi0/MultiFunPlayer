@@ -517,6 +517,32 @@
                                                         </StackPanel>
                                                     </Grid>
                                                 </material:PopupBox>
+
+                                                <ToggleButton IsChecked="{Binding Value.SmartLimitEnabled}"
+                                                              Checked="{s:Action OnSmartLimitCheckedChanged}"
+                                                              Unchecked="{s:Action OnSmartLimitCheckedChanged}"
+                                                              ToolTipService.InitialShowDelay="0"
+                                                              ToolTipService.Placement="Top"
+                                                              ToolTip="Smart limit">
+                                                    <ToggleButton.Resources>
+                                                        <Style TargetType="{x:Type ToggleButton}" BasedOn="{StaticResource MaterialDesignToolBarToggleButton}">
+                                                            <Setter Property="Visibility" Value="Hidden"/>
+                                                            <Style.Triggers>
+                                                                <DataTrigger  Binding="{Binding Key}" Value="R1">
+                                                                    <Setter Property="Visibility" Value="Visible"/>
+                                                                </DataTrigger>
+                                                                <DataTrigger  Binding="{Binding Key}" Value="R2">
+                                                                    <Setter Property="Visibility" Value="Visible"/>
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </ToggleButton.Resources>
+                                                    
+                                                    <material:PackIcon Kind="ChartSnakeyVariant" Opacity=".56"/>
+                                                    <material:ToggleButtonAssist.OnContent>
+                                                        <material:PackIcon Kind="ChartSnakeyVariant"/>
+                                                    </material:ToggleButtonAssist.OnContent>
+                                                </ToggleButton>
                                             </StackPanel>
                                         </DockPanel>
                                     </Border>

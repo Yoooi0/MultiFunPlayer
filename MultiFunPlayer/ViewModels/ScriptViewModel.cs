@@ -134,6 +134,24 @@ namespace MultiFunPlayer.ViewModels
                     }
                 }
 
+                foreach (var axis in EnumUtils.GetValues<DeviceAxis>())
+                {
+                    var settings = AxisSettings[axis];
+                    if (!settings.SmartLimitEnabled)
+                        continue;
+
+                    var limitState = AxisStates[DeviceAxis.L0];
+                    if (!limitState.Valid)
+                        continue;
+
+                    var state = AxisStates[axis];
+                    var value = state.Value;
+                    var limitValue = limitState.Value;
+
+                    var factor = MathUtils.Map(limitValue, 0.25f, 0.9f, 1f, 0f);
+                    state.Value = MathUtils.Lerp(axis.DefaultValue(), state.Value, factor);
+                }
+
                 Thread.Sleep(2);
 
                 uiUpdateTime += (float)stopwatch.Elapsed.TotalSeconds;
@@ -644,6 +662,12 @@ namespace MultiFunPlayer.ViewModels
 
             ResetSync();
         }
+
+        [SuppressPropertyChangedWarnings]
+        public void OnSmartLimitCheckedChanged(object sender, RoutedEventArgs e)
+        {
+            ResetSync();
+        }
         #endregion
 
         #region ScriptLibrary
@@ -744,6 +768,7 @@ namespace MultiFunPlayer.ViewModels
     {
         [JsonIgnore] public IScriptFile Script { get; set; } = null;
         [JsonProperty] public DeviceAxis? LinkAxis { get; set; } = null;
+        [JsonProperty] public bool SmartLimitEnabled { get; set; } = false;
         [JsonProperty] public int RandomizerSeed { get; set; } = 0;
         [JsonProperty] public int RandomizerStrength { get; set; } = 0;
         [JsonProperty] public int RandomizerSpeed { get; set; } = 0;
