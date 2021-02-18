@@ -134,7 +134,8 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
         {
             if (type == AppSettingsMessageType.Saving)
             {
-                settings[nameof(SelectedComPort)] = new JValue(SelectedComPort);
+                if(SelectedComPort != null)
+                    settings[nameof(SelectedComPort)] = new JValue(SelectedComPort);
             }
             else if (type == AppSettingsMessageType.Loading)
             {

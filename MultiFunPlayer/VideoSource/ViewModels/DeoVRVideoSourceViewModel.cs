@@ -130,7 +130,8 @@ namespace MultiFunPlayer.VideoSource.ViewModels
         {
             if (type == AppSettingsMessageType.Saving)
             {
-                settings[nameof(Endpoint)] = new JValue(Endpoint.ToString());
+                if(Endpoint != null)
+                    settings[nameof(Endpoint)] = new JValue(Endpoint.ToString());
             }
             else if (type == AppSettingsMessageType.Loading)
             {

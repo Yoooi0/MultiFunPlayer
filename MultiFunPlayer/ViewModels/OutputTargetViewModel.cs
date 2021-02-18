@@ -25,7 +25,8 @@ namespace MultiFunPlayer.ViewModels
                  || !message.Settings.TryGetObject(out var settings, "OutputTarget"))
                     return;
 
-                settings[nameof(ActiveItem)] = ActiveItem.Name;
+                if(ActiveItem != null)
+                    settings[nameof(ActiveItem)] = ActiveItem.Name;
             }
             else if (message.Type == AppSettingsMessageType.Loading)
             {

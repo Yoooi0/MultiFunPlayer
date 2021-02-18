@@ -143,8 +143,10 @@ namespace MultiFunPlayer.VideoSource.ViewModels
         {
             if (type == AppSettingsMessageType.Saving)
             {
-                settings[nameof(Executable)] = JToken.FromObject(Executable);
-                settings[nameof(Arguments)] = new JValue(Arguments);
+                if(Executable != null)
+                    settings[nameof(Executable)] = JToken.FromObject(Executable);
+                if(Arguments != null)
+                    settings[nameof(Arguments)] = new JValue(Arguments);
             }
             else if (type == AppSettingsMessageType.Loading)
             {
