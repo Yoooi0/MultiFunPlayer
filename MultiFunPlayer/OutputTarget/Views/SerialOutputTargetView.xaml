@@ -53,16 +53,6 @@
                                 </material:PackIcon.Style>
                             </material:PackIcon>
                         </Button>
-
-                        <Button DockPanel.Dock="Left"
-                                Style="{StaticResource MaterialDesignProgressToolBarButton}"
-                                Command="{s:Action RefreshPorts}"
-                                IsEnabled="{Binding CanRefreshPorts}"
-                                material:ButtonProgressAssist.IsIndicatorVisible="{Binding IsRefreshBusy}"
-                                material:ButtonProgressAssist.Value="-1"
-                                material:ButtonProgressAssist.IsIndeterminate="True">
-                            <material:PackIcon Kind="Refresh" Width="19" Height="19"/>
-                        </Button>
                         
                         <ToggleButton DockPanel.Dock="Right"
                                       IsChecked="{Binding ContentVisible}"                                
@@ -108,6 +98,22 @@
                               Width="150"
                               ItemsSource="{Binding ComPorts}"
                               SelectedItem="{Binding SelectedComPort}"/>
+
+                    <Button DockPanel.Dock="Left"
+                            Style="{StaticResource MaterialDesignFloatingActionMiniLightButton}"
+                            Command="{s:Action RefreshPorts}"
+                            IsEnabled="{Binding CanRefreshPorts}"
+                            Margin="0 -12 0 0"
+                            Height="24"
+                            Width="24"
+                            ToolTip="Refresh" 
+                            ToolTipService.InitialShowDelay="0" 
+                            ToolTipService.Placement="Top" 
+                            material:ButtonProgressAssist.IsIndicatorVisible="{Binding IsRefreshBusy}"
+                            material:ButtonProgressAssist.Value="-1"
+                            material:ButtonProgressAssist.IsIndeterminate="True">
+                        <material:PackIcon Kind="Refresh"/>
+                    </Button>
                 </StackPanel>
                 
                 <StackPanel DockPanel.Dock="Right" 
