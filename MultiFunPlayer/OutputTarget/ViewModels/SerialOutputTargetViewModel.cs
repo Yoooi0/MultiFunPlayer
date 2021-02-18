@@ -35,13 +35,14 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
             IsRefreshBusy = true;
             await Task.Delay(750).ConfigureAwait(true);
 
+            var lastSelected = SelectedComPort;
             ComPorts.Clear();
-            SelectedComPort = null;
             try
             {
                 ComPorts.AddRange(SerialPort.GetPortNames());
             }
             catch { }
+            SelectedComPort = ComPorts.FirstOrDefault(p => string.Equals(p, lastSelected, StringComparison.OrdinalIgnoreCase));
 
             await Task.Delay(250).ConfigureAwait(true);
             IsRefreshBusy = false;
