@@ -13,8 +13,7 @@ namespace MultiFunPlayer.ViewModels
         public OutputTargetViewModel(IEventAggregator eventAggregator, IEnumerable<IOutputTarget> targets)
         {
             eventAggregator.Subscribe(this);
-            foreach (var target in targets)
-                Items.Add(target);
+            Items.AddRange(targets);
         }
 
         public void Handle(AppSettingsMessage message)

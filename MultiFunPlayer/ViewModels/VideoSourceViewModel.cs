@@ -20,8 +20,7 @@ namespace MultiFunPlayer.ViewModels
         public VideoSourceViewModel(IEventAggregator eventAggregator, IEnumerable<IVideoSource> sources)
         {
             eventAggregator.Subscribe(this);
-            foreach (var source in sources)
-                Items.Add(source);
+            Items.AddRange(sources);
 
             _currentSource = null;
 
