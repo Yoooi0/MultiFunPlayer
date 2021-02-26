@@ -80,7 +80,16 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
 
         protected override void HandleSettings(JObject settings, AppSettingsMessageType type)
         {
+            if (type == AppSettingsMessageType.Saving)
+            {
+                if (PipeName != null)
+                    settings[nameof(PipeName)] = new JValue(PipeName);
+            }
+            else if (type == AppSettingsMessageType.Loading)
+            {
+                if (settings.TryGetValue(nameof(PipeName), out var pipeNameToken))
+                    PipeName = pipeNameToken.ToObject<string>();
+            }
         }
-
     }
 }
