@@ -95,7 +95,18 @@
                     Margin="20"
                     Visibility="{Binding ContentVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
             <DockPanel LastChildFill="True" Margin="0 0 0 20">
-                <DockPanel DockPanel.Dock="Left" LastChildFill="False">
+                <DockPanel DockPanel.Dock="Left"
+                           LastChildFill="False">
+                    <DockPanel.Resources>
+                        <Style TargetType="{x:Type DockPanel}">
+                            <Setter Property="IsEnabled" Value="False" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding Status}" Value="Disconnected">
+                                    <Setter Property="IsEnabled" Value="True" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </DockPanel.Resources>
                     <TextBox Text="{Binding Endpoint, Converter={StaticResource IPEndPointToStringConverter}}"
                              material:HintAssist.Hint="address:port"
                              Style="{StaticResource MaterialDesignFloatingHintTextBox}"

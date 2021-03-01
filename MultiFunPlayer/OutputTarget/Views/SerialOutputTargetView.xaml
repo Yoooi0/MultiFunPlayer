@@ -90,7 +90,18 @@
                     Margin="20" 
                     Visibility="{Binding ContentVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
             <DockPanel LastChildFill="True" Margin="0 0 0 20">
-                <StackPanel DockPanel.Dock="Left" Orientation="Horizontal">
+                <DockPanel DockPanel.Dock="Left"
+                           LastChildFill="False">
+                    <DockPanel.Resources>
+                        <Style TargetType="{x:Type DockPanel}">
+                            <Setter Property="IsEnabled" Value="False" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding Status}" Value="Disconnected">
+                                    <Setter Property="IsEnabled" Value="True" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </DockPanel.Resources>
                     <ComboBox Style="{StaticResource MaterialDesignFloatingHintComboBox}"
                               IsEnabled="{Binding CanChangePort}"
                               DockPanel.Dock="Left"
@@ -116,7 +127,7 @@
                             material:ButtonProgressAssist.IsIndeterminate="True">
                         <material:PackIcon Kind="Refresh"/>
                     </Button>
-                </StackPanel>
+                </DockPanel>
                 
                 <StackPanel DockPanel.Dock="Right" 
                             Orientation="Horizontal" 
