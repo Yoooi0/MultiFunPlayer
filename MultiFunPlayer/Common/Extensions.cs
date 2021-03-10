@@ -4,6 +4,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -169,5 +170,8 @@ namespace MultiFunPlayer.Common
     {
         public static T[] GetValues<T>() where T : Enum
             => (T[])Enum.GetValues(typeof(T));
+
+        public static Dictionary<TEnum, TValue> ToDictionary<TEnum, TValue>(Func<TEnum, TValue> valueGenerator) where TEnum : Enum
+            => GetValues<TEnum>().ToDictionary(x => x, valueGenerator);
     }
 }

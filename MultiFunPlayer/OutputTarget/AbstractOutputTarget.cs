@@ -28,8 +28,8 @@ namespace MultiFunPlayer.OutputTarget
             eventAggregator.Subscribe(this);
             _valueProvider = valueProvider;
 
-            Values = EnumUtils.GetValues<DeviceAxis>().ToDictionary(axis => axis, axis => axis.DefaultValue());
-            AxisSettings = new ObservableConcurrentDictionary<DeviceAxis, DeviceAxisSettings>(EnumUtils.GetValues<DeviceAxis>().ToDictionary(a => a, _ => new DeviceAxisSettings()));
+            Values = EnumUtils.ToDictionary<DeviceAxis, float>(axis => axis.DefaultValue());
+            AxisSettings = new ObservableConcurrentDictionary<DeviceAxis, DeviceAxisSettings>(EnumUtils.ToDictionary<DeviceAxis, DeviceAxisSettings>(_ => new DeviceAxisSettings()));
             UpdateRate = 60;
         }
 

@@ -78,7 +78,7 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
                 foreach (var device in client.Devices)
                     OnDeviceAdded(device);
 
-                var lastSentValues = EnumUtils.GetValues<DeviceAxis>().ToDictionary(a => a, _ => float.PositiveInfinity);
+                var lastSentValues = EnumUtils.ToDictionary<DeviceAxis, float>(_ => float.PositiveInfinity);
                 while (!token.IsCancellationRequested && client.Connected)
                 {
                     var interval = MathF.Max(1, 1000.0f / UpdateRate);

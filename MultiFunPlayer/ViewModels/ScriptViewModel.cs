@@ -48,8 +48,8 @@ namespace MultiFunPlayer.ViewModels
         {
             eventAggregator.Subscribe(this);
 
-            AxisStates = new ObservableConcurrentDictionary<DeviceAxis, AxisState>(EnumUtils.GetValues<DeviceAxis>().ToDictionary(a => a, _ => new AxisState()));
-            AxisSettings = new ObservableConcurrentDictionary<DeviceAxis, ScriptAxisSettings>(EnumUtils.GetValues<DeviceAxis>().ToDictionary(a => a, _ => new ScriptAxisSettings()));
+            AxisStates = new ObservableConcurrentDictionary<DeviceAxis, AxisState>(EnumUtils.ToDictionary<DeviceAxis, AxisState>(_ => new AxisState()));
+            AxisSettings = new ObservableConcurrentDictionary<DeviceAxis, ScriptAxisSettings>(EnumUtils.ToDictionary<DeviceAxis, ScriptAxisSettings>(_ => new ScriptAxisSettings()));
             ScriptLibraries = new BindableCollection<ScriptLibrary>();
             SyncSettings = new SyncSettings();
 
