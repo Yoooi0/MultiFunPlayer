@@ -43,7 +43,7 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
                 ComPorts.AddRange(SerialPort.GetPortNames());
             }
             catch { }
-            SelectedComPort = ComPorts.FirstOrDefault(p => string.Equals(p, lastSelected, StringComparison.OrdinalIgnoreCase));
+            SelectedComPort = lastSelected;
 
             await Task.Delay(250).ConfigureAwait(true);
             IsRefreshBusy = false;
@@ -146,7 +146,7 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
             else if (type == AppSettingsMessageType.Loading)
             {
                 if (settings.TryGetValue(nameof(SelectedComPort), out var selectedComPortToken))
-                    SelectedComPort = ComPorts.FirstOrDefault(x => string.Equals(x, selectedComPortToken.ToObject<string>(), StringComparison.OrdinalIgnoreCase));
+                    SelectedComPort = selectedComPortToken.ToObject<string>();
             }
         }
     }
