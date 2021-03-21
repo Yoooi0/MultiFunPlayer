@@ -134,13 +134,12 @@ namespace MultiFunPlayer.Common.Controls
                     if (next.Position < 0 || prev.Position < 0)
                         continue;
 
-                    var dx = next.Position - prev.Position;
-                    var dy = next.Value - prev.Value;
-                    if (MathF.Abs(dx) < 0.001f || MathF.Abs(dy) < 0.001f)
+                    var dx = MathF.Abs(next.Position - prev.Position);
+                    var dy = MathF.Abs(next.Value - prev.Value);
+                    if (dy < 0.001f || (dx > 0.00001f && MathF.Atan2(dy, dx) * 180 / MathF.PI < 5))
                         continue;
 
                     var length = MathF.Sqrt(dx * dx + dy * dy);
-
                     var startBucket = (int)MathF.Floor(prev.Position / bucketSize);
                     var endBucket = (int)MathF.Floor(next.Position / bucketSize);
 
