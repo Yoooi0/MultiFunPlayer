@@ -22,14 +22,14 @@ namespace MultiFunPlayer.Common.Controls
         public bool ShowScrubber => float.IsFinite(Duration) && Duration > 0;
 
         [DoNotNotify]
-        public ObservableConcurrentDictionary<DeviceAxis, List<Keyframe>> Keyframes
+        public IReadOnlyDictionary<DeviceAxis, List<Keyframe>> Keyframes
         {
-            get => (ObservableConcurrentDictionary<DeviceAxis, List<Keyframe>>)GetValue(KeyframesProperty);
+            get => (IReadOnlyDictionary<DeviceAxis, List<Keyframe>>)GetValue(KeyframesProperty);
             set => SetValue(KeyframesProperty, value);
         }
 
         public static readonly DependencyProperty KeyframesProperty =
-            DependencyProperty.Register(nameof(Keyframes), typeof(ObservableConcurrentDictionary<DeviceAxis, List<Keyframe>>),
+            DependencyProperty.Register(nameof(Keyframes), typeof(IReadOnlyDictionary<DeviceAxis, List<Keyframe>>),
                 typeof(KeyframesHeatmapGradient), new FrameworkPropertyMetadata(null,
                     new PropertyChangedCallback(OnKeyframesChanged)));
 
@@ -39,9 +39,9 @@ namespace MultiFunPlayer.Common.Controls
             if (d is not KeyframesHeatmapGradient @this)
                 return;
 
-            if (e.OldValue is ObservableConcurrentDictionary<DeviceAxis, List<Keyframe>> oldKeyframes)
+            if (e.OldValue is INotifyCollectionChanged oldKeyframes)
                 oldKeyframes.CollectionChanged -= @this.OnKeyframesCollectionChanged;
-            if (e.NewValue is ObservableConcurrentDictionary<DeviceAxis, List<Keyframe>> newKeframes)
+            if (e.NewValue is INotifyCollectionChanged newKeframes)
                 newKeframes.CollectionChanged += @this.OnKeyframesCollectionChanged;
 
             @this.Refresh();
@@ -123,6 +123,9 @@ namespace MultiFunPlayer.Common.Controls
             AddStop(Color.FromRgb(0, 0, 0), 0);
             foreach (var (axis, keyframes) in Keyframes)
             {
+                if (keyframes == null || keyframes.Count < 2)
+                    continue;
+
                 var startTime = keyframes[0].Position;
                 var endTime = keyframes[^1].Position;
 

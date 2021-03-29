@@ -327,7 +327,7 @@
 
 
             <material:Card material:ShadowAssist.ShadowDepth="Depth1" Margin="0 0 0 20">
-                <TabControl ItemsSource="{Binding AxisSettings}" behaviours:TabContent.IsCached="True">
+                <TabControl ItemsSource="{Binding Axes}" behaviours:TabContent.IsCached="True">
                     <TabControl.ItemTemplate>
                         <DataTemplate>
                             <TextBlock Text="{Binding Key}"
@@ -342,7 +342,7 @@
                                             <MultiDataTrigger>
                                                 <MultiDataTrigger.Conditions>
                                                     <Condition Binding="{Binding Value.Script}" Value="{x:Null}"/>
-                                                    <Condition Binding="{Binding Value.LinkAxis, Converter={StaticResource InvertedNullableToBooleanConverter}}" Value="True"/>
+                                                    <Condition Binding="{Binding Value.Settings.LinkAxis, Converter={StaticResource InvertedNullableToBooleanConverter}}" Value="True"/>
                                                 </MultiDataTrigger.Conditions>
                                                 <Setter Property="Foreground" Value="{StaticResource PrimaryHueMidBrush}"/>
                                             </MultiDataTrigger>
@@ -383,7 +383,7 @@
                                                 <Button Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}"
                                                         Command="{s:Action OnAxisLoad}"
                                                         CommandParameter="{Binding Key}"
-                                                        IsEnabled="{Binding Value.LinkAxis, Converter={StaticResource NullableToBooleanConverter}}"
+                                                        IsEnabled="{Binding Value.Settings.LinkAxis, Converter={StaticResource NullableToBooleanConverter}}"
                                                         ToolTipService.InitialShowDelay="0"
                                                         ToolTipService.Placement="Top"
                                                         ToolTip="Load script"
@@ -399,7 +399,7 @@
                                                         Padding="8">
                                                     <Button.IsEnabled>
                                                         <MultiBinding Converter="{StaticResource MultiBooleanToBooleanAndConverter}">
-                                                            <Binding Path="Value.LinkAxis" Converter="{StaticResource NullableToBooleanConverter}"/>
+                                                            <Binding Path="Value.Settings.LinkAxis" Converter="{StaticResource NullableToBooleanConverter}"/>
                                                             <Binding Path="Value.Script" Converter="{StaticResource InvertedNullableToBooleanConverter}"/>
                                                         </MultiBinding>
                                                     </Button.IsEnabled>
@@ -414,7 +414,7 @@
                                                         Padding="8">
                                                     <Button.IsEnabled>
                                                         <MultiBinding Converter="{StaticResource MultiBooleanToBooleanAndConverter}">
-                                                            <Binding Path="Value.LinkAxis" Converter="{StaticResource NullableToBooleanConverter}"/>
+                                                            <Binding Path="Value.Settings.LinkAxis" Converter="{StaticResource NullableToBooleanConverter}"/>
                                                             <Binding Path="Value.Script" Converter="{StaticResource InvertedNullableToBooleanConverter}"/>
                                                         </MultiBinding>
                                                     </Button.IsEnabled>
@@ -484,7 +484,7 @@
                                                                    ToolTip="Link axis">
                                                     <material:PopupBox.IsEnabled>
                                                         <MultiBinding Converter="{StaticResource MultiBooleanToBooleanOrConverter}">
-                                                            <Binding Path="Value.LinkAxis" Converter="{StaticResource InvertedNullableToBooleanConverter}"/>
+                                                            <Binding Path="Value.Settings.LinkAxis" Converter="{StaticResource InvertedNullableToBooleanConverter}"/>
                                                             <Binding Path="Value.Script" Converter="{StaticResource NullableToBooleanConverter}"/>
                                                         </MultiBinding>
                                                     </material:PopupBox.IsEnabled>
@@ -501,7 +501,7 @@
                                                         <StackPanel>
                                                             <StackPanel.IsEnabled>
                                                                 <MultiBinding Converter="{StaticResource MultiBooleanToBooleanOrConverter}">
-                                                                    <Binding Path="Value.LinkAxis" Converter="{StaticResource InvertedNullableToBooleanConverter}"/>
+                                                                    <Binding Path="Value.Settings.LinkAxis" Converter="{StaticResource InvertedNullableToBooleanConverter}"/>
                                                                     <Binding Path="Value.Script" Converter="{StaticResource NullableToBooleanConverter}"/>
                                                                 </MultiBinding>
                                                             </StackPanel.IsEnabled>
@@ -515,7 +515,7 @@
                                                                           material:TextFieldAssist.HasClearButton="True"
                                                                           Width="50" 
                                                                           ItemsSource="{Binding Source={controls:EnumBindingSource {x:Type common:DeviceAxis}}}" 
-                                                                          SelectedItem="{Binding Value.LinkAxis}"
+                                                                          SelectedItem="{Binding Value.Settings.LinkAxis}"
                                                                           SelectionChanged="{s:Action OnSelectedLinkAxisChanged}"/>
                                                             </DockPanel>
 
@@ -559,9 +559,9 @@
                                                                            Margin="0 0 10 0" 
                                                                            VerticalAlignment="Center"/>
                                                                 <Slider DockPanel.Dock="Right"
-                                                                        Value="{Binding Value.RandomizerStrength}"
+                                                                        Value="{Binding Value.Settings.RandomizerStrength}"
                                                                         Style="{StaticResource MaterialDesignDiscreteSlider}"
-                                                                        IsEnabled="{Binding Value.LinkAxis, Converter={StaticResource InvertedNullableToBooleanConverter}}"
+                                                                        IsEnabled="{Binding Value.Settings.LinkAxis, Converter={StaticResource InvertedNullableToBooleanConverter}}"
                                                                         Margin="0 -38 0 0"
                                                                         Minimum="0" 
                                                                         Maximum="100"
@@ -579,9 +579,9 @@
                                                                            Margin="0 0 10 0"
                                                                            VerticalAlignment="Center"/>
                                                                 <Slider DockPanel.Dock="Right"
-                                                                        Value="{Binding Value.RandomizerSpeed}"    
+                                                                        Value="{Binding Value.Settings.RandomizerSpeed}"    
                                                                         Style="{StaticResource MaterialDesignDiscreteSlider}"
-                                                                        IsEnabled="{Binding Value.LinkAxis, Converter={StaticResource InvertedNullableToBooleanConverter}}"
+                                                                        IsEnabled="{Binding Value.Settings.LinkAxis, Converter={StaticResource InvertedNullableToBooleanConverter}}"
                                                                         Margin="0 -38 0 0"
                                                                         Minimum="0" 
                                                                         Maximum="100"
@@ -595,7 +595,7 @@
                                                     </Grid>
                                                 </material:PopupBox>
 
-                                                <ToggleButton IsChecked="{Binding Value.SmartLimitEnabled}"
+                                                <ToggleButton IsChecked="{Binding Value.Settings.SmartLimitEnabled}"
                                                               Checked="{s:Action OnSmartLimitCheckedChanged}"
                                                               Unchecked="{s:Action OnSmartLimitCheckedChanged}"
                                                               ToolTipService.InitialShowDelay="0"
@@ -627,7 +627,7 @@
                                 <StackPanel DockPanel.Dock="Bottom" Margin="20">
                                     <DockPanel LastChildFill="True" 
                                                Margin="0 0 0 10" 
-                                               IsEnabled="{Binding Value.LinkAxis, Converter={StaticResource NullableToBooleanConverter}}">
+                                               IsEnabled="{Binding Value.Settings.LinkAxis, Converter={StaticResource NullableToBooleanConverter}}">
                                         <TextBlock Text="File:" 
                                                    DockPanel.Dock="Left" 
                                                    Margin="0 0 10 0" 
@@ -647,13 +647,13 @@
                                     </DockPanel>
                                     <DockPanel LastChildFill="True" Margin="0 0 0 10">
                                         <TextBlock Text="Offset:" DockPanel.Dock="Left" Margin="0 0 10 0" VerticalAlignment="Center"/>
-                                        <TextBlock Text="{Binding Value.Offset, StringFormat={}{0:0.00}s}" 
+                                        <TextBlock Text="{Binding Value.Settings.Offset, StringFormat={}{0:0.00}s}" 
                                                    VerticalAlignment="Center"
                                                    DockPanel.Dock="Right" 
                                                    Width="50"
                                                    TextAlignment="Right"/>
 
-                                        <Slider Value="{Binding Value.Offset}" 
+                                        <Slider Value="{Binding Value.Settings.Offset}" 
                                                 DockPanel.Dock="Left"
                                                 Minimum="-5" 
                                                 Maximum="5"
@@ -665,7 +665,7 @@
                                     <StackPanel Orientation="Horizontal">
                                         <TextBlock Text="Inverted:" Margin="0 0 10 0" VerticalAlignment="Center"/>
                                         <ToggleButton Style="{StaticResource MaterialDesignSwitchToggleButton}"
-                                                      IsChecked="{Binding Value.Inverted}"/>
+                                                      IsChecked="{Binding Value.Settings.Inverted}"/>
                                     </StackPanel>
                                 </StackPanel>
                             </DockPanel>
