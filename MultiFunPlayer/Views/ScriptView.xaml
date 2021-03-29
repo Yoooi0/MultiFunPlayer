@@ -415,7 +415,7 @@
                                                     <Button.IsEnabled>
                                                         <MultiBinding Converter="{StaticResource MultiBooleanToBooleanAndConverter}">
                                                             <Binding Path="Value.Settings.LinkAxis" Converter="{StaticResource NullableToBooleanConverter}"/>
-                                                            <Binding Path="Value.Script" Converter="{StaticResource InvertedNullableToBooleanConverter}"/>
+                                                            <Binding Path="DataContext.VideoFile" RelativeSource="{RelativeSource FindAncestor, AncestorType={x:Type UserControl}}" Converter="{StaticResource InvertedNullableToBooleanConverter}"/>
                                                         </MultiBinding>
                                                     </Button.IsEnabled>
                                                     <material:PackIcon Kind="Reload" Width="19" Height="19"/>
