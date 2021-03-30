@@ -414,7 +414,6 @@
                                                         Padding="8">
                                                     <Button.IsEnabled>
                                                         <MultiBinding Converter="{StaticResource MultiBooleanToBooleanAndConverter}">
-                                                            <Binding Path="Value.Settings.LinkAxis" Converter="{StaticResource NullableToBooleanConverter}"/>
                                                             <Binding Path="DataContext.VideoFile" RelativeSource="{RelativeSource FindAncestor, AncestorType={x:Type UserControl}}" Converter="{StaticResource InvertedNullableToBooleanConverter}"/>
                                                         </MultiBinding>
                                                     </Button.IsEnabled>
@@ -482,12 +481,6 @@
                                                                    ToolTipService.InitialShowDelay="0"
                                                                    ToolTipService.Placement="Top"
                                                                    ToolTip="Link axis">
-                                                    <material:PopupBox.IsEnabled>
-                                                        <MultiBinding Converter="{StaticResource MultiBooleanToBooleanOrConverter}">
-                                                            <Binding Path="Value.Settings.LinkAxis" Converter="{StaticResource InvertedNullableToBooleanConverter}"/>
-                                                            <Binding Path="Value.Script" Converter="{StaticResource NullableToBooleanConverter}"/>
-                                                        </MultiBinding>
-                                                    </material:PopupBox.IsEnabled>
                                                     <material:PopupBox.ToggleContent>
                                                         <Border Width="35" Height="35">
                                                             <material:PackIcon Kind="LinkVariant" 
@@ -499,12 +492,6 @@
                                                     </material:PopupBox.ToggleContent>
                                                     <Grid Width="300" Margin="10">
                                                         <StackPanel>
-                                                            <StackPanel.IsEnabled>
-                                                                <MultiBinding Converter="{StaticResource MultiBooleanToBooleanOrConverter}">
-                                                                    <Binding Path="Value.Settings.LinkAxis" Converter="{StaticResource InvertedNullableToBooleanConverter}"/>
-                                                                    <Binding Path="Value.Script" Converter="{StaticResource NullableToBooleanConverter}"/>
-                                                                </MultiBinding>
-                                                            </StackPanel.IsEnabled>
                                                             <DockPanel Margin="0 0 0 10" LastChildFill="False">
                                                                 <TextBlock Text="Target:" 
                                                                            DockPanel.Dock="Left"
@@ -517,6 +504,35 @@
                                                                           ItemsSource="{Binding Source={controls:EnumBindingSource {x:Type common:DeviceAxis}}}" 
                                                                           SelectedItem="{Binding Value.Settings.LinkAxis}"
                                                                           SelectionChanged="{s:Action OnSelectedLinkAxisChanged}"/>
+                                                                
+                                                                <material:ColorZone DockPanel.Dock="Right"
+                                                                                    VerticalAlignment="Center"
+                                                                                    CornerRadius="7"
+                                                                                    Mode="PrimaryLight"
+                                                                                    Width="14"
+                                                                                    Height="14"
+                                                                                    ToolTipService.InitialShowDelay="0"
+                                                                                    ToolTipService.ShowDuration="99999"
+                                                                                    ToolTipService.Placement="Top">
+                                                                    <material:ColorZone.ToolTip>
+                                                                        <TextBlock>
+                                                                            When enabled the link has priority<LineBreak/>
+                                                                            over automatically loaded scripts
+                                                                        </TextBlock>
+                                                                    </material:ColorZone.ToolTip>
+                                                                    <material:PackIcon Kind="Help"
+                                                                                       Width="10"
+                                                                                       Height="10"
+                                                                                       HorizontalAlignment="Center"
+                                                                                       VerticalAlignment="Center"/>
+                                                                </material:ColorZone>
+                                                                
+                                                                <CheckBox IsChecked="{Binding Value.Settings.LinkAxisHasPriority}"
+                                                                          Checked="{s:Action OnLinkAxisPriorityChanged}"
+                                                                          Unchecked="{s:Action OnLinkAxisPriorityChanged}"
+                                                                          DockPanel.Dock="Right"
+                                                                          Margin="0 0 5 0"
+                                                                          Content="Priority"/>
                                                             </DockPanel>
 
                                                             <DockPanel LastChildFill="False">
@@ -626,8 +642,7 @@
                                 </DockPanel>
                                 <StackPanel DockPanel.Dock="Bottom" Margin="20">
                                     <DockPanel LastChildFill="True" 
-                                               Margin="0 0 0 10" 
-                                               IsEnabled="{Binding Value.Settings.LinkAxis, Converter={StaticResource NullableToBooleanConverter}}">
+                                               Margin="0 0 0 10">
                                         <TextBlock Text="File:" 
                                                    DockPanel.Dock="Left" 
                                                    Margin="0 0 10 0" 

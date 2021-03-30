@@ -208,7 +208,7 @@ namespace MultiFunPlayer.ViewModels
                 PlaybackSpeed = 1;
             }
 
-            UpdateFiles(AxisFilesChangeType.Update, null);
+            UpdateScripts(AxisFilesChangeType.Update, null);
         }
 
         public void Handle(VideoPlayingMessage message)
@@ -334,7 +334,24 @@ namespace MultiFunPlayer.ViewModels
             }
         }
 
-        private void UpdateFiles(AxisFilesChangeType changeType, params DeviceAxis[] changedAxes)
+        private void MatchAndUpdateScript(DeviceAxis axis, bool overwrite = true)
+        {
+            var updated = TryMatchFiles(overwrite, axis);
+            if (updated.Any())
+                UpdateScripts(AxisFilesChangeType.Update, axis);
+        }
+
+        private void LinkAndUpdateScript(DeviceAxis axis)
+        {
+            var model = Axes[axis];
+            if (model.Settings.LinkAxis == null)
+                return;
+
+            model.Script = LinkedScriptFile.LinkTo(Axes[model.Settings.LinkAxis.Value].Script);
+            UpdateScripts(AxisFilesChangeType.Update, axis);
+        }
+
+        private void UpdateScripts(AxisFilesChangeType changeType, params DeviceAxis[] changedAxes)
         {
             changedAxes ??= EnumUtils.GetValues<DeviceAxis>();
             foreach (var axis in changedAxes)
@@ -342,9 +359,12 @@ namespace MultiFunPlayer.ViewModels
 
             foreach (var (axis, settings) in AxisSettings.Where(x => Array.Exists(changedAxes, a => a == x.Value.LinkAxis)))
             {
-                Axes[axis].Script = Axes[settings.LinkAxis.Value].Script;
-                Axes[axis].UpdateKeyframes(AxisFilesChangeType.Update);
-                Axes[axis].Settings.RandomizerSeed = MathUtils.Random(short.MinValue, short.MaxValue);
+                if (Axes[axis].Script == null || Axes[axis].Settings.LinkAxisHasPriority)
+                {
+                    Axes[axis].Script = LinkedScriptFile.LinkTo(Axes[settings.LinkAxis.Value].Script);
+                    Axes[axis].UpdateKeyframes(AxisFilesChangeType.Update);
+                    Axes[axis].Settings.RandomizerSeed = MathUtils.Random(short.MinValue, short.MaxValue);
+                }
             }
 
             NotifyOfPropertyChange(nameof(ScriptKeyframes));
@@ -430,8 +450,11 @@ namespace MultiFunPlayer.ViewModels
             {
                 if (overwrite && Axes[axis].Script != null)
                 {
-                    Axes[axis].Script = null;
-                    updated.Add(axis);
+                    if (Axes[axis].Script.Origin != ScriptFileOrigin.User)
+                    {
+                        Axes[axis].Script = null;
+                        updated.Add(axis);
+                    }
                 }
             }
 
@@ -476,9 +499,10 @@ namespace MultiFunPlayer.ViewModels
         #region AxisSettings
         public void OnAxisDrop(object sender, DragEventArgs e)
         {
-            if (!(sender is FrameworkElement element && element.DataContext is KeyValuePair<DeviceAxis, AxisViewModel> pair))
+            if (sender is not FrameworkElement element || element.DataContext is not KeyValuePair<DeviceAxis, AxisViewModel> pair)
                 return;
 
+            var (axis, model) = pair;
             var drop = e.Data.GetData(DataFormats.FileDrop);
             if (drop is string[] paths)
             {
@@ -486,23 +510,39 @@ namespace MultiFunPlayer.ViewModels
                 if (path == null)
                     return;
 
-                pair.Value.Script = ScriptFile.FromPath(path);
-                UpdateFiles(AxisFilesChangeType.Update, pair.Key);
+                if (!(model.Settings.LinkAxisHasPriority && model.Script?.Origin == ScriptFileOrigin.Link))
+                {
+                    model.Script = ScriptFile.FromPath(path, userLoaded: true);
+                    UpdateScripts(AxisFilesChangeType.Update, axis);
+                }
             }
         }
 
         public void OnPreviewDragOver(object sender, DragEventArgs e)
         {
-            e.Handled = true;
-            e.Effects = DragDropEffects.Link;
+            if (sender is not FrameworkElement element || element.DataContext is not KeyValuePair<DeviceAxis, AxisViewModel> pair)
+                return;
+
+            var (_, model) = pair;
+            if (model.Settings.LinkAxisHasPriority && model.Script?.Origin == ScriptFileOrigin.Link)
+            {
+                e.Handled = false;
+                e.Effects = DragDropEffects.None;
+            }
+            else
+            {
+                e.Handled = true;
+                e.Effects = DragDropEffects.Link;
+            }
         }
 
         public void OnAxisOpenFolder(DeviceAxis axis)
         {
-            if (Axes[axis].Script == null)
+            var model = Axes[axis];
+            if (model.Script == null)
                 return;
-            
-            Process.Start("explorer.exe", Axes[axis].Script.Source.DirectoryName);
+
+            Process.Start("explorer.exe", model.Script.Source.DirectoryName);
         }
 
         public void OnAxisLoad(DeviceAxis axis)
@@ -517,19 +557,28 @@ namespace MultiFunPlayer.ViewModels
             if (dialog.ShowDialog() != CommonFileDialogResult.Ok)
                 return;
 
-            Axes[axis].Script = ScriptFile.FromFileInfo(new FileInfo(dialog.FileName));
-            UpdateFiles(AxisFilesChangeType.Update, axis);
+            Axes[axis].Script = ScriptFile.FromFileInfo(new FileInfo(dialog.FileName), userLoaded: true);
+            UpdateScripts(AxisFilesChangeType.Update, axis);
+            ResetSync();
         }
 
-        public void OnAxisClear(DeviceAxis axis) => UpdateFiles(AxisFilesChangeType.Clear, axis);
+        public void OnAxisClear(DeviceAxis axis) => UpdateScripts(AxisFilesChangeType.Clear, axis);
         public void OnAxisReload(DeviceAxis axis)
         {
-            var updated = TryMatchFiles(overwrite: true, axis);
-            if (updated.Any())
+            if (Axes[axis].Settings.LinkAxisHasPriority)
             {
-                UpdateFiles(AxisFilesChangeType.Update, axis);
-                ResetSync();
+                if (Axes[axis].Script?.Origin == ScriptFileOrigin.Link)
+                    return;
+
+                if (Axes[axis].Settings.LinkAxis != null)
+                    LinkAndUpdateScript(axis);
             }
+            else
+            {
+                MatchAndUpdateScript(axis);
+            }
+
+            ResetSync();
         }
 
         private bool MoveScript(DeviceAxis axis, DirectoryInfo directory)
@@ -549,22 +598,14 @@ namespace MultiFunPlayer.ViewModels
         public void OnAxisMoveToVideo(DeviceAxis axis)
         {
             if (VideoFile != null && MoveScript(axis, new DirectoryInfo(VideoFile.Source)))
-            {
-                var updated = TryMatchFiles(true, axis);
-                if (updated.Any())
-                    UpdateFiles(AxisFilesChangeType.Update, axis);
-            }
+                MatchAndUpdateScript(axis);
         }
 
         public RelayCommand<DeviceAxis, ScriptLibrary> OnAxisMoveToLibraryCommand => new RelayCommand<DeviceAxis, ScriptLibrary>(OnAxisMoveToLibrary);
         public void OnAxisMoveToLibrary(DeviceAxis axis, ScriptLibrary library)
         {
             if (library?.Directory.Exists == true && MoveScript(axis, library.Directory))
-            {
-                var updated = TryMatchFiles(true, axis);
-                if (updated.Any())
-                    UpdateFiles(AxisFilesChangeType.Update, axis);
-            }
+                MatchAndUpdateScript(axis);
         }
 
         public void OnSliderDoubleClick(object sender, MouseButtonEventArgs e)
@@ -576,11 +617,26 @@ namespace MultiFunPlayer.ViewModels
         [SuppressPropertyChangedWarnings]
         public void OnRandomizerSliderValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
-            if (!(sender is FrameworkElement element && element.DataContext is KeyValuePair<DeviceAxis, AxisViewModel> pair))
+            if (sender is not FrameworkElement element || element.DataContext is not KeyValuePair<DeviceAxis, AxisViewModel> pair)
                 return;
 
-            if (pair.Value.Settings.LinkAxis == null)
+            var (_, model) = pair;
+            if (model.Settings.LinkAxis == null)
                 return;
+
+            ResetSync();
+        }
+
+        public void OnLinkAxisPriorityChanged(object sender, RoutedEventArgs e)
+        {
+            if (sender is not FrameworkElement element || element.DataContext is not KeyValuePair<DeviceAxis, AxisViewModel> pair)
+                return;
+
+            var (axis, model) = pair;
+            if (model.Settings.LinkAxisHasPriority && model.Settings.LinkAxis != null)
+                LinkAndUpdateScript(axis);
+            else
+                MatchAndUpdateScript(axis);
 
             ResetSync();
         }
@@ -588,24 +644,25 @@ namespace MultiFunPlayer.ViewModels
         [SuppressPropertyChangedWarnings]
         public void OnSelectedLinkAxisChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (!(sender is FrameworkElement element && element.DataContext is KeyValuePair<DeviceAxis, AxisViewModel> pair))
+            if (sender is not FrameworkElement element || element.DataContext is not KeyValuePair<DeviceAxis, AxisViewModel> pair)
                 return;
 
-            var axis = pair.Key;
-            var settings = pair.Value.Settings;
-
+            var (axis, model) = pair;
             if (e.AddedItems.TryGet<DeviceAxis>(0, out var added) && added == axis)
             {
-                settings.LinkAxis = e.RemovedItems.TryGet<DeviceAxis>(0, out var removed) ? removed : null;
+                model.Settings.LinkAxis = e.RemovedItems.TryGet<DeviceAxis>(0, out var removed) ? removed : null;
             }
-            else if(settings.LinkAxis == null)
+            else if(model.Settings.LinkAxis == null)
             {
-                UpdateFiles(AxisFilesChangeType.Clear, axis);
+                if(model.Settings.LinkAxisHasPriority)
+                    UpdateScripts(AxisFilesChangeType.Clear, axis);
+                else
+                    MatchAndUpdateScript(axis);
             }
-            else if(settings.LinkAxis != null)
+            else if(model.Settings.LinkAxis != null)
             {
-                Axes[axis].Script = Axes[settings.LinkAxis.Value].Script;
-                UpdateFiles(AxisFilesChangeType.Update, axis);
+                if (model.Script == null || model.Settings.LinkAxisHasPriority)
+                    LinkAndUpdateScript(axis);
             }
 
             ResetSync();
@@ -639,7 +696,7 @@ namespace MultiFunPlayer.ViewModels
             var updated = TryMatchFiles(overwrite: false, null);
             if (updated.Any())
             {
-                UpdateFiles(AxisFilesChangeType.Update, updated.ToArray());
+                UpdateScripts(AxisFilesChangeType.Update, updated.ToArray());
                 ResetSync();
             }
         }
@@ -654,7 +711,7 @@ namespace MultiFunPlayer.ViewModels
             var updated = TryMatchFiles(overwrite: false, null);
             if (updated.Any())
             {
-                UpdateFiles(AxisFilesChangeType.Update, updated.ToArray());
+                UpdateScripts(AxisFilesChangeType.Update, updated.ToArray());
                 ResetSync();
             }
         }
@@ -756,7 +813,6 @@ namespace MultiFunPlayer.ViewModels
         }
     }
 
-
     [DoNotNotify]
     public class AxisState : INotifyPropertyChanged
     {
@@ -780,6 +836,7 @@ namespace MultiFunPlayer.ViewModels
     [JsonObject(MemberSerialization.OptIn)]
     public class AxisSettings : PropertyChangedBase
     {
+        [JsonProperty] public bool LinkAxisHasPriority { get; set; } = false;
         [JsonProperty] public DeviceAxis? LinkAxis { get; set; } = null;
         [JsonProperty] public bool SmartLimitEnabled { get; set; } = false;
         [JsonProperty] public int RandomizerSeed { get; set; } = 0;
