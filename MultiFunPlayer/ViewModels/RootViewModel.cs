@@ -1,10 +1,14 @@
 ﻿using MaterialDesignThemes.Wpf;
+using MultiFunPlayer.Common;
 using MultiFunPlayer.Common.Controls;
 using MultiFunPlayer.Common.Converters;
 using MultiFunPlayer.Common.Messages;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;
+using NLog;
+using NLog.Config;
+using NLog.Targets;
 using Stylet;
 using StyletIoC;
 using System;
@@ -38,6 +42,40 @@ namespace MultiFunPlayer.ViewModels
                 settings.Converters.Add(new StringEnumConverter());
                 return settings;
             };
+
+            var settings = ReadSettings();
+            if (!settings.ContainsKey("LogLevel"))
+            {
+                settings["LogLevel"] = JToken.FromObject(LogLevel.Info);
+                WriteSettings(settings);
+            }
+
+            if (settings.TryGetValue("LogLevel", out var logLevelToken))
+            {
+                var logLevel = LogLevel.FromString(logLevelToken.ToObject<string>());
+                var config = new LoggingConfiguration();
+
+                config.AddRule(logLevel, LogLevel.Fatal, new FileTarget("file")
+                {
+                    FileName = @"${basedir}\Logs\latest.log",
+                    ArchiveFileName = @"${basedir}\Logs\log.{#}.log",
+                    ArchiveNumbering = ArchiveNumberingMode.DateAndSequence,
+                    ArchiveAboveSize = 1048576,
+                    ArchiveDateFormat = "yyyyMMdd",
+                    ArchiveOldFileOnStartup = true,
+                    MaxArchiveFiles = 10,
+                    ConcurrentWrites = false,
+                    KeepFileOpen = true,
+                    OpenFileCacheTimeout = 30,
+                    AutoFlush = false,
+                    OpenFileFlushTimeout = 5
+                });
+
+                if (Debugger.IsAttached)
+                    config.AddRule(LogLevel.Debug, LogLevel.Fatal, new OutputDebugStringTarget("debug"));
+
+                LogManager.Configuration = config;
+            }
         }
 
         protected override void OnActivate()

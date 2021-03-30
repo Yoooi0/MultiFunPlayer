@@ -4,9 +4,9 @@ using MultiFunPlayer.Common;
 using MultiFunPlayer.Common.Controls;
 using MultiFunPlayer.Common.Messages;
 using Newtonsoft.Json.Linq;
+using NLog;
 using Stylet;
 using System;
-using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Threading;
@@ -16,6 +16,8 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
 {
     public class ButtplugOutputTargetViewModel : AsyncAbstractOutputTarget
     {
+        protected Logger Logger = LogManager.GetCurrentClassLogger();
+
         public override string Name => "Buttplug.io";
         public override OutputTargetStatus Status { get; protected set; }
         public IPEndPoint Endpoint { get; set; } = new IPEndPoint(IPAddress.Loopback, 12345);
@@ -36,6 +38,7 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
         {
             void OnDeviceRemoved(ButtplugClientDevice device)
             {
+                Logger.Info($"Device removed: \"{device.Name}\"");
                 if (!DeviceSettings.ContainsKey(device.Name))
                     return;
 
@@ -44,6 +47,7 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
 
             void OnDeviceAdded(ButtplugClientDevice device)
             {
+                Logger.Info($"Device added: \"{device.Name}\"");
                 if (!device.AllowedMessages.ContainsKey(ServerMessage.Types.MessageAttributeType.VibrateCmd))
                     return;
 
@@ -53,15 +57,17 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
             using var client = new ButtplugClient(nameof(MultiFunPlayer));
             client.DeviceAdded += (s, e) => OnDeviceAdded(e.Device);
             client.DeviceRemoved += (s, e) => OnDeviceRemoved(e.Device);
-            client.ErrorReceived += (s, e) => Debug.WriteLine(e.Exception.ToString()); //TODO:
+            client.ErrorReceived += (s, e) => Logger.Debug(e.Exception);
 
             try
             {
+                Logger.Info("Connecting to {0}", $"ws://{Endpoint}");
                 await client.ConnectAsync(new ButtplugWebsocketConnectorOptions(new Uri($"ws://{Endpoint}"))).WithCancellation(token).ConfigureAwait(false);
                 Status = OutputTargetStatus.Connected;
             }
             catch (Exception e)
             {
+                Logger.Warn(e, "Error when connecting to server");
                 if (client.Connected)
                     await client.DisconnectAsync().ConfigureAwait(false);
 
@@ -102,6 +108,8 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
                             return Task.CompletedTask;
 
                         lastSentValues[axis] = value;
+
+                        Logger.Trace("Sending value \"{0}\" to \"{1}\"", value, d.Name);
                         return d.SendVibrateCmd(value);
                     })).ConfigureAwait(false);
 
@@ -111,6 +119,7 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
             catch (OperationCanceledException) { }
             catch (Exception e)
             {
+                Logger.Error(e, "Unhandled error");
                 _ = Execute.OnUIThreadAsync(() => _ = DialogHost.Show(new ErrorMessageDialog($"Unhandled error:\n\n{e}")));
             }
 

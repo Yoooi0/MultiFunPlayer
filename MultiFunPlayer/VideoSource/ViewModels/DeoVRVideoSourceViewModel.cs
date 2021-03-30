@@ -4,6 +4,7 @@ using MultiFunPlayer.Common.Controls;
 using MultiFunPlayer.Common.Messages;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using NLog;
 using Stylet;
 using System;
 using System.Diagnostics;
@@ -18,6 +19,8 @@ namespace MultiFunPlayer.VideoSource.ViewModels
 {
     public class DeoVRVideoSourceViewModel : AbstractVideoSource
     {
+        protected Logger Logger = LogManager.GetCurrentClassLogger();
+
         private readonly IEventAggregator _eventAggregator;
 
         public override string Name => "DeoVR";
@@ -54,6 +57,7 @@ namespace MultiFunPlayer.VideoSource.ViewModels
 
             try
             {
+                Logger.Info("Connecting to {0}", Name);
                 if (Endpoint == null)
                     throw new Exception($"Endpoint cannot be null.");
 
@@ -95,7 +99,9 @@ namespace MultiFunPlayer.VideoSource.ViewModels
 
                     try
                     {
-                        var document = JObject.Parse(Encoding.UTF8.GetString(data[4..(length+4)]));
+                        var json = Encoding.UTF8.GetString(data[4..(length + 4)]);
+                        var document = JObject.Parse(json);
+                        Logger.Trace("Received \"{0}\" from \"{1}\"", json, Name);
 
                         if (document.TryGetValue("path", out var pathToken))
                             _eventAggregator.Publish(new VideoFileChangedMessage(pathToken.TryToObject<string>(out var path) && !string.IsNullOrWhiteSpace(path) ? path : null));
@@ -119,6 +125,7 @@ namespace MultiFunPlayer.VideoSource.ViewModels
             catch (IOException) { }
             catch (Exception e)
             {
+                Logger.Error(e, $"{Name} failed with exception");
                 _ = Execute.OnUIThreadAsync(() => DialogHost.Show(new ErrorMessageDialog($"{Name} failed with exception:\n\n{e}")));
             }
 

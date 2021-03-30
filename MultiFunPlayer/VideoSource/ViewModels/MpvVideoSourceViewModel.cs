@@ -5,6 +5,7 @@ using MultiFunPlayer.Common.Controls;
 using MultiFunPlayer.Common.Messages;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using NLog;
 using Stylet;
 using System;
 using System.Diagnostics;
@@ -19,6 +20,8 @@ namespace MultiFunPlayer.VideoSource.ViewModels
 {
     public class MpvVideoSourceViewModel : AbstractVideoSource
     {
+        protected Logger Logger = LogManager.GetCurrentClassLogger();
+
         private readonly string _pipeName = "multifunplayer-mpv";
         private readonly IEventAggregator _eventAggregator;
 
@@ -41,6 +44,7 @@ namespace MultiFunPlayer.VideoSource.ViewModels
         {
             try
             {
+                Logger.Info("Connecting to {0}", Name);
                 using var client = new NamedPipeClientStream(_pipeName);
 
                 try
@@ -88,6 +92,8 @@ namespace MultiFunPlayer.VideoSource.ViewModels
 
                         try
                         {
+                            Logger.Trace("Received \"{0}\" from \"{1}\"", message, Name);
+
                             var document = JObject.Parse(message);
                             if (!document.TryGetValue("event", out var eventToken))
                                 continue;
@@ -132,6 +138,7 @@ namespace MultiFunPlayer.VideoSource.ViewModels
             catch (IOException) { }
             catch (Exception e)
             {
+                Logger.Error(e, $"{Name} failed with exception");
                 _ = Execute.OnUIThreadAsync(() => DialogHost.Show(new ErrorMessageDialog($"{Name} failed with exception:\n\n{e}")));
             }
 

@@ -2,6 +2,7 @@
 using MultiFunPlayer.Common.Controls;
 using MultiFunPlayer.Common.Messages;
 using Newtonsoft.Json.Linq;
+using NLog;
 using Stylet;
 using System;
 using System.IO.Pipes;
@@ -12,6 +13,8 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
 {
     public class PipeOutputTargetViewModel : ThreadAbstractOutputTarget
     {
+        protected Logger Logger = LogManager.GetCurrentClassLogger();
+
         public override string Name => "Pipe";
         public override OutputTargetStatus Status { get; protected set; }
 
@@ -30,6 +33,8 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
 
             try
             {
+                Logger.Info("Connecting to {0}", PipeName);
+
                 client = new NamedPipeClientStream(".", PipeName, PipeDirection.Out);
                 client.Connect(2500);
 
@@ -37,6 +42,7 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
             }
             catch (Exception e)
             {
+                Logger.Warn(e, "Error when opening pipe");
                 if (client?.IsConnected == true)
                     client.Close();
 
@@ -56,21 +62,29 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
                     sb.Clear();
                     foreach (var (axis, value) in Values)
                     {
+                        if (sb.Length > 0)
+                            sb.Append(' ');
+
                         sb.Append(axis)
                           .AppendFormat("{0:000}", value * 999)
-                          .AppendFormat("I{0}", (int)interval)
-                          .Append(' ');
+                          .AppendFormat("I{0}", (int)interval);
                     }
+                    sb.AppendLine();
 
-                    var encoded = Encoding.ASCII.GetBytes($"{sb}\n", buffer);
-                    if(client?.IsConnected == true)
+                    var commands = sb.ToString();
+                    if (client?.IsConnected == true && !string.IsNullOrWhiteSpace(commands))
+                    {
+                        Logger.Trace("Sending \"{0}\" to \"{1}\"", commands.Trim(), PipeName);
+                        var encoded = Encoding.ASCII.GetBytes(commands, buffer);
                         client?.Write(buffer, 0, encoded);
+                    }
 
                     Thread.Sleep((int)interval);
                 }
             }
             catch (Exception e)
             {
+                Logger.Error(e, "Unhandled error");
                 _ = Execute.OnUIThreadAsync(() => _ = DialogHost.Show(new ErrorMessageDialog($"Unhandled error:\n\n{e}")));
             }
 

@@ -17,12 +17,15 @@ using Newtonsoft.Json;
 using Microsoft.WindowsAPICodePack.Dialogs;
 using System.ComponentModel;
 using MultiFunPlayer.OutputTarget;
+using NLog;
 
 namespace MultiFunPlayer.ViewModels
 {
     public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         IHandle<VideoPositionMessage>, IHandle<VideoPlayingMessage>, IHandle<VideoFileChangedMessage>, IHandle<VideoDurationMessage>, IHandle<VideoSpeedMessage>, IHandle<AppSettingsMessage>
     {
+        protected Logger Logger = LogManager.GetCurrentClassLogger();
+
         private Thread _updateThread;
         private CancellationTokenSource _cancellationSource;
         private float _syncTime;
@@ -187,6 +190,8 @@ namespace MultiFunPlayer.ViewModels
         #region Events
         public void Handle(VideoFileChangedMessage message)
         {
+            Logger.Info("Received VideoFileChangedMessage [Source: \"{0}\" Name: \"{1}\"]", message.VideoFile?.Source, message.VideoFile?.Name);
+
             if (VideoFile == null && message.VideoFile == null)
                 return;
             if (VideoFile != null && message.VideoFile != null)
@@ -213,6 +218,8 @@ namespace MultiFunPlayer.ViewModels
 
         public void Handle(VideoPlayingMessage message)
         {
+            Logger.Info("Received VideoPlayingMessage [IsPlaying: {0}]", message.IsPlaying);
+
             if (!IsPlaying && message.IsPlaying)
                 if(SyncSettings.SyncOnVideoResume)
                     ResetSync();
@@ -222,7 +229,10 @@ namespace MultiFunPlayer.ViewModels
 
         public void Handle(VideoDurationMessage message)
         {
-            VideoDuration = (float)(message.Duration?.TotalSeconds ?? float.NaN);
+            var newDuration = (float)(message.Duration?.TotalSeconds ?? float.NaN);
+            Logger.Info("Received VideoDurationMessage [Duration: {0}]", message.Duration?.ToString());
+
+            VideoDuration = newDuration;
         }
 
         public void Handle(VideoSpeedMessage message)
@@ -233,6 +243,7 @@ namespace MultiFunPlayer.ViewModels
         public void Handle(VideoPositionMessage message)
         {
             var newPosition = (float)(message.Position?.TotalSeconds ?? float.NaN);
+            Logger.Trace("Received VideoPositionMessage [Position: {0}]", message.Position?.ToString());
 
             var error = float.IsFinite(CurrentPosition) ? newPosition - CurrentPosition : 0;
             var wasSeek = MathF.Abs(error) > 1.0f;
@@ -244,8 +255,11 @@ namespace MultiFunPlayer.ViewModels
                 return;
 
             if (wasSeek)
-                if(SyncSettings.SyncOnSeek)
+            {
+                Logger.Debug("Detected seek: {0}", error);
+                if (SyncSettings.SyncOnSeek)
                     ResetSync();
+            }
 
             foreach (var axis in EnumUtils.GetValues<DeviceAxis>())
             {
@@ -347,6 +361,7 @@ namespace MultiFunPlayer.ViewModels
             if (model.Settings.LinkAxis == null)
                 return;
 
+            Logger.Debug("Linked {0} to {1}", axis, model.Settings.LinkAxis.Value);
             model.Script = LinkedScriptFile.LinkTo(Axes[model.Settings.LinkAxis.Value].Script);
             UpdateScripts(AxisFilesChangeType.Update, axis);
         }
@@ -391,6 +406,8 @@ namespace MultiFunPlayer.ViewModels
                         {
                             Axes[DeviceAxis.L0].Script = generator();
                             updated.Add(DeviceAxis.L0);
+
+                            Logger.Debug("Matched {0} script to \"{1}\"", DeviceAxis.L0, fileName);
                         }
                         return true;
                     }
@@ -405,6 +422,8 @@ namespace MultiFunPlayer.ViewModels
                         {
                             Axes[axis].Script = generator();
                             updated.Add(axis);
+
+                            Logger.Debug("Matched {0} script to \"{1}\"", axis, fileName);
                         }
                         return true;
                     }
@@ -454,6 +473,8 @@ namespace MultiFunPlayer.ViewModels
                     {
                         Axes[axis].Script = null;
                         updated.Add(axis);
+
+                        Logger.Debug("Reset {0} script", axis);
                     }
                 }
             }

@@ -2,6 +2,7 @@
 using MultiFunPlayer.Common.Controls;
 using MultiFunPlayer.Common.Messages;
 using Newtonsoft.Json.Linq;
+using NLog;
 using Stylet;
 using System;
 using System.IO;
@@ -20,6 +21,8 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
 
     public class NetworkOutputTargetViewModel : ThreadAbstractOutputTarget
     {
+        protected Logger Logger = LogManager.GetCurrentClassLogger();
+
         public override string Name => "Network";
         public override OutputTargetStatus Status { get; protected set; }
 
@@ -50,11 +53,13 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
 
             try
             {
+                Logger.Info("Connecting to {0}", $"tcp://{Endpoint}");
                 client.Connect(Endpoint);
                 Status = OutputTargetStatus.Connected;
             }
             catch (Exception e)
             {
+                Logger.Warn(e, "Error when connecting to server");
                 _ = Execute.OnUIThreadAsync(() => _ = DialogHost.Show(new ErrorMessageDialog($"Error when connecting to server:\n\n{e}")));
                 return;
             }
@@ -71,21 +76,28 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
                     sb.Clear();
                     foreach (var (axis, value) in Values)
                     {
+                        if (sb.Length > 0)
+                            sb.Append(' ');
+
                         sb.Append(axis)
                           .AppendFormat("{0:000}", value * 999)
-                          .AppendFormat("I{0}", (int)interval)
-                          .Append(' ');
+                          .AppendFormat("I{0}", (int)interval);
                     }
+                    sb.AppendLine();
 
-                    var commands = sb.ToString().Trim();
+                    var commands = sb.ToString();
                     if (client.Connected && !string.IsNullOrWhiteSpace(commands))
+                    {
+                        Logger.Trace("Sending \"{0}\" to \"{1}\"", commands.Trim(), $"tcp://{Endpoint}");
                         stream.WriteLine(commands);
+                    }
 
                     Thread.Sleep((int)interval);
                 }
             }
             catch (Exception e)
             {
+                Logger.Error(e, "Unhandled error");
                 _ = Execute.OnUIThreadAsync(() => _ = DialogHost.Show(new ErrorMessageDialog($"Unhandled error:\n\n{e}")));
             }
         }
@@ -96,11 +108,13 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
 
             try
             {
+                Logger.Info("Connecting to {0}", $"udp://{Endpoint}");
                 client.Connect(Endpoint);
                 Status = OutputTargetStatus.Connected;
             }
             catch (Exception e)
             {
+                Logger.Warn(e, "Error when connecting to server");
                 _ = Execute.OnUIThreadAsync(() => _ = DialogHost.Show(new ErrorMessageDialog($"Error when connecting to server:\n\n{e}")));
                 return;
             }
@@ -108,6 +122,7 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
             try
             {
                 var sb = new StringBuilder(256);
+                var buffer = new byte[256];
                 while (!token.IsCancellationRequested)
                 {
                     var interval = MathF.Max(1, 1000.0f / UpdateRate);
@@ -116,17 +131,22 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
                     sb.Clear();
                     foreach (var (axis, value) in Values)
                     {
+                        if (sb.Length > 0)
+                            sb.Append(' ');
+
                         sb.Append(axis)
                           .AppendFormat("{0:000}", value * 999)
-                          .AppendFormat("I{0}", (int)interval)
-                          .Append(' ');
+                          .AppendFormat("I{0}", (int)interval);
                     }
+                    sb.AppendLine();
 
-                    var commands = sb.ToString().Trim();
+                    var commands = sb.ToString();
                     if (!string.IsNullOrWhiteSpace(commands))
                     {
-                        var bytes = Encoding.ASCII.GetBytes(commands);
-                        client.Send(bytes, bytes.Length);
+                        Logger.Trace("Sending \"{0}\" to \"{1}\"", commands.Trim(), $"udp://{Endpoint}");
+
+                        var encoded = Encoding.ASCII.GetBytes(commands, buffer);
+                        client.Send(buffer, encoded);
                     }
 
                     Thread.Sleep((int)interval);
@@ -134,6 +154,7 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
             }
             catch (Exception e)
             {
+                Logger.Error(e, "Unhandled error");
                 _ = Execute.OnUIThreadAsync(() => _ = DialogHost.Show(new ErrorMessageDialog($"Unhandled error:\n\n{e}")));
             }
         }

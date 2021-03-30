@@ -3,6 +3,7 @@ using MultiFunPlayer.Common;
 using MultiFunPlayer.Common.Controls;
 using MultiFunPlayer.Common.Messages;
 using Newtonsoft.Json.Linq;
+using NLog;
 using Stylet;
 using System;
 using System.IO;
@@ -16,6 +17,8 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
 {
     public class SerialOutputTargetViewModel : ThreadAbstractOutputTarget
     {
+        protected Logger Logger = LogManager.GetCurrentClassLogger();
+
         public override string Name => "Serial";
         public override OutputTargetStatus Status { get; protected set; }
 
@@ -59,6 +62,8 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
 
             try
             {
+                Logger.Info("Connecting to {0}", SelectedComPort);
+
                 serialPort = new SerialPort(SelectedComPort, 115200)
                 {
                     ReadTimeout = 1000,
@@ -73,6 +78,8 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
             }
             catch (Exception e)
             {
+                Logger.Warn(e, "Error when opening serial port");
+
                 try
                 {
                     if (serialPort?.IsOpen == true)
@@ -101,25 +108,32 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
                     sb.Clear();
                     foreach (var (axis, value) in Values)
                     {
+                        if (sb.Length > 0)
+                            sb.Append(' ');
+
                         if (float.IsFinite(lastSentValues[axis]) && MathF.Abs(lastSentValues[axis] - value) * 999 < 1)
                             continue;
 
                         lastSentValues[axis] = value;
                         sb.Append(axis)
                           .AppendFormat("{0:000}", value * 999)
-                          .AppendFormat("I{0}", (int)interval)
-                          .Append(' ');
+                          .AppendFormat("I{0}", (int)interval);
                     }
+                    sb.AppendLine();
 
-                    var commands = sb.ToString().Trim();
+                    var commands = sb.ToString();
                     if (serialPort?.IsOpen == true && !string.IsNullOrWhiteSpace(commands))
-                        serialPort?.WriteLine(commands);
+                    {
+                        Logger.Trace("Sending \"{0}\" to \"{1}\"", commands.Trim(), SelectedComPort);
+                        serialPort?.Write(commands);
+                    }
 
                     Thread.Sleep((int)interval);
                 }
             }
             catch (Exception e) when (e is TimeoutException || e is IOException)
             {
+                Logger.Error(e, "Unhandled error");
                 _ = Execute.OnUIThreadAsync(async () =>
                 {
                     _ = DialogHost.Show(new ErrorMessageDialog($"Unhandled error:\n\n{e}"));

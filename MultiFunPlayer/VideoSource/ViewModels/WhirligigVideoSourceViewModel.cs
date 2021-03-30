@@ -3,6 +3,7 @@ using MultiFunPlayer.Common;
 using MultiFunPlayer.Common.Controls;
 using MultiFunPlayer.Common.Messages;
 using Newtonsoft.Json.Linq;
+using NLog;
 using Stylet;
 using System;
 using System.Diagnostics;
@@ -17,6 +18,8 @@ namespace MultiFunPlayer.VideoSource.ViewModels
 {
     public class WhirligigVideoSourceViewModel : AbstractVideoSource
     {
+        protected Logger Logger = LogManager.GetCurrentClassLogger();
+
         private readonly IEventAggregator _eventAggregator;
 
         public override string Name => "Whirligig";
@@ -35,6 +38,7 @@ namespace MultiFunPlayer.VideoSource.ViewModels
         {
             try
             {
+                Logger.Info("Connecting to {0}", Name);
                 if (!Process.GetProcesses().Any(p => p.ProcessName.StartsWith("Whirligig")))
                     throw new Exception($"Could not find a running {Name} process.");
 
@@ -49,6 +53,7 @@ namespace MultiFunPlayer.VideoSource.ViewModels
                     if (string.IsNullOrWhiteSpace(message))
                         continue;
 
+                    Logger.Trace("Received \"{0}\" from \"{1}\"", message, Name);
                     if (message.Length >= 1 && message[0] == 'C')
                     {
                         var parts = message.Split(' ', 2);
@@ -78,6 +83,7 @@ namespace MultiFunPlayer.VideoSource.ViewModels
             catch (IOException) { }
             catch (Exception e)
             {
+                Logger.Error(e, $"{Name} failed with exception");
                 _ = Execute.OnUIThreadAsync(() => DialogHost.Show(new ErrorMessageDialog($"{Name} failed with exception:\n\n{e}")));
             }
 
