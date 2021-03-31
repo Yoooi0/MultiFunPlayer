@@ -54,6 +54,7 @@ namespace MultiFunPlayer.ViewModels
             {
                 var logLevel = LogLevel.FromString(logLevelToken.ToObject<string>());
                 var config = new LoggingConfiguration();
+                var layout = "${longdate}|${level:uppercase=true}|${logger}|${message}${onexception:|${exception:format=ToString}}";
 
                 config.AddRule(logLevel, LogLevel.Fatal, new FileTarget("file")
                 {
@@ -68,11 +69,17 @@ namespace MultiFunPlayer.ViewModels
                     KeepFileOpen = true,
                     OpenFileCacheTimeout = 30,
                     AutoFlush = false,
-                    OpenFileFlushTimeout = 5
+                    OpenFileFlushTimeout = 5,
+                    Layout = layout
                 });
 
                 if (Debugger.IsAttached)
-                    config.AddRule(LogLevel.Debug, LogLevel.Fatal, new OutputDebugStringTarget("debug"));
+                {
+                    config.AddRule(LogLevel.Debug, LogLevel.Fatal, new OutputDebugStringTarget("debug")
+                    {
+                        Layout = layout
+                    });
+                }
 
                 LogManager.Configuration = config;
             }
