@@ -36,21 +36,35 @@ namespace MultiFunPlayer.OutputTarget
         public async Task ToggleConnectAsync()
         {
             if (Status == OutputTargetStatus.Connected || Status == OutputTargetStatus.Connecting)
-                await DisconnectAsync().ConfigureAwait(true);
+                await DisconnectWithStatusAsync().ConfigureAwait(true);
             else
-                await ConnectAsync().ConfigureAwait(true);
+                await ConnectWithStatusAsync().ConfigureAwait(true);
         }
 
         protected abstract Task ConnectAsync();
 
+        protected async Task ConnectWithStatusAsync()
+        {
+            if (Status != OutputTargetStatus.Disconnected)
+                return;
+
+            Status = OutputTargetStatus.Connecting;
+            await ConnectAsync().ConfigureAwait(false);
+        }
+
         protected virtual async Task DisconnectAsync()
+        {
+            Dispose(disposing: false);
+            await Task.Delay(1000).ConfigureAwait(false);
+        }
+
+        protected async Task DisconnectWithStatusAsync()
         {
             if (Status == OutputTargetStatus.Disconnected || Status == OutputTargetStatus.Disconnecting)
                 return;
 
             Status = OutputTargetStatus.Disconnecting;
-            Dispose(disposing: false);
-            await Task.Delay(1000).ConfigureAwait(false);
+            await DisconnectAsync();
             Status = OutputTargetStatus.Disconnected;
         }
 
@@ -117,17 +131,13 @@ namespace MultiFunPlayer.OutputTarget
 
         protected override async Task ConnectAsync()
         {
-            if (Status != OutputTargetStatus.Disconnected)
-                return;
-
-            Status = OutputTargetStatus.Connecting;
             await Task.Delay(1000).ConfigureAwait(true);
 
             _cancellationSource = new CancellationTokenSource();
             _thread = new Thread(() =>
             {
                 Run(_cancellationSource.Token);
-                _ = Execute.OnUIThreadAsync(async () => await DisconnectAsync().ConfigureAwait(true));
+                _ = Execute.OnUIThreadAsync(async () => await DisconnectWithStatusAsync().ConfigureAwait(true));
             })
             {
                 IsBackground = true
@@ -160,10 +170,6 @@ namespace MultiFunPlayer.OutputTarget
 
         protected override async Task ConnectAsync()
         {
-            if (Status != OutputTargetStatus.Disconnected)
-                return;
-
-            Status = OutputTargetStatus.Connecting;
             await Task.Delay(1000).ConfigureAwait(true);
 
             _cancellationSource = new CancellationTokenSource();
@@ -172,7 +178,7 @@ namespace MultiFunPlayer.OutputTarget
                 TaskCreationOptions.LongRunning,
                 TaskScheduler.Default)
                 .Unwrap();
-            _ = _task.ContinueWith(_ => Execute.OnUIThreadAsync(async () => await DisconnectAsync().ConfigureAwait(true))).Unwrap();
+            _ = _task.ContinueWith(_ => Execute.OnUIThreadAsync(async () => await DisconnectWithStatusAsync().ConfigureAwait(true))).Unwrap();
         }
 
         protected override async void Dispose(bool disposing)

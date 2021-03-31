@@ -56,6 +56,14 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
         public bool IsConnectBusy => Status == OutputTargetStatus.Connecting || Status == OutputTargetStatus.Disconnecting;
         public bool CanToggleConnect => !IsConnectBusy && SelectedComPort != null;
 
+        protected override async Task ConnectAsync()
+        {
+            if (!ComPorts.Contains(SelectedComPort))
+                await RefreshPorts();
+
+            await base.ConnectAsync();
+        }
+
         protected override void Run(CancellationToken token)
         {
             var serialPort = default(SerialPort);
