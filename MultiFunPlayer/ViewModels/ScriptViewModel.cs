@@ -374,7 +374,7 @@ namespace MultiFunPlayer.ViewModels
 
             foreach (var (axis, settings) in AxisSettings.Where(x => Array.Exists(changedAxes, a => a == x.Value.LinkAxis)))
             {
-                if (Axes[axis].Script == null || Axes[axis].Settings.LinkAxisHasPriority)
+                if (Axes[axis].Script == null || (Axes[axis].Settings.LinkAxisHasPriority && Axes[axis].Script.Origin != ScriptFileOrigin.User))
                 {
                     Axes[axis].Script = LinkedScriptFile.LinkTo(Axes[settings.LinkAxis.Value].Script);
                     Axes[axis].UpdateKeyframes(AxisFilesChangeType.Update);
@@ -531,11 +531,9 @@ namespace MultiFunPlayer.ViewModels
                 if (path == null)
                     return;
 
-                if (!(model.Settings.LinkAxisHasPriority && model.Script?.Origin == ScriptFileOrigin.Link))
-                {
-                    model.Script = ScriptFile.FromPath(path, userLoaded: true);
-                    UpdateScripts(AxisFilesChangeType.Update, axis);
-                }
+                model.Script = ScriptFile.FromPath(path, userLoaded: true);
+                UpdateScripts(AxisFilesChangeType.Update, axis);
+                ResetSync();
             }
         }
 
@@ -545,16 +543,8 @@ namespace MultiFunPlayer.ViewModels
                 return;
 
             var (_, model) = pair;
-            if (model.Settings.LinkAxisHasPriority && model.Script?.Origin == ScriptFileOrigin.Link)
-            {
-                e.Handled = false;
-                e.Effects = DragDropEffects.None;
-            }
-            else
-            {
-                e.Handled = true;
-                e.Effects = DragDropEffects.Link;
-            }
+            e.Handled = true;
+            e.Effects = DragDropEffects.Link;
         }
 
         public void OnAxisOpenFolder(DeviceAxis axis)
