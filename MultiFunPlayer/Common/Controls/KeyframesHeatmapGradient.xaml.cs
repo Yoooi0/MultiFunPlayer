@@ -101,7 +101,7 @@ namespace MultiFunPlayer.Common.Controls
         private void Refresh()
         {
             Stops = new GradientStopCollection();
-            if (Keyframes?.Count() == 0 || !float.IsFinite(Duration) || Duration <= 0)
+            if (Keyframes == null || Keyframes.Count == 0 || !float.IsFinite(Duration) || Duration <= 0)
                 return;
 
             void AddStop(Color color, float offset) => Stops.Add(new GradientStop(color, offset));

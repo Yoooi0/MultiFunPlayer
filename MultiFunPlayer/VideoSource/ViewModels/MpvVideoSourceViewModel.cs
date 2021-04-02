@@ -49,7 +49,7 @@ namespace MultiFunPlayer.VideoSource.ViewModels
 
                 try
                 {
-                    await client.ConnectAsync(500, token).ConfigureAwait(false);
+                    await client.ConnectAsync(500, token);
                 }
                 catch (TimeoutException)
                 {
@@ -68,7 +68,7 @@ namespace MultiFunPlayer.VideoSource.ViewModels
 
                         Process.Start(processInfo);
 
-                        await client.ConnectAsync(2000, token).ConfigureAwait(false);
+                        await client.ConnectAsync(2000, token);
                     }
                 }
 
@@ -77,16 +77,16 @@ namespace MultiFunPlayer.VideoSource.ViewModels
                     using var reader = new StreamReader(client);
                     using var writer = new StreamWriter(client) { AutoFlush = true };
 
-                    await writer.WriteLineAsync("{ \"command\": [\"observe_property_string\", 1, \"pause\"] }").ConfigureAwait(false);
-                    await writer.WriteLineAsync("{ \"command\": [\"observe_property_string\", 2, \"duration\"] }").ConfigureAwait(false);
-                    await writer.WriteLineAsync("{ \"command\": [\"observe_property_string\", 3, \"time-pos\"] }").ConfigureAwait(false);
-                    await writer.WriteLineAsync("{ \"command\": [\"observe_property_string\", 4, \"path\"] }").ConfigureAwait(false);
-                    await writer.WriteLineAsync("{ \"command\": [\"observe_property_string\", 5, \"speed\"] }").ConfigureAwait(false);
+                    await writer.WriteLineAsync("{ \"command\": [\"observe_property_string\", 1, \"pause\"] }");
+                    await writer.WriteLineAsync("{ \"command\": [\"observe_property_string\", 2, \"duration\"] }");
+                    await writer.WriteLineAsync("{ \"command\": [\"observe_property_string\", 3, \"time-pos\"] }");
+                    await writer.WriteLineAsync("{ \"command\": [\"observe_property_string\", 4, \"path\"] }");
+                    await writer.WriteLineAsync("{ \"command\": [\"observe_property_string\", 5, \"speed\"] }");
 
                     Status = VideoSourceStatus.Connected;
                     while (!token.IsCancellationRequested && client.IsConnected)
                     {
-                        var message = await reader.ReadLineAsync().WithCancellation(token).ConfigureAwait(false);
+                        var message = await reader.ReadLineAsync().WithCancellation(token);
                         if (message == null)
                             continue;
 
@@ -164,7 +164,7 @@ namespace MultiFunPlayer.VideoSource.ViewModels
             }
         }
 
-        public override async ValueTask<bool> CanConnectAsync(CancellationToken token) => await ValueTask.FromResult(File.Exists(@$"\\.\\pipe\\{_pipeName}")).ConfigureAwait(false);
+        public override async ValueTask<bool> CanConnectAsync(CancellationToken token) => await ValueTask.FromResult(File.Exists(@$"\\.\\pipe\\{_pipeName}"));
 
         public void OnLoadExecutable()
         {
@@ -203,7 +203,7 @@ namespace MultiFunPlayer.VideoSource.ViewModels
 
                 {
                     using var client = new WebClient();
-                    await client.DownloadFileTaskAsync(bootstrapperUri, bootstrapperZip.FullName).ConfigureAwait(false);
+                    await client.DownloadFileTaskAsync(bootstrapperUri, bootstrapperZip.FullName);
                 }
 
                 ZipFile.ExtractToDirectory(bootstrapperZip.FullName, downloadRoot.FullName, true);
@@ -224,7 +224,7 @@ namespace MultiFunPlayer.VideoSource.ViewModels
                 process.Exited += (s, e) => completionSource.SetResult(process.ExitCode);
                 process.Start();
 
-                var result = await completionSource.Task.ConfigureAwait(false);
+                var result = await completionSource.Task;
                 if (result == 0)
                     Executable = new FileInfo(Path.Combine(downloadRoot.FullName, "mpv.exe"));
 

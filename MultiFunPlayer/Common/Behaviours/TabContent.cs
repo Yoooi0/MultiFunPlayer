@@ -14,40 +14,58 @@ namespace MultiFunPlayer.Common.Behaviours
     public static class TabContent
     {
         public static readonly DependencyProperty IsCachedProperty =
-            DependencyProperty.RegisterAttached("IsCached", typeof(bool), typeof(TabContent), new UIPropertyMetadata(false, OnIsCachedChanged));
+            DependencyProperty.RegisterAttached("IsCached",
+                typeof(bool), typeof(TabContent),
+                    new UIPropertyMetadata(false, OnIsCachedChanged));
         public static bool GetIsCached(DependencyObject obj) => (bool)obj.GetValue(IsCachedProperty);
         public static void SetIsCached(DependencyObject obj, bool value) => obj.SetValue(IsCachedProperty, value);
 
         public static readonly DependencyProperty TemplateProperty =
-            DependencyProperty.RegisterAttached("Template", typeof(DataTemplate), typeof(TabContent), new UIPropertyMetadata(null));
+            DependencyProperty.RegisterAttached("Template",
+                typeof(DataTemplate), typeof(TabContent),
+                    new UIPropertyMetadata(null));
         public static DataTemplate GetTemplate(DependencyObject obj) => (DataTemplate)obj.GetValue(TemplateProperty);
         public static void SetTemplate(DependencyObject obj, DataTemplate value) => obj.SetValue(TemplateProperty, value);
 
         public static readonly DependencyProperty TemplateSelectorProperty =
-            DependencyProperty.RegisterAttached("TemplateSelector", typeof(DataTemplateSelector), typeof(TabContent), new UIPropertyMetadata(null));
+            DependencyProperty.RegisterAttached("TemplateSelector",
+                typeof(DataTemplateSelector), typeof(TabContent),
+                    new UIPropertyMetadata(null));
         public static DataTemplateSelector GetTemplateSelector(DependencyObject obj) => (DataTemplateSelector)obj.GetValue(TemplateSelectorProperty);
         public static void SetTemplateSelector(DependencyObject obj, DataTemplateSelector value) => obj.SetValue(TemplateSelectorProperty, value);
 
         [EditorBrowsable(EditorBrowsableState.Never)]
         public static readonly DependencyProperty InternalTabControlProperty =
-            DependencyProperty.RegisterAttached("InternalTabControl", typeof(TabControl), typeof(TabContent), new UIPropertyMetadata(null, OnInternalTabControlChanged));
+            DependencyProperty.RegisterAttached("InternalTabControl",
+                typeof(TabControl), typeof(TabContent),
+                    new UIPropertyMetadata(null, OnInternalTabControlChanged));
+
         [EditorBrowsable(EditorBrowsableState.Never)]
         public static TabControl GetInternalTabControl(DependencyObject obj) => (TabControl)obj.GetValue(InternalTabControlProperty);
+
         [EditorBrowsable(EditorBrowsableState.Never)]
         public static void SetInternalTabControl(DependencyObject obj, TabControl value) => obj.SetValue(InternalTabControlProperty, value);
 
         [EditorBrowsable(EditorBrowsableState.Never)]
         public static readonly DependencyProperty InternalCachedContentProperty =
-            DependencyProperty.RegisterAttached("InternalCachedContent", typeof(ContentControl), typeof(TabContent), new UIPropertyMetadata(null));
+            DependencyProperty.RegisterAttached("InternalCachedContent",
+                typeof(ContentControl), typeof(TabContent),
+                    new UIPropertyMetadata(null));
+
         [EditorBrowsable(EditorBrowsableState.Never)]
         public static ContentControl GetInternalCachedContent(DependencyObject obj) => (ContentControl)obj.GetValue(InternalCachedContentProperty);
+
         [EditorBrowsable(EditorBrowsableState.Never)]
         public static void SetInternalCachedContent(DependencyObject obj, ContentControl value) => obj.SetValue(InternalCachedContentProperty, value);
 
         public static readonly DependencyProperty InternalContentManagerProperty =
-            DependencyProperty.RegisterAttached("InternalContentManager", typeof(object), typeof(TabContent), new UIPropertyMetadata(null));
+            DependencyProperty.RegisterAttached("InternalContentManager",
+                typeof(object), typeof(TabContent),
+                    new UIPropertyMetadata(null));
+
         [EditorBrowsable(EditorBrowsableState.Never)]
         public static object GetInternalContentManager(DependencyObject obj) => obj.GetValue(InternalContentManagerProperty);
+
         [EditorBrowsable(EditorBrowsableState.Never)]
         public static void SetInternalContentManager(DependencyObject obj, object value) => obj.SetValue(InternalContentManagerProperty, value);
 

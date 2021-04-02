@@ -41,7 +41,7 @@ namespace MultiFunPlayer.VideoSource
                 .Unwrap();
             _ = _task.ContinueWith(_ => DisconnectAsync()).Unwrap();
 
-            await Task.CompletedTask.ConfigureAwait(false);
+            await Task.CompletedTask;
         }
 
         public async virtual Task DisconnectAsync()
@@ -54,9 +54,9 @@ namespace MultiFunPlayer.VideoSource
             _cancellationSource?.Cancel();
 
             if (_task != null)
-                await _task.ConfigureAwait(false);
+                await _task;
 
-            await Task.Delay(250).ConfigureAwait(false);
+            await Task.Delay(250);
             _cancellationSource?.Dispose();
 
             _cancellationSource = null;
@@ -65,7 +65,7 @@ namespace MultiFunPlayer.VideoSource
             Status = VideoSourceStatus.Disconnected;
         }
 
-        public async virtual ValueTask<bool> CanConnectAsync(CancellationToken token) => await ValueTask.FromResult(false).ConfigureAwait(false);
+        public async virtual ValueTask<bool> CanConnectAsync(CancellationToken token) => await ValueTask.FromResult(false);
         public async Task WaitForStatus(IEnumerable<VideoSourceStatus> statuses, int checkFrequency, CancellationToken token)
         {
             if (statuses.Contains(Status))
@@ -73,7 +73,7 @@ namespace MultiFunPlayer.VideoSource
 
             //TODO: not great, not terrible
             while (!statuses.Contains(Status))
-                await Task.Delay(checkFrequency, token).ConfigureAwait(false);
+                await Task.Delay(checkFrequency, token);
         }
 
         protected abstract void HandleSettings(JObject settings, AppSettingsMessageType type);
@@ -98,7 +98,7 @@ namespace MultiFunPlayer.VideoSource
 
         protected async virtual void Dispose(bool disposing)
         {
-            await DisconnectAsync().ConfigureAwait(false);
+            await DisconnectAsync();
         }
 
         public void Dispose()

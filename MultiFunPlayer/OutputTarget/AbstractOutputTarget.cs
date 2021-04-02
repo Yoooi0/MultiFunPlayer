@@ -49,13 +49,13 @@ namespace MultiFunPlayer.OutputTarget
                 return;
 
             Status = OutputTargetStatus.Connecting;
-            await ConnectAsync().ConfigureAwait(false);
+            await ConnectAsync().ConfigureAwait(true);
         }
 
         protected virtual async Task DisconnectAsync()
         {
             Dispose(disposing: false);
-            await Task.Delay(1000).ConfigureAwait(false);
+            await Task.Delay(1000);
         }
 
         protected async Task DisconnectWithStatusAsync()
@@ -64,7 +64,7 @@ namespace MultiFunPlayer.OutputTarget
                 return;
 
             Status = OutputTargetStatus.Disconnecting;
-            await DisconnectAsync();
+            await DisconnectAsync().ConfigureAwait(true);
             Status = OutputTargetStatus.Disconnected;
         }
 
@@ -188,7 +188,7 @@ namespace MultiFunPlayer.OutputTarget
             _cancellationSource?.Cancel();
 
             if (_task != null)
-                await _task.ConfigureAwait(false);
+                await _task;
 
             _cancellationSource?.Dispose();
 

@@ -318,7 +318,7 @@
                                     ValueChanged="{s:Action OnOffsetSliderValueChanged}"/>
                         </DockPanel>
                         <controls:KeyframesHeatmapGradient Height="30" 
-                                                           Keyframes="{Binding ScriptKeyframes, Mode=OneWay}"
+                                                           Keyframes="{Binding AxisKeyframes, Mode=OneWay}"
                                                            Duration="{Binding VideoDuration, Mode=OneWay}"
                                                            Position="{Binding CurrentPosition, Mode=OneWay}"/>
                     </StackPanel>
@@ -327,7 +327,7 @@
 
 
             <material:Card material:ShadowAssist.ShadowDepth="Depth1" Margin="0 0 0 20">
-                <TabControl ItemsSource="{Binding Axes}" behaviours:TabContent.IsCached="True">
+                <TabControl ItemsSource="{Binding AxisModels}" behaviours:TabContent.IsCached="True">
                     <TabControl.ItemTemplate>
                         <DataTemplate>
                             <TextBlock Text="{Binding Key}"

@@ -1,0 +1,7 @@
+﻿[*.cs]
+
+# RCS1001: Add braces (when expression spans over multiple lines).
+dotnet_diagnostic.RCS1001.severity = none
+
+# RCS1090: Add call to 'ConfigureAwait' (or vice versa).
+dotnet_diagnostic.RCS1090.severity = none

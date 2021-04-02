@@ -29,7 +29,7 @@ namespace MultiFunPlayer.Common
                 DeviceAxis.V0 => 0.0f,
                 DeviceAxis.V1 => 0.0f,
                 DeviceAxis.L3 => 0.5f,
-                _ => throw new NotImplementedException()
+                _ => throw new NotSupportedException()
             };
 
         public static string Name(this DeviceAxis axis) => axis.ToString();
@@ -45,7 +45,7 @@ namespace MultiFunPlayer.Common
                 DeviceAxis.V0 => "vib",
                 DeviceAxis.V1 => "pump",
                 DeviceAxis.L3 => "suck",
-                _ => throw new NotImplementedException()
+                _ => throw new NotSupportedException()
             };
 
         public static string FriendlyName(this DeviceAxis axis)
@@ -60,7 +60,7 @@ namespace MultiFunPlayer.Common
                 DeviceAxis.V0 => "Vibrate",
                 DeviceAxis.V1 => "Pump",
                 DeviceAxis.L3 => "Suction",
-                _ => throw new NotImplementedException()
+                _ => throw new NotSupportedException()
             };
         }
 }

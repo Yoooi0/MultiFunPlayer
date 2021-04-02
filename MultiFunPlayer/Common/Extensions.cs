@@ -37,7 +37,7 @@ namespace MultiFunPlayer.Common
             {
                 var tcs = new TaskCompletionSource();
                 using var registration = cancellationToken.Register(() => tcs.TrySetCanceled(cancellationToken), useSynchronizationContext: false);
-                await await Task.WhenAny(task, tcs.Task).ConfigureAwait(false);
+                await await Task.WhenAny(task, tcs.Task);
             }
 
             if (!cancellationToken.CanBeCanceled)
@@ -53,7 +53,7 @@ namespace MultiFunPlayer.Common
             {
                 var tcs = new TaskCompletionSource<T>();
                 using var registration = cancellationToken.Register(() => tcs.TrySetCanceled(cancellationToken), useSynchronizationContext: false);
-                return await await Task.WhenAny(task, tcs.Task).ConfigureAwait(false);
+                return await await Task.WhenAny(task, tcs.Task);
             }
 
             if (!cancellationToken.CanBeCanceled)

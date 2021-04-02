@@ -62,14 +62,14 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
             try
             {
                 Logger.Info("Connecting to {0}", $"ws://{Endpoint}");
-                await client.ConnectAsync(new ButtplugWebsocketConnectorOptions(new Uri($"ws://{Endpoint}"))).WithCancellation(token).ConfigureAwait(false);
+                await client.ConnectAsync(new ButtplugWebsocketConnectorOptions(new Uri($"ws://{Endpoint}"))).WithCancellation(token);
                 Status = OutputTargetStatus.Connected;
             }
             catch (Exception e)
             {
                 Logger.Warn(e, "Error when connecting to server");
                 if (client.Connected)
-                    await client.DisconnectAsync().ConfigureAwait(false);
+                    await client.DisconnectAsync();
 
                 _ = Execute.OnUIThreadAsync(() => _ = DialogHost.Show(new ErrorMessageDialog($"Error when connecting to server:\n\n{e}")));
                 return;
@@ -77,10 +77,10 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
 
             try
             {
-                try { await client.StopScanningAsync().WithCancellation(token).ConfigureAwait(false); } catch (ButtplugException) { }
-                try { await client.StartScanningAsync().WithCancellation(token).ConfigureAwait(false); } catch (ButtplugException) { }
+                try { await client.StopScanningAsync().WithCancellation(token); } catch (ButtplugException) { }
+                try { await client.StartScanningAsync().WithCancellation(token); } catch (ButtplugException) { }
 
-                await Task.Delay(2500, token).ConfigureAwait(false);
+                await Task.Delay(2500, token);
                 foreach (var device in client.Devices)
                     OnDeviceAdded(device);
 
@@ -111,9 +111,9 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
 
                         Logger.Trace("Sending value \"{0}\" to \"{1}\"", value, d.Name);
                         return d.SendVibrateCmd(value);
-                    })).ConfigureAwait(false);
+                    }));
 
-                    await Task.Delay((int)interval, token).ConfigureAwait(false);
+                    await Task.Delay((int)interval, token);
                 }
             }
             catch (OperationCanceledException) { }
@@ -124,7 +124,7 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
             }
 
             if (client.Connected)
-                await client.DisconnectAsync().ConfigureAwait(false);
+                await client.DisconnectAsync();
         }
 
         protected override void HandleSettings(JObject settings, AppSettingsMessageType type)

@@ -98,23 +98,23 @@ namespace MultiFunPlayer.Common
         }
 
         #region ICollection<KeyValuePair<TKey,TValue>> Members
-        void ICollection<KeyValuePair<TKey, TValue>>.Add(KeyValuePair<TKey, TValue> item) => TryAddWithNotification(item);
+        public void Add(KeyValuePair<TKey, TValue> item) => TryAddWithNotification(item);
 
-        void ICollection<KeyValuePair<TKey, TValue>>.Clear()
+        public void Clear()
         {
             _dictionary.Clear();
             NotifyObserversOfChange(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
         }
 
-        bool ICollection<KeyValuePair<TKey, TValue>>.Contains(KeyValuePair<TKey, TValue> item) => ((ICollection<KeyValuePair<TKey, TValue>>)_dictionary).Contains(item);
-        void ICollection<KeyValuePair<TKey, TValue>>.CopyTo(KeyValuePair<TKey, TValue>[] array, int arrayIndex) => ((ICollection<KeyValuePair<TKey, TValue>>)_dictionary).CopyTo(array, arrayIndex);
-        int ICollection<KeyValuePair<TKey, TValue>>.Count => _dictionary.Count;
-        bool ICollection<KeyValuePair<TKey, TValue>>.IsReadOnly => ((ICollection<KeyValuePair<TKey, TValue>>)_dictionary).IsReadOnly;
-        bool ICollection<KeyValuePair<TKey, TValue>>.Remove(KeyValuePair<TKey, TValue> item) => TryRemoveWithNotification(item.Key, out _);
+        public bool Contains(KeyValuePair<TKey, TValue> item) => ((ICollection<KeyValuePair<TKey, TValue>>)_dictionary).Contains(item);
+        public void CopyTo(KeyValuePair<TKey, TValue>[] array, int arrayIndex) => ((ICollection<KeyValuePair<TKey, TValue>>)_dictionary).CopyTo(array, arrayIndex);
+        public int Count => _dictionary.Count;
+        public bool IsReadOnly => ((ICollection<KeyValuePair<TKey, TValue>>)_dictionary).IsReadOnly;
+        public bool Remove(KeyValuePair<TKey, TValue> item) => TryRemoveWithNotification(item.Key, out _);
         #endregion
 
         #region IEnumerable<KeyValuePair<TKey,TValue>> Members
-        IEnumerator<KeyValuePair<TKey, TValue>> IEnumerable<KeyValuePair<TKey, TValue>>.GetEnumerator() => _dictionary.GetEnumerator();
+        public IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator() => _dictionary.GetEnumerator();
         IEnumerator IEnumerable.GetEnumerator() => _dictionary.GetEnumerator();
         #endregion
 

@@ -56,34 +56,34 @@ namespace MultiFunPlayer.ViewModels
 
         public async void ToggleConnectAsync(IVideoSource source)
         {
-            await _semaphore.WaitAsync(_cancellationSource.Token).ConfigureAwait(false);
+            await _semaphore.WaitAsync(_cancellationSource.Token);
             if (_currentSource == source)
             {
                 if (_currentSource?.Status == VideoSourceStatus.Connected)
                 {
-                    await _currentSource.DisconnectAsync().ConfigureAwait(false);
-                    await _currentSource.WaitForStatus(new[] { VideoSourceStatus.Disconnected }, 100, _cancellationSource.Token).ConfigureAwait(false);
+                    await _currentSource.DisconnectAsync();
+                    await _currentSource.WaitForStatus(new[] { VideoSourceStatus.Disconnected }, 100, _cancellationSource.Token);
                     _currentSource = null;
                 }
                 else if(_currentSource?.Status == VideoSourceStatus.Disconnected)
                 {
-                    await _currentSource.ConnectAsync().ConfigureAwait(false);
-                    await _currentSource.WaitForStatus(new[] { VideoSourceStatus.Connected, VideoSourceStatus.Disconnected }, 100, _cancellationSource.Token).ConfigureAwait(false);
+                    await _currentSource.ConnectAsync();
+                    await _currentSource.WaitForStatus(new[] { VideoSourceStatus.Connected, VideoSourceStatus.Disconnected }, 100, _cancellationSource.Token);
                 }
             }
             else if (_currentSource != source)
             {
                 if (_currentSource != null)
                 {
-                    await _currentSource.DisconnectAsync().ConfigureAwait(false);
-                    await _currentSource.WaitForStatus(new[] { VideoSourceStatus.Disconnected }, 100, _cancellationSource.Token).ConfigureAwait(false);
+                    await _currentSource.DisconnectAsync();
+                    await _currentSource.WaitForStatus(new[] { VideoSourceStatus.Disconnected }, 100, _cancellationSource.Token);
                     _currentSource = null;
                 }
 
                 if (source != null)
                 {
-                    await source.ConnectAsync().ConfigureAwait(false);
-                    await source.WaitForStatus(new[] { VideoSourceStatus.Connected, VideoSourceStatus.Disconnected }, 100, _cancellationSource.Token).ConfigureAwait(false);
+                    await source.ConnectAsync();
+                    await source.WaitForStatus(new[] { VideoSourceStatus.Connected, VideoSourceStatus.Disconnected }, 100, _cancellationSource.Token);
                 }
 
                 if(source == null || source.Status == VideoSourceStatus.Connected)
@@ -97,13 +97,13 @@ namespace MultiFunPlayer.ViewModels
         {
             try
             {
-                await Task.Delay(2500, token).ConfigureAwait(false);
+                await Task.Delay(2500, token);
                 while (!token.IsCancellationRequested)
                 {
                     if (_currentSource != null)
                     {
-                        await _currentSource.WaitForStatus(new[] { VideoSourceStatus.Disconnected }, 5000, _cancellationSource.Token).ConfigureAwait(false);
-                        await _semaphore.WaitAsync(_cancellationSource.Token).ConfigureAwait(false);
+                        await _currentSource.WaitForStatus(new[] { VideoSourceStatus.Disconnected }, 5000, _cancellationSource.Token);
+                        await _semaphore.WaitAsync(_cancellationSource.Token);
                         if(_currentSource?.Status == VideoSourceStatus.Disconnected)
                             _currentSource = null;
                         _semaphore.Release();
@@ -114,13 +114,13 @@ namespace MultiFunPlayer.ViewModels
                         if (_currentSource != null)
                             break;
 
-                        if(await source.CanConnectAsync(_cancellationSource.Token).ConfigureAwait(false))
+                        if(await source.CanConnectAsync(_cancellationSource.Token))
                         {
-                            await _semaphore.WaitAsync(_cancellationSource.Token).ConfigureAwait(false);
+                            await _semaphore.WaitAsync(_cancellationSource.Token);
                             if(_currentSource == null)
                             {
-                                await source.ConnectAsync().ConfigureAwait(false);
-                                await source.WaitForStatus(new[] { VideoSourceStatus.Connected, VideoSourceStatus.Disconnected }, 100, _cancellationSource.Token).ConfigureAwait(false);
+                                await source.ConnectAsync();
+                                await source.WaitForStatus(new[] { VideoSourceStatus.Connected, VideoSourceStatus.Disconnected }, 100, _cancellationSource.Token);
 
                                 if (source.Status == VideoSourceStatus.Connected)
                                     _currentSource = source;
@@ -129,7 +129,7 @@ namespace MultiFunPlayer.ViewModels
                         }
                     }
 
-                    await Task.Delay(1000, _cancellationSource.Token).ConfigureAwait(false);
+                    await Task.Delay(1000, _cancellationSource.Token);
                 }
             }
             catch (OperationCanceledException) { }
@@ -151,7 +151,7 @@ namespace MultiFunPlayer.ViewModels
             _cancellationSource?.Cancel();
 
             if (_task != null)
-                await _task.ConfigureAwait(false);
+                await _task;
 
             _semaphore?.Dispose();
             _currentSource?.Dispose();

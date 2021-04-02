@@ -109,7 +109,7 @@ namespace MultiFunPlayer.Common
                 foreach (var (key, value) in _dictionary)
                     Remove(key, _dictionary[key]);
 
-                (_view as ICollection<KeyValuePair<TKey, TView>>).Clear();
+                _view.Clear();
             }
             else if (e.Action == NotifyCollectionChangedAction.Move)
             { }
@@ -117,16 +117,13 @@ namespace MultiFunPlayer.Common
 
         #region IReadOnlyDictionary Members
         public TView this[TKey key] => _view[key];
-
         public IEnumerable<TKey> Keys => _dictionary.Keys;
         public IEnumerable<TView> Values => _view.Values;
-
-        public int Count => (_dictionary as ICollection<KeyValuePair<TKey, TValue>>).Count;
-
+        public int Count => _dictionary .Count;
         public bool ContainsKey(TKey key) => _dictionary.ContainsKey(key);
-        public IEnumerator<KeyValuePair<TKey, TView>> GetEnumerator() => (_view as IEnumerable<KeyValuePair<TKey, TView>>).GetEnumerator();
+        public IEnumerator<KeyValuePair<TKey, TView>> GetEnumerator() => _view.GetEnumerator();
         public bool TryGetValue(TKey key, [MaybeNullWhen(false)] out TView value) => _view.TryGetValue(key, out value);
-        IEnumerator IEnumerable.GetEnumerator() => (_view as IEnumerable).GetEnumerator();
+        IEnumerator IEnumerable.GetEnumerator() => (_view as IEnumerable)?.GetEnumerator();
         #endregion
 
         public event NotifyCollectionChangedEventHandler CollectionChanged;

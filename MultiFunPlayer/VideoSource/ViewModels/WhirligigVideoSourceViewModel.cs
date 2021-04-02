@@ -49,7 +49,7 @@ namespace MultiFunPlayer.VideoSource.ViewModels
                 Status = VideoSourceStatus.Connected;
                 while (!token.IsCancellationRequested && client.Connected && !reader.EndOfStream)
                 {
-                    var message = await reader.ReadLineAsync().WithCancellation(token).ConfigureAwait(false);
+                    var message = await reader.ReadLineAsync().WithCancellation(token);
                     if (string.IsNullOrWhiteSpace(message))
                         continue;
 
@@ -100,16 +100,16 @@ namespace MultiFunPlayer.VideoSource.ViewModels
             try
             {
                 if (!Process.GetProcesses().Any(p => p.ProcessName.StartsWith("Whirligig")))
-                    return await ValueTask.FromResult(false).ConfigureAwait(false);
+                    return await ValueTask.FromResult(false);
 
                 using var client = new TcpClient("localhost", 2000);
                 using var stream = client.GetStream();
 
-                return await ValueTask.FromResult(client.Connected).ConfigureAwait(false);
+                return await ValueTask.FromResult(client.Connected);
             }
             catch
             {
-                return await ValueTask.FromResult(false).ConfigureAwait(false);
+                return await ValueTask.FromResult(false);
             }
         }
     }

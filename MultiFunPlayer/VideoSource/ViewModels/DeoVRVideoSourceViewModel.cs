@@ -46,8 +46,8 @@ namespace MultiFunPlayer.VideoSource.ViewModels
                 using var memory = new MemoryStream();
                 do
                 {
-                    result = await stream.ReadAsync(buffer, token).ConfigureAwait(false);
-                    await memory.WriteAsync(buffer.AsMemory(buffer.Offset, result), token).ConfigureAwait(false);
+                    result = await stream.ReadAsync(buffer, token);
+                    await memory.WriteAsync(buffer.AsMemory(buffer.Offset, result), token);
                 }
                 while (result > 0 && stream.DataAvailable);
 
@@ -70,7 +70,7 @@ namespace MultiFunPlayer.VideoSource.ViewModels
                     using var timeoutCancellationSource = new CancellationTokenSource(5000);
                     using var connectCancellationSource = CancellationTokenSource.CreateLinkedTokenSource(token, timeoutCancellationSource.Token);
 
-                    await client.ConnectAsync(Endpoint.Address, Endpoint.Port, connectCancellationSource.Token).ConfigureAwait(false);
+                    await client.ConnectAsync(Endpoint.Address, Endpoint.Port, connectCancellationSource.Token);
                 }
 
                 using var stream = client.GetStream();
@@ -80,16 +80,16 @@ namespace MultiFunPlayer.VideoSource.ViewModels
                     var pingBuffer = new byte[4];
                     while (!token.IsCancellationRequested)
                     {
-                        await Task.Delay(500, token).ConfigureAwait(false);
-                        await stream.WriteAsync(pingBuffer, token).ConfigureAwait(false);
-                        await stream.FlushAsync(token).ConfigureAwait(false);
+                        await Task.Delay(500, token);
+                        await stream.WriteAsync(pingBuffer, token);
+                        await stream.FlushAsync(token);
                     }
                 }, token);
 
                 Status = VideoSourceStatus.Connected;
                 while (!token.IsCancellationRequested && client.Connected)
                 {
-                    var data = await ReadAllBytesAsync(stream, token).ConfigureAwait(false);
+                    var data = await ReadAllBytesAsync(stream, token);
                     if (data.Length <= 4)
                         continue;
 
@@ -152,27 +152,27 @@ namespace MultiFunPlayer.VideoSource.ViewModels
             try
             {
                 if (Endpoint == null)
-                    return await ValueTask.FromResult(false).ConfigureAwait(false);
+                    return await ValueTask.FromResult(false);
 
                 if(string.Equals(Endpoint.Address.ToString(), "localhost") || string.Equals(Endpoint.Address.ToString(), "127.0.0.1"))
                     if (Process.GetProcessesByName("DeoVR").Length == 0)
-                        return await ValueTask.FromResult(false).ConfigureAwait(false);
+                        return await ValueTask.FromResult(false);
 
                 using var client = new TcpClient();
                 {
                     using var timeoutCancellationSource = new CancellationTokenSource(2500);
                     using var connectCancellationSource = CancellationTokenSource.CreateLinkedTokenSource(token, timeoutCancellationSource.Token);
 
-                    await client.ConnectAsync(Endpoint.Address, Endpoint.Port, connectCancellationSource.Token).ConfigureAwait(false);
+                    await client.ConnectAsync(Endpoint.Address, Endpoint.Port, connectCancellationSource.Token);
                 }
 
                 using var stream = client.GetStream();
 
-                return await ValueTask.FromResult(client.Connected).ConfigureAwait(false);
+                return await ValueTask.FromResult(client.Connected);
             }
             catch
             {
-                return await ValueTask.FromResult(false).ConfigureAwait(false);
+                return await ValueTask.FromResult(false);
             }
         }
     }
