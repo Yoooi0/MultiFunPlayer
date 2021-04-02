@@ -383,7 +383,7 @@
                                                 <Button Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}"
                                                         Command="{s:Action OnAxisLoad}"
                                                         CommandParameter="{Binding Key}"
-                                                        IsEnabled="{Binding Value.Settings.LinkAxis, Converter={StaticResource NullableToBooleanConverter}}"
+                                                        IsEnabled="{Binding DataContext.VideoFile, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}, Converter={StaticResource InvertedNullableToBooleanConverter}}"
                                                         ToolTipService.InitialShowDelay="0"
                                                         ToolTipService.Placement="Top"
                                                         ToolTip="Load script"
@@ -393,30 +393,21 @@
                                                 <Button Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}"
                                                         Command="{s:Action OnAxisClear}"
                                                         CommandParameter="{Binding Key}"
+                                                        IsEnabled="{Binding Value.Script, Converter={StaticResource InvertedNullableToBooleanConverter}}"
                                                         ToolTipService.InitialShowDelay="0"
                                                         ToolTipService.Placement="Top"
                                                         ToolTip="Clear script"
                                                         Padding="8">
-                                                    <Button.IsEnabled>
-                                                        <MultiBinding Converter="{StaticResource MultiBooleanToBooleanAndConverter}">
-                                                            <Binding Path="Value.Settings.LinkAxis" Converter="{StaticResource NullableToBooleanConverter}"/>
-                                                            <Binding Path="Value.Script" Converter="{StaticResource InvertedNullableToBooleanConverter}"/>
-                                                        </MultiBinding>
-                                                    </Button.IsEnabled>
                                                     <material:PackIcon Kind="Close" Width="19" Height="19"/>
                                                 </Button>
                                                 <Button Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}"
                                                         Command="{s:Action OnAxisReload}"
                                                         CommandParameter="{Binding Key}"
+                                                        IsEnabled="{Binding DataContext.VideoFile, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}, Converter={StaticResource InvertedNullableToBooleanConverter}}"
                                                         ToolTipService.InitialShowDelay="0"
                                                         ToolTipService.Placement="Top"
                                                         ToolTip="Reload script"
                                                         Padding="8">
-                                                    <Button.IsEnabled>
-                                                        <MultiBinding Converter="{StaticResource MultiBooleanToBooleanAndConverter}">
-                                                            <Binding Path="DataContext.VideoFile" RelativeSource="{RelativeSource FindAncestor, AncestorType={x:Type UserControl}}" Converter="{StaticResource InvertedNullableToBooleanConverter}"/>
-                                                        </MultiBinding>
-                                                    </Button.IsEnabled>
                                                     <material:PackIcon Kind="Reload" Width="19" Height="19"/>
                                                 </Button>
                                                 <Menu>
