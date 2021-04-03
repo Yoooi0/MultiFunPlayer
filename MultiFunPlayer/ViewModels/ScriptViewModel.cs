@@ -575,17 +575,21 @@ namespace MultiFunPlayer.ViewModels
         public void OnAxisClear(DeviceAxis axis) => UpdateScripts(AxisFilesChangeType.Clear, axis);
         public void OnAxisReload(DeviceAxis axis)
         {
-            if (AxisModels[axis].Settings.LinkAxisHasPriority)
+            var model = AxisModels[axis];
+            if (model.Settings.LinkAxisHasPriority)
             {
-                if (AxisModels[axis].Script?.Origin == ScriptFileOrigin.Link)
+                if (model.Script?.Origin == ScriptFileOrigin.Link)
                     return;
 
-                if (AxisModels[axis].Settings.LinkAxis != null)
+                if (model.Settings.LinkAxis != null)
                     LinkAndUpdateScript(axis);
             }
             else
             {
                 MatchAndUpdateScript(axis);
+
+                if (model.Script == null && model.Settings.LinkAxis != null)
+                    LinkAndUpdateScript(axis);
             }
 
             ResetSync();
