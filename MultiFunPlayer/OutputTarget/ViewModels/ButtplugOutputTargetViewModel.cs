@@ -55,9 +55,9 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
             }
 
             using var client = new ButtplugClient(nameof(MultiFunPlayer));
-            client.DeviceAdded += (s, e) => OnDeviceAdded(e.Device);
-            client.DeviceRemoved += (s, e) => OnDeviceRemoved(e.Device);
-            client.ErrorReceived += (s, e) => Logger.Debug(e.Exception);
+            client.DeviceAdded += (_, e) => OnDeviceAdded(e.Device);
+            client.DeviceRemoved += (_, e) => OnDeviceRemoved(e.Device);
+            client.ErrorReceived += (_, e) => Logger.Debug(e.Exception);
 
             try
             {

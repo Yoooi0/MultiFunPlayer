@@ -59,7 +59,7 @@ namespace MultiFunPlayer.VideoSource.ViewModels
             {
                 Logger.Info("Connecting to {0}", Name);
                 if (Endpoint == null)
-                    throw new Exception($"Endpoint cannot be null.");
+                    throw new Exception("Endpoint cannot be null.");
 
                 if (string.Equals(Endpoint.Address, "localhost") || string.Equals(Endpoint.Address, "127.0.0.1"))
                     if (Process.GetProcessesByName("DeoVR").Length == 0)

@@ -148,7 +148,7 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
                     await RefreshPorts().ConfigureAwait(true);
                 });
             }
-            catch (Exception) { }
+            catch { }
 
             try
             {

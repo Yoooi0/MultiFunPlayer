@@ -94,7 +94,7 @@ namespace MultiFunPlayer.Common.Behaviours
 
             var context = new ParserContext
             {
-                XamlTypeMapper = new XamlTypeMapper(new string[0])
+                XamlTypeMapper = new XamlTypeMapper(Array.Empty<string>())
             };
 
             context.XamlTypeMapper.AddMappingProcessingInstruction("b", typeof(TabContent).Namespace, typeof(TabContent).Assembly.FullName);
@@ -126,7 +126,9 @@ namespace MultiFunPlayer.Common.Behaviours
         {
             var contentManager = (ContentManager)GetInternalContentManager(tabControl);
             if (contentManager != null)
+            {
                 contentManager.ReplaceContainer(container);
+            }
             else
             {
                 contentManager = new ContentManager(tabControl, container);

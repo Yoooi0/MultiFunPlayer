@@ -539,9 +539,6 @@ namespace MultiFunPlayer.ViewModels
 
         public void OnPreviewDragOver(object sender, DragEventArgs e)
         {
-            if (sender is not FrameworkElement element || element.DataContext is not KeyValuePair<DeviceAxis, AxisModel> pair)
-                return;
-
             e.Handled = true;
             e.Effects = DragDropEffects.Link;
         }
@@ -615,7 +612,7 @@ namespace MultiFunPlayer.ViewModels
                 MatchAndUpdateScript(axis);
         }
 
-        public RelayCommand<DeviceAxis, ScriptLibrary> OnAxisMoveToLibraryCommand => new RelayCommand<DeviceAxis, ScriptLibrary>(OnAxisMoveToLibrary);
+        public RelayCommand<DeviceAxis, ScriptLibrary> OnAxisMoveToLibraryCommand => new(OnAxisMoveToLibrary);
         public void OnAxisMoveToLibrary(DeviceAxis axis, ScriptLibrary library)
         {
             if (library?.Directory.Exists == true && MoveScript(axis, library.Directory))
@@ -641,6 +638,7 @@ namespace MultiFunPlayer.ViewModels
             ResetSync();
         }
 
+        [SuppressPropertyChangedWarnings]
         public void OnLinkAxisPriorityChanged(object sender, RoutedEventArgs e)
         {
             if (sender is not FrameworkElement element || element.DataContext is not KeyValuePair<DeviceAxis, AxisModel> pair)

@@ -34,7 +34,7 @@ namespace MultiFunPlayer.Common
             _context.Send(_ =>
             {
                 CollectionChanged?.Invoke(this, collectionChangedArgs);
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("Count"));
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Count)));
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Keys)));
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Values)));
             }, null);

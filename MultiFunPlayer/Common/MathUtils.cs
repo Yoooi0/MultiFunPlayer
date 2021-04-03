@@ -58,7 +58,7 @@ namespace MultiFunPlayer.Common
                 seed = seed * 6364136223846793005L + 1442695040888963407L;
                 var r = (int)((seed + 31) % (i + 1));
                 if (r < 0)
-                    r += (i + 1);
+                    r += i + 1;
 
                 _perm[i] = source[r];
                 _grad[i] = GradLookup[_perm[i]];

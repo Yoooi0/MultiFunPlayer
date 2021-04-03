@@ -54,7 +54,7 @@ namespace MultiFunPlayer.ViewModels
             {
                 var logLevel = LogLevel.FromString(logLevelToken.ToObject<string>());
                 var config = new LoggingConfiguration();
-                var layout = "${longdate}|${level:uppercase=true}|${logger}|${message}${onexception:|${exception:format=ToString}}";
+                const string layout = "${longdate}|${level:uppercase=true}|${logger}|${message}${onexception:|${exception:format=ToString}}";
 
                 config.AddRule(logLevel, LogLevel.Fatal, new FileTarget("file")
                 {

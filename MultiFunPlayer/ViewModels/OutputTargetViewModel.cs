@@ -33,7 +33,7 @@ namespace MultiFunPlayer.ViewModels
                     return;
 
                 if (settings.TryGetValue(nameof(ActiveItem), out var selectedItemToken))
-                    ChangeActiveItem(Items.FirstOrDefault(x => string.Equals(x.Name, selectedItemToken.ToObject<string>())) ?? Items.First(), closePrevious: false);
+                    ChangeActiveItem(Items.FirstOrDefault(x => string.Equals(x.Name, selectedItemToken.ToObject<string>())) ?? Items[0], closePrevious: false);
             }
         }
 

@@ -11,15 +11,13 @@ namespace MultiFunPlayer.Common.Controls
     /// </summary>
     public partial class InformationMessageDialog : UserControl
     {
-        private readonly bool _showCheckbox;
-
         public string VersionText => $"v{Assembly.GetEntryAssembly().GetName().Version}";
-        public bool ShowCheckbox => _showCheckbox;
+        public bool ShowCheckbox { get; }
         public bool DontShowAgain { get; set; }
 
         public InformationMessageDialog(bool showCheckbox)
         {
-            _showCheckbox = showCheckbox;
+            ShowCheckbox = showCheckbox;
 
             InitializeComponent();
         }
