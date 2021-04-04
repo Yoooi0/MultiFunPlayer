@@ -213,7 +213,7 @@ namespace MultiFunPlayer.ViewModels
                 PlaybackSpeed = 1;
             }
 
-            UpdateScripts(AxisFilesChangeType.Update, null);
+            UpdateKeyframes(null);
         }
 
         public void Handle(VideoPlayingMessage message)
@@ -348,41 +348,139 @@ namespace MultiFunPlayer.ViewModels
             }
         }
 
-        private void MatchAndUpdateScript(DeviceAxis axis, bool overwrite = true)
+        private void MatchAndUpdateScript(bool overwrite, params DeviceAxis[] axes)
         {
-            var updated = TryMatchFiles(overwrite, axis);
+            var updated = TryMatchFiles(overwrite, axes);
             if (updated.Any())
-                UpdateScripts(AxisFilesChangeType.Update, axis);
+                UpdateKeyframes(axes);
         }
 
-        private void LinkAndUpdateScript(DeviceAxis axis)
+        private void LinkAndUpdateScript(params DeviceAxis[] axes)
         {
-            var model = AxisModels[axis];
-            if (model.Settings.LinkAxis == null)
+            axes ??= EnumUtils.GetValues<DeviceAxis>();
+            if (axes.Length == 0)
                 return;
 
-            Logger.Debug("Linked {0} to {1}", axis, model.Settings.LinkAxis.Value);
-            model.Script = LinkedScriptFile.LinkTo(AxisModels[model.Settings.LinkAxis.Value].Script);
-            UpdateScripts(AxisFilesChangeType.Update, axis);
+            foreach (var axis in axes)
+            {
+                var model = AxisModels[axis];
+                if (model.Settings.LinkAxis == null)
+                    continue;
+
+                if (model.Script != null)
+                {
+                    if (model.Settings.LinkAxisHasPriority && model.Script.Origin == ScriptFileOrigin.User)
+                        continue;
+
+                    if (!model.Settings.LinkAxisHasPriority && model.Script.Origin != ScriptFileOrigin.Link)
+                        continue;
+                }
+
+                Logger.Debug("Linked {0} to {1}", axis, model.Settings.LinkAxis.Value);
+                model.Script = LinkedScriptFile.LinkTo(AxisModels[model.Settings.LinkAxis.Value].Script);
+            }
+
+            UpdateKeyframes(axes);
         }
 
-        private void UpdateScripts(AxisFilesChangeType changeType, params DeviceAxis[] changedAxes)
+        private void ResetScript(params DeviceAxis[] axes)
         {
-            changedAxes ??= EnumUtils.GetValues<DeviceAxis>();
-            foreach (var axis in changedAxes)
-                AxisModels[axis].UpdateKeyframes(changeType);
+            axes ??= EnumUtils.GetValues<DeviceAxis>();
+            if (axes.Length == 0)
+                return;
 
-            foreach (var (_, model) in AxisModels.Where(m => Array.Exists(changedAxes, a => a == m.Value.Settings.LinkAxis)))
+            foreach (var axis in axes)
             {
-                if (model.Script == null || (model.Settings.LinkAxisHasPriority && model.Script.Origin != ScriptFileOrigin.User))
+                Logger.Debug("Reset {0} script", axis);
+                AxisModels[axis].Script = null;
+            }
+        }
+
+        private void ReloadScript(params DeviceAxis[] axes)
+        {
+            axes ??= EnumUtils.GetValues<DeviceAxis>();
+            if (axes.Length == 0)
+                return;
+
+            foreach (var group in axes.GroupBy(a => AxisModels[a].Settings.LinkAxisHasPriority))
+            {
+                if (group.Key)
                 {
-                    model.Script = LinkedScriptFile.LinkTo(AxisModels[model.Settings.LinkAxis.Value].Script);
-                    model.UpdateKeyframes(AxisFilesChangeType.Update);
-                    model.Settings.RandomizerSeed = MathUtils.Random(short.MinValue, short.MaxValue);
+                    LinkAndUpdateScript(group.ToArray());
+                }
+                else
+                {
+                    MatchAndUpdateScript(overwrite: true, group.ToArray());
+                    LinkAndUpdateScript(group.ToArray());
                 }
             }
 
-            NotifyOfPropertyChange(nameof(AxisKeyframes));
+            ResetSync();
+        }
+
+        private void UpdateKeyframes(params DeviceAxis[] changedAxes)
+        {
+            changedAxes ??= EnumUtils.GetValues<DeviceAxis>();
+            if (changedAxes.Length == 0)
+                return;
+
+            static bool UpdateKeyframes(AxisModel model)
+            {
+                if (model.Script == null)
+                {
+                    var result = model.Keyframes != null;
+                    model.Keyframes = null;
+                    model.Script = null;
+
+                    lock (model.State)
+                        model.State.Invalidate();
+
+                    return result;
+                }
+                else
+                {
+                    var result = true;
+                    try
+                    {
+                        var document = JObject.Parse(model.Script.Data);
+                        if (!document.TryGetValue("rawActions", out var actions) || (actions as JArray)?.Count == 0)
+                            if (!document.TryGetValue("actions", out actions) || (actions as JArray)?.Count == 0)
+                                return false;
+
+                        var keyframes = new List<Keyframe>();
+                        foreach (var child in actions)
+                        {
+                            var position = child["at"].ToObject<long>() / 1000.0f;
+                            if (position < 0)
+                                continue;
+
+                            var value = child["pos"].ToObject<float>() / 100;
+                            keyframes.Add(new Keyframe(position, value));
+                        }
+
+                        model.Keyframes = keyframes;
+                    }
+                    catch
+                    {
+                        model.Keyframes = null;
+                        result = false;
+                    }
+
+                    lock (model.State)
+                        model.State.Invalidate();
+
+                    return result;
+                }
+            }
+
+            foreach (var axis in changedAxes)
+                UpdateKeyframes(AxisModels[axis]);
+
+            foreach (var (axis, model) in AxisModels.Where(m => Array.Exists(changedAxes, a => a == m.Value.Settings.LinkAxis)))
+            {
+                LinkAndUpdateScript(axis);
+                model.Settings.RandomizerSeed = MathUtils.Random(short.MinValue, short.MaxValue);
+            }
         }
 
         private IEnumerable<DeviceAxis> TryMatchFiles(bool overwrite, params DeviceAxis[] axes)
@@ -436,6 +534,7 @@ namespace MultiFunPlayer.ViewModels
             {
                 if (File.Exists(path))
                 {
+                    Logger.Info("Matching zip file \"{0}\"", path);
                     using var zip = ZipFile.OpenRead(path);
                     foreach (var entry in zip.Entries.Where(e => string.Equals(Path.GetExtension(e.FullName), ".funscript", StringComparison.OrdinalIgnoreCase)))
                         TryMatchFile(entry.Name, () => ScriptFile.FromZipArchiveEntry(path, entry));
@@ -449,6 +548,7 @@ namespace MultiFunPlayer.ViewModels
             var videoWithoutExtension = Path.GetFileNameWithoutExtension(VideoFile.Name);
             foreach (var library in ScriptLibraries)
             {
+                Logger.Info("Searching library \"{0}\"", library.Directory);
                 foreach (var zipFile in library.EnumerateFiles($"{videoWithoutExtension}.zip"))
                     TryMatchArchive(zipFile.FullName);
 
@@ -458,6 +558,7 @@ namespace MultiFunPlayer.ViewModels
 
             if (Directory.Exists(VideoFile.Source))
             {
+                Logger.Info("Searching video location \"{0}\"", VideoFile.Source);
                 var sourceDirectory = new DirectoryInfo(VideoFile.Source);
                 TryMatchArchive(Path.Join(sourceDirectory.FullName, $"{videoWithoutExtension}.zip"));
 
@@ -471,10 +572,8 @@ namespace MultiFunPlayer.ViewModels
                 {
                     if (AxisModels[axis].Script.Origin != ScriptFileOrigin.User)
                     {
-                        AxisModels[axis].Script = null;
+                        ResetScript(axis);
                         updated.Add(axis);
-
-                        Logger.Debug("Reset {0} script", axis);
                     }
                 }
             }
@@ -532,7 +631,7 @@ namespace MultiFunPlayer.ViewModels
                     return;
 
                 model.Script = ScriptFile.FromPath(path, userLoaded: true);
-                UpdateScripts(AxisFilesChangeType.Update, axis);
+                UpdateKeyframes(axis);
                 ResetSync();
             }
         }
@@ -565,31 +664,19 @@ namespace MultiFunPlayer.ViewModels
                 return;
 
             AxisModels[axis].Script = ScriptFile.FromFileInfo(new FileInfo(dialog.FileName), userLoaded: true);
-            UpdateScripts(AxisFilesChangeType.Update, axis);
+            UpdateKeyframes(axis);
             ResetSync();
         }
 
-        public void OnAxisClear(DeviceAxis axis) => UpdateScripts(AxisFilesChangeType.Clear, axis);
+        public void OnAxisClear(DeviceAxis axis)
+        {
+            ResetScript(axis);
+            UpdateKeyframes(axis);
+        }
+
         public void OnAxisReload(DeviceAxis axis)
         {
-            var model = AxisModels[axis];
-            if (model.Settings.LinkAxisHasPriority)
-            {
-                if (model.Script?.Origin == ScriptFileOrigin.Link)
-                    return;
-
-                if (model.Settings.LinkAxis != null)
-                    LinkAndUpdateScript(axis);
-            }
-            else
-            {
-                MatchAndUpdateScript(axis);
-
-                if (model.Script == null && model.Settings.LinkAxis != null)
-                    LinkAndUpdateScript(axis);
-            }
-
-            ResetSync();
+            ReloadScript(axis);
         }
 
         private bool MoveScript(DeviceAxis axis, DirectoryInfo directory)
@@ -609,14 +696,14 @@ namespace MultiFunPlayer.ViewModels
         public void OnAxisMoveToVideo(DeviceAxis axis)
         {
             if (VideoFile != null && MoveScript(axis, new DirectoryInfo(VideoFile.Source)))
-                MatchAndUpdateScript(axis);
+                ReloadScript(axis);
         }
 
         public RelayCommand<DeviceAxis, ScriptLibrary> OnAxisMoveToLibraryCommand => new(OnAxisMoveToLibrary);
         public void OnAxisMoveToLibrary(DeviceAxis axis, ScriptLibrary library)
         {
             if (library?.Directory.Exists == true && MoveScript(axis, library.Directory))
-                MatchAndUpdateScript(axis);
+                ReloadScript(axis);
         }
 
         public void OnSliderDoubleClick(object sender, MouseButtonEventArgs e)
@@ -644,13 +731,8 @@ namespace MultiFunPlayer.ViewModels
             if (sender is not FrameworkElement element || element.DataContext is not KeyValuePair<DeviceAxis, AxisModel> pair)
                 return;
 
-            var (axis, model) = pair;
-            if (model.Settings.LinkAxisHasPriority && model.Settings.LinkAxis != null)
-                LinkAndUpdateScript(axis);
-            else
-                MatchAndUpdateScript(axis);
-
-            ResetSync();
+            var (axis, _) = pair;
+            ReloadScript(axis);
         }
 
         [SuppressPropertyChangedWarnings]
@@ -661,23 +743,9 @@ namespace MultiFunPlayer.ViewModels
 
             var (axis, model) = pair;
             if (e.AddedItems.TryGet<DeviceAxis>(0, out var added) && added == axis)
-            {
                 model.Settings.LinkAxis = e.RemovedItems.TryGet<DeviceAxis>(0, out var removed) ? removed : null;
-            }
-            else if(model.Settings.LinkAxis == null)
-            {
-                if(model.Settings.LinkAxisHasPriority)
-                    UpdateScripts(AxisFilesChangeType.Clear, axis);
-                else
-                    MatchAndUpdateScript(axis);
-            }
-            else if(model.Settings.LinkAxis != null)
-            {
-                if (model.Script == null || model.Settings.LinkAxisHasPriority)
-                    LinkAndUpdateScript(axis);
-            }
 
-            ResetSync();
+            ReloadScript(axis);
         }
 
         [SuppressPropertyChangedWarnings]
@@ -704,13 +772,7 @@ namespace MultiFunPlayer.ViewModels
                 return;
 
             ScriptLibraries.Add(new ScriptLibrary(directory));
-
-            var updated = TryMatchFiles(overwrite: false, null);
-            if (updated.Any())
-            {
-                UpdateScripts(AxisFilesChangeType.Update, updated.ToArray());
-                ResetSync();
-            }
+            ReloadScript(null);
         }
 
         public void OnLibraryDelete(object sender, RoutedEventArgs e)
@@ -719,13 +781,7 @@ namespace MultiFunPlayer.ViewModels
                 return;
 
             ScriptLibraries.Remove(library);
-
-            var updated = TryMatchFiles(overwrite: false, null);
-            if (updated.Any())
-            {
-                UpdateScripts(AxisFilesChangeType.Update, updated.ToArray());
-                ResetSync();
-            }
+            ReloadScript(null);
         }
 
         public void OnLibraryOpenFolder(object sender, RoutedEventArgs e)
@@ -766,63 +822,6 @@ namespace MultiFunPlayer.ViewModels
         public AxisSettings Settings { get; } = new AxisSettings();
         public IScriptFile Script { get; set; } = null;
         public List<Keyframe> Keyframes { get; set; } = null;
-
-        public bool UpdateKeyframes(AxisFilesChangeType changeType)
-        {
-            bool Clear()
-            {
-                var result = Keyframes != null;
-                Keyframes = null;
-                Script = null;
-
-                lock (State)
-                    State.Invalidate();
-
-                return result;
-            }
-
-            bool Load()
-            {
-                var result = true;
-                try
-                {
-                    var document = JObject.Parse(Script.Data);
-                    if (!document.TryGetValue("rawActions", out var actions) || (actions as JArray)?.Count == 0)
-                        if (!document.TryGetValue("actions", out actions) || (actions as JArray)?.Count == 0)
-                            return false;
-
-                    var keyframes = new List<Keyframe>();
-                    foreach (var child in actions)
-                    {
-                        var position = child["at"].ToObject<long>() / 1000.0f;
-                        if (position < 0)
-                            continue;
-
-                        var value = child["pos"].ToObject<float>() / 100;
-                        keyframes.Add(new Keyframe(position, value));
-                    }
-
-                    Keyframes = keyframes;
-                }
-                catch
-                {
-                    Keyframes = null;
-                    result = false;
-                }
-
-                lock (State)
-                    State.Invalidate();
-
-                return result;
-            }
-
-            if (changeType == AxisFilesChangeType.Clear)
-                return Clear();
-            else if (changeType == AxisFilesChangeType.Update)
-                return Script == null ? Clear() : Load();
-
-            return false;
-        }
     }
 
     [DoNotNotify]
