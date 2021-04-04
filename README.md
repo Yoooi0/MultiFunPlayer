@@ -11,6 +11,17 @@
 MultiFunPlayer is a simple app to synchronize your devices (e.g. [OSR](https://www.patreon.com/tempestvr) or [buttplug.io](https://buttplug.io) supported devices) with any video using funscripts. Supported video players are [DeoVR](https://deovr.com/), [MPV](https://mpv.io/) and [Whirligig](http://whirligig.xyz/).
 The player's main feature is the ability to play multiple funscripts at the same time, allowing for greater movement fidelity.
 
+# Features
+
+* One of the first multi axis funscript players
+* Supports [DeoVR](https://deovr.com/), [MPV](https://mpv.io/) and [Whirligig](http://whirligig.xyz/) video players
+* Ability to output to [buttplug.io](https://buttplug.io), Network TCP/UDP, Namedpipes and Serial
+* Soft start sync feature to prevent unwanted motion
+* Script libraries to organize funscripts in different folders and load funscripts not located next to the video file
+* Ability to link unscripted axis to a different one with optional random motion
+* Smart limit on R1 and R2 axes to limit values based on L0 height
+* Multi funscript heatmap
+
 # How To
 
 To synchronize with videos, start your desired video player and wait for automatic connection or click on the connect button to connect manually *(NOTE: DeoVR and Whirligig require you to enable remote support in their settings)*. Once connected, the funscripts can be loaded in several ways:
