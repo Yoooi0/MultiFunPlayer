@@ -466,6 +466,20 @@
                                                     </MenuItem>
                                                 </Menu>
 
+                                                <ToggleButton IsChecked="{Binding Value.Settings.Inverted}"
+                                                              Checked="{s:Action OnInvertedCheckedChanged}"
+                                                              Unchecked="{s:Action OnInvertedCheckedChanged}"
+                                                              Style="{StaticResource MaterialDesignToolBarToggleButton}"
+                                                              ToolTipService.InitialShowDelay="0"
+                                                              ToolTipService.Placement="Top"
+                                                              ToolTip="Invert">
+
+                                                    <material:PackIcon Kind="FlipVertical" Opacity=".56" Width="20" Height="20"/>
+                                                    <material:ToggleButtonAssist.OnContent>
+                                                        <material:PackIcon Kind="FlipVertical" Width="20" Height="20"/>
+                                                    </material:ToggleButtonAssist.OnContent>
+                                                </ToggleButton>
+
                                                 <material:PopupBox DockPanel.Dock="Left"
                                                                    StaysOpen="True" 
                                                                    Style="{StaticResource MaterialDesignToolBarPopupBox}"
@@ -679,11 +693,6 @@
                                                 MouseDoubleClick="{s:Action OnSliderDoubleClick}"
                                                 ValueChanged="{s:Action OnOffsetSliderValueChanged}"/>
                                     </DockPanel>
-                                    <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="Inverted:" Margin="0 0 10 0" VerticalAlignment="Center"/>
-                                        <ToggleButton Style="{StaticResource MaterialDesignSwitchToggleButton}"
-                                                      IsChecked="{Binding Value.Settings.Inverted}"/>
-                                    </StackPanel>
                                 </StackPanel>
                             </DockPanel>
                         </DataTemplate>
