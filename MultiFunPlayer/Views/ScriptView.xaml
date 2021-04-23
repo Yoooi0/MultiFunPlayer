@@ -610,7 +610,7 @@
                                                               ToolTip="Smart limit">
                                                     <ToggleButton.Resources>
                                                         <Style TargetType="{x:Type ToggleButton}" BasedOn="{StaticResource MaterialDesignToolBarToggleButton}">
-                                                            <Setter Property="Visibility" Value="Hidden"/>
+                                                            <Setter Property="Visibility" Value="Collapsed "/>
                                                             <Style.Triggers>
                                                                 <DataTrigger  Binding="{Binding Key}" Value="R1">
                                                                     <Setter Property="Visibility" Value="Visible"/>
@@ -625,6 +625,17 @@
                                                     <material:PackIcon Kind="ChartSnakeyVariant" Opacity=".56"/>
                                                     <material:ToggleButtonAssist.OnContent>
                                                         <material:PackIcon Kind="ChartSnakeyVariant"/>
+                                                    </material:ToggleButtonAssist.OnContent>
+                                                </ToggleButton>
+
+                                                <ToggleButton IsChecked="{Binding Value.Settings.SmoothingEnabled}"
+                                                              Style="{StaticResource MaterialDesignToolBarToggleButton}"
+                                                              ToolTipService.InitialShowDelay="0"
+                                                              ToolTipService.Placement="Top"
+                                                              ToolTip="Smoothing">
+                                                    <material:PackIcon Kind="ChartBellCurve" Opacity=".56"/>
+                                                    <material:ToggleButtonAssist.OnContent>
+                                                        <material:PackIcon Kind="ChartBellCurve"/>
                                                     </material:ToggleButtonAssist.OnContent>
                                                 </ToggleButton>
                                             </StackPanel>

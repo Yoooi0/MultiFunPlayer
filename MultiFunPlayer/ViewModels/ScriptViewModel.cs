@@ -106,19 +106,39 @@ namespace MultiFunPlayer.ViewModels
                             if (!AxisKeyframes.TryGetValue(axis, out var keyframes) || keyframes == null || keyframes.Count == 0)
                                 continue;
 
-                            var axisPosition = GetAxisPosition(axis);
-                            while (state.NextIndex < keyframes.Count - 1 && keyframes[state.NextIndex].Position < axisPosition)
-                                state.PrevIndex = state.NextIndex++;
-
-                            if (!keyframes.ValidateIndex(state.PrevIndex) || !keyframes.ValidateIndex(state.NextIndex))
-                                continue;
-
-                            var prev = keyframes[state.PrevIndex];
-                            var next = keyframes[state.NextIndex];
                             var settings = AxisSettings[axis];
-                            var newValue = MathUtils.Map(axisPosition, prev.Position, next.Position,
-                                settings.Inverted ? 1 - prev.Value : prev.Value,
-                                settings.Inverted ? 1 - next.Value : next.Value);
+                            var axisPosition = GetAxisPosition(axis);
+
+                            while (state.Index + 1 < keyframes.Count - 1 && keyframes[state.Index + 1].Position < axisPosition)
+                                state.Index++;
+
+                            var newValue = default(float);
+                            var canSmooth = keyframes.ValidateIndex(state.Index - 1) && keyframes.ValidateIndex(state.Index + 2);
+                            if (!settings.SmoothingEnabled || !canSmooth)
+                            {
+                                if (!keyframes.ValidateIndex(state.Index + 1))
+                                    continue;
+
+                                var prev = keyframes[state.Index];
+                                var next = keyframes[state.Index + 1];
+
+                                newValue = MathUtils.Map(axisPosition, prev.Position, next.Position, prev.Value, next.Value);
+                            }
+                            else
+                            {
+                                var p0 = keyframes[state.Index - 1];
+                                var p1 = keyframes[state.Index + 0];
+                                var p2 = keyframes[state.Index + 1];
+                                var p3 = keyframes[state.Index + 2];
+
+                                newValue = MathUtils.Pchip(p0.Position, p0.Value,
+                                                           p1.Position, p1.Value,
+                                                           p2.Position, p2.Value,
+                                                           p3.Position, p3.Value, axisPosition);
+                            }
+
+                            if (settings.Inverted)
+                                newValue = 1 - newValue;
 
                             if (settings.LinkAxis != null)
                             {
@@ -328,22 +348,13 @@ namespace MultiFunPlayer.ViewModels
                 var bestIndex = keyframes.BinarySearch(new Keyframe(GetAxisPosition(axis)), new KeyframePositionComparer());
                 if (bestIndex >= 0)
                 {
-                    state.PrevIndex = bestIndex;
-                    state.NextIndex = bestIndex + 1;
+                    state.Index = bestIndex;
                 }
                 else
                 {
                     bestIndex = ~bestIndex;
-                    if (bestIndex == keyframes.Count)
-                    {
-                        state.PrevIndex = keyframes.Count;
-                        state.NextIndex = keyframes.Count;
-                    }
-                    else
-                    {
-                        state.PrevIndex = bestIndex - 1;
-                        state.NextIndex = bestIndex;
-                    }
+                    state.Index = bestIndex == keyframes.Count ?
+                                  keyframes.Count : bestIndex - 1;
                 }
             }
         }
@@ -827,15 +838,14 @@ namespace MultiFunPlayer.ViewModels
     [DoNotNotify]
     public class AxisState : INotifyPropertyChanged
     {
-        public int PrevIndex { get; set; } = -1;
-        public int NextIndex { get; set; } = -1;
+        public int Index { get; set; } = -1;
         public float Value { get; set; } = float.NaN;
 
-        public bool Valid => PrevIndex >= 0 && NextIndex >= 0;
+        public bool Valid => Index >= 0;
 
         public event PropertyChangedEventHandler PropertyChanged;
 
-        public void Invalidate() => PrevIndex = NextIndex = -1;
+        public void Invalidate() => Index = -1;
 
         public void Notify()
         {
@@ -850,6 +860,7 @@ namespace MultiFunPlayer.ViewModels
         [JsonProperty] public bool LinkAxisHasPriority { get; set; } = false;
         [JsonProperty] public DeviceAxis? LinkAxis { get; set; } = null;
         [JsonProperty] public bool SmartLimitEnabled { get; set; } = false;
+        [JsonProperty] public bool SmoothingEnabled { get; set; } = true;
         [JsonProperty] public int RandomizerSeed { get; set; } = 0;
         [JsonProperty] public int RandomizerStrength { get; set; } = 0;
         [JsonProperty] public int RandomizerSpeed { get; set; } = 0;

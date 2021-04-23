@@ -31,6 +31,37 @@ namespace MultiFunPlayer.Common
 
         public static int Random(int from, int to) => _random.Next(from, to);
         public static double Random() => _random.NextDouble();
+
+        [MethodImpl(MethodImplOptions.AggressiveOptimization)]
+        public static float Pchip(float x0, float y0, float x1, float y1, float x2, float y2, float x3, float y3, float x)
+        {
+            [MethodImpl(MethodImplOptions.AggressiveOptimization)]
+            static float Slope(float xkm, float ykm, float xk, float yk, float xkp, float ykp)
+            {
+                var hkm1 = xk - xkm;
+                var dkm1 = (yk - ykm) / hkm1;
+
+                var hk = xkp - xk;
+                var dk = (ykp - yk) / hk;
+                var w1 = 2 * hk + hkm1;
+                var w2 = hk + 2 * hkm1;
+                if ((dk > 0 && dkm1 < 0) || (dk < 0 && dkm1 > 0) || dk == 0 || dkm1 == 0)
+                    return 0;
+
+                return (w1 + w2) / (w1 / dkm1 + w2 / dk);
+            }
+
+            var s1 = Slope(x0, y0, x1, y1, x2, y2);
+            var s2 = Slope(x1, y1, x2, y2, x3, y3);
+
+            var d = x2 - x1;
+            var dx = x - x1;
+            var t = dx / d;
+            var tt = 1 - t;
+
+            return tt * tt * (y1 * (1 + 2 * t) + dx * s1)
+                   + t * t * (y2 * (3 - 2 * t) - d * s2 * tt);
+        }
     }
 
     public class OpenSimplex
