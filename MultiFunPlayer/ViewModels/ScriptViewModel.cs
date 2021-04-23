@@ -752,6 +752,12 @@ namespace MultiFunPlayer.ViewModels
         }
 
         [SuppressPropertyChangedWarnings]
+        public void OnInvertedCheckedChanged(object sender, RoutedEventArgs e)
+        {
+            ResetSync();
+        }
+
+        [SuppressPropertyChangedWarnings]
         public void OnSelectedLinkAxisChanged(object sender, SelectionChangedEventArgs e)
         {
             if (sender is not FrameworkElement element || element.DataContext is not KeyValuePair<DeviceAxis, AxisModel> pair)
