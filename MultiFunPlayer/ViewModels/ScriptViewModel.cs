@@ -376,7 +376,12 @@ namespace MultiFunPlayer.ViewModels
             {
                 var model = AxisModels[axis];
                 if (model.Settings.LinkAxis == null)
+                {
+                    if (model.Settings.LinkAxisHasPriority)
+                        ResetScript(axis);
+
                     continue;
+                }
 
                 if (model.Script != null)
                 {
