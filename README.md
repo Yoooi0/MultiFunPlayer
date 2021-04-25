@@ -15,12 +15,15 @@ The player's main feature is the ability to play multiple funscripts at the same
 
 * One of the first multi axis funscript players
 * Supports [DeoVR](https://deovr.com/), [MPV](https://mpv.io/) and [Whirligig](http://whirligig.xyz/) video players
+* Auto detection and connection to any supported running video player
+* Supports local, DLNA, web and unc video paths
 * Ability to output to [buttplug.io](https://buttplug.io), Network TCP/UDP, Namedpipes and Serial
 * Soft start sync feature to prevent unwanted motion
 * Script libraries to organize funscripts in different folders and load funscripts not located next to the video file
 * Ability to link unscripted axis to a different one with optional random motion
 * Smart limit on R1 and R2 axes to limit values based on L0 height
 * Multi funscript heatmap
+* True portable app, no files are created/edited outside of the executable folder
 
 # How To
 
