@@ -35,15 +35,15 @@ To synchronize with videos, start your desired video player and wait for automat
 
 | Axis | Description | File Name |
 |-|-|-|
-| L0 | Up/Down | **`<video name>.funscript`** <br/> `<video name>.stroke.funscript` <br/> `<video name>.L0.funscript` |
-| L1 | Forward/Backward | **`<video name>.sway.funscript`** <br/> `<video name>.L1.funscript` |
-| L2 | Left/Right | **`<video name>.surge.funscript`** <br/> `<video name>.L2.funscript` |
-| R0 | Twist | **`<video name>.twist.funscript`** <br/> `<video name>.R0.funscript` |
-| R1 | Roll | **`<video name>.roll.funscript`** <br/> `<video name>.R1.funscript` |
-| R2 | Pitch | **`<video name>.pitch.funscript`** <br/> `<video name>.R2.funscript` |
-| V0 | Vibrate | **`<video name>.vib.funscript`** <br/> `<video name>.V0.funscript` |
-| V1 | Pump | **`<video name>.lube.funscript`** <br/> `<video name>.pump.funscript` <br/> `<video name>.V1.funscript` |
-| L3 | Suction | **`<video name>.suck.funscript`** <br/> `<video name>.valve.funscript` <br/> `<video name>.L3.funscript` |
+| L0 | Up/Down | **`<video name>.funscript`** <br/> <sub>`<video name>.stroke.funscript`</sub> <br/> <sub>`<video name>.L0.funscript`</sub> |
+| L1 | Forward/Backward | **`<video name>.sway.funscript`** <br/> <sub>`<video name>.L1.funscript`</sub> |
+| L2 | Left/Right | **`<video name>.surge.funscript`** <br/> <sub>`<video name>.L2.funscript`</sub> |
+| R0 | Twist | **`<video name>.twist.funscript`** <br/> <sub>`<video name>.R0.funscript`</sub> |
+| R1 | Roll | **`<video name>.roll.funscript`** <br/> <sub>`<video name>.R1.funscript`</sub> |
+| R2 | Pitch | **`<video name>.pitch.funscript`** <br/> <sub>`<video name>.R2.funscript`</sub> |
+| V0 | Vibrate | **`<video name>.vib.funscript`** <br/> <sub>`<video name>.V0.funscript`</sub> |
+| V1 | Pump | **`<video name>.lube.funscript`** <br/> <sub>`<video name>.pump.funscript`</sub> <br/> <sub>`<video name>.V1.funscript`</sub> |
+| L3 | Suction | **`<video name>.suck.funscript`** <br/> <sub>`<video name>.valve.funscript`</sub> <br/> <sub>`<video name>.L3.funscript`</sub> |
 
 > Names in **bold** are commonly used used and are preferred 
 
