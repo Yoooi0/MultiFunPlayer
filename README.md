@@ -33,7 +33,7 @@ To synchronize with videos, start your desired video player and wait for automat
 * Manually, by using the `Load script` button in the axis settings toolbar.
 * Automatically, based on the currently played video file name if the funscripts are named correctly:
 
-| Axis | Description | File Name |
+| Axis | Description | Valid file names |
 |-|-|-|
 | L0 | Up/Down | **`<video name>.funscript`** <br/> <sub>`<video name>.stroke.funscript`</sub> <br/> <sub>`<video name>.L0.funscript`</sub> |
 | L1 | Forward/Backward | **`<video name>.sway.funscript`** <br/> <sub>`<video name>.L1.funscript`</sub> |
