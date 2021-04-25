@@ -529,8 +529,7 @@ namespace MultiFunPlayer.ViewModels
 
                 foreach (var axis in axes)
                 {
-                    if (funscriptWithoutExtension.EndsWith(axis.Name(), StringComparison.OrdinalIgnoreCase)
-                     || funscriptWithoutExtension.EndsWith(axis.AltName(), StringComparison.OrdinalIgnoreCase))
+                    if (axis.Names().Any(n => funscriptWithoutExtension.EndsWith(n, StringComparison.OrdinalIgnoreCase)))
                     {
                         if (AxisModels[axis].Script == null || overwrite)
                         {

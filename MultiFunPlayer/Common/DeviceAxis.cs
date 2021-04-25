@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace MultiFunPlayer.Common
 {
@@ -32,22 +33,6 @@ namespace MultiFunPlayer.Common
                 _ => throw new NotSupportedException()
             };
 
-        public static string Name(this DeviceAxis axis) => axis.ToString();
-        public static string AltName(this DeviceAxis axis)
-            => axis switch
-            {
-                DeviceAxis.L0 => "stroke",
-                DeviceAxis.L1 => "surge",
-                DeviceAxis.L2 => "sway",
-                DeviceAxis.R0 => "twist",
-                DeviceAxis.R1 => "roll",
-                DeviceAxis.R2 => "pitch",
-                DeviceAxis.V0 => "vib",
-                DeviceAxis.V1 => "pump",
-                DeviceAxis.L3 => "suck",
-                _ => throw new NotSupportedException()
-            };
-
         public static string FriendlyName(this DeviceAxis axis)
             => axis switch
             {
@@ -62,5 +47,30 @@ namespace MultiFunPlayer.Common
                 DeviceAxis.L3 => "Suction",
                 _ => throw new NotSupportedException()
             };
+
+        public static IEnumerable<string> Names(this DeviceAxis axis)
+        {
+            yield return axis.ToString();
+            switch (axis)
+            {
+                case DeviceAxis.L0: yield return "stroke"; break;
+                case DeviceAxis.L1: yield return "surge"; break;
+                case DeviceAxis.L2: yield return "sway"; break;
+                case DeviceAxis.R0: yield return "twist"; break;
+                case DeviceAxis.R1: yield return "roll"; break;
+                case DeviceAxis.R2: yield return "pitch"; break;
+                case DeviceAxis.V0: yield return "vib"; break;
+                case DeviceAxis.V1:
+                    yield return "pump";
+                    yield return "lube";
+                    break;
+                case DeviceAxis.L3:
+                    yield return "suck";
+                    yield return "valve";
+                    break;
+                default:
+                    throw new NotSupportedException();
+            }
         }
+    }
 }
