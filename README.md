@@ -21,7 +21,7 @@ The player's main feature is the ability to play multiple funscripts at the same
 * Soft start sync feature to prevent unwanted motion
 * Script libraries to organize funscripts in different folders and load funscripts not located next to the video file
 * Ability to link unscripted axis to a different one with optional random motion
-* Smart limit on R1 and R2 axes to limit values based on L0 height
+* Smart limit on R1 (roll) and R2 (pitch) axes to limit values based on L0 (stroke) height
 * Multi funscript heatmap
 * True portable app, no files are created/edited outside of the executable folder
 
