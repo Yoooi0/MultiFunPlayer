@@ -71,15 +71,14 @@ namespace MultiFunPlayer.ViewModels
             AxisKeyframes = new ObservableConcurrentDictionaryView<DeviceAxis, AxisModel, List<Keyframe>>(AxisModels, model => model.Keyframes);
             _cancellationSource = new CancellationTokenSource();
 
-            _updateThread = new Thread(UpdateThread) { IsBackground = true };
-            _updateThread.Start(_cancellationSource.Token);
+            _updateThread = new Thread(() => UpdateThread(_cancellationSource.Token)) { IsBackground = true };
+            _updateThread.Start();
 
             ResetSync(false);
         }
 
-        private void UpdateThread(object parameter)
+        private void UpdateThread(CancellationToken token)
         {
-            var token = (CancellationToken)parameter;
             var stopwatch = new Stopwatch();
             const float uiUpdateInterval = 1f / 60f;
             var uiUpdateTime = 0f;
