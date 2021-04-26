@@ -114,7 +114,7 @@ namespace MultiFunPlayer.ViewModels
 
                             var newValue = default(float);
                             var canSmooth = keyframes.ValidateIndex(state.Index - 1) && keyframes.ValidateIndex(state.Index + 2);
-                            if (!settings.SmoothingEnabled || !canSmooth)
+                            if (settings.SmoothingType == null || !canSmooth)
                             {
                                 if (!keyframes.ValidateIndex(state.Index + 1))
                                     continue;
@@ -131,10 +131,11 @@ namespace MultiFunPlayer.ViewModels
                                 var p2 = keyframes[state.Index + 1];
                                 var p3 = keyframes[state.Index + 2];
 
-                                newValue = MathUtils.Pchip(p0.Position, p0.Value,
+                                newValue = MathUtils.Interpolate(p0.Position, p0.Value,
                                                            p1.Position, p1.Value,
                                                            p2.Position, p2.Value,
-                                                           p3.Position, p3.Value, axisPosition);
+                                                           p3.Position, p3.Value,
+                                                           axisPosition, settings.SmoothingType.Value);
                             }
 
                             if (settings.Inverted)
@@ -870,7 +871,7 @@ namespace MultiFunPlayer.ViewModels
         [JsonProperty] public bool LinkAxisHasPriority { get; set; } = false;
         [JsonProperty] public DeviceAxis? LinkAxis { get; set; } = null;
         [JsonProperty] public bool SmartLimitEnabled { get; set; } = false;
-        [JsonProperty] public bool SmoothingEnabled { get; set; } = true;
+        [JsonProperty] public InterpolationType? SmoothingType { get; set; } = InterpolationType.Pchip;
         [JsonProperty] public int RandomizerSeed { get; set; } = 0;
         [JsonProperty] public int RandomizerStrength { get; set; } = 0;
         [JsonProperty] public int RandomizerSpeed { get; set; } = 0;

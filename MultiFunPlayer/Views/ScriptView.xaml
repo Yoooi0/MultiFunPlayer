@@ -642,16 +642,40 @@
                                                     </material:ToggleButtonAssist.OnContent>
                                                 </ToggleButton>
 
-                                                <ToggleButton IsChecked="{Binding Value.Settings.SmoothingEnabled}"
-                                                              Style="{StaticResource MaterialDesignToolBarToggleButton}"
-                                                              ToolTipService.InitialShowDelay="0"
-                                                              ToolTipService.Placement="Top"
-                                                              ToolTip="Smoothing">
-                                                    <material:PackIcon Kind="ChartBellCurve" Opacity=".56"/>
-                                                    <material:ToggleButtonAssist.OnContent>
-                                                        <material:PackIcon Kind="ChartBellCurve"/>
-                                                    </material:ToggleButtonAssist.OnContent>
-                                                </ToggleButton>
+                                                <material:PopupBox DockPanel.Dock="Left"
+                                                                   StaysOpen="True" 
+                                                                   Style="{StaticResource MaterialDesignToolBarPopupBox}"
+                                                                   ToolTipService.InitialShowDelay="0"
+                                                                   ToolTipService.Placement="Top"
+                                                                   ToolTip="Smoothing">
+                                                    <material:PopupBox.ToggleContent>
+                                                        <Border Width="35" Height="35">
+                                                            <material:PackIcon Kind="ChartBellCurve" 
+                                                                               Width="19" 
+                                                                               Height="19" 
+                                                                               HorizontalAlignment="Center" 
+                                                                               VerticalAlignment="Center"/>
+                                                        </Border>
+                                                    </material:PopupBox.ToggleContent>
+                                                    <Grid Width="150" Margin="10">
+                                                        <StackPanel>
+                                                            <DockPanel>
+                                                                <TextBlock Text="Type:" 
+                                                                           DockPanel.Dock="Left"
+                                                                           Width="30"
+                                                                           Margin="0 0 10 0"
+                                                                           VerticalAlignment="Center"/>
+                                                                
+                                                                <ComboBox DockPanel.Dock="Left"
+                                                                          Margin="0 0 10 0" 
+                                                                          Width="100" 
+                                                                          ItemsSource="{Binding Source={controls:EnumBindingSource {x:Type common:InterpolationType}}}" 
+                                                                          SelectedItem="{Binding Value.Settings.SmoothingType}"
+                                                                          material:TextFieldAssist.HasClearButton="True"/>
+                                                            </DockPanel>
+                                                        </StackPanel>
+                                                    </Grid>
+                                                </material:PopupBox>
                                             </StackPanel>
                                         </DockPanel>
                                     </Border>

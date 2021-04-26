@@ -57,11 +57,53 @@ namespace MultiFunPlayer.Common
             var d = x2 - x1;
             var dx = x - x1;
             var t = dx / d;
-            var tt = 1 - t;
+            var r = 1 - t;
 
-            return tt * tt * (y1 * (1 + 2 * t) + dx * s1)
-                   + t * t * (y2 * (3 - 2 * t) - d * s2 * tt);
+            return r * r * (y1 * (1 + 2 * t) + dx * s1)
+                 + t * t * (y2 * (3 - 2 * t) - d * s2 * r);
         }
+
+        [MethodImpl(MethodImplOptions.AggressiveOptimization)]
+        public static float Makima(float x0, float y0, float x1, float y1, float x2, float y2, float x3, float y3, float x)
+        {
+            var m2 = (y3 - y2) / (x3 - x2);
+            var m1 = (y2 - y1) / (x2 - x1);
+            var m0 = (y1 - y0) / (x1 - x0);
+
+            var w11 = Math.Abs(m2 - m1) + Math.Abs(m2 + m1) / 2;
+            var w12 = Math.Abs(m1 - m0) + Math.Abs(3 * m0 - m1) / 2;
+            var s1 = (w11 * m0 + w12 * m1) / (w11 + w12);
+            if (!double.IsFinite(s1))
+                s1 = 0;
+
+            var w21 = Math.Abs(m2 - m1) + Math.Abs(3 * m2 - m1) / 2;
+            var w22 = Math.Abs(m1 - m0) + Math.Abs(m1 + m0) / 2;
+            var s2 = (w21 * m1 + w22 * m2) / (w21 + w22);
+            if (!double.IsFinite(s2))
+                s2 = 0;
+
+            var d = x2 - x1;
+            var dx = x - x1;
+            var t = dx / d;
+            var r = 1 - t;
+
+            return r * r * (y1 * (1 + 2 * t) + s1 * dx)
+                 + t * t * (y2 * (3 - 2 * t) - d * s2 * r);
+        }
+
+        public static float Interpolate(float x0, float y0, float x1, float y1, float x2, float y2, float x3, float y3, float x, InterpolationType type)
+            => type switch
+            {
+                InterpolationType.Pchip => Pchip(x0, y0, x1, y1, x2, y2, x3, y3, x),
+                InterpolationType.Makima => Makima(x0, y0, x1, y1, x2, y2, x3, y3, x),
+                _ => throw new NotSupportedException()
+            };
+    }
+
+    public enum InterpolationType
+    {
+        Pchip,
+        Makima
     }
 
     public class OpenSimplex
