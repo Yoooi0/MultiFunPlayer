@@ -676,6 +676,55 @@
                                                         </StackPanel>
                                                     </Grid>
                                                 </material:PopupBox>
+                                                
+                                                <material:PopupBox DockPanel.Dock="Left"
+                                                                   StaysOpen="True" 
+                                                                   Style="{StaticResource MaterialDesignToolBarPopupBox}"
+                                                                   ToolTipService.InitialShowDelay="0"
+                                                                   ToolTipService.Placement="Top"
+                                                                   ToolTip="Auto home">
+                                                    <material:PopupBox.ToggleContent>
+                                                        <Border Width="35" Height="35">
+                                                            <material:PackIcon Kind="Home" 
+                                                                               Width="22" 
+                                                                               Height="22" 
+                                                                               HorizontalAlignment="Center" 
+                                                                               VerticalAlignment="Center"/>
+                                                        </Border>
+                                                    </material:PopupBox.ToggleContent>
+                                                    <Grid Width="200" Margin="10">
+                                                        <StackPanel>
+                                                            <StackPanel Margin="0 0 0 10" Orientation="Horizontal">
+                                                                <TextBlock Text="Enabled:" 
+                                                                           Width="50"
+                                                                           Margin="0 0 10 0"
+                                                                           VerticalAlignment="Center"/>
+
+                                                                <CheckBox IsChecked="{Binding Value.Settings.AutoHomeEnabled}"
+                                                                          Style="{StaticResource MaterialDesignSwitchToggleButton}"/>
+                                                            </StackPanel>
+                                                            
+                                                            <DockPanel>
+                                                                <TextBlock Text="Delay:" 
+                                                                           DockPanel.Dock="Left"
+                                                                           Width="50"
+                                                                           Margin="0 0 10 0"
+                                                                           VerticalAlignment="Center"/>
+
+                                                                <Slider DockPanel.Dock="Left"
+                                                                        Value="{Binding Value.Settings.AutoHomeDelay}"    
+                                                                        Style="{StaticResource MaterialDesignDiscreteSlider}"
+                                                                        Margin="0 -38 0 0"
+                                                                        Minimum="0" 
+                                                                        Maximum="60"
+                                                                        TickFrequency="1"
+                                                                        VerticalAlignment="Center"
+                                                                        IsSnapToTickEnabled="True"
+                                                                        MouseDoubleClick="{s:Action OnSliderDoubleClick}"/>
+                                                            </DockPanel>
+                                                        </StackPanel>
+                                                    </Grid>
+                                                </material:PopupBox>
                                             </StackPanel>
                                         </DockPanel>
                                     </Border>

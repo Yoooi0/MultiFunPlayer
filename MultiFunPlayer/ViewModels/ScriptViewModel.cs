@@ -82,20 +82,66 @@ namespace MultiFunPlayer.ViewModels
             var stopwatch = new Stopwatch();
             const float uiUpdateInterval = 1f / 60f;
             var uiUpdateTime = 0f;
+            var pauseTime = 0f;
 
             stopwatch.Start();
 
             var randomizer = new OpenSimplex(0);
             while (!token.IsCancellationRequested)
             {
-                if (!IsPlaying)
+                var dirty = UpdateValues();
+                Thread.Sleep(IsPlaying && dirty ? 2 : 10);
+
+                UpdateUi();
+
+                CurrentPosition += (float)stopwatch.Elapsed.TotalSeconds * PlaybackSpeed;
+                pauseTime += (float)stopwatch.Elapsed.TotalSeconds;
+                uiUpdateTime += (float)stopwatch.Elapsed.TotalSeconds;
+
+                UpdateSync();
+
+                stopwatch.Restart();
+            }
+
+            void UpdateSmartLimit()
+            {
+                foreach (var axis in EnumUtils.GetValues<DeviceAxis>())
                 {
-                    Thread.Sleep(10);
-                    stopwatch.Restart();
-                    continue;
+                    var settings = AxisSettings[axis];
+                    if (!settings.SmartLimitEnabled)
+                        continue;
+
+                    var limitState = AxisStates[DeviceAxis.L0];
+                    if (!limitState.Valid)
+                        continue;
+
+                    var state = AxisStates[axis];
+                    var value = state.Value;
+                    var limitValue = limitState.Value;
+
+                    var factor = MathUtils.Map(limitValue, 0.25f, 0.9f, 1f, 0f);
+                    state.Value = MathUtils.Lerp(axis.DefaultValue(), state.Value, factor);
+                }
+            }
+
+            bool UpdateValues()
+            {
+                if (IsPlaying)
+                    pauseTime = 0;
+
+                var dirty = false;
+                foreach (var axis in EnumUtils.GetValues<DeviceAxis>())
+                {
+                    if (IsPlaying)
+                        dirty |= UpdateValuesPlaying(axis);
+                    else
+                        dirty |= UpdateValuesPaused(axis);
                 }
 
-                foreach (var axis in EnumUtils.GetValues<DeviceAxis>())
+                UpdateSmartLimit();
+                return dirty;
+
+                bool UpdateValuesPlaying(DeviceAxis axis)
                 {
                     var state = AxisStates[axis];
                     lock (state)
@@ -103,7 +149,7 @@ namespace MultiFunPlayer.ViewModels
                         if (state.Valid)
                         {
                             if (!AxisKeyframes.TryGetValue(axis, out var keyframes) || keyframes == null || keyframes.Count == 0)
-                                continue;
+                                return false;
 
                             var settings = AxisSettings[axis];
                             var axisPosition = GetAxisPosition(axis);
@@ -116,7 +162,7 @@ namespace MultiFunPlayer.ViewModels
                             if (settings.SmoothingType == null || !canSmooth)
                             {
                                 if (!keyframes.ValidateIndex(state.Index + 1))
-                                    continue;
+                                    return false;
 
                                 var prev = keyframes[state.Index];
                                 var next = keyframes[state.Index + 1];
@@ -159,29 +205,30 @@ namespace MultiFunPlayer.ViewModels
                             state.Value = newValue;
                         }
                     }
+
+                    return true;
                 }
 
-                foreach (var axis in EnumUtils.GetValues<DeviceAxis>())
+                bool UpdateValuesPaused(DeviceAxis axis)
                 {
-                    var settings = AxisSettings[axis];
-                    if (!settings.SmartLimitEnabled)
-                        continue;
-
-                    var limitState = AxisStates[DeviceAxis.L0];
-                    if (!limitState.Valid)
-                        continue;
-
                     var state = AxisStates[axis];
-                    var value = state.Value;
-                    var limitValue = limitState.Value;
+                    lock (state)
+                    {
+                        if (!float.IsFinite(state.Value))
+                            return false;
 
-                    var factor = MathUtils.Map(limitValue, 0.25f, 0.9f, 1f, 0f);
-                    state.Value = MathUtils.Lerp(axis.DefaultValue(), state.Value, factor);
+                        var t = (pauseTime - AxisSettings[axis].AutoHomeDelay) / 3;
+                        if (t < 0 || t > 1)
+                            return false;
+
+                        state.Value = MathUtils.Lerp(state.Value, axis.DefaultValue(), MathF.Pow(2, 10 * (t - 1)));
+                        return true;
+                    }
                 }
+            }
 
-                Thread.Sleep(2);
-
-                uiUpdateTime += (float)stopwatch.Elapsed.TotalSeconds;
+            void UpdateUi()
+            {
                 if (uiUpdateTime >= uiUpdateInterval)
                 {
                     uiUpdateTime = 0;
@@ -194,16 +241,16 @@ namespace MultiFunPlayer.ViewModels
                         });
                     }
                 }
+            }
 
-                CurrentPosition += (float)stopwatch.Elapsed.TotalSeconds * PlaybackSpeed;
+            void UpdateSync()
+            {
                 if (IsSyncing && AxisStates.Values.Any(x => x.Valid))
                 {
                     _syncTime += (float)stopwatch.Elapsed.TotalSeconds;
                     NotifyOfPropertyChange(nameof(IsSyncing));
                     NotifyOfPropertyChange(nameof(SyncProgress));
                 }
-
-                stopwatch.Restart();
             }
         }
 
@@ -808,6 +855,8 @@ namespace MultiFunPlayer.ViewModels
         [JsonProperty] public DeviceAxis? LinkAxis { get; set; } = null;
         [JsonProperty] public bool SmartLimitEnabled { get; set; } = false;
         [JsonProperty] public InterpolationType? SmoothingType { get; set; } = InterpolationType.Pchip;
+        [JsonProperty] public bool AutoHomeEnabled { get; set; } = false;
+        [JsonProperty] public float AutoHomeDelay { get; set; } = 5;
         [JsonProperty] public int RandomizerSeed { get; set; } = 0;
         [JsonProperty] public int RandomizerStrength { get; set; } = 0;
         [JsonProperty] public int RandomizerSpeed { get; set; } = 0;
