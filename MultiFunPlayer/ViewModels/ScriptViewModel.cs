@@ -112,7 +112,7 @@ namespace MultiFunPlayer.ViewModels
                                 state.Index++;
 
                             var newValue = default(float);
-                            var canSmooth = keyframes.ValidateIndex(state.Index - 1) && keyframes.ValidateIndex(state.Index + 2);
+                            var canSmooth = !keyframes.IsRawCollection && keyframes.ValidateIndex(state.Index - 1) && keyframes.ValidateIndex(state.Index + 2);
                             if (settings.SmoothingType == null || !canSmooth)
                             {
                                 if (!keyframes.ValidateIndex(state.Index + 1))
