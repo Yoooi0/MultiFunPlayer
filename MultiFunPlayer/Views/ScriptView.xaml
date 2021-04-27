@@ -688,6 +688,29 @@
                                                    Margin="0 0 10 0" 
                                                    VerticalAlignment="Center"/>
 
+                                        <TextBlock Text="RAW" 
+                                                   DockPanel.Dock="Right"
+                                                   VerticalAlignment="Center"
+                                                   Typography.Capitals="AllSmallCaps"
+                                                   FontWeight="Medium"
+                                                   FontSize="12"
+                                                   Margin="10 0 0 0"
+                                                   Padding="0">
+                                            <TextBlock.LayoutTransform>
+                                                <ScaleTransform ScaleY="1.35"/>
+                                            </TextBlock.LayoutTransform>
+                                            <TextBlock.Style>
+                                                <Style TargetType="{x:Type TextBlock}">
+                                                    <Setter Property="Foreground" Value="{StaticResource PrimaryHueLightBrush}"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding Value.Script.Keyframes.IsRawCollection}" Value="True">
+                                                            <Setter Property="Foreground" Value="Red"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+                                        
                                         <TextBox Text="{Binding Value.Script.Name, Mode=OneWay}"
                                                  Style="{StaticResource MaterialDesignFloatingHintTextBox}"
                                                  material:HintAssist.Hint="{Binding Value.Script.Source.DirectoryName}"
