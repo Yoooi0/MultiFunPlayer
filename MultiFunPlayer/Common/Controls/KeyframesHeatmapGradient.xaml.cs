@@ -22,14 +22,14 @@ namespace MultiFunPlayer.Common.Controls
         public bool ShowScrubber => float.IsFinite(Duration) && Duration > 0;
 
         [DoNotNotify]
-        public IReadOnlyDictionary<DeviceAxis, List<Keyframe>> Keyframes
+        public IReadOnlyDictionary<DeviceAxis, KeyframeCollection> Keyframes
         {
-            get => (IReadOnlyDictionary<DeviceAxis, List<Keyframe>>)GetValue(KeyframesProperty);
+            get => (IReadOnlyDictionary<DeviceAxis, KeyframeCollection>)GetValue(KeyframesProperty);
             set => SetValue(KeyframesProperty, value);
         }
 
         public static readonly DependencyProperty KeyframesProperty =
-            DependencyProperty.Register(nameof(Keyframes), typeof(IReadOnlyDictionary<DeviceAxis, List<Keyframe>>),
+            DependencyProperty.Register(nameof(Keyframes), typeof(IReadOnlyDictionary<DeviceAxis, KeyframeCollection>),
                 typeof(KeyframesHeatmapGradient), new FrameworkPropertyMetadata(null,
                     new PropertyChangedCallback(OnKeyframesChanged)));
 

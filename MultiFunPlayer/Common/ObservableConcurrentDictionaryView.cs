@@ -11,6 +11,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Drawing.Text;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Windows.Controls;
 
 namespace MultiFunPlayer.Common
 {
@@ -23,9 +24,12 @@ namespace MultiFunPlayer.Common
         private readonly string _propertyName;
 
         public ObservableConcurrentDictionaryView(ObservableConcurrentDictionary<TKey, TValue> dictionary, Expression<Func<TValue, TView>> selector)
+            : this(dictionary, selector.Compile(), selector.NameForProperty()) { }
+
+        public ObservableConcurrentDictionaryView(ObservableConcurrentDictionary<TKey, TValue> dictionary, Func<TValue, TView> selector, string propertyName)
         {
-            _propertyName = selector.NameForProperty();
-            _selector = selector.Compile();
+            _propertyName = propertyName;
+            _selector = selector;
 
             _view = new ObservableConcurrentDictionary<TKey, TView>();
             _view.PropertyChanged += (s, e) => PropertyChanged?.Invoke(s, e);
