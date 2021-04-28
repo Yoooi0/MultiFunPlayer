@@ -89,7 +89,10 @@ namespace MultiFunPlayer.Common
                     return false;
 
                 if (path.EndsWith(name))
+                {
                     source = path.Remove(path.Length - name.Length);
+                    source = source.TrimEnd('\\', '/');
+                }
 
                 return true;
             }
