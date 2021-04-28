@@ -94,7 +94,9 @@ namespace MultiFunPlayer.ViewModels
 
                 UpdateUi();
 
-                CurrentPosition += (float)stopwatch.Elapsed.TotalSeconds * PlaybackSpeed;
+                if(IsPlaying)
+                    CurrentPosition += (float)stopwatch.Elapsed.TotalSeconds * PlaybackSpeed;
+
                 pauseTime += (float)stopwatch.Elapsed.TotalSeconds;
                 uiUpdateTime += (float)stopwatch.Elapsed.TotalSeconds;
 
