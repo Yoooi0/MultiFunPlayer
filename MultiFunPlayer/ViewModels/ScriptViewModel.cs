@@ -217,7 +217,11 @@ namespace MultiFunPlayer.ViewModels
                         if (!float.IsFinite(state.Value))
                             return false;
 
-                        var t = (pauseTime - AxisSettings[axis].AutoHomeDelay) / 3;
+                        var settings = AxisSettings[axis];
+                        if (!settings.AutoHomeEnabled)
+                            return false;
+
+                        var t = (pauseTime - settings.AutoHomeDelay) / 3;
                         if (t < 0 || t > 1)
                             return false;
 
