@@ -102,18 +102,27 @@ namespace MultiFunPlayer.Common
 
         private static KeyframeCollection ParseFunscript(string data)
         {
+            static JArray GetArray(JObject document, string propertyName)
+            {
+                if (!document.TryGetValue(propertyName, out var property) || property is not JArray array || array.Count == 0)
+                    return null;
+                return array;
+            }
+
             var document = JObject.Parse(data);
 
-            var isRaw = document.TryGetValue("rawActions", out var actions) && (actions as JArray)?.Count != 0;
-            if (!isRaw && (!document.TryGetValue("actions", out actions) || (actions as JArray)?.Count == 0))
+            var rawActions = GetArray(document, "rawActions");
+            var actions = GetArray(document, "actions");
+            if (rawActions == null && actions == null)
                 return null;
 
+            var isRaw = rawActions?.Count > actions?.Count;
             var keyframes = new KeyframeCollection()
             {
                 IsRawCollection = isRaw
             };
 
-            foreach (var child in actions)
+            foreach (var child in isRaw ? rawActions : actions)
             {
                 var position = child["at"].ToObject<long>() / 1000.0f;
                 if (position < 0)
