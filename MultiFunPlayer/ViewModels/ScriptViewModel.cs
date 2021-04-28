@@ -251,7 +251,7 @@ namespace MultiFunPlayer.ViewModels
 
             void UpdateSync()
             {
-                if (IsSyncing && AxisStates.Values.Any(x => x.Valid))
+                if (IsPlaying && IsSyncing && AxisStates.Values.Any(x => x.Valid))
                 {
                     _syncTime += (float)stopwatch.Elapsed.TotalSeconds;
                     NotifyOfPropertyChange(nameof(IsSyncing));
