@@ -66,6 +66,19 @@ namespace MultiFunPlayer.VideoSource
         }
 
         public async virtual ValueTask<bool> CanConnectAsync(CancellationToken token) => await ValueTask.FromResult(false);
+        public async virtual ValueTask<bool> CanConnectAsyncWithStatus(CancellationToken token)
+        {
+            if (Status != VideoSourceStatus.Disconnected)
+                return await ValueTask.FromResult(false);
+
+            Status = VideoSourceStatus.Connecting;
+            await Task.Delay(100, token);
+            var result = await CanConnectAsync(token);
+            Status = VideoSourceStatus.Disconnected;
+
+            return result;
+        }
+
         public async Task WaitForStatus(IEnumerable<VideoSourceStatus> statuses, int checkFrequency, CancellationToken token)
         {
             if (statuses.Contains(Status))
