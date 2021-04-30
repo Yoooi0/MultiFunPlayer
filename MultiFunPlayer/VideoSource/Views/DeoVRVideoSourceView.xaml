@@ -62,6 +62,18 @@
                             </material:PackIcon>
                         </Button>
 
+                        <ToggleButton DockPanel.Dock="Left"
+                                      IsChecked="{Binding AutoConnectEnabled}"           
+                                      Style="{StaticResource MaterialDesignToolBarToggleButton}"
+                                      ToolTipService.InitialShowDelay="0"
+                                      ToolTipService.Placement="Top"
+                                      ToolTip="Auto-connect">
+                            <material:PackIcon Kind="MotionPlayOutline" Opacity=".56" Width="20" Height="20"/>
+                            <material:ToggleButtonAssist.OnContent>
+                                <material:PackIcon Kind="MotionPlayOutline" Width="20" Height="20"/>
+                            </material:ToggleButtonAssist.OnContent>
+                        </ToggleButton>
+
                         <ToggleButton DockPanel.Dock="Right"
                                       IsChecked="{Binding ContentVisible}"                                
                                       ToolTipService.InitialShowDelay="0"

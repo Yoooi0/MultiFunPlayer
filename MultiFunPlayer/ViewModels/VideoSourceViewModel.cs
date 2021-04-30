@@ -114,6 +114,9 @@ namespace MultiFunPlayer.ViewModels
                         if (_currentSource != null)
                             break;
 
+                        if (!source.AutoConnectEnabled)
+                            continue;
+
                         if(await source.CanConnectAsyncWithStatus(_cancellationSource.Token))
                         {
                             await _semaphore.WaitAsync(_cancellationSource.Token);

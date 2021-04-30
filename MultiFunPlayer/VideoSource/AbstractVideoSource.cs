@@ -17,7 +17,8 @@ namespace MultiFunPlayer.VideoSource
         private Task _task;
 
         [SuppressPropertyChangedWarnings] public abstract VideoSourceStatus Status { get; protected set; }
-        public bool ContentVisible { get; set; }
+        public bool ContentVisible { get; set; } = false;
+        public bool AutoConnectEnabled { get; set; } = true;
 
         protected AbstractVideoSource(IEventAggregator eventAggregator)
         {
@@ -98,12 +99,17 @@ namespace MultiFunPlayer.VideoSource
                  || !message.Settings.TryGetObject(out var settings, "VideoSource", Name))
                     return;
 
+                settings[nameof(AutoConnectEnabled)] = new JValue(AutoConnectEnabled);
+
                 HandleSettings(settings, message.Type);
             }
             else if (message.Type == AppSettingsMessageType.Loading)
             {
                 if (!message.Settings.TryGetObject(out var settings, "VideoSource", Name))
                     return;
+
+                if (settings.TryGetValue(nameof(AutoConnectEnabled), out var autoConnectEnabledToken) && autoConnectEnabledToken.TryToObject<bool>(out var autoConnectEnabled))
+                    AutoConnectEnabled = autoConnectEnabled;
 
                 HandleSettings(settings, message.Type);
             }

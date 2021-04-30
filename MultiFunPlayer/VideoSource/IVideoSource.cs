@@ -18,6 +18,7 @@ namespace MultiFunPlayer.VideoSource
         string Name { get; }
         VideoSourceStatus Status { get; }
         bool ContentVisible { get; set; }
+        bool AutoConnectEnabled { get; set; }
 
         Task ConnectAsync();
         Task DisconnectAsync();
