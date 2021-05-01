@@ -66,9 +66,9 @@ namespace MultiFunPlayer.ViewModels
 
             IsPlaying = false;
 
-            AxisStates = new ObservableConcurrentDictionaryView<DeviceAxis, AxisModel, AxisState>(AxisModels, model => model.State);
-            AxisSettings = new ObservableConcurrentDictionaryView<DeviceAxis, AxisModel, AxisSettings>(AxisModels, model => model.Settings);
-            AxisKeyframes = new ObservableConcurrentDictionaryView<DeviceAxis, AxisModel, KeyframeCollection>(AxisModels, model => model.Script?.Keyframes, "Script");
+            AxisStates = AxisModels.CreateView(model => model.State);
+            AxisSettings = AxisModels.CreateView(model => model.Settings);
+            AxisKeyframes = AxisModels.CreateView(model => model.Script?.Keyframes, "Script");
             _cancellationSource = new CancellationTokenSource();
 
             _updateThread = new Thread(() => UpdateThread(_cancellationSource.Token)) { IsBackground = true };
