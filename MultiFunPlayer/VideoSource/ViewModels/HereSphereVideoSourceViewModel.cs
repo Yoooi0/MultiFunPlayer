@@ -61,8 +61,8 @@ namespace MultiFunPlayer.VideoSource.ViewModels
                 if (Endpoint == null)
                     throw new Exception("Endpoint cannot be null.");
 
-                if (string.Equals(Endpoint.Address, "localhost") || string.Equals(Endpoint.Address, "127.0.0.1"))
-                    if (Process.GetProcessesByName("HereSph").Length == 0)
+                if (string.Equals(Endpoint.Address.ToString(), "localhost") || string.Equals(Endpoint.Address.ToString(), "127.0.0.1"))
+                    if (Process.GetProcessesByName("HereSphere").Length == 0)
                         throw new Exception($"Could not find a running {Name} process.");
 
                 using var client = new TcpClient();
