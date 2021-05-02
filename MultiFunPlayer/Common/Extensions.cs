@@ -4,8 +4,10 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Net.Sockets;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -30,6 +32,22 @@ namespace MultiFunPlayer.Common
             {
                 return false;
             }
+        }
+
+        public static async Task<byte[]> ReadAllBytesAsync(this NetworkStream stream, CancellationToken token)
+        {
+            var result = 0;
+            var buffer = new ArraySegment<byte>(new byte[1024]);
+            using var memory = new MemoryStream();
+            do
+            {
+                result = await stream.ReadAsync(buffer, token);
+                await memory.WriteAsync(buffer.AsMemory(buffer.Offset, result), token);
+            }
+            while (result > 0 && stream.DataAvailable);
+
+            memory.Seek(0, SeekOrigin.Begin);
+            return memory.ToArray();
         }
 
         public static ObservableConcurrentDictionaryView<TKey, TValue, TView> CreateView<TKey, TValue, TView>(

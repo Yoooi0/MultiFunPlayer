@@ -39,22 +39,6 @@ namespace MultiFunPlayer.VideoSource.ViewModels
 
         protected override async Task RunAsync(CancellationToken token)
         {
-            static async Task<byte[]> ReadAllBytesAsync(NetworkStream stream, CancellationToken token)
-            {
-                var result = 0;
-                var buffer = new ArraySegment<byte>(new byte[1024]);
-                using var memory = new MemoryStream();
-                do
-                {
-                    result = await stream.ReadAsync(buffer, token);
-                    await memory.WriteAsync(buffer.AsMemory(buffer.Offset, result), token);
-                }
-                while (result > 0 && stream.DataAvailable);
-
-                memory.Seek(0, SeekOrigin.Begin);
-                return memory.ToArray();
-            }
-
             try
             {
                 Logger.Info("Connecting to {0}", Name);
@@ -89,7 +73,7 @@ namespace MultiFunPlayer.VideoSource.ViewModels
                 Status = VideoSourceStatus.Connected;
                 while (!token.IsCancellationRequested && client.Connected)
                 {
-                    var data = await ReadAllBytesAsync(stream, token);
+                    var data = await stream.ReadAllBytesAsync(token);
                     if (data.Length <= 4)
                         continue;
 
