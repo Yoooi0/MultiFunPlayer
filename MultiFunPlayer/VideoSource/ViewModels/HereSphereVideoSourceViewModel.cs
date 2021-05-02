@@ -2,6 +2,7 @@
 using MultiFunPlayer.Common;
 using MultiFunPlayer.Common.Controls;
 using MultiFunPlayer.Common.Messages;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NLog;
 using Stylet;
@@ -11,7 +12,6 @@ using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
-using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
