@@ -8,14 +8,16 @@
 
 # About
 
-MultiFunPlayer is a simple app to synchronize your devices (e.g. [OSR](https://www.patreon.com/tempestvr) or [buttplug.io](https://buttplug.io) supported devices) with any video using funscripts. Supported video players are [DeoVR](https://deovr.com/), [MPV](https://mpv.io/) and [Whirligig](http://whirligig.xyz/).
+MultiFunPlayer is a simple app to synchronize your devices (e.g. [OSR](https://www.patreon.com/tempestvr) or [buttplug.io](https://buttplug.io) supported devices) with any video using funscripts. Supported video players are [DeoVR](https://deovr.com/), [MPV](https://mpv.io/), [HereSphere](https://store.steampowered.com/app/1234730/HereSphere/) and [Whirligig](http://whirligig.xyz/).
 The player's main feature is the ability to play multiple funscripts at the same time, allowing for greater movement fidelity.
 
 # Features
 
 * One of the first multi axis funscript players
-* Supports [DeoVR](https://deovr.com/), [MPV](https://mpv.io/) and [Whirligig](http://whirligig.xyz/) video players
+* Supports [DeoVR](https://deovr.com/), [MPV](https://mpv.io/), [HereSphere](https://store.steampowered.com/app/1234730/HereSphere/) and [Whirligig](http://whirligig.xyz/) video players
 * Auto detection and connection to any supported running video player
+* Real time script smoothing using pchip or makima interpolation
+* Auto-home feature which when video is paused moves axis to its default value after some delay
 * Supports local, DLNA, web and unc video paths
 * Ability to output to [buttplug.io](https://buttplug.io), Network TCP/UDP, Namedpipes and Serial
 * Soft start sync feature to prevent unwanted motion
