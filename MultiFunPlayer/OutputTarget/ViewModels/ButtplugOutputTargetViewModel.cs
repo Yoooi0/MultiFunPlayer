@@ -5,29 +5,91 @@ using MultiFunPlayer.Common.Controls;
 using MultiFunPlayer.Common.Messages;
 using Newtonsoft.Json.Linq;
 using NLog;
+using PropertyChanged;
 using Stylet;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows;
 
 namespace MultiFunPlayer.OutputTarget.ViewModels
 {
+    public static class E
+    {
+        public static string ToString(this ButtplugClientDevice device)
+            => device.Name;
+    }
+
     public class ButtplugOutputTargetViewModel : AsyncAbstractOutputTarget
     {
         protected Logger Logger = LogManager.GetCurrentClassLogger();
 
+        private readonly List<ServerMessage.Types.MessageAttributeType> _supportedMessages = new()
+        {
+            ServerMessage.Types.MessageAttributeType.LinearCmd,
+            ServerMessage.Types.MessageAttributeType.RotateCmd,
+            ServerMessage.Types.MessageAttributeType.VibrateCmd
+        };
+
         public override string Name => "Buttplug.io";
         public override OutputTargetStatus Status { get; protected set; }
         public IPEndPoint Endpoint { get; set; } = new IPEndPoint(IPAddress.Loopback, 12345);
-        public ObservableConcurrentDictionary<string, ButtplugClientDeviceSettings> DeviceSettings { get; protected set; }
+        public BindableCollection<ButtplugClientDevice> AvailableDevices { get; protected set; }
+
+        [DependsOn(nameof(SelectedDevice))]
+        public BindableCollection<ServerMessage.Types.MessageAttributeType> AvailableMessageTypes
+            => SelectedDevice != null ? new(SelectedDevice.AllowedMessages.Keys.Join(_supportedMessages, x => x, x => x, (x, _) => x)) : null;
+
+        [DependsOn(nameof(SelectedDevice), nameof(AvailableMessageTypes))]
+        public BindableCollection<uint> AvailableFeatureIndices
+        {
+            get
+            {
+                if (SelectedDevice == null || SelectedMessageType == null)
+                    return null;
+
+                var indices = Enumerable.Range(0, (int)SelectedDevice.AllowedMessages[SelectedMessageType.Value].FeatureCount).Select(x => (uint)x);
+                var usedIndices = DeviceSettings.Where(s => s.Device == SelectedDevice && s.MessageType == SelectedMessageType).Select(s => s.FeatureIndex);
+                var allowedIndices = indices.Except(usedIndices);
+                if (!allowedIndices.Any())
+                    return null;
+
+                return new(allowedIndices);
+            }
+        }
+
+        public ButtplugClientDevice SelectedDevice { get; set; }
+        public DeviceAxis? SelectedDeviceAxis { get; set; }
+        public ServerMessage.Types.MessageAttributeType? SelectedMessageType { get; set; }
+        public uint? SelectedFeatureIndex { get; set; }
+        public bool CanAddSelected => SelectedDevice != null && SelectedDeviceAxis != null && SelectedMessageType != null && SelectedFeatureIndex != null;
+
+        public BindableCollection<ButtplugClientDeviceSettings> DeviceSettings { get; protected set; }
 
         public ButtplugOutputTargetViewModel(IEventAggregator eventAggregator, IDeviceAxisValueProvider valueProvider)
             : base(eventAggregator, valueProvider)
         {
-            DeviceSettings = new ObservableConcurrentDictionary<string, ButtplugClientDeviceSettings>();
+            AvailableDevices = new BindableCollection<ButtplugClientDevice>();
+            DeviceSettings = new BindableCollection<ButtplugClientDeviceSettings>();
             UpdateRate = 20;
+
+            var rule = LogManager.Configuration.LoggingRules.FirstOrDefault(r => r.Targets.Any(t => string.Equals(t.Name, "file", StringComparison.OrdinalIgnoreCase)));
+            var logLevel = (rule?.Levels.Min().Ordinal ?? 2) switch
+            {
+                0 => ButtplugLogLevel.Trace,
+                1 => ButtplugLogLevel.Debug,
+                2 => ButtplugLogLevel.Info,
+                3 => ButtplugLogLevel.Warn,
+                4 or 5 => ButtplugLogLevel.Error,
+                6 => ButtplugLogLevel.Off,
+                _ => ButtplugLogLevel.Info
+            };
+
+            ButtplugFFILog.LogMessage += (_, message) => Logger.Info(message.Trim());
+            ButtplugFFILog.SetLogOptions(logLevel, true);
         }
 
         public bool IsConnected => Status == OutputTargetStatus.Connected;
@@ -39,19 +101,14 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
             void OnDeviceRemoved(ButtplugClientDevice device)
             {
                 Logger.Info($"Device removed: \"{device.Name}\"");
-                if (!DeviceSettings.ContainsKey(device.Name))
-                    return;
-
-                DeviceSettings.Remove(device.Name);
+                AvailableDevices.Remove(device);
+                DeviceSettings.RemoveRange(DeviceSettings.Where(s => s.Device == device).ToList());
             }
 
             void OnDeviceAdded(ButtplugClientDevice device)
             {
                 Logger.Info($"Device added: \"{device.Name}\"");
-                if (!device.AllowedMessages.ContainsKey(ServerMessage.Types.MessageAttributeType.VibrateCmd))
-                    return;
-
-                DeviceSettings.AddOrUpdate(device.Name, new ButtplugClientDeviceSettings());
+                AvailableDevices.Add(device);
             }
 
             using var client = new ButtplugClient(nameof(MultiFunPlayer));
@@ -77,12 +134,27 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
 
             try
             {
-                try { await client.StopScanningAsync().WithCancellation(token); } catch (ButtplugException) { }
-                try { await client.StartScanningAsync().WithCancellation(token); } catch (ButtplugException) { }
+                _ = Task.Factory.StartNew(async () =>
+                {
+                    try
+                    {
+                        if (client.IsScanning)
+                            await client.StopScanningAsync().WithCancellation(token);
+                    }
+                    catch (ButtplugException) { }
 
-                await Task.Delay(2500, token);
-                foreach (var device in client.Devices)
-                    OnDeviceAdded(device);
+                    while (!token.IsCancellationRequested)
+                    {
+                        try
+                        {
+                            await client.StartScanningAsync().WithCancellation(token);
+                            await Task.Delay(5000);
+                            await client.StopScanningAsync().WithCancellation(token);
+                            await Task.Delay(10000);
+                        }
+                        catch (ButtplugException) { }
+                    }
+                });
 
                 var lastSentValues = EnumUtils.ToDictionary<DeviceAxis, float>(_ => float.PositiveInfinity);
                 while (!token.IsCancellationRequested && client.Connected)
@@ -90,28 +162,36 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
                     var interval = MathF.Max(1, 1000.0f / UpdateRate);
                     UpdateValues();
 
-                    await Task.WhenAll(client.Devices.Where(d => DeviceSettings.ContainsKey(d.Name)).Select(d =>
+                    var validSettings = DeviceSettings.Where(s => float.IsFinite(Values[s.SourceAxis]));
+
+                    try
                     {
-                        var settings = DeviceSettings[d.Name];
-                        if (settings.SourceAxis == null)
-                            return Task.CompletedTask;
+                        await Task.WhenAll(validSettings.GroupBy(m => m.Device).SelectMany(deviceGroup =>
+                        {
+                            var device = deviceGroup.Key;
+                            return deviceGroup.GroupBy(m => m.MessageType).Select(typeGroup =>
+                            {
+                                var type = typeGroup.Key;
+                                if (type == ServerMessage.Types.MessageAttributeType.VibrateCmd)
+                                    return device.SendVibrateCmd(typeGroup.ToDictionary(m => m.FeatureIndex,
+                                                                                        m => (double)Values[m.SourceAxis]));
 
-                        var axis = settings.SourceAxis.Value;
-                        if (!Values.ContainsKey(axis))
-                            return Task.CompletedTask;
+                                if (type == ServerMessage.Types.MessageAttributeType.LinearCmd)
+                                    return device.SendLinearCmd(typeGroup.ToDictionary(m => m.FeatureIndex,
+                                                                                       m => ((uint)interval, (double)Values[m.SourceAxis])));
 
-                        var value = Values[axis];
-                        if (value < 0.02f)
-                            value = 0;
+                                if (type == ServerMessage.Types.MessageAttributeType.RotateCmd)
+                                    return device.SendRotateCmd(typeGroup.ToDictionary(m => m.FeatureIndex,
+                                                                                       m => (Math.Clamp(Math.Abs(Values[m.SourceAxis] - 0.5) / 0.5, 0, 1), Values[m.SourceAxis] > 0.5)));
 
-                        if (!float.IsFinite(value) || Math.Abs(value - lastSentValues[axis]) < 0.02f)
-                            return Task.CompletedTask;
+                                return Task.CompletedTask;
+                            });
+                        }));
+                    }
+                    catch (ButtplugDeviceException) { }
 
-                        lastSentValues[axis] = value;
-
-                        Logger.Trace("Sending value \"{0}\" to \"{1}\"", value, d.Name);
-                        return d.SendVibrateCmd(value);
-                    }));
+                    foreach(var group in validSettings.GroupBy(x => x.SourceAxis))
+                        lastSentValues[group.Key] = Values[group.Key];
 
                     await Task.Delay((int)interval, token);
                 }
@@ -125,6 +205,8 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
 
             if (client.Connected)
                 await client.DisconnectAsync();
+
+            DeviceSettings.Clear();
         }
 
         protected override void HandleSettings(JObject settings, AppSettingsMessageType type)
@@ -140,10 +222,38 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
                     Endpoint = endpoint;
             }
         }
+
+        public void OnSettingsAdd()
+        {
+            DeviceSettings.Add(new()
+            {
+                Device = SelectedDevice,
+                SourceAxis = SelectedDeviceAxis.Value,
+                FeatureIndex = SelectedFeatureIndex.Value,
+                MessageType = SelectedMessageType.Value
+            });
+
+            SelectedDevice = null;
+            SelectedDeviceAxis = null;
+            SelectedFeatureIndex = null;
+            SelectedMessageType = null;
+        }
+
+        public void OnSettingsDelete(object sender, EventArgs e)
+        {
+            if (sender is not FrameworkElement element || element.DataContext is not ButtplugClientDeviceSettings settings)
+                return;
+
+            DeviceSettings.Remove(settings);
+            NotifyOfPropertyChange(nameof(AvailableFeatureIndices));
+        }
     }
 
-    public class ButtplugClientDeviceSettings
+    public class ButtplugClientDeviceSettings : PropertyChangedBase
     {
-        public DeviceAxis? SourceAxis { get; set; }
+        public ButtplugClientDevice Device { get; set; }
+        public DeviceAxis SourceAxis { get; set; }
+        public ServerMessage.Types.MessageAttributeType MessageType { get; set; }
+        public uint FeatureIndex { get; set; }
     }
 }

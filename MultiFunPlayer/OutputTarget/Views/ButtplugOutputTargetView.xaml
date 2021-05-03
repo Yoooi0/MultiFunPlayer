@@ -14,6 +14,7 @@
              d:DesignHeight="450" d:DesignWidth="800">
     <UserControl.Resources>
         <converters:IPEndPointToStringConverter x:Key="IPEndPointToStringConverter"/>
+        <converters:ButtplugDeviceDisplayNameConverter x:Key="ButtplugDeviceDisplayNameConverter"/>
     </UserControl.Resources>
     <DockPanel LastChildFill="True">
         <DockPanel DockPanel.Dock="Top" LastChildFill="True">
@@ -61,43 +62,7 @@
                                 </material:PackIcon.Style>
                             </material:PackIcon>
                         </Button>
-                        <material:PopupBox DockPanel.Dock="Left"
-                                           StaysOpen="True" 
-                                           Style="{StaticResource MaterialDesignToolBarPopupBox}"
-                                           IsEnabled="{Binding DeviceSettings.Count, Converter={StaticResource NotZeroConverter}}"
-                                           ToolTipService.InitialShowDelay="0"
-                                           ToolTipService.Placement="Top"
-                                           ToolTip="Link devices">
-                            <material:PopupBox.ToggleContent>
-                                <Border Width="35" Height="35">
-                                    <material:PackIcon Kind="LinkVariant" 
-                                                       Width="19" 
-                                                       Height="19" 
-                                                       HorizontalAlignment="Center" 
-                                                       VerticalAlignment="Center"/>
-                                </Border>
-                            </material:PopupBox.ToggleContent>
-                            <Grid Width="300" Margin="10">
-                                <ItemsControl ItemsSource="{Binding DeviceSettings}">
-                                    <ItemsControl.ItemTemplate>
-                                        <DataTemplate>
-                                            <DockPanel Margin="2" LastChildFill="True">
-                                                <ComboBox DockPanel.Dock="Right"
-                                                          Margin="0 0 10 0" 
-                                                          material:TextFieldAssist.HasClearButton="True"
-                                                          Width="50" 
-                                                          ItemsSource="{Binding Source={controls:EnumBindingSource {x:Type common:DeviceAxis}}}" 
-                                                          SelectedItem="{Binding Value.SourceAxis}"/>
-                                                <TextBlock DockPanel.Dock="Left" 
-                                                           VerticalAlignment="Center" 
-                                                           Text="{Binding Key}"/>
-                                            </DockPanel>
-                                        </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
-                                </ItemsControl>
-                            </Grid>
-                        </material:PopupBox>
-                        
+
                         <ToggleButton DockPanel.Dock="Right"
                                       IsChecked="{Binding ContentVisible}"                                
                                       ToolTipService.InitialShowDelay="0"
@@ -224,6 +189,121 @@
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>
             </ItemsControl>
+            
+            <material:Card material:ShadowAssist.ShadowDepth="Depth1" Margin="0 20 0 0">
+                <Expander>
+                    <Expander.Header>
+                        <TextBlock Text="Device map" 
+                                   FontSize="14"
+                                   FontWeight="Bold"
+                                   Typography.Capitals="AllSmallCaps"/>
+                    </Expander.Header>
+                    <StackPanel Margin="10 0 10 10">
+                        <ListView ItemsSource="{Binding DeviceSettings}"
+                                  material:ListViewAssist.ListViewItemPadding="0">
+                            <ListView.ItemContainerStyle>
+                                <Style TargetType="ListViewItem" BasedOn="{StaticResource MaterialDesignGridViewItem}">
+                                    <Setter Property="Focusable" Value="False"/>
+                                    <Setter Property="Height" Value="35"/>
+                                    <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                                    <Setter Property="VerticalContentAlignment" Value="Center" />
+                                </Style>
+                            </ListView.ItemContainerStyle>
+                            <ListView.View>
+                                <GridView AllowsColumnReorder="False">
+                                    <GridView.ColumnHeaderContainerStyle>
+                                        <Style TargetType="{x:Type GridViewColumnHeader}">
+                                            <Setter Property="Template">
+                                                <Setter.Value>
+                                                    <ControlTemplate TargetType="{x:Type GridViewColumnHeader}">
+                                                        <TextBlock x:Name="ContentHeader" 
+                                                                   Text="{TemplateBinding Content}"
+                                                                   Padding="10"
+                                                                   HorizontalAlignment="Center"/>
+                                                    </ControlTemplate>
+                                                </Setter.Value>
+                                            </Setter>
+                                        </Style>
+                                    </GridView.ColumnHeaderContainerStyle>
+                                    
+                                    <GridViewColumn Header="Axis"
+                                                    Width="60"
+                                                    DisplayMemberBinding="{Binding SourceAxis}"/>
+                                    <GridViewColumn Header="Device"
+                                                    Width="230"
+                                                    DisplayMemberBinding="{Binding Device, Converter={StaticResource ButtplugDeviceDisplayNameConverter}}"/>
+                                    <GridViewColumn Header="Message Type"
+                                                    Width="140"
+                                                    DisplayMemberBinding="{Binding MessageType}"/>
+                                    <GridViewColumn Header="Index"
+                                                    Width="50"
+                                                    DisplayMemberBinding="{Binding FeatureIndex}"/>
+
+                                    <GridViewColumn Header=""
+                                                    Width="50">
+                                        <GridViewColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <Button Style="{StaticResource MaterialDesignFlatButton}"
+                                                        ToolTip="Remove"
+                                                        ToolTipService.InitialShowDelay="0"
+                                                        ToolTipService.Placement="Top"
+                                                        material:RippleAssist.Feedback="Red"
+                                                        Foreground="Red"
+                                                        Height="24" 
+                                                        Width="24" 
+                                                        Padding="0"
+                                                        Click="{s:Action OnSettingsDelete}" >
+                                                    <material:PackIcon Kind="Delete"/>
+                                                </Button>
+                                            </DataTemplate>
+                                        </GridViewColumn.CellTemplate>
+                                    </GridViewColumn>
+                                </GridView>
+                            </ListView.View>
+                        </ListView>
+
+                        <StackPanel Orientation="Horizontal">
+                            <ComboBox Margin="5 0 10 0" 
+                                      Width="50"
+                                      material:TextFieldAssist.HasClearButton="True"
+                                      ItemsSource="{Binding Source={controls:EnumBindingSource {x:Type common:DeviceAxis}}}" 
+                                      SelectedItem="{Binding SelectedDeviceAxis}"/>
+
+                            <ComboBox Margin="0 0 10 0"
+                                      Width="210"
+                                      material:TextFieldAssist.HasClearButton="True"
+                                      ItemsSource="{Binding AvailableDevices}" 
+                                      SelectedItem="{Binding SelectedDevice}"/>
+                            
+                            <ComboBox Margin="0 0 10 0" 
+                                      Width="130"
+                                      material:TextFieldAssist.HasClearButton="True"
+                                      ItemsSource="{Binding AvailableMessageTypes}" 
+                                      SelectedItem="{Binding SelectedMessageType}"/>
+
+                            <ComboBox Margin="0 0 10 0" 
+                                      Width="50"
+                                      material:TextFieldAssist.HasClearButton="True"
+                                      ItemsSource="{Binding AvailableFeatureIndices}" 
+                                      SelectedItem="{Binding SelectedFeatureIndex}"/>
+                            
+                            <Button Style="{StaticResource MaterialDesignFlatButton}"
+                                    ToolTip="Add"
+                                    ToolTipService.InitialShowDelay="0"
+                                    ToolTipService.Placement="Top"
+                                    material:RippleAssist.Feedback="Green"
+                                    Foreground="Green"
+                                    Height="24" 
+                                    Width="24" 
+                                    Padding="0"
+                                    Click="{s:Action OnSettingsAdd}"
+                                    IsEnabled="{Binding CanAddSelected}">
+                                <material:PackIcon Kind="Plus"/>
+                            </Button>
+                        </StackPanel>
+                    </StackPanel>
+                </Expander>
+            </material:Card>
         </StackPanel>
     </DockPanel>
 </UserControl>
