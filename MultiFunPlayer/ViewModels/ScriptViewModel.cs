@@ -223,12 +223,26 @@ namespace MultiFunPlayer.ViewModels
                         if (!settings.AutoHomeEnabled)
                             return false;
 
-                        var t = (pauseTime - settings.AutoHomeDelay) / 3;
-                        if (t < 0 || t > 1)
+                        var t = (pauseTime - settings.AutoHomeDelay);
+                        if (t < 0)
                             return false;
 
-                        state.Value = MathUtils.Lerp(state.Value, axis.DefaultValue(), MathF.Pow(2, 10 * (t - 1)));
-                        return true;
+                        if (settings.AutoHomeDuration < 0.0001f)
+                        {
+                            if (state.Value == axis.DefaultValue())
+                                return false;
+
+                            state.Value = axis.DefaultValue();
+                            return true;
+                        }
+                        else
+                        {
+                            if (t / settings.AutoHomeDuration > 1)
+                                return false;
+
+                            state.Value = MathUtils.Lerp(state.Value, axis.DefaultValue(), MathF.Pow(2, 10 * (t / settings.AutoHomeDuration - 1)));
+                            return true;
+                        }
                     }
                 }
             }
@@ -863,6 +877,7 @@ namespace MultiFunPlayer.ViewModels
         [JsonProperty] public InterpolationType? SmoothingType { get; set; } = InterpolationType.Pchip;
         [JsonProperty] public bool AutoHomeEnabled { get; set; } = false;
         [JsonProperty] public float AutoHomeDelay { get; set; } = 5;
+        [JsonProperty] public float AutoHomeDuration { get; set; } = 3;
         [JsonProperty] public int RandomizerSeed { get; set; } = 0;
         [JsonProperty] public int RandomizerStrength { get; set; } = 0;
         [JsonProperty] public int RandomizerSpeed { get; set; } = 0;

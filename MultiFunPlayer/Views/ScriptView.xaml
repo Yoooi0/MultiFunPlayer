@@ -704,7 +704,7 @@
                                                                           Style="{StaticResource MaterialDesignSwitchToggleButton}"/>
                                                             </StackPanel>
                                                             
-                                                            <DockPanel>
+                                                            <DockPanel Margin="0 0 0 10">
                                                                 <TextBlock Text="Delay:" 
                                                                            DockPanel.Dock="Left"
                                                                            Width="50"
@@ -718,6 +718,25 @@
                                                                         Minimum="0" 
                                                                         Maximum="60"
                                                                         TickFrequency="1"
+                                                                        VerticalAlignment="Center"
+                                                                        IsSnapToTickEnabled="True"
+                                                                        MouseDoubleClick="{s:Action OnSliderDoubleClick}"/>
+                                                            </DockPanel>
+                                                            
+                                                            <DockPanel>
+                                                                <TextBlock Text="Duration:" 
+                                                                           DockPanel.Dock="Left"
+                                                                           Width="50"
+                                                                           Margin="0 0 10 0"
+                                                                           VerticalAlignment="Center"/>
+
+                                                                <Slider DockPanel.Dock="Left"
+                                                                        Value="{Binding Value.Settings.AutoHomeDuration}"    
+                                                                        Style="{StaticResource MaterialDesignDiscreteSlider}"
+                                                                        Margin="0 -38 0 0"
+                                                                        Minimum="0" 
+                                                                        Maximum="10"
+                                                                        TickFrequency="0.25"
                                                                         VerticalAlignment="Center"
                                                                         IsSnapToTickEnabled="True"
                                                                         MouseDoubleClick="{s:Action OnSliderDoubleClick}"/>
