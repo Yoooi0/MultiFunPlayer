@@ -1,4 +1,4 @@
-using MultiFunPlayer.Common;
+﻿using MultiFunPlayer.Common;
 using MultiFunPlayer.Common.Messages;
 using MultiFunPlayer.VideoSource;
 using Stylet;
@@ -110,7 +110,7 @@ namespace MultiFunPlayer.ViewModels
                         _semaphore.Release();
                     }
 
-                    foreach(var source in Items)
+                    foreach(var source in Items.ToList())
                     {
                         if (_currentSource != null)
                             break;
