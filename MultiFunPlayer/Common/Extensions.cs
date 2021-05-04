@@ -75,12 +75,10 @@ namespace MultiFunPlayer.Common
             using var reader = token.CreateReader();
             JsonSerializer.CreateDefault().Populate(reader, target);
         }
-
     }
 
     public static class TaskExtensions
     {
-
         public static Task WithCancellation(this Task task, CancellationToken cancellationToken)
         {
             static async Task DoWaitAsync(Task task, CancellationToken cancellationToken)
