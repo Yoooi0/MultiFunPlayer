@@ -79,24 +79,17 @@
                         <ToggleButton DockPanel.Dock="Right"
                                       IsChecked="{Binding ContentVisible}"                                
                                       ToolTipService.InitialShowDelay="0"
-                                      ToolTipService.Placement="Top"
-                                      material:ToggleButtonAssist.OnContent="a">
+                                      ToolTipService.Placement="Top">                            
+                            <material:PackIcon Kind="ChevronDown" Width="19" Height="19"/>
+                            <material:ToggleButtonAssist.OnContent>
+                                <material:PackIcon Kind="ChevronUp" Width="19" Height="19"/>
+                            </material:ToggleButtonAssist.OnContent>
                             <ToggleButton.Resources>
-                                <Style TargetType="{x:Type ToggleButton}" BasedOn="{StaticResource MaterialDesignProgressToolBarButton}">
+                                <Style TargetType="{x:Type ToggleButton}" BasedOn="{StaticResource MaterialDesignToolBarToggleButton}">
                                     <Setter Property="ToolTip" Value="Open settings" />
-                                    <Setter Property="Content">
-                                        <Setter.Value>
-                                            <material:PackIcon Kind="ChevronDown" Width="19" Height="19"/>
-                                        </Setter.Value>
-                                    </Setter>
                                     <Style.Triggers>
                                         <Trigger Property="IsChecked" Value="True">
                                             <Setter Property="ToolTip" Value="Close settings" />
-                                            <Setter Property="Content">
-                                                <Setter.Value>
-                                                    <material:PackIcon Kind="ChevronUp" Width="19" Height="19"/>
-                                                </Setter.Value>
-                                            </Setter>
                                         </Trigger>
                                     </Style.Triggers>
                                 </Style>
