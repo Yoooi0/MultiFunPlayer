@@ -1,4 +1,4 @@
-using Buttplug;
+﻿using Buttplug;
 using MaterialDesignThemes.Wpf;
 using MultiFunPlayer.Common;
 using MultiFunPlayer.Common.Controls;
@@ -90,8 +90,27 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
                 _ => ButtplugLogLevel.Info
             };
 
-            ButtplugFFILog.LogMessage += (_, message) => Logger.Info(message.Trim());
-            ButtplugFFILog.SetLogOptions(logLevel, true);
+            ButtplugFFILog.LogMessage += (_, m) =>
+            {
+                var prefix = m.Remove(25).Trim();
+                var level = prefix[^5..].Trim() switch
+                {
+                    "TRACE" => LogLevel.Trace,
+                    "DEBUG" => LogLevel.Debug,
+                    "INFO" => LogLevel.Info,
+                    "WARN" => LogLevel.Warn,
+                    "ERROR" => LogLevel.Error,
+                    "OFF" => LogLevel.Off,
+                    _ => LogLevel.Info,
+                };
+
+                var message = m.Remove(0, 25).Trim();
+                Logger.Log(level, message);
+            };
+
+            ButtplugFFILog.SetLogOptions(logLevel, false);
+        }
+
         public bool IsScanBusy { get; set; }
         public bool CanScan => IsConnected;
         public void ToggleScan()
