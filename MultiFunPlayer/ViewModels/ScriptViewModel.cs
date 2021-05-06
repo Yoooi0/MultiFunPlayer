@@ -223,7 +223,7 @@ namespace MultiFunPlayer.ViewModels
                         if (!settings.AutoHomeEnabled)
                             return false;
 
-                        var t = (pauseTime - settings.AutoHomeDelay);
+                        var t = pauseTime - settings.AutoHomeDelay;
                         if (t < 0)
                             return false;
 

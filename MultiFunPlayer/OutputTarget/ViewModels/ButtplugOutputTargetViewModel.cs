@@ -146,7 +146,7 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
             client.ErrorReceived += (_, e) => Logger.Debug(e.Exception);
             client.ScanningFinished += (_, _) =>
             {
-                if (IsScanBusy && _endScanSemaphore.CurrentCount == 0)
+                if (IsScanBusy && _endScanSemaphore?.CurrentCount == 0)
                     _endScanSemaphore.Release();
             };
 
