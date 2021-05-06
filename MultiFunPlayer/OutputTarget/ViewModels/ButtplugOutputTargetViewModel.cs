@@ -1,4 +1,4 @@
-﻿using Buttplug;
+using Buttplug;
 using MaterialDesignThemes.Wpf;
 using MultiFunPlayer.Common;
 using MultiFunPlayer.Common.Controls;
@@ -33,6 +33,8 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
             ServerMessage.Types.MessageAttributeType.RotateCmd,
             ServerMessage.Types.MessageAttributeType.VibrateCmd
         };
+        private SemaphoreSlim _startScanSemaphore;
+        private SemaphoreSlim _endScanSemaphore;
 
         public override string Name => "Buttplug.io";
         public override OutputTargetStatus Status { get; protected set; }
@@ -90,6 +92,14 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
 
             ButtplugFFILog.LogMessage += (_, message) => Logger.Info(message.Trim());
             ButtplugFFILog.SetLogOptions(logLevel, true);
+        public bool IsScanBusy { get; set; }
+        public bool CanScan => IsConnected;
+        public void ToggleScan()
+        {
+            if (IsScanBusy && _endScanSemaphore?.CurrentCount == 0)
+                _endScanSemaphore.Release();
+            else if(_startScanSemaphore?.CurrentCount == 0)
+                _startScanSemaphore.Release();
         }
 
         public bool IsConnected => Status == OutputTargetStatus.Connected;
@@ -115,6 +125,11 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
             client.DeviceAdded += (_, e) => OnDeviceAdded(e.Device);
             client.DeviceRemoved += (_, e) => OnDeviceRemoved(e.Device);
             client.ErrorReceived += (_, e) => Logger.Debug(e.Exception);
+            client.ScanningFinished += (_, _) =>
+            {
+                if (IsScanBusy && _endScanSemaphore.CurrentCount == 0)
+                    _endScanSemaphore.Release();
+            };
 
             try
             {
@@ -134,27 +149,7 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
 
             try
             {
-                _ = Task.Factory.StartNew(async () =>
-                {
-                    try
-                    {
-                        if (client.IsScanning)
-                            await client.StopScanningAsync().WithCancellation(token);
-                    }
-                    catch (ButtplugException) { }
-
-                    while (!token.IsCancellationRequested)
-                    {
-                        try
-                        {
-                            await client.StartScanningAsync().WithCancellation(token);
-                            await Task.Delay(5000);
-                            await client.StopScanningAsync().WithCancellation(token);
-                            await Task.Delay(10000);
-                        }
-                        catch (ButtplugException) { }
-                    }
-                });
+                _ = ScanAsync(client, token);
 
                 var lastSentValues = EnumUtils.ToDictionary<DeviceAxis, float>(_ => float.PositiveInfinity);
                 while (!token.IsCancellationRequested && client.Connected)
@@ -206,7 +201,49 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
             if (client.Connected)
                 await client.DisconnectAsync();
 
+            IsScanBusy = false;
             DeviceSettings.Clear();
+        }
+
+        private async Task ScanAsync(ButtplugClient client, CancellationToken token)
+        {
+            void CleanupSemaphores()
+            {
+                _startScanSemaphore?.Dispose();
+                _endScanSemaphore?.Dispose();
+
+                _startScanSemaphore = null;
+                _endScanSemaphore = null;
+            }
+
+            try { await client.StopScanningAsync().WithCancellation(token); } catch { }
+
+            CleanupSemaphores();
+            _startScanSemaphore = new SemaphoreSlim(1, 1);
+            _endScanSemaphore = new SemaphoreSlim(0, 1);
+
+            try
+            {
+                while (!token.IsCancellationRequested)
+                {
+                    try
+                    {
+                        await _startScanSemaphore.WaitAsync(token);
+                        await client.StartScanningAsync().WithCancellation(token);
+
+                        IsScanBusy = true;
+                        await _endScanSemaphore.WaitAsync(token);
+                        IsScanBusy = false;
+
+                        if (client.IsScanning)
+                            await client.StopScanningAsync().WithCancellation(token);
+                    }
+                    catch (ButtplugException) { }
+                }
+            }
+            catch (OperationCanceledException) { }
+
+            CleanupSemaphores();
         }
 
         protected override void HandleSettings(JObject settings, AppSettingsMessageType type)

@@ -63,6 +63,19 @@
                             </material:PackIcon>
                         </Button>
 
+                        <Button DockPanel.Dock="Left"
+                                IsEnabled="{Binding CanScan}"
+                                Style="{StaticResource MaterialDesignProgressToolBarButton}"
+                                Click="{s:Action ToggleScan}"
+                                ToolTipService.InitialShowDelay="0"
+                                ToolTipService.Placement="Top"
+                                ToolTip="Toggle Scan"
+                                material:ButtonProgressAssist.IsIndicatorVisible="{Binding IsScanBusy}"
+                                material:ButtonProgressAssist.Value="-1"
+                                material:ButtonProgressAssist.IsIndeterminate="True">
+                            <material:PackIcon Width="20" Height="20" Kind="MagnifyScan"/>
+                        </Button>
+
                         <ToggleButton DockPanel.Dock="Right"
                                       IsChecked="{Binding ContentVisible}"                                
                                       ToolTipService.InitialShowDelay="0"
