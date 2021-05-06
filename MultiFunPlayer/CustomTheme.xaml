@@ -4,7 +4,7 @@
                     xmlns:local="clr-namespace:MultiFunPlayer">
     <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
     <Style TargetType="{x:Type ButtonBase}" x:Key="MaterialDesignProgressToolBarButton">
-        <Setter Property="Padding" Value="8"/>
+        <Setter Property="Padding" Value="0"/>
         <Setter Property="Foreground" Value="{DynamicResource MaterialDesignBody}"/>
         <Setter Property="Background" Value="Transparent"/>
         <Setter Property="BorderBrush" Value="Transparent"/>
