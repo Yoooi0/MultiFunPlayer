@@ -400,6 +400,9 @@ namespace MultiFunPlayer.ViewModels
                 if (settings.TryGetValue(nameof(IsValuesPanelExpanded), out var isValuesPanelExpandedToken))
                     IsValuesPanelExpanded = isValuesPanelExpandedToken.ToObject<bool>();
 
+                if (settings.TryGetValue(nameof(VideoContentVisible), out var videoContentVisibleToken))
+                    VideoContentVisible = videoContentVisibleToken.ToObject<bool>();
+
                 if (settings.TryGetValue(nameof(SyncSettings), out var syncSettingsToken))
                     syncSettingsToken.Populate(SyncSettings);
             }
