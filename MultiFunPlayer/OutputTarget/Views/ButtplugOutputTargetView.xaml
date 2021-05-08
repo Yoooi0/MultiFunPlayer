@@ -206,7 +206,8 @@
                     </Expander.Header>
                     <StackPanel Margin="10 0 10 10">
                         <ListView ItemsSource="{Binding DeviceSettings}"
-                                  material:ListViewAssist.ListViewItemPadding="0">
+                                  material:ListViewAssist.ListViewItemPadding="0"
+                                  ScrollViewer.HorizontalScrollBarVisibility="Disabled">
                             <ListView.ItemContainerStyle>
                                 <Style TargetType="ListViewItem" BasedOn="{StaticResource MaterialDesignGridViewItem}">
                                     <Setter Property="Focusable" Value="False"/>
@@ -236,7 +237,7 @@
                                                     Width="60"
                                                     DisplayMemberBinding="{Binding SourceAxis}"/>
                                     <GridViewColumn Header="Device Name"
-                                                    Width="230"
+                                                    Width="225"
                                                     DisplayMemberBinding="{Binding DeviceName}"/>
                                     <GridViewColumn Header="Message Type"
                                                     Width="140"
@@ -276,7 +277,7 @@
                                       SelectedItem="{Binding SelectedDeviceAxis}"/>
 
                             <ComboBox Margin="0 0 10 0"
-                                      Width="210"
+                                      Width="215"
                                       material:TextFieldAssist.HasClearButton="True"
                                       ItemsSource="{Binding AvailableDevices}" 
                                       SelectedItem="{Binding SelectedDevice}"/>
