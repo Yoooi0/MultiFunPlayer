@@ -14,7 +14,6 @@
              d:DesignHeight="450" d:DesignWidth="800">
     <UserControl.Resources>
         <converters:IPEndPointToStringConverter x:Key="IPEndPointToStringConverter"/>
-        <converters:ButtplugDeviceDisplayNameConverter x:Key="ButtplugDeviceDisplayNameConverter"/>
     </UserControl.Resources>
     <DockPanel LastChildFill="True">
         <DockPanel DockPanel.Dock="Top" LastChildFill="True">
@@ -236,9 +235,9 @@
                                     <GridViewColumn Header="Axis"
                                                     Width="60"
                                                     DisplayMemberBinding="{Binding SourceAxis}"/>
-                                    <GridViewColumn Header="Device"
+                                    <GridViewColumn Header="Device Name"
                                                     Width="230"
-                                                    DisplayMemberBinding="{Binding Device, Converter={StaticResource ButtplugDeviceDisplayNameConverter}}"/>
+                                                    DisplayMemberBinding="{Binding DeviceName}"/>
                                     <GridViewColumn Header="Message Type"
                                                     Width="140"
                                                     DisplayMemberBinding="{Binding MessageType}"/>

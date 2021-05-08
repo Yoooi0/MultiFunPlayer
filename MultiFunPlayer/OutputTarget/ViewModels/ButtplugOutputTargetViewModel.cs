@@ -54,7 +54,8 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
                     return null;
 
                 var indices = Enumerable.Range(0, (int)SelectedDevice.AllowedMessages[SelectedMessageType.Value].FeatureCount).Select(x => (uint)x);
-                var usedIndices = DeviceSettings.Where(s => s.Device == SelectedDevice && s.MessageType == SelectedMessageType).Select(s => s.FeatureIndex);
+                var usedIndices = DeviceSettings.Where(s => string.Equals(s.DeviceName, SelectedDevice.Name, StringComparison.OrdinalIgnoreCase) && s.MessageType == SelectedMessageType)
+                                                .Select(s => s.FeatureIndex);
                 var allowedIndices = indices.Except(usedIndices);
                 if (!allowedIndices.Any())
                     return null;
@@ -131,7 +132,6 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
             {
                 Logger.Info($"Device removed: \"{device.Name}\"");
                 AvailableDevices.Remove(device);
-                DeviceSettings.RemoveRange(DeviceSettings.Where(s => s.Device == device).ToList());
             }
 
             void OnDeviceAdded(ButtplugClientDevice device)
@@ -180,25 +180,29 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
 
                     try
                     {
-                        await Task.WhenAll(validSettings.GroupBy(m => m.Device).SelectMany(deviceGroup =>
+                        await Task.WhenAll(validSettings.GroupBy(m => m.DeviceName).SelectMany(deviceGroup =>
                         {
-                            var device = deviceGroup.Key;
-                            return deviceGroup.GroupBy(m => m.MessageType).Select(typeGroup =>
+                            var deviceName = deviceGroup.Key;
+                            var devices = AvailableDevices.Where(d => string.Equals(d.Name, deviceName, StringComparison.OrdinalIgnoreCase));
+                            return deviceGroup.GroupBy(m => m.MessageType).SelectMany(typeGroup =>
                             {
                                 var type = typeGroup.Key;
-                                if (type == ServerMessage.Types.MessageAttributeType.VibrateCmd)
-                                    return device.SendVibrateCmd(typeGroup.ToDictionary(m => m.FeatureIndex,
-                                                                                        m => (double)Values[m.SourceAxis]));
+                                return devices.Select(device =>
+                                {
+                                    if (type == ServerMessage.Types.MessageAttributeType.VibrateCmd)
+                                        return device.SendVibrateCmd(typeGroup.ToDictionary(m => m.FeatureIndex,
+                                                                                            m => (double)Values[m.SourceAxis]));
 
-                                if (type == ServerMessage.Types.MessageAttributeType.LinearCmd)
-                                    return device.SendLinearCmd(typeGroup.ToDictionary(m => m.FeatureIndex,
-                                                                                       m => ((uint)interval, (double)Values[m.SourceAxis])));
+                                    if (type == ServerMessage.Types.MessageAttributeType.LinearCmd)
+                                        return device.SendLinearCmd(typeGroup.ToDictionary(m => m.FeatureIndex,
+                                                                                           m => ((uint)interval, (double)Values[m.SourceAxis])));
 
-                                if (type == ServerMessage.Types.MessageAttributeType.RotateCmd)
-                                    return device.SendRotateCmd(typeGroup.ToDictionary(m => m.FeatureIndex,
-                                                                                       m => (Math.Clamp(Math.Abs(Values[m.SourceAxis] - 0.5) / 0.5, 0, 1), Values[m.SourceAxis] > 0.5)));
+                                    if (type == ServerMessage.Types.MessageAttributeType.RotateCmd)
+                                        return device.SendRotateCmd(typeGroup.ToDictionary(m => m.FeatureIndex,
+                                                                                           m => (Math.Clamp(Math.Abs(Values[m.SourceAxis] - 0.5) / 0.5, 0, 1), Values[m.SourceAxis] > 0.5)));
 
-                                return Task.CompletedTask;
+                                    return Task.CompletedTask;
+                                });
                             });
                         }));
                     }
@@ -271,11 +275,20 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
             {
                 if (Endpoint != null)
                     settings[nameof(Endpoint)] = new JValue(Endpoint.ToString());
+
+                if (DeviceSettings != null)
+                    settings[nameof(DeviceSettings)] = JArray.FromObject(DeviceSettings);
             }
             else if (type == AppSettingsMessageType.Loading)
             {
                 if (settings.TryGetValue(nameof(Endpoint), out var endpointToken) && IPEndPoint.TryParse(endpointToken.ToObject<string>(), out var endpoint))
                     Endpoint = endpoint;
+
+                if (settings.TryGetValue(nameof(DeviceSettings), out var deviceSettingsToken) && deviceSettingsToken.TryToObject<List<ButtplugClientDeviceSettings>>(out var deviceSettings))
+                {
+                    DeviceSettings.Clear();
+                    DeviceSettings.AddRange(deviceSettings);
+                }
             }
         }
 
@@ -283,7 +296,8 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
         {
             DeviceSettings.Add(new()
             {
-                Device = SelectedDevice,
+                DeviceName = SelectedDevice.Name,
+                DeviceIndex = SelectedDevice.Index,
                 SourceAxis = SelectedDeviceAxis.Value,
                 FeatureIndex = SelectedFeatureIndex.Value,
                 MessageType = SelectedMessageType.Value
@@ -307,7 +321,8 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
 
     public class ButtplugClientDeviceSettings : PropertyChangedBase
     {
-        public ButtplugClientDevice Device { get; set; }
+        public string DeviceName { get; set; }
+        public uint DeviceIndex { get; set; }
         public DeviceAxis SourceAxis { get; set; }
         public ServerMessage.Types.MessageAttributeType MessageType { get; set; }
         public uint FeatureIndex { get; set; }
