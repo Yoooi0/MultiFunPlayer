@@ -151,8 +151,29 @@
                                 </StackPanel>
                             </Grid>
                         </material:PopupBox>
+                        
+                        <ToggleButton DockPanel.Dock="Right"
+                                      IsChecked="{Binding VideoContentVisible}"                                
+                                      ToolTipService.InitialShowDelay="0"
+                                      ToolTipService.Placement="Top">                            
+                            <material:PackIcon Kind="ChevronDown" Width="19" Height="19"/>
+                            <material:ToggleButtonAssist.OnContent>
+                                <material:PackIcon Kind="ChevronUp" Width="19" Height="19"/>
+                            </material:ToggleButtonAssist.OnContent>
+                            <ToggleButton.Resources>
+                                <Style TargetType="{x:Type ToggleButton}" BasedOn="{StaticResource MaterialDesignToolBarToggleButton}">
+                                    <Setter Property="ToolTip" Value="Open settings" />
+                                    <Style.Triggers>
+                                        <Trigger Property="IsChecked" Value="True">
+                                            <Setter Property="ToolTip" Value="Close settings" />
+                                        </Trigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </ToggleButton.Resources>
+                        </ToggleButton>
                     </StackPanel>
-                    <StackPanel DockPanel.Dock="Left" Orientation="Horizontal">
+                    <StackPanel DockPanel.Dock="Left" 
+                                Orientation="Horizontal">
                         <Button Click="{s:Action OnOpenVideoLocation}" 
                                     Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}"
                                     IsEnabled="{Binding CanOpenVideoLocation}"
@@ -267,7 +288,9 @@
                         </Button>
                     </StackPanel>
                 </DockPanel>
-                <StackPanel Margin="20 15 20 20" DockPanel.Dock="Bottom">
+                <StackPanel Margin="20 15 20 20"
+                            DockPanel.Dock="Bottom"
+                            Visibility="{Binding VideoContentVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
                     <DockPanel LastChildFill="True" Margin="0 0 0 10">
                         <TextBlock Text="Video:"
                                        DockPanel.Dock="Left"
@@ -329,7 +352,9 @@
 
 
         <material:Card material:ShadowAssist.ShadowDepth="Depth1" Margin="0 0 0 20">
-            <TabControl ItemsSource="{Binding AxisModels}" behaviours:TabContent.IsCached="True">
+            <TabControl ItemsSource="{Binding AxisModels}"
+                        SelectionChanged="{s:Action OnSelectedAxisChanged}"
+                        behaviours:TabContent.IsCached="True">
                 <TabControl.ItemTemplate>
                     <DataTemplate>
                         <TextBlock Text="{Binding Key}"
@@ -363,13 +388,34 @@
                                             BorderBrush="{StaticResource PrimaryHueLightBrush}">
                                     <DockPanel LastChildFill="True"
                                                    Background="{StaticResource MaterialDesignToolBarBackground}">
-                                        <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" Margin="0 0 8 0">
+                                        <StackPanel Orientation="Horizontal" DockPanel.Dock="Right">
                                             <TextBlock Text="{Binding Key, Converter={StaticResource DeviceAxisFriendlyNameConverter}}"
-                                                           Foreground="{StaticResource PrimaryHueLightBrush}"
-                                                           VerticalAlignment="Center"
-                                                           FontSize="14"
-                                                           FontWeight="Bold"
-                                                           Typography.Capitals="AllSmallCaps"/>
+                                                       Foreground="{StaticResource PrimaryHueLightBrush}"
+                                                       Margin="0 0 10 0"
+                                                       VerticalAlignment="Center"
+                                                       FontSize="14"
+                                                       FontWeight="Bold"
+                                                       Typography.Capitals="AllSmallCaps"/>
+                                            
+                                            <ToggleButton DockPanel.Dock="Right"
+                                                            IsChecked="{Binding Value.Settings.ContentVisible}"                                
+                                                            ToolTipService.InitialShowDelay="0"
+                                                            ToolTipService.Placement="Top">                            
+                                                <material:PackIcon Kind="ChevronDown" Width="19" Height="19"/>
+                                                <material:ToggleButtonAssist.OnContent>
+                                                    <material:PackIcon Kind="ChevronUp" Width="19" Height="19"/>
+                                                </material:ToggleButtonAssist.OnContent>
+                                                <ToggleButton.Resources>
+                                                    <Style TargetType="{x:Type ToggleButton}" BasedOn="{StaticResource MaterialDesignToolBarToggleButton}">
+                                                        <Setter Property="ToolTip" Value="Open settings" />
+                                                        <Style.Triggers>
+                                                            <Trigger Property="IsChecked" Value="True">
+                                                                <Setter Property="ToolTip" Value="Close settings" />
+                                                            </Trigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </ToggleButton.Resources>
+                                            </ToggleButton>
                                         </StackPanel>
                                         <StackPanel Orientation="Horizontal" DockPanel.Dock="Left">
                                             <Button Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}"
@@ -750,7 +796,9 @@
                                     </DockPanel>
                                 </Border>
                             </DockPanel>
-                            <StackPanel DockPanel.Dock="Bottom" Margin="20 15 20 20">
+                            <StackPanel DockPanel.Dock="Bottom" 
+                                        Margin="20 15 20 20"
+                                        Visibility="{Binding Value.Settings.ContentVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
                                 <DockPanel LastChildFill="True" 
                                                Margin="0 0 0 10">
                                     <TextBlock Text="File:" 

@@ -32,6 +32,7 @@ namespace MultiFunPlayer.ViewModels
 
         public bool IsPlaying { get; set; }
         public bool IsValuesPanelExpanded { get; set; }
+        public bool VideoContentVisible { get; set; } = true;
         public float CurrentPosition { get; set; }
         public float PlaybackSpeed { get; set; }
         public float VideoDuration { get; set; }
@@ -365,6 +366,7 @@ namespace MultiFunPlayer.ViewModels
                     { nameof(AxisSettings), JObject.FromObject(AxisSettings) },
                     { nameof(ScriptLibraries), JArray.FromObject(ScriptLibraries) },
                     { nameof(IsValuesPanelExpanded), JToken.FromObject(IsValuesPanelExpanded) },
+                    { nameof(VideoContentVisible), JToken.FromObject(VideoContentVisible) },
                     { nameof(SyncSettings), JObject.FromObject(SyncSettings) }
                 };
             }
@@ -621,6 +623,12 @@ namespace MultiFunPlayer.ViewModels
             foreach (var axis in EnumUtils.GetValues<DeviceAxis>())
                 SearchForValidIndices(axis, AxisStates[axis]);
         }
+
+        public void OnSliderDoubleClick(object sender, MouseButtonEventArgs e)
+        {
+            if (sender is Slider slider)
+                slider.Value = 0;
+        }
         #endregion
 
         #region Video
@@ -713,6 +721,18 @@ namespace MultiFunPlayer.ViewModels
             return true;
         }
 
+        public void OnSelectedAxisChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (e.RemovedItems.Count != 1 || e.AddedItems.Count != 1)
+                return;
+
+            if (e.RemovedItems[0] is not KeyValuePair<DeviceAxis, AxisModel> removed
+                || e.AddedItems[0] is not KeyValuePair<DeviceAxis, AxisModel> added)
+                return;
+
+            added.Value.Settings.ContentVisible = removed.Value.Settings.ContentVisible;
+        }
+
         public void OnAxisMoveToVideo(DeviceAxis axis)
         {
             if (VideoFile != null && MoveScript(axis, new DirectoryInfo(VideoFile.Source)))
@@ -724,12 +744,6 @@ namespace MultiFunPlayer.ViewModels
         {
             if (library?.Directory.Exists == true && MoveScript(axis, library.Directory))
                 ReloadScript(axis);
-        }
-
-        public void OnSliderDoubleClick(object sender, MouseButtonEventArgs e)
-        {
-            if (sender is Slider slider)
-                slider.Value = 0;
         }
 
         [SuppressPropertyChangedWarnings]
@@ -883,6 +897,7 @@ namespace MultiFunPlayer.ViewModels
         [JsonProperty] public int RandomizerSpeed { get; set; } = 0;
         [JsonProperty] public bool Inverted { get; set; } = false;
         [JsonProperty] public float Offset { get; set; } = 0;
+        [JsonProperty] public bool ContentVisible { get; set; } = true;
     }
 
     [JsonObject(MemberSerialization.OptIn)]
