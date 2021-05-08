@@ -1,4 +1,4 @@
-﻿using Buttplug;
+using Buttplug;
 using MaterialDesignThemes.Wpf;
 using MultiFunPlayer.Common;
 using MultiFunPlayer.Common.Controls;
@@ -132,6 +132,8 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
             {
                 Logger.Info($"Device removed: \"{device.Name}\"");
                 AvailableDevices.Remove(device);
+                if (device == SelectedDevice)
+                    SelectedDevice = null;
             }
 
             void OnDeviceAdded(ButtplugClientDevice device)
