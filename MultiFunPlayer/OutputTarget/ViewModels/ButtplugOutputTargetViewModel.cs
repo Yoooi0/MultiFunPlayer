@@ -3,6 +3,7 @@ using MaterialDesignThemes.Wpf;
 using MultiFunPlayer.Common;
 using MultiFunPlayer.Common.Controls;
 using MultiFunPlayer.Common.Messages;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NLog;
 using PropertyChanged;
@@ -321,12 +322,13 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
         }
     }
 
+    [JsonObject(MemberSerialization.OptIn)]
     public class ButtplugClientDeviceSettings : PropertyChangedBase
     {
-        public string DeviceName { get; set; }
-        public uint DeviceIndex { get; set; }
-        public DeviceAxis SourceAxis { get; set; }
-        public ServerMessage.Types.MessageAttributeType MessageType { get; set; }
-        public uint FeatureIndex { get; set; }
+        [JsonProperty] public string DeviceName { get; set; }
+        [JsonProperty] public uint DeviceIndex { get; set; }
+        [JsonProperty] public DeviceAxis SourceAxis { get; set; }
+        [JsonProperty] public ServerMessage.Types.MessageAttributeType MessageType { get; set; }
+        [JsonProperty] public uint FeatureIndex { get; set; }
     }
 }
