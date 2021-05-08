@@ -33,6 +33,12 @@ namespace MultiFunPlayer.Common
             }
         }
 
+        public static bool TryGetValue<T>(this JObject o, string propertyName, out T value)
+        {
+            value = default;
+            return o.TryGetValue(propertyName, out var token) && token.TryToObject(out value);
+        }
+
         public static bool EnsureContainsObjects(this JToken token, params string[] propertyNames)
         {
             if (token is not JObject o)

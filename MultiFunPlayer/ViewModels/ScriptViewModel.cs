@@ -386,9 +386,9 @@ namespace MultiFunPlayer.ViewModels
                     }
                 }
 
-                if(settings.TryGetValue(nameof(ScriptLibraries), out var scriptDirectoriesToken))
+                if(settings.TryGetValue<List<ScriptLibrary>>(nameof(ScriptLibraries), out var scriptDirectories))
                 {
-                    foreach (var library in scriptDirectoriesToken.ToObject<List<ScriptLibrary>>())
+                    foreach (var library in scriptDirectories)
                     {
                         if (!library.Directory.Exists || ScriptLibraries.Any(x => string.Equals(x.Directory.FullName, library.Directory.FullName)))
                             continue;
@@ -397,11 +397,11 @@ namespace MultiFunPlayer.ViewModels
                     }
                 }
 
-                if (settings.TryGetValue(nameof(IsValuesPanelExpanded), out var isValuesPanelExpandedToken))
-                    IsValuesPanelExpanded = isValuesPanelExpandedToken.ToObject<bool>();
+                if (settings.TryGetValue<bool>(nameof(IsValuesPanelExpanded), out var isValuesPanelExpanded))
+                    IsValuesPanelExpanded = isValuesPanelExpanded;
 
-                if (settings.TryGetValue(nameof(VideoContentVisible), out var videoContentVisibleToken))
-                    VideoContentVisible = videoContentVisibleToken.ToObject<bool>();
+                if (settings.TryGetValue<bool>(nameof(VideoContentVisible), out var videoContentVisible))
+                    VideoContentVisible = videoContentVisible;
 
                 if (settings.TryGetValue(nameof(SyncSettings), out var syncSettingsToken))
                     syncSettingsToken.Populate(SyncSettings);

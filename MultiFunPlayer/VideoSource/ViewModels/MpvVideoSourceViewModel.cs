@@ -157,10 +157,10 @@ namespace MultiFunPlayer.VideoSource.ViewModels
             }
             else if (type == AppSettingsMessageType.Loading)
             {
-                if (settings.TryGetValue(nameof(Executable), out var executableToken))
-                    Executable = executableToken.ToObject<FileInfo>();
-                if (settings.TryGetValue(nameof(Arguments), out var argumentsToken))
-                    Arguments = argumentsToken.ToObject<string>();
+                if (settings.TryGetValue<FileInfo>(nameof(Executable), out var executable))
+                    Executable = executable;
+                if (settings.TryGetValue<string>(nameof(Arguments), out var arguments))
+                    Arguments = arguments;
             }
         }
 

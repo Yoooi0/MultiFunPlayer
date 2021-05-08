@@ -167,8 +167,8 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
             }
             else if (type == AppSettingsMessageType.Loading)
             {
-                if (settings.TryGetValue(nameof(SelectedComPort), out var selectedComPortToken))
-                    SelectedComPort = selectedComPortToken.ToObject<string>();
+                if (settings.TryGetValue<string>(nameof(SelectedComPort), out var selectedComPort))
+                    SelectedComPort = selectedComPort;
             }
         }
     }

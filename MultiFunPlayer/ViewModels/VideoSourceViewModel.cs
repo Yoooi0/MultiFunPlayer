@@ -49,8 +49,8 @@ namespace MultiFunPlayer.ViewModels
                 if (!message.Settings.TryGetObject(out var settings, "VideoSource"))
                     return;
 
-                if (settings.TryGetValue(nameof(ActiveItem), out var selectedItemToken))
-                    ChangeActiveItem(Items.FirstOrDefault(x => string.Equals(x.Name, selectedItemToken.ToObject<string>())) ?? Items[0], closePrevious: false);
+                if (settings.TryGetValue<string>(nameof(ActiveItem), out var selectedItem))
+                    ChangeActiveItem(Items.FirstOrDefault(x => string.Equals(x.Name, selectedItem)) ?? Items[0], closePrevious: false);
             }
         }
 

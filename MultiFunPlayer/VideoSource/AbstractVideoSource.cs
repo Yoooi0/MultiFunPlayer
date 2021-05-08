@@ -108,7 +108,7 @@ namespace MultiFunPlayer.VideoSource
                 if (!message.Settings.TryGetObject(out var settings, "VideoSource", Name))
                     return;
 
-                if (settings.TryGetValue(nameof(AutoConnectEnabled), out var autoConnectEnabledToken) && autoConnectEnabledToken.TryToObject<bool>(out var autoConnectEnabled))
+                if (settings.TryGetValue<bool>(nameof(AutoConnectEnabled), out var autoConnectEnabled))
                     AutoConnectEnabled = autoConnectEnabled;
 
                 HandleSettings(settings, message.Type);

@@ -1,4 +1,5 @@
 ﻿using MaterialDesignThemes.Wpf;
+using MultiFunPlayer.Common;
 using MultiFunPlayer.Common.Controls;
 using MultiFunPlayer.Common.Messages;
 using Newtonsoft.Json.Linq;
@@ -101,8 +102,8 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
             }
             else if (type == AppSettingsMessageType.Loading)
             {
-                if (settings.TryGetValue(nameof(PipeName), out var pipeNameToken))
-                    PipeName = pipeNameToken.ToObject<string>();
+                if (settings.TryGetValue<string>(nameof(PipeName), out var pipeName))
+                    PipeName = pipeName;
             }
         }
     }

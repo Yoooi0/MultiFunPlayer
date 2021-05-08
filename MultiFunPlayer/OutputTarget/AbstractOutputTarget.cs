@@ -100,10 +100,10 @@ namespace MultiFunPlayer.OutputTarget
                 if (!message.Settings.TryGetObject(out var settings, "OutputTarget", Name))
                     return;
 
-                if (settings.TryGetValue(nameof(UpdateRate), out var updateRateToken))
-                    UpdateRate = updateRateToken.ToObject<int>();
-                if (settings.TryGetValue(nameof(AxisSettings), out var axisSettingsToken))
-                    foreach (var (axis, axisSettings) in axisSettingsToken.ToObject<Dictionary<DeviceAxis, DeviceAxisSettings>>())
+                if (settings.TryGetValue<int>(nameof(UpdateRate), out var updateRate))
+                    UpdateRate = updateRate;
+                if (settings.TryGetValue<Dictionary<DeviceAxis, DeviceAxisSettings>>(nameof(AxisSettings), out var axisSettingsMap))
+                    foreach (var (axis, axisSettings) in axisSettingsMap)
                         AxisSettings[axis] = axisSettings;
 
                 HandleSettings(settings, message.Type);

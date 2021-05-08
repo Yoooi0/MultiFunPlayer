@@ -50,13 +50,12 @@ namespace MultiFunPlayer.ViewModels
                 WriteSettings(settings);
             }
 
-            if (settings.TryGetValue("LogLevel", out var logLevelToken))
+            if (settings.TryGetValue<string>("LogLevel", out var logLevel))
             {
-                var logLevel = LogLevel.FromString(logLevelToken.ToObject<string>());
                 var config = new LoggingConfiguration();
                 const string layout = "${longdate}|${level:uppercase=true}|${logger}|${message}${onexception:|${exception:format=ToString}}";
 
-                config.AddRule(logLevel, LogLevel.Fatal, new FileTarget("file")
+                config.AddRule(LogLevel.FromString(logLevel), LogLevel.Fatal, new FileTarget("file")
                 {
                     FileName = @"${basedir}\Logs\latest.log",
                     ArchiveFileName = @"${basedir}\Logs\log.{#}.log",
