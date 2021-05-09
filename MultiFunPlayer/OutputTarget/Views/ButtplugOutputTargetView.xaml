@@ -225,8 +225,8 @@
                                                     <ControlTemplate TargetType="{x:Type GridViewColumnHeader}">
                                                         <TextBlock x:Name="ContentHeader" 
                                                                    Text="{TemplateBinding Content}"
-                                                                   Padding="10"
-                                                                   HorizontalAlignment="Center"/>
+                                                                   Padding="5 10 5 10"
+                                                                   HorizontalAlignment="Left"/>
                                                     </ControlTemplate>
                                                 </Setter.Value>
                                             </Setter>
@@ -269,30 +269,39 @@
                             </ListView.View>
                         </ListView>
 
-                        <StackPanel Orientation="Horizontal">
+                        <StackPanel Orientation="Horizontal"
+                                    Margin="0 0 0 10">
                             <ComboBox Margin="5 0 10 0" 
                                       Width="50"
                                       material:TextFieldAssist.HasClearButton="True"
+                                      material:HintAssist.HelperText="Axes"
+                                      HorizontalAlignment="Center"
                                       ItemsSource="{Binding Source={controls:EnumBindingSource {x:Type common:DeviceAxis}}}" 
                                       SelectedItem="{Binding SelectedDeviceAxis}"/>
 
                             <ComboBox Margin="0 0 10 0"
                                       Width="215"
                                       material:TextFieldAssist.HasClearButton="True"
+                                      material:HintAssist.HelperText="Connected devices"
                                       ItemsSource="{Binding AvailableDevices}" 
-                                      SelectedItem="{Binding SelectedDevice}"/>
+                                      SelectedItem="{Binding SelectedDevice}"
+                                      IsEnabled="{Binding AvailableDevices.Count, Converter={StaticResource NotZeroConverter}}"/>
                             
                             <ComboBox Margin="0 0 10 0" 
                                       Width="130"
                                       material:TextFieldAssist.HasClearButton="True"
+                                      material:HintAssist.HelperText="Message types"
                                       ItemsSource="{Binding AvailableMessageTypes}" 
-                                      SelectedItem="{Binding SelectedMessageType}"/>
+                                      SelectedItem="{Binding SelectedMessageType}"
+                                      IsEnabled="{Binding SelectedDevice, Converter={StaticResource notNullBooleanConverter}}"/>
 
                             <ComboBox Margin="0 0 10 0" 
                                       Width="50"
                                       material:TextFieldAssist.HasClearButton="True"
+                                      material:HintAssist.HelperText="Indices"
                                       ItemsSource="{Binding AvailableFeatureIndices}" 
-                                      SelectedItem="{Binding SelectedFeatureIndex}"/>
+                                      SelectedItem="{Binding SelectedFeatureIndex}"
+                                      IsEnabled="{Binding SelectedMessageType, Converter={StaticResource notNullBooleanConverter}}"/>
                             
                             <Button Style="{StaticResource MaterialDesignFlatButton}"
                                     ToolTip="Add"
