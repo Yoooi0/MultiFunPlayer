@@ -724,6 +724,7 @@ namespace MultiFunPlayer.ViewModels
             return true;
         }
 
+        [SuppressPropertyChangedWarnings]
         public void OnSelectedAxisChanged(object sender, SelectionChangedEventArgs e)
         {
             if (e.RemovedItems.Count != 1 || e.AddedItems.Count != 1)
