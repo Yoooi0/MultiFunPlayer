@@ -866,7 +866,8 @@
 
         <material:Card material:ShadowAssist.ShadowDepth="Depth1">
             <Expander IsExpanded="{Binding IsValuesPanelExpanded}"
-                      material:ExpanderAssist.HorizontalHeaderPadding="24 6 6 6">
+                      material:ExpanderAssist.HorizontalHeaderPadding="24 6 6 6"
+                      Background="{StaticResource MaterialDesignToolBarBackground}">
                 <Expander.Header>
                     <TextBlock Text="Script values" 
                                    FontSize="14"
