@@ -157,20 +157,19 @@ namespace MultiFunPlayer.ViewModels
                             var settings = AxisSettings[axis];
                             var axisPosition = GetAxisPosition(axis);
 
-                            while (state.Index + 1 < keyframes.Count - 1 && keyframes[state.Index + 1].Position < axisPosition)
+                            while (state.Index + 1 < keyframes.Count && keyframes[state.Index + 1].Position < axisPosition)
                                 state.Index++;
 
+                            if (!keyframes.ValidateIndex(state.Index + 1))
+                                return false;
+
                             var newValue = default(float);
-                            var canSmooth = !keyframes.IsRawCollection && keyframes.ValidateIndex(state.Index - 1) && keyframes.ValidateIndex(state.Index + 2);
-                            if (settings.SmoothingType == null || !canSmooth)
+                            if (keyframes.IsRawCollection || state.Index == 0 || state.Index + 2 == keyframes.Count || settings.SmoothingType == InterpolationType.Linear)
                             {
-                                if (!keyframes.ValidateIndex(state.Index + 1))
-                                    return false;
+                                var p0 = keyframes[state.Index];
+                                var p1 = keyframes[state.Index + 1];
 
-                                var prev = keyframes[state.Index];
-                                var next = keyframes[state.Index + 1];
-
-                                newValue = MathUtils.Map(axisPosition, prev.Position, next.Position, prev.Value, next.Value);
+                                newValue = MathUtils.Interpolate(p0.Position, p0.Value, p1.Position, p1.Value, axisPosition, InterpolationType.Linear);
                             }
                             else
                             {
@@ -179,11 +178,8 @@ namespace MultiFunPlayer.ViewModels
                                 var p2 = keyframes[state.Index + 1];
                                 var p3 = keyframes[state.Index + 2];
 
-                                newValue = MathUtils.Interpolate(p0.Position, p0.Value,
-                                                           p1.Position, p1.Value,
-                                                           p2.Position, p2.Value,
-                                                           p3.Position, p3.Value,
-                                                           axisPosition, settings.SmoothingType.Value);
+                                newValue = MathUtils.Interpolate(p0.Position, p0.Value, p1.Position, p1.Value, p2.Position, p2.Value, p3.Position, p3.Value,
+                                                                     axisPosition, settings.SmoothingType);
                             }
 
                             if (settings.Inverted)
@@ -892,7 +888,7 @@ namespace MultiFunPlayer.ViewModels
         [JsonProperty] public bool LinkAxisHasPriority { get; set; } = false;
         [JsonProperty] public DeviceAxis? LinkAxis { get; set; } = null;
         [JsonProperty] public bool SmartLimitEnabled { get; set; } = false;
-        [JsonProperty] public InterpolationType? SmoothingType { get; set; } = InterpolationType.Pchip;
+        [JsonProperty] public InterpolationType SmoothingType { get; set; } = InterpolationType.Pchip;
         [JsonProperty] public bool AutoHomeEnabled { get; set; } = false;
         [JsonProperty] public float AutoHomeDelay { get; set; } = 5;
         [JsonProperty] public float AutoHomeDuration { get; set; } = 3;

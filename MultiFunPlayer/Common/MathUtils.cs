@@ -33,38 +33,93 @@ namespace MultiFunPlayer.Common
         public static double Random() => _random.NextDouble();
 
         [MethodImpl(MethodImplOptions.AggressiveOptimization)]
-        public static float Pchip(float x0, float y0, float x1, float y1, float x2, float y2, float x3, float y3, float x)
-        {
-            [MethodImpl(MethodImplOptions.AggressiveOptimization)]
-            static float Slope(float xkm, float ykm, float xk, float yk, float xkp, float ykp)
+        public static float Interpolate(float x0, float y0, float x1, float y1, float x, InterpolationType type)
+            => type switch
             {
-                var hkm1 = xk - xkm;
-                var dkm1 = (yk - ykm) / hkm1;
+                InterpolationType.Linear => Interpolation.Linear(x0, y0, x1, y1, x),
+                _ => throw new NotSupportedException()
+            };
 
-                var hk = xkp - xk;
-                var dk = (ykp - yk) / hk;
-                var w1 = 2 * hk + hkm1;
-                var w2 = hk + 2 * hkm1;
-                if ((dk > 0 && dkm1 < 0) || (dk < 0 && dkm1 > 0) || dk == 0 || dkm1 == 0)
-                    return 0;
+        [MethodImpl(MethodImplOptions.AggressiveOptimization)]
+        public static float Interpolate(float x0, float y0, float x1, float y1, float x2, float y2, float x3, float y3, float x, InterpolationType type)
+            => type switch
+            {
+                InterpolationType.Pchip => Interpolation.Pchip(x0, y0, x1, y1, x2, y2, x3, y3, x),
+                InterpolationType.Makima => Interpolation.Makima(x0, y0, x1, y1, x2, y2, x3, y3, x),
+                _ => throw new NotSupportedException()
+            };
+    }
 
-                return (w1 + w2) / (w1 / dkm1 + w2 / dk);
-            }
+    public enum InterpolationType
+    {
+        Linear,
+        Pchip,
+        Makima
+    }
 
-            var s1 = Slope(x0, y0, x1, y1, x2, y2);
-            var s2 = Slope(x1, y1, x2, y2, x3, y3);
-
-            var d = x2 - x1;
-            var dx = x - x1;
+    public static class Interpolation
+    {
+        [MethodImpl(MethodImplOptions.AggressiveOptimization)]
+        public static float CubicHermite(float x0, float y0, float x1, float y1, float s0, float s1, float x)
+        {
+            var d = x1 - x0;
+            var dx = x - x0;
             var t = dx / d;
             var r = 1 - t;
 
-            return r * r * (y1 * (1 + 2 * t) + dx * s1)
-                 + t * t * (y2 * (3 - 2 * t) - d * s2 * r);
+            return r * r * (y0 * (1 + 2 * t) + s0 * dx)
+                 + t * t * (y1 * (3 - 2 * t) - d * s1 * r);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveOptimization)]
-        public static float Makima(float x0, float y0, float x1, float y1, float x2, float y2, float x3, float y3, float x)
+        public static float CubicHermitePrime(float x0, float y0, float x1, float y1, float s0, float s1, float x)
+        {
+            var d = x - x0;
+            var dx = x1 - x0;
+            var d1 = (y1 - y0 - s0 * dx) / (dx * dx);
+            var d2 = (s1 - s0) / (2 * dx);
+            var c2 = 3 * d1 - 2 * d2;
+            var c3 = 2 * (d2 - d1) / dx;
+            return s0 + 2 * c2 * d + 3 * c3 * d * d;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveOptimization)]
+        private static void PchipSlopes(float x0, float y0, float x1, float y1, float x2, float y2, float x3, float y3, out float s1, out float s2)
+        {
+            var hkm1 = x1 - x0;
+            var dkm1 = (y1 - y0) / hkm1;
+
+            var hk1 = x2 - x1;
+            var dk1 = (y2 - y1) / hk1;
+            var w11 = 2 * hk1 + hkm1;
+            var w12 = hk1 + 2 * hkm1;
+
+            s1 = (w11 + w12) / (w11 / dkm1 + w12 / dk1);
+            if (!float.IsFinite(s1) || dk1 * dkm1 < 0)
+                s1 = 0;
+
+            var hkm2 = x2 - x1;
+            var dkm2 = (y2 - y1) / hkm2;
+
+            var hk2 = x3 - x2;
+            var dk2 = (y3 - y2) / hk2;
+            var w21 = 2 * hk2 + hkm2;
+            var w22 = hk2 + 2 * hkm2;
+
+            s2 = (w21 + w22) / (w21 / dkm2 + w22 / dk2);
+            if (!float.IsFinite(s2) || dk2 * dkm2 < 0)
+                s2 = 0;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveOptimization)]
+        public static float Pchip(float x0, float y0, float x1, float y1, float x2, float y2, float x3, float y3, float x)
+        {
+            PchipSlopes(x0, y0, x1, y1, x2, y2, x3, y3, out var s1, out var s2);
+            return CubicHermite(x1, y1, x2, y2, s1, s2, x);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveOptimization)]
+        private static void MakimaSlopes(float x0, float y0, float x1, float y1, float x2, float y2, float x3, float y3, out float s1, out float s2)
         {
             var m2 = (y3 - y2) / (x3 - x2);
             var m1 = (y2 - y1) / (x2 - x1);
@@ -72,38 +127,34 @@ namespace MultiFunPlayer.Common
 
             var w11 = Math.Abs(m2 - m1) + Math.Abs(m2 + m1) / 2;
             var w12 = Math.Abs(m1 - m0) + Math.Abs(3 * m0 - m1) / 2;
-            var s1 = (w11 * m0 + w12 * m1) / (w11 + w12);
+            
+            s1 = (w11 * m0 + w12 * m1) / (w11 + w12);
             if (!double.IsFinite(s1))
                 s1 = 0;
 
             var w21 = Math.Abs(m2 - m1) + Math.Abs(3 * m2 - m1) / 2;
             var w22 = Math.Abs(m1 - m0) + Math.Abs(m1 + m0) / 2;
-            var s2 = (w21 * m1 + w22 * m2) / (w21 + w22);
+            
+            s2 = (w21 * m1 + w22 * m2) / (w21 + w22);
             if (!double.IsFinite(s2))
                 s2 = 0;
-
-            var d = x2 - x1;
-            var dx = x - x1;
-            var t = dx / d;
-            var r = 1 - t;
-
-            return r * r * (y1 * (1 + 2 * t) + s1 * dx)
-                 + t * t * (y2 * (3 - 2 * t) - d * s2 * r);
         }
 
-        public static float Interpolate(float x0, float y0, float x1, float y1, float x2, float y2, float x3, float y3, float x, InterpolationType type)
-            => type switch
-            {
-                InterpolationType.Pchip => Pchip(x0, y0, x1, y1, x2, y2, x3, y3, x),
-                InterpolationType.Makima => Makima(x0, y0, x1, y1, x2, y2, x3, y3, x),
-                _ => throw new NotSupportedException()
-            };
-    }
+        [MethodImpl(MethodImplOptions.AggressiveOptimization)]
+        public static float Makima(float x0, float y0, float x1, float y1, float x2, float y2, float x3, float y3, float x)
+        {
+            MakimaSlopes(x0, y0, x1, y1, x2, y2, x3, y3, out var s1, out var s2);
+            return CubicHermite(x1, y1, x2, y2, s1, s2, x);
+        }
 
-    public enum InterpolationType
-    {
-        Pchip,
-        Makima
+        [MethodImpl(MethodImplOptions.AggressiveOptimization)]
+        public static float Linear(float x0, float y0, float x1, float y1, float x)
+        {
+            var d = x1 - x0;
+            var dx = x - x0;
+            var t = dx / d;
+            return MathUtils.Lerp(y0, y1, t);
+        }
     }
 
     public class OpenSimplex
