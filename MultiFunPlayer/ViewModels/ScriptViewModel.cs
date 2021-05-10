@@ -164,7 +164,7 @@ namespace MultiFunPlayer.ViewModels
                                 return false;
 
                             var newValue = default(float);
-                            if (keyframes.IsRawCollection || state.Index == 0 || state.Index + 2 == keyframes.Count || settings.SmoothingType == InterpolationType.Linear)
+                            if (keyframes.IsRawCollection || state.Index == 0 || state.Index + 2 == keyframes.Count || settings.InterpolationType == InterpolationType.Linear)
                             {
                                 var p0 = keyframes[state.Index];
                                 var p1 = keyframes[state.Index + 1];
@@ -179,7 +179,7 @@ namespace MultiFunPlayer.ViewModels
                                 var p3 = keyframes[state.Index + 2];
 
                                 newValue = MathUtils.Interpolate(p0.Position, p0.Value, p1.Position, p1.Value, p2.Position, p2.Value, p3.Position, p3.Value,
-                                                                     axisPosition, settings.SmoothingType);
+                                                                     axisPosition, settings.InterpolationType);
                             }
 
                             if (settings.Inverted)
@@ -888,7 +888,7 @@ namespace MultiFunPlayer.ViewModels
         [JsonProperty] public bool LinkAxisHasPriority { get; set; } = false;
         [JsonProperty] public DeviceAxis? LinkAxis { get; set; } = null;
         [JsonProperty] public bool SmartLimitEnabled { get; set; } = false;
-        [JsonProperty] public InterpolationType SmoothingType { get; set; } = InterpolationType.Pchip;
+        [JsonProperty] public InterpolationType InterpolationType { get; set; } = InterpolationType.Pchip;
         [JsonProperty] public bool AutoHomeEnabled { get; set; } = false;
         [JsonProperty] public float AutoHomeDelay { get; set; } = 5;
         [JsonProperty] public float AutoHomeDuration { get; set; } = 3;

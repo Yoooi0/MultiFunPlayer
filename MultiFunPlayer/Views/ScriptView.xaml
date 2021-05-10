@@ -695,7 +695,7 @@
                                                                    Style="{StaticResource MaterialDesignToolBarPopupBox}"
                                                                    ToolTipService.InitialShowDelay="0"
                                                                    ToolTipService.Placement="Top"
-                                                                   ToolTip="Smoothing">
+                                                                   ToolTip="Interpolation">
                                                 <material:PopupBox.ToggleContent>
                                                     <Border Width="35" Height="35">
                                                         <material:PackIcon Kind="ChartBellCurve" 
@@ -718,7 +718,7 @@
                                                                           Margin="0 0 10 0" 
                                                                           Width="100" 
                                                                           ItemsSource="{Binding Source={controls:EnumBindingSource {x:Type common:InterpolationType}}}" 
-                                                                          SelectedItem="{Binding Value.Settings.SmoothingType}"/>
+                                                                          SelectedItem="{Binding Value.Settings.InterpolationType}"/>
                                                         </DockPanel>
                                                     </StackPanel>
                                                 </Grid>
