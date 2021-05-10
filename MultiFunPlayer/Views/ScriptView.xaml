@@ -873,11 +873,11 @@
                                    FontWeight="Bold"
                                    Typography.Capitals="AllSmallCaps"/>
                 </Expander.Header>
-                <StackPanel Margin="20 0 20 10">
+                <StackPanel Margin="15 0 15 10">
                     <ItemsControl ItemsSource="{Binding AxisStates}">
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate>
-                                <UniformGrid Columns="3" Rows="3" IsItemsHost="True" Margin="-5 0 -5 0"/>
+                                <UniformGrid Columns="3" Rows="3" IsItemsHost="True"/>
                             </ItemsPanelTemplate>
                         </ItemsControl.ItemsPanel>
                         <ItemsControl.ItemContainerStyle>
@@ -887,14 +887,15 @@
                         </ItemsControl.ItemContainerStyle>
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <DockPanel Margin="2" LastChildFill="True">
+                                <DockPanel Margin="0" LastChildFill="True">
                                     <TextBlock DockPanel.Dock="Left" Margin="0 0 5 0" Text="{Binding Key, Mode=OneWay}"/>
                                     <ProgressBar material:TransitionAssist.DisableTransitions="True"
-                                                     DockPanel.Dock="Right"
-                                                     Minimum="0"
-                                                     Maximum="100"
-                                                     Height="10"
-                                                     Value="{Binding Value.Value, Mode=OneWay, Converter={StaticResource DeviceAxisValueToPercentConverter}}">
+                                                 DockPanel.Dock="Right"
+                                                 Minimum="0"
+                                                 Maximum="100"
+                                                 Height="10"
+                                                 Width="155"
+                                                 Value="{Binding Value.Value, Mode=OneWay, Converter={StaticResource DeviceAxisValueToPercentConverter}}">
                                         <ProgressBar.Style>
                                             <Style TargetType="ProgressBar" BasedOn="{StaticResource MaterialDesignLinearProgressBar}">
                                                 <Style.Triggers>
