@@ -127,14 +127,14 @@ namespace MultiFunPlayer.Common
 
             var w11 = Math.Abs(m2 - m1) + Math.Abs(m2 + m1) / 2;
             var w12 = Math.Abs(m1 - m0) + Math.Abs(3 * m0 - m1) / 2;
-            
+
             s1 = (w11 * m0 + w12 * m1) / (w11 + w12);
             if (!double.IsFinite(s1))
                 s1 = 0;
 
             var w21 = Math.Abs(m2 - m1) + Math.Abs(3 * m2 - m1) / 2;
             var w22 = Math.Abs(m1 - m0) + Math.Abs(m1 + m0) / 2;
-            
+
             s2 = (w21 * m1 + w22 * m2) / (w21 + w22);
             if (!double.IsFinite(s2))
                 s2 = 0;

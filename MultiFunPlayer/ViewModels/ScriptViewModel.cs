@@ -651,7 +651,7 @@ namespace MultiFunPlayer.ViewModels
 
             var (axis, model) = pair;
             var drop = e.Data.GetData(DataFormats.FileDrop);
-            if (drop is string[] paths)
+            if (drop is IEnumerable<string> paths)
             {
                 var path = paths.FirstOrDefault(p => Path.GetExtension(p) == ".funscript");
                 if (path == null)
