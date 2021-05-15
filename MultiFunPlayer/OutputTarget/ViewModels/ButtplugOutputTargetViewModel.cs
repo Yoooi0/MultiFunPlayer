@@ -135,12 +135,16 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
                 AvailableDevices.Remove(device);
                 if (device == SelectedDevice)
                     SelectedDevice = null;
+
+                DeviceSettings.Refresh();
             }
 
             void OnDeviceAdded(ButtplugClientDevice device)
             {
                 Logger.Info($"Device added: \"{device.Name}\"");
                 AvailableDevices.Add(device);
+
+                DeviceSettings.Refresh();
             }
 
             using var client = new ButtplugClient(nameof(MultiFunPlayer));
@@ -271,6 +275,9 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
 
             CleanupSemaphores();
         }
+
+        public int GetNumberOfDevices(string deviceName)
+            => AvailableDevices.Count(d => string.Equals(d.Name, deviceName, StringComparison.OrdinalIgnoreCase));
 
         protected override void HandleSettings(JObject settings, AppSettingsMessageType type)
         {

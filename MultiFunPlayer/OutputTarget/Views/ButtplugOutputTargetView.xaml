@@ -1,4 +1,4 @@
-<UserControl x:Class="MultiFunPlayer.OutputTarget.Views.ButtplugOutputTargetView"
+﻿<UserControl x:Class="MultiFunPlayer.OutputTarget.Views.ButtplugOutputTargetView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:material="http://materialdesigninxaml.net/winfx/xaml/themes"
              xmlns:metro="http://metro.mahapps.com/winfx/xaml/controls"
@@ -10,10 +10,12 @@
              xmlns:common="clr-namespace:MultiFunPlayer.Common" 
              xmlns:converters="clr-namespace:MultiFunPlayer.Common.Converters"
              xmlns:controls="clr-namespace:MultiFunPlayer.Common.Controls"
+             xmlns:system="clr-namespace:System;assembly=mscorlib"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
     <UserControl.Resources>
         <converters:IPEndPointToStringConverter x:Key="IPEndPointToStringConverter"/>
+        <converters:CallObjectMethodWithArgumentConverter x:Key="CallObjectMethodWithArgumentConverter"/>
     </UserControl.Resources>
     <DockPanel LastChildFill="True">
         <DockPanel DockPanel.Dock="Top" LastChildFill="True">
@@ -237,8 +239,26 @@
                                                     Width="60"
                                                     DisplayMemberBinding="{Binding SourceAxis}"/>
                                     <GridViewColumn Header="Device Name"
-                                                    Width="225"
-                                                    DisplayMemberBinding="{Binding DeviceName}"/>
+                                                    Width="225">
+                                        <GridViewColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <material:Badged BadgePlacementMode="TopRight"
+                                                                 Padding="0 0 10 0">
+                                                    <material:Badged.Resources>
+                                                        <system:String x:Key="MethodName">GetNumberOfDevices</system:String>
+                                                    </material:Badged.Resources>
+                                                    <material:Badged.Badge>
+                                                        <MultiBinding Converter="{StaticResource CallObjectMethodWithArgumentConverter}">
+                                                            <Binding Path="DataContext" RelativeSource="{RelativeSource FindAncestor, AncestorType={x:Type UserControl}}"/>
+                                                            <Binding Source="{StaticResource MethodName}"/>
+                                                            <Binding Path="DeviceName"/>
+                                                        </MultiBinding>
+                                                    </material:Badged.Badge>
+                                                    <TextBlock Text="{Binding DeviceName}"/>
+                                                </material:Badged>
+                                            </DataTemplate>
+                                        </GridViewColumn.CellTemplate>
+                                    </GridViewColumn>
                                     <GridViewColumn Header="Message Type"
                                                     Width="140"
                                                     DisplayMemberBinding="{Binding MessageType}"/>
