@@ -1,4 +1,4 @@
-﻿<UserControl x:Class="MultiFunPlayer.OutputTarget.Views.ButtplugOutputTargetView"
+<UserControl x:Class="MultiFunPlayer.OutputTarget.Views.ButtplugOutputTargetView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:material="http://materialdesigninxaml.net/winfx/xaml/themes"
              xmlns:metro="http://metro.mahapps.com/winfx/xaml/controls"
@@ -285,8 +285,17 @@
                                       material:HintAssist.HelperText="Connected devices"
                                       ItemsSource="{Binding AvailableDevices}" 
                                       SelectedItem="{Binding SelectedDevice}"
-                                      IsEnabled="{Binding AvailableDevices.Count, Converter={StaticResource NotZeroConverter}}"/>
-                            
+                                      IsEnabled="{Binding AvailableDevices.Count, Converter={StaticResource NotZeroConverter}}">
+                                <ComboBox.ItemTemplate> 
+                                    <DataTemplate> 
+                                        <StackPanel Orientation="Horizontal"> 
+                                            <TextBlock Text="{Binding Name}"/> 
+                                            <TextBlock Text="{Binding Index, StringFormat=[{0}]}" /> 
+                                        </StackPanel> 
+                                    </DataTemplate> 
+                                </ComboBox.ItemTemplate> 
+                            </ComboBox>
+
                             <ComboBox Margin="0 0 10 0" 
                                       Width="130"
                                       material:TextFieldAssist.HasClearButton="True"
