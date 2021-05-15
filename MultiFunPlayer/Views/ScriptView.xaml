@@ -17,8 +17,6 @@
         <converters:NullableToBooleanConverter x:Key="NullableToBooleanConverter"/>
         <converters:InvertedNullableToBooleanConverter x:Key="InvertedNullableToBooleanConverter"/>
         <converters:MultiObjectToArrayConverter x:Key="MultiObjectToArrayConverter"/>
-        <converters:MultiBooleanToBooleanAndConverter x:Key="MultiBooleanToBooleanAndConverter"/>
-        <converters:MultiBooleanToBooleanOrConverter x:Key="MultiBooleanToBooleanOrConverter"/>
         <material:NullableToVisibilityConverter x:Key="NullableToVisibilityConverter"/>
     </UserControl.Resources>
     <StackPanel Margin="0 0 0 20">
