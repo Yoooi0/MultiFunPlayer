@@ -731,6 +731,7 @@ namespace MultiFunPlayer.ViewModels
                 return;
 
             added.Value.Settings.ContentVisible = removed.Value.Settings.ContentVisible;
+            removed.Value.Settings.ContentVisible = false;
         }
 
         public void OnAxisMoveToVideo(DeviceAxis axis)
