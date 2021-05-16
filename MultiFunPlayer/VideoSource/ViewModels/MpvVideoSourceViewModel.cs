@@ -56,7 +56,7 @@ namespace MultiFunPlayer.VideoSource.ViewModels
                     var executable = Executable ?? new FileInfo(Path.Join(Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName), "mpv.exe"));
                     if (!executable.Exists)
                     {
-                        _ = Execute.OnUIThreadAsync(() => DialogHost.Show(new ErrorMessageDialog($"Could not find mpv executable!\n\nYou can download latest release from settings or copy mpv.exe to\n\"{executable.FullName}\"\n")));
+                        throw new Exception($"Could not find mpv executable! Please set path to mpv.exe or download latest release from settings.");
                     }
                     else
                     {
