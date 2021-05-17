@@ -67,26 +67,14 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
 
             try
             {
-                var sb = new StringBuilder(256);
                 using var stream = new StreamWriter(client.GetStream(), Encoding.ASCII);
                 while (!token.IsCancellationRequested && client?.Connected == true)
                 {
                     var interval = MathF.Max(1, 1000.0f / UpdateRate);
                     UpdateValues();
 
-                    sb.Clear();
-                    foreach (var (axis, value) in Values)
-                    {
-                        if (sb.Length > 0)
-                            sb.Append(' ');
 
-                        sb.Append(axis)
-                          .AppendFormat("{0:000}", value * 999)
-                          .AppendFormat("I{0}", (int)interval);
-                    }
-                    sb.AppendLine();
-
-                    var commands = sb.ToString();
+                    var commands = TCode.ToString(Values, (int)interval);
                     if (client.Connected && !string.IsNullOrWhiteSpace(commands))
                     {
                         Logger.Trace("Sending \"{0}\" to \"{1}\"", commands.Trim(), $"tcp://{Endpoint}");
