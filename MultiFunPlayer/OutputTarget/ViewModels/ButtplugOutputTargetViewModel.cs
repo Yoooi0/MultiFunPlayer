@@ -181,38 +181,43 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
                     UpdateValues();
 
                     var dirtySettings = DeviceSettings.Where(s => IsDirty(s.SourceAxis));
+                    var tasks = dirtySettings.GroupBy(m => m.DeviceName).SelectMany(deviceGroup =>
+                    {
+                        var deviceName = deviceGroup.Key;
+                        var devices = AvailableDevices.Where(d => string.Equals(d.Name, deviceName, StringComparison.OrdinalIgnoreCase));
+                        return deviceGroup.GroupBy(m => m.MessageType).SelectMany(typeGroup =>
+                        {
+                            var type = typeGroup.Key;
+                            return devices.Select(device =>
+                            {
+                                if (type == ServerMessage.Types.MessageAttributeType.VibrateCmd)
+                                    return device.SendVibrateCmd(typeGroup.ToDictionary(m => m.FeatureIndex,
+                                                                                        m => (double)Values[m.SourceAxis]));
+
+                                if (type == ServerMessage.Types.MessageAttributeType.LinearCmd)
+                                    return device.SendLinearCmd(typeGroup.ToDictionary(m => m.FeatureIndex,
+                                                                                       m => ((uint)interval, (double)Values[m.SourceAxis])));
+
+                                if (type == ServerMessage.Types.MessageAttributeType.RotateCmd)
+                                    return device.SendRotateCmd(typeGroup.ToDictionary(m => m.FeatureIndex,
+                                                                                       m => (Math.Clamp(Math.Abs(Values[m.SourceAxis] - 0.5) / 0.5, 0, 1), Values[m.SourceAxis] > 0.5)));
+
+                                return Task.CompletedTask;
+                            });
+                        });
+                    });
 
                     try
                     {
-                        await Task.WhenAll(dirtySettings.GroupBy(m => m.DeviceName).SelectMany(deviceGroup =>
-                        {
-                            var deviceName = deviceGroup.Key;
-                            var devices = AvailableDevices.Where(d => string.Equals(d.Name, deviceName, StringComparison.OrdinalIgnoreCase));
-                            return deviceGroup.GroupBy(m => m.MessageType).SelectMany(typeGroup =>
-                            {
-                                var type = typeGroup.Key;
-                                return devices.Select(device =>
-                                {
-                                    if (type == ServerMessage.Types.MessageAttributeType.VibrateCmd)
-                                        return device.SendVibrateCmd(typeGroup.ToDictionary(m => m.FeatureIndex,
-                                                                                            m => (double)Values[m.SourceAxis]));
-
-                                    if (type == ServerMessage.Types.MessageAttributeType.LinearCmd)
-                                        return device.SendLinearCmd(typeGroup.ToDictionary(m => m.FeatureIndex,
-                                                                                           m => ((uint)interval, (double)Values[m.SourceAxis])));
-
-                                    if (type == ServerMessage.Types.MessageAttributeType.RotateCmd)
-                                        return device.SendRotateCmd(typeGroup.ToDictionary(m => m.FeatureIndex,
-                                                                                           m => (Math.Clamp(Math.Abs(Values[m.SourceAxis] - 0.5) / 0.5, 0, 1), Values[m.SourceAxis] > 0.5)));
-
-                                    return Task.CompletedTask;
-                                });
-                            });
-                        }));
+                        await Task.WhenAll(tasks);
                     }
-                    catch (ButtplugDeviceException) { }
+                    catch (Exception)
+                    {
+                        foreach (var exception in tasks.Where(t => t.Exception != null).Select(t => t.Exception))
+                            Logger.Debug(exception, "Buttplug device exception");
+                    }
 
-                    foreach(var group in dirtySettings.GroupBy(x => x.SourceAxis))
+                    foreach (var group in dirtySettings.GroupBy(x => x.SourceAxis))
                         lastSentValues[group.Key] = Values[group.Key];
 
                     await Task.Delay((int)interval, token);
