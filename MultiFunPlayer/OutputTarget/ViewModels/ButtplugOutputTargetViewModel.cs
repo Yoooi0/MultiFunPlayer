@@ -172,16 +172,19 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
                 _ = ScanAsync(client, token);
 
                 var lastSentValues = EnumUtils.ToDictionary<DeviceAxis, float>(_ => float.PositiveInfinity);
+                bool IsDirty(DeviceAxis axis)
+                    => float.IsFinite(Values[axis]) && (!float.IsFinite(lastSentValues[axis]) || MathF.Abs(lastSentValues[axis] - Values[axis]) >= 0.005f);
+
                 while (!token.IsCancellationRequested && client.Connected)
                 {
                     var interval = MathF.Max(1, 1000.0f / UpdateRate);
                     UpdateValues();
 
-                    var validSettings = DeviceSettings.Where(s => float.IsFinite(Values[s.SourceAxis]));
+                    var dirtySettings = DeviceSettings.Where(s => IsDirty(s.SourceAxis));
 
                     try
                     {
-                        await Task.WhenAll(validSettings.GroupBy(m => m.DeviceName).SelectMany(deviceGroup =>
+                        await Task.WhenAll(dirtySettings.GroupBy(m => m.DeviceName).SelectMany(deviceGroup =>
                         {
                             var deviceName = deviceGroup.Key;
                             var devices = AvailableDevices.Where(d => string.Equals(d.Name, deviceName, StringComparison.OrdinalIgnoreCase));
@@ -209,7 +212,7 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
                     }
                     catch (ButtplugDeviceException) { }
 
-                    foreach(var group in validSettings.GroupBy(x => x.SourceAxis))
+                    foreach(var group in dirtySettings.GroupBy(x => x.SourceAxis))
                         lastSentValues[group.Key] = Values[group.Key];
 
                     await Task.Delay((int)interval, token);
