@@ -1,5 +1,4 @@
-﻿using MultiFunPlayer.ViewModels;
-using PropertyChanged;
+﻿using PropertyChanged;
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;

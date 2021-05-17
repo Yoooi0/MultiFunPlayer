@@ -18,12 +18,6 @@ using System.Windows;
 
 namespace MultiFunPlayer.OutputTarget.ViewModels
 {
-    public static class E
-    {
-        public static string ToString(this ButtplugClientDevice device)
-            => device.Name;
-    }
-
     public class ButtplugOutputTargetViewModel : AsyncAbstractOutputTarget
     {
         protected Logger Logger = LogManager.GetCurrentClassLogger();

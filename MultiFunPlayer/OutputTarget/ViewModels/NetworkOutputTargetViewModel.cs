@@ -73,7 +73,6 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
                     var interval = MathF.Max(1, 1000.0f / UpdateRate);
                     UpdateValues();
 
-
                     var commands = TCode.ToString(Values, (int)interval);
                     if (client.Connected && !string.IsNullOrWhiteSpace(commands))
                     {
