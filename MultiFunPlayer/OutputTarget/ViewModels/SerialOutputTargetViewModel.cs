@@ -19,7 +19,7 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
         protected Logger Logger = LogManager.GetCurrentClassLogger();
 
         public override string Name => "Serial";
-        public override OutputTargetStatus Status { get; protected set; }
+        public override ConnectionStatus Status { get; protected set; }
 
         public BindableCollection<string> ComPorts { get; set; }
         public string SelectedComPort { get; set; }
@@ -51,11 +51,11 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
             IsRefreshBusy = false;
         }
 
-        public bool IsConnected => Status == OutputTargetStatus.Connected;
-        public bool IsConnectBusy => Status == OutputTargetStatus.Connecting || Status == OutputTargetStatus.Disconnecting;
+        public bool IsConnected => Status == ConnectionStatus.Connected;
+        public bool IsConnectBusy => Status == ConnectionStatus.Connecting || Status == ConnectionStatus.Disconnecting;
         public bool CanToggleConnect => !IsConnectBusy && SelectedComPort != null;
 
-        protected override async Task ConnectAsync()
+        public override async Task ConnectAsync()
         {
             if (!ComPorts.Contains(SelectedComPort))
                 await RefreshPorts();
@@ -81,7 +81,7 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
 
                 serialPort.Open();
                 serialPort.ReadExisting();
-                Status = OutputTargetStatus.Connected;
+                Status = ConnectionStatus.Connected;
             }
             catch (Exception e)
             {

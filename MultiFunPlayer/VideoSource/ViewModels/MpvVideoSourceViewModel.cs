@@ -26,7 +26,7 @@ namespace MultiFunPlayer.VideoSource.ViewModels
         private readonly IEventAggregator _eventAggregator;
 
         public override string Name => "MPV";
-        public override VideoSourceStatus Status { get; protected set; }
+        public override ConnectionStatus Status { get; protected set; }
 
         public FileInfo Executable { get; set; } = null;
         public string Arguments { get; set; } = "--keep-open=always --pause";
@@ -36,8 +36,8 @@ namespace MultiFunPlayer.VideoSource.ViewModels
             _eventAggregator = eventAggregator;
         }
 
-        public bool IsConnected => Status == VideoSourceStatus.Connected;
-        public bool IsConnectBusy => Status == VideoSourceStatus.Connecting || Status == VideoSourceStatus.Disconnecting;
+        public bool IsConnected => Status == ConnectionStatus.Connected;
+        public bool IsConnectBusy => Status == ConnectionStatus.Connecting || Status == ConnectionStatus.Disconnecting;
         public bool CanToggleConnect => !IsConnectBusy;
 
         protected override async Task RunAsync(CancellationToken token)
@@ -83,7 +83,7 @@ namespace MultiFunPlayer.VideoSource.ViewModels
                     await writer.WriteLineAsync("{ \"command\": [\"observe_property_string\", 4, \"path\"] }");
                     await writer.WriteLineAsync("{ \"command\": [\"observe_property_string\", 5, \"speed\"] }");
 
-                    Status = VideoSourceStatus.Connected;
+                    Status = ConnectionStatus.Connected;
                     while (!token.IsCancellationRequested && client.IsConnected)
                     {
                         var message = await reader.ReadLineAsync().WithCancellation(token);

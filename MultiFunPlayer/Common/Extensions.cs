@@ -14,12 +14,12 @@ using System.Threading.Tasks;
 
 namespace MultiFunPlayer.Common
 {
-    public static class VideoSourceExtensions
+    public static class ConnectableExtensions
     {
-        public static Task WaitForIdle(this IVideoSource source, CancellationToken token)
-            => source.WaitForStatus(new[] { VideoSourceStatus.Connected, VideoSourceStatus.Disconnected }, token);
-        public static Task WaitForDisconnect(this IVideoSource source, CancellationToken token)
-            => source.WaitForStatus(new[] { VideoSourceStatus.Disconnected }, token);
+        public static Task WaitForIdle(this IConnectable connectable, CancellationToken token)
+            => connectable.WaitForStatus(new[] { ConnectionStatus.Connected, ConnectionStatus.Disconnected }, token);
+        public static Task WaitForDisconnect(this IConnectable connectable, CancellationToken token)
+            => connectable.WaitForStatus(new[] { ConnectionStatus.Disconnected }, token);
     }
 
     public static class JsonExtensions

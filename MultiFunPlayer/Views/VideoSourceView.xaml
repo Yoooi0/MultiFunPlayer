@@ -10,7 +10,7 @@
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
     <UserControl.Resources>
-        <converters:VideoSourceStatusToBrushConverter x:Key="VideoSourceStatusToBrushConverter"/>
+        <converters:ConnectionStatusToBrushConverter x:Key="ConnectionStatusToBrushConverter"/>
     </UserControl.Resources>
     <material:Card material:ShadowAssist.ShadowDepth="Depth1" Margin="0 0 0 20">
         <StackPanel>
@@ -25,7 +25,7 @@
                                        HorizontalAlignment="Center"
                                        FontWeight="Light"
                                        FontSize="10" 
-                                       Foreground="{Binding Status, Converter={StaticResource VideoSourceStatusToBrushConverter}}"/>
+                                       Foreground="{Binding Status, Converter={StaticResource ConnectionStatusToBrushConverter}}"/>
                         </StackPanel>
                     </DataTemplate>
                 </TabControl.ItemTemplate>

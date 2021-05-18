@@ -17,7 +17,7 @@ namespace MultiFunPlayer.VideoSource
         private CancellationTokenSource _cancellationSource;
         private Task _task;
 
-        [SuppressPropertyChangedWarnings] public abstract VideoSourceStatus Status { get; protected set; }
+        [SuppressPropertyChangedWarnings] public abstract ConnectionStatus Status { get; protected set; }
         public bool ContentVisible { get; set; } = false;
         public bool AutoConnectEnabled { get; set; } = true;
 
@@ -38,10 +38,10 @@ namespace MultiFunPlayer.VideoSource
 
         public async virtual Task ConnectAsync()
         {
-            if (Status != VideoSourceStatus.Disconnected)
+            if (Status != ConnectionStatus.Disconnected)
                 return;
 
-            Status = VideoSourceStatus.Connecting;
+            Status = ConnectionStatus.Connecting;
             _cancellationSource = new CancellationTokenSource();
             _task = Task.Factory.StartNew(() => RunAsync(_cancellationSource.Token),
                 _cancellationSource.Token,
@@ -55,10 +55,10 @@ namespace MultiFunPlayer.VideoSource
 
         public async virtual Task DisconnectAsync()
         {
-            if (Status == VideoSourceStatus.Disconnected || Status == VideoSourceStatus.Disconnecting)
+            if (Status == ConnectionStatus.Disconnected || Status == ConnectionStatus.Disconnecting)
                 return;
 
-            Status = VideoSourceStatus.Disconnecting;
+            Status = ConnectionStatus.Disconnecting;
 
             _cancellationSource?.Cancel();
 
@@ -71,24 +71,24 @@ namespace MultiFunPlayer.VideoSource
             _cancellationSource = null;
             _task = null;
 
-            Status = VideoSourceStatus.Disconnected;
+            Status = ConnectionStatus.Disconnected;
         }
 
         public async virtual ValueTask<bool> CanConnectAsync(CancellationToken token) => await ValueTask.FromResult(false);
         public async virtual ValueTask<bool> CanConnectAsyncWithStatus(CancellationToken token)
         {
-            if (Status != VideoSourceStatus.Disconnected)
+            if (Status != ConnectionStatus.Disconnected)
                 return await ValueTask.FromResult(false);
 
-            Status = VideoSourceStatus.Connecting;
+            Status = ConnectionStatus.Connecting;
             await Task.Delay(100, token);
             var result = await CanConnectAsync(token);
-            Status = VideoSourceStatus.Disconnected;
+            Status = ConnectionStatus.Disconnected;
 
             return result;
         }
 
-        public async Task WaitForStatus(IEnumerable<VideoSourceStatus> statuses, CancellationToken token)
+        public async Task WaitForStatus(IEnumerable<ConnectionStatus> statuses, CancellationToken token)
         {
             while (!statuses.Contains(Status))
                 await _statusEvent.WaitAsync(token);

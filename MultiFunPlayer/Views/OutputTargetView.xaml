@@ -11,7 +11,7 @@
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">    
     <UserControl.Resources>
-        <converters:OutputTargetStatusToBrushConverter x:Key="OutputTargetStatusToBrushConverter"/>
+        <converters:ConnectionStatusToBrushConverter x:Key="ConnectionStatusToBrushConverter"/>
     </UserControl.Resources>
     <material:Card material:ShadowAssist.ShadowDepth="Depth1">
         <StackPanel>
@@ -26,7 +26,7 @@
                                        HorizontalAlignment="Center"
                                        FontWeight="Light"
                                        FontSize="10" 
-                                       Foreground="{Binding Status, Converter={StaticResource OutputTargetStatusToBrushConverter}}"/>
+                                       Foreground="{Binding Status, Converter={StaticResource ConnectionStatusToBrushConverter}}"/>
                         </StackPanel>
                     </DataTemplate>
                 </TabControl.ItemTemplate>

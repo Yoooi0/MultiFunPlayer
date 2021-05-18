@@ -19,6 +19,8 @@
                     <DockPanel DockPanel.Dock="Left" LastChildFill="False">
                         <Button DockPanel.Dock="Left"
                                 Command="{s:Action ToggleConnectAsync}"
+                                CommandParameter="{Binding}"
+                                s:View.ActionTarget="{Binding DataContext.Parent, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}"
                                 IsEnabled="{Binding CanToggleConnect}"                                          
                                 ToolTipService.InitialShowDelay="0"
                                 ToolTipService.Placement="Top"

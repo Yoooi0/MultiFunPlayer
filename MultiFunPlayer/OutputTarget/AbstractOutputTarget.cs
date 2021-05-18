@@ -5,18 +5,21 @@ using PropertyChanged;
 using Stylet;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace MultiFunPlayer.OutputTarget
 {
-    public abstract class AbstractOutputTarget : Screen, IHandle<AppSettingsMessage>, IDisposable, IOutputTarget
+    public abstract class AbstractOutputTarget : Screen, IHandle<AppSettingsMessage>, IOutputTarget
     {
         private readonly IDeviceAxisValueProvider _valueProvider;
+        private readonly AsyncManualResetEvent _statusEvent;
 
         public abstract string Name { get; }
-        [SuppressPropertyChangedWarnings] public abstract OutputTargetStatus Status { get; protected set; }
-        public bool ContentVisible { get; set; }
+        [SuppressPropertyChangedWarnings] public abstract ConnectionStatus Status { get; protected set; }
+        public bool ContentVisible { get; set; } = false;
+        public bool AutoConnectEnabled { get; set; } = true;
 
         public ObservableConcurrentDictionary<DeviceAxis, DeviceAxisSettings> AxisSettings { get; protected set; }
         public int UpdateRate { get; set; }
@@ -24,47 +27,42 @@ namespace MultiFunPlayer.OutputTarget
 
         protected AbstractOutputTarget(IEventAggregator eventAggregator, IDeviceAxisValueProvider valueProvider)
         {
+            _statusEvent = new AsyncManualResetEvent();
             eventAggregator.Subscribe(this);
             _valueProvider = valueProvider;
 
             Values = EnumUtils.ToDictionary<DeviceAxis, float>(axis => axis.DefaultValue());
             AxisSettings = new ObservableConcurrentDictionary<DeviceAxis, DeviceAxisSettings>(EnumUtils.ToDictionary<DeviceAxis, DeviceAxisSettings>(_ => new DeviceAxisSettings()));
             UpdateRate = 60;
+
+            PropertyChanged += (s, e) =>
+            {
+                if (string.Equals(e.PropertyName, "Status", StringComparison.OrdinalIgnoreCase))
+                    _statusEvent.Reset();
+            };
         }
 
-        public async Task ToggleConnectAsync()
+        public abstract Task ConnectAsync();
+        public abstract Task DisconnectAsync();
+
+        public async virtual ValueTask<bool> CanConnectAsync(CancellationToken token) => await ValueTask.FromResult(false);
+        public async virtual ValueTask<bool> CanConnectAsyncWithStatus(CancellationToken token)
         {
-            if (Status == OutputTargetStatus.Connected || Status == OutputTargetStatus.Connecting)
-                await DisconnectWithStatusAsync().ConfigureAwait(true);
-            else
-                await ConnectWithStatusAsync().ConfigureAwait(true);
+            if (Status != ConnectionStatus.Disconnected)
+                return await ValueTask.FromResult(false);
+
+            Status = ConnectionStatus.Connecting;
+            await Task.Delay(100, token);
+            var result = await CanConnectAsync(token);
+            Status = ConnectionStatus.Disconnected;
+
+            return result;
         }
 
-        protected abstract Task ConnectAsync();
-
-        protected async Task ConnectWithStatusAsync()
+        public async Task WaitForStatus(IEnumerable<ConnectionStatus> statuses, CancellationToken token)
         {
-            if (Status != OutputTargetStatus.Disconnected)
-                return;
-
-            Status = OutputTargetStatus.Connecting;
-            await ConnectAsync().ConfigureAwait(true);
-        }
-
-        protected virtual async Task DisconnectAsync()
-        {
-            Dispose(disposing: false);
-            await Task.Delay(1000);
-        }
-
-        protected async Task DisconnectWithStatusAsync()
-        {
-            if (Status == OutputTargetStatus.Disconnected || Status == OutputTargetStatus.Disconnecting)
-                return;
-
-            Status = OutputTargetStatus.Disconnecting;
-            await DisconnectAsync().ConfigureAwait(true);
-            Status = OutputTargetStatus.Disconnected;
+            while (!statuses.Contains(Status))
+                await _statusEvent.WaitAsync(token);
         }
 
         protected void UpdateValues()
@@ -128,32 +126,49 @@ namespace MultiFunPlayer.OutputTarget
 
         protected abstract void Run(CancellationToken token);
 
-        protected override async Task ConnectAsync()
+        public override async Task ConnectAsync()
         {
-            await Task.Delay(1000).ConfigureAwait(true);
+            if (Status != ConnectionStatus.Disconnected)
+                return;
 
+            Status = ConnectionStatus.Connecting;
             _cancellationSource = new CancellationTokenSource();
             _thread = new Thread(() =>
             {
                 Run(_cancellationSource.Token);
-                _ = Execute.OnUIThreadAsync(async () => await DisconnectWithStatusAsync().ConfigureAwait(true));
+                _ = Execute.OnUIThreadAsync(async () => await DisconnectAsync().ConfigureAwait(true));
             })
             {
                 IsBackground = true
             };
             _thread.Start();
+
+            await Task.CompletedTask;
         }
 
-        protected override void Dispose(bool disposing)
+        public override async Task DisconnectAsync()
         {
-            base.Dispose(disposing);
+            if (Status == ConnectionStatus.Disconnected || Status == ConnectionStatus.Disconnecting)
+                return;
+
+            Status = ConnectionStatus.Disconnecting;
 
             _cancellationSource?.Cancel();
             _thread?.Join();
+
+            await Task.Delay(250);
             _cancellationSource?.Dispose();
 
             _cancellationSource = null;
             _thread = null;
+
+            Status = ConnectionStatus.Disconnected;
+        }
+
+        protected override async void Dispose(bool disposing)
+        {
+            base.Dispose(disposing);
+            await DisconnectAsync();
         }
     }
 
@@ -167,32 +182,48 @@ namespace MultiFunPlayer.OutputTarget
 
         protected abstract Task RunAsync(CancellationToken token);
 
-        protected override async Task ConnectAsync()
+        public override async Task ConnectAsync()
         {
-            await Task.Delay(1000).ConfigureAwait(true);
+            if (Status != ConnectionStatus.Disconnected)
+                return;
 
+            Status = ConnectionStatus.Connecting;
             _cancellationSource = new CancellationTokenSource();
             _task = Task.Factory.StartNew(() => RunAsync(_cancellationSource.Token),
                 _cancellationSource.Token,
                 TaskCreationOptions.LongRunning,
                 TaskScheduler.Default)
                 .Unwrap();
-            _ = _task.ContinueWith(_ => Execute.OnUIThreadAsync(async () => await DisconnectWithStatusAsync().ConfigureAwait(true))).Unwrap();
+            _ = _task.ContinueWith(_ => Execute.OnUIThreadAsync(async () => await DisconnectAsync().ConfigureAwait(true))).Unwrap();
+
+            await Task.CompletedTask;
         }
 
-        protected override async void Dispose(bool disposing)
+        public override async Task DisconnectAsync()
         {
-            base.Dispose(disposing);
+            if (Status == ConnectionStatus.Disconnected || Status == ConnectionStatus.Disconnecting)
+                return;
+
+            Status = ConnectionStatus.Disconnecting;
 
             _cancellationSource?.Cancel();
 
             if (_task != null)
                 await _task;
 
+            await Task.Delay(250);
             _cancellationSource?.Dispose();
 
             _cancellationSource = null;
             _task = null;
+
+            Status = ConnectionStatus.Disconnected;
+        }
+
+        protected override async void Dispose(bool disposing)
+        {
+            base.Dispose(disposing);
+            await DisconnectAsync();
         }
     }
 }

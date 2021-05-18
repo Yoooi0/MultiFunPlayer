@@ -60,13 +60,13 @@ namespace MultiFunPlayer.ViewModels
             await _semaphore.WaitAsync(token);
             if (_currentSource == source)
             {
-                if (_currentSource?.Status == VideoSourceStatus.Connected)
+                if (_currentSource?.Status == ConnectionStatus.Connected)
                 {
                     await _currentSource.DisconnectAsync();
                     await _currentSource.WaitForDisconnect(token);
                     _currentSource = null;
                 }
-                else if(_currentSource?.Status == VideoSourceStatus.Disconnected)
+                else if(_currentSource?.Status == ConnectionStatus.Disconnected)
                 {
                     await _currentSource.ConnectAsync();
                     await source.WaitForIdle(token);
@@ -87,7 +87,7 @@ namespace MultiFunPlayer.ViewModels
                     await source.WaitForIdle(token);
                 }
 
-                if(source == null || source.Status == VideoSourceStatus.Connected)
+                if(source == null || source.Status == ConnectionStatus.Connected)
                     _currentSource = source;
             }
 
@@ -105,7 +105,7 @@ namespace MultiFunPlayer.ViewModels
                     {
                         await _currentSource.WaitForDisconnect(token);
                         await _semaphore.WaitAsync(token);
-                        if(_currentSource?.Status == VideoSourceStatus.Disconnected)
+                        if(_currentSource?.Status == ConnectionStatus.Disconnected)
                             _currentSource = null;
                         _semaphore.Release();
                     }
@@ -126,7 +126,7 @@ namespace MultiFunPlayer.ViewModels
                                 await source.ConnectAsync();
                                 await source.WaitForIdle(token);
 
-                                if (source.Status == VideoSourceStatus.Connected)
+                                if (source.Status == ConnectionStatus.Connected)
                                     _currentSource = source;
                             }
                             _semaphore.Release();

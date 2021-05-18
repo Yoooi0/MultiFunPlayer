@@ -25,7 +25,7 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
         protected Logger Logger = LogManager.GetCurrentClassLogger();
 
         public override string Name => "Network";
-        public override OutputTargetStatus Status { get; protected set; }
+        public override ConnectionStatus Status { get; protected set; }
 
         public IPEndPoint Endpoint { get; set; } = new IPEndPoint(IPAddress.Loopback, 8080);
         public ProtocolType Protocol { get; set; } = ProtocolType.Tcp;
@@ -33,8 +33,8 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
         public NetworkOutputTargetViewModel(IEventAggregator eventAggregator, IDeviceAxisValueProvider valueProvider)
             : base(eventAggregator, valueProvider) { }
 
-        public bool IsConnected => Status == OutputTargetStatus.Connected;
-        public bool IsConnectBusy => Status == OutputTargetStatus.Connecting || Status == OutputTargetStatus.Disconnecting;
+        public bool IsConnected => Status == ConnectionStatus.Connected;
+        public bool IsConnectBusy => Status == ConnectionStatus.Connecting || Status == ConnectionStatus.Disconnecting;
         public bool CanToggleConnect => !IsConnectBusy;
 
         protected override void Run(CancellationToken token)
@@ -56,7 +56,7 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
             {
                 Logger.Info("Connecting to {0}", $"tcp://{Endpoint}");
                 client.Connect(Endpoint);
-                Status = OutputTargetStatus.Connected;
+                Status = ConnectionStatus.Connected;
             }
             catch (Exception e)
             {
@@ -98,7 +98,7 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
             {
                 Logger.Info("Connecting to {0}", $"udp://{Endpoint}");
                 client.Connect(Endpoint);
-                Status = OutputTargetStatus.Connected;
+                Status = ConnectionStatus.Connected;
             }
             catch (Exception e)
             {

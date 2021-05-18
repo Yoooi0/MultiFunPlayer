@@ -1,21 +1,11 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 
 namespace MultiFunPlayer.OutputTarget
 {
-    public enum OutputTargetStatus
-    {
-        Disconnected,
-        Disconnecting,
-        Connecting,
-        Connected
-    }
-
-    public interface IOutputTarget
+    public interface IOutputTarget : IConnectable, IDisposable
     {
         string Name { get; }
-        OutputTargetStatus Status { get; }
         bool ContentVisible { get; set; }
-
-        Task ToggleConnectAsync();
     }
 }

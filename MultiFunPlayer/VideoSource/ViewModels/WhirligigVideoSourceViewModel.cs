@@ -23,15 +23,15 @@ namespace MultiFunPlayer.VideoSource.ViewModels
         private readonly IEventAggregator _eventAggregator;
 
         public override string Name => "Whirligig";
-        public override VideoSourceStatus Status { get; protected set; }
+        public override ConnectionStatus Status { get; protected set; }
 
         public WhirligigVideoSourceViewModel(IEventAggregator eventAggregator) : base(eventAggregator)
         {
             _eventAggregator = eventAggregator;
         }
 
-        public bool IsConnected => Status == VideoSourceStatus.Connected;
-        public bool IsConnectBusy => Status == VideoSourceStatus.Connecting || Status == VideoSourceStatus.Disconnecting;
+        public bool IsConnected => Status == ConnectionStatus.Connected;
+        public bool IsConnectBusy => Status == ConnectionStatus.Connecting || Status == ConnectionStatus.Disconnecting;
         public bool CanToggleConnect => !IsConnectBusy;
 
         protected override async Task RunAsync(CancellationToken token)
@@ -46,7 +46,7 @@ namespace MultiFunPlayer.VideoSource.ViewModels
                 using var stream = client.GetStream();
                 using var reader = new StreamReader(stream);
 
-                Status = VideoSourceStatus.Connected;
+                Status = ConnectionStatus.Connected;
                 while (!token.IsCancellationRequested && client.Connected && !reader.EndOfStream)
                 {
                     var message = await reader.ReadLineAsync().WithCancellation(token);

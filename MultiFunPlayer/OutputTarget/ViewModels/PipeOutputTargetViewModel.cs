@@ -17,15 +17,15 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
         protected Logger Logger = LogManager.GetCurrentClassLogger();
 
         public override string Name => "Pipe";
-        public override OutputTargetStatus Status { get; protected set; }
+        public override ConnectionStatus Status { get; protected set; }
 
         public string PipeName { get; set; } = "mfp-pipe";
 
         public PipeOutputTargetViewModel(IEventAggregator eventAggregator, IDeviceAxisValueProvider valueProvider)
             : base(eventAggregator, valueProvider) { }
 
-        public bool IsConnected => Status == OutputTargetStatus.Connected;
-        public bool IsConnectBusy => Status == OutputTargetStatus.Connecting || Status == OutputTargetStatus.Disconnecting;
+        public bool IsConnected => Status == ConnectionStatus.Connected;
+        public bool IsConnectBusy => Status == ConnectionStatus.Connecting || Status == ConnectionStatus.Disconnecting;
         public bool CanToggleConnect => !IsConnectBusy;
 
         protected override void Run(CancellationToken token)
@@ -39,7 +39,7 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
                 client = new NamedPipeClientStream(".", PipeName, PipeDirection.Out);
                 client.Connect(2500);
 
-                Status = OutputTargetStatus.Connected;
+                Status = ConnectionStatus.Connected;
             }
             catch (Exception e)
             {

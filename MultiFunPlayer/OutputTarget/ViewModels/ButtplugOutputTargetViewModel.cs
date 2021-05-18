@@ -32,7 +32,7 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
         private SemaphoreSlim _endScanSemaphore;
 
         public override string Name => "Buttplug.io";
-        public override OutputTargetStatus Status { get; protected set; }
+        public override ConnectionStatus Status { get; protected set; }
         public IPEndPoint Endpoint { get; set; } = new IPEndPoint(IPAddress.Loopback, 12345);
         public BindableCollection<ButtplugClientDevice> AvailableDevices { get; protected set; }
 
@@ -117,8 +117,8 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
                 _startScanSemaphore.Release();
         }
 
-        public bool IsConnected => Status == OutputTargetStatus.Connected;
-        public bool IsConnectBusy => Status == OutputTargetStatus.Connecting || Status == OutputTargetStatus.Disconnecting;
+        public bool IsConnected => Status == ConnectionStatus.Connected;
+        public bool IsConnectBusy => Status == ConnectionStatus.Connecting || Status == ConnectionStatus.Disconnecting;
         public bool CanToggleConnect => !IsConnectBusy;
 
         protected override async Task RunAsync(CancellationToken token)
@@ -155,7 +155,7 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
             {
                 Logger.Info("Connecting to {0}", $"ws://{Endpoint}");
                 await client.ConnectAsync(new ButtplugWebsocketConnectorOptions(new Uri($"ws://{Endpoint}"))).WithCancellation(token);
-                Status = OutputTargetStatus.Connected;
+                Status = ConnectionStatus.Connected;
             }
             catch (Exception e)
             {

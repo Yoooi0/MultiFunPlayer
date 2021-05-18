@@ -24,7 +24,7 @@ namespace MultiFunPlayer.VideoSource.ViewModels
         private readonly IEventAggregator _eventAggregator;
 
         public override string Name => "DeoVR";
-        public override VideoSourceStatus Status { get; protected set; }
+        public override ConnectionStatus Status { get; protected set; }
 
         public IPEndPoint Endpoint { get; set; } = new IPEndPoint(IPAddress.Loopback, 23554);
 
@@ -33,8 +33,8 @@ namespace MultiFunPlayer.VideoSource.ViewModels
             _eventAggregator = eventAggregator;
         }
 
-        public bool IsConnected => Status == VideoSourceStatus.Connected;
-        public bool IsConnectBusy => Status == VideoSourceStatus.Connecting || Status == VideoSourceStatus.Disconnecting;
+        public bool IsConnected => Status == ConnectionStatus.Connected;
+        public bool IsConnectBusy => Status == ConnectionStatus.Connecting || Status == ConnectionStatus.Disconnecting;
         public bool CanToggleConnect => !IsConnectBusy;
 
         protected override async Task RunAsync(CancellationToken token)
@@ -70,7 +70,7 @@ namespace MultiFunPlayer.VideoSource.ViewModels
                     }
                 }, token);
 
-                Status = VideoSourceStatus.Connected;
+                Status = ConnectionStatus.Connected;
                 while (!token.IsCancellationRequested && client.Connected)
                 {
                     var data = await stream.ReadAllBytesAsync(token);
