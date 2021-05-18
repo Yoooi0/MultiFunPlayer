@@ -11,6 +11,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace MultiFunPlayer.OutputTarget.ViewModels
 {
@@ -158,6 +159,24 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
             {
                 if (settings.TryGetValue<string>(nameof(Endpoint), out var endpointString) && IPEndPoint.TryParse(endpointString, out var endpoint))
                     Endpoint = endpoint;
+            }
+        }
+
+        public override async ValueTask<bool> CanConnectAsync(CancellationToken token)
+        {
+            try
+            {
+                if (Protocol == ProtocolType.Udp)
+                    return await ValueTask.FromResult(true);
+
+                using var client = new TcpClient();
+                client.Connect(Endpoint);
+                client.GetStream();
+                return await ValueTask.FromResult(true);
+            }
+            catch
+            {
+                return await ValueTask.FromResult(false);
             }
         }
     }

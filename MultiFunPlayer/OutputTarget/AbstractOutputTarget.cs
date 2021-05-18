@@ -89,6 +89,7 @@ namespace MultiFunPlayer.OutputTarget
 
                 settings[nameof(UpdateRate)] = new JValue(UpdateRate);
                 settings[nameof(AxisSettings)] = JObject.FromObject(AxisSettings);
+                settings[nameof(AutoConnectEnabled)] = new JValue(AutoConnectEnabled);
 
                 HandleSettings(settings, message.Type);
             }
@@ -102,6 +103,8 @@ namespace MultiFunPlayer.OutputTarget
                 if (settings.TryGetValue<Dictionary<DeviceAxis, DeviceAxisSettings>>(nameof(AxisSettings), out var axisSettingsMap))
                     foreach (var (axis, axisSettings) in axisSettingsMap)
                         AxisSettings[axis] = axisSettings;
+                if (settings.TryGetValue<bool>(nameof(AutoConnectEnabled), out var autoConnectEnabled))
+                    AutoConnectEnabled = autoConnectEnabled;
 
                 HandleSettings(settings, message.Type);
             }

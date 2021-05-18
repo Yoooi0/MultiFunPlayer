@@ -157,5 +157,20 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
                     SelectedComPort = selectedComPort;
             }
         }
+
+        public override async ValueTask<bool> CanConnectAsync(CancellationToken token)
+        {
+            try
+            {
+                if (!ComPorts.Contains(SelectedComPort))
+                    await RefreshPorts();
+
+                return await ValueTask.FromResult(ComPorts.Contains(SelectedComPort));
+            }
+            catch
+            {
+                return await ValueTask.FromResult(false);
+            }
+        }
     }
 }

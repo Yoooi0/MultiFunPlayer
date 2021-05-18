@@ -6,11 +6,13 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace MultiFunPlayer.ViewModels
 {
     public class OutputTargetViewModel : Conductor<IOutputTarget>.Collection.OneActive, IHandle<AppSettingsMessage>, IDisposable
     {
+        private Task _task;
         private CancellationTokenSource _cancellationSource;
         private IOutputTarget _currentTarget;
         private SemaphoreSlim _semaphore;
@@ -24,6 +26,11 @@ namespace MultiFunPlayer.ViewModels
 
             _semaphore = new SemaphoreSlim(1, 1);
             _cancellationSource = new CancellationTokenSource();
+            _task = Task.Factory.StartNew(() => ScanAsync(_cancellationSource.Token),
+                _cancellationSource.Token,
+                TaskCreationOptions.LongRunning,
+                TaskScheduler.Default)
+                .Unwrap();
         }
 
         public void Handle(AppSettingsMessage message)
@@ -87,6 +94,51 @@ namespace MultiFunPlayer.ViewModels
             _semaphore.Release();
         }
 
+        private async Task ScanAsync(CancellationToken token)
+        {
+            try
+            {
+                await Task.Delay(2500, token);
+                while (!token.IsCancellationRequested)
+                {
+                    if (_currentTarget != null)
+                    {
+                        await _currentTarget.WaitForDisconnect(token);
+                        await _semaphore.WaitAsync(token);
+                        if (_currentTarget?.Status == ConnectionStatus.Disconnected)
+                            _currentTarget = null;
+                        _semaphore.Release();
+                    }
+
+                    foreach (var source in Items.ToList())
+                    {
+                        if (_currentTarget != null)
+                            break;
+
+                        if (!source.AutoConnectEnabled)
+                            continue;
+
+                        if (await source.CanConnectAsyncWithStatus(token))
+                        {
+                            await _semaphore.WaitAsync(token);
+                            if (_currentTarget == null)
+                            {
+                                await source.ConnectAsync();
+                                await source.WaitForIdle(token);
+
+                                if (source.Status == ConnectionStatus.Connected)
+                                    _currentTarget = source;
+                            }
+                            _semaphore.Release();
+                        }
+                    }
+
+                    await Task.Delay(1000, token);
+                }
+            }
+            catch (OperationCanceledException) { }
+        }
+
         protected override void ChangeActiveItem(IOutputTarget newItem, bool closePrevious)
         {
             if (ActiveItem != null && newItem != null)
@@ -98,20 +150,24 @@ namespace MultiFunPlayer.ViewModels
             base.ChangeActiveItem(newItem, closePrevious);
         }
 
-        protected virtual void Dispose(bool disposing)
+        protected async virtual void Dispose(bool disposing)
         {
             _cancellationSource?.Cancel();
+
+            if (_task != null)
+                await _task;
 
             _semaphore?.Dispose();
             _currentTarget?.Dispose();
             _cancellationSource?.Dispose();
 
+            _task = null;
             _semaphore = null;
             _currentTarget = null;
             _cancellationSource = null;
         }
 
-        void IDisposable.Dispose()
+        public void Dispose()
         {
             Dispose(disposing: true);
             GC.SuppressFinalize(this);

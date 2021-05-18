@@ -6,9 +6,11 @@ using Newtonsoft.Json.Linq;
 using NLog;
 using Stylet;
 using System;
+using System.IO;
 using System.IO.Pipes;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace MultiFunPlayer.OutputTarget.ViewModels
 {
@@ -91,6 +93,18 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
             {
                 if (settings.TryGetValue<string>(nameof(PipeName), out var pipeName))
                     PipeName = pipeName;
+            }
+        }
+
+        public override async ValueTask<bool> CanConnectAsync(CancellationToken token)
+        {
+            try
+            {
+                return await ValueTask.FromResult(File.Exists($@"\\.\pipe\{PipeName}"));
+            }
+            catch
+            {
+                return await ValueTask.FromResult(false);
             }
         }
     }

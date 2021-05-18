@@ -12,6 +12,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Net.WebSockets;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
@@ -301,6 +302,22 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
                     DeviceSettings.Clear();
                     DeviceSettings.AddRange(deviceSettings);
                 }
+            }
+        }
+
+        public override async ValueTask<bool> CanConnectAsync(CancellationToken token)
+        {
+            try
+            {
+                using var client = new ClientWebSocket();
+                await client.ConnectAsync(new Uri($"ws://{Endpoint}"), token);
+                var result = client.State == WebSocketState.Open;
+                await client.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, null, token);
+                return await ValueTask.FromResult(result);
+            }
+            catch
+            {
+                return await ValueTask.FromResult(false);
             }
         }
 
