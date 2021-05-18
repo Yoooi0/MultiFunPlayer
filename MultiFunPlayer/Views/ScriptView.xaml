@@ -31,6 +31,24 @@
                         <DropShadowEffect ShadowDepth="0" Direction="270"/>
                     </DockPanel.Effect>
                     <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                        <material:PackIcon Width="28" 
+                                           Height="28"
+                                           Margin="0 0 5 0"
+                                           VerticalAlignment="Center">
+                            <material:PackIcon.Style>
+                                <Style TargetType="material:PackIcon">
+                                    <Setter Property="Foreground" Value="Red"/>
+                                    <Setter Property="Kind" Value="Pause"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsPlaying}" Value="True">
+                                            <Setter Property="Foreground" Value="Green"/>
+                                            <Setter Property="Kind" Value="Play"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </material:PackIcon.Style>
+                        </material:PackIcon>
+
                         <material:PopupBox StaysOpen="True" 
                                                PlacementMode="BottomAndAlignRightEdges"
                                                Style="{StaticResource MaterialDesignToolBarPopupBox}"
@@ -294,26 +312,6 @@
                                        DockPanel.Dock="Left"
                                        Margin="0 0 10 0"
                                        VerticalAlignment="Center"/>
-                        
-                        <material:PackIcon DockPanel.Dock="Right"
-                                           Margin="5 0 0 0"
-                                           Width="28" 
-                                           Height="28" 
-                                           VerticalAlignment="Center">
-                            <material:PackIcon.Style>
-                                <Style TargetType="material:PackIcon">
-                                    <Setter Property="Foreground" Value="Red"/>
-                                    <Setter Property="Kind" Value="Pause"/>
-                                    <Style.Triggers>
-                                        <DataTrigger Binding="{Binding IsPlaying}" Value="True">
-                                            <Setter Property="Foreground" Value="Green"/>
-                                            <Setter Property="Kind" Value="Play"/>
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </material:PackIcon.Style>
-                        </material:PackIcon>
-
 
                         <TextBox IsReadOnly="True"
                                      Text="{Binding VideoFile.Name, Mode=OneWay}"
@@ -804,13 +802,13 @@
                                                    VerticalAlignment="Center"/>
 
                                     <TextBlock Text="RAW" 
-                                               DockPanel.Dock="Right"
-                                               VerticalAlignment="Center"
-                                               Typography.Capitals="AllSmallCaps"
-                                               FontWeight="Medium"
-                                               FontSize="12"
-                                               Margin="10 0 0 0"
-                                               Padding="0">
+                                                   DockPanel.Dock="Right"
+                                                   VerticalAlignment="Center"
+                                                   Typography.Capitals="AllSmallCaps"
+                                                   FontWeight="Medium"
+                                                   FontSize="12"
+                                                   Margin="10 0 0 0"
+                                                   Padding="0">
                                         <TextBlock.LayoutTransform>
                                             <ScaleTransform ScaleY="1.35"/>
                                         </TextBlock.LayoutTransform>
