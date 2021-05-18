@@ -63,13 +63,13 @@ namespace MultiFunPlayer.ViewModels
                 if (_currentSource?.Status == VideoSourceStatus.Connected)
                 {
                     await _currentSource.DisconnectAsync();
-                    await _currentSource.WaitForStatus(new[] { VideoSourceStatus.Disconnected }, token);
+                    await _currentSource.WaitForDisconnect(token);
                     _currentSource = null;
                 }
                 else if(_currentSource?.Status == VideoSourceStatus.Disconnected)
                 {
                     await _currentSource.ConnectAsync();
-                    await _currentSource.WaitForStatus(new[] { VideoSourceStatus.Connected, VideoSourceStatus.Disconnected }, token);
+                    await source.WaitForIdle(token);
                 }
             }
             else if (_currentSource != source)
@@ -77,14 +77,14 @@ namespace MultiFunPlayer.ViewModels
                 if (_currentSource != null)
                 {
                     await _currentSource.DisconnectAsync();
-                    await _currentSource.WaitForStatus(new[] { VideoSourceStatus.Disconnected }, token);
+                    await _currentSource.WaitForDisconnect(token);
                     _currentSource = null;
                 }
 
                 if (source != null)
                 {
                     await source.ConnectAsync();
-                    await source.WaitForStatus(new[] { VideoSourceStatus.Connected, VideoSourceStatus.Disconnected }, token);
+                    await source.WaitForIdle(token);
                 }
 
                 if(source == null || source.Status == VideoSourceStatus.Connected)
@@ -103,7 +103,7 @@ namespace MultiFunPlayer.ViewModels
                 {
                     if (_currentSource != null)
                     {
-                        await _currentSource.WaitForStatus(new[] { VideoSourceStatus.Disconnected }, token);
+                        await _currentSource.WaitForDisconnect(token);
                         await _semaphore.WaitAsync(token);
                         if(_currentSource?.Status == VideoSourceStatus.Disconnected)
                             _currentSource = null;
@@ -124,7 +124,7 @@ namespace MultiFunPlayer.ViewModels
                             if(_currentSource == null)
                             {
                                 await source.ConnectAsync();
-                                await source.WaitForStatus(new[] { VideoSourceStatus.Connected, VideoSourceStatus.Disconnected }, token);
+                                await source.WaitForIdle(token);
 
                                 if (source.Status == VideoSourceStatus.Connected)
                                     _currentSource = source;

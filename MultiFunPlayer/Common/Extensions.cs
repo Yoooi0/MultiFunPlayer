@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using MultiFunPlayer.VideoSource;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections;
@@ -13,6 +14,14 @@ using System.Threading.Tasks;
 
 namespace MultiFunPlayer.Common
 {
+    public static class VideoSourceExtensions
+    {
+        public static Task WaitForIdle(this IVideoSource source, CancellationToken token)
+            => source.WaitForStatus(new[] { VideoSourceStatus.Connected, VideoSourceStatus.Disconnected }, token);
+        public static Task WaitForDisconnect(this IVideoSource source, CancellationToken token)
+            => source.WaitForStatus(new[] { VideoSourceStatus.Disconnected }, token);
+    }
+
     public static class JsonExtensions
     {
         public static bool TryToObject<T>(this JToken token, out T value)
