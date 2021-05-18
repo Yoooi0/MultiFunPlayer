@@ -19,7 +19,7 @@ namespace MultiFunPlayer.OutputTarget
         public abstract string Name { get; }
         [SuppressPropertyChangedWarnings] public abstract ConnectionStatus Status { get; protected set; }
         public bool ContentVisible { get; set; } = false;
-        public bool AutoConnectEnabled { get; set; } = true;
+        public bool AutoConnectEnabled { get; set; } = false;
 
         public ObservableConcurrentDictionary<DeviceAxis, DeviceAxisSettings> AxisSettings { get; protected set; }
         public int UpdateRate { get; set; }
