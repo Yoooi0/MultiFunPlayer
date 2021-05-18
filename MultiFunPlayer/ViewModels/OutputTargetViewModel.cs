@@ -133,7 +133,7 @@ namespace MultiFunPlayer.ViewModels
                         }
                     }
 
-                    await Task.Delay(1000, token);
+                    await Task.Delay(5000, token);
                 }
             }
             catch (OperationCanceledException) { }
