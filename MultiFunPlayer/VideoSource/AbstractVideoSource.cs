@@ -13,6 +13,7 @@ namespace MultiFunPlayer.VideoSource
 {
     public abstract class AbstractVideoSource : Screen, IVideoSource, IHandle<AppSettingsMessage>
     {
+        private readonly AsyncManualResetEvent _statusEvent;
         private CancellationTokenSource _cancellationSource;
         private Task _task;
 
@@ -22,7 +23,14 @@ namespace MultiFunPlayer.VideoSource
 
         protected AbstractVideoSource(IEventAggregator eventAggregator)
         {
+            _statusEvent = new AsyncManualResetEvent();
+
             eventAggregator.Subscribe(this);
+            PropertyChanged += (s, e) =>
+            {
+                if (string.Equals(e.PropertyName, "Status", StringComparison.OrdinalIgnoreCase))
+                    _statusEvent.Reset();
+            };
         }
 
         public abstract string Name { get; }
@@ -80,14 +88,10 @@ namespace MultiFunPlayer.VideoSource
             return result;
         }
 
-        public async Task WaitForStatus(IEnumerable<VideoSourceStatus> statuses, int checkFrequency, CancellationToken token)
+        public async Task WaitForStatus(IEnumerable<VideoSourceStatus> statuses, CancellationToken token)
         {
-            if (statuses.Contains(Status))
-                return;
-
-            //TODO: not great, not terrible
             while (!statuses.Contains(Status))
-                await Task.Delay(checkFrequency, token);
+                await _statusEvent.WaitAsync(token);
         }
 
         protected abstract void HandleSettings(JObject settings, AppSettingsMessageType type);

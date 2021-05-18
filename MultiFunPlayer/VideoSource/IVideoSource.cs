@@ -24,6 +24,6 @@ namespace MultiFunPlayer.VideoSource
         Task DisconnectAsync();
         ValueTask<bool> CanConnectAsync(CancellationToken token);
         ValueTask<bool> CanConnectAsyncWithStatus(CancellationToken token);
-        Task WaitForStatus(IEnumerable<VideoSourceStatus> statuses, int checkFrequency, CancellationToken token);
+        Task WaitForStatus(IEnumerable<VideoSourceStatus> statuses, CancellationToken token);
     }
 }
