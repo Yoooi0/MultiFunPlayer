@@ -7,8 +7,12 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:MultiFunPlayer.VideoSource.Views"
+             xmlns:converters="clr-namespace:MultiFunPlayer.Common.Converters"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
+    <UserControl.Resources>
+        <converters:IPEndPointToStringConverter x:Key="IPEndPointToStringConverter"/>
+    </UserControl.Resources>
     <DockPanel LastChildFill="True">
         <DockPanel DockPanel.Dock="Top" LastChildFill="True">
             <Border BorderThickness="0 0 0 1"
@@ -69,9 +73,40 @@
                                 <material:PackIcon Kind="MotionPlayOutline" Width="20" Height="20"/>
                             </material:ToggleButtonAssist.OnContent>
                         </ToggleButton>
+
+                        <ToggleButton DockPanel.Dock="Right"
+                                      IsChecked="{Binding ContentVisible}"                                
+                                      ToolTipService.InitialShowDelay="0"
+                                      ToolTipService.Placement="Top">                            
+                            <material:PackIcon Kind="ChevronDown" Width="19" Height="19"/>
+                            <material:ToggleButtonAssist.OnContent>
+                                <material:PackIcon Kind="ChevronUp" Width="19" Height="19"/>
+                            </material:ToggleButtonAssist.OnContent>
+                            <ToggleButton.Resources>
+                                <Style TargetType="{x:Type ToggleButton}" BasedOn="{StaticResource MaterialDesignToolBarToggleButton}">
+                                    <Setter Property="ToolTip" Value="Open settings" />
+                                    <Style.Triggers>
+                                        <Trigger Property="IsChecked" Value="True">
+                                            <Setter Property="ToolTip" Value="Close settings" />
+                                        </Trigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </ToggleButton.Resources>
+                        </ToggleButton>
                     </DockPanel>
                 </DockPanel>
             </Border>
         </DockPanel>
+        <StackPanel Margin="20" 
+                    DockPanel.Dock="Bottom"
+                    Visibility="{Binding ContentVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
+            <TextBox Text="{Binding Endpoint, Converter={StaticResource IPEndPointToStringConverter}}"
+                     material:HintAssist.Hint="address:port"
+                     Style="{StaticResource MaterialDesignFloatingHintTextBox}"
+                     DockPanel.Dock="Left"
+                     Width="150"
+                     Margin="0 -12 20 0"
+                     HorizontalAlignment="Left"/>
+        </StackPanel>
     </DockPanel>
 </UserControl>

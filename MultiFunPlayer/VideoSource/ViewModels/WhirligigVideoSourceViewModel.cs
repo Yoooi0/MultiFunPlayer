@@ -10,6 +10,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
@@ -25,6 +26,8 @@ namespace MultiFunPlayer.VideoSource.ViewModels
         public override string Name => "Whirligig";
         public override ConnectionStatus Status { get; protected set; }
 
+        public IPEndPoint Endpoint { get; set; } = new IPEndPoint(IPAddress.Loopback, 2000);
+
         public WhirligigVideoSourceViewModel(IEventAggregator eventAggregator) : base(eventAggregator)
         {
             _eventAggregator = eventAggregator;
@@ -39,10 +42,19 @@ namespace MultiFunPlayer.VideoSource.ViewModels
             try
             {
                 Logger.Info("Connecting to {0}", Name);
-                if (!Process.GetProcesses().Any(p => p.ProcessName.StartsWith("Whirligig")))
-                    throw new Exception($"Could not find a running {Name} process.");
 
-                using var client = new TcpClient("localhost", 2000);
+                if (string.Equals(Endpoint.Address.ToString(), "localhost") || string.Equals(Endpoint.Address.ToString(), "127.0.0.1"))
+                    if (Process.GetProcessesByName("Whirligig").Length == 0)
+                        throw new Exception($"Could not find a running {Name} process.");
+
+                using var client = new TcpClient();
+                {
+                    using var timeoutCancellationSource = new CancellationTokenSource(5000);
+                    using var connectCancellationSource = CancellationTokenSource.CreateLinkedTokenSource(token, timeoutCancellationSource.Token);
+
+                    await client.ConnectAsync(Endpoint.Address, Endpoint.Port, connectCancellationSource.Token);
+                }
+
                 using var stream = client.GetStream();
                 using var reader = new StreamReader(stream);
 
@@ -93,16 +105,37 @@ namespace MultiFunPlayer.VideoSource.ViewModels
 
         protected override void HandleSettings(JObject settings, AppSettingsMessageType type)
         {
+            if (type == AppSettingsMessageType.Saving)
+            {
+                if (Endpoint != null)
+                    settings[nameof(Endpoint)] = new JValue(Endpoint.ToString());
+            }
+            else if (type == AppSettingsMessageType.Loading)
+            {
+                if (settings.TryGetValue<string>(nameof(Endpoint), out var endpointString) && IPEndPoint.TryParse(endpointString, out var endpoint))
+                    Endpoint = endpoint;
+            }
         }
 
         public override async ValueTask<bool> CanConnectAsync(CancellationToken token)
         {
             try
             {
-                if (!Process.GetProcesses().Any(p => p.ProcessName.StartsWith("Whirligig")))
+                if (Endpoint == null)
                     return await ValueTask.FromResult(false);
 
-                using var client = new TcpClient("localhost", 2000);
+                if (string.Equals(Endpoint.Address.ToString(), "localhost") || string.Equals(Endpoint.Address.ToString(), "127.0.0.1"))
+                    if (Process.GetProcessesByName("Whirligig").Length == 0)
+                        return await ValueTask.FromResult(false);
+
+                using var client = new TcpClient();
+                {
+                    using var timeoutCancellationSource = new CancellationTokenSource(2500);
+                    using var connectCancellationSource = CancellationTokenSource.CreateLinkedTokenSource(token, timeoutCancellationSource.Token);
+
+                    await client.ConnectAsync(Endpoint.Address, Endpoint.Port, connectCancellationSource.Token);
+                }
+
                 using var stream = client.GetStream();
 
                 return await ValueTask.FromResult(client.Connected);
