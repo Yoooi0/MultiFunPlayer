@@ -235,6 +235,7 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
                 await client.DisconnectAsync();
 
             IsScanBusy = false;
+            AvailableDevices.Clear();
         }
 
         private async Task ScanAsync(ButtplugClient client, CancellationToken token)
