@@ -491,13 +491,13 @@ namespace MultiFunPlayer.ViewModels
             ResetSync();
         }
 
-        private void InvalidateState(params DeviceAxis[] changedAxes)
+        private void InvalidateState(params DeviceAxis[] axes)
         {
-            changedAxes ??= EnumUtils.GetValues<DeviceAxis>();
-            if (changedAxes.Length == 0)
+            axes ??= EnumUtils.GetValues<DeviceAxis>();
+            if (axes.Length == 0)
                 return;
 
-            foreach (var axis in changedAxes)
+            foreach (var axis in axes)
             {
                 var state = AxisStates[axis];
                 lock (state)
