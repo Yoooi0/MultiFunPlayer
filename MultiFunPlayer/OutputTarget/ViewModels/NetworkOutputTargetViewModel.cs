@@ -143,8 +143,8 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
             }
             catch (Exception e)
             {
-                Logger.Error(e, "Unhandled error");
-                _ = Execute.OnUIThreadAsync(() => _ = DialogHost.Show(new ErrorMessageDialog($"Unhandled error:\n\n{e}")));
+                Logger.Error(e, $"{Name} failed with exception");
+                _ = Execute.OnUIThreadAsync(() => _ = DialogHost.Show(new ErrorMessageDialog($"{Name} failed with exception:\n\n{e}")));
             }
         }
 

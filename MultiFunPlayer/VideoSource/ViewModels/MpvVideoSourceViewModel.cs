@@ -135,7 +135,7 @@ namespace MultiFunPlayer.VideoSource.ViewModels
                 }
             }
             catch (OperationCanceledException) { }
-            catch (IOException) { }
+            catch (IOException e) { Logger.Debug(e, $"{Name} failed with exception"); }
             catch (Exception e)
             {
                 Logger.Error(e, $"{Name} failed with exception");
@@ -234,7 +234,11 @@ namespace MultiFunPlayer.VideoSource.ViewModels
                 if (Executable?.Exists == false)
                     Executable = null;
             }
-            catch { }
+            catch (Exception e)
+            {
+                Logger.Error(e, $"{Name} executable download failed with exception");
+                _ = Execute.OnUIThreadAsync(() => DialogHost.Show(new ErrorMessageDialog($"{Name} executable download failed with exception:\n\n{e}")));
+            }
 
             IsDownloading = false;
         }

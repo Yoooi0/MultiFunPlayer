@@ -1,4 +1,4 @@
-﻿using MaterialDesignThemes.Wpf;
+using MaterialDesignThemes.Wpf;
 using MultiFunPlayer.Common;
 using MultiFunPlayer.Common.Controls;
 using MultiFunPlayer.Common.Converters;
@@ -21,6 +21,8 @@ namespace MultiFunPlayer.ViewModels
 {
     public class RootViewModel : Conductor<IScreen>.Collection.AllActive
     {
+        protected Logger Logger = LogManager.GetCurrentClassLogger();
+
         private readonly IEventAggregator _eventAggregator;
 
         [Inject] public ScriptViewModel Script { get; set; }
@@ -130,6 +132,7 @@ namespace MultiFunPlayer.ViewModels
             if (!File.Exists(path))
                 return new JObject();
 
+            Logger.Info("Reading settings from \"{0}\"", path);
             try
             {
                 return JObject.Parse(File.ReadAllText(path));
@@ -143,6 +146,8 @@ namespace MultiFunPlayer.ViewModels
         private void WriteSettings(JObject settings)
         {
             var path = Path.Join(Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName), "MultiFunPlayer.config.json");
+
+            Logger.Info("Saving settings to \"{0}\"", path);
             File.WriteAllText(path, settings.ToString());
         }
 

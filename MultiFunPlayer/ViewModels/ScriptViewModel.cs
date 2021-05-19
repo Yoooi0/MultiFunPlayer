@@ -302,7 +302,8 @@ namespace MultiFunPlayer.ViewModels
 
         public void Handle(VideoPlayingMessage message)
         {
-            Logger.Info("Received VideoPlayingMessage [IsPlaying: {0}]", message.IsPlaying);
+            if(IsPlaying != message.IsPlaying)
+                Logger.Info("Received VideoPlayingMessage [IsPlaying: {0}]", message.IsPlaying);
 
             if (!IsPlaying && message.IsPlaying)
                 if(SyncSettings.SyncOnVideoResume)
@@ -321,6 +322,7 @@ namespace MultiFunPlayer.ViewModels
 
         public void Handle(VideoSpeedMessage message)
         {
+            Logger.Info("Received VideoSpeedMessage [Speed: {0}]", message.Speed);
             PlaybackSpeed = message.Speed;
         }
 
@@ -411,6 +413,7 @@ namespace MultiFunPlayer.ViewModels
             if (!AxisKeyframes.TryGetValue(axis, out var keyframes) || keyframes == null || keyframes.Count == 0)
                 return;
 
+            Logger.Debug("Searching for valid indices [Axis: {0}]", axis);
             lock (state)
                 state.Index = keyframes.BinarySearch(GetAxisPosition(axis));
         }
@@ -428,6 +431,7 @@ namespace MultiFunPlayer.ViewModels
             if (axes.Length == 0)
                 return;
 
+            Logger.Debug("Trying to link axes [Axes: {list}]", axes);
             foreach (var axis in axes)
             {
                 var model = AxisModels[axis];
@@ -462,6 +466,7 @@ namespace MultiFunPlayer.ViewModels
             if (axes.Length == 0)
                 return;
 
+            Logger.Debug("Resetting axes [Axes: {list}]", axes);
             foreach (var axis in axes)
             {
                 Logger.Debug("Reset {0} script", axis);
@@ -475,6 +480,7 @@ namespace MultiFunPlayer.ViewModels
             if (axes.Length == 0)
                 return;
 
+            Logger.Debug("Reloading axes [Axes: {list}]", axes);
             foreach (var group in axes.GroupBy(a => AxisModels[a].Settings.LinkAxisHasPriority))
             {
                 if (group.Key)
@@ -497,6 +503,7 @@ namespace MultiFunPlayer.ViewModels
             if (axes.Length == 0)
                 return;
 
+            Logger.Debug("Invalidating axes [Axes: {list}]", axes);
             foreach (var axis in axes)
             {
                 var state = AxisStates[axis];
@@ -512,6 +519,8 @@ namespace MultiFunPlayer.ViewModels
 
             if (axes == null)
                 axes = EnumUtils.GetValues<DeviceAxis>();
+
+            Logger.Debug("Maching files to axes [Axes: {list}]", axes);
 
             var updated = new List<DeviceAxis>();
             bool TryMatchFile(string fileName, Func<IScriptFile> generator)
@@ -607,6 +616,8 @@ namespace MultiFunPlayer.ViewModels
 
         private void ResetSync(bool isSyncing = true)
         {
+            Logger.Debug("Resetting sync");
+
             Interlocked.Exchange(ref _syncTime, isSyncing ? 0 : SyncSettings.Duration);
             NotifyOfPropertyChange(nameof(IsSyncing));
             NotifyOfPropertyChange(nameof(SyncProgress));

@@ -106,7 +106,7 @@ namespace MultiFunPlayer.VideoSource.ViewModels
                 }
             }
             catch (OperationCanceledException) { }
-            catch (IOException) { }
+            catch (IOException e) { Logger.Debug(e, $"{Name} failed with exception"); }
             catch (Exception e)
             {
                 Logger.Error(e, $"{Name} failed with exception");

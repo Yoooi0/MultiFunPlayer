@@ -127,14 +127,14 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
             }
             catch (Exception e) when (e is TimeoutException || e is IOException)
             {
-                Logger.Error(e, "Unhandled error");
+                Logger.Error(e, $"{Name} failed with exception");
                 _ = Execute.OnUIThreadAsync(async () =>
                 {
-                    _ = DialogHost.Show(new ErrorMessageDialog($"Unhandled error:\n\n{e}"));
+                    _ = DialogHost.Show(new ErrorMessageDialog($"{Name} failed with exception:\n\n{e}"));
                     await RefreshPorts().ConfigureAwait(true);
                 });
             }
-            catch { }
+            catch (Exception e) { Logger.Debug(e, $"{Name} failed with exception"); }
 
             try
             {
