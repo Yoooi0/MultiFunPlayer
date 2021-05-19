@@ -75,6 +75,8 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
             DeviceSettings = new BindableCollection<ButtplugClientDeviceSettings>();
             UpdateRate = 20;
 
+            AvailableDevices.CollectionChanged += (s, e) => DeviceSettings.Refresh();
+
             var rule = LogManager.Configuration.LoggingRules.FirstOrDefault(r => r.Targets.Any(t => string.Equals(t.Name, "file", StringComparison.OrdinalIgnoreCase)));
             var logLevel = (rule?.Levels.Min().Ordinal ?? 2) switch
             {
@@ -130,16 +132,12 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
                 AvailableDevices.Remove(device);
                 if (device == SelectedDevice)
                     SelectedDevice = null;
-
-                DeviceSettings.Refresh();
             }
 
             void OnDeviceAdded(ButtplugClientDevice device)
             {
                 Logger.Info($"Device added: \"{device.Name}\"");
                 AvailableDevices.Add(device);
-
-                DeviceSettings.Refresh();
             }
 
             using var client = new ButtplugClient(nameof(MultiFunPlayer));
