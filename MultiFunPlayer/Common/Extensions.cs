@@ -36,7 +36,7 @@ namespace MultiFunPlayer.Common
                 value = token.ToObject<T>();
                 return true;
             }
-            catch (FormatException)
+            catch (JsonException)
             {
                 return false;
             }

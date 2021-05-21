@@ -42,6 +42,15 @@ namespace MultiFunPlayer.ViewModels
 
                 settings.Converters.Add(new FileSystemInfoConverter());
                 settings.Converters.Add(new StringEnumConverter());
+                settings.Error += (s, e) =>
+                {
+                    if (e.ErrorContext.Error is JsonSerializationException or JsonReaderException)
+                    {
+                        Logger.Warn(e.ErrorContext.Error);
+                        e.ErrorContext.Handled = true;
+                    }
+                };
+
                 return settings;
             };
 
@@ -137,18 +146,26 @@ namespace MultiFunPlayer.ViewModels
             {
                 return JObject.Parse(File.ReadAllText(path));
             }
-            catch (JsonException)
+            catch (Exception e)
             {
+                Logger.Error(e, "Failed to read settings");
                 return new JObject();
             }
         }
 
         private void WriteSettings(JObject settings)
         {
-            var path = Path.Join(Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName), "MultiFunPlayer.config.json");
+            try
+            {
+                var path = Path.Join(Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName), "MultiFunPlayer.config.json");
 
-            Logger.Info("Saving settings to \"{0}\"", path);
-            File.WriteAllText(path, settings.ToString());
+                Logger.Info("Saving settings to \"{0}\"", path);
+                File.WriteAllText(path, settings.ToString());
+            }
+            catch (Exception e)
+            {
+                Logger.Error(e, "Failed to save settings");
+            }
         }
 
         public void OnMouseDown(object sender, MouseButtonEventArgs e)
