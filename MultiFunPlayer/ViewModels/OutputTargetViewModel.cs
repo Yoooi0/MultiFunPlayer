@@ -82,11 +82,11 @@ namespace MultiFunPlayer.ViewModels
                 {
                     foreach (var target in Items.ToList())
                     {
-                        await _semaphores[target].WaitAsync(token);
-                        if (!target.AutoConnectEnabled || target.Status == ConnectionStatus.Connected)
+                        if (!target.AutoConnectEnabled)
                             continue;
 
-                        if (await target.CanConnectAsyncWithStatus(token))
+                        await _semaphores[target].WaitAsync(token);
+                        if (target.Status != ConnectionStatus.Connected && await target.CanConnectAsyncWithStatus(token))
                         {
                             await target.ConnectAsync();
                             await target.WaitForIdle(token);
