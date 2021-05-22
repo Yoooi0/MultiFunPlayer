@@ -861,7 +861,7 @@
         </material:Card>
 
         <material:Card material:ShadowAssist.ShadowDepth="Depth1">
-            <Expander IsExpanded="{Binding IsValuesPanelExpanded}"
+            <Expander IsExpanded="{Binding ValuesContentVisible}"
                       material:ExpanderAssist.HorizontalHeaderPadding="24 6 6 6"
                       Background="{StaticResource MaterialDesignToolBarBackground}">
                 <Expander.Header>

@@ -31,7 +31,7 @@ namespace MultiFunPlayer.ViewModels
         private float _syncTime;
 
         public bool IsPlaying { get; set; }
-        public bool IsValuesPanelExpanded { get; set; }
+        public bool ValuesContentVisible { get; set; }
         public bool VideoContentVisible { get; set; } = true;
         public float CurrentPosition { get; set; }
         public float PlaybackSpeed { get; set; }
@@ -249,7 +249,7 @@ namespace MultiFunPlayer.ViewModels
                 if (uiUpdateTime >= uiUpdateInterval)
                 {
                     uiUpdateTime = 0;
-                    if (IsValuesPanelExpanded)
+                    if (ValuesContentVisible)
                     {
                         Execute.OnUIThread(() =>
                         {
@@ -363,7 +363,7 @@ namespace MultiFunPlayer.ViewModels
                 {
                     { nameof(AxisSettings), JObject.FromObject(AxisSettings) },
                     { nameof(ScriptLibraries), JArray.FromObject(ScriptLibraries) },
-                    { nameof(IsValuesPanelExpanded), JToken.FromObject(IsValuesPanelExpanded) },
+                    { nameof(ValuesContentVisible), JToken.FromObject(ValuesContentVisible) },
                     { nameof(VideoContentVisible), JToken.FromObject(VideoContentVisible) },
                     { nameof(SyncSettings), JObject.FromObject(SyncSettings) }
                 };
@@ -395,8 +395,8 @@ namespace MultiFunPlayer.ViewModels
                     }
                 }
 
-                if (settings.TryGetValue<bool>(nameof(IsValuesPanelExpanded), out var isValuesPanelExpanded))
-                    IsValuesPanelExpanded = isValuesPanelExpanded;
+                if (settings.TryGetValue<bool>(nameof(ValuesContentVisible), out var valuesContentVisible))
+                    ValuesContentVisible = valuesContentVisible;
 
                 if (settings.TryGetValue<bool>(nameof(VideoContentVisible), out var videoContentVisible))
                     VideoContentVisible = videoContentVisible;
