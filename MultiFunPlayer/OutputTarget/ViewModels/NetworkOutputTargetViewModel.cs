@@ -117,19 +117,7 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
                     var interval = MathF.Max(1, 1000.0f / UpdateRate);
                     UpdateValues();
 
-                    sb.Clear();
-                    foreach (var (axis, value) in Values)
-                    {
-                        if (sb.Length > 0)
-                            sb.Append(' ');
-
-                        sb.Append(axis)
-                          .AppendFormat("{0:000}", value * 999)
-                          .AppendFormat("I{0}", (int)interval);
-                    }
-                    sb.AppendLine();
-
-                    var commands = sb.ToString();
+                    var commands = TCode.ToString(Values, (int)interval);
                     if (!string.IsNullOrWhiteSpace(commands))
                     {
                         Logger.Trace("Sending \"{0}\" to \"{1}\"", commands.Trim(), $"udp://{Endpoint}");
