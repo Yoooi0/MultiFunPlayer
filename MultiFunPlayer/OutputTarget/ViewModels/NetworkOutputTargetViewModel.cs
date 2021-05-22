@@ -142,11 +142,16 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
             {
                 if(Endpoint != null)
                     settings[nameof(Endpoint)] = new JValue(Endpoint.ToString());
+
+                settings[nameof(Protocol)] = new JValue(Protocol.ToString());
             }
             else if (type == AppSettingsMessageType.Loading)
             {
                 if (settings.TryGetValue<string>(nameof(Endpoint), out var endpointString) && IPEndPoint.TryParse(endpointString, out var endpoint))
                     Endpoint = endpoint;
+
+                if (settings.TryGetValue<ProtocolType>(nameof(Protocol), out var protocol))
+                    Protocol = protocol;
             }
         }
 
