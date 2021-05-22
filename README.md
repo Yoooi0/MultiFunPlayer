@@ -13,13 +13,13 @@ The player's main feature is the ability to play multiple funscripts at the same
 
 # Features
 
-* One of the first multi axis funscript players
 * Supports [DeoVR](https://deovr.com/), [MPV](https://mpv.io/), [HereSphere](https://store.steampowered.com/app/1234730/HereSphere/) and [Whirligig](http://whirligig.xyz/) video players
-* Auto detection and connection to any supported running video player
+* Supports [buttplug.io](https://buttplug.io), network TCP/UDP, namedpipes and serial output
+* Auto detection and connection to any supported video player and output
+* Supports multiple concurrent outputs
 * Real time script smoothing using pchip or makima interpolation
 * Auto-home feature which when video is paused moves axis to its default value after some delay
 * Supports local, DLNA, web and unc video paths
-* Ability to output to [buttplug.io](https://buttplug.io), Network TCP/UDP, Namedpipes and Serial
 * Soft start sync feature to prevent unwanted motion
 * Script libraries to organize funscripts in different folders and load funscripts not located next to the video file
 * Ability to link unscripted axis to a different one with optional random motion
@@ -29,7 +29,7 @@ The player's main feature is the ability to play multiple funscripts at the same
 
 # How To
 
-To synchronize with videos, start your desired video player and wait for automatic connection or click on the connect button to connect manually *(NOTE: DeoVR and Whirligig require you to enable remote support in their settings)*. Once connected, the funscripts can be loaded in several ways:
+To synchronize with videos, start your desired video player and wait for automatic connection or click on the connect button to connect manually *(NOTE: DeoVR, Whirligig and HereSphere require you to enable remote support in their settings)*. Once connected, the funscripts can be loaded in several ways:
 
 * Manually, by dragging a funscript file from windows explorer and dropping it on the desired axis `File` text box.
 * Manually, by using the `Load script` button in the axis settings toolbar.
