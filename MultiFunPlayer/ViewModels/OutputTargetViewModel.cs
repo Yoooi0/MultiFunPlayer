@@ -14,17 +14,15 @@ namespace MultiFunPlayer.ViewModels
     {
         private Task _task;
         private CancellationTokenSource _cancellationSource;
-        private IOutputTarget _currentTarget;
-        private SemaphoreSlim _semaphore;
+        private Dictionary<IOutputTarget, SemaphoreSlim> _semaphores;
 
         public OutputTargetViewModel(IEventAggregator eventAggregator, IEnumerable<IOutputTarget> targets)
         {
             eventAggregator.Subscribe(this);
             Items.AddRange(targets);
 
-            _currentTarget = null;
+            _semaphores = targets.ToDictionary(t => t, _ => new SemaphoreSlim(1, 1));
 
-            _semaphore = new SemaphoreSlim(1, 1);
             _cancellationSource = new CancellationTokenSource();
             _task = Task.Factory.StartNew(() => ScanAsync(_cancellationSource.Token),
                 _cancellationSource.Token,
@@ -57,41 +55,22 @@ namespace MultiFunPlayer.ViewModels
         public async void ToggleConnectAsync(IOutputTarget target)
         {
             var token = _cancellationSource.Token;
-            await _semaphore.WaitAsync(token);
-            if (_currentTarget == target)
+            if (target == null)
+                return;
+
+            await _semaphores[target].WaitAsync(token);
+            if (target.Status == ConnectionStatus.Connected)
             {
-                if (_currentTarget?.Status == ConnectionStatus.Connected)
-                {
-                    await _currentTarget.DisconnectAsync();
-                    await _currentTarget.WaitForDisconnect(token);
-                    _currentTarget = null;
-                }
-                else if (_currentTarget?.Status == ConnectionStatus.Disconnected)
-                {
-                    await _currentTarget.ConnectAsync();
-                    await target.WaitForIdle(token);
-                }
+                await target.DisconnectAsync();
+                await target.WaitForDisconnect(token);
             }
-            else if (_currentTarget != target)
+            else if (target.Status == ConnectionStatus.Disconnected)
             {
-                if (_currentTarget != null)
-                {
-                    await _currentTarget.DisconnectAsync();
-                    await _currentTarget.WaitForDisconnect(token);
-                    _currentTarget = null;
-                }
-
-                if (target != null)
-                {
-                    await target.ConnectAsync();
-                    await target.WaitForIdle(token);
-                }
-
-                if (target == null || target.Status == ConnectionStatus.Connected)
-                    _currentTarget = target;
+                await target.ConnectAsync();
+                await target.WaitForIdle(token);
             }
 
-            _semaphore.Release();
+            _semaphores[target].Release();
         }
 
         private async Task ScanAsync(CancellationToken token)
@@ -101,36 +80,19 @@ namespace MultiFunPlayer.ViewModels
                 await Task.Delay(2500, token);
                 while (!token.IsCancellationRequested)
                 {
-                    if (_currentTarget != null)
+                    foreach (var target in Items.ToList())
                     {
-                        await _currentTarget.WaitForDisconnect(token);
-                        await _semaphore.WaitAsync(token);
-                        if (_currentTarget?.Status == ConnectionStatus.Disconnected)
-                            _currentTarget = null;
-                        _semaphore.Release();
-                    }
-
-                    foreach (var source in Items.ToList())
-                    {
-                        if (_currentTarget != null)
-                            break;
-
-                        if (!source.AutoConnectEnabled)
+                        await _semaphores[target].WaitAsync(token);
+                        if (!target.AutoConnectEnabled || target.Status == ConnectionStatus.Connected)
                             continue;
 
-                        if (await source.CanConnectAsyncWithStatus(token))
+                        if (await target.CanConnectAsyncWithStatus(token))
                         {
-                            await _semaphore.WaitAsync(token);
-                            if (_currentTarget == null)
-                            {
-                                await source.ConnectAsync();
-                                await source.WaitForIdle(token);
-
-                                if (source.Status == ConnectionStatus.Connected)
-                                    _currentTarget = source;
-                            }
-                            _semaphore.Release();
+                            await target.ConnectAsync();
+                            await target.WaitForIdle(token);
                         }
+
+                        _semaphores[target].Release();
                     }
 
                     await Task.Delay(5000, token);
@@ -157,13 +119,12 @@ namespace MultiFunPlayer.ViewModels
             if (_task != null)
                 await _task;
 
-            _semaphore?.Dispose();
-            _currentTarget?.Dispose();
+            foreach (var (_, semaphore) in _semaphores)
+                semaphore.Dispose();
+
             _cancellationSource?.Dispose();
 
             _task = null;
-            _semaphore = null;
-            _currentTarget = null;
             _cancellationSource = null;
         }
 
