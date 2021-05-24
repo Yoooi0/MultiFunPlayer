@@ -2,7 +2,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace MultiFunPlayer
+namespace MultiFunPlayer.Common
 {
     public enum ConnectionStatus
     {
