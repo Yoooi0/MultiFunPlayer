@@ -112,15 +112,15 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
                     UpdateValues();
 
                     var dirtyValues = Values.Where(x => TCode.IsDirty(x.Value, lastSentValues[x.Key]));
-                    foreach (var (axis, value) in dirtyValues)
-                        lastSentValues[axis] = value;
-
                     var commands = TCode.ToString(dirtyValues, (int)interval);
                     if (serialPort?.IsOpen == true && !string.IsNullOrWhiteSpace(commands))
                     {
                         Logger.Trace("Sending \"{0}\" to \"{1}\"", commands.Trim(), SelectedComPort);
                         serialPort?.Write(commands);
                     }
+
+                    foreach (var (axis, value) in dirtyValues)
+                        lastSentValues[axis] = value;
 
                     Thread.Sleep((int)interval);
                 }
