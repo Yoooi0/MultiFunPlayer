@@ -1,11 +1,9 @@
-﻿using MultiFunPlayer.Common;
-using MultiFunPlayer.Common.Input;
+﻿using MultiFunPlayer.Common.Input;
 using MultiFunPlayer.Common.Input.Gesture;
 using Stylet;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;

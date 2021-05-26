@@ -1,24 +1,14 @@
 using MaterialDesignThemes.Wpf;
 using MultiFunPlayer.Common;
 using MultiFunPlayer.Common.Controls;
-using MultiFunPlayer.Common.Converters;
 using MultiFunPlayer.Common.Input;
-using MultiFunPlayer.Common.Input.Gesture;
 using MultiFunPlayer.Common.Messages;
-using MultiFunPlayer.Views;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;
 using NLog;
-using NLog.Config;
-using NLog.Targets;
 using Stylet;
 using StyletIoC;
 using System;
-using System.Diagnostics;
-using System.IO;
 using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Interop;
 

@@ -1,6 +1,5 @@
 ﻿using MultiFunPlayer.Common;
 using System;
-using System.Threading.Tasks;
 
 namespace MultiFunPlayer.OutputTarget
 {
