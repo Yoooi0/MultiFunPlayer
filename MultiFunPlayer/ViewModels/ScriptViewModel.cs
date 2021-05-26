@@ -18,6 +18,7 @@ using Microsoft.WindowsAPICodePack.Dialogs;
 using System.ComponentModel;
 using MultiFunPlayer.OutputTarget;
 using NLog;
+using MultiFunPlayer.Common.Input;
 
 namespace MultiFunPlayer.ViewModels
 {
@@ -51,7 +52,7 @@ namespace MultiFunPlayer.ViewModels
         public bool IsSyncing => _syncTime < SyncSettings.Duration;
         public float SyncProgress => !IsSyncing ? 100 : (MathF.Pow(2, 10 * (_syncTime / SyncSettings.Duration - 1)) * 100);
 
-        public ScriptViewModel(IEventAggregator eventAggregator)
+        public ScriptViewModel(IShortcutManager shortcutManager, IEventAggregator eventAggregator)
         {
             eventAggregator.Subscribe(this);
 
@@ -76,6 +77,7 @@ namespace MultiFunPlayer.ViewModels
             _updateThread.Start();
 
             ResetSync(false);
+            RegisterShortcuts(shortcutManager);
         }
 
         private void UpdateThread(CancellationToken token)
@@ -844,6 +846,78 @@ namespace MultiFunPlayer.ViewModels
             Process.Start("explorer.exe", library.Directory.FullName);
         }
         #endregion
+
+        private void RegisterShortcuts(IShortcutManager shortcutManager)
+        {
+            foreach (var axis in EnumUtils.GetValues<DeviceAxis>())
+            {
+                shortcutManager.RegisterAction($"{axis}::Value::Plus5%", () =>
+                {
+                    var state = AxisStates[axis];
+                    lock (state)
+                    {
+                        if (!float.IsFinite(state.Value))
+                            state.Value = axis.DefaultValue();
+                        state.Value = MathUtils.Clamp01(state.Value + 0.05f);
+                    }
+                });
+                shortcutManager.RegisterAction($"{axis}::Value::Minus5%", () =>
+                {
+                    var state = AxisStates[axis];
+                    lock (state)
+                    {
+                        if (!float.IsFinite(state.Value))
+                            state.Value = axis.DefaultValue();
+                        state.Value = MathUtils.Clamp01(state.Value - 0.05f);
+                    }
+                });
+                shortcutManager.RegisterAction($"{axis}::Value", (v, _) =>
+                {
+                    var state = AxisStates[axis];
+                    lock (state) state.Value = MathUtils.Clamp01(v);
+                });
+
+                shortcutManager.RegisterAction($"{axis}::ClearScript", () => OnAxisClear(axis));
+                shortcutManager.RegisterAction($"{axis}::ReloadScript", () => OnAxisReload(axis));
+
+                shortcutManager.RegisterAction($"{axis}::Inverted::Value::True", () => AxisSettings[axis].Inverted = true);
+                shortcutManager.RegisterAction($"{axis}::Inverted::Value::False", () => AxisSettings[axis].Inverted = false);
+
+                shortcutManager.RegisterAction($"{axis}::LinkPriority::Value::True", () => AxisSettings[axis].LinkAxisHasPriority = true);
+                shortcutManager.RegisterAction($"{axis}::LinkPriority::Value::False", () => AxisSettings[axis].LinkAxisHasPriority = false);
+
+                shortcutManager.RegisterAction($"{axis}::RandomizerStrength::Value", (_, d) => AxisSettings[axis].RandomizerStrength += (int)(d * 100));
+                shortcutManager.RegisterAction($"{axis}::RandomizerStrength::Value::Plus5%", () => AxisSettings[axis].RandomizerStrength += 5);
+                shortcutManager.RegisterAction($"{axis}::RandomizerStrength::Value::Minus5%", () => AxisSettings[axis].RandomizerStrength -= 5);
+
+                shortcutManager.RegisterAction($"{axis}::RandomizerSpeed::Value", (_, d) => AxisSettings[axis].RandomizerSpeed += (int)(d * 100));
+                shortcutManager.RegisterAction($"{axis}::RandomizerSpeed::Value::Plus5%", () => AxisSettings[axis].RandomizerSpeed += 5);
+                shortcutManager.RegisterAction($"{axis}::RandomizerSpeed::Value::Minus5%", () => AxisSettings[axis].RandomizerSpeed -= 5);
+
+                foreach (var other in EnumUtils.GetValues<DeviceAxis>().Where(a => a != axis))
+                {
+                    shortcutManager.RegisterAction($"{axis}::LinkAxis::Value::{other}", () =>
+                    {
+                        AxisSettings[axis].LinkAxis = other;
+                        LinkAndInvalidate(axis);
+                    });
+                }
+
+                foreach (var interpolation in EnumUtils.GetValues<InterpolationType>())
+                    shortcutManager.RegisterAction($"{axis}::Interpolation::Value::{interpolation}", () => AxisSettings[axis].InterpolationType = interpolation);
+
+                shortcutManager.RegisterAction($"{axis}::AutoHomeEnabled::Value::True", () => AxisSettings[axis].AutoHomeEnabled = true);
+                shortcutManager.RegisterAction($"{axis}::AutoHomeEnabled::Value::False", () => AxisSettings[axis].AutoHomeEnabled = false);
+
+                shortcutManager.RegisterAction($"{axis}::AutoHomeDelay::Value", (_, d) => AxisSettings[axis].AutoHomeDelay += d);
+                shortcutManager.RegisterAction($"{axis}::AutoHomeDelay::Value::Plus1", () => AxisSettings[axis].AutoHomeDelay++);
+                shortcutManager.RegisterAction($"{axis}::AutoHomeDelay::Value::Minus1", () => AxisSettings[axis].AutoHomeDelay--);
+
+                shortcutManager.RegisterAction($"{axis}::AutoHomeDuration::Value", (_, d) => AxisSettings[axis].AutoHomeDuration += d);
+                shortcutManager.RegisterAction($"{axis}::AutoHomeDuration::Value::Plus025", () => AxisSettings[axis].AutoHomeDuration += 0.25f);
+                shortcutManager.RegisterAction($"{axis}::AutoHomeDuration::Value::Minus025", () => AxisSettings[axis].AutoHomeDuration -= 0.25f);
+            }
+        }
 
         protected virtual void Dispose(bool disposing)
         {

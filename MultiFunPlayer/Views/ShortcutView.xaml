@@ -1,0 +1,135 @@
+﻿<UserControl x:Class="MultiFunPlayer.Views.ShortcutView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:material="http://materialdesigninxaml.net/winfx/xaml/themes"
+             xmlns:s="https://github.com/canton7/Stylet"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:MultiFunPlayer.Views" 
+             xmlns:converters="clr-namespace:MultiFunPlayer.Common.Converters"
+             mc:Ignorable="d" 
+             d:DesignHeight="450" d:DesignWidth="800">
+    <UserControl.Resources>
+        <converters:GestureToStringConverter x:Key="GestureToStringConverter"/>
+    </UserControl.Resources>
+    <DockPanel Width="500" 
+               MaxHeight="600"
+               LastChildFill="True"
+               Margin="20">
+        
+        <Button DockPanel.Dock="Top"
+                Style="{StaticResource MaterialDesignFlatButton}"
+                material:RippleAssist.Feedback="Black"
+                Foreground="Black"
+                Height="24"
+                Width="24"
+                Padding="0"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Top"
+                Margin="0 -15 -15 0"
+                Command="{x:Static material:DialogHost.CloseDialogCommand}">
+            <material:PackIcon Kind="Close" 
+                               Height="20" 
+                               Width="20"/>
+        </Button>
+        
+        <StackPanel DockPanel.Dock="Bottom"
+                    IsEnabled="{Binding IsSelectingGesture, Converter={StaticResource NotConverter}}">
+            <DockPanel DockPanel.Dock="Bottom"
+                       LastChildFill="True">
+                <Button DockPanel.Dock="Right"
+                        Click="{s:Action WaitForGesture}"
+                        Style="{StaticResource MaterialDesignFlatButton}"
+                        Width="32" Height="32"
+                        Margin="0" Padding="0">
+                    <material:PackIcon Kind="Input" Width="28" Height="28" />
+                </Button>
+                
+                <TextBox DockPanel.Dock="Left"
+                         IsReadOnly="True" 
+                         Text="{Binding SelectedGesture, Mode=OneWay, Converter={StaticResource GestureToStringConverter}}" 
+                         Margin="0 0 10 0"
+                         VerticalAlignment="Center"
+                         material:HintAssist.HelperText="Selected gesture"/>
+            </DockPanel>
+            <DockPanel DockPanel.Dock="Bottom"
+                       LastChildFill="True">
+                <Button DockPanel.Dock="Right"
+                        Click="{s:Action OnAddShortcut}"
+                        Style="{StaticResource MaterialDesignFlatButton}"
+                        Width="32" 
+                        Height="32"
+                        Margin="0" 
+                        Padding="0"
+                        material:RippleAssist.Feedback="Green"
+                        Foreground="Green">
+                    <material:PackIcon Kind="Plus" Width="28" Height="28" />
+                </Button>
+                
+                <ComboBox DockPanel.Dock="Left"
+                          IsEditable="True"
+                          IsEnabled="{Binding SelectedGesture, Converter={StaticResource notNullBooleanConverter}}"
+                          IsTextSearchEnabled="False"
+                          Margin="0 0 10 0"
+                          material:TextFieldAssist.HasClearButton="True"
+                          material:HintAssist.HelperText="Available actions"
+                          ItemsSource="{Binding AvailableActions}"
+                          SelectedItem="{Binding SelectedAction}"
+                          Text="{Binding ActionsFilter}"
+                          KeyUp="{s:Action OnComboBoxKeyUp}">
+                    <ComboBox.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <VirtualizingStackPanel />
+                        </ItemsPanelTemplate>
+                    </ComboBox.ItemsPanel>
+                </ComboBox>
+            </DockPanel>
+        </StackPanel>
+        
+        <ItemsControl DockPanel.Dock="Top"
+                      ItemsSource="{Binding Shortcuts, UpdateSourceTrigger=PropertyChanged}">
+            <ItemsControl.Template>
+                <ControlTemplate>
+                    <ScrollViewer VerticalScrollBarVisibility="Visible" 
+                                  HorizontalScrollBarVisibility="Disabled">
+                        <ItemsPresenter/>
+                    </ScrollViewer>
+                </ControlTemplate>
+            </ItemsControl.Template>
+            <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                    <Border Padding="5">
+                        <material:Card Padding="10" material:ShadowAssist.ShadowDepth="Depth1">
+                            <DockPanel LastChildFill="True">
+                                <Button DockPanel.Dock="Right"   
+                                        Style="{StaticResource MaterialDesignFlatButton}"
+                                        ToolTip="Remove"
+                                        ToolTipService.InitialShowDelay="0"
+                                        ToolTipService.Placement="Top"
+                                        material:RippleAssist.Feedback="Red"
+                                        Foreground="Red"
+                                        Height="32" 
+                                        Width="32" 
+                                        Padding="0"
+                                        Click="{s:Action OnRemoveShortcut}" >
+                                    <material:PackIcon Kind="Delete" Width="24" Height="24"/>
+                                </Button>
+                                <TextBox DockPanel.Dock="Top"
+                                         IsReadOnly="True" 
+                                         Text="{Binding Key, Mode=OneWay, Converter={StaticResource GestureToStringConverter}}" 
+                                         Margin="0 0 10 0"
+                                         VerticalAlignment="Center"/>
+                            
+                                <TextBox DockPanel.Dock="Bottom"
+                                         IsReadOnly="True" 
+                                         Text="{Binding Value, Mode=OneWay}" 
+                                         Margin="0 0 10 0"
+                                         VerticalAlignment="Center"/>
+                            </DockPanel>
+                        </material:Card>
+                    </Border>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+    </DockPanel>
+</UserControl>

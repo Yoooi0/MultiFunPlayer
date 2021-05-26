@@ -1,5 +1,7 @@
-using MultiFunPlayer.Common;
+﻿using MultiFunPlayer.Common;
 using MultiFunPlayer.Common.Converters;
+using MultiFunPlayer.Common.Input;
+using MultiFunPlayer.Common.Input.Processor;
 using MultiFunPlayer.OutputTarget;
 using MultiFunPlayer.VideoSource;
 using MultiFunPlayer.ViewModels;
@@ -22,6 +24,9 @@ namespace MultiFunPlayer
             builder.Bind<ScriptViewModel>().And<IDeviceAxisValueProvider>().To<ScriptViewModel>().InSingletonScope();
             builder.Bind<IVideoSource>().ToAllImplementations();
             builder.Bind<IOutputTarget>().ToAllImplementations();
+
+            builder.Bind<ShortcutManager>().And<IShortcutManager>().To<ShortcutManager>().InSingletonScope();
+            builder.Bind<IInputProcessor>().ToAllImplementations();
         }
 
         protected override void OnStart()

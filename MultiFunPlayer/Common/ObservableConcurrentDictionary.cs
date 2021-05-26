@@ -9,7 +9,7 @@ using System.Threading;
 namespace MultiFunPlayer.Common
 {
     [DoNotNotify]
-    public class ObservableConcurrentDictionary<TKey, TValue> : IDictionary<TKey, TValue>, INotifyCollectionChanged, INotifyPropertyChanged
+    public class ObservableConcurrentDictionary<TKey, TValue> : IDictionary<TKey, TValue>, IReadOnlyDictionary<TKey, TValue>, INotifyCollectionChanged, INotifyPropertyChanged
     {
         private readonly SynchronizationContext _context;
         private readonly ConcurrentDictionary<TKey, TValue> _dictionary;
@@ -131,6 +131,11 @@ namespace MultiFunPlayer.Common
             get => _dictionary[key];
             set => UpdateWithNotification(key, value);
         }
+        #endregion
+
+        #region IReadOnlyDictionary<TKey,TValue> Members
+        IEnumerable<TKey> IReadOnlyDictionary<TKey, TValue>.Keys => (_dictionary as IReadOnlyDictionary<TKey, TValue>)?.Keys;
+        IEnumerable<TValue> IReadOnlyDictionary<TKey, TValue>.Values => (_dictionary as IReadOnlyDictionary<TKey, TValue>)?.Values;
         #endregion
     }
 }
