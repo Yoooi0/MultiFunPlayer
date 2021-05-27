@@ -14,9 +14,11 @@ namespace MultiFunPlayer.Common.Converters
 
             return gesture switch
             {
-                KeyboardGesture k => $"[Keys: {string.Join(", ", k.Keys)}]",
+                KeyboardGesture k => $"[Keyboard Keys: {string.Join(", ", k.Keys)}]",
                 MouseAxisGesture ma => $"[Mouse Axis: {ma.Axis}]",
                 MouseButtonGesture mb => $"[Mouse Button: {mb.Button}]",
+                HidAxisGesture ha => $"[Hid Axis: {ha.VendorId}/{ha.ProductId}/{ha.Axis}]",
+                HidButtonGesture hb => $"[Hid Button: {hb.VendorId}/{hb.ProductId}/{hb.Button}]",
                 _ => null
             };
         }
