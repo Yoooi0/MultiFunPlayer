@@ -1,4 +1,4 @@
-﻿using MultiFunPlayer.Common.Input;
+using MultiFunPlayer.Common.Input;
 using MultiFunPlayer.Common.Input.Gesture;
 using Stylet;
 using System;
@@ -38,7 +38,7 @@ namespace MultiFunPlayer.ViewModels
             if (_gestureSource == null)
                 return;
 
-            if (gesture is IAxisInputGesture axisGesture && axisGesture.Delta < 0.02f)
+            if (gesture is IAxisInputGesture axisGesture && MathF.Abs(axisGesture.Delta) < 0.005f)
                 return;
 
             if (Shortcuts.ContainsKey(gesture))
