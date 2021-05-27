@@ -57,6 +57,7 @@
                 <Button DockPanel.Dock="Right"
                         Click="{s:Action OnAddShortcut}"
                         Style="{StaticResource MaterialDesignFlatButton}"
+                        IsEnabled="{Binding CanAddShortcut}"
                         Width="32" 
                         Height="32"
                         Margin="0" 

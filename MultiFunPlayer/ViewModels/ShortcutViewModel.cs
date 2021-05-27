@@ -1,4 +1,4 @@
-using MultiFunPlayer.Common.Input;
+﻿using MultiFunPlayer.Common.Input;
 using MultiFunPlayer.Common.Input.Gesture;
 using Stylet;
 using System;
@@ -24,6 +24,7 @@ namespace MultiFunPlayer.ViewModels
         public IReadOnlyDictionary<IInputGesture, string> Shortcuts => _shortcutManager.Shortcuts;
 
         public bool IsSelectingGesture => _gestureSource != null;
+        public bool CanAddShortcut => SelectedGesture != null && SelectedAction != null;
 
         public ShortcutViewModel(IShortcutManager shortcutManager)
         {
@@ -69,7 +70,7 @@ namespace MultiFunPlayer.ViewModels
 
         public void OnAddShortcut()
         {
-            if (SelectedGesture == null || SelectedAction == null)
+            if (!CanAddShortcut)
                 return;
 
             _shortcutManager.RegisterShortcut(SelectedGesture, SelectedAction);
