@@ -32,7 +32,7 @@ namespace MultiFunPlayer.Common.Input.Processor
             {
                 foreach(var value in o.CurrentValues)
                 {
-                    var isGesture = (!_axisStates.TryGetValue(valueIndex, out var state) || state != value) && state > 0;
+                    var isGesture = _axisStates.TryGetValue(valueIndex, out var state) && state != value && state > 0;
                     _axisStates[valueIndex] = value;
 
                     if (isGesture)
