@@ -129,6 +129,11 @@ namespace MultiFunPlayer.ViewModels
 
         public async void WaitForGesture()
         {
+            if (!IsKeyboardKeysGestureEnabled && !IsMouseAxisGestureEnabled
+            && !IsMouseButtonGestureEnabled && !IsHidAxisGestureEnabled
+            && !IsHidButtonGestureEnabled)
+                return;
+
             _gestureSource = new TaskCompletionSource<IInputGesture>();
             NotifyOfPropertyChange(nameof(IsSelectingGesture));
 
