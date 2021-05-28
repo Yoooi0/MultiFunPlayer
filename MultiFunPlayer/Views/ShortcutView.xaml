@@ -43,6 +43,19 @@
                         Width="32" Height="32"
                         Margin="0" Padding="0">
                     <material:PackIcon Kind="Input" Width="28" Height="28" />
+                    <Button.ContextMenu>
+                        <ContextMenu>
+                            <MenuItem IsEnabled="False" Header="Enabled gestures:" Padding="0" Margin="-20 0 0 0"/>
+                            <Separator />
+                            <MenuItem Header="Keyboard Keys" IsCheckable="True" IsChecked="{Binding IsKeyboardKeysGestureEnabled}"/>
+                            <Separator />
+                            <MenuItem Header="Mouse Axis" IsCheckable="True" IsChecked="{Binding IsMouseAxisGestureEnabled}"/>
+                            <MenuItem Header="Mouse Button" IsCheckable="True" IsChecked="{Binding IsMouseButtonGestureEnabled}"/>
+                            <Separator />
+                            <MenuItem Header="Hid Axis" IsCheckable="True" IsChecked="{Binding IsHidAxisGestureEnabled}"/>
+                            <MenuItem Header="Hid Button" IsCheckable="True" IsChecked="{Binding IsHidButtonGestureEnabled}"/>
+                        </ContextMenu>
+                    </Button.ContextMenu>
                 </Button>
                 
                 <TextBox DockPanel.Dock="Left"

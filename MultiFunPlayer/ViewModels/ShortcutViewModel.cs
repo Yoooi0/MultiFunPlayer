@@ -21,6 +21,12 @@ namespace MultiFunPlayer.ViewModels
         public IInputGesture SelectedGesture { get; private set; }
         public IReadOnlyCollection<string> AvailableActions { get; private set; }
 
+        public bool IsKeyboardKeysGestureEnabled { get; set; } = true;
+        public bool IsMouseAxisGestureEnabled { get; set; } = false;
+        public bool IsMouseButtonGestureEnabled { get; set; } = false;
+        public bool IsHidAxisGestureEnabled { get; set; } = true;
+        public bool IsHidButtonGestureEnabled { get; set; } = true;
+
         public IReadOnlyDictionary<IInputGesture, string> Shortcuts => _shortcutManager.Shortcuts;
 
         public bool IsSelectingGesture => _gestureSource != null;
@@ -39,8 +45,18 @@ namespace MultiFunPlayer.ViewModels
             if (_gestureSource == null)
                 return;
 
-            if (gesture is IAxisInputGesture axisGesture && MathF.Abs(axisGesture.Delta) < 0.005f)
-                return;
+            switch (gesture)
+            {
+                case KeyboardGesture when !IsKeyboardKeysGestureEnabled:
+                case MouseAxisGesture when !IsMouseAxisGestureEnabled:
+                case MouseButtonGesture when !IsMouseButtonGestureEnabled:
+                case HidAxisGesture when !IsHidAxisGestureEnabled:
+                case HidButtonGesture when !IsHidButtonGestureEnabled:
+                case IAxisInputGesture axisGesture when MathF.Abs(axisGesture.Delta) < 0.01f:
+                    return;
+                default:
+                    break;
+            }
 
             if (Shortcuts.ContainsKey(gesture))
                 return;
