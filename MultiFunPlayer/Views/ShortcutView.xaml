@@ -36,12 +36,18 @@
         <StackPanel DockPanel.Dock="Bottom"
                     IsEnabled="{Binding IsSelectingGesture, Converter={StaticResource NotConverter}}">
             <DockPanel DockPanel.Dock="Bottom"
-                       LastChildFill="True">
+                       LastChildFill="True"
+                       Margin="0 0 0 5">
                 <Button DockPanel.Dock="Right"
                         Click="{s:Action WaitForGesture}"
                         Style="{StaticResource MaterialDesignFlatButton}"
-                        Width="32" Height="32"
-                        Margin="0" Padding="0">
+                        ToolTipService.InitialShowDelay="0"
+                        ToolTipService.Placement="Top"
+                        ToolTip="Capture gesture"
+                        Width="32" 
+                        Height="32"
+                        Margin="0" 
+                        Padding="0">
                     <material:PackIcon Kind="Input" Width="28" Height="28" />
                     <Button.ContextMenu>
                         <ContextMenu>
@@ -71,6 +77,9 @@
                         Click="{s:Action OnAddShortcut}"
                         Style="{StaticResource MaterialDesignFlatButton}"
                         IsEnabled="{Binding CanAddShortcut}"
+                        ToolTipService.InitialShowDelay="0"
+                        ToolTipService.Placement="Top"
+                        ToolTip="Add shortcut"
                         Width="32" 
                         Height="32"
                         Margin="0" 
