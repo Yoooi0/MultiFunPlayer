@@ -19,5 +19,6 @@ namespace MultiFunPlayer.Common.Input.Gesture
         public override bool Equals(object other) => Equals(other as IInputGesture);
         public bool Equals(IInputGesture other) => other is HidButtonGesture g && g.Button == Button;
         public override int GetHashCode() => HashCode.Combine(Button);
+        public override string ToString() => $"[Hid Button: {VendorId}/{ProductId}/{Button}]";
     }
 }

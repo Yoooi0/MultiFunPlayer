@@ -12,5 +12,6 @@ namespace MultiFunPlayer.Common.Input.Gesture
         public override bool Equals(object other) => Equals(other as IInputGesture);
         public bool Equals(IInputGesture other) => other is MouseButtonGesture g && g.Button == Button;
         public override int GetHashCode() => HashCode.Combine(Button);
+        public override string ToString() => $"[Mouse Button: {Button}]";
     }
 }

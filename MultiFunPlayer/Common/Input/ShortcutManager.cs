@@ -18,9 +18,9 @@ namespace MultiFunPlayer.Common.Input
         IReadOnlyDictionary<IInputGesture, string> Shortcuts { get; }
 
         void RegisterWindow(HwndSource source);
-        void RegisterAction(string name, Action command);
-        void RegisterAction(string name, Action<float, float> command);
-        void RegisterShortcut(IInputGesture gesture, string commandName);
+        void RegisterAction(string name, Action action);
+        void RegisterAction(string name, Action<float, float> action);
+        void RegisterShortcut(IInputGesture gesture, string actionName);
         void RemoveShortcut(IInputGesture gesture);
     }
 
@@ -66,25 +66,25 @@ namespace MultiFunPlayer.Common.Input
             RawInputDevice.RegisterDevice(HidUsageAndPage.Joystick, RawInputDeviceFlags.ExInputSink, source.Handle);
         }
 
-        public void RegisterAction(string name, Action command)
+        public void RegisterAction(string name, Action action)
         {
             if (_actions.ContainsKey(name))
-                throw new NotSupportedException($"Cannot add more than one command with \"{name}\" name");
+                throw new NotSupportedException($"Cannot add more than one action with \"{name}\" name");
 
-            Logger.Debug($"Registered \"{name}\" command");
-            _actions[name] = command;
+            Logger.Debug($"Registered \"{name}\" action");
+            _actions[name] = action;
         }
 
-        public void RegisterAction(string name, Action<float, float> command)
+        public void RegisterAction(string name, Action<float, float> action)
         {
             if (_axisActions.ContainsKey(name))
-                throw new NotSupportedException($"Cannot add more than one command with \"{name}\" name");
+                throw new NotSupportedException($"Cannot add more than one action with \"{name}\" name");
 
-            Logger.Debug($"Registered \"{name}\" command");
-            _axisActions[name] = command;
+            Logger.Debug($"Registered \"{name}\" action");
+            _axisActions[name] = action;
         }
 
-        public void RegisterShortcut(IInputGesture gesture, string commandName) => _shortcuts.Add(gesture, commandName);
+        public void RegisterShortcut(IInputGesture gesture, string actionName) => _shortcuts[gesture] = actionName;
         public void RemoveShortcut(IInputGesture gesture) => _shortcuts.Remove(gesture, out var _);
 
         private IntPtr MessageSink(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)

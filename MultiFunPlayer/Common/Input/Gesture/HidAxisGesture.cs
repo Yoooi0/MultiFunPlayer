@@ -24,5 +24,6 @@ namespace MultiFunPlayer.Common.Input.Gesture
         public override bool Equals(object other) => Equals(other as IInputGesture);
         public bool Equals(IInputGesture other) => other is HidAxisGesture g && Axis == g.Axis && VendorId == g.VendorId && ProductId == g.ProductId;
         public override int GetHashCode() => HashCode.Combine(Axis);
+        public override string ToString() => $"[Hid Axis: {VendorId}/{ProductId}/{Axis}]";
     }
 }

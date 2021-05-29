@@ -27,5 +27,6 @@ namespace MultiFunPlayer.Common.Input.Gesture
         public override bool Equals(object other) => Equals(other as IInputGesture);
         public bool Equals(IInputGesture other) => other is MouseAxisGesture g && Axis == g.Axis;
         public override int GetHashCode() => HashCode.Combine(Axis);
+        public override string ToString() => $"[Mouse Axis: {Axis}]";
     }
 }
