@@ -54,7 +54,7 @@ namespace MultiFunPlayer.Common.Input
         public void RegisterWindow(HwndSource source)
         {
             if (_source != null)
-                throw new Exception();
+                throw new InvalidOperationException("Cannot register more than one window");
 
             _source = source;
 
@@ -84,8 +84,23 @@ namespace MultiFunPlayer.Common.Input
             _axisActions[name] = action;
         }
 
-        public void RegisterShortcut(IInputGesture gesture, string actionName) => _shortcuts[gesture] = actionName;
-        public void RemoveShortcut(IInputGesture gesture) => _shortcuts.Remove(gesture, out var _);
+        public void RegisterShortcut(IInputGesture gesture, string actionName)
+        {
+            if (gesture == null)
+                return;
+
+            Logger.Debug($"Registered \"{gesture}\" to \"{actionName}\"");
+            _shortcuts[gesture] = actionName;
+        }
+
+        public void RemoveShortcut(IInputGesture gesture)
+        {
+            if (gesture == null)
+                return;
+
+            Logger.Debug($"Removed \"{gesture}\" action");
+            _shortcuts.Remove(gesture, out var _);
+        }
 
         private IntPtr MessageSink(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
         {
@@ -94,6 +109,8 @@ namespace MultiFunPlayer.Common.Input
             if (msg == WM_INPUT)
             {
                 var data = RawInputData.FromHandle(lParam);
+                Logger.Trace(data);
+
                 foreach (var gesture in _processors.SelectMany(p => p.GetGestures(data)))
                 {
                     OnGesture?.Invoke(this, gesture);
