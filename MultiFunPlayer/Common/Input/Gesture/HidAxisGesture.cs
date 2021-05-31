@@ -43,7 +43,6 @@ namespace MultiFunPlayer.Common.Input.Gesture
 
         public override string ToString() => $"[Hid Axis: {VendorId}/{ProductId}/{Axis}, Value: {Value}, Delta: {Delta}]";
 
-        public static HidAxisGesture Create(int vendorId, int productId, int axis, float value, float delta)
-            => new HidAxisGesture(new HidAxisGestureDescriptor(vendorId, productId, axis), value, delta);
+        public static HidAxisGesture Create(int vendorId, int productId, int axis, float value, float delta) => new(new(vendorId, productId, axis), value, delta);
     }
 }

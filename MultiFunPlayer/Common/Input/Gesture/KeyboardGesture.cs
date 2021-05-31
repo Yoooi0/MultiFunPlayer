@@ -18,7 +18,6 @@ namespace MultiFunPlayer.Common.Input.Gesture
         public override string ToString() => $"[Keyboard Keys: {string.Join(", ", Keys)}]";
     }
 
-
     public class KeyboardGesture : IInputGesture
     {
         private readonly KeyboardGestureDescriptor _descriptor;
@@ -30,7 +29,6 @@ namespace MultiFunPlayer.Common.Input.Gesture
 
         public override string ToString() => $"[Keyboard Keys: {string.Join(", ", Keys)}]";
 
-        public static KeyboardGesture Create(IEnumerable<Key> keys)
-            => new KeyboardGesture(new KeyboardGestureDescriptor(keys));
+        public static KeyboardGesture Create(IEnumerable<Key> keys) => new(new(keys));
     }
 }

@@ -41,7 +41,6 @@ namespace MultiFunPlayer.Common.Input.Gesture
 
         public override string ToString() => $"[Mouse Axis: {Axis}, Value: {Value}, Delta: {Delta}]";
 
-        public static MouseAxisGesture Create(MouseAxis axis, float value, float delta)
-            => new MouseAxisGesture(new MouseAxisGestureDescriptor(axis), value, delta);
+        public static MouseAxisGesture Create(MouseAxis axis, float value, float delta) => new(new(axis), value, delta);
     }
 }

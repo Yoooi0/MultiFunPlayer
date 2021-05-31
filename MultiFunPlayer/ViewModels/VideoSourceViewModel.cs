@@ -142,6 +142,7 @@ namespace MultiFunPlayer.ViewModels
                                 if (source.Status == ConnectionStatus.Connected)
                                     _currentSource = source;
                             }
+
                             _semaphore.Release();
                         }
                     }

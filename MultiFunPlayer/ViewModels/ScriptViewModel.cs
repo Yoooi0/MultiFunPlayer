@@ -540,6 +540,7 @@ namespace MultiFunPlayer.ViewModels
 
                             Logger.Debug("Matched {0} script to \"{1}\"", DeviceAxis.L0, fileName);
                         }
+
                         return true;
                     }
                 }
@@ -555,6 +556,7 @@ namespace MultiFunPlayer.ViewModels
 
                             Logger.Debug("Matched {0} script to \"{1}\"", axis, fileName);
                         }
+
                         return true;
                     }
                 }
@@ -730,6 +732,7 @@ namespace MultiFunPlayer.ViewModels
                 File.Move(sourceFile.FullName, Path.Join(directory.FullName, sourceFile.Name));
             }
             catch { return false; }
+
             return true;
         }
 

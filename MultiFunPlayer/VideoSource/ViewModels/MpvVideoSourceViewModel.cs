@@ -129,6 +129,7 @@ namespace MultiFunPlayer.VideoSource.ViewModels
                                                 _eventAggregator.Publish(new VideoSpeedMessage(speed));
                                             break;
                                     }
+
                                     break;
                             }
                         }

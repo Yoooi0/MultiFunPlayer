@@ -25,7 +25,6 @@ namespace MultiFunPlayer.Common.Input.Gesture
 
         public override string ToString() => $"[Mouse Button: {Button}]";
 
-        public static MouseButtonGesture Create(MouseButton button)
-            => new MouseButtonGesture(new MouseButtonGestureDescriptor(button));
+        public static MouseButtonGesture Create(MouseButton button) => new(new(button));
     }
 }

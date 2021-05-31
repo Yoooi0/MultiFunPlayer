@@ -37,15 +37,15 @@ namespace MultiFunPlayer.ViewModels
             foreach (var action in _shortcutManager.AxisActions)
                 _shortcuts.Add(new ShortcutModel() { ActionName = action, IsAxisAction = true });
 
-            UpdateAvailableActions();
+            UpdateShortcutsList();
             PropertyChanged += (s, e) =>
             {
                 if (e.PropertyName == "ActionsFilter")
-                    UpdateAvailableActions();
+                    UpdateShortcutsList();
             };
         }
 
-        private void UpdateAvailableActions()
+        private void UpdateShortcutsList()
         {
             if (!string.IsNullOrWhiteSpace(ActionsFilter))
             {
@@ -129,7 +129,7 @@ namespace MultiFunPlayer.ViewModels
             if(model.GestureDescriptor != null)
                 _shortcutManager.RemoveShortcut(model.GestureDescriptor);
 
-            model.GestureDescriptor = gesture.Descriptor;
+            model.GestureDescriptor = gesture?.Descriptor;
             if (gesture != null)
                 _shortcutManager.RegisterShortcut(gesture.Descriptor, model.ActionName);
         }

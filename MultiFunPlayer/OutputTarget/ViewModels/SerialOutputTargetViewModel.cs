@@ -46,8 +46,8 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
                 ComPorts.AddRange(SerialPort.GetPortNames());
             }
             catch { }
-            SelectedComPort = lastSelected;
 
+            SelectedComPort = lastSelected;
             await Task.Delay(250).ConfigureAwait(true);
             IsRefreshBusy = false;
         }

@@ -34,7 +34,6 @@ namespace MultiFunPlayer.Common.Input.Gesture
 
         public override string ToString() => $"[Hid Button: {VendorId}/{ProductId}/{Button}]";
 
-        public static HidButtonGesture Create(int vendorId, int productId, int button)
-            => new HidButtonGesture(new HidButtonGestureDescriptor(vendorId, productId, button));
+        public static HidButtonGesture Create(int vendorId, int productId, int button) => new(new(vendorId, productId, button));
     }
 }
