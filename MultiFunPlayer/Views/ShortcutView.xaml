@@ -99,73 +99,96 @@
                 <DataTemplate>
                     <material:Card Margin="3 5 10 5"
                                    material:ShadowAssist.ShadowDepth="Depth1">
-                        <DockPanel LastChildFill="True"
-                                   Margin="10 5 10 5">
-                            <Button DockPanel.Dock="Right"   
-                                    Style="{StaticResource MaterialDesignFlatButton}"
-                                    ToolTip="Clear"
-                                    ToolTipService.InitialShowDelay="0"
-                                    ToolTipService.Placement="Top"
-                                    material:RippleAssist.Feedback="Red"
-                                    Foreground="Red"
-                                    Height="32" 
-                                    Width="32" 
-                                    Padding="0"
-                                    Click="{s:Action ClearGesture}">
-                                <Button.IsEnabled>
-                                    <MultiBinding Converter="{StaticResource MultiBooleanToBooleanAndConverter}">
-                                        <Binding Path="GestureDescriptor" Converter="{StaticResource InvertedNullableToBooleanConverter}"/>
-                                        <Binding Path="DataContext.IsSelectingGesture" RelativeSource="{RelativeSource FindAncestor, AncestorType={x:Type UserControl}}" Converter="{StaticResource NotConverter}"/>
-                                    </MultiBinding>
-                                </Button.IsEnabled>
-                                <material:PackIcon Kind="Close" Width="24" Height="24"/>
-                            </Button>
-                            
-                            <Button DockPanel.Dock="Right"
-                                    Style="{StaticResource MaterialDesignFlatButton}"
-                                    Click="{s:Action SelectGesture}"
-                                    s:View.ActionTarget="{Binding DataContext, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}"
-                                    IsEnabled="{Binding DataContext.IsSelectingGesture, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}, Converter={StaticResource NotConverter}}"
-                                    ToolTipService.InitialShowDelay="0" 
-                                    ToolTipService.Placement="Top"
-                                    ToolTip="Capture gesture"
-                                    VerticalAlignment="Center"
-                                    Width="32" 
-                                    Height="32"
-                                    Margin="0" 
-                                    Padding="0">
-                                <material:PackIcon Kind="Input" Width="28" Height="28" />
-                            </Button>
+                        <DockPanel LastChildFill="True">
+                            <material:ColorZone DockPanel.Dock="Left" 
+                                                Width="6"
+                                                VerticalAlignment="Stretch"
+                                                ToolTipService.InitialShowDelay="0"
+                                                ToolTipService.Placement="Top">
+                                <material:ColorZone.Resources>
+                                    <Style TargetType="{x:Type material:ColorZone}">
+                                        <Setter Property="Background" Value="BlueViolet"/>
+                                        <Setter Property="ToolTip" Value="Simple"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsAxisAction}" Value="True">
+                                                <Setter Property="Background" Value="LimeGreen"/>
+                                        <Setter Property="ToolTip" Value="Axis"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </material:ColorZone.Resources>
+                            </material:ColorZone>
 
-                            <StackPanel Orientation="Vertical"
-                                        VerticalAlignment="Center">
-                                <TextBlock Text="{Binding ActionName, Mode=OneWay}"
-                                           Padding="0">
-                                    <TextBlock.Style>
-                                        <Style BasedOn="{StaticResource MaterialDesignTextBlock}" TargetType="{x:Type TextBlock}">
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding GestureDescriptor, Converter={StaticResource InvertedNullableToBooleanConverter}}" Value="True">
-                                                    <Setter Property="FontWeight" Value="Bold"/>
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </TextBlock.Style>
-                                </TextBlock>
-                                
-                                <TextBlock FontSize="10"
-                                           Padding="0">
-                                    <TextBlock.Style>
-                                        <Style BasedOn="{StaticResource MaterialDesignTextBlock}" TargetType="{x:Type TextBlock}">
-                                            <Setter Property="Text" Value="{Binding GestureDescriptor, Mode=OneWay, StringFormat={}{0}}"/>
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding GestureDescriptor, Converter={StaticResource InvertedNullableToBooleanConverter}}" Value="True">
-                                                    <Setter Property="FontWeight" Value="Bold"/>
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </TextBlock.Style>
-                                </TextBlock>
-                            </StackPanel>
+                            <DockPanel LastChildFill="True"
+                                       DockPanel.Dock="Right"
+                                       Margin="10 5 10 5">
+
+                                <Button DockPanel.Dock="Right"   
+                                        Style="{StaticResource MaterialDesignFlatButton}"
+                                        ToolTip="Clear"
+                                        ToolTipService.InitialShowDelay="0"
+                                        ToolTipService.Placement="Top"
+                                        material:RippleAssist.Feedback="Red"
+                                        Foreground="Red"
+                                        Height="32" 
+                                        Width="32" 
+                                        Padding="0"
+                                        Click="{s:Action ClearGesture}">
+                                    <Button.IsEnabled>
+                                        <MultiBinding Converter="{StaticResource MultiBooleanToBooleanAndConverter}">
+                                            <Binding Path="GestureDescriptor" Converter="{StaticResource InvertedNullableToBooleanConverter}"/>
+                                            <Binding Path="DataContext.IsSelectingGesture" RelativeSource="{RelativeSource FindAncestor, AncestorType={x:Type UserControl}}" Converter="{StaticResource NotConverter}"/>
+                                        </MultiBinding>
+                                    </Button.IsEnabled>
+                                    <material:PackIcon Kind="Close" Width="24" Height="24"/>
+                                </Button>
+
+                                <Button DockPanel.Dock="Right"
+                                        Style="{StaticResource MaterialDesignFlatButton}"
+                                        Click="{s:Action SelectGesture}"
+                                        s:View.ActionTarget="{Binding DataContext, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}"
+                                        IsEnabled="{Binding DataContext.IsSelectingGesture, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}, Converter={StaticResource NotConverter}}"
+                                        ToolTipService.InitialShowDelay="0" 
+                                        ToolTipService.Placement="Top"
+                                        ToolTip="Capture gesture"
+                                        VerticalAlignment="Center"
+                                        Width="32" 
+                                        Height="32"
+                                        Margin="0" 
+                                        Padding="0">
+                                    <material:PackIcon Kind="Input" Width="28" Height="28" />
+                                </Button>
+
+                                <StackPanel Orientation="Vertical"
+                                            VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding ActionName, Mode=OneWay}"
+                                               Padding="0">
+                                        <TextBlock.Style>
+                                            <Style BasedOn="{StaticResource MaterialDesignTextBlock}" TargetType="{x:Type TextBlock}">
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding GestureDescriptor, Converter={StaticResource InvertedNullableToBooleanConverter}}" Value="True">
+                                                        <Setter Property="FontWeight" Value="Bold"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+
+                                    <TextBlock FontSize="10"
+                                               Padding="0">
+                                        <TextBlock.Style>
+                                            <Style BasedOn="{StaticResource MaterialDesignTextBlock}" TargetType="{x:Type TextBlock}">
+                                                <Setter Property="Text" Value="{Binding GestureDescriptor, Mode=OneWay, StringFormat={}{0}}"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding GestureDescriptor, Converter={StaticResource InvertedNullableToBooleanConverter}}" Value="True">
+                                                        <Setter Property="FontWeight" Value="Bold"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                </StackPanel>
+                            </DockPanel>
                         </DockPanel>
                     </material:Card>
                 </DataTemplate>
