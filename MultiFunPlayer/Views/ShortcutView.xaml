@@ -82,7 +82,7 @@
                                     Click="{s:Action ClearGesture}">
                                 <Button.IsEnabled>
                                     <MultiBinding Converter="{StaticResource MultiBooleanToBooleanAndConverter}">
-                                        <Binding Path="Gesture" Converter="{StaticResource InvertedNullableToBooleanConverter}"/>
+                                        <Binding Path="GestureDescriptor" Converter="{StaticResource InvertedNullableToBooleanConverter}"/>
                                         <Binding Path="DataContext.IsSelectingGesture" RelativeSource="{RelativeSource FindAncestor, AncestorType={x:Type UserControl}}" Converter="{StaticResource NotConverter}"/>
                                     </MultiBinding>
                                 </Button.IsEnabled>
@@ -112,7 +112,7 @@
                                     <TextBlock.Style>
                                         <Style BasedOn="{StaticResource MaterialDesignTextBlock}" TargetType="{x:Type TextBlock}">
                                             <Style.Triggers>
-                                                <DataTrigger Binding="{Binding Gesture, Converter={StaticResource InvertedNullableToBooleanConverter}}" Value="True">
+                                                <DataTrigger Binding="{Binding GestureDescriptor, Converter={StaticResource InvertedNullableToBooleanConverter}}" Value="True">
                                                     <Setter Property="FontWeight" Value="Bold"/>
                                                 </DataTrigger>
                                             </Style.Triggers>
@@ -124,9 +124,9 @@
                                            Padding="0">
                                     <TextBlock.Style>
                                         <Style BasedOn="{StaticResource MaterialDesignTextBlock}" TargetType="{x:Type TextBlock}">
-                                            <Setter Property="Text" Value="{Binding Gesture, Mode=OneWay, StringFormat={}{0}}"/>
+                                            <Setter Property="Text" Value="{Binding GestureDescriptor, Mode=OneWay, StringFormat={}{0}}"/>
                                             <Style.Triggers>
-                                                <DataTrigger Binding="{Binding Gesture, Converter={StaticResource InvertedNullableToBooleanConverter}}" Value="True">
+                                                <DataTrigger Binding="{Binding GestureDescriptor, Converter={StaticResource InvertedNullableToBooleanConverter}}" Value="True">
                                                     <Setter Property="FontWeight" Value="Bold"/>
                                                 </DataTrigger>
                                             </Style.Triggers>

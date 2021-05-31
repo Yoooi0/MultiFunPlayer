@@ -32,7 +32,7 @@ namespace MultiFunPlayer.Common.Input.Processor
             {
                 var pressedKeys = _state.Where(x => x.Value).Select(x => x.Key).ToList();
                 if (pressedKeys.Count > 0)
-                    yield return new KeyboardGesture(pressedKeys);
+                    yield return KeyboardGesture.Create(pressedKeys);
 
                 foreach (var pressedKey in pressedKeys)
                     _state[pressedKey] = false;

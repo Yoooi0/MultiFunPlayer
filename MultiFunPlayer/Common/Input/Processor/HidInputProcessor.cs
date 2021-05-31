@@ -21,8 +21,8 @@ namespace MultiFunPlayer.Common.Input.Processor
             if (data is not RawInputHidData hid)
                 yield break;
 
-            var vid = hid.Device.VendorId;
-            var pid = hid.Device.ProductId;
+            var vendorId = hid.Device.VendorId;
+            var productId = hid.Device.ProductId;
 
             var valueIndex = 0;
             foreach (var o in hid.ValueSetStates)
@@ -33,7 +33,7 @@ namespace MultiFunPlayer.Common.Input.Processor
                     _axisStates[valueIndex] = value;
 
                     if (isGesture)
-                        yield return new HidAxisGesture(vid, pid, valueIndex, value / (float)short.MaxValue, (value - state) / (float)short.MaxValue);
+                        yield return HidAxisGesture.Create(vendorId, productId, valueIndex, value / (float)short.MaxValue, (value - state) / (float)short.MaxValue);
 
                     valueIndex++;
                 }
@@ -47,7 +47,7 @@ namespace MultiFunPlayer.Common.Input.Processor
                     _buttonStates[index] = true;
 
                     if (isGesture)
-                        yield return new HidButtonGesture(vid, pid, index);
+                        yield return HidButtonGesture.Create(vendorId, productId, index);
                 }
 
                 foreach(var (index, _) in _buttonStates)

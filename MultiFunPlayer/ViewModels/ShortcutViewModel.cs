@@ -52,7 +52,7 @@ namespace MultiFunPlayer.ViewModels
                 var filterWords = ActionsFilter.Split(' ');
                 Shortcuts = _shortcuts?.Where(m =>
                    filterWords.All(w => (m.ActionName?.Contains(w, StringComparison.InvariantCultureIgnoreCase) ?? false)
-                                     || (m.Gesture?.ToString().Contains(w, StringComparison.InvariantCultureIgnoreCase) ?? false))
+                                     || (m.GestureDescriptor?.ToString().Contains(w, StringComparison.InvariantCultureIgnoreCase) ?? false))
                 ).ToList();
             }
             else
@@ -82,7 +82,7 @@ namespace MultiFunPlayer.ViewModels
 
         private bool ValidateGesture(IInputGesture gesture, ShortcutModel model)
         {
-            if (_shortcuts.Any(m => m != model && gesture.Equals(m.Gesture)))
+            if (_shortcuts.Any(m => m != model && gesture.Equals(m.GestureDescriptor)))
                 return false;
 
             switch (gesture)
@@ -126,12 +126,12 @@ namespace MultiFunPlayer.ViewModels
             _gestureSource = null;
             NotifyOfPropertyChange(nameof(IsSelectingGesture));
 
-            if(model.Gesture != null)
-                _shortcutManager.RemoveShortcut(model.Gesture);
+            if(model.GestureDescriptor != null)
+                _shortcutManager.RemoveShortcut(model.GestureDescriptor);
 
-            model.Gesture = gesture;
+            model.GestureDescriptor = gesture.Descriptor;
             if (gesture != null)
-                _shortcutManager.RegisterShortcut(gesture, model.ActionName);
+                _shortcutManager.RegisterShortcut(gesture.Descriptor, model.ActionName);
         }
 
         public void ClearGesture(object sender, RoutedEventArgs e)
@@ -139,8 +139,8 @@ namespace MultiFunPlayer.ViewModels
             if (sender is not FrameworkElement element || element.DataContext is not ShortcutModel model)
                 return;
 
-            _shortcutManager.RemoveShortcut(model.Gesture);
-            model.Gesture = null;
+            _shortcutManager.RemoveShortcut(model.GestureDescriptor);
+            model.GestureDescriptor = null;
         }
 
         protected virtual void Dispose(bool disposing) { }
@@ -156,6 +156,6 @@ namespace MultiFunPlayer.ViewModels
     {
         public string ActionName { get; init; }
         public bool IsAxisAction { get; init; }
-        public IInputGesture Gesture { get; set; }
+        public IInputGestureDescriptor GestureDescriptor { get; set; }
     }
 }

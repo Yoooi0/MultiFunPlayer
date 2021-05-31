@@ -15,13 +15,13 @@ namespace MultiFunPlayer.Common.Input
 
         IReadOnlyCollection<string> Actions { get; }
         IReadOnlyCollection<string> AxisActions { get; }
-        IReadOnlyDictionary<IInputGesture, string> Shortcuts { get; }
+        IReadOnlyDictionary<IInputGestureDescriptor, string> Shortcuts { get; }
 
         void RegisterWindow(HwndSource source);
         void RegisterAction(string name, Action action);
         void RegisterAction(string name, Action<float, float> action);
-        void RegisterShortcut(IInputGesture gesture, string actionName);
-        void RemoveShortcut(IInputGesture gesture);
+        void RegisterShortcut(IInputGestureDescriptor descriptor, string actionName);
+        void RemoveShortcut(IInputGestureDescriptor descriptor);
     }
 
     public class ShortcutManager : IShortcutManager
@@ -30,7 +30,7 @@ namespace MultiFunPlayer.Common.Input
 
         private readonly Dictionary<string, Action> _actions;
         private readonly Dictionary<string, Action<float, float>> _axisActions;
-        private readonly ObservableConcurrentDictionary<IInputGesture, string> _shortcuts;
+        private readonly ObservableConcurrentDictionary<IInputGestureDescriptor, string> _shortcuts;
 
         private readonly IReadOnlyList<IInputProcessor> _processors;
 
@@ -40,7 +40,7 @@ namespace MultiFunPlayer.Common.Input
 
         public IReadOnlyCollection<string> Actions => _actions.Keys;
         public IReadOnlyCollection<string> AxisActions => _axisActions.Keys;
-        public IReadOnlyDictionary<IInputGesture, string> Shortcuts => _shortcuts;
+        public IReadOnlyDictionary<IInputGestureDescriptor, string> Shortcuts => _shortcuts;
 
         public ShortcutManager(IEnumerable<IInputProcessor> processors)
         {
@@ -48,7 +48,7 @@ namespace MultiFunPlayer.Common.Input
 
             _actions = new Dictionary<string, Action>();
             _axisActions = new Dictionary<string, Action<float, float>>();
-            _shortcuts = new ObservableConcurrentDictionary<IInputGesture, string>();
+            _shortcuts = new ObservableConcurrentDictionary<IInputGestureDescriptor, string>();
         }
 
         public void RegisterWindow(HwndSource source)
@@ -84,22 +84,22 @@ namespace MultiFunPlayer.Common.Input
             _axisActions[name] = action;
         }
 
-        public void RegisterShortcut(IInputGesture gesture, string actionName)
+        public void RegisterShortcut(IInputGestureDescriptor descriptor, string actionName)
         {
-            if (gesture == null)
+            if (descriptor == null)
                 return;
 
-            Logger.Debug($"Registered \"{gesture}\" to \"{actionName}\"");
-            _shortcuts[gesture] = actionName;
+            Logger.Debug($"Registered \"{descriptor}\" to \"{actionName}\"");
+            _shortcuts[descriptor] = actionName;
         }
 
-        public void RemoveShortcut(IInputGesture gesture)
+        public void RemoveShortcut(IInputGestureDescriptor descriptor)
         {
-            if (gesture == null)
+            if (descriptor == null)
                 return;
 
-            Logger.Debug($"Removed \"{gesture}\" action");
-            _shortcuts.Remove(gesture, out var _);
+            Logger.Debug($"Removed \"{descriptor}\" action");
+            _shortcuts.Remove(descriptor, out var _);
         }
 
         private IntPtr MessageSink(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
@@ -114,7 +114,7 @@ namespace MultiFunPlayer.Common.Input
                 foreach (var gesture in _processors.SelectMany(p => p.GetGestures(data)))
                 {
                     OnGesture?.Invoke(this, gesture);
-                    if (!Shortcuts.TryGetValue(gesture, out var actionName))
+                    if (!Shortcuts.TryGetValue(gesture.Descriptor, out var actionName))
                         continue;
 
                     if(gesture is IAxisInputGesture axisGesture && _axisActions.TryGetValue(actionName, out var axisAction))

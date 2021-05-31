@@ -24,24 +24,24 @@ namespace MultiFunPlayer.Common.Input.Processor
 
             bool HasFlag(RawMouseButtonFlags flag) => mouse.Mouse.Buttons.HasFlag(flag);
 
-            if (HasFlag(RawMouseButtonFlags.Button4Down)) yield return new MouseButtonGesture(MouseButton.XButton1);
-            else if (HasFlag(RawMouseButtonFlags.Button5Down)) yield return new MouseButtonGesture(MouseButton.XButton2);
-            else if (HasFlag(RawMouseButtonFlags.LeftButtonDown)) yield return new MouseButtonGesture(MouseButton.Left);
-            else if (HasFlag(RawMouseButtonFlags.RightButtonDown)) yield return new MouseButtonGesture(MouseButton.Right);
-            else if (HasFlag(RawMouseButtonFlags.MiddleButtonDown)) yield return new MouseButtonGesture(MouseButton.Middle);
+            if (HasFlag(RawMouseButtonFlags.Button4Down)) yield return MouseButtonGesture.Create(MouseButton.XButton1);
+            else if (HasFlag(RawMouseButtonFlags.Button5Down)) yield return MouseButtonGesture.Create(MouseButton.XButton2);
+            else if (HasFlag(RawMouseButtonFlags.LeftButtonDown)) yield return MouseButtonGesture.Create(MouseButton.Left);
+            else if (HasFlag(RawMouseButtonFlags.RightButtonDown)) yield return MouseButtonGesture.Create(MouseButton.Right);
+            else if (HasFlag(RawMouseButtonFlags.MiddleButtonDown)) yield return MouseButtonGesture.Create(MouseButton.Middle);
 
             if (mouse.Mouse.LastX != 0)
             {
                 var delta = mouse.Mouse.LastX / 500.0f;
                 xAxis = MathUtils.Clamp01(xAxis + delta);
-                yield return new MouseAxisGesture(MouseAxis.X, xAxis, delta);
+                yield return MouseAxisGesture.Create(MouseAxis.X, xAxis, delta);
             }
 
             if (mouse.Mouse.LastY != 0)
             {
                 var delta = mouse.Mouse.LastY / 500.0f;
                 yAxis = MathUtils.Clamp01(yAxis + delta);
-                yield return new MouseAxisGesture(MouseAxis.Y, yAxis, delta);
+                yield return MouseAxisGesture.Create(MouseAxis.Y, yAxis, delta);
             }
 
             if (mouse.Mouse.ButtonData != 0)
@@ -50,12 +50,12 @@ namespace MultiFunPlayer.Common.Input.Processor
                 if (HasFlag(RawMouseButtonFlags.MouseWheel))
                 {
                     wAxis = MathUtils.Clamp01(wAxis + delta);
-                    yield return new MouseAxisGesture(MouseAxis.MouseWheel, wAxis, delta);
+                    yield return MouseAxisGesture.Create(MouseAxis.MouseWheel, wAxis, delta);
                 }
                 else if (HasFlag(RawMouseButtonFlags.MouseHorizontalWheel))
                 {
                     whAxis = MathUtils.Clamp01(whAxis + delta);
-                    yield return new MouseAxisGesture(MouseAxis.MouseHorizontalWheel, whAxis, delta);
+                    yield return MouseAxisGesture.Create(MouseAxis.MouseHorizontalWheel, whAxis, delta);
                 }
             }
         }
