@@ -34,16 +34,48 @@
                                Height="20" 
                                Width="20"/>
         </Button>
-        
-        <TextBox DockPanel.Dock="Top"
-                 Style="{StaticResource MaterialDesignFloatingHintTextBox}"
-                 Text="{Binding ActionsFilter, UpdateSourceTrigger=Explicit}"
-                 Margin="0 0 10 20"
-                 material:HintAssist.Hint="Filter actions"
-                 behaviours:InputAssist.UpdateSourceOnEnter="TextBox.Text">
-            
-        </TextBox>
-        
+
+        <DockPanel LastChildFill="True"
+                   DockPanel.Dock="Top"
+                   Margin="0 0 15 20">
+            <material:PopupBox DockPanel.Dock="Right"
+                               StaysOpen="True"
+                               ToolTipService.InitialShowDelay="0"
+                               ToolTipService.Placement="Top"
+                               PlacementMode="BottomAndAlignRightEdges"
+                               ToolTip="Filter gestures"
+                               Height="35"
+                               Width="35">
+                <material:PopupBox.ToggleContent>
+                    <Border Width="35" Height="35">
+                        <material:PackIcon Kind="FormatListBulleted" 
+                                           Width="24" 
+                                           Height="24"
+                                           HorizontalAlignment="Center" 
+                                           VerticalAlignment="Center"/>
+                    </Border>
+                </material:PopupBox.ToggleContent>
+                <Grid Width="150" Margin="10">
+                    <StackPanel>
+                        <StackPanel>
+                            <CheckBox IsChecked="{Binding IsKeyboardKeysGestureEnabled}" Content="Keyboard keys"/>
+                            <CheckBox IsChecked="{Binding IsMouseAxisGestureEnabled}" Content="Mouse axis"/>
+                            <CheckBox IsChecked="{Binding IsMouseButtonGestureEnabled}" Content="Mouse button"/>
+                            <CheckBox IsChecked="{Binding IsHidAxisGestureEnabled}" Content="Hid axis"/>
+                            <CheckBox IsChecked="{Binding IsHidButtonGestureEnabled}" Content="Hid button"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Grid>
+            </material:PopupBox>
+
+            <TextBox DockPanel.Dock="Left"
+                     Margin="0 0 10 0"
+                     Style="{StaticResource MaterialDesignFloatingHintTextBox}"
+                     Text="{Binding ActionsFilter, UpdateSourceTrigger=Explicit}"
+                     material:HintAssist.Hint="Filter actions"
+                     behaviours:InputAssist.UpdateSourceOnEnter="TextBox.Text"/>
+        </DockPanel>
+
         <ItemsControl DockPanel.Dock="Top"
                       ItemsSource="{Binding Shortcuts}"
                       Margin="0 0 10 0"
