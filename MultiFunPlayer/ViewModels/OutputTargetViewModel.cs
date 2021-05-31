@@ -160,6 +160,7 @@ namespace MultiFunPlayer.ViewModels
 
             _cancellationSource?.Dispose();
 
+            _semaphores = null;
             _task = null;
             _cancellationSource = null;
         }

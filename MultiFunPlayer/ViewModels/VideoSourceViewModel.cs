@@ -2,14 +2,12 @@
 using MultiFunPlayer.Common.Input;
 using MultiFunPlayer.Common.Messages;
 using MultiFunPlayer.VideoSource;
-using NLog.Common;
 using Stylet;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Windows;
 
 namespace MultiFunPlayer.ViewModels
 {

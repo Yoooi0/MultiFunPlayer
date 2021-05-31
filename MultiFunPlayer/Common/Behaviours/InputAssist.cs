@@ -31,13 +31,13 @@ namespace MultiFunPlayer.Common.Behaviours
                 element.PreviewKeyDown += HandlePreviewKeyDown;
         }
 
-        static void HandlePreviewKeyDown(object sender, KeyEventArgs e)
+        private static void HandlePreviewKeyDown(object sender, KeyEventArgs e)
         {
             if (e.Key == Key.Enter)
                 UpdateSource(e.Source);
         }
 
-        static void UpdateSource(object source)
+        private static void UpdateSource(object source)
         {
             var property = GetUpdateSourceOnEnter(source as DependencyObject);
             if (property == null)
@@ -47,8 +47,7 @@ namespace MultiFunPlayer.Common.Behaviours
                 return;
 
             var binding = BindingOperations.GetBindingExpression(elt, property);
-            if (binding != null)
-                binding.UpdateSource();
+            binding?.UpdateSource();
         }
     }
 }

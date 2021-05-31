@@ -22,7 +22,7 @@ namespace MultiFunPlayer.Common.Input.Processor
                 yield break;
 
             var key = KeyInterop.KeyFromVirtualKey(keyboard.Keyboard.VirutalKey);
-            var pressed = !keyboard.Keyboard.Flags.HasFlag(RawKeyboardFlags.Up);
+            var pressed = (keyboard.Keyboard.Flags & RawKeyboardFlags.Up) == 0;
 
             if (pressed)
             {

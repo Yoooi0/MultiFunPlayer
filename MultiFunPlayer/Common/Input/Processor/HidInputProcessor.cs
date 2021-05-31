@@ -1,10 +1,7 @@
 ﻿using Linearstar.Windows.RawInput;
-using Linearstar.Windows.RawInput.Native;
 using MultiFunPlayer.Common.Input.Gesture;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
-using System.Windows.Input;
 
 namespace MultiFunPlayer.Common.Input.Processor
 {
