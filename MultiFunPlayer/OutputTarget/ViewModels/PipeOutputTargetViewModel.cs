@@ -1,6 +1,7 @@
 ﻿using MaterialDesignThemes.Wpf;
 using MultiFunPlayer.Common;
 using MultiFunPlayer.Common.Controls;
+using MultiFunPlayer.Common.Input;
 using MultiFunPlayer.Common.Messages;
 using Newtonsoft.Json.Linq;
 using NLog;
@@ -23,8 +24,8 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
 
         public string PipeName { get; set; } = "mfp-pipe";
 
-        public PipeOutputTargetViewModel(IEventAggregator eventAggregator, IDeviceAxisValueProvider valueProvider)
-            : base(eventAggregator, valueProvider) { }
+        public PipeOutputTargetViewModel(IShortcutManager shortcutManager, IEventAggregator eventAggregator, IDeviceAxisValueProvider valueProvider)
+            : base(shortcutManager, eventAggregator, valueProvider) { }
 
         public bool IsConnected => Status == ConnectionStatus.Connected;
         public bool IsConnectBusy => Status == ConnectionStatus.Connecting || Status == ConnectionStatus.Disconnecting;

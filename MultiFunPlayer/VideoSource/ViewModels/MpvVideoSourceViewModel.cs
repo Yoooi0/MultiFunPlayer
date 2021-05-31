@@ -2,6 +2,7 @@
 using Microsoft.WindowsAPICodePack.Dialogs;
 using MultiFunPlayer.Common;
 using MultiFunPlayer.Common.Controls;
+using MultiFunPlayer.Common.Input;
 using MultiFunPlayer.Common.Messages;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -31,7 +32,8 @@ namespace MultiFunPlayer.VideoSource.ViewModels
         public FileInfo Executable { get; set; } = null;
         public string Arguments { get; set; } = "--keep-open=always --pause";
 
-        public MpvVideoSourceViewModel(IEventAggregator eventAggregator) : base(eventAggregator)
+        public MpvVideoSourceViewModel(IShortcutManager shortcutManager, IEventAggregator eventAggregator)
+            : base(shortcutManager, eventAggregator)
         {
             _eventAggregator = eventAggregator;
         }

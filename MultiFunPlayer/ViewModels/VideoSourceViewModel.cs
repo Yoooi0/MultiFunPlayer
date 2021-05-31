@@ -1,12 +1,15 @@
 ﻿using MultiFunPlayer.Common;
+using MultiFunPlayer.Common.Input;
 using MultiFunPlayer.Common.Messages;
 using MultiFunPlayer.VideoSource;
+using NLog.Common;
 using Stylet;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows;
 
 namespace MultiFunPlayer.ViewModels
 {
@@ -17,7 +20,7 @@ namespace MultiFunPlayer.ViewModels
         private IVideoSource _currentSource;
         private SemaphoreSlim _semaphore;
 
-        public VideoSourceViewModel(IEventAggregator eventAggregator, IEnumerable<IVideoSource> sources)
+        public VideoSourceViewModel(IShortcutManager shortcutManager, IEventAggregator eventAggregator, IEnumerable<IVideoSource> sources)
         {
             eventAggregator.Subscribe(this);
             Items.AddRange(sources);
@@ -31,6 +34,8 @@ namespace MultiFunPlayer.ViewModels
                 TaskCreationOptions.LongRunning,
                 TaskScheduler.Default)
                 .Unwrap();
+
+            RegisterShortcuts(shortcutManager);
         }
 
         public void Handle(AppSettingsMessage message)
@@ -54,44 +59,54 @@ namespace MultiFunPlayer.ViewModels
             }
         }
 
-        public async void ToggleConnectAsync(IVideoSource source)
+        public async Task ToggleConnectAsync(IVideoSource source)
         {
             var token = _cancellationSource.Token;
             await _semaphore.WaitAsync(token);
             if (_currentSource == source)
-            {
-                if (_currentSource?.Status == ConnectionStatus.Connected)
-                {
-                    await _currentSource.DisconnectAsync();
-                    await _currentSource.WaitForDisconnect(token);
-                    _currentSource = null;
-                }
-                else if(_currentSource?.Status == ConnectionStatus.Disconnected)
-                {
-                    await _currentSource.ConnectAsync();
-                    await source.WaitForIdle(token);
-                }
-            }
+                await ToggleConnectCurrentSourceAsync(token);
             else if (_currentSource != source)
-            {
-                if (_currentSource != null)
-                {
-                    await _currentSource.DisconnectAsync();
-                    await _currentSource.WaitForDisconnect(token);
-                    _currentSource = null;
-                }
-
-                if (source != null)
-                {
-                    await source.ConnectAsync();
-                    await source.WaitForIdle(token);
-                }
-
-                if(source == null || source.Status == ConnectionStatus.Connected)
-                    _currentSource = source;
-            }
+                await ConnectAndSetAsCurrentSourceAsync(source, token);
 
             _semaphore.Release();
+        }
+
+        private async Task ToggleConnectCurrentSourceAsync(CancellationToken token)
+        {
+            if (_currentSource?.Status == ConnectionStatus.Connected)
+                await DisconnectCurrentSourceAsync(token);
+            else if (_currentSource?.Status == ConnectionStatus.Disconnected)
+                await ConnectAsync(_currentSource, token);
+        }
+
+        private async Task ConnectAndSetAsCurrentSourceAsync(IVideoSource source, CancellationToken token)
+        {
+            if (_currentSource != null)
+                await DisconnectCurrentSourceAsync(token);
+
+            if (source != null)
+                await ConnectAsync(source, token);
+
+            if (source == null || source.Status == ConnectionStatus.Connected)
+                _currentSource = source;
+        }
+
+        private async Task DisconnectCurrentSourceAsync(CancellationToken token)
+        {
+            await DisconnectAsync(_currentSource, token);
+            _currentSource = null;
+        }
+
+        private async Task ConnectAsync(IVideoSource source, CancellationToken token)
+        {
+            await source.ConnectAsync();
+            await source.WaitForIdle(token);
+        }
+
+        private async Task DisconnectAsync(IVideoSource source, CancellationToken token)
+        {
+            await source.DisconnectAsync();
+            await source.WaitForDisconnect(token);
         }
 
         private async Task ScanAsync(CancellationToken token)
@@ -148,6 +163,29 @@ namespace MultiFunPlayer.ViewModels
             }
 
             base.ChangeActiveItem(newItem, closePrevious);
+        }
+
+        private void RegisterShortcuts(IShortcutManager shortcutManger)
+        {
+            var token = _cancellationSource.Token;
+            foreach (var source in Items)
+            {
+                shortcutManger.RegisterAction($"{source.Name}::Connection::Toggle", async () => await ToggleConnectAsync(source));
+                shortcutManger.RegisterAction($"{source.Name}::Connection::Connect", async () =>
+                {
+                    await _semaphore.WaitAsync(token);
+                    if (_currentSource != source)
+                        await ConnectAndSetAsCurrentSourceAsync(source, token);
+                    _semaphore.Release();
+                });
+                shortcutManger.RegisterAction($"{source.Name}::Connection::Disconnect", async () =>
+                {
+                    await _semaphore.WaitAsync(token);
+                    if (_currentSource == source)
+                        await DisconnectCurrentSourceAsync(token);
+                    _semaphore.Release();
+                });
+            }
         }
 
         protected async virtual void Dispose(bool disposing)

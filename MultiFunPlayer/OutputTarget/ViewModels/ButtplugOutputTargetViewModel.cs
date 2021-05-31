@@ -2,6 +2,7 @@ using Buttplug;
 using MaterialDesignThemes.Wpf;
 using MultiFunPlayer.Common;
 using MultiFunPlayer.Common.Controls;
+using MultiFunPlayer.Common.Input;
 using MultiFunPlayer.Common.Messages;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -68,8 +69,8 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
 
         public BindableCollection<ButtplugClientDeviceSettings> DeviceSettings { get; protected set; }
 
-        public ButtplugOutputTargetViewModel(IEventAggregator eventAggregator, IDeviceAxisValueProvider valueProvider)
-            : base(eventAggregator, valueProvider)
+        public ButtplugOutputTargetViewModel(IShortcutManager shortcutManager, IEventAggregator eventAggregator, IDeviceAxisValueProvider valueProvider)
+            : base(shortcutManager, eventAggregator, valueProvider)
         {
             AvailableDevices = new BindableCollection<ButtplugClientDevice>();
             DeviceSettings = new BindableCollection<ButtplugClientDeviceSettings>();

@@ -1,4 +1,5 @@
 using MultiFunPlayer.Common;
+using MultiFunPlayer.Common.Input;
 using MultiFunPlayer.Common.Messages;
 using MultiFunPlayer.OutputTarget;
 using Stylet;
@@ -16,7 +17,7 @@ namespace MultiFunPlayer.ViewModels
         private CancellationTokenSource _cancellationSource;
         private Dictionary<IOutputTarget, SemaphoreSlim> _semaphores;
 
-        public OutputTargetViewModel(IEventAggregator eventAggregator, IEnumerable<IOutputTarget> targets)
+        public OutputTargetViewModel(IShortcutManager shortcutManager, IEventAggregator eventAggregator, IEnumerable<IOutputTarget> targets)
         {
             eventAggregator.Subscribe(this);
             Items.AddRange(targets);
@@ -29,6 +30,8 @@ namespace MultiFunPlayer.ViewModels
                 TaskCreationOptions.LongRunning,
                 TaskScheduler.Default)
                 .Unwrap();
+
+            RegisterShortcuts(shortcutManager);
         }
 
         public void Handle(AppSettingsMessage message)
@@ -52,7 +55,7 @@ namespace MultiFunPlayer.ViewModels
             }
         }
 
-        public async void ToggleConnectAsync(IOutputTarget target)
+        public async Task ToggleConnectAsync(IOutputTarget target)
         {
             var token = _cancellationSource.Token;
             if (target == null)
@@ -110,6 +113,39 @@ namespace MultiFunPlayer.ViewModels
             }
 
             base.ChangeActiveItem(newItem, closePrevious);
+        }
+
+        private void RegisterShortcuts(IShortcutManager shortcutManger)
+        {
+            var token = _cancellationSource.Token;
+            foreach (var target in Items)
+            {
+                shortcutManger.RegisterAction($"{target.Name}::Connection::Toggle", async () => await ToggleConnectAsync(target));
+                shortcutManger.RegisterAction($"{target.Name}::Connection::Connect", async () =>
+                {
+                    await _semaphores[target].WaitAsync(token);
+
+                    if (target.Status == ConnectionStatus.Disconnected)
+                    {
+                        await target.ConnectAsync();
+                        await target.WaitForIdle(token);
+                    }
+
+                    _semaphores[target].Release();
+                });
+                shortcutManger.RegisterAction($"{target.Name}::Connection::Disconnect", async () =>
+                {
+                    await _semaphores[target].WaitAsync(token);
+
+                    if (target.Status == ConnectionStatus.Connected)
+                    {
+                        await target.DisconnectAsync();
+                        await target.WaitForDisconnect(token);
+                    }
+
+                    _semaphores[target].Release();
+                });
+            }
         }
 
         protected async virtual void Dispose(bool disposing)

@@ -882,9 +882,15 @@ namespace MultiFunPlayer.ViewModels
 
                 shortcutManager.RegisterAction($"{axis}::Inverted::Value::True", () => AxisSettings[axis].Inverted = true);
                 shortcutManager.RegisterAction($"{axis}::Inverted::Value::False", () => AxisSettings[axis].Inverted = false);
+                shortcutManager.RegisterAction($"{axis}::Inverted::Value::Toggle", () => AxisSettings[axis].Inverted = !AxisSettings[axis].Inverted);
 
                 shortcutManager.RegisterAction($"{axis}::LinkPriority::Value::True", () => AxisSettings[axis].LinkAxisHasPriority = true);
                 shortcutManager.RegisterAction($"{axis}::LinkPriority::Value::False", () => AxisSettings[axis].LinkAxisHasPriority = false);
+                shortcutManager.RegisterAction($"{axis}::LinkPriority::Value::Toggle", () => AxisSettings[axis].LinkAxisHasPriority = !AxisSettings[axis].LinkAxisHasPriority);
+
+                shortcutManager.RegisterAction($"{axis}::SmartLimitEnabled::Value::True", () => AxisSettings[axis].SmartLimitEnabled = true);
+                shortcutManager.RegisterAction($"{axis}::SmartLimitEnabled::Value::False", () => AxisSettings[axis].SmartLimitEnabled = false);
+                shortcutManager.RegisterAction($"{axis}::SmartLimitEnabled::Value::Toggle", () => AxisSettings[axis].SmartLimitEnabled = !AxisSettings[axis].SmartLimitEnabled);
 
                 shortcutManager.RegisterAction($"{axis}::RandomizerStrength::Value", (_, d) => AxisSettings[axis].RandomizerStrength += (int)(d * 100));
                 shortcutManager.RegisterAction($"{axis}::RandomizerStrength::Value::Plus5%", () => AxisSettings[axis].RandomizerStrength += 5);
@@ -894,6 +900,11 @@ namespace MultiFunPlayer.ViewModels
                 shortcutManager.RegisterAction($"{axis}::RandomizerSpeed::Value::Plus5%", () => AxisSettings[axis].RandomizerSpeed += 5);
                 shortcutManager.RegisterAction($"{axis}::RandomizerSpeed::Value::Minus5%", () => AxisSettings[axis].RandomizerSpeed -= 5);
 
+                shortcutManager.RegisterAction($"{axis}::LinkAxis::Value::Null", () =>
+                {
+                    AxisSettings[axis].LinkAxis = null;
+                    LinkAndInvalidate(axis);
+                });
                 foreach (var other in EnumUtils.GetValues<DeviceAxis>().Where(a => a != axis))
                 {
                     shortcutManager.RegisterAction($"{axis}::LinkAxis::Value::{other}", () =>
@@ -908,6 +919,7 @@ namespace MultiFunPlayer.ViewModels
 
                 shortcutManager.RegisterAction($"{axis}::AutoHomeEnabled::Value::True", () => AxisSettings[axis].AutoHomeEnabled = true);
                 shortcutManager.RegisterAction($"{axis}::AutoHomeEnabled::Value::False", () => AxisSettings[axis].AutoHomeEnabled = false);
+                shortcutManager.RegisterAction($"{axis}::AutoHomeEnabled::Value::Toggle", () => AxisSettings[axis].AutoHomeEnabled = !AxisSettings[axis].AutoHomeEnabled);
 
                 shortcutManager.RegisterAction($"{axis}::AutoHomeDelay::Value", (_, d) => AxisSettings[axis].AutoHomeDelay += d);
                 shortcutManager.RegisterAction($"{axis}::AutoHomeDelay::Value::Plus1", () => AxisSettings[axis].AutoHomeDelay++);
@@ -916,6 +928,11 @@ namespace MultiFunPlayer.ViewModels
                 shortcutManager.RegisterAction($"{axis}::AutoHomeDuration::Value", (_, d) => AxisSettings[axis].AutoHomeDuration += d);
                 shortcutManager.RegisterAction($"{axis}::AutoHomeDuration::Value::Plus025", () => AxisSettings[axis].AutoHomeDuration += 0.25f);
                 shortcutManager.RegisterAction($"{axis}::AutoHomeDuration::Value::Minus025", () => AxisSettings[axis].AutoHomeDuration -= 0.25f);
+
+                shortcutManager.RegisterAction($"{axis}::Offset::Value", (_, d) => AxisSettings[axis].Offset += d);
+                shortcutManager.RegisterAction($"{axis}::Offset::Value::Zero", () => AxisSettings[axis].Offset = 0);
+                shortcutManager.RegisterAction($"{axis}::Offset::Value::Plus01", () => AxisSettings[axis].Offset += 0.1f);
+                shortcutManager.RegisterAction($"{axis}::Offset::Value::Minus01", () => AxisSettings[axis].Offset -= 0.1f);
             }
         }
 

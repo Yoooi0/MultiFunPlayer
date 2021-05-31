@@ -1,6 +1,7 @@
 using MaterialDesignThemes.Wpf;
 using MultiFunPlayer.Common;
 using MultiFunPlayer.Common.Controls;
+using MultiFunPlayer.Common.Input;
 using MultiFunPlayer.Common.Messages;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -28,7 +29,8 @@ namespace MultiFunPlayer.VideoSource.ViewModels
 
         public IPEndPoint Endpoint { get; set; } = new IPEndPoint(IPAddress.Loopback, 23554);
 
-        public DeoVRVideoSourceViewModel(IEventAggregator eventAggregator) : base(eventAggregator)
+        public DeoVRVideoSourceViewModel(IShortcutManager shortcutManager, IEventAggregator eventAggregator)
+            : base(shortcutManager, eventAggregator)
         {
             _eventAggregator = eventAggregator;
         }

@@ -1,6 +1,7 @@
 ﻿using MaterialDesignThemes.Wpf;
 using MultiFunPlayer.Common;
 using MultiFunPlayer.Common.Controls;
+using MultiFunPlayer.Common.Input;
 using MultiFunPlayer.Common.Messages;
 using Newtonsoft.Json.Linq;
 using NLog;
@@ -28,7 +29,8 @@ namespace MultiFunPlayer.VideoSource.ViewModels
 
         public IPEndPoint Endpoint { get; set; } = new IPEndPoint(IPAddress.Loopback, 2000);
 
-        public WhirligigVideoSourceViewModel(IEventAggregator eventAggregator) : base(eventAggregator)
+        public WhirligigVideoSourceViewModel(IShortcutManager shortcutManager, IEventAggregator eventAggregator)
+            : base(shortcutManager, eventAggregator)
         {
             _eventAggregator = eventAggregator;
         }

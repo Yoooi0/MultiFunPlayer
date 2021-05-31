@@ -71,7 +71,7 @@ namespace MultiFunPlayer.Common.Input
             if (_actions.ContainsKey(name))
                 throw new NotSupportedException($"Cannot add more than one action with \"{name}\" name");
 
-            Logger.Debug($"Registered \"{name}\" action");
+            Logger.Trace($"Registered \"{name}\" action");
             _actions[name] = action;
         }
 
@@ -80,7 +80,7 @@ namespace MultiFunPlayer.Common.Input
             if (_axisActions.ContainsKey(name))
                 throw new NotSupportedException($"Cannot add more than one action with \"{name}\" name");
 
-            Logger.Debug($"Registered \"{name}\" action");
+            Logger.Trace($"Registered \"{name}\" action");
             _axisActions[name] = action;
         }
 
