@@ -1,5 +1,9 @@
-﻿using MultiFunPlayer.Common.Input;
+﻿using MultiFunPlayer.Common;
+using MultiFunPlayer.Common.Input;
 using MultiFunPlayer.Common.Input.Gesture;
+using MultiFunPlayer.Common.Messages;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using Stylet;
 using System;
 using System.Collections.Generic;
@@ -9,10 +13,10 @@ using System.Windows;
 
 namespace MultiFunPlayer.ViewModels
 {
-    public class ShortcutViewModel : Screen, IDisposable
+    public class ShortcutViewModel : Screen, IHandle<AppSettingsMessage>, IDisposable
     {
         private readonly IShortcutManager _shortcutManager;
-        private readonly BindableCollection<ShortcutModel> _shortcuts;
+        private BindableCollection<ShortcutModel> _shortcuts;
         private TaskCompletionSource<IInputGesture> _gestureSource;
 
         public string ActionsFilter { get; set; }
@@ -26,8 +30,10 @@ namespace MultiFunPlayer.ViewModels
 
         public bool IsSelectingGesture => _gestureSource != null;
 
-        public ShortcutViewModel(IShortcutManager shortcutManager)
+        public ShortcutViewModel(IEventAggregator eventAggregator, IShortcutManager shortcutManager)
         {
+            eventAggregator.Subscribe(this);
+
             _shortcutManager = shortcutManager;
             _shortcutManager.OnGesture += OnGesture;
 
@@ -143,6 +149,58 @@ namespace MultiFunPlayer.ViewModels
             model.GestureDescriptor = null;
         }
 
+        public void Handle(AppSettingsMessage message)
+        {
+            if (message.Type == AppSettingsMessageType.Saving)
+            {
+                message.Settings["Shortcuts"] = new JObject
+                {
+                    { nameof(IsKeyboardKeysGestureEnabled), JValue.FromObject(IsKeyboardKeysGestureEnabled) },
+                    { nameof(IsMouseAxisGestureEnabled), JValue.FromObject(IsMouseAxisGestureEnabled) },
+                    { nameof(IsMouseButtonGestureEnabled), JValue.FromObject(IsMouseButtonGestureEnabled) },
+                    { nameof(IsHidAxisGestureEnabled), JValue.FromObject(IsHidAxisGestureEnabled) },
+                    { nameof(IsHidButtonGestureEnabled), JValue.FromObject(IsHidButtonGestureEnabled) },
+                    { "Bindings", JArray.FromObject(_shortcuts.Where(s => s.GestureDescriptor != null)) },
+                };
+            }
+            else if (message.Type == AppSettingsMessageType.Loading)
+            {
+                if (!message.Settings.TryGetObject(out var settings, "Shortcuts"))
+                    return;
+
+                if (settings.TryGetValue<bool>(nameof(IsKeyboardKeysGestureEnabled), out var isKeyboardKeysGestureEnabled))
+                    IsKeyboardKeysGestureEnabled = isKeyboardKeysGestureEnabled;
+                if (settings.TryGetValue<bool>(nameof(IsMouseAxisGestureEnabled), out var isMouseAxisGestureEnabled))
+                    IsMouseAxisGestureEnabled = isMouseAxisGestureEnabled;
+                if (settings.TryGetValue<bool>(nameof(IsMouseButtonGestureEnabled), out var isMouseButtonGestureEnabled))
+                    IsMouseButtonGestureEnabled = isMouseButtonGestureEnabled;
+                if (settings.TryGetValue<bool>(nameof(IsHidAxisGestureEnabled), out var isHidAxisGestureEnabled))
+                    IsHidAxisGestureEnabled = isHidAxisGestureEnabled;
+                if (settings.TryGetValue<bool>(nameof(IsHidButtonGestureEnabled), out var isHidButtonGestureEnabled))
+                    IsHidButtonGestureEnabled = isHidButtonGestureEnabled;
+
+                if (settings.TryGetValue<List<ShortcutModel>>("Bindings", out var loadedShortcuts))
+                {
+                    foreach (var shortcut in _shortcuts)
+                    {
+                        _shortcutManager.RemoveShortcut(shortcut.GestureDescriptor);
+                        shortcut.GestureDescriptor = null;
+                    }
+
+                    foreach (var loadedShortcut in loadedShortcuts)
+                    {
+                        _shortcutManager.RegisterShortcut(loadedShortcut.GestureDescriptor, loadedShortcut.ActionName);
+
+                        var shortcut = _shortcuts.FirstOrDefault(s => s.ActionName == loadedShortcut.ActionName);
+                        if(shortcut != null)
+                            shortcut.GestureDescriptor = loadedShortcut.GestureDescriptor;
+                    }
+
+                    UpdateShortcutsList();
+                }
+            }
+        }
+
         protected virtual void Dispose(bool disposing) { }
 
         public void Dispose()
@@ -152,10 +210,11 @@ namespace MultiFunPlayer.ViewModels
         }
     }
 
+    [JsonObject(MemberSerialization = MemberSerialization.OptIn)]
     public class ShortcutModel : PropertyChangedBase
     {
-        public string ActionName { get; init; }
-        public bool IsAxisAction { get; init; }
-        public IInputGestureDescriptor GestureDescriptor { get; set; }
+        [JsonProperty] public string ActionName { get; init; }
+        [JsonProperty] public bool IsAxisAction { get; init; }
+        [JsonProperty(TypeNameHandling = TypeNameHandling.Auto)] public IInputGestureDescriptor GestureDescriptor { get; set; }
     }
 }
