@@ -155,8 +155,9 @@ namespace MultiFunPlayer.ViewModels
             if (_task != null)
                 await _task;
 
-            foreach (var (_, semaphore) in _semaphores)
-                semaphore.Dispose();
+            if(_semaphores != null)
+                foreach (var (_, semaphore) in _semaphores)
+                    semaphore.Dispose();
 
             _cancellationSource?.Dispose();
 
