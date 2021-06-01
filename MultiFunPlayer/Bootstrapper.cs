@@ -13,6 +13,7 @@ using NLog.Config;
 using NLog.Targets;
 using Stylet;
 using StyletIoC;
+using System;
 using System.Diagnostics;
 
 namespace MultiFunPlayer
@@ -28,11 +29,13 @@ namespace MultiFunPlayer
             builder.Bind<ShortcutManager>().And<IShortcutManager>().To<ShortcutManager>().InSingletonScope();
             builder.Bind<IInputProcessor>().ToAllImplementations();
         }
-
         protected override void OnStart()
         {
             SetupLoging();
             SetupJson();
+
+            var logger = LogManager.GetLogger(nameof(AppDomain));
+            AppDomain.CurrentDomain.UnhandledException += (s, e) => logger.Fatal(e.ExceptionObject as Exception);
         }
 
         private void SetupJson()
