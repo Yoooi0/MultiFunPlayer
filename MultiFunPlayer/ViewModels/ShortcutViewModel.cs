@@ -16,7 +16,7 @@ namespace MultiFunPlayer.ViewModels
     public class ShortcutViewModel : Screen, IHandle<AppSettingsMessage>, IDisposable
     {
         private readonly IShortcutManager _shortcutManager;
-        private BindableCollection<ShortcutModel> _shortcuts;
+        private readonly BindableCollection<ShortcutModel> _shortcuts;
         private TaskCompletionSource<IInputGesture> _gestureSource;
 
         public string ActionsFilter { get; set; }
@@ -38,10 +38,8 @@ namespace MultiFunPlayer.ViewModels
             _shortcutManager.OnGesture += OnGesture;
 
             _shortcuts = new BindableCollection<ShortcutModel>();
-            foreach (var action in _shortcutManager.Actions)
-                _shortcuts.Add(new ShortcutModel() { ActionName = action });
-            foreach (var action in _shortcutManager.AxisActions)
-                _shortcuts.Add(new ShortcutModel() { ActionName = action, IsAxisAction = true });
+            foreach (var actionDescriptor in _shortcutManager.Actions)
+                _shortcuts.Add(new ShortcutModel(actionDescriptor));
 
             UpdateShortcutsList();
             PropertyChanged += (s, e) =>
@@ -57,7 +55,7 @@ namespace MultiFunPlayer.ViewModels
             {
                 var filterWords = ActionsFilter.Split(' ');
                 Shortcuts = _shortcuts?.Where(m =>
-                   filterWords.All(w => (m.ActionName?.Contains(w, StringComparison.InvariantCultureIgnoreCase) ?? false)
+                   filterWords.All(w => (m.ActionDescriptor?.Name.Contains(w, StringComparison.InvariantCultureIgnoreCase) ?? false)
                                      || (m.GestureDescriptor?.ToString().Contains(w, StringComparison.InvariantCultureIgnoreCase) ?? false))
                 ).ToList();
             }
@@ -93,8 +91,8 @@ namespace MultiFunPlayer.ViewModels
 
             switch (gesture)
             {
-                case not IAxisInputGesture when model.IsAxisAction:
-                case IAxisInputGesture when !model.IsAxisAction:
+                case not IAxisInputGesture when model.ActionDescriptor.Type == ShortcutActionType.Axis:
+                case IAxisInputGesture when model.ActionDescriptor.Type != ShortcutActionType.Axis:
                     return false;
             }
 
@@ -137,7 +135,7 @@ namespace MultiFunPlayer.ViewModels
 
             model.GestureDescriptor = gesture?.Descriptor;
             if (gesture != null)
-                _shortcutManager.RegisterShortcut(gesture.Descriptor, model.ActionName);
+                _shortcutManager.RegisterShortcut(gesture.Descriptor, model.ActionDescriptor);
         }
 
         public void ClearGesture(object sender, RoutedEventArgs e)
@@ -189,9 +187,9 @@ namespace MultiFunPlayer.ViewModels
 
                     foreach (var loadedShortcut in loadedShortcuts)
                     {
-                        _shortcutManager.RegisterShortcut(loadedShortcut.GestureDescriptor, loadedShortcut.ActionName);
+                        _shortcutManager.RegisterShortcut(loadedShortcut.GestureDescriptor, loadedShortcut.ActionDescriptor);
 
-                        var shortcut = _shortcuts.FirstOrDefault(s => s.ActionName == loadedShortcut.ActionName);
+                        var shortcut = _shortcuts.FirstOrDefault(s => s.ActionDescriptor == loadedShortcut.ActionDescriptor);
                         if(shortcut != null)
                             shortcut.GestureDescriptor = loadedShortcut.GestureDescriptor;
                     }
@@ -213,8 +211,9 @@ namespace MultiFunPlayer.ViewModels
     [JsonObject(MemberSerialization = MemberSerialization.OptIn)]
     public class ShortcutModel : PropertyChangedBase
     {
-        [JsonProperty] public string ActionName { get; init; }
-        [JsonProperty] public bool IsAxisAction { get; init; }
+        public ShortcutModel(ShortcutActionDescriptor actionDescriptor) => ActionDescriptor = actionDescriptor;
+
+        [JsonProperty] public ShortcutActionDescriptor ActionDescriptor { get; }
         [JsonProperty(TypeNameHandling = TypeNameHandling.Auto)] public IInputGestureDescriptor GestureDescriptor { get; set; }
     }
 }

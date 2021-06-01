@@ -6,6 +6,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:MultiFunPlayer.Views" 
+             xmlns:input="clr-namespace:MultiFunPlayer.Common.Input" 
              xmlns:behaviours="clr-namespace:MultiFunPlayer.Common.Behaviours" 
              xmlns:converters="clr-namespace:MultiFunPlayer.Common.Converters"
              mc:Ignorable="d" 
@@ -103,16 +104,15 @@
                             <material:ColorZone DockPanel.Dock="Left" 
                                                 Width="6"
                                                 VerticalAlignment="Stretch"
+                                                ToolTip="{Binding ActionDescriptor.Type}"
                                                 ToolTipService.InitialShowDelay="0"
                                                 ToolTipService.Placement="Top">
                                 <material:ColorZone.Resources>
                                     <Style TargetType="{x:Type material:ColorZone}">
                                         <Setter Property="Background" Value="BlueViolet"/>
-                                        <Setter Property="ToolTip" Value="Simple"/>
                                         <Style.Triggers>
-                                            <DataTrigger Binding="{Binding IsAxisAction}" Value="True">
+                                            <DataTrigger Binding="{Binding ActionDescriptor.Type}" Value="{x:Static input:ShortcutActionType.Axis}">
                                                 <Setter Property="Background" Value="LimeGreen"/>
-                                        <Setter Property="ToolTip" Value="Axis"/>
                                             </DataTrigger>
                                         </Style.Triggers>
                                     </Style>
@@ -161,7 +161,7 @@
 
                                 <StackPanel Orientation="Vertical"
                                             VerticalAlignment="Center">
-                                    <TextBlock Text="{Binding ActionName, Mode=OneWay}"
+                                    <TextBlock Text="{Binding ActionDescriptor.Name, Mode=OneWay}"
                                                Padding="0">
                                         <TextBlock.Style>
                                             <Style BasedOn="{StaticResource MaterialDesignTextBlock}" TargetType="{x:Type TextBlock}">

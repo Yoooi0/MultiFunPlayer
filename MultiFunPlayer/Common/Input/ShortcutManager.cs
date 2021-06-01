@@ -13,14 +13,12 @@ namespace MultiFunPlayer.Common.Input
     {
         event EventHandler<IInputGesture> OnGesture;
 
-        IReadOnlyCollection<string> Actions { get; }
-        IReadOnlyCollection<string> AxisActions { get; }
-        IReadOnlyDictionary<IInputGestureDescriptor, string> Shortcuts { get; }
+        IReadOnlyCollection<ShortcutActionDescriptor> Actions { get; }
+        IReadOnlyDictionary<IInputGestureDescriptor, ShortcutActionDescriptor> Shortcuts { get; }
 
         void RegisterWindow(HwndSource source);
-        void RegisterAction(string name, Action action);
-        void RegisterAction(string name, Action<float, float> action);
-        void RegisterShortcut(IInputGestureDescriptor descriptor, string actionName);
+        void RegisterAction(IShortcutAction action);
+        void RegisterShortcut(IInputGestureDescriptor descriptor, ShortcutActionDescriptor actionDescriptor);
         void RemoveShortcut(IInputGestureDescriptor descriptor);
     }
 
@@ -28,9 +26,8 @@ namespace MultiFunPlayer.Common.Input
     {
         protected Logger Logger = LogManager.GetCurrentClassLogger();
 
-        private readonly Dictionary<string, Action> _actions;
-        private readonly Dictionary<string, Action<float, float>> _axisActions;
-        private readonly ObservableConcurrentDictionary<IInputGestureDescriptor, string> _shortcuts;
+        private readonly Dictionary<ShortcutActionDescriptor, IShortcutAction> _actions;
+        private readonly ObservableConcurrentDictionary<IInputGestureDescriptor, ShortcutActionDescriptor> _shortcuts;
 
         private readonly IReadOnlyList<IInputProcessor> _processors;
 
@@ -38,17 +35,15 @@ namespace MultiFunPlayer.Common.Input
 
         public event EventHandler<IInputGesture> OnGesture;
 
-        public IReadOnlyCollection<string> Actions => _actions.Keys;
-        public IReadOnlyCollection<string> AxisActions => _axisActions.Keys;
-        public IReadOnlyDictionary<IInputGestureDescriptor, string> Shortcuts => _shortcuts;
+        public IReadOnlyCollection<ShortcutActionDescriptor> Actions => _actions.Keys;
+        public IReadOnlyDictionary<IInputGestureDescriptor, ShortcutActionDescriptor> Shortcuts => _shortcuts;
 
         public ShortcutManager(IEnumerable<IInputProcessor> processors)
         {
             _processors = processors.ToList();
 
-            _actions = new Dictionary<string, Action>();
-            _axisActions = new Dictionary<string, Action<float, float>>();
-            _shortcuts = new ObservableConcurrentDictionary<IInputGestureDescriptor, string>();
+            _actions = new Dictionary<ShortcutActionDescriptor, IShortcutAction>();
+            _shortcuts = new ObservableConcurrentDictionary<IInputGestureDescriptor, ShortcutActionDescriptor>();
         }
 
         public void RegisterWindow(HwndSource source)
@@ -66,40 +61,31 @@ namespace MultiFunPlayer.Common.Input
             RawInputDevice.RegisterDevice(HidUsageAndPage.Joystick, RawInputDeviceFlags.ExInputSink, source.Handle);
         }
 
-        public void RegisterAction(string name, Action action)
+        public void RegisterAction(IShortcutAction action)
         {
-            if (_actions.ContainsKey(name))
-                throw new NotSupportedException($"Cannot add more than one action with \"{name}\" name");
+            if (_actions.ContainsKey(action.Descriptor))
+                throw new NotSupportedException($"Duplicate action found \"{action.Descriptor}\"");
 
-            Logger.Trace($"Registered \"{name}\" action");
-            _actions[name] = action;
+            Logger.Trace($"Registered \"{action}\" action");
+            _actions[action.Descriptor] = action;
         }
 
-        public void RegisterAction(string name, Action<float, float> action)
+        public void RegisterShortcut(IInputGestureDescriptor gestureDescriptor, ShortcutActionDescriptor actionDescriptor)
         {
-            if (_axisActions.ContainsKey(name))
-                throw new NotSupportedException($"Cannot add more than one action with \"{name}\" name");
-
-            Logger.Trace($"Registered \"{name}\" action");
-            _axisActions[name] = action;
-        }
-
-        public void RegisterShortcut(IInputGestureDescriptor descriptor, string actionName)
-        {
-            if (descriptor == null)
+            if (gestureDescriptor == null)
                 return;
 
-            Logger.Debug($"Registered \"{descriptor}\" to \"{actionName}\"");
-            _shortcuts[descriptor] = actionName;
+            Logger.Debug($"Registered \"{gestureDescriptor}\" to \"{actionDescriptor}\"");
+            _shortcuts[gestureDescriptor] = actionDescriptor;
         }
 
-        public void RemoveShortcut(IInputGestureDescriptor descriptor)
+        public void RemoveShortcut(IInputGestureDescriptor gestureDescriptor)
         {
-            if (descriptor == null)
+            if (gestureDescriptor == null)
                 return;
 
-            Logger.Debug($"Removed \"{descriptor}\" action");
-            _shortcuts.Remove(descriptor, out var _);
+            Logger.Debug($"Removed \"{gestureDescriptor}\" action");
+            _shortcuts.Remove(gestureDescriptor, out var _);
         }
 
         private IntPtr MessageSink(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
@@ -114,13 +100,13 @@ namespace MultiFunPlayer.Common.Input
                 foreach (var gesture in _processors.SelectMany(p => p.GetGestures(data)))
                 {
                     OnGesture?.Invoke(this, gesture);
-                    if (!Shortcuts.TryGetValue(gesture.Descriptor, out var actionName))
+                    if (!Shortcuts.TryGetValue(gesture.Descriptor, out var actionDescriptor))
                         continue;
 
-                    if(gesture is IAxisInputGesture axisGesture && _axisActions.TryGetValue(actionName, out var axisAction))
-                        axisAction.Invoke(axisGesture.Value, axisGesture.Delta);
-                    else if(_actions.TryGetValue(actionName, out var action))
-                        action.Invoke();
+                    if (!_actions.TryGetValue(actionDescriptor, out var action))
+                        continue;
+
+                    action.Invoke(gesture);
                 }
             }
 
@@ -144,5 +130,14 @@ namespace MultiFunPlayer.Common.Input
             Dispose(disposing: true);
             GC.SuppressFinalize(this);
         }
+    }
+
+    public static class ShortcutManagerExtensions
+    {
+        public static void RegisterAction(this IShortcutManager shortcutManager, string name, Action action)
+            => shortcutManager.RegisterAction(new ShortcutAction(name, action));
+
+        public static void RegisterAction(this IShortcutManager shortcutManager, string name, Action<float, float> action)
+            => shortcutManager.RegisterAction(new AxisShortcutAction(name, action));
     }
 }
