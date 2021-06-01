@@ -20,7 +20,13 @@ namespace MultiFunPlayer
         protected override void OnStart()
         {
             var logger = LogManager.GetLogger(nameof(AppDomain));
-            AppDomain.CurrentDomain.UnhandledException += (s, e) => logger.Fatal(e.ExceptionObject as Exception);
+            AppDomain.CurrentDomain.UnhandledException += (s, e) =>
+            {
+                logger.Fatal(e.ExceptionObject as Exception);
+                LogManager.Flush();
+                if(e.IsTerminating)
+                    LogManager.Shutdown();
+            };
         }
     }
 }
