@@ -123,16 +123,50 @@ namespace MultiFunPlayer.OutputTarget
                 => settings.Minimum = (int)MathUtils.Clamp((float)settings.Minimum + offset, 0, (float)settings.Maximum - 1);
             static void OffsetMaximum(DeviceAxisSettings settings, int offset)
                 => settings.Maximum = (int)MathUtils.Clamp((float)settings.Maximum + offset, (float)settings.Minimum + 1, 100);
+            static void OffsetMiddle(DeviceAxisSettings settings, int offset)
+            {
+                if (offset > 0 && settings.Maximum + offset > 100)
+                    offset = Math.Min(offset, 100 - settings.Maximum);
+                else if (offset < 0 && settings.Minimum + offset < 0)
+                    offset = Math.Max(offset, 0 - settings.Minimum);
+
+                settings.Minimum = (int)MathUtils.Clamp(settings.Minimum + offset, 0, 99);
+                settings.Maximum = (int)MathUtils.Clamp(settings.Maximum + offset, 1, 100);
+            }
+
+            static void OffsetRange(DeviceAxisSettings settings, int offset)
+            {
+                var middle = (settings.Maximum + settings.Minimum) / 2.0f;
+                var newRange = MathUtils.Clamp(settings.Maximum - settings.Minimum + offset, 1, 100);
+                var newMaximum = middle + newRange / 2;
+                var newMinimum = middle - newRange / 2;
+
+                if (newMaximum > 100)
+                    newMinimum -= newMaximum - 100;
+                if (newMinimum < 0)
+                    newMaximum += 0 - newMinimum;
+
+                settings.Minimum = (int)MathF.Round(MathUtils.Clamp(newMinimum, 0, 99));
+                settings.Maximum = (int)MathF.Round(MathUtils.Clamp(newMaximum, 1, 100));
+            }
 
             foreach (var (axis, _) in AxisSettings)
             {
-                shortcutManager.RegisterAction($"{Name}::{axis}::Minimum::Value", (_, d) => OffsetMinimum(AxisSettings[axis], (int)(d * 100)));
-                shortcutManager.RegisterAction($"{Name}::{axis}::Minimum::Value::Plus5%", () => OffsetMinimum(AxisSettings[axis], 5));
-                shortcutManager.RegisterAction($"{Name}::{axis}::Minimum::Value::Minus5%", () => OffsetMinimum(AxisSettings[axis], -5));
+                shortcutManager.RegisterAction($"{Name}::{axis}::Range::Minimum::Value", (_, d) => OffsetMinimum(AxisSettings[axis], (int)(d * 100)));
+                shortcutManager.RegisterAction($"{Name}::{axis}::Range::Minimum::Value::Plus5%", () => OffsetMinimum(AxisSettings[axis], 5));
+                shortcutManager.RegisterAction($"{Name}::{axis}::Range::Minimum::Value::Minus5%", () => OffsetMinimum(AxisSettings[axis], -5));
 
-                shortcutManager.RegisterAction($"{Name}::{axis}::Maximum::Value", (_, d) => OffsetMaximum(AxisSettings[axis], (int)(d * 100)));
-                shortcutManager.RegisterAction($"{Name}::{axis}::Maximum::Value::Plus5%", () => OffsetMaximum(AxisSettings[axis], 5));
-                shortcutManager.RegisterAction($"{Name}::{axis}::Maximum::Value::Minus5%", () => OffsetMaximum(AxisSettings[axis], -5));
+                shortcutManager.RegisterAction($"{Name}::{axis}::Range::Maximum::Value", (_, d) => OffsetMaximum(AxisSettings[axis], (int)(d * 100)));
+                shortcutManager.RegisterAction($"{Name}::{axis}::Range::Maximum::Value::Plus5%", () => OffsetMaximum(AxisSettings[axis], 5));
+                shortcutManager.RegisterAction($"{Name}::{axis}::Range::Maximum::Value::Minus5%", () => OffsetMaximum(AxisSettings[axis], -5));
+
+                shortcutManager.RegisterAction($"{Name}::{axis}::Range::Middle::Value", (_, d) => OffsetMiddle(AxisSettings[axis], (int)(d * 100)));
+                shortcutManager.RegisterAction($"{Name}::{axis}::Range::Middle::Value::Plus5%", () => OffsetMiddle(AxisSettings[axis], 5));
+                shortcutManager.RegisterAction($"{Name}::{axis}::Range::Middle::Value::Minus5%", () => OffsetMiddle(AxisSettings[axis], -5));
+
+                shortcutManager.RegisterAction($"{Name}::{axis}::Range::Size::Value", (_, d) => OffsetRange(AxisSettings[axis], (int)(d * 100)));
+                shortcutManager.RegisterAction($"{Name}::{axis}::Range::Size::Value::Plus5%", () => OffsetRange(AxisSettings[axis], 5));
+                shortcutManager.RegisterAction($"{Name}::{axis}::Range::Size::Value::Minus5%", () => OffsetRange(AxisSettings[axis], -5));
             }
         }
 
