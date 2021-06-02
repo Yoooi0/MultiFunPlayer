@@ -13,7 +13,7 @@ namespace MultiFunPlayer.Common.Input.Gesture
 
         public KeyboardGestureDescriptor(IEnumerable<Key> keys) => _keys = new SortedSet<Key>(keys.ToHashSet());
 
-        public virtual bool Equals(KeyboardGestureDescriptor other) => _comparer.Equals(_keys, other._keys);
+        public virtual bool Equals(KeyboardGestureDescriptor other) => _comparer.Equals(_keys, other?._keys);
         public bool Equals(IInputGestureDescriptor other) => other is KeyboardGestureDescriptor d && Equals(d);
         public override int GetHashCode() => _comparer.GetHashCode(_keys);
         public override string ToString() => $"[Keyboard Keys: {string.Join(", ", Keys)}]";
