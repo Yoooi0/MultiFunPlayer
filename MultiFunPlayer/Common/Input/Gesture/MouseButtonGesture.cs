@@ -3,14 +3,8 @@ using System.Windows.Input;
 
 namespace MultiFunPlayer.Common.Input.Gesture
 {
-    public class MouseButtonGestureDescriptor : IInputGestureDescriptor
+    public record MouseButtonGestureDescriptor(MouseButton Button) : IInputGestureDescriptor
     {
-        public MouseButton Button { get; }
-
-        public MouseButtonGestureDescriptor(MouseButton button) => Button = button;
-
-        public bool Equals(IInputGestureDescriptor other) => other is MouseButtonGestureDescriptor d && d.Button == Button;
-        public override int GetHashCode() => HashCode.Combine(Button);
         public override string ToString() => $"[Mouse Button: {Button}]";
     }
 

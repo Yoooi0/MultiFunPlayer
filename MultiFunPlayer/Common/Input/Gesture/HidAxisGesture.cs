@@ -2,21 +2,8 @@
 
 namespace MultiFunPlayer.Common.Input.Gesture
 {
-    public class HidAxisGestureDescriptor : IInputGestureDescriptor
+    public record HidAxisGestureDescriptor(int VendorId, int ProductId, int Axis) : IInputGestureDescriptor
     {
-        public int VendorId { get; }
-        public int ProductId { get; }
-        public int Axis { get; }
-
-        public HidAxisGestureDescriptor(int vendorId, int productId, int axis)
-        {
-            VendorId = vendorId;
-            ProductId = productId;
-            Axis = axis;
-        }
-
-        public bool Equals(IInputGestureDescriptor other) => other is HidAxisGestureDescriptor d && Axis == d.Axis && VendorId == d.VendorId && ProductId == d.ProductId;
-        public override int GetHashCode() => HashCode.Combine(VendorId, ProductId, Axis);
         public override string ToString() => $"[Hid Axis: {VendorId}/{ProductId}/{Axis}]";
     }
 

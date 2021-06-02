@@ -10,14 +10,8 @@ namespace MultiFunPlayer.Common.Input.Gesture
         MouseHorizontalWheel
     }
 
-    public class MouseAxisGestureDescriptor : IInputGestureDescriptor
+    public record MouseAxisGestureDescriptor(MouseAxis Axis) : IInputGestureDescriptor
     {
-        public MouseAxis Axis { get; }
-
-        public MouseAxisGestureDescriptor(MouseAxis axis) => Axis = axis;
-
-        public bool Equals(IInputGestureDescriptor other) => other is MouseAxisGestureDescriptor d && Axis == d.Axis;
-        public override int GetHashCode() => HashCode.Combine(Axis);
         public override string ToString() => $"[Mouse Axis: {Axis}]";
     }
 

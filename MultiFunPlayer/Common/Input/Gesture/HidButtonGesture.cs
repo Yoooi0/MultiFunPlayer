@@ -2,21 +2,8 @@
 
 namespace MultiFunPlayer.Common.Input.Gesture
 {
-    public class HidButtonGestureDescriptor : IInputGestureDescriptor
+    public record HidButtonGestureDescriptor(int VendorId, int ProductId, int Button) : IInputGestureDescriptor
     {
-        public int VendorId { get; }
-        public int ProductId { get; }
-        public int Button { get; }
-
-        public HidButtonGestureDescriptor(int vendorId, int productId, int button)
-        {
-            VendorId = vendorId;
-            ProductId = productId;
-            Button = button;
-        }
-
-        public bool Equals(IInputGestureDescriptor other) => other is HidButtonGestureDescriptor d && d.Button == Button;
-        public override int GetHashCode() => HashCode.Combine(Button);
         public override string ToString() => $"[Hid Button: {VendorId}/{ProductId}/{Button}]";
     }
 

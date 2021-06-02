@@ -4,7 +4,7 @@ using System.Windows.Input;
 
 namespace MultiFunPlayer.Common.Input.Gesture
 {
-    public class KeyboardGestureDescriptor : IInputGestureDescriptor
+    public record KeyboardGestureDescriptor : IInputGestureDescriptor
     {
         private static readonly IEqualityComparer<SortedSet<Key>> _comparer = SortedSet<Key>.CreateSetComparer();
 
@@ -13,7 +13,8 @@ namespace MultiFunPlayer.Common.Input.Gesture
 
         public KeyboardGestureDescriptor(IEnumerable<Key> keys) => _keys = new SortedSet<Key>(keys.ToHashSet());
 
-        public bool Equals(IInputGestureDescriptor other) => other is KeyboardGestureDescriptor d && _comparer.Equals(_keys, d._keys);
+        public virtual bool Equals(KeyboardGestureDescriptor other) => _comparer.Equals(_keys, other._keys);
+        public bool Equals(IInputGestureDescriptor other) => other is KeyboardGestureDescriptor d && Equals(d);
         public override int GetHashCode() => _comparer.GetHashCode(_keys);
         public override string ToString() => $"[Keyboard Keys: {string.Join(", ", Keys)}]";
     }
