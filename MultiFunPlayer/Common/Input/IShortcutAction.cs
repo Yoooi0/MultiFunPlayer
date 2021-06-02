@@ -1,5 +1,6 @@
 ﻿using MultiFunPlayer.Common.Input.Gesture;
 using System;
+using System.Configuration;
 
 namespace MultiFunPlayer.Common.Input
 {
@@ -20,7 +21,9 @@ namespace MultiFunPlayer.Common.Input
             Descriptor = new ShortcutActionDescriptor(name, ShortcutActionType.Simple);
             _action = action;
         }
+
         public void Invoke(IInputGesture gesture) => _action?.Invoke();
+        public override string ToString() => Descriptor.ToString();
     }
 
     public class AxisShortcutAction : IShortcutAction
@@ -37,5 +40,6 @@ namespace MultiFunPlayer.Common.Input
 
         public void Invoke(IInputGesture gesture) => Invoke(gesture as IAxisInputGesture);
         public void Invoke(IAxisInputGesture gesture) => _action?.Invoke(gesture.Value, gesture.Delta);
+        public override string ToString() => Descriptor.ToString();
     }
 }
