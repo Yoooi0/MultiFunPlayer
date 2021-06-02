@@ -8,6 +8,7 @@ using Stylet;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 using System.Windows;
 
@@ -17,18 +18,17 @@ namespace MultiFunPlayer.ViewModels
     {
         private readonly IShortcutManager _shortcutManager;
         private readonly BindableCollection<ShortcutModel> _shortcuts;
-        private TaskCompletionSource<IInputGesture> _gestureSource;
+        private readonly Channel<IInputGesture> _gestureChannel;
 
         public string ActionsFilter { get; set; }
         public IReadOnlyCollection<ShortcutModel> Shortcuts { get; private set; }
+        public bool IsSelectingGesture { get; private set; }
 
         public bool IsKeyboardKeysGestureEnabled { get; set; } = true;
         public bool IsMouseAxisGestureEnabled { get; set; } = false;
         public bool IsMouseButtonGestureEnabled { get; set; } = false;
         public bool IsHidAxisGestureEnabled { get; set; } = true;
         public bool IsHidButtonGestureEnabled { get; set; } = true;
-
-        public bool IsSelectingGesture => _gestureSource != null;
 
         public ShortcutViewModel(IEventAggregator eventAggregator, IShortcutManager shortcutManager)
         {
@@ -40,6 +40,13 @@ namespace MultiFunPlayer.ViewModels
             _shortcuts = new BindableCollection<ShortcutModel>();
             foreach (var actionDescriptor in _shortcutManager.Actions)
                 _shortcuts.Add(new ShortcutModel(actionDescriptor));
+
+            _gestureChannel = Channel.CreateBounded<IInputGesture>(new BoundedChannelOptions(1)
+            {
+                FullMode = BoundedChannelFullMode.DropOldest,
+                SingleReader = true,
+                SingleWriter = true
+            });
 
             UpdateShortcutsList();
             PropertyChanged += (s, e) =>
@@ -65,9 +72,9 @@ namespace MultiFunPlayer.ViewModels
             }
         }
 
-        private void OnGesture(object sender, IInputGesture gesture)
+        private async void OnGesture(object sender, IInputGesture gesture)
         {
-            if (_gestureSource == null)
+            if (!IsSelectingGesture)
                 return;
 
             switch (gesture)
@@ -81,12 +88,12 @@ namespace MultiFunPlayer.ViewModels
                     return;
             }
 
-            _gestureSource?.SetResult(gesture);
+            await _gestureChannel.Writer.WriteAsync(gesture);
         }
 
         private bool ValidateGesture(IInputGesture gesture, ShortcutModel model)
         {
-            if (_shortcuts.Any(m => m != model && gesture.Equals(m.GestureDescriptor)))
+            if (_shortcuts.Any(m => m != model && gesture.Descriptor.Equals(m.GestureDescriptor)))
                 return false;
 
             switch (gesture)
@@ -116,21 +123,22 @@ namespace MultiFunPlayer.ViewModels
         {
             var tryCount = 0;
             var gesture = default(IInputGesture);
+
+            while (_gestureChannel.Reader.TryRead(out var _)) ;
+
+            IsSelectingGesture = true;
             do
             {
-                _gestureSource = new TaskCompletionSource<IInputGesture>();
-                NotifyOfPropertyChange(nameof(IsSelectingGesture));
-
-                gesture = await _gestureSource.Task.ConfigureAwait(true);
+                await _gestureChannel.Reader.WaitToReadAsync().ConfigureAwait(true);
+                gesture = await _gestureChannel.Reader.ReadAsync().ConfigureAwait(true);
             } while (!ValidateGesture(gesture, model) && tryCount++ < 5);
 
+            IsSelectingGesture = false;
             if (tryCount >= 5)
                 gesture = null;
 
-            _gestureSource = null;
-            NotifyOfPropertyChange(nameof(IsSelectingGesture));
 
-            if(model.GestureDescriptor != null)
+            if (model.GestureDescriptor != null)
                 _shortcutManager.RemoveShortcut(model.GestureDescriptor);
 
             model.GestureDescriptor = gesture?.Descriptor;
