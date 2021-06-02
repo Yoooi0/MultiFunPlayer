@@ -24,7 +24,7 @@ namespace MultiFunPlayer.Common.Input
 
     public class ShortcutManager : IShortcutManager
     {
-        protected Logger Logger = LogManager.GetCurrentClassLogger();
+        protected static readonly  Logger Logger = LogManager.GetCurrentClassLogger();
 
         private readonly Dictionary<ShortcutActionDescriptor, IShortcutAction> _actions;
         private readonly ObservableConcurrentDictionary<IInputGestureDescriptor, ShortcutActionDescriptor> _shortcuts;

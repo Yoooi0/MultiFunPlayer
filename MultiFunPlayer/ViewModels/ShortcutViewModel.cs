@@ -4,6 +4,7 @@ using MultiFunPlayer.Common.Input.Gesture;
 using MultiFunPlayer.Common.Messages;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using NLog;
 using Stylet;
 using System;
 using System.Collections.Generic;
@@ -16,6 +17,8 @@ namespace MultiFunPlayer.ViewModels
 {
     public class ShortcutViewModel : Screen, IHandle<AppSettingsMessage>, IDisposable
     {
+        protected static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+
         private readonly IShortcutManager _shortcutManager;
         private readonly BindableCollection<ShortcutModel> _shortcuts;
         private readonly Channel<IInputGesture> _gestureChannel;
@@ -197,8 +200,10 @@ namespace MultiFunPlayer.ViewModels
                         _shortcutManager.RegisterShortcut(loadedShortcut.GestureDescriptor, loadedShortcut.ActionDescriptor);
 
                         var shortcut = _shortcuts.FirstOrDefault(s => s.ActionDescriptor == loadedShortcut.ActionDescriptor);
-                        if(shortcut != null)
+                        if (shortcut != null)
                             shortcut.GestureDescriptor = loadedShortcut.GestureDescriptor;
+                        else
+                            Logger.Warn($"Action \"{loadedShortcut.ActionDescriptor}\" not found!");
                     }
 
                     UpdateShortcutsList();
