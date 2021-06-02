@@ -1,11 +1,11 @@
-﻿using Linearstar.Windows.RawInput;
-using MultiFunPlayer.Common.Input.Gesture;
+﻿using MultiFunPlayer.Common.Input.Gesture;
+using System;
 using System.Collections.Generic;
 
 namespace MultiFunPlayer.Common.Input.Processor
 {
-    public interface IInputProcessor
+    public interface IInputProcessor : IDisposable
     {
-        IEnumerable<IInputGesture> GetGestures(RawInputData data);
+        event EventHandler<IInputGesture> OnGesture;
     }
 }

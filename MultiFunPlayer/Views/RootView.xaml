@@ -21,7 +21,6 @@
         Title="MultiFunPlayer" 
         SizeToContent="Height"
         Width="600"
-        Loaded="{s:Action OnLoaded}"
         Closing="{s:Action OnClosing}"
         MouseDown="{s:Action OnMouseDown}">
     <materialExtensions:MaterialWindow.TitleTemplate>

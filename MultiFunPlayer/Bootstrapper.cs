@@ -15,6 +15,8 @@ using Stylet;
 using StyletIoC;
 using System;
 using System.Diagnostics;
+using System.Windows;
+using System.Windows.Interop;
 
 namespace MultiFunPlayer
 {
@@ -42,6 +44,15 @@ namespace MultiFunPlayer
                 if(e.IsTerminating)
                     LogManager.Shutdown();
             };
+        }
+
+        protected override void OnLaunch()
+        {
+            base.OnLaunch();
+
+            var source = PresentationSource.FromVisual(RootViewModel.View) as HwndSource;
+            if (GetInstance(typeof(RawInputProcessor)) is RawInputProcessor rawInput)
+                rawInput.RegisterWindow(source);
         }
 
         private void SetupJson()

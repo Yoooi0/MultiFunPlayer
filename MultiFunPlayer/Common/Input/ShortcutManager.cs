@@ -16,7 +16,6 @@ namespace MultiFunPlayer.Common.Input
         IReadOnlyCollection<ShortcutActionDescriptor> Actions { get; }
         IReadOnlyDictionary<IInputGestureDescriptor, ShortcutActionDescriptor> Shortcuts { get; }
 
-        void RegisterWindow(HwndSource source);
         void RegisterAction(IShortcutAction action);
         void RegisterShortcut(IInputGestureDescriptor descriptor, ShortcutActionDescriptor actionDescriptor);
         void RemoveShortcut(IInputGestureDescriptor descriptor);
@@ -31,8 +30,6 @@ namespace MultiFunPlayer.Common.Input
 
         private readonly IReadOnlyList<IInputProcessor> _processors;
 
-        private HwndSource _source;
-
         public event EventHandler<IInputGesture> OnGesture;
 
         public IReadOnlyCollection<ShortcutActionDescriptor> Actions => _actions.Keys;
@@ -41,25 +38,15 @@ namespace MultiFunPlayer.Common.Input
         public ShortcutManager(IEnumerable<IInputProcessor> processors)
         {
             _processors = processors.ToList();
+            foreach (var processor in _processors)
+                processor.OnGesture += HandleGesture;
 
             _actions = new Dictionary<ShortcutActionDescriptor, IShortcutAction>();
             _shortcuts = new ObservableConcurrentDictionary<IInputGestureDescriptor, ShortcutActionDescriptor>();
         }
 
-        public void RegisterWindow(HwndSource source)
-        {
-            if (_source != null)
-                throw new InvalidOperationException("Cannot register more than one window");
-
-            _source = source;
-
-            source.AddHook(MessageSink);
-
-            RawInputDevice.RegisterDevice(HidUsageAndPage.Keyboard, RawInputDeviceFlags.ExInputSink, source.Handle);
-            RawInputDevice.RegisterDevice(HidUsageAndPage.Mouse, RawInputDeviceFlags.ExInputSink, source.Handle);
-            RawInputDevice.RegisterDevice(HidUsageAndPage.GamePad, RawInputDeviceFlags.ExInputSink, source.Handle);
-            RawInputDevice.RegisterDevice(HidUsageAndPage.Joystick, RawInputDeviceFlags.ExInputSink, source.Handle);
-        }
+        private void HandleGesture(object sender, IInputGesture e)
+            => OnGesture?.Invoke(this, e);
 
         public void RegisterAction(IShortcutAction action)
         {
@@ -88,41 +75,10 @@ namespace MultiFunPlayer.Common.Input
             _shortcuts.Remove(gestureDescriptor, out var _);
         }
 
-        private IntPtr MessageSink(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
-        {
-            const int WM_INPUT = 0x00FF;
-
-            if (msg == WM_INPUT)
-            {
-                var data = RawInputData.FromHandle(lParam);
-                Logger.Trace(data);
-
-                foreach (var gesture in _processors.SelectMany(p => p.GetGestures(data)))
-                {
-                    OnGesture?.Invoke(this, gesture);
-                    if (!Shortcuts.TryGetValue(gesture.Descriptor, out var actionDescriptor))
-                        continue;
-
-                    if (!_actions.TryGetValue(actionDescriptor, out var action))
-                        continue;
-
-                    action.Invoke(gesture);
-                }
-            }
-
-            return IntPtr.Zero;
-        }
-
         protected virtual void Dispose(bool disposing)
         {
-            _source?.RemoveHook(MessageSink);
-
-            RawInputDevice.UnregisterDevice(HidUsageAndPage.Keyboard);
-            RawInputDevice.UnregisterDevice(HidUsageAndPage.Mouse);
-            RawInputDevice.UnregisterDevice(HidUsageAndPage.GamePad);
-            RawInputDevice.UnregisterDevice(HidUsageAndPage.Joystick);
-
-            _source = null;
+            foreach (var processor in _processors)
+                processor.OnGesture -= HandleGesture;
         }
 
         public void Dispose()

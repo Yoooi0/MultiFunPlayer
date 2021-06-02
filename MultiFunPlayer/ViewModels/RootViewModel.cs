@@ -19,7 +19,6 @@ namespace MultiFunPlayer.ViewModels
         protected Logger Logger = LogManager.GetCurrentClassLogger();
 
         private readonly IViewManager _viewManager;
-        private readonly IShortcutManager _shortcutManager;
         private readonly IEventAggregator _eventAggregator;
 
         [Inject] public ScriptViewModel Script { get; set; }
@@ -27,17 +26,10 @@ namespace MultiFunPlayer.ViewModels
         [Inject] public OutputTargetViewModel OutputTarget { get; set; }
         [Inject] public ShortcutViewModel Shortcut { get; set; }
 
-        public RootViewModel(IViewManager viewManager, IShortcutManager shortcutManager, IEventAggregator eventAggregator)
+        public RootViewModel(IViewManager viewManager, IEventAggregator eventAggregator)
         {
             _viewManager = viewManager;
-            _shortcutManager = shortcutManager;
             _eventAggregator = eventAggregator;
-        }
-
-        protected override void OnViewLoaded()
-        {
-            var source = PresentationSource.FromVisual(View) as HwndSource;
-            _shortcutManager.RegisterWindow(source);
         }
 
         protected override void OnActivate()
