@@ -137,7 +137,6 @@ namespace MultiFunPlayer.ViewModels
             if (tryCount >= 5)
                 gesture = null;
 
-
             if (model.GestureDescriptor != null)
                 _shortcutManager.RemoveShortcut(model.GestureDescriptor);
 

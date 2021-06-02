@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace MultiFunPlayer.Common.Input.Gesture
+﻿namespace MultiFunPlayer.Common.Input.Gesture
 {
     public record HidAxisGestureDescriptor(int VendorId, int ProductId, int Axis) : IInputGestureDescriptor
     {
