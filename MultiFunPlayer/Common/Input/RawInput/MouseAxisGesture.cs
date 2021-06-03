@@ -1,4 +1,4 @@
-﻿namespace MultiFunPlayer.Common.Input.Gesture
+﻿namespace MultiFunPlayer.Common.Input.RawInput
 {
     public enum MouseAxis
     {

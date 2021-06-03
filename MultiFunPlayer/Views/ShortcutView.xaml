@@ -62,8 +62,8 @@
                             <CheckBox IsChecked="{Binding IsKeyboardKeysGestureEnabled}" Content="Keyboard keys"/>
                             <CheckBox IsChecked="{Binding IsMouseAxisGestureEnabled}" Content="Mouse axis"/>
                             <CheckBox IsChecked="{Binding IsMouseButtonGestureEnabled}" Content="Mouse button"/>
-                            <CheckBox IsChecked="{Binding IsHidAxisGestureEnabled}" Content="Hid axis"/>
-                            <CheckBox IsChecked="{Binding IsHidButtonGestureEnabled}" Content="Hid button"/>
+                            <CheckBox IsChecked="{Binding IsGamepadAxisGestureEnabled}" Content="Gamepad axis"/>
+                            <CheckBox IsChecked="{Binding IsGamepadButtonGestureEnabled}" Content="Gamepad button"/>
                         </StackPanel>
                     </StackPanel>
                 </Grid>

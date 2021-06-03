@@ -1,7 +1,6 @@
-﻿using MultiFunPlayer.Common.Input.Gesture;
-using System;
+﻿using System;
 
-namespace MultiFunPlayer.Common.Input.Processor
+namespace MultiFunPlayer.Common.Input
 {
     public interface IInputProcessor : IDisposable
     {

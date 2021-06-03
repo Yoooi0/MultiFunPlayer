@@ -1,10 +1,9 @@
-﻿using MultiFunPlayer.Common.Input.Gesture;
-using NLog;
+﻿using NLog;
 using System;
 using System.Threading;
 using Vortice.XInput;
 
-namespace MultiFunPlayer.Common.Input.Processor
+namespace MultiFunPlayer.Common.Input.XInput
 {
     public class XInputProcessor : IInputProcessor
     {
@@ -33,15 +32,16 @@ namespace MultiFunPlayer.Common.Input.Processor
         {
             const int sleepMs = (int)(1000 / 30f);
 
-            XInput.SetReporting(true);
+            Vortice.XInput.XInput.SetReporting(true);
             while (!token.IsCancellationRequested)
             {
-                for (var i = 0; i < _states.Length; i++) {
-                    if (!XInput.GetState(i, out var state))
+                for (var i = 0; i < _states.Length; i++)
+                {
+                    if (!Vortice.XInput.XInput.GetState(i, out var state))
                         continue;
 
                     Logger.Trace("{0}, PacketNumber: {1}", state.Gamepad, state.PacketNumber);
-                    if (XInput.GetKeystroke(i, out var keystroke))
+                    if (Vortice.XInput.XInput.GetKeystroke(i, out var keystroke))
                         ParseKeystrokeGestures(i, keystroke);
 
                     var lastState = _states[i];
@@ -61,7 +61,7 @@ namespace MultiFunPlayer.Common.Input.Processor
             if (keystroke.Flags == KeyStrokeFlags.KeyDown)
                 return;
 
-            foreach(var button in EnumUtils.GetValues<GamepadVirtualKey>())
+            foreach (var button in EnumUtils.GetValues<GamepadVirtualKey>())
             {
                 if ((keystroke.VirtualKey & button) != 0)
                     HandleGesture(GamepadButtonGesture.Create(userIndex, button));

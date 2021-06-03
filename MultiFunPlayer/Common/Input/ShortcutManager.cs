@@ -1,5 +1,3 @@
-using MultiFunPlayer.Common.Input.Gesture;
-using MultiFunPlayer.Common.Input.Processor;
 using NLog;
 using System;
 using System.Collections.Generic;

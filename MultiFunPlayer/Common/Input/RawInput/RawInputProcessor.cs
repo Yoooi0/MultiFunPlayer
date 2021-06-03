@@ -1,6 +1,5 @@
 ﻿using Linearstar.Windows.RawInput;
 using Linearstar.Windows.RawInput.Native;
-using MultiFunPlayer.Common.Input.Gesture;
 using NLog;
 using System;
 using System.Collections.Generic;
@@ -8,7 +7,7 @@ using System.Linq;
 using System.Windows.Input;
 using System.Windows.Interop;
 
-namespace MultiFunPlayer.Common.Input.Processor
+namespace MultiFunPlayer.Common.Input.RawInput
 {
     public class RawInputProcessor : IInputProcessor
     {
@@ -51,7 +50,7 @@ namespace MultiFunPlayer.Common.Input.Processor
                 var data = RawInputData.FromHandle(lParam);
                 Logger.Trace(data);
 
-                switch(data)
+                switch (data)
                 {
                     case RawInputKeyboardData keyboard:
                         ParseKeyboardGestures(keyboard);
@@ -71,9 +70,7 @@ namespace MultiFunPlayer.Common.Input.Processor
             var pressed = (data.Keyboard.Flags & RawKeyboardFlags.Up) == 0;
 
             if (pressed)
-            {
                 _keyboardState[key] = true;
-            }
             else
             {
                 var pressedKeys = _keyboardState.Where(x => x.Value).Select(x => x.Key).ToList();

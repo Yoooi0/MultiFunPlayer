@@ -1,5 +1,4 @@
-﻿using MultiFunPlayer.Common.Input.Gesture;
-using System;
+﻿using System;
 
 namespace MultiFunPlayer.Common.Input
 {

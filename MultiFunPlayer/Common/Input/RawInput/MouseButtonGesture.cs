@@ -1,6 +1,6 @@
 ﻿using System.Windows.Input;
 
-namespace MultiFunPlayer.Common.Input.Gesture
+namespace MultiFunPlayer.Common.Input.RawInput
 {
     public record MouseButtonGestureDescriptor(MouseButton Button) : IInputGestureDescriptor
     {

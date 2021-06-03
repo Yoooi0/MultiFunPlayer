@@ -1,6 +1,7 @@
 ﻿using MultiFunPlayer.Common;
 using MultiFunPlayer.Common.Input;
-using MultiFunPlayer.Common.Input.Gesture;
+using MultiFunPlayer.Common.Input.RawInput;
+using MultiFunPlayer.Common.Input.XInput;
 using MultiFunPlayer.Common.Messages;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -30,8 +31,8 @@ namespace MultiFunPlayer.ViewModels
         public bool IsKeyboardKeysGestureEnabled { get; set; } = true;
         public bool IsMouseAxisGestureEnabled { get; set; } = false;
         public bool IsMouseButtonGestureEnabled { get; set; } = false;
-        public bool IsHidAxisGestureEnabled { get; set; } = true;
-        public bool IsHidButtonGestureEnabled { get; set; } = true;
+        public bool IsGamepadAxisGestureEnabled { get; set; } = true;
+        public bool IsGamepadButtonGestureEnabled { get; set; } = true;
 
         public ShortcutViewModel(IEventAggregator eventAggregator, IShortcutManager shortcutManager)
         {
@@ -85,8 +86,8 @@ namespace MultiFunPlayer.ViewModels
                 case KeyboardGesture when !IsKeyboardKeysGestureEnabled:
                 case MouseAxisGesture when !IsMouseAxisGestureEnabled:
                 case MouseButtonGesture when !IsMouseButtonGestureEnabled:
-                case HidAxisGesture when !IsHidAxisGestureEnabled:
-                case HidButtonGesture when !IsHidButtonGestureEnabled:
+                case GamepadAxisGesture when !IsGamepadAxisGestureEnabled:
+                case GamepadButtonGesture when !IsGamepadButtonGestureEnabled:
                 case IAxisInputGesture axisGesture when MathF.Abs(axisGesture.Delta) < 0.01f:
                     return;
             }
@@ -115,8 +116,8 @@ namespace MultiFunPlayer.ViewModels
                 return;
 
             if (!IsKeyboardKeysGestureEnabled && !IsMouseAxisGestureEnabled
-            && !IsMouseButtonGestureEnabled && !IsHidAxisGestureEnabled
-            && !IsHidButtonGestureEnabled)
+            && !IsMouseButtonGestureEnabled && !IsGamepadAxisGestureEnabled
+            && !IsGamepadButtonGestureEnabled)
                 return;
 
             await TrySelectGestureAsync(model).ConfigureAwait(true);
@@ -166,8 +167,8 @@ namespace MultiFunPlayer.ViewModels
                     { nameof(IsKeyboardKeysGestureEnabled), JValue.FromObject(IsKeyboardKeysGestureEnabled) },
                     { nameof(IsMouseAxisGestureEnabled), JValue.FromObject(IsMouseAxisGestureEnabled) },
                     { nameof(IsMouseButtonGestureEnabled), JValue.FromObject(IsMouseButtonGestureEnabled) },
-                    { nameof(IsHidAxisGestureEnabled), JValue.FromObject(IsHidAxisGestureEnabled) },
-                    { nameof(IsHidButtonGestureEnabled), JValue.FromObject(IsHidButtonGestureEnabled) },
+                    { nameof(IsGamepadAxisGestureEnabled), JValue.FromObject(IsGamepadAxisGestureEnabled) },
+                    { nameof(IsGamepadButtonGestureEnabled), JValue.FromObject(IsGamepadButtonGestureEnabled) },
                     { "Bindings", JArray.FromObject(_shortcuts.Where(s => s.GestureDescriptor != null)) },
                 };
             }
@@ -182,10 +183,10 @@ namespace MultiFunPlayer.ViewModels
                     IsMouseAxisGestureEnabled = isMouseAxisGestureEnabled;
                 if (settings.TryGetValue<bool>(nameof(IsMouseButtonGestureEnabled), out var isMouseButtonGestureEnabled))
                     IsMouseButtonGestureEnabled = isMouseButtonGestureEnabled;
-                if (settings.TryGetValue<bool>(nameof(IsHidAxisGestureEnabled), out var isHidAxisGestureEnabled))
-                    IsHidAxisGestureEnabled = isHidAxisGestureEnabled;
-                if (settings.TryGetValue<bool>(nameof(IsHidButtonGestureEnabled), out var isHidButtonGestureEnabled))
-                    IsHidButtonGestureEnabled = isHidButtonGestureEnabled;
+                if (settings.TryGetValue<bool>(nameof(IsGamepadAxisGestureEnabled), out var isHidAxisGestureEnabled))
+                    IsGamepadAxisGestureEnabled = isHidAxisGestureEnabled;
+                if (settings.TryGetValue<bool>(nameof(IsGamepadButtonGestureEnabled), out var isHidButtonGestureEnabled))
+                    IsGamepadButtonGestureEnabled = isHidButtonGestureEnabled;
 
                 if (settings.TryGetValue<List<ShortcutModel>>("Bindings", out var loadedShortcuts))
                 {

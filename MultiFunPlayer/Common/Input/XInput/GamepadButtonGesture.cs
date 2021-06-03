@@ -1,6 +1,6 @@
 ﻿using Vortice.XInput;
 
-namespace MultiFunPlayer.Common.Input.Gesture
+namespace MultiFunPlayer.Common.Input.XInput
 {
     public record GamepadButtonGestureDescriptor(int UserIndex, GamepadVirtualKey Button) : IInputGestureDescriptor
     {

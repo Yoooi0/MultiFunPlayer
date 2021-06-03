@@ -1,10 +1,10 @@
 ﻿using System;
 
-namespace MultiFunPlayer.Common.Input.Gesture
+namespace MultiFunPlayer.Common.Input
 {
     public interface IInputGestureDescriptor : IEquatable<IInputGestureDescriptor>
     {
-        bool IEquatable<IInputGestureDescriptor>.Equals(IInputGestureDescriptor other) => object.Equals(this, other);
+        bool IEquatable<IInputGestureDescriptor>.Equals(IInputGestureDescriptor other) => Equals(this, other);
     }
 
     public interface IInputGesture : IEquatable<IInputGesture>

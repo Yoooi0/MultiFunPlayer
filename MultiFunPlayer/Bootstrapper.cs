@@ -1,7 +1,7 @@
 ﻿using MultiFunPlayer.Common;
 using MultiFunPlayer.Common.Converters;
 using MultiFunPlayer.Common.Input;
-using MultiFunPlayer.Common.Input.Processor;
+using MultiFunPlayer.Common.Input.RawInput;
 using MultiFunPlayer.OutputTarget;
 using MultiFunPlayer.VideoSource;
 using MultiFunPlayer.ViewModels;
