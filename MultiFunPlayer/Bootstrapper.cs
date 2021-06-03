@@ -15,6 +15,7 @@ using Stylet;
 using StyletIoC;
 using System;
 using System.Diagnostics;
+using System.Linq;
 using System.Windows;
 using System.Windows.Interop;
 
@@ -29,8 +30,9 @@ namespace MultiFunPlayer
             builder.Bind<IOutputTarget>().ToAllImplementations();
 
             builder.Bind<ShortcutManager>().And<IShortcutManager>().To<ShortcutManager>().InSingletonScope();
-            builder.Bind<IInputProcessor>().ToAllImplementations();
+            builder.Bind<IInputProcessor>().ToAllImplementations().InSingletonScope();
         }
+
         protected override void OnStart()
         {
             SetupLoging();
@@ -50,9 +52,9 @@ namespace MultiFunPlayer
         {
             base.OnLaunch();
 
-            var source = PresentationSource.FromVisual(RootViewModel.View) as HwndSource;
-            if (GetInstance(typeof(RawInputProcessor)) is RawInputProcessor rawInput)
-                rawInput.RegisterWindow(source);
+            var source = PresentationSource.FromVisual(GetActiveWindow()) as HwndSource;
+            var rawInput = Container.GetAll<IInputProcessor>().OfType<RawInputProcessor>().FirstOrDefault();
+            rawInput?.RegisterWindow(source);
         }
 
         private void SetupJson()
