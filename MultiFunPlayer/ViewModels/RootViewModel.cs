@@ -1,7 +1,6 @@
 using MaterialDesignThemes.Wpf;
 using MultiFunPlayer.Common;
 using MultiFunPlayer.Common.Controls;
-using MultiFunPlayer.Common.Input;
 using MultiFunPlayer.Common.Messages;
 using Newtonsoft.Json.Linq;
 using NLog;
@@ -10,7 +9,6 @@ using StyletIoC;
 using System;
 using System.Windows;
 using System.Windows.Input;
-using System.Windows.Interop;
 
 namespace MultiFunPlayer.ViewModels
 {
