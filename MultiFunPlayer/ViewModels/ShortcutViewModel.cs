@@ -16,13 +16,15 @@ using System.Windows;
 
 namespace MultiFunPlayer.ViewModels
 {
-    public class ShortcutViewModel : Screen, IHandle<AppSettingsMessage>, IDisposable
+    public class ShortcutViewModel : Screen, IShortcutManager, IHandle<AppSettingsMessage>, IDisposable
     {
         protected static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-        private readonly IShortcutManager _shortcutManager;
+        private readonly Dictionary<ShortcutActionDescriptor, IShortcutAction> _actions;
+        private readonly ObservableConcurrentDictionary<IInputGestureDescriptor, ShortcutActionDescriptor> _bindings;
         private readonly BindableCollection<ShortcutModel> _shortcuts;
         private readonly Channel<IInputGesture> _gestureChannel;
+        private readonly List<IInputProcessor> _processors;
 
         public string ActionsFilter { get; set; }
         public IReadOnlyCollection<ShortcutModel> Shortcuts { get; private set; }
@@ -34,16 +36,13 @@ namespace MultiFunPlayer.ViewModels
         public bool IsGamepadAxisGestureEnabled { get; set; } = true;
         public bool IsGamepadButtonGestureEnabled { get; set; } = true;
 
-        public ShortcutViewModel(IEventAggregator eventAggregator, IShortcutManager shortcutManager)
+        public ShortcutViewModel(IEnumerable<IInputProcessor> processors, IEventAggregator eventAggregator)
         {
             eventAggregator.Subscribe(this);
 
-            _shortcutManager = shortcutManager;
-            _shortcutManager.OnGesture += OnGesture;
-
+            _actions = new Dictionary<ShortcutActionDescriptor, IShortcutAction>();
+            _bindings = new ObservableConcurrentDictionary<IInputGestureDescriptor, ShortcutActionDescriptor>();
             _shortcuts = new BindableCollection<ShortcutModel>();
-            foreach (var actionDescriptor in _shortcutManager.Actions)
-                _shortcuts.Add(new ShortcutModel(actionDescriptor));
 
             _gestureChannel = Channel.CreateBounded<IInputGesture>(new BoundedChannelOptions(1)
             {
@@ -51,6 +50,10 @@ namespace MultiFunPlayer.ViewModels
                 SingleReader = true,
                 SingleWriter = true
             });
+
+            _processors = processors.ToList();
+            foreach (var processor in _processors)
+                processor.OnGesture += HandleGesture;
 
             UpdateShortcutsList();
             PropertyChanged += (s, e) =>
@@ -76,23 +79,55 @@ namespace MultiFunPlayer.ViewModels
             }
         }
 
-        private async void OnGesture(object sender, IInputGesture gesture)
+        public void RegisterAction(IShortcutAction action)
         {
-            if (!IsSelectingGesture)
+            if (_actions.ContainsKey(action.Descriptor))
+                throw new NotSupportedException($"Duplicate action found \"{action.Descriptor}\"");
+
+            Logger.Trace($"Registered \"{action}\" action");
+            _actions[action.Descriptor] = action;
+            _shortcuts.Add(new ShortcutModel(action.Descriptor));
+        }
+
+        private void RegisterShortcut(IInputGestureDescriptor gestureDescriptor, ShortcutActionDescriptor actionDescriptor)
+        {
+            if (gestureDescriptor == null)
                 return;
 
-            switch (gesture)
+            Logger.Debug($"Registered \"{gestureDescriptor}\" to \"{actionDescriptor}\"");
+            _bindings[gestureDescriptor] = actionDescriptor;
+        }
+
+        private void RemoveShortcut(IInputGestureDescriptor gestureDescriptor)
+        {
+            if (gestureDescriptor == null)
+                return;
+
+            Logger.Debug($"Removed \"{gestureDescriptor}\" action");
+            _bindings.Remove(gestureDescriptor, out var _);
+        }
+
+        private async void HandleGesture(object sender, IInputGesture gesture)
+        {
+            if (IsSelectingGesture)
             {
-                case KeyboardGesture when !IsKeyboardKeysGestureEnabled:
-                case MouseAxisGesture when !IsMouseAxisGestureEnabled:
-                case MouseButtonGesture when !IsMouseButtonGestureEnabled:
-                case GamepadAxisGesture when !IsGamepadAxisGestureEnabled:
-                case GamepadButtonGesture when !IsGamepadButtonGestureEnabled:
-                case IAxisInputGesture axisGesture when MathF.Abs(axisGesture.Delta) < 0.01f:
-                    return;
+                switch (gesture)
+                {
+                    case KeyboardGesture when !IsKeyboardKeysGestureEnabled:
+                    case MouseAxisGesture when !IsMouseAxisGestureEnabled:
+                    case MouseButtonGesture when !IsMouseButtonGestureEnabled:
+                    case GamepadAxisGesture when !IsGamepadAxisGestureEnabled:
+                    case GamepadButtonGesture when !IsGamepadButtonGestureEnabled:
+                    case IAxisInputGesture axisGesture when MathF.Abs(axisGesture.Delta) < 0.01f:
+                        return;
+                }
+
+                await _gestureChannel.Writer.WriteAsync(gesture);
             }
 
-            await _gestureChannel.Writer.WriteAsync(gesture);
+            if (_bindings.TryGetValue(gesture.Descriptor, out var actionDescriptor)
+             && _actions.TryGetValue(actionDescriptor, out var action))
+                action.Invoke(gesture);
         }
 
         private bool ValidateGesture(IInputGesture gesture, ShortcutModel model)
@@ -142,11 +177,11 @@ namespace MultiFunPlayer.ViewModels
                 gesture = null;
 
             if (model.GestureDescriptor != null)
-                _shortcutManager.RemoveShortcut(model.GestureDescriptor);
+                RemoveShortcut(model.GestureDescriptor);
 
             model.GestureDescriptor = gesture?.Descriptor;
             if (gesture != null)
-                _shortcutManager.RegisterShortcut(gesture.Descriptor, model.ActionDescriptor);
+                RegisterShortcut(gesture.Descriptor, model.ActionDescriptor);
         }
 
         public void ClearGesture(object sender, RoutedEventArgs e)
@@ -154,7 +189,7 @@ namespace MultiFunPlayer.ViewModels
             if (sender is not FrameworkElement element || element.DataContext is not ShortcutModel model)
                 return;
 
-            _shortcutManager.RemoveShortcut(model.GestureDescriptor);
+            RemoveShortcut(model.GestureDescriptor);
             model.GestureDescriptor = null;
         }
 
@@ -192,13 +227,13 @@ namespace MultiFunPlayer.ViewModels
                 {
                     foreach (var shortcut in _shortcuts)
                     {
-                        _shortcutManager.RemoveShortcut(shortcut.GestureDescriptor);
+                        RemoveShortcut(shortcut.GestureDescriptor);
                         shortcut.GestureDescriptor = null;
                     }
 
                     foreach (var loadedShortcut in loadedShortcuts)
                     {
-                        _shortcutManager.RegisterShortcut(loadedShortcut.GestureDescriptor, loadedShortcut.ActionDescriptor);
+                        RegisterShortcut(loadedShortcut.GestureDescriptor, loadedShortcut.ActionDescriptor);
 
                         var shortcut = _shortcuts.FirstOrDefault(s => s.ActionDescriptor == loadedShortcut.ActionDescriptor);
                         if (shortcut != null)
@@ -212,7 +247,11 @@ namespace MultiFunPlayer.ViewModels
             }
         }
 
-        protected virtual void Dispose(bool disposing) { }
+        protected virtual void Dispose(bool disposing)
+        {
+            foreach (var processor in _processors)
+                processor.OnGesture -= HandleGesture;
+        }
 
         public void Dispose()
         {
