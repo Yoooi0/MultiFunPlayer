@@ -1,4 +1,4 @@
-﻿using Linearstar.Windows.RawInput;
+using Linearstar.Windows.RawInput;
 using MultiFunPlayer.Common.Input.Gesture;
 using MultiFunPlayer.Common.Input.Processor;
 using NLog;
@@ -46,7 +46,13 @@ namespace MultiFunPlayer.Common.Input
         }
 
         private void HandleGesture(object sender, IInputGesture e)
-            => OnGesture?.Invoke(this, e);
+        {
+            OnGesture?.Invoke(this, e);
+
+            if (_shortcuts.TryGetValue(e.Descriptor, out var actionDescriptor)
+             && _actions.TryGetValue(actionDescriptor, out var action))
+                action.Invoke(e);
+        }
 
         public void RegisterAction(IShortcutAction action)
         {
