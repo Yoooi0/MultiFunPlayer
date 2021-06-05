@@ -2,6 +2,7 @@
 using Microsoft.WindowsAPICodePack.Dialogs;
 using MultiFunPlayer.Common;
 using MultiFunPlayer.Common.Controls;
+using MultiFunPlayer.Common.Input;
 using MultiFunPlayer.Common.Messages;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -31,7 +32,8 @@ namespace MultiFunPlayer.VideoSource.ViewModels
         public FileInfo Executable { get; set; } = null;
         public string Arguments { get; set; } = "--keep-open=always --pause";
 
-        public MpvVideoSourceViewModel(IEventAggregator eventAggregator) : base(eventAggregator)
+        public MpvVideoSourceViewModel(IShortcutManager shortcutManager, IEventAggregator eventAggregator)
+            : base(shortcutManager, eventAggregator)
         {
             _eventAggregator = eventAggregator;
         }
@@ -56,7 +58,7 @@ namespace MultiFunPlayer.VideoSource.ViewModels
                     var executable = Executable ?? new FileInfo(Path.Join(Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName), "mpv.exe"));
                     if (!executable.Exists)
                     {
-                        throw new Exception($"Could not find mpv executable! Please set path to mpv.exe or download latest release from settings.");
+                        throw new Exception("Could not find mpv executable! Please set path to mpv.exe or download latest release from settings.");
                     }
                     else
                     {
@@ -127,6 +129,7 @@ namespace MultiFunPlayer.VideoSource.ViewModels
                                                 _eventAggregator.Publish(new VideoSpeedMessage(speed));
                                             break;
                                     }
+
                                     break;
                             }
                         }

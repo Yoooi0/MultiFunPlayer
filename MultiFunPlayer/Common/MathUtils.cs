@@ -198,13 +198,17 @@ namespace MultiFunPlayer.Common
                 int i1, j1, i2, j2;
                 if ((i & 1) == 0)
                 {
-                    if ((i & 2) == 0) { i1 = -1; j1 = 0; } else { i1 = 1; j1 = 0; }
-                    if ((i & 4) == 0) { i2 = 0; j2 = -1; } else { i2 = 0; j2 = 1; }
+                    j1 = i2 = 0;
+
+                    i1 = (i & 2) == 0 ? -1 : 1;
+                    j2 = (i & 4) == 0 ? -1 : 1;
                 }
                 else
                 {
-                    if ((i & 2) != 0) { i1 = 2; j1 = 1; } else { i1 = 0; j1 = 1; }
-                    if ((i & 4) != 0) { i2 = 1; j2 = 2; } else { i2 = 1; j2 = 0; }
+                    j1 = i2 = 1;
+
+                    i1 = (i & 2) != 0 ? 2 : 0;
+                    j2 = (i & 4) != 0 ? 2 : 0;
                 }
 
                 LatticeLookup[i * 4 + 0] = new LatticePoint(0, 0);

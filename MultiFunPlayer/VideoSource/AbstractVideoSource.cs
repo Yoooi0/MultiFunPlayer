@@ -1,4 +1,5 @@
 using MultiFunPlayer.Common;
+using MultiFunPlayer.Common.Input;
 using MultiFunPlayer.Common.Messages;
 using Newtonsoft.Json.Linq;
 using PropertyChanged;
@@ -21,7 +22,7 @@ namespace MultiFunPlayer.VideoSource
         public bool ContentVisible { get; set; } = false;
         public bool AutoConnectEnabled { get; set; } = true;
 
-        protected AbstractVideoSource(IEventAggregator eventAggregator)
+        protected AbstractVideoSource(IShortcutManager shortcutManager, IEventAggregator eventAggregator)
         {
             _statusEvent = new AsyncManualResetEvent();
 
@@ -31,6 +32,8 @@ namespace MultiFunPlayer.VideoSource
                 if (string.Equals(e.PropertyName, "Status", StringComparison.OrdinalIgnoreCase))
                     _statusEvent.Reset();
             };
+
+            RegisterShortcuts(shortcutManager);
         }
 
         public abstract string Name { get; }
@@ -117,6 +120,13 @@ namespace MultiFunPlayer.VideoSource
 
                 HandleSettings(settings, message.Type);
             }
+        }
+
+        protected virtual void RegisterShortcuts(IShortcutManager shortcutManager)
+        {
+            shortcutManager.RegisterAction($"{Name}::AutoConnectEnabled::Value::True", () => AutoConnectEnabled = true);
+            shortcutManager.RegisterAction($"{Name}::AutoConnectEnabled::Value::False", () => AutoConnectEnabled = false);
+            shortcutManager.RegisterAction($"{Name}::AutoConnectEnabled::Value::Toggle", () => AutoConnectEnabled = !AutoConnectEnabled);
         }
 
         protected async virtual void Dispose(bool disposing)

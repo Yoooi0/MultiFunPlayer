@@ -1,0 +1,198 @@
+﻿<UserControl x:Class="MultiFunPlayer.Views.ShortcutView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:material="http://materialdesigninxaml.net/winfx/xaml/themes"
+             xmlns:s="https://github.com/canton7/Stylet"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:MultiFunPlayer.Views" 
+             xmlns:input="clr-namespace:MultiFunPlayer.Common.Input" 
+             xmlns:behaviours="clr-namespace:MultiFunPlayer.Common.Behaviours" 
+             xmlns:converters="clr-namespace:MultiFunPlayer.Common.Converters"
+             mc:Ignorable="d" 
+             d:DesignHeight="450" d:DesignWidth="800">
+    <UserControl.Resources>
+        <converters:MultiBooleanToBooleanAndConverter x:Key="MultiBooleanToBooleanAndConverter"/>
+        <converters:InvertedNullableToBooleanConverter x:Key="InvertedNullableToBooleanConverter"/>
+    </UserControl.Resources>
+    <DockPanel Width="500" 
+               MaxHeight="600"
+               LastChildFill="True"
+               Margin="20 20 0 20">
+        
+        <Button DockPanel.Dock="Top"
+                Style="{StaticResource MaterialDesignFlatButton}"
+                material:RippleAssist.Feedback="Black"
+                Foreground="Black"
+                Height="24"
+                Width="24"
+                Padding="0"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Top"
+                Margin="0 -15 5 0"
+                Command="{x:Static material:DialogHost.CloseDialogCommand}">
+            <material:PackIcon Kind="Close" 
+                               Height="20" 
+                               Width="20"/>
+        </Button>
+
+        <DockPanel LastChildFill="True"
+                   DockPanel.Dock="Top"
+                   Margin="0 0 15 20">
+            <material:PopupBox DockPanel.Dock="Right"
+                               StaysOpen="True"
+                               ToolTipService.InitialShowDelay="0"
+                               ToolTipService.Placement="Top"
+                               PlacementMode="BottomAndAlignRightEdges"
+                               ToolTip="Filter gestures"
+                               Height="35"
+                               Width="35">
+                <material:PopupBox.ToggleContent>
+                    <Border Width="35" Height="35">
+                        <material:PackIcon Kind="FormatListBulleted" 
+                                           Width="24" 
+                                           Height="24"
+                                           HorizontalAlignment="Center" 
+                                           VerticalAlignment="Center"/>
+                    </Border>
+                </material:PopupBox.ToggleContent>
+                <Grid Width="150" Margin="10">
+                    <StackPanel>
+                        <StackPanel>
+                            <CheckBox IsChecked="{Binding IsKeyboardKeysGestureEnabled}" Content="Keyboard keys"/>
+                            <CheckBox IsChecked="{Binding IsMouseAxisGestureEnabled}" Content="Mouse axis"/>
+                            <CheckBox IsChecked="{Binding IsMouseButtonGestureEnabled}" Content="Mouse button"/>
+                            <CheckBox IsChecked="{Binding IsGamepadAxisGestureEnabled}" Content="Gamepad axis"/>
+                            <CheckBox IsChecked="{Binding IsGamepadButtonGestureEnabled}" Content="Gamepad button"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Grid>
+            </material:PopupBox>
+
+            <TextBox DockPanel.Dock="Left"
+                     Margin="0 0 10 0"
+                     Style="{StaticResource MaterialDesignFloatingHintTextBox}"
+                     Text="{Binding ActionsFilter, UpdateSourceTrigger=Explicit}"
+                     material:HintAssist.Hint="Filter actions"
+                     behaviours:InputAssist.UpdateSourceOnEnter="TextBox.Text"/>
+        </DockPanel>
+
+        <ItemsControl DockPanel.Dock="Top"
+                      ItemsSource="{Binding Shortcuts}"
+                      Margin="0 0 10 0"
+                      VirtualizingStackPanel.IsVirtualizing="True"
+                  VirtualizingStackPanel.VirtualizationMode="Recycling">
+             <ItemsControl.Template>
+                <ControlTemplate TargetType="ItemsControl">
+                    <ScrollViewer CanContentScroll="True" 
+                                  Focusable="False">
+                        <ItemsPresenter/>
+                    </ScrollViewer>
+                </ControlTemplate>
+            </ItemsControl.Template>
+            <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <VirtualizingStackPanel IsVirtualizing="True"
+                                            VirtualizationMode="Recycling" />
+                </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                    <material:Card Margin="3 5 10 5"
+                                   material:ShadowAssist.ShadowDepth="Depth1">
+                        <DockPanel LastChildFill="True">
+                            <material:ColorZone DockPanel.Dock="Left" 
+                                                Width="6"
+                                                VerticalAlignment="Stretch"
+                                                ToolTip="{Binding ActionDescriptor.Type}"
+                                                ToolTipService.InitialShowDelay="0"
+                                                ToolTipService.Placement="Top">
+                                <material:ColorZone.Resources>
+                                    <Style TargetType="{x:Type material:ColorZone}">
+                                        <Setter Property="Background" Value="BlueViolet"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding ActionDescriptor.Type}" Value="{x:Static input:ShortcutActionType.Axis}">
+                                                <Setter Property="Background" Value="LimeGreen"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </material:ColorZone.Resources>
+                            </material:ColorZone>
+
+                            <DockPanel LastChildFill="True"
+                                       DockPanel.Dock="Right"
+                                       Margin="10 5 10 5">
+
+                                <Button DockPanel.Dock="Right"   
+                                        Style="{StaticResource MaterialDesignFlatButton}"
+                                        ToolTip="Clear"
+                                        ToolTipService.InitialShowDelay="0"
+                                        ToolTipService.Placement="Top"
+                                        material:RippleAssist.Feedback="Red"
+                                        Foreground="Red"
+                                        Height="32" 
+                                        Width="32" 
+                                        Padding="0"
+                                        Click="{s:Action ClearGesture}">
+                                    <Button.IsEnabled>
+                                        <MultiBinding Converter="{StaticResource MultiBooleanToBooleanAndConverter}">
+                                            <Binding Path="GestureDescriptor" Converter="{StaticResource InvertedNullableToBooleanConverter}"/>
+                                            <Binding Path="DataContext.IsSelectingGesture" RelativeSource="{RelativeSource FindAncestor, AncestorType={x:Type UserControl}}" Converter="{StaticResource NotConverter}"/>
+                                        </MultiBinding>
+                                    </Button.IsEnabled>
+                                    <material:PackIcon Kind="Close" Width="24" Height="24"/>
+                                </Button>
+
+                                <Button DockPanel.Dock="Right"
+                                        Style="{StaticResource MaterialDesignFlatButton}"
+                                        Click="{s:Action SelectGesture}"
+                                        s:View.ActionTarget="{Binding DataContext, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}"
+                                        IsEnabled="{Binding DataContext.IsSelectingGesture, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}, Converter={StaticResource NotConverter}}"
+                                        ToolTipService.InitialShowDelay="0" 
+                                        ToolTipService.Placement="Top"
+                                        ToolTip="Capture gesture"
+                                        VerticalAlignment="Center"
+                                        Width="32" 
+                                        Height="32"
+                                        Margin="0" 
+                                        Padding="0">
+                                    <material:PackIcon Kind="Input" Width="28" Height="28" />
+                                </Button>
+
+                                <StackPanel Orientation="Vertical"
+                                            VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding ActionDescriptor.Name, Mode=OneWay}"
+                                               Padding="0">
+                                        <TextBlock.Style>
+                                            <Style BasedOn="{StaticResource MaterialDesignTextBlock}" TargetType="{x:Type TextBlock}">
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding GestureDescriptor, Converter={StaticResource InvertedNullableToBooleanConverter}}" Value="True">
+                                                        <Setter Property="FontWeight" Value="Bold"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+
+                                    <TextBlock FontSize="10"
+                                               Padding="0">
+                                        <TextBlock.Style>
+                                            <Style BasedOn="{StaticResource MaterialDesignTextBlock}" TargetType="{x:Type TextBlock}">
+                                                <Setter Property="Text" Value="{Binding GestureDescriptor, Mode=OneWay, StringFormat={}{0}}"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding GestureDescriptor, Converter={StaticResource InvertedNullableToBooleanConverter}}" Value="True">
+                                                        <Setter Property="FontWeight" Value="Bold"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                </StackPanel>
+                            </DockPanel>
+                        </DockPanel>
+                    </material:Card>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+    </DockPanel>
+</UserControl>

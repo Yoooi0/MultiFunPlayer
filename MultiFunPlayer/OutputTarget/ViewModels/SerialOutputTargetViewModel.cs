@@ -1,6 +1,7 @@
-﻿using MaterialDesignThemes.Wpf;
+using MaterialDesignThemes.Wpf;
 using MultiFunPlayer.Common;
 using MultiFunPlayer.Common.Controls;
+using MultiFunPlayer.Common.Input;
 using MultiFunPlayer.Common.Messages;
 using Newtonsoft.Json.Linq;
 using NLog;
@@ -24,8 +25,8 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
         public BindableCollection<string> ComPorts { get; set; }
         public string SelectedComPort { get; set; }
 
-        public SerialOutputTargetViewModel(IEventAggregator eventAggregator, IDeviceAxisValueProvider valueProvider)
-            : base(eventAggregator, valueProvider)
+        public SerialOutputTargetViewModel(IShortcutManager shortcutManager, IEventAggregator eventAggregator, IDeviceAxisValueProvider valueProvider)
+            : base(shortcutManager, eventAggregator, valueProvider)
         {
             ComPorts = new BindableCollection<string>(SerialPort.GetPortNames());
         }
@@ -45,8 +46,8 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
                 ComPorts.AddRange(SerialPort.GetPortNames());
             }
             catch { }
-            SelectedComPort = lastSelected;
 
+            SelectedComPort = lastSelected;
             await Task.Delay(250).ConfigureAwait(true);
             IsRefreshBusy = false;
         }

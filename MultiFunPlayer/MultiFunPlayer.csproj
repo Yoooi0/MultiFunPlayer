@@ -36,8 +36,10 @@
     <PackageReference Include="PropertyChanged.Fody" Version="3.*">
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
+    <PackageReference Include="RawInput.Sharp" Version="0.0.4" />
     <PackageReference Include="Stylet" Version="1.*" />
     <PackageReference Include="System.IO.Ports" Version="5.0.0" />
     <PackageReference Include="Microsoft-WindowsAPICodePack-Shell" Version="1.1.4" />
+    <PackageReference Include="Vortice.XInput" Version="1.9.80" />
   </ItemGroup>
 </Project>
