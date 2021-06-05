@@ -17,7 +17,7 @@
         Background="{DynamicResource MaterialDesignPaper}"
         FontFamily="{DynamicResource MaterialDesignFont}"
         BorderThickness="1"
-        ResizeMode="NoResize"
+        ResizeMode="CanMinimize"
         Title="MultiFunPlayer" 
         SizeToContent="Height"
         Width="600"
@@ -37,22 +37,28 @@
                                Margin="8 0 0 0"
                                Style="{StaticResource WindowTitleTextBlockStyle}" 
                                Text="{Binding Path=Title, RelativeSource={RelativeSource AncestorType={x:Type materialExtensions:MaterialWindow}}}"/>
+
+                <Border Width="1" 
+                        DockPanel.Dock="Right"
+                        VerticalAlignment="Stretch" 
+                        Margin="8,4,8,4"
+                        Background="{Binding Path=BorderForegroundBrush, RelativeSource={RelativeSource AncestorType={x:Type materialExtensions:MaterialWindow}}}" />
+                
                 <Button Style="{StaticResource WindowButtonStyle}"
                         Click="{s:Action OnInformationClick}"
                         DockPanel.Dock="Right"
                         Margin="0 -1 0 -1">
-                    <material:PackIcon Foreground="White"
+                    <material:PackIcon Foreground="{Binding Path=BorderForegroundBrush, RelativeSource={RelativeSource AncestorType={x:Type materialExtensions:MaterialWindow}}}"
                                        Kind="InformationOutline"
                                        Width="24"
                                        Height="24"
                                        Margin="0"/>
                 </Button>
-                
                 <Button Style="{StaticResource WindowButtonStyle}"
                         Click="{s:Action OnShortcutClick}"
                         DockPanel.Dock="Right"
                         Margin="0 -1 0 -1">
-                    <material:PackIcon Foreground="White"
+                    <material:PackIcon Foreground="{Binding Path=BorderForegroundBrush, RelativeSource={RelativeSource AncestorType={x:Type materialExtensions:MaterialWindow}}}"
                                        Kind="KeyboardOutline"
                                        Width="24"
                                        Height="24"
