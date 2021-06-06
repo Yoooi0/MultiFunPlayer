@@ -281,7 +281,8 @@ namespace MultiFunPlayer.ViewModels
             if (VideoFile == null && message.VideoFile == null)
                 return;
             if (VideoFile != null && message.VideoFile != null)
-                if (string.Equals(VideoFile.Name, message.VideoFile.Name, StringComparison.OrdinalIgnoreCase))
+                if (string.Equals(VideoFile.Name, message.VideoFile.Name, StringComparison.OrdinalIgnoreCase)
+                 && string.Equals(VideoFile.Source, message.VideoFile.Source, StringComparison.OrdinalIgnoreCase))
                    return;
 
             VideoFile = message.VideoFile;
