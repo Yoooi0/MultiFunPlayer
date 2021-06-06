@@ -335,19 +335,19 @@ namespace MultiFunPlayer.ViewModels
 
             var error = float.IsFinite(CurrentPosition) ? newPosition - CurrentPosition : 0;
             var wasSeek = MathF.Abs(error) > 1.0f;
-            CurrentPosition = newPosition;
-            if (error < 1.0f)
-                CurrentPosition -= MathUtils.Map(MathF.Abs(error), 1, 0, 0, 0.75f) * error;
-
-            if (!float.IsFinite(CurrentPosition))
-                return;
-
             if (wasSeek)
             {
                 Logger.Debug("Detected seek: {0}", error);
                 if (SyncSettings.SyncOnSeek)
                     ResetSync();
             }
+
+            CurrentPosition = newPosition;
+            if (error < 1.0f)
+                CurrentPosition -= MathUtils.Map(MathF.Abs(error), 1, 0, 0, 0.75f) * error;
+
+            if (!float.IsFinite(CurrentPosition))
+                return;
 
             foreach (var axis in EnumUtils.GetValues<DeviceAxis>())
             {
