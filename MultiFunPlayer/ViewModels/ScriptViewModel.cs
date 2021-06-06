@@ -285,11 +285,10 @@ namespace MultiFunPlayer.ViewModels
                    return;
 
             VideoFile = message.VideoFile;
-            foreach (var axis in EnumUtils.GetValues<DeviceAxis>())
-                AxisModels[axis].Script = null;
-
             if(SyncSettings.SyncOnVideoFileChanged)
                 ResetSync(isSyncing: VideoFile != null);
+
+            ResetScript(null);
             ReloadScript(null);
 
             if (VideoFile == null)
@@ -420,27 +419,24 @@ namespace MultiFunPlayer.ViewModels
                 state.Index = keyframes.BinarySearch(GetAxisPosition(axis));
         }
 
-        private void MatchAndInvalidate(bool overwrite, params DeviceAxis[] axes)
-        {
-            var updated = TryMatchFiles(overwrite, axes);
-            if (updated.Any())
-                InvalidateState(axes);
-        }
-
-        private void LinkAndInvalidate(params DeviceAxis[] axes)
+        private List<DeviceAxis> UpdateLinkScript(params DeviceAxis[] axes) => UpdateLinkScript(axes.AsEnumerable());
+        private List<DeviceAxis> UpdateLinkScript(IEnumerable<DeviceAxis> axes)
         {
             axes ??= EnumUtils.GetValues<DeviceAxis>();
-            if (axes.Length == 0)
-                return;
 
             Logger.Debug("Trying to link axes [Axes: {list}]", axes);
+
+            var updated = new List<DeviceAxis>();
             foreach (var axis in axes)
             {
                 var model = AxisModels[axis];
                 if (model.Settings.LinkAxis == null)
                 {
                     if (model.Settings.LinkAxisHasPriority)
+                    {
                         ResetScript(axis);
+                        updated.Add(axis);
+                    }
 
                     continue;
                 }
@@ -455,55 +451,64 @@ namespace MultiFunPlayer.ViewModels
                 }
 
                 Logger.Debug("Linked {0} to {1}", axis, model.Settings.LinkAxis.Value);
-                model.Script = LinkedScriptFile.LinkTo(AxisModels[model.Settings.LinkAxis.Value].Script);
+
+                SetScript(axis, LinkedScriptFile.LinkTo(AxisModels[model.Settings.LinkAxis.Value].Script));
                 model.Settings.RandomizerSeed = MathUtils.Random(short.MinValue, short.MaxValue);
+                updated.Add(axis);
             }
 
-            InvalidateState(axes);
+            return updated;
         }
 
         private void ResetScript(params DeviceAxis[] axes)
         {
             axes ??= EnumUtils.GetValues<DeviceAxis>();
-            if (axes.Length == 0)
-                return;
 
             Logger.Debug("Resetting axes [Axes: {list}]", axes);
             foreach (var axis in axes)
             {
                 Logger.Debug("Reset {0} script", axis);
-                AxisModels[axis].Script = null;
+                SetScript(axis, null);
+            }
+        }
+
+        private void SetScript(DeviceAxis axis, IScriptFile script)
+        {
+            var model = AxisModels[axis];
+            var state = AxisStates[axis];
+            lock (state)
+            {
+                state.Invalidate();
+                model.Script = script;
             }
         }
 
         private void ReloadScript(params DeviceAxis[] axes)
         {
             axes ??= EnumUtils.GetValues<DeviceAxis>();
-            if (axes.Length == 0)
-                return;
+
+            ResetSync();
 
             Logger.Debug("Reloading axes [Axes: {list}]", axes);
             foreach (var group in axes.GroupBy(a => AxisModels[a].Settings.LinkAxisHasPriority))
             {
+                var groupAxes = group.ToArray();
                 if (group.Key)
                 {
-                    LinkAndInvalidate(group.ToArray());
+                    UpdateLinkScript(groupAxes);
                 }
                 else
                 {
-                    MatchAndInvalidate(overwrite: true, group.ToArray());
-                    LinkAndInvalidate(group.ToArray());
+                    var updated = TryMatchFiles(true, groupAxes);
+                    UpdateLinkScript(groupAxes.Except(updated));
                 }
             }
-
-            ResetSync();
         }
 
-        private void InvalidateState(params DeviceAxis[] axes)
+        private void InvalidateState(params DeviceAxis[] axes) => InvalidateState(axes.AsEnumerable());
+        private void InvalidateState(IEnumerable<DeviceAxis> axes)
         {
             axes ??= EnumUtils.GetValues<DeviceAxis>();
-            if (axes.Length == 0)
-                return;
 
             Logger.Debug("Invalidating axes [Axes: {list}]", axes);
             foreach (var axis in axes)
@@ -514,17 +519,16 @@ namespace MultiFunPlayer.ViewModels
             }
         }
 
-        private IEnumerable<DeviceAxis> TryMatchFiles(bool overwrite, params DeviceAxis[] axes)
+        private List<DeviceAxis> TryMatchFiles(bool overwrite, params DeviceAxis[] axes)
         {
-            if (VideoFile == null)
-                return Enumerable.Empty<DeviceAxis>();
-
-            if (axes == null)
-                axes = EnumUtils.GetValues<DeviceAxis>();
+            axes ??= EnumUtils.GetValues<DeviceAxis>();
 
             Logger.Debug("Maching files to axes [Axes: {list}]", axes);
 
             var updated = new List<DeviceAxis>();
+            if (VideoFile == null)
+                return updated;
+
             bool TryMatchFile(string fileName, Func<IScriptFile> generator)
             {
                 var videoWithoutExtension = Path.GetFileNameWithoutExtension(VideoFile.Name);
@@ -535,7 +539,7 @@ namespace MultiFunPlayer.ViewModels
                     {
                         if (AxisModels[DeviceAxis.L0].Script == null || overwrite)
                         {
-                            AxisModels[DeviceAxis.L0].Script = generator();
+                            SetScript(DeviceAxis.L0, generator());
                             updated.Add(DeviceAxis.L0);
 
                             Logger.Debug("Matched {0} script to \"{1}\"", DeviceAxis.L0, fileName);
@@ -551,7 +555,7 @@ namespace MultiFunPlayer.ViewModels
                     {
                         if (AxisModels[axis].Script == null || overwrite)
                         {
-                            AxisModels[axis].Script = generator();
+                            SetScript(axis, generator());
                             updated.Add(axis);
 
                             Logger.Debug("Matched {0} script to \"{1}\"", axis, fileName);
@@ -612,7 +616,7 @@ namespace MultiFunPlayer.ViewModels
                 }
             }
 
-            return updated.Distinct();
+            return updated;
         }
 
         private float GetAxisPosition(DeviceAxis axis) => CurrentPosition - GlobalOffset - AxisSettings[axis].Offset;
@@ -672,9 +676,8 @@ namespace MultiFunPlayer.ViewModels
                 if (path == null)
                     return;
 
-                model.Script = ScriptFile.FromPath(path, userLoaded: true);
-                InvalidateState(axis);
                 ResetSync();
+                SetScript(axis, ScriptFile.FromPath(path, userLoaded: true));
             }
         }
 
@@ -705,21 +708,12 @@ namespace MultiFunPlayer.ViewModels
             if (dialog.ShowDialog() != CommonFileDialogResult.Ok)
                 return;
 
-            AxisModels[axis].Script = ScriptFile.FromFileInfo(new FileInfo(dialog.FileName), userLoaded: true);
-            InvalidateState(axis);
             ResetSync();
+            SetScript(axis, ScriptFile.FromFileInfo(new FileInfo(dialog.FileName), userLoaded: true));
         }
 
-        public void OnAxisClear(DeviceAxis axis)
-        {
-            ResetScript(axis);
-            InvalidateState(axis);
-        }
-
-        public void OnAxisReload(DeviceAxis axis)
-        {
-            ReloadScript(axis);
-        }
+        public void OnAxisClear(DeviceAxis axis) => ResetScript(axis);
+        public void OnAxisReload(DeviceAxis axis) => ReloadScript(axis);
 
         private bool MoveScript(DeviceAxis axis, DirectoryInfo directory)
         {
@@ -906,14 +900,14 @@ namespace MultiFunPlayer.ViewModels
                 shortcutManager.RegisterAction($"{axis}::LinkAxis::Value::Null", () =>
                 {
                     AxisSettings[axis].LinkAxis = null;
-                    LinkAndInvalidate(axis);
+                    ReloadScript(axis);
                 });
                 foreach (var other in EnumUtils.GetValues<DeviceAxis>().Where(a => a != axis))
                 {
                     shortcutManager.RegisterAction($"{axis}::LinkAxis::Value::{other}", () =>
                     {
                         AxisSettings[axis].LinkAxis = other;
-                        LinkAndInvalidate(axis);
+                        ReloadScript(axis);
                     });
                 }
 
