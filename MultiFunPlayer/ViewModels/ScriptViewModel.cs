@@ -276,14 +276,14 @@ namespace MultiFunPlayer.ViewModels
         #region Events
         public void Handle(VideoFileChangedMessage message)
         {
-            Logger.Info("Received VideoFileChangedMessage [Source: \"{0}\" Name: \"{1}\"]", message.VideoFile?.Source, message.VideoFile?.Name);
-
             if (VideoFile == null && message.VideoFile == null)
                 return;
             if (VideoFile != null && message.VideoFile != null)
                 if (string.Equals(VideoFile.Name, message.VideoFile.Name, StringComparison.OrdinalIgnoreCase)
                  && string.Equals(VideoFile.Source, message.VideoFile.Source, StringComparison.OrdinalIgnoreCase))
-                   return;
+                    return;
+
+            Logger.Info("Received VideoFileChangedMessage [Source: \"{0}\" Name: \"{1}\"]", message.VideoFile?.Source, message.VideoFile?.Name);
 
             VideoFile = message.VideoFile;
             if(SyncSettings.SyncOnVideoFileChanged)
@@ -304,8 +304,10 @@ namespace MultiFunPlayer.ViewModels
 
         public void Handle(VideoPlayingMessage message)
         {
-            if(IsPlaying != message.IsPlaying)
-                Logger.Info("Received VideoPlayingMessage [IsPlaying: {0}]", message.IsPlaying);
+            if (IsPlaying == message.IsPlaying)
+                return;
+
+            Logger.Info("Received VideoPlayingMessage [IsPlaying: {0}]", message.IsPlaying);
 
             if (!IsPlaying && message.IsPlaying)
                 if(SyncSettings.SyncOnVideoResume)
@@ -317,6 +319,9 @@ namespace MultiFunPlayer.ViewModels
         public void Handle(VideoDurationMessage message)
         {
             var newDuration = (float)(message.Duration?.TotalSeconds ?? float.NaN);
+            if (VideoDuration == newDuration)
+                return;
+
             Logger.Info("Received VideoDurationMessage [Duration: {0}]", message.Duration?.ToString());
 
             VideoDuration = newDuration;
@@ -324,6 +329,9 @@ namespace MultiFunPlayer.ViewModels
 
         public void Handle(VideoSpeedMessage message)
         {
+            if (PlaybackSpeed == message.Speed)
+                return;
+
             Logger.Info("Received VideoSpeedMessage [Speed: {0}]", message.Speed);
             PlaybackSpeed = message.Speed;
         }

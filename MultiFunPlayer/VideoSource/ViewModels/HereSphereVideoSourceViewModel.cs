@@ -72,6 +72,12 @@ namespace MultiFunPlayer.VideoSource.ViewModels
                     }
                 }, token);
 
+                var lastSpeed = default(float?);
+                var lastDuration = default(float?);
+                var lastPosition = default(float?);
+                var lastState = default(int?);
+                var lastPath = default(string);
+
                 Status = ConnectionStatus.Connected;
                 while (!token.IsCancellationRequested && client.Connected)
                 {
@@ -89,20 +95,41 @@ namespace MultiFunPlayer.VideoSource.ViewModels
                         var document = JObject.Parse(json);
                         Logger.Trace("Received \"{0}\" from \"{1}\"", json, Name);
 
-                        if (document.TryGetValue("path", out var pathToken))
-                            _eventAggregator.Publish(new VideoFileChangedMessage(pathToken.TryToObject<string>(out var path) && !string.IsNullOrWhiteSpace(path) ? path : null));
+                        if (document.TryGetValue("path", out var pathToken) && pathToken.TryToObject<string>(out var path))
+                        {
+                            if (string.IsNullOrWhiteSpace(path))
+                                path = null;
 
-                        if (document.TryGetValue("playerState", out var stateToken) && stateToken.TryToObject<int>(out var state))
+                            if (path != lastPath)
+                            {
+                                _eventAggregator.Publish(new VideoFileChangedMessage(path));
+                                lastPath = path;
+                            }
+                        }
+
+                        if (document.TryGetValue("playerState", out var stateToken) && stateToken.TryToObject<int>(out var state) && state != lastState)
+                        {
                             _eventAggregator.Publish(new VideoPlayingMessage(state == 0));
+                            lastState = state;
+                        }
 
-                        if (document.TryGetValue("duration", out var durationToken) && durationToken.TryToObject<float>(out var duration) && duration >= 0)
+                        if (document.TryGetValue("duration", out var durationToken) && durationToken.TryToObject<float>(out var duration) && duration >= 0 && duration != lastDuration)
+                        {
                             _eventAggregator.Publish(new VideoDurationMessage(TimeSpan.FromSeconds(duration)));
+                            lastDuration = duration;
+                        }
 
-                        if (document.TryGetValue("currentTime", out var timeToken) && timeToken.TryToObject<float>(out var position) && position >= 0)
+                        if (document.TryGetValue("currentTime", out var timeToken) && timeToken.TryToObject<float>(out var position) && position >= 0 && position != lastPosition)
+                        {
                             _eventAggregator.Publish(new VideoPositionMessage(TimeSpan.FromSeconds(position)));
+                            lastPosition = position;
+                        }
 
-                        if (document.TryGetValue("playbackSpeed", out var speedToken) && speedToken.TryToObject<float>(out var speed) && speed > 0)
+                        if (document.TryGetValue("playbackSpeed", out var speedToken) && speedToken.TryToObject<float>(out var speed) && speed > 0 && speed != lastSpeed)
+                        {
                             _eventAggregator.Publish(new VideoSpeedMessage(speed));
+                            lastSpeed = speed;
+                        }
                     }
                     catch (JsonException) { }
                 }
