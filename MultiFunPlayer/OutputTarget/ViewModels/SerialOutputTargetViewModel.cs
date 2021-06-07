@@ -163,9 +163,7 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
         {
             try
             {
-                if (!ComPorts.Contains(SelectedComPort))
-                    await RefreshPorts();
-
+                await RefreshPorts();
                 return await ValueTask.FromResult(ComPorts.Contains(SelectedComPort));
             }
             catch
