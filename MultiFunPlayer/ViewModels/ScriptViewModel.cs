@@ -162,7 +162,7 @@ namespace MultiFunPlayer.ViewModels
                             while (state.Index + 1 < keyframes.Count && keyframes[state.Index + 1].Position < axisPosition)
                                 state.Index++;
 
-                            if (!keyframes.ValidateIndex(state.Index + 1))
+                            if (!keyframes.ValidateIndex(state.Index) || !keyframes.ValidateIndex(state.Index + 1))
                                 return false;
 
                             var newValue = default(float);
@@ -361,7 +361,7 @@ namespace MultiFunPlayer.ViewModels
             {
                 var state = AxisStates[axis];
                 if (wasSeek || !state.Valid)
-                    SearchForValidIndices(axis, state);
+                    SearchForValidIndex(axis, state);
             }
         }
 
@@ -418,12 +418,12 @@ namespace MultiFunPlayer.ViewModels
         #endregion
 
         #region Common
-        private void SearchForValidIndices(DeviceAxis axis, AxisState state)
+        private void SearchForValidIndex(DeviceAxis axis, AxisState state)
         {
             if (!AxisKeyframes.TryGetValue(axis, out var keyframes) || keyframes == null || keyframes.Count == 0)
                 return;
 
-            Logger.Debug("Searching for valid indices [Axis: {0}]", axis);
+            Logger.Debug("Searching for valid index [Axis: {0}]", axis);
             lock (state)
                 state.Index = keyframes.BinarySearch(GetAxisPosition(axis));
         }
@@ -648,7 +648,7 @@ namespace MultiFunPlayer.ViewModels
             ResetSync();
 
             foreach (var axis in EnumUtils.GetValues<DeviceAxis>())
-                SearchForValidIndices(axis, AxisStates[axis]);
+                SearchForValidIndex(axis, AxisStates[axis]);
         }
 
         public void OnSliderDoubleClick(object sender, MouseButtonEventArgs e)
@@ -975,14 +975,14 @@ namespace MultiFunPlayer.ViewModels
     [DoNotNotify]
     public class AxisState : INotifyPropertyChanged
     {
-        public int Index { get; set; } = -1;
+        public int Index { get; set; } = int.MinValue;
         public float Value { get; set; } = float.NaN;
 
-        public bool Valid => Index >= 0;
+        public bool Valid => Index != int.MinValue;
 
         public event PropertyChangedEventHandler PropertyChanged;
 
-        public void Invalidate() => Index = -1;
+        public void Invalidate() => Index = int.MinValue;
 
         public void Notify()
         {
