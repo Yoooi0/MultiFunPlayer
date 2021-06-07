@@ -85,7 +85,7 @@ namespace MultiFunPlayer.ViewModels
             var stopwatch = new Stopwatch();
             const float uiUpdateInterval = 1f / 60f;
             var uiUpdateTime = 0f;
-            var pauseTime = 0f;
+            var autoHomeTimes = EnumUtils.ToDictionary<DeviceAxis, float>(_ => 0f);
 
             stopwatch.Start();
 
@@ -93,172 +93,166 @@ namespace MultiFunPlayer.ViewModels
             while (!token.IsCancellationRequested)
             {
                 var dirty = UpdateValues();
-                Thread.Sleep(IsPlaying && dirty ? 2 : 10);
-
                 UpdateUi();
-
-                if(IsPlaying)
-                    CurrentPosition += (float)stopwatch.Elapsed.TotalSeconds * PlaybackSpeed;
-
-                pauseTime += (float)stopwatch.Elapsed.TotalSeconds;
-                uiUpdateTime += (float)stopwatch.Elapsed.TotalSeconds;
-
                 UpdateSync();
 
                 stopwatch.Restart();
-            }
-
-            void UpdateSmartLimit()
-            {
-                foreach (var axis in EnumUtils.GetValues<DeviceAxis>())
-                {
-                    var settings = AxisSettings[axis];
-                    if (!settings.SmartLimitEnabled)
-                        continue;
-
-                    var limitState = AxisStates[DeviceAxis.L0];
-                    if (!limitState.Valid)
-                        continue;
-
-                    var state = AxisStates[axis];
-                    var value = state.Value;
-                    var limitValue = limitState.Value;
-
-                    var factor = MathUtils.Map(limitValue, 0.25f, 0.9f, 1f, 0f);
-                    state.Value = MathUtils.Lerp(axis.DefaultValue(), state.Value, factor);
-                }
+                Thread.Sleep(IsPlaying && dirty ? 2 : 10);
             }
 
             bool UpdateValues()
             {
                 if (IsPlaying)
-                    pauseTime = 0;
+                    CurrentPosition += (float)stopwatch.Elapsed.TotalSeconds * PlaybackSpeed;
 
                 var dirty = false;
                 foreach (var axis in EnumUtils.GetValues<DeviceAxis>())
                 {
-                    if (IsPlaying)
-                        dirty |= UpdateValuesPlaying(axis);
-                    else
-                        dirty |= UpdateValuesPaused(axis);
+                    var axisDirty = false;
+                    var state = AxisStates[axis];
+                    var settings = AxisSettings[axis];
+                    lock (state)
+                    {
+                        if (IsPlaying)
+                        {
+                            axisDirty |= UpdateValues(axis, state, settings);
+                            axisDirty |= UpdateSmartLimit(axis, state, settings);
+
+                            if (axisDirty)
+                                autoHomeTimes[axis] = 0;
+                        }
+                        else
+                        {
+                            axisDirty |= UpdateAutoHome(axis, state, settings);
+                        }
+                    }
+
+                    dirty |= axisDirty;
                 }
 
-                UpdateSmartLimit();
                 return dirty;
 
-                bool UpdateValuesPlaying(DeviceAxis axis)
+                bool UpdateSmartLimit(DeviceAxis axis, AxisState state, AxisSettings settings)
                 {
-                    var state = AxisStates[axis];
-                    lock (state)
-                    {
-                        if (state.Valid)
-                        {
-                            if (!AxisKeyframes.TryGetValue(axis, out var keyframes) || keyframes == null || keyframes.Count == 0)
-                                return false;
+                    if (!settings.SmartLimitEnabled)
+                        return false;
 
-                            var settings = AxisSettings[axis];
-                            var axisPosition = GetAxisPosition(axis);
+                    var limitState = AxisStates[DeviceAxis.L0];
+                    if (!limitState.Valid)
+                        return false;
 
-                            while (state.Index + 1 < keyframes.Count && keyframes[state.Index + 1].Position < axisPosition)
-                                state.Index++;
+                    var value = state.Value;
+                    var limitValue = limitState.Value;
 
-                            if (!keyframes.ValidateIndex(state.Index) || !keyframes.ValidateIndex(state.Index + 1))
-                                return false;
-
-                            var newValue = default(float);
-                            if (keyframes.IsRawCollection || state.Index == 0 || state.Index + 2 == keyframes.Count || settings.InterpolationType == InterpolationType.Linear)
-                            {
-                                var p0 = keyframes[state.Index];
-                                var p1 = keyframes[state.Index + 1];
-
-                                newValue = MathUtils.Interpolate(p0.Position, p0.Value, p1.Position, p1.Value, axisPosition, InterpolationType.Linear);
-                            }
-                            else
-                            {
-                                var p0 = keyframes[state.Index - 1];
-                                var p1 = keyframes[state.Index + 0];
-                                var p2 = keyframes[state.Index + 1];
-                                var p3 = keyframes[state.Index + 2];
-
-                                newValue = MathUtils.Interpolate(p0.Position, p0.Value, p1.Position, p1.Value, p2.Position, p2.Value, p3.Position, p3.Value,
-                                                                     axisPosition, settings.InterpolationType);
-                            }
-
-                            if (settings.Inverted)
-                                newValue = 1 - newValue;
-
-                            if (settings.LinkAxis != null)
-                            {
-                                var speed = MathUtils.Map(settings.RandomizerSpeed, 100, 0, 0.25f, 4);
-                                var randomizerValue = (float)(randomizer.Calculate2D(axisPosition / speed, settings.RandomizerSeed) + 1) / 2;
-                                newValue = MathUtils.Lerp(newValue, randomizerValue, settings.RandomizerStrength / 100.0f);
-                            }
-
-                            if (IsSyncing)
-                                newValue = MathUtils.Lerp(!float.IsFinite(state.Value) ? axis.DefaultValue() : state.Value, newValue, SyncProgress / 100);
-                            state.Value = newValue;
-                        }
-                        else
-                        {
-                            var newValue = axis.DefaultValue();
-                            if (IsSyncing)
-                                newValue = MathUtils.Lerp(!float.IsFinite(state.Value) ? axis.DefaultValue() : state.Value, newValue, SyncProgress / 100);
-                            state.Value = newValue;
-                        }
-                    }
-
-                    return true;
+                    var factor = MathUtils.Map(limitValue, 0.25f, 0.9f, 1f, 0f);
+                    var lastValue = state.Value;
+                    state.Value = MathUtils.Lerp(axis.DefaultValue(), state.Value, factor);
+                    return lastValue != state.Value;
                 }
 
-                bool UpdateValuesPaused(DeviceAxis axis)
+                bool UpdateValues(DeviceAxis axis, AxisState state, AxisSettings settings)
                 {
-                    var state = AxisStates[axis];
-                    lock (state)
+                    var lastValue = state.Value;
+                    if (state.Valid)
                     {
-                        if (!float.IsFinite(state.Value))
+                        if (!AxisKeyframes.TryGetValue(axis, out var keyframes) || keyframes == null || keyframes.Count == 0)
                             return false;
 
-                        var settings = AxisSettings[axis];
-                        if (!settings.AutoHomeEnabled)
+                        var axisPosition = GetAxisPosition(axis);
+
+                        while (state.Index + 1 < keyframes.Count && keyframes[state.Index + 1].Position < axisPosition)
+                            state.Index++;
+
+                        if (!keyframes.ValidateIndex(state.Index) || !keyframes.ValidateIndex(state.Index + 1))
                             return false;
 
-                        var t = pauseTime - settings.AutoHomeDelay;
-                        if (t < 0)
-                            return false;
-
-                        if (settings.AutoHomeDuration < 0.0001f)
+                        var newValue = default(float);
+                        if (keyframes.IsRawCollection || state.Index == 0 || state.Index + 2 == keyframes.Count || settings.InterpolationType == InterpolationType.Linear)
                         {
-                            if (state.Value == axis.DefaultValue())
-                                return false;
+                            var p0 = keyframes[state.Index];
+                            var p1 = keyframes[state.Index + 1];
 
-                            state.Value = axis.DefaultValue();
-                            return true;
+                            newValue = MathUtils.Interpolate(p0.Position, p0.Value, p1.Position, p1.Value, axisPosition, InterpolationType.Linear);
                         }
                         else
                         {
-                            if (t / settings.AutoHomeDuration > 1)
-                                return false;
+                            var p0 = keyframes[state.Index - 1];
+                            var p1 = keyframes[state.Index + 0];
+                            var p2 = keyframes[state.Index + 1];
+                            var p3 = keyframes[state.Index + 2];
 
-                            state.Value = MathUtils.Lerp(state.Value, axis.DefaultValue(), MathF.Pow(2, 10 * (t / settings.AutoHomeDuration - 1)));
-                            return true;
+                            newValue = MathUtils.Interpolate(p0.Position, p0.Value, p1.Position, p1.Value, p2.Position, p2.Value, p3.Position, p3.Value,
+                                                                    axisPosition, settings.InterpolationType);
                         }
+
+                        if (settings.Inverted)
+                            newValue = 1 - newValue;
+
+                        if (settings.LinkAxis != null)
+                        {
+                            var speed = MathUtils.Map(settings.RandomizerSpeed, 100, 0, 0.25f, 4);
+                            var randomizerValue = (float)(randomizer.Calculate2D(axisPosition / speed, settings.RandomizerSeed) + 1) / 2;
+                            newValue = MathUtils.Lerp(newValue, randomizerValue, settings.RandomizerStrength / 100.0f);
+                        }
+
+                        if (IsSyncing)
+                            newValue = MathUtils.Lerp(!float.IsFinite(state.Value) ? axis.DefaultValue() : state.Value, newValue, SyncProgress / 100);
+                        state.Value = newValue;
                     }
+                    else
+                    {
+                        var newValue = axis.DefaultValue();
+                        if (IsSyncing)
+                            newValue = MathUtils.Lerp(!float.IsFinite(state.Value) ? axis.DefaultValue() : state.Value, newValue, SyncProgress / 100);
+                        state.Value = newValue;
+                    }
+
+                    return lastValue != state.Value;
+                }
+
+                bool UpdateAutoHome(DeviceAxis axis, AxisState state, AxisSettings settings)
+                {
+                    if (!float.IsFinite(state.Value))
+                        return false;
+
+                    if (!settings.AutoHomeEnabled)
+                        return false;
+
+                    if (settings.AutoHomeDuration < 0.0001f)
+                    {
+                        var lastValue = state.Value;
+                        state.Value = axis.DefaultValue();
+                        return lastValue != state.Value;
+                    }
+
+                    autoHomeTimes[axis] += (float)stopwatch.Elapsed.TotalSeconds;
+
+                    var t = autoHomeTimes[axis] - settings.AutoHomeDelay;
+                    if (t >= 0 && t / settings.AutoHomeDuration <= 1)
+                    {
+                        var lastValue = state.Value;
+                        state.Value = MathUtils.Lerp(state.Value, axis.DefaultValue(), MathF.Pow(2, 10 * (t / settings.AutoHomeDuration - 1)));
+                        return lastValue != state.Value;
+                    }
+
+                    return false;
                 }
             }
 
             void UpdateUi()
             {
-                if (uiUpdateTime >= uiUpdateInterval)
+                uiUpdateTime += (float)stopwatch.Elapsed.TotalSeconds;
+                if (uiUpdateTime < uiUpdateInterval)
+                    return;
+
+                uiUpdateTime = 0;
+                if (ValuesContentVisible)
                 {
-                    uiUpdateTime = 0;
-                    if (ValuesContentVisible)
+                    Execute.OnUIThread(() =>
                     {
-                        Execute.OnUIThread(() =>
-                        {
-                            foreach (var axis in EnumUtils.GetValues<DeviceAxis>())
-                                AxisStates[axis].Notify();
-                        });
-                    }
+                        foreach (var axis in EnumUtils.GetValues<DeviceAxis>())
+                            AxisStates[axis].Notify();
+                    });
                 }
             }
 
