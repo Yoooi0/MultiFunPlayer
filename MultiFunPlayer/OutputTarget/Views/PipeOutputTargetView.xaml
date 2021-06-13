@@ -122,7 +122,7 @@
                             Orientation="Horizontal" 
                             HorizontalAlignment="Right"
                             VerticalAlignment="Center">
-                    <TextBlock VerticalAlignment="Center" Text="Update rate" Margin="0 0 10 0"/>
+                    <TextBlock VerticalAlignment="Center" Text="Update rate:" Margin="0 0 10 0"/>
                     <Slider Value="{Binding UpdateRate, Mode=TwoWay}"
                             HorizontalAlignment="Stretch"
                             VerticalAlignment="Top"
@@ -141,16 +141,21 @@
                                Text="{Binding UpdateRate, StringFormat={}{0} hz}"/>
                 </StackPanel>
             </DockPanel>
-
+            
+            <TextBlock Text="Output Range:"
+                       Typography.Capitals="AllSmallCaps"
+                       FontWeight="Bold"
+                       VerticalAlignment="Center"
+                       HorizontalAlignment="Left"/>
             <ItemsControl ItemsSource="{Binding AxisSettings}">
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>
-                        <UniformGrid Columns="3" Rows="3" IsItemsHost="True" Margin="-3 0 -10 0"/>
+                        <UniformGrid Columns="3" Rows="3" IsItemsHost="True" Margin="0 0 -10 0"/>
                     </ItemsPanelTemplate>
                 </ItemsControl.ItemsPanel>
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
-                        <DockPanel Margin="2" LastChildFill="True">
+                        <DockPanel LastChildFill="True">
                             <TextBlock DockPanel.Dock="Left" 
                                     VerticalAlignment="Center" 
                                     Text="{Binding Key}"/>
