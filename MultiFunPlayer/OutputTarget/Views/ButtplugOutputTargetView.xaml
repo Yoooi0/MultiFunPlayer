@@ -176,16 +176,17 @@
                                     VerticalAlignment="Center" 
                                     Text="{Binding Key}"/>
                             <metro:RangeSlider Style="{StaticResource MaterialDesignRangeSlider}" 
-                                            DockPanel.Dock="Right"
-                                            HorizontalAlignment="Stretch"
-                                            Margin="5 0 10 0"
-                                            Minimum="0" 
-                                            Maximum="100" 
-                                            MinRangeWidth="10" 
-                                            MinRange="1"
-                                            AutoToolTipPlacement="TopLeft" 
-                                            LowerValue="{Binding Value.Minimum, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
-                                            UpperValue="{Binding Value.Maximum, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                                               DockPanel.Dock="Right"
+                                               HorizontalAlignment="Stretch"
+                                               Margin="5 0 10 0"
+                                               Minimum="0" 
+                                               Maximum="100" 
+                                               MinRangeWidth="10" 
+                                               MinRange="1"
+                                               AutoToolTipPlacement="TopLeft" 
+                                               UseLayoutRounding="False"
+                                               LowerValue="{Binding Value.Minimum, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
+                                               UpperValue="{Binding Value.Maximum, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
                                 <metro:RangeSlider.AutoToolTipLowerValueTemplate>
                                     <DataTemplate>
                                         <TextBlock HorizontalAlignment="Right" Text="{Binding StringFormat='{}{0:D}%'}" />
