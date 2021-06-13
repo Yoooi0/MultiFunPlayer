@@ -30,6 +30,7 @@ namespace MultiFunPlayer.ViewModels
         private Thread _updateThread;
         private CancellationTokenSource _cancellationSource;
         private float _syncTime;
+        private float _playbackSpeedCorrection;
 
         public bool IsPlaying { get; set; }
         public bool ValuesContentVisible { get; set; }
@@ -65,6 +66,7 @@ namespace MultiFunPlayer.ViewModels
             VideoDuration = float.NaN;
             CurrentPosition = float.NaN;
             PlaybackSpeed = 1;
+            _playbackSpeedCorrection = 1;
 
             IsPlaying = false;
 
@@ -103,7 +105,7 @@ namespace MultiFunPlayer.ViewModels
             bool UpdateValues()
             {
                 if (IsPlaying)
-                    CurrentPosition += (float)stopwatch.Elapsed.TotalSeconds * PlaybackSpeed;
+                    CurrentPosition += (float)stopwatch.Elapsed.TotalSeconds * PlaybackSpeed * _playbackSpeedCorrection;
 
                 var dirty = false;
                 foreach (var axis in EnumUtils.GetValues<DeviceAxis>())
@@ -342,12 +344,15 @@ namespace MultiFunPlayer.ViewModels
                 Logger.Debug("Detected seek: {0}", error);
                 if (SyncSettings.SyncOnSeek)
                     ResetSync();
+
+                _playbackSpeedCorrection = 1;
+            }
+            else
+            {
+                _playbackSpeedCorrection = MathUtils.Clamp(_playbackSpeedCorrection + error * 0.1f, 0.9f, 1.1f);
             }
 
             CurrentPosition = newPosition;
-            if (error < 1.0f)
-                CurrentPosition -= MathUtils.Map(MathF.Abs(error), 1, 0, 0, 0.75f) * error;
-
             if (!float.IsFinite(CurrentPosition))
                 return;
 
