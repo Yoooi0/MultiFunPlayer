@@ -88,11 +88,7 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
             {
                 Logger.Warn(e, "Error when opening serial port");
 
-                try
-                {
-                    if (serialPort?.IsOpen == true)
-                        serialPort.Close();
-                }
+                try { serialPort?.Close(); }
                 catch (IOException) { }
 
                 _ = Execute.OnUIThreadAsync(async () =>
@@ -137,11 +133,7 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
             }
             catch (Exception e) { Logger.Debug(e, $"{Name} failed with exception"); }
 
-            try
-            {
-                if (serialPort?.IsOpen == true)
-                    serialPort?.Close();
-            }
+            try { serialPort?.Close(); }
             catch (IOException) { }
         }
 
@@ -164,7 +156,22 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
             try
             {
                 await RefreshPorts();
-                return await ValueTask.FromResult(ComPorts.Contains(SelectedComPort));
+                if (!ComPorts.Contains(SelectedComPort))
+                    return await ValueTask.FromResult(false);
+
+                using var serialPort = new SerialPort(SelectedComPort, 115200)
+                {
+                    ReadTimeout = 1000,
+                    WriteTimeout = 1000,
+                    DtrEnable = true,
+                    RtsEnable = true
+                };
+
+                serialPort.Open();
+                serialPort.ReadExisting();
+                serialPort.Close();
+
+                return await ValueTask.FromResult(true);
             }
             catch
             {
