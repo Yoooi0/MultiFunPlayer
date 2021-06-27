@@ -16,6 +16,7 @@ The player's main feature is the ability to play multiple funscripts at the same
 * Supports [DeoVR](https://deovr.com/), [MPV](https://mpv.io/), [HereSphere](https://store.steampowered.com/app/1234730/HereSphere/) and [Whirligig](http://whirligig.xyz/) video players
 * Supports [buttplug.io](https://buttplug.io), network TCP/UDP, namedpipes and serial output
 * Auto detection and connection to any supported video player and output
+* Bind keyboard/mouse/gamepad input to almost any setting (900+ possible actions)
 * Supports multiple concurrent outputs
 * Real time script smoothing using pchip or makima interpolation
 * Auto-home feature which when video is paused moves axis to its default value after some delay
