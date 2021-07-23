@@ -73,9 +73,9 @@ namespace MultiFunPlayer
                 ContractResolver = new DefaultContractResolver()
             });
 
-            if (!settings.TryGetValue<string>("SelectedDevice", serializer, out var selectedDevice))
+            if (!settings.TryGetValue<string>("SelectedDevice", serializer, out var selectedDevice) || selectedDevice == null)
             {
-                selectedDevice = devices.Properties().Last().Name;
+                selectedDevice = devices.Properties().First().Name;
                 settings["SelectedDevice"] = selectedDevice;
                 Settings.Write(settings);
             }

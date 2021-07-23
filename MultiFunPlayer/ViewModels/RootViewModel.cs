@@ -23,6 +23,7 @@ namespace MultiFunPlayer.ViewModels
         [Inject] public VideoSourceViewModel VideoSource { get; set; }
         [Inject] public OutputTargetViewModel OutputTarget { get; set; }
         [Inject] public ShortcutViewModel Shortcut { get; set; }
+        [Inject] public ApplicationViewModel Application { get; set; }
 
         public RootViewModel(IViewManager viewManager, IEventAggregator eventAggregator)
         {
@@ -48,6 +49,9 @@ namespace MultiFunPlayer.ViewModels
 
         public void OnShortcutClick()
             => _ = Execute.OnUIThreadAsync(() => DialogHost.Show(_viewManager.CreateAndBindViewForModelIfNecessary(Shortcut), "RootDialog"));
+
+        public void OnSettingsClick()
+            => _ = Execute.OnUIThreadAsync(() => DialogHost.Show(_viewManager.CreateAndBindViewForModelIfNecessary(Application), "RootDialog"));
 
         public void OnLoaded(object sender, EventArgs e)
         {
