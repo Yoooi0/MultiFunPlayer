@@ -43,4 +43,10 @@
     <PackageReference Include="Microsoft-WindowsAPICodePack-Shell" Version="1.1.4" />
     <PackageReference Include="Vortice.XInput" Version="1.9.80" />
   </ItemGroup>
+
+  <ItemGroup>
+    <None Update="MultiFunPlayer.device.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
 </Project>

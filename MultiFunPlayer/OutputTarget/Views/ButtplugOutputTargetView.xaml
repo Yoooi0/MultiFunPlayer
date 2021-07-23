@@ -316,7 +316,7 @@
                                       material:TextFieldAssist.HasClearButton="True"
                                       material:HintAssist.HelperText="Axes"
                                       HorizontalAlignment="Center"
-                                      ItemsSource="{Binding Source={controls:EnumBindingSource {x:Type common:DeviceAxis}}}" 
+                                      ItemsSource="{Binding Source={x:Static common:DeviceAxis.All}}" 
                                       SelectedItem="{Binding SelectedDeviceAxis}"/>
 
                             <ComboBox Margin="0 0 10 0"

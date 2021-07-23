@@ -102,7 +102,7 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
 
             try
             {
-                var lastSentValues = EnumUtils.ToDictionary<DeviceAxis, float>(_ => float.NaN);
+                var lastSentValues = DeviceAxis.All.ToDictionary(a => a, _ => float.NaN);
                 while (!token.IsCancellationRequested && serialPort?.IsOpen == true)
                 {
                     var interval = MathF.Max(1, 1000.0f / UpdateRate);
