@@ -110,24 +110,22 @@ namespace MultiFunPlayer.ViewModels
                 var dirty = false;
                 foreach (var axis in EnumUtils.GetValues<DeviceAxis>())
                 {
-                    var axisDirty = false;
                     var state = AxisStates[axis];
                     var settings = AxisSettings[axis];
                     lock (state)
                     {
                         if (IsPlaying)
                         {
-                            axisDirty |= UpdateValues(axis, state, settings);
-                            axisDirty |= UpdateSmartLimit(axis, state, settings);
+                            state.Dirty |= UpdateValues(axis, state, settings);
+                            state.Dirty |= UpdateSmartLimit(axis, state, settings);
 
-                            if (axisDirty)
-                                autoHomeTimes[axis] = 0;
                         }
 
-                        axisDirty |= UpdateAutoHome(axis, state, settings);
-                    }
+                        state.Dirty |= UpdateAutoHome(axis, state, settings);
+                        dirty |= state.Dirty;
 
-                    dirty |= axisDirty;
+                        state.Dirty = false;
+                    }
                 }
 
                 return dirty;
@@ -204,6 +202,12 @@ namespace MultiFunPlayer.ViewModels
 
                 bool UpdateAutoHome(DeviceAxis axis, AxisState state, AxisSettings settings)
                 {
+                    if (state.Dirty)
+                    {
+                        autoHomeTimes[axis] = 0;
+                        return false;
+                    }
+
                     if (!float.IsFinite(state.Value))
                         return false;
 
@@ -866,10 +870,20 @@ namespace MultiFunPlayer.ViewModels
                         state.Value = MathUtils.Clamp01(state.Value - 0.05f);
                     }
                 });
-                shortcutManager.RegisterAction($"{axis}::Value", (v, _) =>
+                shortcutManager.RegisterAction($"{axis}::Value", (_, d) =>
                 {
                     var state = AxisStates[axis];
-                    lock (state) state.Value = MathUtils.Clamp01(v);
+                    lock (state)
+                    {
+                        if (state.Valid)
+                            return;
+
+                        if (!float.IsFinite(state.Value))
+                            state.Value = axis.DefaultValue();
+
+                        state.Value = MathUtils.Clamp01(state.Value + d);
+                        state.Dirty = true;
+                    }
                 });
 
                 shortcutManager.RegisterAction($"{axis}::ClearScript", () => OnAxisClear(axis));
@@ -966,6 +980,7 @@ namespace MultiFunPlayer.ViewModels
     {
         public int Index { get; set; } = int.MinValue;
         public float Value { get; set; } = float.NaN;
+        public bool Dirty { get; set; } = true;
 
         public bool Valid => Index != int.MinValue;
 
