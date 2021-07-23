@@ -154,16 +154,16 @@ namespace MultiFunPlayer.ViewModels
 
                 bool UpdateValues(DeviceAxis axis, AxisState state, AxisSettings settings)
                 {
+                    if (!state.Valid)
+                        return false;
+
                     var lastValue = state.Value;
-                    if (state.Valid)
-                    {
-                        if (!AxisKeyframes.TryGetValue(axis, out var keyframes) || keyframes == null || keyframes.Count == 0)
-                            return false;
+                    if (!AxisKeyframes.TryGetValue(axis, out var keyframes) || keyframes == null || keyframes.Count == 0)
+                        return false;
 
-                        var axisPosition = GetAxisPosition(axis);
-
-                        while (state.Index + 1 < keyframes.Count && keyframes[state.Index + 1].Position < axisPosition)
-                            state.Index++;
+                    var axisPosition = GetAxisPosition(axis);
+                    while (state.Index + 1 < keyframes.Count && keyframes[state.Index + 1].Position < axisPosition)
+                        state.Index++;
 
                         if (!keyframes.ValidateIndex(state.Index) || !keyframes.ValidateIndex(state.Index + 1))
                             return false;
@@ -197,19 +197,11 @@ namespace MultiFunPlayer.ViewModels
                             newValue = MathUtils.Lerp(newValue, randomizerValue, settings.RandomizerStrength / 100.0f);
                         }
 
-                        if (IsSyncing)
-                            newValue = MathUtils.Lerp(!float.IsFinite(state.Value) ? axis.DefaultValue() : state.Value, newValue, SyncProgress / 100);
-                        state.Value = newValue;
-                    }
-                    else
-                    {
-                        var newValue = axis.DefaultValue();
-                        if (IsSyncing)
-                            newValue = MathUtils.Lerp(!float.IsFinite(state.Value) ? axis.DefaultValue() : state.Value, newValue, SyncProgress / 100);
-                        state.Value = newValue;
-                    }
+                    if (IsSyncing)
+                        newValue = MathUtils.Lerp(!float.IsFinite(state.Value) ? axis.DefaultValue() : state.Value, newValue, SyncProgress / 100);
 
-                    return lastValue != state.Value;
+                    state.Value = newValue;
+                    return lastValue != newValue;
                 }
 
                 bool UpdateAutoHome(DeviceAxis axis, AxisState state, AxisSettings settings)
