@@ -2,12 +2,8 @@
 using MultiFunPlayer.Common.Messages;
 using Newtonsoft.Json.Linq;
 using Stylet;
-using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace MultiFunPlayer.ViewModels
 {

@@ -1,4 +1,3 @@
-using Accessibility;
 using MultiFunPlayer.Common;
 using MultiFunPlayer.Common.Converters;
 using MultiFunPlayer.Common.Input;
@@ -80,7 +79,7 @@ namespace MultiFunPlayer
                 Settings.Write(settings);
             }
 
-            var a = devices[selectedDevice].ToObject<List<DeviceAxis>>(serializer);
+            _ = devices[selectedDevice].ToObject<List<DeviceAxis>>(serializer);
         }
 
         private void SetupJson()

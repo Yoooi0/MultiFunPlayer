@@ -1,12 +1,7 @@
 ﻿using MultiFunPlayer.Common.Converters;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using Stylet;
-using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics;
-using System.Linq;
 using System.Runtime.Serialization;
 
 namespace MultiFunPlayer.Common
