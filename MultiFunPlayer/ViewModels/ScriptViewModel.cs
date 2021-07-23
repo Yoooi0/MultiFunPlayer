@@ -123,10 +123,8 @@ namespace MultiFunPlayer.ViewModels
                             if (axisDirty)
                                 autoHomeTimes[axis] = 0;
                         }
-                        else
-                        {
-                            axisDirty |= UpdateAutoHome(axis, state, settings);
-                        }
+
+                        axisDirty |= UpdateAutoHome(axis, state, settings);
                     }
 
                     dirty |= axisDirty;
@@ -165,37 +163,37 @@ namespace MultiFunPlayer.ViewModels
                     while (state.Index + 1 < keyframes.Count && keyframes[state.Index + 1].Position < axisPosition)
                         state.Index++;
 
-                        if (!keyframes.ValidateIndex(state.Index) || !keyframes.ValidateIndex(state.Index + 1))
-                            return false;
+                    if (!keyframes.ValidateIndex(state.Index) || !keyframes.ValidateIndex(state.Index + 1))
+                        return false;
 
-                        var newValue = default(float);
-                        if (keyframes.IsRawCollection || state.Index == 0 || state.Index + 2 == keyframes.Count || settings.InterpolationType == InterpolationType.Linear)
-                        {
-                            var p0 = keyframes[state.Index];
-                            var p1 = keyframes[state.Index + 1];
+                    var newValue = default(float);
+                    if (keyframes.IsRawCollection || state.Index == 0 || state.Index + 2 == keyframes.Count || settings.InterpolationType == InterpolationType.Linear)
+                    {
+                        var p0 = keyframes[state.Index];
+                        var p1 = keyframes[state.Index + 1];
 
-                            newValue = MathUtils.Interpolate(p0.Position, p0.Value, p1.Position, p1.Value, axisPosition, InterpolationType.Linear);
-                        }
-                        else
-                        {
-                            var p0 = keyframes[state.Index - 1];
-                            var p1 = keyframes[state.Index + 0];
-                            var p2 = keyframes[state.Index + 1];
-                            var p3 = keyframes[state.Index + 2];
+                        newValue = MathUtils.Interpolate(p0.Position, p0.Value, p1.Position, p1.Value, axisPosition, InterpolationType.Linear);
+                    }
+                    else
+                    {
+                        var p0 = keyframes[state.Index - 1];
+                        var p1 = keyframes[state.Index + 0];
+                        var p2 = keyframes[state.Index + 1];
+                        var p3 = keyframes[state.Index + 2];
 
-                            newValue = MathUtils.Interpolate(p0.Position, p0.Value, p1.Position, p1.Value, p2.Position, p2.Value, p3.Position, p3.Value,
-                                                                    axisPosition, settings.InterpolationType);
-                        }
+                        newValue = MathUtils.Interpolate(p0.Position, p0.Value, p1.Position, p1.Value, p2.Position, p2.Value, p3.Position, p3.Value,
+                                                                axisPosition, settings.InterpolationType);
+                    }
 
-                        if (settings.Inverted)
-                            newValue = 1 - newValue;
+                    if (settings.Inverted)
+                        newValue = 1 - newValue;
 
-                        if (settings.LinkAxis != null)
-                        {
-                            var speed = MathUtils.Map(settings.RandomizerSpeed, 100, 0, 0.25f, 4);
-                            var randomizerValue = (float)(randomizer.Calculate2D(axisPosition / speed, settings.RandomizerSeed) + 1) / 2;
-                            newValue = MathUtils.Lerp(newValue, randomizerValue, settings.RandomizerStrength / 100.0f);
-                        }
+                    if (settings.LinkAxis != null)
+                    {
+                        var speed = MathUtils.Map(settings.RandomizerSpeed, 100, 0, 0.25f, 4);
+                        var randomizerValue = (float)(randomizer.Calculate2D(axisPosition / speed, settings.RandomizerSeed) + 1) / 2;
+                        newValue = MathUtils.Lerp(newValue, randomizerValue, settings.RandomizerStrength / 100.0f);
+                    }
 
                     if (IsSyncing)
                         newValue = MathUtils.Lerp(!float.IsFinite(state.Value) ? axis.DefaultValue() : state.Value, newValue, SyncProgress / 100);
