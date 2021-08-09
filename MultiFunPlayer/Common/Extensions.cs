@@ -126,6 +126,15 @@ namespace MultiFunPlayer.Common
         }
     }
 
+    public static class IOExtensions
+    {
+        public static T AsRefreshed<T>(this T info) where T : FileSystemInfo
+        {
+            info.Refresh();
+            return info;
+        }
+    }
+
     public static class CollectionExtensions
     {
         public static ObservableConcurrentDictionaryView<TKey, TValue, TView> CreateView<TKey, TValue, TView>(

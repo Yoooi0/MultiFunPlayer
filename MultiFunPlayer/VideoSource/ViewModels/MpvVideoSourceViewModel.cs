@@ -55,7 +55,7 @@ namespace MultiFunPlayer.VideoSource.ViewModels
                 }
                 catch (TimeoutException)
                 {
-                    var executable = Executable ?? new FileInfo(Path.Join(Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName), "mpv.exe"));
+                    var executable = Executable?.AsRefreshed() ?? new FileInfo(Path.Join(Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName), "mpv.exe"));
                     if (!executable.Exists)
                     {
                         throw new Exception("Could not find mpv executable! Please set path to mpv.exe or download latest release from settings.");

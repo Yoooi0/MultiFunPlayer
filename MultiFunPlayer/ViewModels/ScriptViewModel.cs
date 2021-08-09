@@ -390,12 +390,7 @@ namespace MultiFunPlayer.ViewModels
                 if(settings.TryGetValue<List<ScriptLibrary>>(nameof(ScriptLibraries), out var scriptDirectories))
                 {
                     foreach (var library in scriptDirectories)
-                    {
-                        if (!library.Directory.Exists || ScriptLibraries.Any(x => string.Equals(x.Directory.FullName, library.Directory.FullName)))
-                            continue;
-
                         ScriptLibraries.Add(library);
-                    }
                 }
 
                 if (settings.TryGetValue<bool>(nameof(ValuesContentVisible), out var valuesContentVisible))
@@ -719,7 +714,7 @@ namespace MultiFunPlayer.ViewModels
 
         private bool MoveScript(DeviceAxis axis, DirectoryInfo directory)
         {
-            if (!directory.Exists || AxisModels[axis].Script == null)
+            if (directory?.Exists == false || AxisModels[axis].Script == null)
                 return false;
 
             try
@@ -755,7 +750,7 @@ namespace MultiFunPlayer.ViewModels
         public RelayCommand<DeviceAxis, ScriptLibrary> OnAxisMoveToLibraryCommand => new(OnAxisMoveToLibrary);
         public void OnAxisMoveToLibrary(DeviceAxis axis, ScriptLibrary library)
         {
-            if (library?.Directory.Exists == true && MoveScript(axis, library.Directory))
+            if (MoveScript(axis, library?.Directory.AsRefreshed()))
                 ReloadScript(axis);
         }
 
@@ -821,9 +816,6 @@ namespace MultiFunPlayer.ViewModels
                 return;
 
             var directory = new DirectoryInfo(dialog.FileName);
-            if (ScriptLibraries.Any(x => string.Equals(x.Directory.FullName, directory.FullName)))
-                return;
-
             ScriptLibraries.Add(new ScriptLibrary(directory));
             ReloadScript(null);
         }
