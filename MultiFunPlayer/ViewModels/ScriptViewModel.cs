@@ -1027,9 +1027,6 @@ namespace MultiFunPlayer.ViewModels
     {
         public ScriptLibrary(DirectoryInfo directory)
         {
-            if (directory?.Exists == false)
-                throw new DirectoryNotFoundException();
-
             Directory = directory;
         }
 
@@ -1037,6 +1034,16 @@ namespace MultiFunPlayer.ViewModels
         [JsonProperty] public bool Recursive { get; set; }
 
         public IEnumerable<FileInfo> EnumerateFiles(string searchPattern)
-            => Directory.EnumerateFiles(searchPattern, Recursive ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly);
+        {
+            try
+            {
+                Directory.Refresh();
+                if (Directory.Exists)
+                    return Directory.EnumerateFiles(searchPattern, Recursive ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly);
+            }
+            catch { }
+
+            return Enumerable.Empty<FileInfo>();
+        }
     }
 }
