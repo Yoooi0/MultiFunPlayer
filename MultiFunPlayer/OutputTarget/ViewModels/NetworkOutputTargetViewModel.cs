@@ -75,7 +75,7 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
                     var interval = MathF.Max(1, 1000.0f / UpdateRate);
                     UpdateValues();
 
-                    var commands = TCode.ToString(Values, (int)interval);
+                    var commands = DeviceAxis.ToString(Values, (int)interval);
                     if (client.Connected && !string.IsNullOrWhiteSpace(commands))
                     {
                         Logger.Trace("Sending \"{0}\" to \"{1}\"", commands.Trim(), $"tcp://{Endpoint}");
@@ -118,7 +118,7 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
                     var interval = MathF.Max(1, 1000.0f / UpdateRate);
                     UpdateValues();
 
-                    var commands = TCode.ToString(Values, (int)interval);
+                    var commands = DeviceAxis.ToString(Values, (int)interval);
                     if (!string.IsNullOrWhiteSpace(commands))
                     {
                         Logger.Trace("Sending \"{0}\" to \"{1}\"", commands.Trim(), $"udp://{Endpoint}");

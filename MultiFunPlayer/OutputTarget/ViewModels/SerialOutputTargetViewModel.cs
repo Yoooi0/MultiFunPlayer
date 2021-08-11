@@ -108,8 +108,8 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
                     var interval = MathF.Max(1, 1000.0f / UpdateRate);
                     UpdateValues();
 
-                    var dirtyValues = Values.Where(x => TCode.IsDirty(x.Value, lastSentValues[x.Key]));
-                    var commands = TCode.ToString(dirtyValues, (int)interval);
+                    var dirtyValues = Values.Where(x => DeviceAxis.IsDirty(x.Value, lastSentValues[x.Key]));
+                    var commands = DeviceAxis.ToString(dirtyValues, (int)interval);
                     if (serialPort?.IsOpen == true && !string.IsNullOrWhiteSpace(commands))
                     {
                         Logger.Trace("Sending \"{0}\" to \"{1}\"", commands.Trim(), SelectedComPort);

@@ -1,7 +1,10 @@
 ﻿using MultiFunPlayer.Common.Converters;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
 using System.Runtime.Serialization;
 
 namespace MultiFunPlayer.Common
@@ -20,20 +23,39 @@ namespace MultiFunPlayer.Common
         public override string ToString() => Name;
         public override int GetHashCode() => _id;
 
-        private static readonly Dictionary<string, DeviceAxis> _axes = new();
-        public static IReadOnlyCollection<DeviceAxis> All => _axes.Values;
-
         [OnDeserialized]
-        internal void OnDeserializedMethod(StreamingContext context)
-        {
-            _id = _axes.Count;
-            _axes[Name] = this;
-        }
+        internal void OnDeserializedMethod(StreamingContext context) => _id = _count++;
+
+        private static int _count;
+        private static int _outputMaximum;
+        private static string _outputFormat;
+        private static Dictionary<string, DeviceAxis> _axes;
+        public static IReadOnlyCollection<DeviceAxis> All => _axes.Values;
 
         public static bool TryParse(string name, out DeviceAxis axis)
         {
             axis = _axes.GetValueOrDefault(name, null);
             return axis != null;
+        }
+
+        public static string ToString(DeviceAxis axis, float value) => $"{axis}{string.Format(_outputFormat, value * _outputMaximum)}";
+        public static string ToString(DeviceAxis axis, float value, int interval) => $"{ToString(axis, value)}I{interval}";
+
+        public static string ToString(IEnumerable<KeyValuePair<DeviceAxis, float>> values, int interval)
+            => $"{values.Aggregate(string.Empty, (s, x) => $"{s} {ToString(x.Key, x.Value, interval)}")}\n".TrimStart();
+
+        public static bool IsDirty(float value, float lastValue)
+            => float.IsFinite(value) && (!float.IsFinite(lastValue) || MathF.Abs(lastValue - value) * 999 >= 1);
+
+        public static void LoadSettings(JObject settings, JsonSerializer serializer)
+        {
+            if (!settings.TryGetValue<List<DeviceAxis>>("Axes", serializer, out var axes)
+             || !settings.TryGetValue<int>("OutputPrecision", serializer, out var precision))
+                throw new JsonReaderException("Unable to read device settings");
+
+            _outputMaximum = (int)(MathF.Pow(10, precision) - 1);
+            _outputFormat = $"{{0:{new string('0', precision)}}}";
+            _axes = axes.ToDictionary(a => a.Name, a => a);
         }
     }
 }

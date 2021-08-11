@@ -79,7 +79,7 @@ namespace MultiFunPlayer
                 Settings.Write(settings);
             }
 
-            _ = devices[selectedDevice].ToObject<List<DeviceAxis>>(serializer);
+            DeviceAxis.LoadSettings(devices[selectedDevice] as JObject, serializer);
         }
 
         private void SetupJson()
