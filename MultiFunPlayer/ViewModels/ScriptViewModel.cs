@@ -57,7 +57,7 @@ namespace MultiFunPlayer.ViewModels
         {
             eventAggregator.Subscribe(this);
 
-            AxisModels = new ObservableConcurrentDictionary<DeviceAxis, AxisModel>(EnumUtils.ToDictionary<DeviceAxis, AxisModel>(_ => new AxisModel()));
+            AxisModels = new ObservableConcurrentDictionary<DeviceAxis, AxisModel>(DeviceAxis.All.ToDictionary(a => a, _ => new AxisModel()));
             ScriptLibraries = new BindableCollection<ScriptLibrary>();
             SyncSettings = new SyncSettings();
 
@@ -87,7 +87,7 @@ namespace MultiFunPlayer.ViewModels
             var stopwatch = new Stopwatch();
             const float uiUpdateInterval = 1f / 60f;
             var uiUpdateTime = 0f;
-            var autoHomeTimes = EnumUtils.ToDictionary<DeviceAxis, float>(_ => 0f);
+            var autoHomeTimes = DeviceAxis.All.ToDictionary(a => a, _ => 0f);
 
             stopwatch.Start();
 
@@ -108,7 +108,7 @@ namespace MultiFunPlayer.ViewModels
                     CurrentPosition += (float)stopwatch.Elapsed.TotalSeconds * PlaybackSpeed * _playbackSpeedCorrection;
 
                 var dirty = false;
-                foreach (var axis in EnumUtils.GetValues<DeviceAxis>())
+                foreach (var axis in DeviceAxis.All)
                 {
                     var state = AxisStates[axis];
                     var settings = AxisSettings[axis];
@@ -118,7 +118,6 @@ namespace MultiFunPlayer.ViewModels
                         {
                             state.Dirty |= UpdateValues(axis, state, settings);
                             state.Dirty |= UpdateSmartLimit(axis, state, settings);
-
                         }
 
                         state.Dirty |= UpdateAutoHome(axis, state, settings);
@@ -135,7 +134,10 @@ namespace MultiFunPlayer.ViewModels
                     if (!settings.SmartLimitEnabled)
                         return false;
 
-                    var limitState = AxisStates[DeviceAxis.L0];
+                    if (!DeviceAxis.TryParse("L0", out var strokeAxis))
+                        return false;
+
+                    var limitState = AxisStates[strokeAxis];
                     if (!limitState.Valid)
                         return false;
 
@@ -144,7 +146,7 @@ namespace MultiFunPlayer.ViewModels
 
                     var factor = MathUtils.Map(limitValue, 0.25f, 0.9f, 1f, 0f);
                     var lastValue = state.Value;
-                    state.Value = MathUtils.Lerp(axis.DefaultValue(), state.Value, factor);
+                    state.Value = MathUtils.Lerp(axis.DefaultValue, state.Value, factor);
                     return lastValue != state.Value;
                 }
 
@@ -194,7 +196,7 @@ namespace MultiFunPlayer.ViewModels
                     }
 
                     if (IsSyncing)
-                        newValue = MathUtils.Lerp(!float.IsFinite(state.Value) ? axis.DefaultValue() : state.Value, newValue, SyncProgress / 100);
+                        newValue = MathUtils.Lerp(!float.IsFinite(state.Value) ? axis.DefaultValue : state.Value, newValue, SyncProgress / 100);
 
                     state.Value = newValue;
                     return lastValue != newValue;
@@ -217,7 +219,7 @@ namespace MultiFunPlayer.ViewModels
                     if (settings.AutoHomeDuration < 0.0001f)
                     {
                         var lastValue = state.Value;
-                        state.Value = axis.DefaultValue();
+                        state.Value = axis.DefaultValue;
                         return lastValue != state.Value;
                     }
 
@@ -227,7 +229,7 @@ namespace MultiFunPlayer.ViewModels
                     if (t >= 0 && t / settings.AutoHomeDuration <= 1)
                     {
                         var lastValue = state.Value;
-                        state.Value = MathUtils.Lerp(state.Value, axis.DefaultValue(), MathF.Pow(2, 10 * (t / settings.AutoHomeDuration - 1)));
+                        state.Value = MathUtils.Lerp(state.Value, axis.DefaultValue, MathF.Pow(2, 10 * (t / settings.AutoHomeDuration - 1)));
                         return lastValue != state.Value;
                     }
 
@@ -246,7 +248,7 @@ namespace MultiFunPlayer.ViewModels
                 {
                     Execute.OnUIThread(() =>
                     {
-                        foreach (var axis in EnumUtils.GetValues<DeviceAxis>())
+                        foreach (var axis in DeviceAxis.All)
                             AxisStates[axis].Notify();
                     });
                 }
@@ -350,7 +352,7 @@ namespace MultiFunPlayer.ViewModels
             if (!float.IsFinite(CurrentPosition))
                 return;
 
-            foreach (var axis in EnumUtils.GetValues<DeviceAxis>())
+            foreach (var axis in DeviceAxis.All)
             {
                 var state = AxisStates[axis];
                 if (wasSeek || !state.Valid)
@@ -380,7 +382,7 @@ namespace MultiFunPlayer.ViewModels
                 {
                     foreach(var property in axisSettingsToken.Children<JProperty>())
                     {
-                        if (!Enum.TryParse<DeviceAxis>(property.Name, out var axis))
+                        if (!DeviceAxis.TryParse(property.Name, out var axis))
                             continue;
 
                         property.Value.Populate(AxisSettings[axis]);
@@ -419,7 +421,7 @@ namespace MultiFunPlayer.ViewModels
         private List<DeviceAxis> UpdateLinkScript(params DeviceAxis[] axes) => UpdateLinkScript(axes.AsEnumerable());
         private List<DeviceAxis> UpdateLinkScript(IEnumerable<DeviceAxis> axes)
         {
-            axes ??= EnumUtils.GetValues<DeviceAxis>();
+            axes ??= DeviceAxis.All;
 
             Logger.Debug("Trying to link axes [Axes: {list}]", axes);
 
@@ -447,9 +449,9 @@ namespace MultiFunPlayer.ViewModels
                         continue;
                 }
 
-                Logger.Debug("Linked {0} to {1}", axis, model.Settings.LinkAxis.Value);
+                Logger.Debug("Linked {0} to {1}", axis.Name, model.Settings.LinkAxis.Name);
 
-                SetScript(axis, LinkedScriptFile.LinkTo(AxisModels[model.Settings.LinkAxis.Value].Script));
+                SetScript(axis, LinkedScriptFile.LinkTo(AxisModels[model.Settings.LinkAxis].Script));
                 model.Settings.RandomizerSeed = MathUtils.Random(short.MinValue, short.MaxValue);
                 updated.Add(axis);
             }
@@ -459,7 +461,7 @@ namespace MultiFunPlayer.ViewModels
 
         private void ResetScript(params DeviceAxis[] axes)
         {
-            axes ??= EnumUtils.GetValues<DeviceAxis>();
+            axes ??= DeviceAxis.All.ToArray();
 
             Logger.Debug("Resetting axes [Axes: {list}]", axes);
             foreach (var axis in axes)
@@ -482,7 +484,7 @@ namespace MultiFunPlayer.ViewModels
 
         private void ReloadScript(params DeviceAxis[] axes)
         {
-            axes ??= EnumUtils.GetValues<DeviceAxis>();
+            axes ??= DeviceAxis.All.ToArray();
 
             ResetSync();
 
@@ -505,7 +507,7 @@ namespace MultiFunPlayer.ViewModels
         private void InvalidateState(params DeviceAxis[] axes) => InvalidateState(axes.AsEnumerable());
         private void InvalidateState(IEnumerable<DeviceAxis> axes)
         {
-            axes ??= EnumUtils.GetValues<DeviceAxis>();
+            axes ??= DeviceAxis.All;
 
             Logger.Debug("Invalidating axes [Axes: {list}]", axes);
             foreach (var axis in axes)
@@ -518,7 +520,7 @@ namespace MultiFunPlayer.ViewModels
 
         private List<DeviceAxis> TryMatchFiles(bool overwrite, params DeviceAxis[] axes)
         {
-            axes ??= EnumUtils.GetValues<DeviceAxis>();
+            axes ??= DeviceAxis.All.ToArray();
 
             Logger.Debug("Maching files to axes [Axes: {list}]", axes);
 
@@ -530,25 +532,29 @@ namespace MultiFunPlayer.ViewModels
             {
                 var videoWithoutExtension = Path.GetFileNameWithoutExtension(VideoFile.Name);
                 var funscriptWithoutExtension = Path.GetFileNameWithoutExtension(fileName);
-                if (axes.Contains(DeviceAxis.L0))
+
+                if (DeviceAxis.TryParse("L0", out var strokeAxis))
                 {
-                    if (string.Equals(funscriptWithoutExtension, videoWithoutExtension, StringComparison.OrdinalIgnoreCase))
+                    if (axes.Contains(strokeAxis))
                     {
-                        if (AxisModels[DeviceAxis.L0].Script == null || overwrite)
+                        if (string.Equals(funscriptWithoutExtension, videoWithoutExtension, StringComparison.OrdinalIgnoreCase))
                         {
-                            SetScript(DeviceAxis.L0, generator());
-                            updated.Add(DeviceAxis.L0);
+                            if (AxisModels[strokeAxis].Script == null || overwrite)
+                            {
+                                SetScript(strokeAxis, generator());
+                                updated.Add(strokeAxis);
 
-                            Logger.Debug("Matched {0} script to \"{1}\"", DeviceAxis.L0, fileName);
+                                Logger.Debug("Matched {0} script to \"{1}\"", strokeAxis.Name, fileName);
+                            }
+
+                            return true;
                         }
-
-                        return true;
                     }
                 }
 
                 foreach (var axis in axes)
                 {
-                    if (axis.Names().Any(n => funscriptWithoutExtension.EndsWith(n, StringComparison.OrdinalIgnoreCase)))
+                    if (axis.FunscriptNames.Any(n => funscriptWithoutExtension.EndsWith(n, StringComparison.OrdinalIgnoreCase)))
                     {
                         if (AxisModels[axis].Script == null || overwrite)
                         {
@@ -635,7 +641,7 @@ namespace MultiFunPlayer.ViewModels
         {
             ResetSync();
 
-            foreach (var axis in EnumUtils.GetValues<DeviceAxis>())
+            foreach (var axis in DeviceAxis.All)
                 SearchForValidIndex(axis, AxisStates[axis]);
         }
 
@@ -840,7 +846,7 @@ namespace MultiFunPlayer.ViewModels
 
         private void RegisterShortcuts(IShortcutManager shortcutManager)
         {
-            foreach (var axis in EnumUtils.GetValues<DeviceAxis>())
+            foreach (var axis in DeviceAxis.All)
             {
                 shortcutManager.RegisterAction($"{axis}::Value::Plus5%", () =>
                 {
@@ -848,7 +854,7 @@ namespace MultiFunPlayer.ViewModels
                     lock (state)
                     {
                         if (!float.IsFinite(state.Value))
-                            state.Value = axis.DefaultValue();
+                            state.Value = axis.DefaultValue;
                         state.Value = MathUtils.Clamp01(state.Value + 0.05f);
                     }
                 });
@@ -858,7 +864,7 @@ namespace MultiFunPlayer.ViewModels
                     lock (state)
                     {
                         if (!float.IsFinite(state.Value))
-                            state.Value = axis.DefaultValue();
+                            state.Value = axis.DefaultValue;
                         state.Value = MathUtils.Clamp01(state.Value - 0.05f);
                     }
                 });
@@ -871,7 +877,7 @@ namespace MultiFunPlayer.ViewModels
                             return;
 
                         if (!float.IsFinite(state.Value))
-                            state.Value = axis.DefaultValue();
+                            state.Value = axis.DefaultValue;
 
                         state.Value = MathUtils.Clamp01(state.Value + d);
                         state.Dirty = true;
@@ -906,7 +912,7 @@ namespace MultiFunPlayer.ViewModels
                     AxisSettings[axis].LinkAxis = null;
                     ReloadScript(axis);
                 });
-                foreach (var other in EnumUtils.GetValues<DeviceAxis>().Where(a => a != axis))
+                foreach (var other in DeviceAxis.All.Where(a => a != axis))
                 {
                     shortcutManager.RegisterAction($"{axis}::LinkAxis::Value::{other}", () =>
                     {
@@ -991,7 +997,7 @@ namespace MultiFunPlayer.ViewModels
     public class AxisSettings : PropertyChangedBase
     {
         [JsonProperty] public bool LinkAxisHasPriority { get; set; } = false;
-        [JsonProperty] public DeviceAxis? LinkAxis { get; set; } = null;
+        [JsonProperty] public DeviceAxis LinkAxis { get; set; } = null;
         [JsonProperty] public bool SmartLimitEnabled { get; set; } = false;
         [JsonProperty] public InterpolationType InterpolationType { get; set; } = InterpolationType.Pchip;
         [JsonProperty] public bool AutoHomeEnabled { get; set; } = false;

@@ -550,7 +550,7 @@
                                                                           Margin="0 0 10 0" 
                                                                           material:TextFieldAssist.HasClearButton="True"
                                                                           Width="50" 
-                                                                          ItemsSource="{Binding Source={controls:EnumBindingSource {x:Type common:DeviceAxis}}}" 
+                                                                          ItemsSource="{Binding Source={x:Static common:DeviceAxis.All}}" 
                                                                           SelectedItem="{Binding Value.Settings.LinkAxis}"
                                                                           SelectionChanged="{s:Action OnSelectedLinkAxisChanged}"/>
 
@@ -670,10 +670,10 @@
                                                     <Style TargetType="{x:Type ToggleButton}" BasedOn="{StaticResource MaterialDesignToolBarToggleButton}">
                                                         <Setter Property="Visibility" Value="Collapsed "/>
                                                         <Style.Triggers>
-                                                            <DataTrigger  Binding="{Binding Key}" Value="R1">
+                                                            <DataTrigger  Binding="{Binding Key.Name}" Value="R1">
                                                                 <Setter Property="Visibility" Value="Visible"/>
                                                             </DataTrigger>
-                                                            <DataTrigger  Binding="{Binding Key}" Value="R2">
+                                                            <DataTrigger  Binding="{Binding Key.Name}" Value="R2">
                                                                 <Setter Property="Visibility" Value="Visible"/>
                                                             </DataTrigger>
                                                         </Style.Triggers>

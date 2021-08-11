@@ -64,6 +64,16 @@
                                        Height="24"
                                        Margin="0"/>
                 </Button>
+                <Button Style="{StaticResource WindowButtonStyle}"
+                        Click="{s:Action OnSettingsClick}"
+                        DockPanel.Dock="Right"
+                        Margin="0 -1 0 -1">
+                    <material:PackIcon Foreground="{Binding Path=BorderForegroundBrush, RelativeSource={RelativeSource AncestorType={x:Type materialExtensions:MaterialWindow}}}"
+                                       Kind="Cog"
+                                       Width="24"
+                                       Height="24"
+                                       Margin="0"/>
+                </Button>
             </DockPanel>
         </DataTemplate>
     </materialExtensions:MaterialWindow.TitleTemplate>

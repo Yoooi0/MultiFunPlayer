@@ -32,8 +32,8 @@ namespace MultiFunPlayer.OutputTarget
             eventAggregator.Subscribe(this);
             _valueProvider = valueProvider;
 
-            Values = EnumUtils.ToDictionary<DeviceAxis, float>(axis => axis.DefaultValue());
-            AxisSettings = new ObservableConcurrentDictionary<DeviceAxis, DeviceAxisSettings>(EnumUtils.ToDictionary<DeviceAxis, DeviceAxisSettings>(_ => new DeviceAxisSettings()));
+            Values = DeviceAxis.All.ToDictionary(a => a, a => a.DefaultValue);
+            AxisSettings = new ObservableConcurrentDictionary<DeviceAxis, DeviceAxisSettings>(DeviceAxis.All.ToDictionary(a => a, _ => new DeviceAxisSettings()));
             UpdateRate = 60;
 
             PropertyChanged += (s, e) =>
@@ -70,11 +70,11 @@ namespace MultiFunPlayer.OutputTarget
 
         protected void UpdateValues()
         {
-            foreach (var axis in EnumUtils.GetValues<DeviceAxis>())
+            foreach (var axis in DeviceAxis.All)
             {
                 var value = _valueProvider?.GetValue(axis) ?? float.NaN;
                 if (!float.IsFinite(value))
-                    value = axis.DefaultValue();
+                    value = axis.DefaultValue;
 
                 var settings = AxisSettings[axis];
                 Values[axis] = MathUtils.Lerp(settings.Minimum / 100f, settings.Maximum / 100f, value);

@@ -9,6 +9,7 @@ using MultiFunPlayer.ViewModels;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;
+using Newtonsoft.Json.Serialization;
 using NLog;
 using NLog.Config;
 using NLog.Targets;
@@ -17,6 +18,7 @@ using StyletIoC;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Windows;
 using System.Windows.Interop;
@@ -37,6 +39,7 @@ namespace MultiFunPlayer
 
         protected override void OnStart()
         {
+            SetupDevice();
             SetupJson();
             SetupLoging();
 
@@ -59,6 +62,26 @@ namespace MultiFunPlayer
             rawInput?.RegisterWindow(source);
         }
 
+        private void SetupDevice()
+        {
+            var settings = Settings.Read();
+            var devices = JObject.Parse(File.ReadAllText("MultiFunPlayer.device.json"));
+
+            var serializer = JsonSerializer.Create(new JsonSerializerSettings()
+            {
+                ContractResolver = new DefaultContractResolver()
+            });
+
+            if (!settings.TryGetValue<string>("SelectedDevice", serializer, out var selectedDevice) || selectedDevice == null)
+            {
+                selectedDevice = devices.Properties().First().Name;
+                settings["SelectedDevice"] = selectedDevice;
+                Settings.Write(settings);
+            }
+
+            DeviceAxis.LoadSettings(devices[selectedDevice] as JObject, serializer);
+        }
+
         private void SetupJson()
         {
             var logger = LogManager.GetLogger(nameof(JsonConvert));
@@ -72,6 +95,7 @@ namespace MultiFunPlayer
                 settings.Converters.Add(new LogLevelConverter());
                 settings.Converters.Add(new FileSystemInfoConverter());
                 settings.Converters.Add(new StringEnumConverter());
+                settings.Converters.Add(new DeviceAxisConverter());
                 settings.Error += (s, e) =>
                 {
                     if (e.ErrorContext.Error is JsonSerializationException or JsonReaderException)
@@ -117,7 +141,6 @@ namespace MultiFunPlayer
                 foreach (var (filter, maxLevel) in blacklist)
                     config.AddRule(LogLevel.Trace, maxLevel, blackhole, filter, true);
             }
-
 
             if (settings.TryGetValue<LogLevel>("LogLevel", out var minLevel))
             {

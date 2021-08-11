@@ -23,7 +23,8 @@ namespace MultiFunPlayer.Common
 
     public static class JsonExtensions
     {
-        public static bool TryToObject<T>(this JToken token, out T value)
+        public static bool TryToObject<T>(this JToken token, out T value) => TryToObject(token, null, out value);
+        public static bool TryToObject<T>(this JToken token, JsonSerializer serializer, out T value)
         {
             value = default;
 
@@ -32,7 +33,8 @@ namespace MultiFunPlayer.Common
                 if (token.Type == JTokenType.Null)
                     return false;
 
-                value = token.ToObject<T>();
+                serializer ??= JsonSerializer.CreateDefault();
+                value = token.ToObject<T>(serializer);
                 return true;
             }
             catch (JsonException)
@@ -41,10 +43,11 @@ namespace MultiFunPlayer.Common
             }
         }
 
-        public static bool TryGetValue<T>(this JObject o, string propertyName, out T value)
+        public static bool TryGetValue<T>(this JObject o, string propertyName, out T value) => TryGetValue(o, propertyName, null, out value);
+        public static bool TryGetValue<T>(this JObject o, string propertyName, JsonSerializer serializer, out T value)
         {
             value = default;
-            return o.TryGetValue(propertyName, out var token) && token.TryToObject(out value);
+            return o.TryGetValue(propertyName, out var token) && token.TryToObject(serializer, out value);
         }
 
         public static bool EnsureContainsObjects(this JToken token, params string[] propertyNames)

@@ -62,7 +62,7 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
         }
 
         public ButtplugClientDevice SelectedDevice { get; set; }
-        public DeviceAxis? SelectedDeviceAxis { get; set; }
+        public DeviceAxis SelectedDeviceAxis { get; set; }
         public ServerMessage.Types.MessageAttributeType? SelectedMessageType { get; set; }
         public uint? SelectedFeatureIndex { get; set; }
         public bool CanAddSelected => SelectedDevice != null && SelectedDeviceAxis != null && SelectedMessageType != null && SelectedFeatureIndex != null;
@@ -171,7 +171,7 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
             {
                 _ = ScanAsync(client, token);
 
-                var lastSentValues = EnumUtils.ToDictionary<DeviceAxis, float>(_ => float.PositiveInfinity);
+                var lastSentValues = DeviceAxis.All.ToDictionary(a => a, _ => float.PositiveInfinity);
                 bool IsDirty(DeviceAxis axis)
                     => float.IsFinite(Values[axis]) && (!float.IsFinite(lastSentValues[axis]) || MathF.Abs(lastSentValues[axis] - Values[axis]) >= 0.005f);
 
@@ -326,7 +326,7 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
             {
                 DeviceName = SelectedDevice.Name,
                 DeviceIndex = SelectedDevice.Index,
-                SourceAxis = SelectedDeviceAxis.Value,
+                SourceAxis = SelectedDeviceAxis,
                 FeatureIndex = SelectedFeatureIndex.Value,
                 MessageType = SelectedMessageType.Value
             });

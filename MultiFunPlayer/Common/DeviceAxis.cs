@@ -1,76 +1,61 @@
-﻿using System;
+﻿using MultiFunPlayer.Common.Converters;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Linq;
+using System.Runtime.Serialization;
 
 namespace MultiFunPlayer.Common
 {
-    public enum DeviceAxis
+    [JsonObject(MemberSerialization = MemberSerialization.OptIn)]
+    [TypeConverter(typeof(DeviceAxisTypeConverter))]
+    public sealed class DeviceAxis
     {
-        L0,
-        L1,
-        L2,
-        R0,
-        R1,
-        R2,
-        V0,
-        V1,
-        L3,
-    }
+        private int _id;
 
-    public static class DeviceAxisExtensions
-    {
-        public static float DefaultValue(this DeviceAxis axis)
-            => axis switch
-            {
-                DeviceAxis.L0 => 0.5f,
-                DeviceAxis.L1 => 0.5f,
-                DeviceAxis.L2 => 0.5f,
-                DeviceAxis.R0 => 0.5f,
-                DeviceAxis.R1 => 0.5f,
-                DeviceAxis.R2 => 0.5f,
-                DeviceAxis.V0 => 0.0f,
-                DeviceAxis.V1 => 0.0f,
-                DeviceAxis.L3 => 0.5f,
-                _ => throw new NotSupportedException()
-            };
+        [JsonProperty] public string Name { get; init; }
+        [JsonProperty] public float DefaultValue { get; init; }
+        [JsonProperty] public string FriendlyName { get; init; }
+        [JsonProperty] public IEnumerable<string> FunscriptNames { get; init; }
 
-        public static string FriendlyName(this DeviceAxis axis)
-            => axis switch
-            {
-                DeviceAxis.L0 => "Up/Down",
-                DeviceAxis.L1 => "Forward/Backward",
-                DeviceAxis.L2 => "Left/Right",
-                DeviceAxis.R0 => "Twist",
-                DeviceAxis.R1 => "Roll",
-                DeviceAxis.R2 => "Pitch",
-                DeviceAxis.V0 => "Vibrate",
-                DeviceAxis.V1 => "Pump",
-                DeviceAxis.L3 => "Suction",
-                _ => throw new NotSupportedException()
-            };
+        public override string ToString() => Name;
+        public override int GetHashCode() => _id;
 
-        public static IEnumerable<string> Names(this DeviceAxis axis)
+        [OnDeserialized]
+        internal void OnDeserializedMethod(StreamingContext context) => _id = _count++;
+
+        private static int _count;
+        private static int _outputMaximum;
+        private static string _outputFormat;
+        private static Dictionary<string, DeviceAxis> _axes;
+        public static IReadOnlyCollection<DeviceAxis> All => _axes.Values;
+
+        public static bool TryParse(string name, out DeviceAxis axis)
         {
-            yield return axis.ToString();
-            switch (axis)
-            {
-                case DeviceAxis.L0: yield return "stroke"; break;
-                case DeviceAxis.L1: yield return "surge"; break;
-                case DeviceAxis.L2: yield return "sway"; break;
-                case DeviceAxis.R0: yield return "twist"; break;
-                case DeviceAxis.R1: yield return "roll"; break;
-                case DeviceAxis.R2: yield return "pitch"; break;
-                case DeviceAxis.V0: yield return "vib"; break;
-                case DeviceAxis.V1:
-                    yield return "pump";
-                    yield return "lube";
-                    break;
-                case DeviceAxis.L3:
-                    yield return "suck";
-                    yield return "valve";
-                    break;
-                default:
-                    throw new NotSupportedException();
-            }
+            axis = _axes.GetValueOrDefault(name, null);
+            return axis != null;
+        }
+
+        public static string ToString(DeviceAxis axis, float value) => $"{axis}{string.Format(_outputFormat, value * _outputMaximum)}";
+        public static string ToString(DeviceAxis axis, float value, int interval) => $"{ToString(axis, value)}I{interval}";
+
+        public static string ToString(IEnumerable<KeyValuePair<DeviceAxis, float>> values, int interval)
+            => $"{values.Aggregate(string.Empty, (s, x) => $"{s} {ToString(x.Key, x.Value, interval)}")}\n".TrimStart();
+
+        public static bool IsDirty(float value, float lastValue)
+            => float.IsFinite(value) && (!float.IsFinite(lastValue) || MathF.Abs(lastValue - value) * 999 >= 1);
+
+        public static void LoadSettings(JObject settings, JsonSerializer serializer)
+        {
+            if (!settings.TryGetValue<List<DeviceAxis>>("Axes", serializer, out var axes)
+             || !settings.TryGetValue<int>("OutputPrecision", serializer, out var precision))
+                throw new JsonReaderException("Unable to read device settings");
+
+            _outputMaximum = (int)(MathF.Pow(10, precision) - 1);
+            _outputFormat = $"{{0:{new string('0', precision)}}}";
+            _axes = axes.ToDictionary(a => a.Name, a => a);
         }
     }
 }
