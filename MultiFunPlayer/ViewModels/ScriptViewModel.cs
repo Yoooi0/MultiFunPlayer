@@ -19,6 +19,7 @@ using System.ComponentModel;
 using MultiFunPlayer.OutputTarget;
 using NLog;
 using MultiFunPlayer.Common.Input;
+using System.Runtime.CompilerServices;
 
 namespace MultiFunPlayer.ViewModels
 {
@@ -29,7 +30,6 @@ namespace MultiFunPlayer.ViewModels
 
         private Thread _updateThread;
         private CancellationTokenSource _cancellationSource;
-        private float _syncTime;
         private float _playbackSpeedCorrection;
 
         public bool IsPlaying { get; set; }
@@ -50,8 +50,8 @@ namespace MultiFunPlayer.ViewModels
 
         public VideoFileInfo VideoFile { get; set; }
 
-        public bool IsSyncing => _syncTime < SyncSettings.Duration;
-        public float SyncProgress => !IsSyncing ? 100 : (MathF.Pow(2, 10 * (_syncTime / SyncSettings.Duration - 1)) * 100);
+        public bool IsSyncing => AxisStates.Values.Any(s => s.SyncTime < SyncSettings.Duration);
+        public float SyncProgress => !IsSyncing ? 100 : GetSyncProgress(AxisStates.Values.Min(s => s.SyncTime), SyncSettings.Duration) * 100;
 
         public ScriptViewModel(IShortcutManager shortcutManager, IEventAggregator eventAggregator)
         {
@@ -195,8 +195,8 @@ namespace MultiFunPlayer.ViewModels
                         newValue = MathUtils.Lerp(newValue, randomizerValue, settings.RandomizerStrength / 100.0f);
                     }
 
-                    if (IsSyncing)
-                        newValue = MathUtils.Lerp(!float.IsFinite(state.Value) ? axis.DefaultValue : state.Value, newValue, SyncProgress / 100);
+                    if (state.SyncTime < SyncSettings.Duration)
+                        newValue = MathUtils.Lerp(!float.IsFinite(state.Value) ? axis.DefaultValue : state.Value, newValue, GetSyncProgress(state.SyncTime, SyncSettings.Duration));
 
                     state.Value = newValue;
                     return lastValue != newValue;
@@ -256,9 +256,24 @@ namespace MultiFunPlayer.ViewModels
 
             void UpdateSync()
             {
-                if (IsPlaying && IsSyncing && AxisStates.Values.Any(x => x.Valid))
+                if (!IsPlaying)
+                    return;
+
+                var dirty = false;
+                foreach(var (axis, state) in AxisStates)
                 {
-                    _syncTime += (float)stopwatch.Elapsed.TotalSeconds;
+                    lock (state)
+                    {
+                    if (state.SyncTime >= SyncSettings.Duration)
+                        continue;
+
+                    state.SyncTime += (float)stopwatch.Elapsed.TotalSeconds;
+                    dirty = true;
+                }
+                }
+
+                if (dirty)
+                {
                     NotifyOfPropertyChange(nameof(IsSyncing));
                     NotifyOfPropertyChange(nameof(SyncProgress));
                 }
@@ -418,8 +433,8 @@ namespace MultiFunPlayer.ViewModels
                 state.Index = keyframes.BinarySearch(GetAxisPosition(axis));
         }
 
-        private List<DeviceAxis> UpdateLinkScript(params DeviceAxis[] axes) => UpdateLinkScript(axes.AsEnumerable());
-        private List<DeviceAxis> UpdateLinkScript(IEnumerable<DeviceAxis> axes)
+        private List<DeviceAxis> UpdateLinkScript(params DeviceAxis[] axes) => UpdateLinkScript(axes?.AsEnumerable());
+        private List<DeviceAxis> UpdateLinkScript(IEnumerable<DeviceAxis> axes = null)
         {
             axes ??= DeviceAxis.All;
 
@@ -459,9 +474,10 @@ namespace MultiFunPlayer.ViewModels
             return updated;
         }
 
-        private void ResetScript(params DeviceAxis[] axes)
+        private void ResetScript(params DeviceAxis[] axes) => ResetScript(axes?.AsEnumerable());
+        private void ResetScript(IEnumerable<DeviceAxis> axes = null)
         {
-            axes ??= DeviceAxis.All.ToArray();
+            axes ??= DeviceAxis.All;
 
             Logger.Debug("Resetting axes [Axes: {list}]", axes);
             foreach (var axis in axes)
@@ -482,11 +498,11 @@ namespace MultiFunPlayer.ViewModels
             }
         }
 
-        private void ReloadScript(params DeviceAxis[] axes)
+        private void ReloadScript(params DeviceAxis[] axes) => ReloadScript(axes?.AsEnumerable());
+        private void ReloadScript(IEnumerable<DeviceAxis> axes = null)
         {
-            axes ??= DeviceAxis.All.ToArray();
-
-            ResetSync();
+            axes ??= DeviceAxis.All;
+            ResetSync(true, axes);
 
             Logger.Debug("Reloading axes [Axes: {list}]", axes);
             foreach (var group in axes.GroupBy(a => AxisModels[a].Settings.LinkAxisHasPriority))
@@ -504,8 +520,8 @@ namespace MultiFunPlayer.ViewModels
             }
         }
 
-        private void InvalidateState(params DeviceAxis[] axes) => InvalidateState(axes.AsEnumerable());
-        private void InvalidateState(IEnumerable<DeviceAxis> axes)
+        private void InvalidateState(params DeviceAxis[] axes) => InvalidateState(axes?.AsEnumerable());
+        private void InvalidateState(IEnumerable<DeviceAxis> axes = null)
         {
             axes ??= DeviceAxis.All;
 
@@ -518,9 +534,10 @@ namespace MultiFunPlayer.ViewModels
             }
         }
 
-        private List<DeviceAxis> TryMatchFiles(bool overwrite, params DeviceAxis[] axes)
+        private List<DeviceAxis> TryMatchFiles(bool overwrite, params DeviceAxis[] axes) => TryMatchFiles(overwrite, axes?.AsEnumerable());
+        private List<DeviceAxis> TryMatchFiles(bool overwrite, IEnumerable<DeviceAxis> axes = null)
         {
-            axes ??= DeviceAxis.All.ToArray();
+            axes ??= DeviceAxis.All;
 
             Logger.Debug("Maching files to axes [Axes: {list}]", axes);
 
@@ -625,11 +642,25 @@ namespace MultiFunPlayer.ViewModels
         private float GetAxisPosition(DeviceAxis axis) => CurrentPosition - GlobalOffset - AxisSettings[axis].Offset;
         public float GetValue(DeviceAxis axis) => MathUtils.Clamp01(AxisStates[axis].Value);
 
-        private void ResetSync(bool isSyncing = true)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private float GetSyncProgress(float time, float duration) => MathF.Pow(2, 10 * (time / duration - 1));
+
+        private void ResetSync(bool isSyncing = true, params DeviceAxis[] axes) => ResetSync(isSyncing, axes?.AsEnumerable());
+        private void ResetSync(bool isSyncing = true, IEnumerable<DeviceAxis> axes = null)
         {
+            axes ??= DeviceAxis.All;
+
             Logger.Debug("Resetting sync");
 
-            Interlocked.Exchange(ref _syncTime, isSyncing ? 0 : SyncSettings.Duration);
+            foreach (var axis in axes)
+            {
+                var state = AxisStates[axis];
+                lock (state)
+                {
+                    state.SyncTime = isSyncing ? 0 : SyncSettings.Duration;
+                }
+            }
+
             NotifyOfPropertyChange(nameof(IsSyncing));
             NotifyOfPropertyChange(nameof(SyncProgress));
         }
@@ -639,7 +670,18 @@ namespace MultiFunPlayer.ViewModels
         [SuppressPropertyChangedWarnings]
         public void OnOffsetSliderValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
-            ResetSync();
+            if (sender is not FrameworkElement element)
+                return;
+
+            if (element.DataContext is KeyValuePair<DeviceAxis, AxisModel> pair)
+            {
+                var (axis, _) = pair;
+                ResetSync(true, axis);
+            }
+            else
+            {
+                ResetSync();
+            }
 
             foreach (var axis in DeviceAxis.All)
                 SearchForValidIndex(axis, AxisStates[axis]);
@@ -679,7 +721,7 @@ namespace MultiFunPlayer.ViewModels
                 if (path == null)
                     return;
 
-                ResetSync();
+                ResetSync(true, axis);
                 SetScript(axis, ScriptFile.FromPath(path, userLoaded: true));
             }
         }
@@ -711,7 +753,7 @@ namespace MultiFunPlayer.ViewModels
             if (dialog.ShowDialog() != CommonFileDialogResult.Ok)
                 return;
 
-            ResetSync();
+            ResetSync(true, axis);
             SetScript(axis, ScriptFile.FromFileInfo(new FileInfo(dialog.FileName), userLoaded: true));
         }
 
@@ -766,11 +808,11 @@ namespace MultiFunPlayer.ViewModels
             if (sender is not FrameworkElement element || element.DataContext is not KeyValuePair<DeviceAxis, AxisModel> pair)
                 return;
 
-            var (_, model) = pair;
+            var (axis, model) = pair;
             if (model.Settings.LinkAxis == null)
                 return;
 
-            ResetSync();
+            ResetSync(true, axis);
         }
 
         [SuppressPropertyChangedWarnings]
@@ -786,7 +828,11 @@ namespace MultiFunPlayer.ViewModels
         [SuppressPropertyChangedWarnings]
         public void OnInvertedCheckedChanged(object sender, RoutedEventArgs e)
         {
-            ResetSync();
+            if (sender is not FrameworkElement element || element.DataContext is not KeyValuePair<DeviceAxis, AxisModel> pair)
+                return;
+
+            var (axis, _) = pair;
+            ResetSync(true, axis);
         }
 
         [SuppressPropertyChangedWarnings]
@@ -805,7 +851,11 @@ namespace MultiFunPlayer.ViewModels
         [SuppressPropertyChangedWarnings]
         public void OnSmartLimitCheckedChanged(object sender, RoutedEventArgs e)
         {
-            ResetSync();
+            if (sender is not FrameworkElement element || element.DataContext is not KeyValuePair<DeviceAxis, AxisModel> pair)
+                return;
+
+            var (axis, _) = pair;
+            ResetSync(true, axis);
         }
         #endregion
 
@@ -979,6 +1029,7 @@ namespace MultiFunPlayer.ViewModels
         public int Index { get; set; } = int.MinValue;
         public float Value { get; set; } = float.NaN;
         public bool Dirty { get; set; } = true;
+        public float SyncTime { get; set; } = 0;
 
         public bool Valid => Index != int.MinValue;
 
