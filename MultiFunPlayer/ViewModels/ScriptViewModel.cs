@@ -20,6 +20,7 @@ using MultiFunPlayer.OutputTarget;
 using NLog;
 using MultiFunPlayer.Common.Input;
 using System.Runtime.CompilerServices;
+using System.Windows.Controls.Primitives;
 
 namespace MultiFunPlayer.ViewModels
 {
@@ -112,9 +113,10 @@ namespace MultiFunPlayer.ViewModels
                 {
                     var state = AxisStates[axis];
                     var settings = AxisSettings[axis];
+
                     lock (state)
                     {
-                        if (IsPlaying)
+                        if (IsPlaying && !settings.Bypass)
                         {
                             state.Dirty |= UpdateValues(axis, state, settings);
                             state.Dirty |= UpdateSmartLimit(axis, state, settings);
@@ -836,6 +838,16 @@ namespace MultiFunPlayer.ViewModels
         }
 
         [SuppressPropertyChangedWarnings]
+        public void OnBypassCheckedChanged(object sender, RoutedEventArgs e)
+        {
+            if (sender is not ToggleButton button || button.DataContext is not KeyValuePair<DeviceAxis, AxisModel> pair || button.IsChecked.GetValueOrDefault())
+                return;
+
+            var (axis, _) = pair;
+            ResetSync(true, axis);
+        }
+
+        [SuppressPropertyChangedWarnings]
         public void OnSelectedLinkAxisChanged(object sender, SelectionChangedEventArgs e)
         {
             if (sender is not FrameworkElement element || element.DataContext is not KeyValuePair<DeviceAxis, AxisModel> pair)
@@ -1059,6 +1071,7 @@ namespace MultiFunPlayer.ViewModels
         [JsonProperty] public int RandomizerSpeed { get; set; } = 0;
         [JsonProperty] public bool Inverted { get; set; } = false;
         [JsonProperty] public float Offset { get; set; } = 0;
+        [JsonProperty] public bool Bypass { get; set; } = false;
         [JsonProperty] public bool ContentVisible { get; set; } = true;
     }
 

@@ -511,16 +511,30 @@
                                             </Menu>
 
                                             <ToggleButton IsChecked="{Binding Value.Settings.Inverted}"
-                                                              Checked="{s:Action OnInvertedCheckedChanged}"
-                                                              Unchecked="{s:Action OnInvertedCheckedChanged}"
-                                                              Style="{StaticResource MaterialDesignToolBarToggleButton}"
-                                                              ToolTipService.InitialShowDelay="0"
-                                                              ToolTipService.Placement="Top"
-                                                              ToolTip="Invert">
+                                                          Checked="{s:Action OnInvertedCheckedChanged}"
+                                                          Unchecked="{s:Action OnInvertedCheckedChanged}"
+                                                          Style="{StaticResource MaterialDesignToolBarToggleButton}"
+                                                          ToolTipService.InitialShowDelay="0"
+                                                          ToolTipService.Placement="Top"
+                                                          ToolTip="Invert">
 
                                                 <material:PackIcon Kind="FlipVertical" Opacity=".56" Width="20" Height="20"/>
                                                 <material:ToggleButtonAssist.OnContent>
                                                     <material:PackIcon Kind="FlipVertical" Width="20" Height="20"/>
+                                                </material:ToggleButtonAssist.OnContent>
+                                            </ToggleButton>
+
+                                            <ToggleButton IsChecked="{Binding Value.Settings.Bypass}"
+                                                          Checked="{s:Action OnBypassCheckedChanged}"
+                                                          Unchecked="{s:Action OnBypassCheckedChanged}"
+                                                          Style="{StaticResource MaterialDesignToolBarToggleButton}"
+                                                          ToolTipService.InitialShowDelay="0"
+                                                          ToolTipService.Placement="Top"
+                                                          ToolTip="Bypass">
+
+                                                <material:PackIcon Kind="MotionPauseOutline" Opacity=".56" Width="21" Height="21"/>
+                                                <material:ToggleButtonAssist.OnContent>
+                                                    <material:PackIcon Kind="MotionPauseOutline" Width="21" Height="21"/>
                                                 </material:ToggleButtonAssist.OnContent>
                                             </ToggleButton>
 
