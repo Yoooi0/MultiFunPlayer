@@ -10,7 +10,7 @@
         RightThumbY
     }
 
-    public record GamepadAxisGestureDescriptor(int UserIndex, GamepadAxis Axis) : IInputGestureDescriptor
+    public record GamepadAxisGestureDescriptor(int UserIndex, GamepadAxis Axis) : IAxisInputGestureDescriptor
     {
         public override string ToString() => $"[Gamepad Axis: {UserIndex}/{Axis}]";
     }

@@ -2,12 +2,12 @@
 
 namespace MultiFunPlayer.Common.Input.XInput
 {
-    public record GamepadButtonGestureDescriptor(int UserIndex, GamepadVirtualKey Button) : IInputGestureDescriptor
+    public record GamepadButtonGestureDescriptor(int UserIndex, GamepadVirtualKey Button) : ISimpleInputGestureDescriptor
     {
         public override string ToString() => $"[Gamepad Button: {UserIndex}/{Button}]";
     }
 
-    public class GamepadButtonGesture : IInputGesture
+    public class GamepadButtonGesture : ISimpleInputGesture
     {
         private readonly GamepadButtonGestureDescriptor _descriptor;
 

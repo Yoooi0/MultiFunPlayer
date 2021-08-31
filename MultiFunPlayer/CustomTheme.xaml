@@ -84,7 +84,7 @@
         <Setter Property="HorizontalAlignment" Value="Left" />
         <Setter Property="PopupHorizontalOffset" Value="5"/>
         <Setter Property="PopupVerticalOffset" Value="5"/>
-        <Setter Property="material:ShadowAssist.ShadowDepth" Value="Depth3" />
+        <Setter Property="material:ShadowAssist.ShadowDepth" Value="Depth1" />
         <Setter Property="TextElement.FontWeight" Value="Normal" />
         <Setter Property="Padding" Value="0 8 0 8" />
         <Setter Property="Focusable" Value="True" />
@@ -148,11 +148,12 @@
                                             PopupAnimation="Fade"
                                             AllowsTransparency="True">
                             <material:Card Content="{TemplateBinding PopupContent}" 
-                                            ContentTemplate="{TemplateBinding PopupContentTemplate}"
-                                            Foreground="{DynamicResource MaterialDesignBody}"
-                                            Padding="{TemplateBinding Padding}"
-                                            RenderOptions.ClearTypeHint="Enabled"
-                                            Margin="5">
+                                           ContentTemplate="{TemplateBinding PopupContentTemplate}"
+                                           Foreground="{DynamicResource MaterialDesignBody}"
+                                           Padding="{TemplateBinding Padding}"
+                                           RenderOptions.ClearTypeHint="Enabled"
+                                           material:ShadowAssist.ShadowDepth="{TemplateBinding material:ShadowAssist.ShadowDepth}"
+                                           Margin="5">
                                 <material:Card.Resources>
                                     <Style TargetType="Button" BasedOn="{StaticResource MaterialDesignPopupBoxButton}" />
                                 </material:Card.Resources>

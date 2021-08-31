@@ -8,7 +8,7 @@
         MouseHorizontalWheel
     }
 
-    public record MouseAxisGestureDescriptor(MouseAxis Axis) : IInputGestureDescriptor
+    public record MouseAxisGestureDescriptor(MouseAxis Axis) : IAxisInputGestureDescriptor
     {
         public override string ToString() => $"[Mouse Axis: {Axis}]";
     }

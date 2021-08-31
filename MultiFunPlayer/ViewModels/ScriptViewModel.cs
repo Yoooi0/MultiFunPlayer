@@ -937,6 +937,7 @@ namespace MultiFunPlayer.ViewModels
                     if (!float.IsFinite(state.Value))
                         state.Value = axis.DefaultValue;
                     state.Value = MathUtils.Clamp01(state.Value + 0.05f);
+                    state.Dirty = true;
                 }
             });
             shortcutManager.RegisterAction($"{axis}::Value::Minus5%", () =>
@@ -947,6 +948,7 @@ namespace MultiFunPlayer.ViewModels
                     if (!float.IsFinite(state.Value))
                         state.Value = axis.DefaultValue;
                     state.Value = MathUtils.Clamp01(state.Value - 0.05f);
+                    state.Dirty = true;
                 }
             });
             shortcutManager.RegisterAction($"{axis}::Value", (_, d) =>

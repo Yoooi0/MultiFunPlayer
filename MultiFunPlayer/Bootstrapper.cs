@@ -33,7 +33,7 @@ namespace MultiFunPlayer
             builder.Bind<IVideoSource>().ToAllImplementations();
             builder.Bind<IOutputTarget>().ToAllImplementations();
 
-            builder.Bind<ShortcutViewModel>().And<IShortcutManager>().To<ShortcutViewModel>().InSingletonScope();
+            builder.Bind<IShortcutManager>().To<ShortcutManager>().InSingletonScope();
             builder.Bind<IInputProcessor>().ToAllImplementations().InSingletonScope();
         }
 

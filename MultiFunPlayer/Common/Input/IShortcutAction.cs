@@ -4,19 +4,22 @@ namespace MultiFunPlayer.Common.Input
 {
     public interface IShortcutAction
     {
-        ShortcutActionDescriptor Descriptor { get; }
+        IShortcutActionDescriptor Descriptor { get; }
         void Invoke(IInputGesture gesture);
     }
 
-    public class ShortcutAction : IShortcutAction
+    public interface ISimpleShortcutAction : IShortcutAction { }
+    public interface IAxisShortcutAction : IShortcutAction { }
+
+    public class SimpleShortcutAction : ISimpleShortcutAction
     {
         private readonly Action _action;
 
-        public ShortcutActionDescriptor Descriptor { get; }
+        public IShortcutActionDescriptor Descriptor { get; }
 
-        public ShortcutAction(string name, Action action)
+        public SimpleShortcutAction(string name, Action action)
         {
-            Descriptor = new ShortcutActionDescriptor(name, ShortcutActionType.Simple);
+            Descriptor = new SimpleShortcutActionDescriptor(name);
             _action = action;
         }
 
@@ -24,15 +27,15 @@ namespace MultiFunPlayer.Common.Input
         public override string ToString() => Descriptor.ToString();
     }
 
-    public class AxisShortcutAction : IShortcutAction
+    public class AxisShortcutAction : IAxisShortcutAction
     {
         private readonly Action<float, float> _action;
 
-        public ShortcutActionDescriptor Descriptor { get; }
+        public IShortcutActionDescriptor Descriptor { get; }
 
         public AxisShortcutAction(string name, Action<float, float> action)
         {
-            Descriptor = new ShortcutActionDescriptor(name, ShortcutActionType.Axis);
+            Descriptor = new AxisShortcutActionDescriptor(name);
             _action = action;
         }
 

@@ -35,7 +35,7 @@ namespace MultiFunPlayer.Common
 
                 serializer ??= JsonSerializer.CreateDefault();
                 value = token.ToObject<T>(serializer);
-                return true;
+                return value != null;
             }
             catch (JsonException)
             {

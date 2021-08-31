@@ -743,10 +743,10 @@
                                                 <material:PopupBox.ToggleContent>
                                                     <Border Width="35" Height="35">
                                                         <material:PackIcon Kind="Home" 
-                                                                               Width="22" 
-                                                                               Height="22" 
-                                                                               HorizontalAlignment="Center" 
-                                                                               VerticalAlignment="Center"/>
+                                                                           Width="22" 
+                                                                           Height="22" 
+                                                                           HorizontalAlignment="Center" 
+                                                                           VerticalAlignment="Center"/>
                                                     </Border>
                                                 </material:PopupBox.ToggleContent>
                                                 <Grid Width="200" Margin="10">

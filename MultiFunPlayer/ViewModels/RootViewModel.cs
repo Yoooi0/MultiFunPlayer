@@ -7,6 +7,7 @@ using NLog;
 using Stylet;
 using StyletIoC;
 using System;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 
@@ -44,14 +45,19 @@ namespace MultiFunPlayer.ViewModels
             _eventAggregator.Publish(new AppSettingsMessage(settings, AppSettingsMessageType.Loading));
         }
 
+        private async Task ShowDialogForModel(Screen screen)
+            => await Execute.OnUIThreadAsync(async () =>
+            {
+                (screen as IScreenState)?.Activate();
+                _ = await DialogHost.Show(_viewManager.CreateAndBindViewForModelIfNecessary(screen), "RootDialog").ConfigureAwait(true);
+                (screen as IScreenState)?.Deactivate();
+            });
+
         public void OnInformationClick()
             => _ = Execute.OnUIThreadAsync(() => DialogHost.Show(new InformationMessageDialog(showCheckbox: false), "RootDialog"));
 
-        public void OnShortcutClick()
-            => _ = Execute.OnUIThreadAsync(() => DialogHost.Show(_viewManager.CreateAndBindViewForModelIfNecessary(Shortcut), "RootDialog"));
-
-        public void OnSettingsClick()
-            => _ = Execute.OnUIThreadAsync(() => DialogHost.Show(_viewManager.CreateAndBindViewForModelIfNecessary(Application), "RootDialog"));
+        public void OnShortcutClick() => _ = ShowDialogForModel(Shortcut);
+        public void OnSettingsClick() => _ = ShowDialogForModel(Application);
 
         public void OnLoaded(object sender, EventArgs e)
         {
