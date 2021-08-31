@@ -70,7 +70,9 @@ namespace MultiFunPlayer.Common.Input.RawInput
             var pressed = (data.Keyboard.Flags & RawKeyboardFlags.Up) == 0;
 
             if (pressed)
+            {
                 _keyboardState[key] = true;
+            }
             else
             {
                 var pressedKeys = _keyboardState.Where(x => x.Value).Select(x => x.Key).ToList();

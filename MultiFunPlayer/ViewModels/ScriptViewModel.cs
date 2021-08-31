@@ -920,11 +920,11 @@ namespace MultiFunPlayer.ViewModels
             foreach (var axis in DeviceAxis.All)
                 RegisterShortcuts(shortcutManager, axis);
 
-            shortcutManager.RegisterAction($"Global::Sync", () => ResetSync());
+            shortcutManager.RegisterAction("Global::Sync", () => ResetSync());
 
-            shortcutManager.RegisterAction($"Global::Bypass::Value::True", () => { foreach (var axis in DeviceAxis.All) SetAxisBypass(axis, true); });
-            shortcutManager.RegisterAction($"Global::Bypass::Value::False", () => { foreach (var axis in DeviceAxis.All) SetAxisBypass(axis, false); });
-            shortcutManager.RegisterAction($"Global::Bypass::Value::Toggle", () => { foreach (var axis in DeviceAxis.All) SetAxisBypass(axis, !AxisSettings[axis].Bypass); });
+            shortcutManager.RegisterAction("Global::Bypass::Value::True", () => { foreach (var axis in DeviceAxis.All) SetAxisBypass(axis, true); });
+            shortcutManager.RegisterAction("Global::Bypass::Value::False", () => { foreach (var axis in DeviceAxis.All) SetAxisBypass(axis, false); });
+            shortcutManager.RegisterAction("Global::Bypass::Value::Toggle", () => { foreach (var axis in DeviceAxis.All) SetAxisBypass(axis, !AxisSettings[axis].Bypass); });
         }
 
         private void RegisterShortcuts(IShortcutManager shortcutManager, DeviceAxis axis)

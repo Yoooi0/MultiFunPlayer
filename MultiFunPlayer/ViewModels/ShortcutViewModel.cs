@@ -27,14 +27,13 @@ namespace MultiFunPlayer.ViewModels
         private CancellationTokenSource _captureGestureCancellationSource;
 
         public string ActionsFilter { get; set; }
-        public BindableCollection<IShortcutActionDescriptor> ActionDescriptors { get; private set; }
-        public ICollectionView AvailableActionDescriptors { get; private set; }
+        public BindableCollection<IShortcutActionDescriptor> ActionDescriptors { get; }
+        public ICollectionView AvailableActionDescriptors { get; }
         public IReadOnlyDictionary<IInputGestureDescriptor, BindableCollection<IShortcutActionDescriptor>> Bindings => _manager.Bindings;
 
         public bool IsCapturingGesture { get; private set; }
         public IInputGestureDescriptor CapturedGesture { get; set; }
-        public bool BlockSelectionChangedEvents { get; private set; }
-        public KeyValuePair<IInputGestureDescriptor, BindableCollection<IShortcutActionDescriptor>>? SelectedBinding { get; set; } // TODO: make binding class
+        public KeyValuePair<IInputGestureDescriptor, BindableCollection<IShortcutActionDescriptor>>? SelectedBinding { get; set; }
 
         public bool IsKeyboardKeysGestureEnabled { get; set; } = true;
         public bool IsMouseAxisGestureEnabled { get; set; } = false;
@@ -254,14 +253,14 @@ namespace MultiFunPlayer.ViewModels
                     { nameof(IsMouseButtonGestureEnabled), JValue.FromObject(IsMouseButtonGestureEnabled) },
                     { nameof(IsGamepadAxisGestureEnabled), JValue.FromObject(IsGamepadAxisGestureEnabled) },
                     { nameof(IsGamepadButtonGestureEnabled), JValue.FromObject(IsGamepadButtonGestureEnabled) },
-                    { "Bindings", JArray.FromObject(Bindings.Select(x => new BindingConfigModel(x.Key, x.Value)).ToList()) },
+                    { nameof(Bindings), JArray.FromObject(Bindings.Select(x => new BindingConfigModel(x.Key, x.Value)).ToList()) },
                 };
             }
             else if (message.Type == AppSettingsMessageType.Loading)
             {
                 if (!message.Settings.TryGetObject(out var settings, "Shortcuts"))
                     return;
-            
+
                 if (settings.TryGetValue<bool>(nameof(IsKeyboardKeysGestureEnabled), out var isKeyboardKeysGestureEnabled))
                     IsKeyboardKeysGestureEnabled = isKeyboardKeysGestureEnabled;
                 if (settings.TryGetValue<bool>(nameof(IsMouseAxisGestureEnabled), out var isMouseAxisGestureEnabled))
@@ -272,12 +271,12 @@ namespace MultiFunPlayer.ViewModels
                     IsGamepadAxisGestureEnabled = isHidAxisGestureEnabled;
                 if (settings.TryGetValue<bool>(nameof(IsGamepadButtonGestureEnabled), out var isHidButtonGestureEnabled))
                     IsGamepadButtonGestureEnabled = isHidButtonGestureEnabled;
-            
-                if (settings.TryGetValue<List<BindingConfigModel>>("Bindings", out var loadedBindings))
+
+                if (settings.TryGetValue<List<BindingConfigModel>>(nameof(Bindings), out var loadedBindings))
                 {
                     foreach (var gestureDescriptor in Bindings.Keys.ToList())
                         _manager.UnregisterGesture(gestureDescriptor);
-            
+
                     foreach (var binding in loadedBindings)
                     {
                         var gestureDescriptor = binding.Gesture;

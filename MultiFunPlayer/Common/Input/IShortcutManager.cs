@@ -107,7 +107,7 @@ namespace MultiFunPlayer.Common.Input
             _bindings.Remove(gestureDescriptor);
         }
 
-        private async void HandleGesture(object sender, IInputGesture gesture)
+        private void HandleGesture(object sender, IInputGesture gesture)
         {
             var eventArgs = new GestureEventArgs(gesture);
             OnGesture?.Invoke(this, eventArgs);
