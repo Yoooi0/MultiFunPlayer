@@ -61,6 +61,8 @@ namespace MultiFunPlayer.Common.Input
 
         public void RegisterAction(IShortcutAction action)
         {
+            if (action == null)
+                return;
             if (_actions.ContainsKey(action.Descriptor))
                 throw new NotSupportedException($"Duplicate action found \"{action.Descriptor}\"");
 
@@ -70,6 +72,9 @@ namespace MultiFunPlayer.Common.Input
 
         public void BindAction(IInputGestureDescriptor gestureDescriptor, IShortcutActionDescriptor actionDescriptor)
         {
+            if (gestureDescriptor == null || actionDescriptor == null)
+                return;
+
             RegisterGesture(gestureDescriptor);
 
             var actions = _bindings[gestureDescriptor];
@@ -81,6 +86,8 @@ namespace MultiFunPlayer.Common.Input
 
         public void UnbindAction(IInputGestureDescriptor gestureDescriptor, IShortcutActionDescriptor actionDescriptor)
         {
+            if (gestureDescriptor == null || actionDescriptor == null)
+                return;
             if (!_bindings.ContainsKey(gestureDescriptor))
                 return;
 
@@ -93,6 +100,8 @@ namespace MultiFunPlayer.Common.Input
 
         public void RegisterGesture(IInputGestureDescriptor gestureDescriptor)
         {
+            if (gestureDescriptor == null)
+                return;
             if (_bindings.ContainsKey(gestureDescriptor))
                 return;
 
@@ -101,6 +110,8 @@ namespace MultiFunPlayer.Common.Input
 
         public void UnregisterGesture(IInputGestureDescriptor gestureDescriptor)
         {
+            if (gestureDescriptor == null)
+                return;
             if (!_bindings.ContainsKey(gestureDescriptor))
                 return;
 
@@ -111,12 +122,11 @@ namespace MultiFunPlayer.Common.Input
         {
             var eventArgs = new GestureEventArgs(gesture);
             OnGesture?.Invoke(this, eventArgs);
+
             if (eventArgs.Handled)
                 return;
-
             if (!HandleGestures)
                 return;
-
             if (!_bindings.TryGetValue(gesture.Descriptor, out var actionDescriptors))
                 return;
             if (actionDescriptors.Count == 0)
