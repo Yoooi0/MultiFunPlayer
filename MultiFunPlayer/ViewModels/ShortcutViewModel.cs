@@ -45,6 +45,8 @@ namespace MultiFunPlayer.ViewModels
         {
             eventAggregator.Subscribe(this);
 
+            Logger.Debug($"Found {manager.Actions.Count} available actions");
+
             ActionDescriptors = new BindableCollection<IShortcutActionDescriptor>(manager.Actions.Keys);
             AvailableActionDescriptors = CollectionViewSource.GetDefaultView(ActionDescriptors);
             AvailableActionDescriptors.Filter = o =>

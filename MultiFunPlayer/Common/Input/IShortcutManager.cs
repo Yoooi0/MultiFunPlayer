@@ -117,10 +117,20 @@ namespace MultiFunPlayer.Common.Input
             if (!HandleGestures)
                 return;
 
-            if (_bindings.TryGetValue(gesture.Descriptor, out var actionDescriptors))
-                foreach (var actionDescriptor in actionDescriptors)
-                    if (_actions.TryGetValue(actionDescriptor, out var action))
-                        action.Invoke(gesture);
+            if (!_bindings.TryGetValue(gesture.Descriptor, out var actionDescriptors))
+                return;
+            if (actionDescriptors.Count == 0)
+                return;
+
+            Logger.Debug($"Handling {gesture.Descriptor} gesture");
+            foreach (var actionDescriptor in actionDescriptors)
+            {
+                if (_actions.TryGetValue(actionDescriptor, out var action))
+                {
+                    Logger.Debug($"Invoking {action.Descriptor} action");
+                    action.Invoke(gesture);
+                }
+            }
         }
 
         protected virtual void Dispose(bool disposing)
