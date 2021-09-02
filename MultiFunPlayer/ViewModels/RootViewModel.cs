@@ -48,8 +48,16 @@ namespace MultiFunPlayer.ViewModels
         private async Task ShowDialogForModel(Screen screen)
             => await Execute.OnUIThreadAsync(async () =>
             {
+                var view = _viewManager.CreateAndBindViewForModelIfNecessary(screen);
+                var session = DialogHost.GetDialogSession("RootDialog");
+                if (session?.Content == view)
+                    return;
+
+                if (DialogHost.IsDialogOpen("RootDialog"))
+                    DialogHost.Close("RootDialog");
+
                 (screen as IScreenState)?.Activate();
-                _ = await DialogHost.Show(_viewManager.CreateAndBindViewForModelIfNecessary(screen), "RootDialog").ConfigureAwait(true);
+                _ = await DialogHost.Show(view, "RootDialog").ConfigureAwait(true);
                 (screen as IScreenState)?.Deactivate();
             });
 
