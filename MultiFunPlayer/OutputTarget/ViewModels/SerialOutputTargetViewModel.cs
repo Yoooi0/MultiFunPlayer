@@ -1,6 +1,7 @@
 using MaterialDesignThemes.Wpf;
 using MultiFunPlayer.Common;
 using MultiFunPlayer.Common.Controls;
+using MultiFunPlayer.Common.Controls.ViewModels;
 using MultiFunPlayer.Common.Input;
 using MultiFunPlayer.Common.Messages;
 using Newtonsoft.Json.Linq;
@@ -93,7 +94,7 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
 
                 _ = Execute.OnUIThreadAsync(async () =>
                 {
-                    _ = DialogHost.Show(new ErrorMessageDialog($"Error when opening serial port:\n\n{e}"));
+                    _ = DialogHelper.ShowOnUIThreadAsync(new ErrorMessageDialogViewModel($"Error when opening serial port:\n\n{e}"), "RootDialog");
                     await RefreshPorts().ConfigureAwait(true);
                 });
 
@@ -127,7 +128,7 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
                 Logger.Error(e, $"{Name} failed with exception");
                 _ = Execute.OnUIThreadAsync(async () =>
                 {
-                    _ = DialogHost.Show(new ErrorMessageDialog($"{Name} failed with exception:\n\n{e}"));
+                    _ = DialogHelper.ShowOnUIThreadAsync(new ErrorMessageDialogViewModel($"{Name} failed with exception:\n\n{e}"), "RootDialog");
                     await RefreshPorts().ConfigureAwait(true);
                 });
             }

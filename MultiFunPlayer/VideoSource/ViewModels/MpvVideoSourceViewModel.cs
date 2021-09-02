@@ -2,6 +2,7 @@
 using Microsoft.WindowsAPICodePack.Dialogs;
 using MultiFunPlayer.Common;
 using MultiFunPlayer.Common.Controls;
+using MultiFunPlayer.Common.Controls.ViewModels;
 using MultiFunPlayer.Common.Input;
 using MultiFunPlayer.Common.Messages;
 using Newtonsoft.Json;
@@ -142,7 +143,7 @@ namespace MultiFunPlayer.VideoSource.ViewModels
             catch (Exception e)
             {
                 Logger.Error(e, $"{Name} failed with exception");
-                _ = Execute.OnUIThreadAsync(() => DialogHost.Show(new ErrorMessageDialog($"{Name} failed with exception:\n\n{e}")));
+                _ = Execute.OnUIThreadAsync(() => DialogHelper.ShowOnUIThreadAsync(new ErrorMessageDialogViewModel($"{Name} failed with exception:\n\n{e}"), "RootDialog"));
             }
 
             _eventAggregator.Publish(new VideoFileChangedMessage(null));
@@ -240,7 +241,7 @@ namespace MultiFunPlayer.VideoSource.ViewModels
             catch (Exception e)
             {
                 Logger.Error(e, $"{Name} executable download failed with exception");
-                _ = Execute.OnUIThreadAsync(() => DialogHost.Show(new ErrorMessageDialog($"{Name} executable download failed with exception:\n\n{e}")));
+                _ = Execute.OnUIThreadAsync(() => DialogHelper.ShowOnUIThreadAsync(new ErrorMessageDialogViewModel($"{Name} executable download failed with exception:\n\n{e}"), "RootDialog"));
             }
 
             IsDownloading = false;

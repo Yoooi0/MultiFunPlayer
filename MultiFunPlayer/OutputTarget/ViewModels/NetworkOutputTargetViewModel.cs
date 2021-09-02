@@ -1,6 +1,7 @@
 ﻿using MaterialDesignThemes.Wpf;
 using MultiFunPlayer.Common;
 using MultiFunPlayer.Common.Controls;
+using MultiFunPlayer.Common.Controls.ViewModels;
 using MultiFunPlayer.Common.Input;
 using MultiFunPlayer.Common.Messages;
 using Newtonsoft.Json.Linq;
@@ -63,7 +64,7 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
             catch (Exception e)
             {
                 Logger.Warn(e, "Error when connecting to server");
-                _ = Execute.OnUIThreadAsync(() => _ = DialogHost.Show(new ErrorMessageDialog($"Error when connecting to server:\n\n{e}")));
+                _ = Execute.OnUIThreadAsync(() => _ = DialogHelper.ShowOnUIThreadAsync(new ErrorMessageDialogViewModel($"Error when connecting to server:\n\n{e}"), "RootDialog"));
                 return;
             }
 
@@ -88,7 +89,7 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
             catch (Exception e)
             {
                 Logger.Error(e, "Unhandled error");
-                _ = Execute.OnUIThreadAsync(() => _ = DialogHost.Show(new ErrorMessageDialog($"Unhandled error:\n\n{e}")));
+                _ = Execute.OnUIThreadAsync(() => _ = DialogHelper.ShowOnUIThreadAsync(new ErrorMessageDialogViewModel($"Unhandled error:\n\n{e}"), "RootDialog"));
             }
         }
 
@@ -105,7 +106,7 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
             catch (Exception e)
             {
                 Logger.Warn(e, "Error when connecting to server");
-                _ = Execute.OnUIThreadAsync(() => _ = DialogHost.Show(new ErrorMessageDialog($"Error when connecting to server:\n\n{e}")));
+                _ = Execute.OnUIThreadAsync(() => _ = DialogHelper.ShowOnUIThreadAsync(new ErrorMessageDialogViewModel($"Error when connecting to server:\n\n{e}"), "RootDialog"));
                 return;
             }
 
@@ -133,7 +134,7 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
             catch (Exception e)
             {
                 Logger.Error(e, $"{Name} failed with exception");
-                _ = Execute.OnUIThreadAsync(() => _ = DialogHost.Show(new ErrorMessageDialog($"{Name} failed with exception:\n\n{e}")));
+                _ = Execute.OnUIThreadAsync(() => _ = DialogHelper.ShowOnUIThreadAsync(new ErrorMessageDialogViewModel($"{Name} failed with exception:\n\n{e}"), "RootDialog"));
             }
         }
 

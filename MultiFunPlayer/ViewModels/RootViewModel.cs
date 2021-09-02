@@ -1,6 +1,7 @@
 using MaterialDesignThemes.Wpf;
 using MultiFunPlayer.Common;
 using MultiFunPlayer.Common.Controls;
+using MultiFunPlayer.Common.Controls.ViewModels;
 using MultiFunPlayer.Common.Messages;
 using Newtonsoft.Json.Linq;
 using NLog;
@@ -17,7 +18,6 @@ namespace MultiFunPlayer.ViewModels
     {
         protected Logger Logger = LogManager.GetCurrentClassLogger();
 
-        private readonly IViewManager _viewManager;
         private readonly IEventAggregator _eventAggregator;
 
         [Inject] public ScriptViewModel Script { get; set; }
@@ -26,9 +26,8 @@ namespace MultiFunPlayer.ViewModels
         [Inject] public ShortcutViewModel Shortcut { get; set; }
         [Inject] public ApplicationViewModel Application { get; set; }
 
-        public RootViewModel(IViewManager viewManager, IEventAggregator eventAggregator)
+        public RootViewModel(IEventAggregator eventAggregator)
         {
-            _viewManager = viewManager;
             _eventAggregator = eventAggregator;
         }
 
@@ -45,27 +44,9 @@ namespace MultiFunPlayer.ViewModels
             _eventAggregator.Publish(new AppSettingsMessage(settings, AppSettingsMessageType.Loading));
         }
 
-        private async Task ShowDialogForModel(Screen screen)
-            => await Execute.OnUIThreadAsync(async () =>
-            {
-                var view = _viewManager.CreateAndBindViewForModelIfNecessary(screen);
-                var session = DialogHost.GetDialogSession("RootDialog");
-                if (session?.Content == view)
-                    return;
-
-                if (DialogHost.IsDialogOpen("RootDialog"))
-                    DialogHost.Close("RootDialog");
-
-                (screen as IScreenState)?.Activate();
-                _ = await DialogHost.Show(view, "RootDialog").ConfigureAwait(true);
-                (screen as IScreenState)?.Deactivate();
-            });
-
-        public void OnInformationClick()
-            => _ = Execute.OnUIThreadAsync(() => DialogHost.Show(new InformationMessageDialog(showCheckbox: false), "RootDialog"));
-
-        public void OnShortcutClick() => _ = ShowDialogForModel(Shortcut);
-        public void OnSettingsClick() => _ = ShowDialogForModel(Application);
+        public void OnInformationClick() => _ = DialogHelper.ShowOnUIThreadAsync(new InformationMessageDialogViewModel(showCheckbox: false), "RootDialog");
+        public void OnShortcutClick() => _ = DialogHelper.ShowOnUIThreadAsync(Shortcut, "RootDialog");
+        public void OnSettingsClick() => _ = DialogHelper.ShowOnUIThreadAsync(Application, "RootDialog");
 
         public void OnLoaded(object sender, EventArgs e)
         {
@@ -74,7 +55,7 @@ namespace MultiFunPlayer.ViewModels
                 var settings = Settings.Read();
                 if (!settings.TryGetValue("DisablePopup", out var disablePopupToken) || !disablePopupToken.Value<bool>())
                 {
-                    var result = await DialogHost.Show(new InformationMessageDialog(showCheckbox: true)).ConfigureAwait(true);
+                    var result = await DialogHelper.ShowAsync(new InformationMessageDialogViewModel(showCheckbox: true), "RootDialog").ConfigureAwait(true);
                     if (result is not bool disablePopup || !disablePopup)
                         return;
 

@@ -1,11 +1,11 @@
-﻿<UserControl x:Class="MultiFunPlayer.Common.Controls.InformationMessageDialog"
+﻿<UserControl x:Class="MultiFunPlayer.Common.Controls.Views.InformationMessageDialogView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:material="http://materialdesigninxaml.net/winfx/xaml/themes"
              xmlns:s="https://github.com/canton7/Stylet"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-             xmlns:local="clr-namespace:MultiFunPlayer.Common.Controls"
+             xmlns:local="clr-namespace:MultiFunPlayer.Common.Controls.Views"
              mc:Ignorable="d" 
              d:DesignHeight="400" d:DesignWidth="400">
     <Grid Width="450" Margin="20">
@@ -18,7 +18,7 @@
             <Grid HorizontalAlignment="Center">
                 <StackPanel Orientation="Horizontal">
                     <TextBlock TextAlignment="Center" 
-                               Text="{Binding VersionText, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}" 
+                               Text="{Binding VersionText}" 
                                Margin="0 0 5 0"/>
                     <TextBlock TextAlignment="Center">by Yoooi</TextBlock>
                 </StackPanel>
@@ -33,7 +33,6 @@
                 Check my
                 <material:PackIcon Kind="Github" Margin="0 -3 0 -3"/>
                 <Hyperlink NavigateUri="http://github.com/Yoooi0"
-                           s:View.ActionTarget="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}" 
                            RequestNavigate="{s:Action OnNavigate}">
                     GitHub
                 </Hyperlink>
@@ -48,7 +47,6 @@
                 <material:PackIcon Kind="Patreon" 
                                    Margin="0 -3 0 -3"/>
                 <Hyperlink NavigateUri="https://patreon.com/Yoooi"
-                           s:View.ActionTarget="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}" 
                            RequestNavigate="{s:Action OnNavigate}">
                     Patreon
                 </Hyperlink>
@@ -66,10 +64,9 @@
             <Button Content="Dismiss"
                     IsDefault="True" Style="{DynamicResource MaterialDesignFlatLightBgButton}"
                     HorizontalAlignment="Center"
-                    s:View.ActionTarget="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}" 
                     Command="{s:Action OnDismiss}"/>
-            <CheckBox IsChecked="{Binding DontShowAgain, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}" 
-                      Visibility="{Binding ShowCheckbox, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}, Converter={StaticResource BooleanToVisibilityConverter}}"
+            <CheckBox IsChecked="{Binding DontShowAgain}" 
+                      Visibility="{Binding ShowCheckbox, Converter={StaticResource BooleanToVisibilityConverter}}"
                       Margin="0 10 0 0"
                       HorizontalAlignment="Center"
                       Content="Don't show again"/>

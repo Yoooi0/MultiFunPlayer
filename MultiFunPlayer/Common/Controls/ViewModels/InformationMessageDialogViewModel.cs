@@ -1,25 +1,20 @@
 ﻿using MaterialDesignThemes.Wpf;
+using Stylet;
 using System.Diagnostics;
 using System.Reflection;
-using System.Windows.Controls;
 using System.Windows.Navigation;
 
-namespace MultiFunPlayer.Common.Controls
+namespace MultiFunPlayer.Common.Controls.ViewModels
 {
-    /// <summary>
-    /// Interaction logic for InformationMessageDialog.xaml
-    /// </summary>
-    public partial class InformationMessageDialog : UserControl
+    public class InformationMessageDialogViewModel : Screen
     {
         public string VersionText => $"v{Assembly.GetEntryAssembly().GetName().Version}";
         public bool ShowCheckbox { get; }
         public bool DontShowAgain { get; set; }
 
-        public InformationMessageDialog(bool showCheckbox)
+        public InformationMessageDialogViewModel(bool showCheckbox)
         {
             ShowCheckbox = showCheckbox;
-
-            InitializeComponent();
         }
 
         public void OnDismiss()
@@ -35,5 +30,10 @@ namespace MultiFunPlayer.Common.Controls
             });
             e.Handled = true;
         }
+
+        public override bool Equals(object obj)
+            => obj != null && GetType() == obj.GetType();
+
+        public override int GetHashCode() => VersionText.GetHashCode();
     }
 }

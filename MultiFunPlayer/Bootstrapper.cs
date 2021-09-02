@@ -1,4 +1,5 @@
 using MultiFunPlayer.Common;
+using MultiFunPlayer.Common.Controls;
 using MultiFunPlayer.Common.Converters;
 using MultiFunPlayer.Common.Input;
 using MultiFunPlayer.Common.Input.RawInput;
@@ -35,10 +36,14 @@ namespace MultiFunPlayer
 
             builder.Bind<IShortcutManager>().To<ShortcutManager>().InSingletonScope();
             builder.Bind<IInputProcessor>().ToAllImplementations().InSingletonScope();
+
+            builder.Bind<DialogHelper>().To<DialogHelper>().InSingletonScope();
         }
 
-        protected override void OnStart()
+        protected override void Configure()
         {
+            _ = Container.Get<DialogHelper>();
+
             SetupDevice();
             SetupJson();
             SetupLoging();

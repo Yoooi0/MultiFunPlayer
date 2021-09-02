@@ -1,6 +1,7 @@
 ﻿using MaterialDesignThemes.Wpf;
 using MultiFunPlayer.Common;
 using MultiFunPlayer.Common.Controls;
+using MultiFunPlayer.Common.Controls.ViewModels;
 using MultiFunPlayer.Common.Input;
 using MultiFunPlayer.Common.Messages;
 using Newtonsoft.Json.Linq;
@@ -50,7 +51,7 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
                 if (client?.IsConnected == true)
                     client.Close();
 
-                _ = Execute.OnUIThreadAsync(() => _ = DialogHost.Show(new ErrorMessageDialog($"Error when opening pipe:\n\n{e}")));
+                _ = Execute.OnUIThreadAsync(() => _ = DialogHelper.ShowOnUIThreadAsync(new ErrorMessageDialogViewModel($"Error when opening pipe:\n\n{e}"), "RootDialog"));
                 return;
             }
 
@@ -76,7 +77,7 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
             catch (Exception e)
             {
                 Logger.Error(e, $"{Name} failed with exception");
-                _ = Execute.OnUIThreadAsync(() => _ = DialogHost.Show(new ErrorMessageDialog($"{Name} failed with exception:\n\n{e}")));
+                _ = Execute.OnUIThreadAsync(() => _ = DialogHelper.ShowOnUIThreadAsync(new ErrorMessageDialogViewModel($"{Name} failed with exception:\n\n{e}"), "RootDialog"));
             }
 
             if (client?.IsConnected == true)
