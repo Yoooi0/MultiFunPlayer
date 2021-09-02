@@ -15,8 +15,9 @@ The player's main feature is the ability to play multiple funscripts at the same
 
 * Supports [DeoVR](https://deovr.com/), [MPV](https://mpv.io/), [HereSphere](https://store.steampowered.com/app/1234730/HereSphere/) and [Whirligig](http://whirligig.xyz/) video players
 * Supports [buttplug.io](https://buttplug.io), network TCP/UDP, namedpipes and serial output
+* Supports TCode v0.2 and TCode v0.3 devices
 * Auto detection and connection to any supported video player and output
-* Bind keyboard/mouse/gamepad input to almost any setting (900+ possible actions)
+* Bind keyboard/mouse/gamepad input to almost any action (900+ available actions)
 * Supports multiple concurrent outputs
 * Real time script smoothing using pchip or makima interpolation
 * Auto-home feature which when video is paused moves axis to its default value after some delay
@@ -36,6 +37,10 @@ To synchronize with videos, start your desired video player and wait for automat
 * Manually, by using the `Load script` button in the axis settings toolbar.
 * Automatically, based on the currently played video file name if the funscripts are named correctly:
 
+
+<details>
+<summary>Common</summary>
+
 | Axis | Description | Valid file names |
 |-|-|-|
 | L0 | Up/Down | **`<video name>.funscript`** <br/> <sub>`<video name>.stroke.funscript`</sub> <br/> <sub>`<video name>.L0.funscript`</sub> |
@@ -44,13 +49,35 @@ To synchronize with videos, start your desired video player and wait for automat
 | R0 | Twist | **`<video name>.twist.funscript`** <br/> <sub>`<video name>.R0.funscript`</sub> |
 | R1 | Roll | **`<video name>.roll.funscript`** <br/> <sub>`<video name>.R1.funscript`</sub> |
 | R2 | Pitch | **`<video name>.pitch.funscript`** <br/> <sub>`<video name>.R2.funscript`</sub> |
+
+</details>
+
+<details>
+<summary>TCode v0.2</summary>
+
+| Axis | Description | Valid file names |
+|-|-|-|
 | V0 | Vibrate | **`<video name>.vib.funscript`** <br/> <sub>`<video name>.V0.funscript`</sub> |
 | V1 | Pump | **`<video name>.lube.funscript`** <br/> <sub>`<video name>.pump.funscript`</sub> <br/> <sub>`<video name>.V1.funscript`</sub> |
 | L3 | Suction | **`<video name>.suck.funscript`** <br/> <sub>`<video name>.valve.funscript`</sub> <br/> <sub>`<video name>.L3.funscript`</sub> |
 
+</details>
+
+<details>
+<summary>TCode v0.3</summary>
+
+| Axis | Description | Valid file names |
+|-|-|-|
+| V0 | Vibrate | **`<video name>.vib.funscript`** <br/> <sub>`<video name>.V0.funscript`</sub> |
+| A0 | Valve | **`<video name>.valve.funscript`** <br/> <sub>`<video name>.A0.funscript`</sub> |
+| A1 | Suction | **`<video name>.suck.funscript`** <br/> <sub>`<video name>.A1.funscript`</sub> |
+
+</details>
+</br>
+
 > Names in **bold** are commonly used used and are preferred 
 
-The above file names are matched in all script libraries and in the currently playing video directory.
+> The above file names are matched in all script libraries and in the currently playing video directory.
 
 # Requirements
 
