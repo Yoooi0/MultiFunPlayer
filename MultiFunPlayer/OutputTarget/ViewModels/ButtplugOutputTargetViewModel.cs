@@ -182,31 +182,7 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
                     UpdateValues();
 
                     var dirtySettings = DeviceSettings.Where(s => IsDirty(s.SourceAxis));
-                    var tasks = dirtySettings.GroupBy(m => m.DeviceName).SelectMany(deviceGroup =>
-                    {
-                        var deviceName = deviceGroup.Key;
-                        var devices = AvailableDevices.Where(d => string.Equals(d.Name, deviceName, StringComparison.OrdinalIgnoreCase));
-                        return deviceGroup.GroupBy(m => m.MessageType).SelectMany(typeGroup =>
-                        {
-                            var type = typeGroup.Key;
-                            return devices.Select(device =>
-                            {
-                                if (type == ServerMessage.Types.MessageAttributeType.VibrateCmd)
-                                    return device.SendVibrateCmd(typeGroup.ToDictionary(m => m.FeatureIndex,
-                                                                                        m => (double)Values[m.SourceAxis]));
-
-                                if (type == ServerMessage.Types.MessageAttributeType.LinearCmd)
-                                    return device.SendLinearCmd(typeGroup.ToDictionary(m => m.FeatureIndex,
-                                                                                       m => ((uint)interval, (double)Values[m.SourceAxis])));
-
-                                if (type == ServerMessage.Types.MessageAttributeType.RotateCmd)
-                                    return device.SendRotateCmd(typeGroup.ToDictionary(m => m.FeatureIndex,
-                                                                                       m => (Math.Clamp(Math.Abs(Values[m.SourceAxis] - 0.5) / 0.5, 0, 1), Values[m.SourceAxis] > 0.5)));
-
-                                return Task.CompletedTask;
-                            });
-                        });
-                    });
+                    var tasks = GetDeviceTasks(interval, dirtySettings);
 
                     try
                     {
@@ -236,6 +212,50 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
 
             IsScanBusy = false;
             AvailableDevices.Clear();
+        }
+
+        private IEnumerable<Task> GetDeviceTasks(float interval, IEnumerable<ButtplugClientDeviceSettings> settings)
+        {
+            return settings.GroupBy(m => m.DeviceName).SelectMany(deviceGroup =>
+            {
+                var deviceName = deviceGroup.Key;
+                var devices = AvailableDevices.Where(d => string.Equals(d.Name, deviceName, StringComparison.OrdinalIgnoreCase));
+                return deviceGroup.GroupBy(m => m.MessageType).SelectMany(typeGroup =>
+                {
+                    var type = typeGroup.Key;
+                    return devices.Select(device =>
+                    {
+                        if (type == ServerMessage.Types.MessageAttributeType.VibrateCmd)
+                        {
+                            var cmds = typeGroup.ToDictionary(m => m.FeatureIndex,
+                                                              m => (double)Values[m.SourceAxis]);
+
+                            Logger.Trace("Sending vibrate commands \"{data}\" to \"{name}\"", cmds, device.Name);
+                            return device.SendVibrateCmd(cmds);
+                        }
+
+                        if (type == ServerMessage.Types.MessageAttributeType.LinearCmd)
+                        {
+                            var cmds = typeGroup.ToDictionary(m => m.FeatureIndex,
+                                                              m => ((uint)interval, (double)Values[m.SourceAxis]));
+
+                            Logger.Trace("Sending linear commands \"{data}\" to \"{name}\"", cmds, device.Name);
+                            return device.SendLinearCmd(cmds);
+                        }
+
+                        if (type == ServerMessage.Types.MessageAttributeType.RotateCmd)
+                        {
+                            var cmds = typeGroup.ToDictionary(m => m.FeatureIndex,
+                                                              m => (Math.Clamp(Math.Abs(Values[m.SourceAxis] - 0.5) / 0.5, 0, 1), Values[m.SourceAxis] > 0.5));
+
+                            Logger.Trace("Sending rotate commands \"{data}\" to \"{name}\"", cmds, device.Name);
+                            return device.SendRotateCmd(cmds);
+                        }
+
+                        return Task.CompletedTask;
+                    });
+                });
+            });
         }
 
         private async Task ScanAsync(ButtplugClient client, CancellationToken token)
