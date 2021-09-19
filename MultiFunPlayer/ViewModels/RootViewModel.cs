@@ -1,4 +1,3 @@
-using MaterialDesignThemes.Wpf;
 using MultiFunPlayer.Common;
 using MultiFunPlayer.Common.Controls;
 using MultiFunPlayer.Common.Controls.ViewModels;
@@ -8,7 +7,6 @@ using NLog;
 using Stylet;
 using StyletIoC;
 using System;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 

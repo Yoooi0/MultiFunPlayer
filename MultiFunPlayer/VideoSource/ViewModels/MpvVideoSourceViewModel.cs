@@ -1,5 +1,4 @@
-﻿using MaterialDesignThemes.Wpf;
-using Microsoft.WindowsAPICodePack.Dialogs;
+﻿using Microsoft.WindowsAPICodePack.Dialogs;
 using MultiFunPlayer.Common;
 using MultiFunPlayer.Common.Controls;
 using MultiFunPlayer.Common.Controls.ViewModels;

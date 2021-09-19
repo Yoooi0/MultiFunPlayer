@@ -66,7 +66,7 @@ namespace MultiFunPlayer.Common.Input
             if (_actions.ContainsKey(action.Descriptor))
                 throw new NotSupportedException($"Duplicate action found \"{action.Descriptor}\"");
 
-            Logger.Trace($"Registered \"{action}\" action");
+            Logger.Debug($"Registered \"{action}\" action");
             _actions[action.Descriptor] = action;
         }
 
@@ -132,12 +132,12 @@ namespace MultiFunPlayer.Common.Input
             if (actionDescriptors.Count == 0)
                 return;
 
-            Logger.Debug($"Handling {gesture.Descriptor} gesture");
+            Logger.Trace($"Handling {gesture.Descriptor} gesture");
             foreach (var actionDescriptor in actionDescriptors)
             {
                 if (_actions.TryGetValue(actionDescriptor, out var action))
                 {
-                    Logger.Debug($"Invoking {action.Descriptor} action");
+                    Logger.Trace($"Invoking {action.Descriptor} action");
                     action.Invoke(gesture);
                 }
             }
