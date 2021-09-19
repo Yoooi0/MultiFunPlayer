@@ -171,16 +171,26 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
             {
                 _ = ScanAsync(client, token);
 
-                var lastSentValues = DeviceAxis.All.ToDictionary(a => a, _ => float.PositiveInfinity);
-                bool IsDirty(DeviceAxis axis)
-                    => float.IsFinite(Values[axis]) && (!float.IsFinite(lastSentValues[axis]) || MathF.Abs(lastSentValues[axis] - Values[axis]) >= 0.005f);
+                var lastSentValues = DeviceAxis.All.ToDictionary(a => a, _ => float.NaN);
+                bool CheckDirtyAndUpdate(DeviceAxis axis)
+                {
+                    var currentValue = Values[axis];
+                    var lastValue = lastSentValues[axis];
+                    lastSentValues[axis] = currentValue;
+
+                    if (!float.IsFinite(currentValue)) return false;
+                    if (!float.IsFinite(lastValue)) return true;
+                    if (currentValue == 0 && lastValue != 0) return true;
+                    return MathF.Abs(lastValue - currentValue) >= 0.005f;
+                }
 
                 while (!token.IsCancellationRequested && client.Connected)
                 {
                     var interval = MathF.Max(1, 1000.0f / UpdateRate);
                     UpdateValues();
 
-                    var dirtySettings = DeviceSettings.Where(s => IsDirty(s.SourceAxis));
+                    var dirtyAxes = DeviceAxis.All.Where(CheckDirtyAndUpdate).ToList();
+                    var dirtySettings = DeviceSettings.Where(s => dirtyAxes.Contains(s.SourceAxis));
                     var tasks = GetDeviceTasks(interval, dirtySettings);
 
                     try
@@ -192,9 +202,6 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
                         foreach (var exception in tasks.Where(t => t.Exception != null).Select(t => t.Exception))
                             Logger.Debug(exception, "Buttplug device exception");
                     }
-
-                    foreach (var group in dirtySettings.GroupBy(x => x.SourceAxis))
-                        lastSentValues[group.Key] = Values[group.Key];
 
                     await Task.Delay((int)interval, token);
                 }
@@ -211,6 +218,12 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
 
             IsScanBusy = false;
             AvailableDevices.Clear();
+        }
+
+        protected override float CoerceProviderValue(DeviceAxis axis, float value)
+        {
+            value = base.CoerceProviderValue(axis, value);
+            return value < 0.005f ? 0 : value;
         }
 
         private IEnumerable<Task> GetDeviceTasks(float interval, IEnumerable<ButtplugClientDeviceSettings> settings)

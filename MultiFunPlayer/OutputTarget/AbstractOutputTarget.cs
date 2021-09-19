@@ -68,14 +68,19 @@ namespace MultiFunPlayer.OutputTarget
                 await _statusEvent.WaitAsync(token);
         }
 
+        protected virtual float CoerceProviderValue(DeviceAxis axis, float value)
+        {
+            if (!float.IsFinite(value))
+                return axis.DefaultValue;
+
+            return value;
+        }
+
         protected void UpdateValues()
         {
             foreach (var axis in DeviceAxis.All)
             {
-                var value = _valueProvider?.GetValue(axis) ?? float.NaN;
-                if (!float.IsFinite(value))
-                    value = axis.DefaultValue;
-
+                var value = CoerceProviderValue(axis, _valueProvider?.GetValue(axis) ?? float.NaN);
                 var settings = AxisSettings[axis];
                 Values[axis] = MathUtils.Lerp(settings.Minimum / 100f, settings.Maximum / 100f, value);
             }
