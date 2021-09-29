@@ -35,9 +35,19 @@
             </DrawingBrush>
         </material:Card.Background>
         <Canvas>
+            <Polygon Points="{Binding Points, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}"
+                     Visibility="{Binding ShowStrokeLength, Converter={StaticResource BooleanToVisibilityConverter}, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}"
+                     StrokeThickness="0.5" 
+                     Stroke="Black">
+                <Polygon.Fill>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,0"
+                                         GradientStops="{Binding Stops, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}"/>
+                </Polygon.Fill>
+            </Polygon>
             <Rectangle VerticalAlignment="Stretch" HorizontalAlignment="Stretch"
                        RadiusX="5" RadiusY="5"
                        SnapsToDevicePixels="True"
+                       Visibility="{Binding ShowStrokeLength, Converter={StaticResource InverseBoolToVisConverter}, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}"
                        Width="{Binding ActualWidth, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}"
                        Height="{Binding ActualHeight, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}">
                 <Rectangle.Fill>

@@ -304,7 +304,7 @@
                         </Button>
                     </StackPanel>
                 </DockPanel>
-                <StackPanel Margin="20 15 20 20"
+                <StackPanel Margin="20 15 20 15"
                             DockPanel.Dock="Bottom"
                             Visibility="{Binding VideoContentVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
                     <DockPanel LastChildFill="True" Margin="0 0 0 10">
@@ -338,10 +338,37 @@
                                     MouseDoubleClick="{s:Action OnSliderDoubleClick}"
                                     ValueChanged="{s:Action OnOffsetSliderValueChanged}"/>
                     </DockPanel>
-                    <controls:KeyframesHeatmapGradient Height="30" 
-                                                           Keyframes="{Binding AxisKeyframes, Mode=OneWay}"
-                                                           Duration="{Binding VideoDuration, Mode=OneWay}"
-                                                           Position="{Binding CurrentPosition, Mode=OneWay}"/>
+                    <controls:KeyframesHeatmapGradient Height="35" 
+                                                       Keyframes="{Binding AxisKeyframes, Mode=OneWay}"
+                                                       Duration="{Binding VideoDuration, Mode=OneWay}"
+                                                       Position="{Binding CurrentPosition, Mode=OneWay}"
+                                                       BucketCount="{Binding HeatmapBucketCount}"
+                                                       ShowStrokeLength="{Binding HeatmapShowStrokeLength}">
+                        <controls:KeyframesHeatmapGradient.ContextMenu>
+                            <ContextMenu>
+                                <MenuItem Header="Show stroke length" 
+                                          IsCheckable="True"
+                                          IsChecked="{Binding HeatmapShowStrokeLength}"/>
+                                <Separator/>
+                                <MenuItem Header="Quality" IsEnabled="False"/>
+                                <MenuItem material:RippleAssist.IsDisabled="True">
+                                    <MenuItem.Icon>
+                                        <TextBlock Text="{Binding HeatmapBucketCount}"
+                                                   FontSize="10"
+                                                   Padding="0"/>
+                                    </MenuItem.Icon>
+                                    <MenuItem.HeaderTemplate>
+                                        <DataTemplate>
+                                            <Slider Minimum="100"
+                                                    Maximum="{Binding Source={x:Static controls:KeyframesHeatmapGradient.MaxBucketCount}}"
+                                                    Value="{Binding PlacementTarget.DataContext.HeatmapBucketCount, RelativeSource={RelativeSource FindAncestor, AncestorType=ContextMenu}}"/>
+                                        </DataTemplate>
+                                    </MenuItem.HeaderTemplate>
+                                </MenuItem>
+                                <Separator/>
+                            </ContextMenu>
+                        </controls:KeyframesHeatmapGradient.ContextMenu>
+                    </controls:KeyframesHeatmapGradient>
                 </StackPanel>
             </DockPanel>
         </material:Card>

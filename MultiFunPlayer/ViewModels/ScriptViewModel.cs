@@ -50,6 +50,8 @@ namespace MultiFunPlayer.ViewModels
         public SyncSettings SyncSettings { get; set; }
 
         public VideoFileInfo VideoFile { get; set; }
+        public bool HeatmapShowStrokeLength { get; set; }
+        public int HeatmapBucketCount { get; set; } = 333;
 
         public bool IsSyncing => AxisStates.Values.Any(s => s.SyncTime < SyncSettings.Duration);
         public float SyncProgress => !IsSyncing ? 100 : GetSyncProgress(AxisStates.Values.Min(s => s.SyncTime), SyncSettings.Duration) * 100;
@@ -387,7 +389,9 @@ namespace MultiFunPlayer.ViewModels
                     { nameof(ScriptLibraries), JArray.FromObject(ScriptLibraries) },
                     { nameof(ValuesContentVisible), JToken.FromObject(ValuesContentVisible) },
                     { nameof(VideoContentVisible), JToken.FromObject(VideoContentVisible) },
-                    { nameof(SyncSettings), JObject.FromObject(SyncSettings) }
+                    { nameof(SyncSettings), JObject.FromObject(SyncSettings) },
+                    { nameof(HeatmapBucketCount), JToken.FromObject(HeatmapBucketCount) },
+                    { nameof(HeatmapShowStrokeLength), JToken.FromObject(HeatmapShowStrokeLength) }
                 };
             }
             else if (message.Type == AppSettingsMessageType.Loading)
@@ -417,6 +421,12 @@ namespace MultiFunPlayer.ViewModels
 
                 if (settings.TryGetValue<bool>(nameof(VideoContentVisible), out var videoContentVisible))
                     VideoContentVisible = videoContentVisible;
+
+                if (settings.TryGetValue<int>(nameof(HeatmapBucketCount), out var heatmapBucketCount))
+                    HeatmapBucketCount = heatmapBucketCount;
+
+                if (settings.TryGetValue<bool>(nameof(HeatmapShowStrokeLength), out var heatmapShowStrokeLength))
+                    HeatmapShowStrokeLength = heatmapShowStrokeLength;
 
                 if (settings.TryGetValue(nameof(SyncSettings), out var syncSettingsToken))
                     syncSettingsToken.Populate(SyncSettings);
