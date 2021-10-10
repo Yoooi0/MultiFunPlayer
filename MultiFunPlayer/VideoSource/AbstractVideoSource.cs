@@ -122,11 +122,12 @@ namespace MultiFunPlayer.VideoSource
             }
         }
 
-        protected virtual void RegisterShortcuts(IShortcutManager shortcutManager)
+        protected virtual void RegisterShortcuts(IShortcutManager s)
         {
-            shortcutManager.RegisterAction($"{Name}::AutoConnectEnabled::Value::True", () => AutoConnectEnabled = true);
-            shortcutManager.RegisterAction($"{Name}::AutoConnectEnabled::Value::False", () => AutoConnectEnabled = false);
-            shortcutManager.RegisterAction($"{Name}::AutoConnectEnabled::Value::Toggle", () => AutoConnectEnabled = !AutoConnectEnabled);
+            #region AutoConnectEnabled
+            s.RegisterAction<bool>($"{Name}::AutoConnectEnabled::Set", "Enable auto connect", (_, enabled) => AutoConnectEnabled = enabled);
+            s.RegisterAction($"{Name}::AutoConnectEnabled::Toggle", (_) => AutoConnectEnabled = !AutoConnectEnabled);
+            #endregion
         }
 
         protected async virtual void Dispose(bool disposing)

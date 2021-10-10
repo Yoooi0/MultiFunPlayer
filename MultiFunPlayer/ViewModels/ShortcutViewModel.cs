@@ -1,4 +1,5 @@
-﻿using MultiFunPlayer.Common;
+﻿using MaterialDesignThemes.Wpf;
+using MultiFunPlayer.Common;
 using MultiFunPlayer.Common.Input;
 using MultiFunPlayer.Common.Input.RawInput;
 using MultiFunPlayer.Common.Input.XInput;
@@ -29,11 +30,11 @@ namespace MultiFunPlayer.ViewModels
         public string ActionsFilter { get; set; }
         public BindableCollection<IShortcutActionDescriptor> ActionDescriptors { get; }
         public ICollectionView AvailableActionDescriptors { get; }
-        public IReadOnlyDictionary<IInputGestureDescriptor, BindableCollection<IShortcutActionDescriptor>> Bindings => _manager.Bindings;
+        public IReadOnlyDictionary<IInputGestureDescriptor, BindableCollection<IShortcutAction>> Bindings => _manager.Bindings;
 
         public bool IsCapturingGesture { get; private set; }
         public IInputGestureDescriptor CapturedGesture { get; set; }
-        public KeyValuePair<IInputGestureDescriptor, BindableCollection<IShortcutActionDescriptor>>? SelectedBinding { get; set; }
+        public KeyValuePair<IInputGestureDescriptor, BindableCollection<IShortcutAction>>? SelectedBinding { get; set; }
 
         public bool IsKeyboardKeysGestureEnabled { get; set; } = true;
         public bool IsMouseAxisGestureEnabled { get; set; } = false;
@@ -47,7 +48,7 @@ namespace MultiFunPlayer.ViewModels
 
             Logger.Debug($"Found {manager.Actions.Count} available actions");
 
-            ActionDescriptors = new BindableCollection<IShortcutActionDescriptor>(manager.Actions.Keys);
+            ActionDescriptors = new BindableCollection<IShortcutActionDescriptor>(manager.Actions);
             AvailableActionDescriptors = CollectionViewSource.GetDefaultView(ActionDescriptors);
             AvailableActionDescriptors.Filter = o =>
             {
@@ -56,11 +57,7 @@ namespace MultiFunPlayer.ViewModels
                 if (SelectedBinding == null)
                     return false;
 
-                var (gestureDescriptor, _) = SelectedBinding.Value;
-                if (gestureDescriptor is ISimpleInputGestureDescriptor && actionDescriptor is IAxisShortcutActionDescriptor)
-                    return false;
-                if (gestureDescriptor is IAxisInputGestureDescriptor && actionDescriptor is ISimpleShortcutActionDescriptor)
-                    return false;
+                //TODO: filter based on gesture type
 
                 if (!string.IsNullOrWhiteSpace(ActionsFilter))
                 {
@@ -141,7 +138,7 @@ namespace MultiFunPlayer.ViewModels
 
         public void RemoveGesture(object sender, RoutedEventArgs e)
         {
-            if (sender is not FrameworkElement element || element.DataContext is not KeyValuePair<IInputGestureDescriptor, BindableCollection<IShortcutActionDescriptor>> pair)
+            if (sender is not FrameworkElement element || element.DataContext is not KeyValuePair<IInputGestureDescriptor, BindableCollection<IShortcutAction>> pair)
                 return;
 
             var (gestureDescriptor, _) = pair;
@@ -161,39 +158,47 @@ namespace MultiFunPlayer.ViewModels
 
         public void RemoveAssignedAction(object sender, RoutedEventArgs e)
         {
-            if (sender is not FrameworkElement element || element.DataContext is not IShortcutActionDescriptor actionDescriptor)
+            if (sender is not FrameworkElement element || element.DataContext is not IShortcutAction action)
                 return;
             if (SelectedBinding == null)
                 return;
 
             var binding = SelectedBinding.Value;
-            _manager.UnbindAction(binding.Key, actionDescriptor);
+            _manager.UnbindAction(binding.Key, action);
         }
 
         public void MoveAssignedActionUp(object sender, RoutedEventArgs e)
         {
-            if (sender is not FrameworkElement element || element.DataContext is not IShortcutActionDescriptor actionDescriptor)
+            if (sender is not FrameworkElement element || element.DataContext is not IShortcutAction action)
                 return;
             if (SelectedBinding == null)
                 return;
 
             var binding = SelectedBinding.Value;
-            var index = binding.Value.IndexOf(actionDescriptor);
+            var index = binding.Value.IndexOf(action);
             if (index == 0)
                 return;
 
             binding.Value.Move(index, index - 1);
         }
 
+        public async void ConfigureAssignedAction(object sender, RoutedEventArgs e)
+        {
+            if (sender is not FrameworkElement element || element.DataContext is not IShortcutAction action)
+                return;
+
+            _ = await DialogHost.Show(action, "ShortcutDialog").ConfigureAwait(true);
+        }
+
         public void MoveAssignedActionDown(object sender, RoutedEventArgs e)
         {
-            if (sender is not FrameworkElement element || element.DataContext is not IShortcutActionDescriptor actionDescriptor)
+            if (sender is not FrameworkElement element || element.DataContext is not IShortcutAction action)
                 return;
             if (SelectedBinding == null)
                 return;
 
             var binding = SelectedBinding.Value;
-            var index = binding.Value.IndexOf(actionDescriptor);
+            var index = binding.Value.IndexOf(action);
             if (index == binding.Value.Count - 1)
                 return;
 
@@ -235,9 +240,9 @@ namespace MultiFunPlayer.ViewModels
             public IInputGestureDescriptor Gesture { get; }
 
             [JsonProperty(ItemTypeNameHandling = TypeNameHandling.Objects)]
-            public List<IShortcutActionDescriptor> Actions { get; }
+            public List<IShortcutAction> Actions { get; }
 
-            public BindingConfigModel(IInputGestureDescriptor gesture, [JsonProperty(ItemTypeNameHandling = TypeNameHandling.Objects)] IEnumerable<IShortcutActionDescriptor> actions)
+            public BindingConfigModel(IInputGestureDescriptor gesture, [JsonProperty(ItemTypeNameHandling = TypeNameHandling.Objects)] IEnumerable<IShortcutAction> actions)
             {
                 Gesture = gesture;
                 Actions = actions?.ToList();
@@ -286,15 +291,15 @@ namespace MultiFunPlayer.ViewModels
 
                         if (binding.Actions != null)
                         {
-                            foreach (var actionDescriptor in binding.Actions)
+                            foreach (var action in binding.Actions)
                             {
-                                if (!ActionDescriptors.Contains(actionDescriptor))
+                                if (!ActionDescriptors.Contains(action.Descriptor))
                                 {
-                                    Logger.Warn($"Action \"{actionDescriptor.Name}\" not found!");
+                                    Logger.Warn($"Action \"{action.Descriptor.Name}\" not found!");
                                     continue;
                                 }
 
-                                _manager.BindAction(gestureDescriptor, actionDescriptor);
+                                _manager.BindActionWithSettings(gestureDescriptor, action.Descriptor, action.Settings);
                             }
                         }
                     }

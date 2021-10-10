@@ -6,6 +6,8 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:MultiFunPlayer.Views" 
+             xmlns:common="clr-namespace:MultiFunPlayer.Common" 
+             xmlns:controls="clr-namespace:MultiFunPlayer.Common.Controls" 
              xmlns:input="clr-namespace:MultiFunPlayer.Common.Input" 
              xmlns:behaviours="clr-namespace:MultiFunPlayer.Common.Behaviours" 
              xmlns:converters="clr-namespace:MultiFunPlayer.Common.Converters"
@@ -189,6 +191,7 @@
         </DataTemplate>
     </UserControl.Resources>
 
+    <material:DialogHost Identifier="ShortcutDialog">
     <DockPanel Width="500" 
                MinHeight="300"
                Height="650"
@@ -394,40 +397,40 @@
             </DockPanel>
         </material:Card>
 
-        <material:Card material:ShadowAssist.ShadowDepth="Depth1"
+            <material:Card material:ShadowAssist.ShadowDepth="Depth1"
                         DockPanel.Dock="Top"
                         Margin="0 0 0 0">
-            <DockPanel LastChildFill="True">
-                <TextBlock Text="Assigned actions:"
+                <DockPanel LastChildFill="True">
+                    <TextBlock Text="Assigned actions:"
                            Margin="5 5 0 0"
                            DockPanel.Dock="Top"
                            Typography.Capitals="AllSmallCaps"
                            FontWeight="Medium"/>
 
-                <ItemsControl DockPanel.Dock="Top"
+                    <ItemsControl DockPanel.Dock="Top"
                               ItemsSource="{Binding SelectedBinding.Value}"
                               Margin="5 5 0 0"
                               Height="100"
                               VirtualizingStackPanel.IsVirtualizing="True"
                               VirtualizingStackPanel.VirtualizationMode="Recycling">
-                    <ItemsControl.Template>
-                        <ControlTemplate TargetType="ItemsControl">
-                            <ScrollViewer CanContentScroll="True" 
+                        <ItemsControl.Template>
+                            <ControlTemplate TargetType="ItemsControl">
+                                <ScrollViewer CanContentScroll="True" 
                                           Focusable="False">
-                                <ItemsPresenter/>
-                            </ScrollViewer>
-                        </ControlTemplate>
-                    </ItemsControl.Template>
-                    <ItemsControl.ItemsPanel>
-                        <ItemsPanelTemplate>
-                            <VirtualizingStackPanel IsVirtualizing="True"
+                                    <ItemsPresenter/>
+                                </ScrollViewer>
+                            </ControlTemplate>
+                        </ItemsControl.Template>
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <VirtualizingStackPanel IsVirtualizing="True"
                                                     VirtualizationMode="Recycling" />
-                        </ItemsPanelTemplate>
-                    </ItemsControl.ItemsPanel>
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate>
-                            <DockPanel>
-                                <Button DockPanel.Dock="Right"   
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <DockPanel>
+                                    <Button DockPanel.Dock="Right"   
                                         Style="{StaticResource MaterialDesignFlatButton}"
                                         Click="{s:Action RemoveAssignedAction}"
                                         ToolTip="Remove"
@@ -439,10 +442,10 @@
                                         Height="24" 
                                         Width="24" 
                                         Padding="0">
-                                    <material:PackIcon Kind="Delete"/>
-                                </Button>
-                                
-                                <Button DockPanel.Dock="Right"   
+                                        <material:PackIcon Kind="Delete"/>
+                                    </Button>
+
+                                    <Button DockPanel.Dock="Right"   
                                         Style="{StaticResource MaterialDesignFlatButton}"
                                         Click="{s:Action MoveAssignedActionUp}"
                                         ToolTip="Move Up"
@@ -451,9 +454,9 @@
                                         Height="24" 
                                         Width="24" 
                                         Padding="0">
-                                    <material:PackIcon Kind="ArrowUp"/>
-                                </Button>
-                                <Button DockPanel.Dock="Right"   
+                                        <material:PackIcon Kind="ArrowUp"/>
+                                    </Button>
+                                    <Button DockPanel.Dock="Right"   
                                         Style="{StaticResource MaterialDesignFlatButton}"
                                         Click="{s:Action MoveAssignedActionDown}"
                                         ToolTip="Move Down"
@@ -462,48 +465,61 @@
                                         Height="24" 
                                         Width="24" 
                                         Padding="0">
-                                    <material:PackIcon Kind="ArrowDown"/>
-                                </Button>
+                                        <material:PackIcon Kind="ArrowDown"/>
+                                    </Button>
 
-                                <TextBlock Text="{Binding Name}"
+                                    <Button DockPanel.Dock="Right"   
+                                        Style="{StaticResource MaterialDesignFlatButton}"
+                                        Click="{s:Action ConfigureAssignedAction}"
+                                        Visibility="{Binding Settings.Count, Converter={StaticResource NotZeroToVisibilityConverter}}"
+                                        ToolTip="Configure"
+                                        ToolTipService.InitialShowDelay="0"
+                                        ToolTipService.Placement="Top"
+                                        Height="22" 
+                                        Width="22" 
+                                        Padding="0">
+                                        <material:PackIcon Kind="Wrench" Width="14" Height="14"/>
+                                    </Button>
+
+                                    <TextBlock Text="{Binding DisplayName}"
                                            DockPanel.Dock="Left"
                                            Margin="0"/>
-                            </DockPanel>
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
-                
-                <TextBox DockPanel.Dock="Top"
+                                </DockPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+
+                    <TextBox DockPanel.Dock="Top"
                          Text="{Binding ActionsFilter}"
                          Style="{StaticResource MaterialDesignFloatingHintTextBox}"
                          Margin="5 0 5 0"
                          material:HintAssist.Hint="Filter actions"
                          behaviours:InputAssist.UpdateSourceOnEnter="TextBox.Text"/>
 
-                <ItemsControl DockPanel.Dock="Top"
+                    <ItemsControl DockPanel.Dock="Top"
                          ItemsSource="{Binding AvailableActionDescriptors}"
                          Margin="5 5 0 0"
                          VirtualizingStackPanel.IsVirtualizing="True"
                          VirtualizingStackPanel.VirtualizationMode="Recycling"
                          ScrollViewer.VerticalScrollBarVisibility="Visible">
-                    <ItemsControl.Template>
-                        <ControlTemplate TargetType="ItemsControl">
-                            <ScrollViewer CanContentScroll="True" 
+                        <ItemsControl.Template>
+                            <ControlTemplate TargetType="ItemsControl">
+                                <ScrollViewer CanContentScroll="True" 
                                         Focusable="False">
-                                <ItemsPresenter/>
-                            </ScrollViewer>
-                        </ControlTemplate>
-                    </ItemsControl.Template>
-                    <ItemsControl.ItemsPanel>
-                        <ItemsPanelTemplate>
-                            <VirtualizingStackPanel IsVirtualizing="True"
+                                    <ItemsPresenter/>
+                                </ScrollViewer>
+                            </ControlTemplate>
+                        </ItemsControl.Template>
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <VirtualizingStackPanel IsVirtualizing="True"
                                                     VirtualizationMode="Recycling" />
-                        </ItemsPanelTemplate>
-                    </ItemsControl.ItemsPanel>
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate>
-                            <DockPanel>
-                                <Button DockPanel.Dock="Right"   
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <DockPanel>
+                                    <Button DockPanel.Dock="Right"   
                                         Style="{StaticResource MaterialDesignFlatButton}"
                                         Click="{s:Action AssignAction}"
                                         ToolTip="Assign action"
@@ -513,18 +529,74 @@
                                         Height="24" 
                                         Width="24" 
                                         Padding="0">
-                                    <material:PackIcon Kind="Plus"/>
-                                </Button>
+                                        <material:PackIcon Kind="Plus"/>
+                                    </Button>
 
-                                <TextBlock Text="{Binding Name}"
+                                    <TextBlock Text="{Binding Name}"
                                            DockPanel.Dock="Left"
                                            Margin="0"/>
-                            </DockPanel>
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
-            </DockPanel>
-        </material:Card>
+                                </DockPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </DockPanel>
+            </material:Card>
+        </DockPanel>
 
-    </DockPanel>
+        <material:DialogHost.DialogContentTemplate>
+            <DataTemplate>
+                <DockPanel Margin="20" Width="300">
+                    <Button DockPanel.Dock="Top"
+                        Style="{StaticResource MaterialDesignFlatButton}"
+                        material:RippleAssist.Feedback="Black"
+                        Foreground="Black"
+                        Height="24"
+                        Width="24"
+                        Padding="0"
+                        HorizontalAlignment="Right"
+                        VerticalAlignment="Top"
+                        Margin="0 -15 -15 0"
+                        Command="{x:Static material:DialogHost.CloseDialogCommand}">
+                        <material:PackIcon Kind="Close" 
+                               Height="20" 
+                               Width="20"/>
+                    </Button>
+
+                    <ItemsControl ItemsSource="{Binding Settings}">
+                        <ItemsControl.Resources>
+                            <DataTemplate x:Key="BooleanTemplate" DataType="{x:Type input:IShortcutSetting}">
+                                <CheckBox IsChecked="{Binding Value}" />
+                            </DataTemplate>
+                            <DataTemplate x:Key="Int32Template" DataType="{x:Type input:IShortcutSetting}">
+                                <TextBox Text="{Binding Value}" />
+                            </DataTemplate>
+                            <DataTemplate x:Key="SingleTemplate" DataType="{x:Type input:IShortcutSetting}">
+                                <TextBox Text="{Binding Value}" />
+                            </DataTemplate>
+                            <DataTemplate x:Key="DeviceAxisTemplate" DataType="{x:Type input:IShortcutSetting}">
+                                <ComboBox SelectedItem="{Binding Value}" 
+                                          ItemsSource="{x:Static common:DeviceAxis.All}"
+                                          material:TextFieldAssist.HasClearButton="True" />
+                            </DataTemplate>
+                            <controls:GenericArgumentTemplateSelector x:Key="GenericArgumentTemplateSelector"/>
+                        </ItemsControl.Resources>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate DataType="{x:Type input:IShortcutSetting}">
+                                <DockPanel LastChildFill="True">
+                                    <TextBlock Text="{Binding Description, StringFormat={}{0}:}"
+                                               Width="125"
+                                               VerticalAlignment="Center"
+                                               Margin="0 0 20 0"
+                                               DockPanel.Dock="Left" />
+                                    <ContentControl Content="{Binding}" 
+                                                    ContentTemplateSelector="{StaticResource GenericArgumentTemplateSelector}"
+                                                    DockPanel.Dock="Left" />
+                                </DockPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </DockPanel>
+            </DataTemplate>
+        </material:DialogHost.DialogContentTemplate>
+    </material:DialogHost>
 </UserControl>

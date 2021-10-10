@@ -1,46 +1,62 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using PropertyChanged;
+using Stylet;
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Linq;
+using System.Windows;
+using System.Windows.Controls;
 
 namespace MultiFunPlayer.Common.Input
 {
     public interface IShortcutAction
     {
         IShortcutActionDescriptor Descriptor { get; }
+        IReadOnlyObservableCollection<IShortcutSetting> Settings { get; }
         void Invoke(IInputGesture gesture);
     }
 
-    public interface ISimpleShortcutAction : IShortcutAction { }
-    public interface IAxisShortcutAction : IShortcutAction { }
-
-    public class SimpleShortcutAction : ISimpleShortcutAction
+    [JsonObject(MemberSerialization = MemberSerialization.OptIn)]
+    public class ShortcutAction : IShortcutAction, INotifyPropertyChanged
     {
-        private readonly Action _action;
+        private readonly Delegate _action;
 
-        public IShortcutActionDescriptor Descriptor { get; }
+        [JsonProperty] public IShortcutActionDescriptor Descriptor { get; }
+        [JsonProperty(ItemTypeNameHandling = TypeNameHandling.Objects)] public IReadOnlyObservableCollection<IShortcutSetting> Settings { get; }
 
-        public SimpleShortcutAction(string name, Action action)
+        public string DisplayName => Settings.Count == 0 ? $"{Descriptor.Name}" : $"{Descriptor.Name} [{string.Join(", ", Settings.Select(s => s.Value?.ToString() ?? "null"))}]";
+
+        [JsonConstructor]
+        public ShortcutAction(IShortcutActionDescriptor descriptor, Delegate action, [JsonProperty(ItemTypeNameHandling = TypeNameHandling.Objects)] IEnumerable<IShortcutSetting> settings)
         {
-            Descriptor = new SimpleShortcutActionDescriptor(name);
             _action = action;
+            Descriptor = descriptor;
+            Settings = new BindableCollection<IShortcutSetting>(settings);
         }
 
-        public void Invoke(IInputGesture gesture) => _action?.Invoke();
-        public override string ToString() => Descriptor.ToString();
-    }
-
-    public class AxisShortcutAction : IAxisShortcutAction
-    {
-        private readonly Action<float, float> _action;
-
-        public IShortcutActionDescriptor Descriptor { get; }
-
-        public AxisShortcutAction(string name, Action<float, float> action)
+        public ShortcutAction(IShortcutActionDescriptor descriptor, Delegate action, IEnumerable<(Type Type, string Description)> settings)
         {
-            Descriptor = new AxisShortcutActionDescriptor(name);
             _action = action;
+            Descriptor = descriptor;
+            Settings = new BindableCollection<IShortcutSetting>(settings.Select(s =>
+            {
+                var type = typeof(ShortcutSetting<>).MakeGenericType(s.Type);
+                var setting = (IShortcutSetting)Activator.CreateInstance(type, s.Description);
+
+                if (setting is INotifyPropertyChanged o)
+                    o.PropertyChanged += OnSettingsValueChanged;
+
+                return setting;
+            }));
         }
 
-        public void Invoke(IInputGesture gesture) => Invoke(gesture as IAxisInputGesture);
-        public void Invoke(IAxisInputGesture gesture) => _action?.Invoke(gesture.Value, gesture.Delta);
-        public override string ToString() => Descriptor.ToString();
+        [SuppressPropertyChangedWarnings]
+        private void OnSettingsValueChanged(object sender, PropertyChangedEventArgs e)
+            => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(DisplayName)));
+
+        public void Invoke(IInputGesture gesture) => _action?.DynamicInvoke(Settings.Select(s => s.Value).Prepend(gesture).ToArray());
+
+        public event PropertyChangedEventHandler PropertyChanged;
     }
 }

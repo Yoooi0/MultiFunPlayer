@@ -264,7 +264,7 @@ namespace MultiFunPlayer.ViewModels
                     return;
 
                 var dirty = false;
-                foreach(var (axis, state) in AxisStates)
+                foreach (var (axis, state) in AxisStates)
                 {
                     lock (state)
                     {
@@ -297,7 +297,7 @@ namespace MultiFunPlayer.ViewModels
             Logger.Info("Received VideoFileChangedMessage [Source: \"{0}\" Name: \"{1}\"]", message.VideoFile?.Source, message.VideoFile?.Name);
 
             VideoFile = message.VideoFile;
-            if(SyncSettings.SyncOnVideoFileChanged)
+            if (SyncSettings.SyncOnVideoFileChanged)
                 ResetSync(isSyncing: VideoFile != null);
 
             ResetScript(null);
@@ -321,7 +321,7 @@ namespace MultiFunPlayer.ViewModels
             Logger.Info("Received VideoPlayingMessage [IsPlaying: {0}]", message.IsPlaying);
 
             if (!IsPlaying && message.IsPlaying)
-                if(SyncSettings.SyncOnVideoResume)
+                if (SyncSettings.SyncOnVideoResume)
                     ResetSync();
 
             IsPlaying = message.IsPlaying;
@@ -401,7 +401,7 @@ namespace MultiFunPlayer.ViewModels
 
                 if (settings.TryGetValue(nameof(AxisSettings), out var axisSettingsToken))
                 {
-                    foreach(var property in axisSettingsToken.Children<JProperty>())
+                    foreach (var property in axisSettingsToken.Children<JProperty>())
                     {
                         if (!DeviceAxis.TryParse(property.Name, out var axis))
                             continue;
@@ -410,7 +410,7 @@ namespace MultiFunPlayer.ViewModels
                     }
                 }
 
-                if(settings.TryGetValue<List<ScriptLibrary>>(nameof(ScriptLibraries), out var scriptDirectories))
+                if (settings.TryGetValue<List<ScriptLibrary>>(nameof(ScriptLibraries), out var scriptDirectories))
                 {
                     foreach (var library in scriptDirectories)
                         ScriptLibraries.Add(library);
@@ -781,6 +781,38 @@ namespace MultiFunPlayer.ViewModels
                 ResetSync(true, axis);
         }
 
+        public void SetAxisInverted(DeviceAxis axis, bool value)
+        {
+            var current = AxisSettings[axis].Inverted;
+
+            AxisSettings[axis].Inverted = value;
+            if (current && !value)
+                ResetSync(true, axis);
+        }
+
+        public void SetAxisValue(DeviceAxis axis, float value, bool offset = false)
+        {
+            var state = AxisStates[axis];
+            lock (state)
+            {
+                float lastValue = state.Value;
+
+                if (offset)
+                {
+                    if (!float.IsFinite(state.Value))
+                        state.Value = axis.DefaultValue;
+
+                    state.Value = MathUtils.Clamp01(state.Value + value);
+                }
+                else
+                {
+                    state.Value = value;
+                }
+
+                state.Dirty = state.Value != lastValue;
+            }
+        }
+
         private bool MoveScript(DeviceAxis axis, DirectoryInfo directory)
         {
             if (directory?.Exists == false || AxisModels[axis].Script == null)
@@ -925,121 +957,239 @@ namespace MultiFunPlayer.ViewModels
         }
         #endregion
 
-        private void RegisterShortcuts(IShortcutManager shortcutManager)
+        #region Shortcuts
+        public void RegisterShortcuts(IShortcutManager s)
         {
-            foreach (var axis in DeviceAxis.All)
-                RegisterShortcuts(shortcutManager, axis);
+            #region Axis::Value
+            s.RegisterAction<DeviceAxis, float>("Axis::Value::Offset", "Target axis", "Value offset", (_, axis, offset) =>
+            {
+                if (axis != null)
+                    SetAxisValue(axis, offset, offset: true);
+            });
 
-            shortcutManager.RegisterAction("Global::Sync", () => ResetSync());
+            s.RegisterAction<DeviceAxis, float>("Axis::Value::Set", "Target axis", "Value", (_, axis, value) =>
+            {
+                if (axis != null)
+                    SetAxisValue(axis, value);
+            });
 
-            shortcutManager.RegisterAction("Global::Bypass::Value::True", () => { foreach (var axis in DeviceAxis.All) SetAxisBypass(axis, true); });
-            shortcutManager.RegisterAction("Global::Bypass::Value::False", () => { foreach (var axis in DeviceAxis.All) SetAxisBypass(axis, false); });
-            shortcutManager.RegisterAction("Global::Bypass::Value::Toggle", () => { foreach (var axis in DeviceAxis.All) SetAxisBypass(axis, !AxisSettings[axis].Bypass); });
+            s.RegisterAction<DeviceAxis>("Axis::Value::Drive", "Target axis", (gesture, axis) =>
+            {
+                if (gesture is not IAxisInputGesture axisGesture) return;
+                if (axis != null)
+                    SetAxisValue(axis, axisGesture.Delta, offset: true);
+            });
+            #endregion
+
+            #region Axis::Sync
+            s.RegisterAction<DeviceAxis>("Axis::Sync", "Target axis", (_, axis) =>
+            {
+                if (axis != null)
+                    ResetSync(true, axis);
+            });
+            #endregion
+
+            #region Axis::Bypass
+            s.RegisterAction<DeviceAxis, bool>("Axis::Bypass::Set", "Target axis", "Bypass", (_, axis, enabled) =>
+            {
+                if (axis != null)
+                    SetAxisBypass(axis, enabled);
+            });
+
+            s.RegisterAction<DeviceAxis>("Axis::Bypass::Toggle", "Target axis", (_, axis) =>
+            {
+                if (axis != null)
+                    SetAxisBypass(axis, !AxisSettings[axis].Bypass);
+            });
+            #endregion
+
+            #region Axis::ClearScript
+            s.RegisterAction<DeviceAxis>("Axis::ClearScript", "Target axis", (_, axis) =>
+            {
+                if (axis != null)
+                    OnAxisClear(axis);
+            });
+            #endregion
+
+            #region Axis::ReloadScript
+            s.RegisterAction<DeviceAxis>("Axis::ReloadScript", "Target axis", (_, axis) =>
+            {
+                if (axis != null)
+                    OnAxisReload(axis);
+            });
+            #endregion
+
+            #region Axis::Inverted
+            s.RegisterAction<DeviceAxis, bool>("Axis::Inverted::Set", "Target axis", "Invert", (_, axis, enabled) =>
+            {
+                if (axis != null)
+                    SetAxisInverted(axis, enabled);
+            });
+
+            s.RegisterAction<DeviceAxis>("Axis::Inverted::Toggle", "Target axis", (_, axis) =>
+            {
+                if (axis != null)
+                    SetAxisInverted(axis, !AxisSettings[axis].Inverted);
+            });
+            #endregion
+
+            #region Axis::LinkPriority
+            s.RegisterAction<DeviceAxis, bool>("Axis::LinkPriority::Set", "Target axis", "Link has priority", (_, axis, enabled) =>
+            {
+                if (axis != null)
+                    AxisSettings[axis].LinkAxisHasPriority = enabled;
+            });
+
+            s.RegisterAction<DeviceAxis>("Axis::LinkPriority::Toggle", "Target axis", (_, axis) =>
+            {
+                if (axis != null)
+                    AxisSettings[axis].LinkAxisHasPriority = !AxisSettings[axis].LinkAxisHasPriority;
+            });
+            #endregion
+
+            #region Axis::SmartLimitEnabled
+            s.RegisterAction<DeviceAxis, bool>("Axis::SmartLimitEnabled::Set", "Target axis", "Link has priority", (_, axis, enabled) =>
+            {
+                if (axis != null)
+                    AxisSettings[axis].SmartLimitEnabled = enabled;
+            });
+
+            s.RegisterAction<DeviceAxis>("Axis::SmartLimitEnabled::Toggle", "Target axis", (_, axis) =>
+            {
+                if (axis != null)
+                    AxisSettings[axis].SmartLimitEnabled = !AxisSettings[axis].SmartLimitEnabled;
+            });
+            #endregion
+
+            #region Axis::RandomizerStrength
+            s.RegisterAction<DeviceAxis, int>("Axis::RandomizerStrength::Offset", "Target axis", "Value offset", (_, axis, offset) =>
+            {
+                if (axis != null)
+                    AxisSettings[axis].RandomizerStrength = MathUtils.Clamp(AxisSettings[axis].RandomizerStrength + offset, 0, 100);
+            });
+
+            s.RegisterAction<DeviceAxis, int>("Axis::RandomizerStrength::Set", "Target axis", "Value", (_, axis, value) =>
+            {
+                if (axis != null)
+                    AxisSettings[axis].RandomizerStrength = MathUtils.Clamp(value, 0, 100);
+            });
+
+            s.RegisterAction<DeviceAxis>("Axis::RandomizerStrength::Drive", "Target axis", (gesture, axis) =>
+            {
+                if (gesture is not IAxisInputGesture axisGesture)
+                    return;
+                if (axis == null)
+                    return;
+
+                var offset = (int)Math.Round(axisGesture.Delta * 100);
+                AxisSettings[axis].RandomizerStrength = MathUtils.Clamp(AxisSettings[axis].RandomizerStrength + offset, 0, 100);
+            });
+            #endregion
+
+            #region Axis::RandomizerSpeed
+            s.RegisterAction<DeviceAxis, int>("Axis::RandomizerSpeed::Offset", "Target axis", "Value offset", (_, axis, offset) =>
+            {
+                if (axis != null)
+                    AxisSettings[axis].RandomizerSpeed = MathUtils.Clamp(AxisSettings[axis].RandomizerSpeed + offset, 0, 100);
+            });
+
+            s.RegisterAction<DeviceAxis, int>("Axis::RandomizerSpeed::Set", "Target axis", "Value", (_, axis, value) =>
+            {
+                if (axis != null)
+                    AxisSettings[axis].RandomizerSpeed = MathUtils.Clamp(value, 0, 100);
+            });
+
+            s.RegisterAction<DeviceAxis>("Axis::RandomizerSpeed::Drive", "Target axis", (gesture, axis) =>
+            {
+                if (gesture is not IAxisInputGesture axisGesture)
+                    return;
+                if (axis == null)
+                    return;
+
+                var offset = (int)Math.Round(axisGesture.Delta * 100);
+                AxisSettings[axis].RandomizerSpeed = MathUtils.Clamp(AxisSettings[axis].RandomizerSpeed + offset, 0, 100);
+            });
+            #endregion
+
+            #region Axis::LinkAxis
+            s.RegisterAction<DeviceAxis, DeviceAxis>("Axis::LinkAxis::Set", "Source axis", "Target axis", (_, source, target) =>
+            {
+                if (source == null)
+                    return;
+
+                AxisSettings[source].LinkAxis = target;
+                ReloadScript(source);
+            });
+            #endregion
+
+            #region Axis::Interpolation
+            s.RegisterAction<DeviceAxis, DeviceAxis>("Axis::Interpolation::Set", "Source axis", "Target axis", (_, source, target) =>
+            {
+                if (source == null)
+                    return;
+
+                AxisSettings[source].LinkAxis = target;
+                ReloadScript(source);
+            });
+            #endregion
+
+            #region Axis::AutoHomeEnabled
+            s.RegisterAction<DeviceAxis, bool>("Axis::AutoHomeEnabled::Set", "Target axis", "Auto home enabled", (_, axis, enabled) =>
+            {
+                if (axis != null)
+                    AxisSettings[axis].AutoHomeEnabled = enabled;
+            });
+
+            s.RegisterAction<DeviceAxis>("Axis::AutoHomeEnabled::Toggle", "Target axis", (_, axis) =>
+            {
+                if (axis != null)
+                    AxisSettings[axis].AutoHomeEnabled = !AxisSettings[axis].AutoHomeEnabled;
+            });
+            #endregion
+
+            #region Axis::AutoHomeDelay
+            s.RegisterAction<DeviceAxis, float>("Axis::AutoHomeDelay::Offset", "Target axis", "Value offset", (_, axis, offset) =>
+            {
+                if (axis != null)
+                    AxisSettings[axis].AutoHomeDelay = MathF.Max(0, AxisSettings[axis].AutoHomeDelay + offset);
+            });
+
+            s.RegisterAction<DeviceAxis, float>("Axis::AutoHomeDelay::Set", "Target axis", "Value", (_, axis, value) =>
+            {
+                if (axis != null)
+                    AxisSettings[axis].AutoHomeDelay = MathF.Max(0, value);
+            });
+            #endregion
+
+            #region Axis::AutoHomeDuration
+            s.RegisterAction<DeviceAxis, float>("Axis::AutoHomeDuration::Offset", "Target axis", "Value offset", (_, axis, offset) =>
+            {
+                if (axis != null)
+                    AxisSettings[axis].AutoHomeDuration = MathF.Max(0, AxisSettings[axis].AutoHomeDuration + offset);
+            });
+
+            s.RegisterAction<DeviceAxis, float>("Axis::AutoHomeDuration::Set", "Target axis", "Value", (_, axis, value) =>
+            {
+                if (axis != null)
+                    AxisSettings[axis].AutoHomeDuration = MathF.Max(0, value);
+            });
+            #endregion
+
+            #region Axis::PositionOffset
+            s.RegisterAction<DeviceAxis, float>("Axis::PositionOffset::Offset", "Target axis", "Value offset", (_, axis, offset) =>
+            {
+                if (axis != null)
+                    AxisSettings[axis].Offset = MathUtils.Clamp(AxisSettings[axis].Offset + offset, -5, 5);
+            });
+
+            s.RegisterAction<DeviceAxis, float>("Axis::PositionOffset::Set", "Target axis", "Value", (_, axis, value) =>
+            {
+                if (axis != null)
+                    AxisSettings[axis].Offset = MathUtils.Clamp(value, -5, 5);
+            });
+            #endregion
         }
-
-        private void RegisterShortcuts(IShortcutManager shortcutManager, DeviceAxis axis)
-        {
-            shortcutManager.RegisterAction($"{axis}::Value::Plus5%", () =>
-            {
-                var state = AxisStates[axis];
-                lock (state)
-                {
-                    if (!float.IsFinite(state.Value))
-                        state.Value = axis.DefaultValue;
-                    state.Value = MathUtils.Clamp01(state.Value + 0.05f);
-                    state.Dirty = true;
-                }
-            });
-            shortcutManager.RegisterAction($"{axis}::Value::Minus5%", () =>
-            {
-                var state = AxisStates[axis];
-                lock (state)
-                {
-                    if (!float.IsFinite(state.Value))
-                        state.Value = axis.DefaultValue;
-                    state.Value = MathUtils.Clamp01(state.Value - 0.05f);
-                    state.Dirty = true;
-                }
-            });
-            shortcutManager.RegisterAction($"{axis}::Value", (_, d) =>
-            {
-                var state = AxisStates[axis];
-                lock (state)
-                {
-                    if (state.Valid)
-                        return;
-
-                    if (!float.IsFinite(state.Value))
-                        state.Value = axis.DefaultValue;
-
-                    state.Value = MathUtils.Clamp01(state.Value + d);
-                    state.Dirty = true;
-                }
-            });
-
-            shortcutManager.RegisterAction($"{axis}::Sync", () => ResetSync(true, axis));
-
-            shortcutManager.RegisterAction($"{axis}::Bypass::Value::True", () => SetAxisBypass(axis, true));
-            shortcutManager.RegisterAction($"{axis}::Bypass::Value::False", () => SetAxisBypass(axis, false));
-            shortcutManager.RegisterAction($"{axis}::Bypass::Value::Toggle", () => SetAxisBypass(axis, !AxisSettings[axis].Bypass));
-
-            shortcutManager.RegisterAction($"{axis}::ClearScript", () => OnAxisClear(axis));
-            shortcutManager.RegisterAction($"{axis}::ReloadScript", () => OnAxisReload(axis));
-
-            shortcutManager.RegisterAction($"{axis}::Inverted::Value::True", () => AxisSettings[axis].Inverted = true);
-            shortcutManager.RegisterAction($"{axis}::Inverted::Value::False", () => AxisSettings[axis].Inverted = false);
-            shortcutManager.RegisterAction($"{axis}::Inverted::Value::Toggle", () => AxisSettings[axis].Inverted = !AxisSettings[axis].Inverted);
-
-            shortcutManager.RegisterAction($"{axis}::LinkPriority::Value::True", () => AxisSettings[axis].LinkAxisHasPriority = true);
-            shortcutManager.RegisterAction($"{axis}::LinkPriority::Value::False", () => AxisSettings[axis].LinkAxisHasPriority = false);
-            shortcutManager.RegisterAction($"{axis}::LinkPriority::Value::Toggle", () => AxisSettings[axis].LinkAxisHasPriority = !AxisSettings[axis].LinkAxisHasPriority);
-
-            shortcutManager.RegisterAction($"{axis}::SmartLimitEnabled::Value::True", () => AxisSettings[axis].SmartLimitEnabled = true);
-            shortcutManager.RegisterAction($"{axis}::SmartLimitEnabled::Value::False", () => AxisSettings[axis].SmartLimitEnabled = false);
-            shortcutManager.RegisterAction($"{axis}::SmartLimitEnabled::Value::Toggle", () => AxisSettings[axis].SmartLimitEnabled = !AxisSettings[axis].SmartLimitEnabled);
-
-            shortcutManager.RegisterAction($"{axis}::RandomizerStrength::Value", (_, d) => AxisSettings[axis].RandomizerStrength += (int)(d * 100));
-            shortcutManager.RegisterAction($"{axis}::RandomizerStrength::Value::Plus5%", () => AxisSettings[axis].RandomizerStrength += 5);
-            shortcutManager.RegisterAction($"{axis}::RandomizerStrength::Value::Minus5%", () => AxisSettings[axis].RandomizerStrength -= 5);
-
-            shortcutManager.RegisterAction($"{axis}::RandomizerSpeed::Value", (_, d) => AxisSettings[axis].RandomizerSpeed += (int)(d * 100));
-            shortcutManager.RegisterAction($"{axis}::RandomizerSpeed::Value::Plus5%", () => AxisSettings[axis].RandomizerSpeed += 5);
-            shortcutManager.RegisterAction($"{axis}::RandomizerSpeed::Value::Minus5%", () => AxisSettings[axis].RandomizerSpeed -= 5);
-
-            shortcutManager.RegisterAction($"{axis}::LinkAxis::Value::Null", () =>
-            {
-                AxisSettings[axis].LinkAxis = null;
-                ReloadScript(axis);
-            });
-            foreach (var other in DeviceAxis.All.Where(a => a != axis))
-            {
-                shortcutManager.RegisterAction($"{axis}::LinkAxis::Value::{other}", () =>
-                {
-                    AxisSettings[axis].LinkAxis = other;
-                    ReloadScript(axis);
-                });
-            }
-
-            foreach (var interpolation in EnumUtils.GetValues<InterpolationType>())
-                shortcutManager.RegisterAction($"{axis}::Interpolation::Value::{interpolation}", () => AxisSettings[axis].InterpolationType = interpolation);
-
-            shortcutManager.RegisterAction($"{axis}::AutoHomeEnabled::Value::True", () => AxisSettings[axis].AutoHomeEnabled = true);
-            shortcutManager.RegisterAction($"{axis}::AutoHomeEnabled::Value::False", () => AxisSettings[axis].AutoHomeEnabled = false);
-            shortcutManager.RegisterAction($"{axis}::AutoHomeEnabled::Value::Toggle", () => AxisSettings[axis].AutoHomeEnabled = !AxisSettings[axis].AutoHomeEnabled);
-
-            shortcutManager.RegisterAction($"{axis}::AutoHomeDelay::Value", (_, d) => AxisSettings[axis].AutoHomeDelay += d);
-            shortcutManager.RegisterAction($"{axis}::AutoHomeDelay::Value::Plus1", () => AxisSettings[axis].AutoHomeDelay++);
-            shortcutManager.RegisterAction($"{axis}::AutoHomeDelay::Value::Minus1", () => AxisSettings[axis].AutoHomeDelay--);
-
-            shortcutManager.RegisterAction($"{axis}::AutoHomeDuration::Value", (_, d) => AxisSettings[axis].AutoHomeDuration += d);
-            shortcutManager.RegisterAction($"{axis}::AutoHomeDuration::Value::Plus025", () => AxisSettings[axis].AutoHomeDuration += 0.25f);
-            shortcutManager.RegisterAction($"{axis}::AutoHomeDuration::Value::Minus025", () => AxisSettings[axis].AutoHomeDuration -= 0.25f);
-
-            shortcutManager.RegisterAction($"{axis}::Offset::Value", (_, d) => AxisSettings[axis].Offset += d);
-            shortcutManager.RegisterAction($"{axis}::Offset::Value::Zero", () => AxisSettings[axis].Offset = 0);
-            shortcutManager.RegisterAction($"{axis}::Offset::Value::Plus01", () => AxisSettings[axis].Offset += 0.1f);
-            shortcutManager.RegisterAction($"{axis}::Offset::Value::Minus01", () => AxisSettings[axis].Offset -= 0.1f);
-        }
+        #endregion
 
         protected virtual void Dispose(bool disposing)
         {

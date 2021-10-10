@@ -101,6 +101,7 @@ namespace MultiFunPlayer
                 settings.Converters.Add(new FileSystemInfoConverter());
                 settings.Converters.Add(new StringEnumConverter());
                 settings.Converters.Add(new DeviceAxisConverter());
+                settings.Converters.Add(new ShortcutActionDescriptorConverter());
                 settings.Error += (s, e) =>
                 {
                     if (e.ErrorContext.Error is JsonSerializationException or JsonReaderException)

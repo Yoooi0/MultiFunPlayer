@@ -115,13 +115,14 @@ namespace MultiFunPlayer.ViewModels
             base.ChangeActiveItem(newItem, closePrevious);
         }
 
-        private void RegisterShortcuts(IShortcutManager shortcutManger)
+        private void RegisterShortcuts(IShortcutManager s)
         {
             var token = _cancellationSource.Token;
             foreach (var target in Items)
             {
-                shortcutManger.RegisterAction($"{target.Name}::Connection::Toggle", async () => await ToggleConnectAsync(target));
-                shortcutManger.RegisterAction($"{target.Name}::Connection::Connect", async () =>
+                #region Connection
+                s.RegisterAction($"{target.Name}::Connection::Toggle", async (_) => await ToggleConnectAsync(target));
+                s.RegisterAction($"{target.Name}::Connection::Connect", async (_) =>
                 {
                     await _semaphores[target].WaitAsync(token);
 
@@ -133,7 +134,7 @@ namespace MultiFunPlayer.ViewModels
 
                     _semaphores[target].Release();
                 });
-                shortcutManger.RegisterAction($"{target.Name}::Connection::Disconnect", async () =>
+                s.RegisterAction($"{target.Name}::Connection::Disconnect", async (_) =>
                 {
                     await _semaphores[target].WaitAsync(token);
 
@@ -145,6 +146,7 @@ namespace MultiFunPlayer.ViewModels
 
                     _semaphores[target].Release();
                 });
+                #endregion
             }
         }
 

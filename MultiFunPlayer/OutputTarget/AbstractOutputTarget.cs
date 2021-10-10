@@ -118,16 +118,11 @@ namespace MultiFunPlayer.OutputTarget
             }
         }
 
-        protected virtual void RegisterShortcuts(IShortcutManager shortcutManager)
+        protected virtual void RegisterShortcuts(IShortcutManager s)
         {
-            shortcutManager.RegisterAction($"{Name}::AutoConnectEnabled::Value::True", () => AutoConnectEnabled = true);
-            shortcutManager.RegisterAction($"{Name}::AutoConnectEnabled::Value::False", () => AutoConnectEnabled = false);
-            shortcutManager.RegisterAction($"{Name}::AutoConnectEnabled::Value::Toggle", () => AutoConnectEnabled = !AutoConnectEnabled);
+            static void SetMinimum(DeviceAxisSettings settings, int value) => settings.Minimum = MathUtils.Clamp(value, 0, settings.Maximum - 1);
+            static void SetMaximum(DeviceAxisSettings settings, int value) => settings.Maximum = MathUtils.Clamp(value, settings.Minimum + 1, 100);
 
-            static void OffsetMinimum(DeviceAxisSettings settings, int offset)
-                => settings.Minimum = (int)MathUtils.Clamp((float)settings.Minimum + offset, 0, (float)settings.Maximum - 1);
-            static void OffsetMaximum(DeviceAxisSettings settings, int offset)
-                => settings.Maximum = (int)MathUtils.Clamp((float)settings.Maximum + offset, (float)settings.Minimum + 1, 100);
             static void OffsetMiddle(DeviceAxisSettings settings, int offset)
             {
                 if (offset > 0 && settings.Maximum + offset > 100)
@@ -135,11 +130,11 @@ namespace MultiFunPlayer.OutputTarget
                 else if (offset < 0 && settings.Minimum + offset < 0)
                     offset = Math.Max(offset, 0 - settings.Minimum);
 
-                settings.Minimum = (int)MathUtils.Clamp(settings.Minimum + offset, 0, 99);
-                settings.Maximum = (int)MathUtils.Clamp(settings.Maximum + offset, 1, 100);
+                settings.Minimum = MathUtils.Clamp(settings.Minimum + offset, 0, 99);
+                settings.Maximum = MathUtils.Clamp(settings.Maximum + offset, 1, 100);
             }
 
-            static void OffsetRange(DeviceAxisSettings settings, int offset)
+            static void OffsetSize(DeviceAxisSettings settings, int offset)
             {
                 var middle = (settings.Maximum + settings.Minimum) / 2.0f;
                 var newRange = MathUtils.Clamp(settings.Maximum - settings.Minimum + offset, 1, 100);
@@ -151,28 +146,98 @@ namespace MultiFunPlayer.OutputTarget
                 if (newMinimum < 0)
                     newMaximum += 0 - newMinimum;
 
-                settings.Minimum = (int)MathF.Round(MathUtils.Clamp(newMinimum, 0, 99));
-                settings.Maximum = (int)MathF.Round(MathUtils.Clamp(newMaximum, 1, 100));
+                settings.Minimum = MathUtils.Clamp((int)MathF.Round(newMinimum), 0, 99);
+                settings.Maximum = MathUtils.Clamp((int)MathF.Round(newMaximum), 1, 100);
             }
 
-            foreach (var (axis, _) in AxisSettings)
+            #region AutoConnectEnabled
+            s.RegisterAction<bool>($"{Name}::AutoConnectEnabled::Set", "Enable auto connect", (_, enabled) => AutoConnectEnabled = enabled);
+            s.RegisterAction($"{Name}::AutoConnectEnabled::Toggle", (_) => AutoConnectEnabled = !AutoConnectEnabled);
+            #endregion
+
+            #region Axis::Range::Minimum
+            s.RegisterAction<DeviceAxis, int>($"{Name}::Axis::Range::Minimum::Offset", "Target axis", "Value offset", (_, axis, offset) =>
             {
-                shortcutManager.RegisterAction($"{Name}::{axis}::Range::Minimum::Value", (_, d) => OffsetMinimum(AxisSettings[axis], (int)(d * 100)));
-                shortcutManager.RegisterAction($"{Name}::{axis}::Range::Minimum::Value::Plus5%", () => OffsetMinimum(AxisSettings[axis], 5));
-                shortcutManager.RegisterAction($"{Name}::{axis}::Range::Minimum::Value::Minus5%", () => OffsetMinimum(AxisSettings[axis], -5));
+                if (axis != null)
+                    SetMinimum(AxisSettings[axis], AxisSettings[axis].Minimum + offset);
+            });
 
-                shortcutManager.RegisterAction($"{Name}::{axis}::Range::Maximum::Value", (_, d) => OffsetMaximum(AxisSettings[axis], (int)(d * 100)));
-                shortcutManager.RegisterAction($"{Name}::{axis}::Range::Maximum::Value::Plus5%", () => OffsetMaximum(AxisSettings[axis], 5));
-                shortcutManager.RegisterAction($"{Name}::{axis}::Range::Maximum::Value::Minus5%", () => OffsetMaximum(AxisSettings[axis], -5));
+            s.RegisterAction<DeviceAxis, int>($"{Name}::Axis::Range::Minimum::Set", "Target axis", "Value", (_, axis, value) =>
+            {
+                if (axis != null)
+                    SetMinimum(AxisSettings[axis], value);
+            });
 
-                shortcutManager.RegisterAction($"{Name}::{axis}::Range::Middle::Value", (_, d) => OffsetMiddle(AxisSettings[axis], (int)(d * 100)));
-                shortcutManager.RegisterAction($"{Name}::{axis}::Range::Middle::Value::Plus5%", () => OffsetMiddle(AxisSettings[axis], 5));
-                shortcutManager.RegisterAction($"{Name}::{axis}::Range::Middle::Value::Minus5%", () => OffsetMiddle(AxisSettings[axis], -5));
+            s.RegisterAction<DeviceAxis>($"{Name}::Axis::Range::Minimum::Drive", "Target axis", (gesture, axis) =>
+            {
+                if (gesture is not IAxisInputGesture axisGesture) return;
+                if (axis != null)
+                    SetMinimum(AxisSettings[axis], AxisSettings[axis].Minimum + (int)(axisGesture.Delta * 100));
+            });
+            #endregion
 
-                shortcutManager.RegisterAction($"{Name}::{axis}::Range::Size::Value", (_, d) => OffsetRange(AxisSettings[axis], (int)(d * 100)));
-                shortcutManager.RegisterAction($"{Name}::{axis}::Range::Size::Value::Plus5%", () => OffsetRange(AxisSettings[axis], 5));
-                shortcutManager.RegisterAction($"{Name}::{axis}::Range::Size::Value::Minus5%", () => OffsetRange(AxisSettings[axis], -5));
-            }
+            #region Axis::Range::Maximum
+            s.RegisterAction<DeviceAxis, int>($"{Name}::Axis::Range::Maximum::Offset", "Target axis", "Value offset", (_, axis, offset) =>
+            {
+                if (axis != null)
+                    SetMaximum(AxisSettings[axis], AxisSettings[axis].Maximum + offset);
+            });
+
+            s.RegisterAction<DeviceAxis, int>($"{Name}::Axis::Range::Maximum::Set", "Target axis", "Value", (_, axis, value) =>
+            {
+                if (axis != null)
+                    SetMaximum(AxisSettings[axis], value);
+            });
+
+            s.RegisterAction<DeviceAxis>($"{Name}::Axis::Range::Maximum::Drive", "Target axis", (gesture, axis) =>
+            {
+                if (gesture is not IAxisInputGesture axisGesture) return;
+                if (axis != null)
+                    SetMaximum(AxisSettings[axis], AxisSettings[axis].Maximum + (int)(axisGesture.Delta * 100));
+            });
+            #endregion
+
+            #region Axis::Range::Middle
+            s.RegisterAction<DeviceAxis, int>($"{Name}::Axis::Range::Middle::Offset", "Target axis", "Value offset", (_, axis, offset) =>
+            {
+                if (axis != null)
+                    OffsetMiddle(AxisSettings[axis], offset);
+            });
+
+            s.RegisterAction<DeviceAxis, int>($"{Name}::Axis::Range::Middle::Set", "Target axis", "Value", (_, axis, value) =>
+            {
+                if (axis != null)
+                    OffsetMiddle(AxisSettings[axis], value - (AxisSettings[axis].Maximum - AxisSettings[axis].Minimum) / 2);
+            });
+
+            s.RegisterAction<DeviceAxis>($"{Name}::Axis::Range::Middle::Drive", "Target axis", (gesture, axis) =>
+            {
+                if (gesture is not IAxisInputGesture axisGesture) return;
+                if (axis != null)
+                    OffsetMiddle(AxisSettings[axis], (int)(axisGesture.Delta * 100));
+            });
+            #endregion
+
+            #region Axis::Range::Size
+            s.RegisterAction<DeviceAxis, int>($"{Name}::Axis::Range::Size::Offset", "Target axis", "Value offset", (_, axis, offset) =>
+            {
+                if (axis != null)
+                    OffsetSize(AxisSettings[axis], offset);
+            });
+
+            s.RegisterAction<DeviceAxis, int>($"{Name}::Axis::Range::Size::Set", "Target axis", "Value", (_, axis, value) =>
+            {
+                if (axis != null)
+                    OffsetSize(AxisSettings[axis], value - (AxisSettings[axis].Maximum - AxisSettings[axis].Minimum));
+            });
+
+            s.RegisterAction<DeviceAxis>($"{Name}::Axis::Range::Size::Drive", "Target axis", (gesture, axis) =>
+            {
+                if (gesture is not IAxisInputGesture axisGesture) return;
+                if (axis != null)
+                    OffsetSize(AxisSettings[axis], (int)(axisGesture.Delta * 100));
+            });
+            #endregion
         }
 
         protected virtual void Dispose(bool disposing) { }

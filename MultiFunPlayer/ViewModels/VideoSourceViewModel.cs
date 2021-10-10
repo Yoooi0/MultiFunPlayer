@@ -164,20 +164,20 @@ namespace MultiFunPlayer.ViewModels
             base.ChangeActiveItem(newItem, closePrevious);
         }
 
-        private void RegisterShortcuts(IShortcutManager shortcutManger)
+        private void RegisterShortcuts(IShortcutManager s)
         {
             var token = _cancellationSource.Token;
             foreach (var source in Items)
             {
-                shortcutManger.RegisterAction($"{source.Name}::Connection::Toggle", async () => await ToggleConnectAsync(source));
-                shortcutManger.RegisterAction($"{source.Name}::Connection::Connect", async () =>
+                s.RegisterAction($"{source.Name}::Connection::Toggle", async (_) => await ToggleConnectAsync(source));
+                s.RegisterAction($"{source.Name}::Connection::Connect", async (_) =>
                 {
                     await _semaphore.WaitAsync(token);
                     if (_currentSource != source)
                         await ConnectAndSetAsCurrentSourceAsync(source, token);
                     _semaphore.Release();
                 });
-                shortcutManger.RegisterAction($"{source.Name}::Connection::Disconnect", async () =>
+                s.RegisterAction($"{source.Name}::Connection::Disconnect", async (_) =>
                 {
                     await _semaphore.WaitAsync(token);
                     if (_currentSource == source)
