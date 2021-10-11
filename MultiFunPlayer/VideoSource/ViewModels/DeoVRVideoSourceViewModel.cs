@@ -14,15 +14,17 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 
 namespace MultiFunPlayer.VideoSource.ViewModels
 {
-    public class DeoVRVideoSourceViewModel : AbstractVideoSource
+    public class DeoVRVideoSourceViewModel : AbstractVideoSource, IHandle<VideoPlayPauseMessage>, IHandle<VideoSeekMessage>
     {
         protected Logger Logger = LogManager.GetCurrentClassLogger();
 
         private readonly IEventAggregator _eventAggregator;
+        private readonly Channel<object> _writeMessageChannel;
 
         public override string Name => "DeoVR";
         public override ConnectionStatus Status { get; protected set; }
@@ -33,6 +35,11 @@ namespace MultiFunPlayer.VideoSource.ViewModels
             : base(shortcutManager, eventAggregator)
         {
             _eventAggregator = eventAggregator;
+            _writeMessageChannel = Channel.CreateUnbounded<object>(new UnboundedChannelOptions()
+            {
+                SingleReader = true,
+                SingleWriter = true,
+            });
         }
 
         public bool IsConnected => Status == ConnectionStatus.Connected;
@@ -61,24 +68,33 @@ namespace MultiFunPlayer.VideoSource.ViewModels
 
                 using var stream = client.GetStream();
 
-                _ = Task.Factory.StartNew(async () =>
-                {
-                    var pingBuffer = new byte[4];
-                    while (!token.IsCancellationRequested)
-                    {
-                        await Task.Delay(500, token);
-                        await stream.WriteAsync(pingBuffer, token);
-                        await stream.FlushAsync(token);
-                    }
-                }, token);
-
-                var lastSpeed = default(float?);
-                var lastDuration = default(float?);
-                var lastPosition = default(float?);
-                var lastState = default(int?);
-                var lastPath = default(string);
-
                 Status = ConnectionStatus.Connected;
+                while (_writeMessageChannel.Reader.TryRead(out _)) ;
+
+                using var cancellationSource = CancellationTokenSource.CreateLinkedTokenSource(token);
+                var task = await Task.WhenAny(ReadAsync(client, stream, cancellationSource.Token), WriteAsync(client, stream, cancellationSource.Token));
+                cancellationSource.Cancel();
+
+                if (task.Exception != null)
+                    throw task.Exception;
+            }
+            catch (OperationCanceledException) { }
+            catch (IOException e) { Logger.Debug(e, $"{Name} failed with exception"); }
+            catch (Exception e)
+            {
+                Logger.Error(e, $"{Name} failed with exception");
+                _ = Execute.OnUIThreadAsync(() => _ = DialogHelper.ShowOnUIThreadAsync(new ErrorMessageDialogViewModel($"{Name} failed with exception:\n\n{e}"), "RootDialog"));
+            }
+
+            _eventAggregator.Publish(new VideoFileChangedMessage(null));
+            _eventAggregator.Publish(new VideoPlayingMessage(isPlaying: false));
+        }
+
+        private async Task ReadAsync(TcpClient client, NetworkStream stream, CancellationToken token)
+        {
+            try
+            {
+                var playerState = new PlayerState();
                 while (!token.IsCancellationRequested && client.Connected)
                 {
                     var data = await stream.ReadAllBytesAsync(token);
@@ -100,50 +116,91 @@ namespace MultiFunPlayer.VideoSource.ViewModels
                             if (string.IsNullOrWhiteSpace(path))
                                 path = null;
 
-                            if (path != lastPath)
+                            if (path != playerState.Path)
                             {
                                 _eventAggregator.Publish(new VideoFileChangedMessage(path));
-                                lastPath = path;
+                                playerState.Path = path;
                             }
                         }
 
-                        if (document.TryGetValue("playerState", out var stateToken) && stateToken.TryToObject<int>(out var state) && state != lastState)
+                        if (document.TryGetValue("playerState", out var stateToken) && stateToken.TryToObject<int>(out var state) && state != playerState.State)
                         {
                             _eventAggregator.Publish(new VideoPlayingMessage(state == 0));
-                            lastState = state;
+                            playerState.State = state;
                         }
 
-                        if (document.TryGetValue("duration", out var durationToken) && durationToken.TryToObject<float>(out var duration) && duration >= 0 && duration != lastDuration)
+                        if (document.TryGetValue("duration", out var durationToken) && durationToken.TryToObject<float>(out var duration) && duration >= 0 && duration != playerState.Duration)
                         {
                             _eventAggregator.Publish(new VideoDurationMessage(TimeSpan.FromSeconds(duration)));
-                            lastDuration = duration;
+                            playerState.Duration = duration;
                         }
 
-                        if (document.TryGetValue("currentTime", out var timeToken) && timeToken.TryToObject<float>(out var position) && position >= 0 && position != lastPosition)
+                        if (document.TryGetValue("currentTime", out var timeToken) && timeToken.TryToObject<float>(out var position) && position >= 0 && position != playerState.Position)
                         {
                             _eventAggregator.Publish(new VideoPositionMessage(TimeSpan.FromSeconds(position)));
-                            lastPosition = position;
+                            playerState.Position = position;
                         }
 
-                        if (document.TryGetValue("playbackSpeed", out var speedToken) && speedToken.TryToObject<float>(out var speed) && speed > 0 && speed != lastSpeed)
+                        if (document.TryGetValue("playbackSpeed", out var speedToken) && speedToken.TryToObject<float>(out var speed) && speed > 0 && speed != playerState.Speed)
                         {
                             _eventAggregator.Publish(new VideoSpeedMessage(speed));
-                            lastSpeed = speed;
+                            playerState.Speed = speed;
                         }
                     }
                     catch (JsonException) { }
                 }
             }
             catch (OperationCanceledException) { }
-            catch (IOException e) { Logger.Debug(e, $"{Name} failed with exception"); }
-            catch (Exception e)
-            {
-                Logger.Error(e, $"{Name} failed with exception");
-                _ = Execute.OnUIThreadAsync(() => _ = DialogHelper.ShowOnUIThreadAsync(new ErrorMessageDialogViewModel($"{Name} failed with exception:\n\n{e}"), "RootDialog"));
-            }
+        }
 
-            _eventAggregator.Publish(new VideoFileChangedMessage(null));
-            _eventAggregator.Publish(new VideoPlayingMessage(isPlaying: false));
+        private async Task WriteAsync(TcpClient client, NetworkStream stream, CancellationToken token)
+        {
+            try
+            {
+                var pingBuffer = new byte[4];
+                while (!token.IsCancellationRequested && client.Connected)
+                {
+                    using var cancellationSource = CancellationTokenSource.CreateLinkedTokenSource(token);
+
+                    var readMessageTask = _writeMessageChannel.Reader.WaitToReadAsync(cancellationSource.Token).AsTask();
+                    var timeoutTask = Task.Delay(1000, cancellationSource.Token);
+                    var completedTask = await Task.WhenAny(readMessageTask, timeoutTask);
+
+                    cancellationSource.Cancel();
+                    if (completedTask.Exception != null)
+                        throw completedTask.Exception;
+
+                    if (completedTask == readMessageTask)
+                    {
+                        var message = await _writeMessageChannel.Reader.ReadAsync(token);
+                        var sendState = new PlayerState();
+
+                        if (message is VideoPlayPauseMessage playPauseMessage)
+                            sendState.State = playPauseMessage.State ? 0 : 1;
+                        else if (message is VideoSeekMessage seekMessage && seekMessage.Position.HasValue)
+                            sendState.Position = (float)seekMessage.Position.Value.TotalSeconds;
+
+                        var messageString = JsonConvert.SerializeObject(sendState);
+
+                        Logger.Debug("Sending \"{0}\" to \"{1}\"", messageString, Name);
+
+                        var messageBytes = Encoding.UTF8.GetBytes(messageString);
+                        var lengthBytes = BitConverter.GetBytes(messageBytes.Length);
+
+                        var bytes = new byte[lengthBytes.Length + messageBytes.Length];
+                        Array.Copy(lengthBytes, 0, bytes, 0, lengthBytes.Length);
+                        Array.Copy(messageBytes, 0, bytes, lengthBytes.Length, messageBytes.Length);
+
+                        await stream.WriteAsync(bytes, token);
+                    }
+                    else if (completedTask == timeoutTask)
+                    {
+                        await stream.WriteAsync(pingBuffer, token);
+                        await stream.FlushAsync(token);
+                    }
+                }
+            }
+            catch (OperationCanceledException) { }
         }
 
         protected override void HandleSettings(JObject settings, AppSettingsMessageType type)
@@ -187,6 +244,27 @@ namespace MultiFunPlayer.VideoSource.ViewModels
             {
                 return await ValueTask.FromResult(false);
             }
+        }
+
+        public async void Handle(VideoSeekMessage message)
+        {
+            if (Status == ConnectionStatus.Connected)
+                await _writeMessageChannel.Writer.WriteAsync(message);
+        }
+
+        public async void Handle(VideoPlayPauseMessage message)
+        {
+            if (Status == ConnectionStatus.Connected)
+                await _writeMessageChannel.Writer.WriteAsync(message);
+        }
+
+        private class PlayerState
+        {
+            [JsonProperty("path")] public string Path { get; set; }
+            [JsonProperty("currentTime")] public float? Position { get; set; }
+            [JsonProperty("playbackSpeed")] public float? Speed { get; set; }
+            [JsonProperty("playerState")] public int? State { get; set; }
+            [JsonProperty("duration")] public float? Duration { get; set; }
         }
     }
 }

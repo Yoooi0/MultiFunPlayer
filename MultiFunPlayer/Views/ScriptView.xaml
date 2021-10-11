@@ -31,23 +31,29 @@
                         <DropShadowEffect ShadowDepth="0" Direction="270"/>
                     </DockPanel.Effect>
                     <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
-                        <material:PackIcon Width="28" 
-                                           Height="28"
-                                           Margin="0 0 5 0"
-                                           VerticalAlignment="Center">
-                            <material:PackIcon.Style>
-                                <Style TargetType="material:PackIcon">
-                                    <Setter Property="Foreground" Value="Red"/>
-                                    <Setter Property="Kind" Value="Pause"/>
-                                    <Style.Triggers>
-                                        <DataTrigger Binding="{Binding IsPlaying}" Value="True">
-                                            <Setter Property="Foreground" Value="Green"/>
-                                            <Setter Property="Kind" Value="Play"/>
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </material:PackIcon.Style>
-                        </material:PackIcon>
+                        <Button Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}"
+                                Click="{s:Action OnPlayPauseClick}"
+                                Padding="5"
+                                ToolTipService.InitialShowDelay="0"
+                                ToolTipService.Placement="Top"
+                                ToolTip="Play/Pause">
+                            <material:PackIcon Width="28" 
+                                               Height="28"
+                                               VerticalAlignment="Center">
+                                <material:PackIcon.Style>
+                                    <Style TargetType="material:PackIcon">
+                                        <Setter Property="Foreground" Value="Red"/>
+                                        <Setter Property="Kind" Value="Pause"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsPlaying}" Value="True">
+                                                <Setter Property="Foreground" Value="Green"/>
+                                                <Setter Property="Kind" Value="Play"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </material:PackIcon.Style>
+                            </material:PackIcon>
+                        </Button>
 
                         <material:PopupBox StaysOpen="True" 
                                                PlacementMode="BottomAndAlignRightEdges"
@@ -339,6 +345,8 @@
                                     ValueChanged="{s:Action OnOffsetSliderValueChanged}"/>
                     </DockPanel>
                     <controls:KeyframesHeatmapGradient Height="35" 
+                                                       Cursor="Hand"
+                                                       MouseUp="{s:Action OnKeyframesHeatmapMouseUp}"
                                                        Keyframes="{Binding AxisKeyframes, Mode=OneWay}"
                                                        Duration="{Binding VideoDuration, Mode=OneWay}"
                                                        Position="{Binding CurrentPosition, Mode=OneWay}"

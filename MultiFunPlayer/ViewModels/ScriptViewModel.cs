@@ -29,6 +29,7 @@ namespace MultiFunPlayer.ViewModels
     {
         protected Logger Logger = LogManager.GetCurrentClassLogger();
 
+        private readonly IEventAggregator _eventAggregator;
         private Thread _updateThread;
         private CancellationTokenSource _cancellationSource;
         private float _playbackSpeedCorrection;
@@ -58,7 +59,8 @@ namespace MultiFunPlayer.ViewModels
 
         public ScriptViewModel(IShortcutManager shortcutManager, IEventAggregator eventAggregator)
         {
-            eventAggregator.Subscribe(this);
+            _eventAggregator = eventAggregator;
+            _eventAggregator.Subscribe(this);
 
             AxisModels = new ObservableConcurrentDictionary<DeviceAxis, AxisModel>(DeviceAxis.All.ToDictionary(a => a, _ => new AxisModel()));
             ScriptLibraries = new BindableCollection<ScriptLibrary>();
@@ -716,6 +718,23 @@ namespace MultiFunPlayer.ViewModels
 
             if (Directory.Exists(VideoFile.Source))
                 Process.Start("explorer.exe", VideoFile.Source);
+        }
+
+        public void OnPlayPauseClick()
+        {
+            _eventAggregator.Publish(new VideoPlayPauseMessage(!IsPlaying));
+        }
+
+        public void OnKeyframesHeatmapMouseUp(object sender, MouseButtonEventArgs e)
+        {
+            if (sender is not FrameworkElement element)
+                return;
+            if (e.ChangedButton != MouseButton.Left)
+                return;
+            if (!float.IsFinite(VideoDuration))
+                return;
+
+            _eventAggregator.Publish(new VideoSeekMessage(TimeSpan.FromSeconds(VideoDuration * e.GetPosition(element).X / element.ActualWidth)));
         }
         #endregion
 

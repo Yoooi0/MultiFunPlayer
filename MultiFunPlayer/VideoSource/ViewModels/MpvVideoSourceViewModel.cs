@@ -15,16 +15,18 @@ using System.IO.Compression;
 using System.IO.Pipes;
 using System.Net;
 using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 
 namespace MultiFunPlayer.VideoSource.ViewModels
 {
-    public class MpvVideoSourceViewModel : AbstractVideoSource
+    public class MpvVideoSourceViewModel : AbstractVideoSource, IHandle<VideoPlayPauseMessage>, IHandle<VideoSeekMessage>
     {
         protected Logger Logger = LogManager.GetCurrentClassLogger();
 
         private readonly string _pipeName = "multifunplayer-mpv";
         private readonly IEventAggregator _eventAggregator;
+        private readonly Channel<object> _writeMessageChannel;
 
         public override string Name => "MPV";
         public override ConnectionStatus Status { get; protected set; }
@@ -36,6 +38,11 @@ namespace MultiFunPlayer.VideoSource.ViewModels
             : base(shortcutManager, eventAggregator)
         {
             _eventAggregator = eventAggregator;
+            _writeMessageChannel = Channel.CreateUnbounded<object>(new UnboundedChannelOptions()
+            {
+                SingleReader = true,
+                SingleWriter = true,
+            });
         }
 
         public bool IsConnected => Status == ConnectionStatus.Connected;
@@ -47,7 +54,7 @@ namespace MultiFunPlayer.VideoSource.ViewModels
             try
             {
                 Logger.Info("Connecting to {0}", Name);
-                using var client = new NamedPipeClientStream(_pipeName);
+                using var client = new NamedPipeClientStream(".", _pipeName, PipeDirection.InOut, PipeOptions.Asynchronous);
 
                 try
                 {
@@ -86,55 +93,14 @@ namespace MultiFunPlayer.VideoSource.ViewModels
                     await writer.WriteLineAsync("{ \"command\": [\"observe_property_string\", 5, \"speed\"] }");
 
                     Status = ConnectionStatus.Connected;
-                    while (!token.IsCancellationRequested && client.IsConnected)
-                    {
-                        var message = await reader.ReadLineAsync().WithCancellation(token);
-                        if (message == null)
-                            continue;
+                    while (_writeMessageChannel.Reader.TryRead(out _)) ;
 
-                        try
-                        {
-                            Logger.Trace("Received \"{0}\" from \"{1}\"", message, Name);
+                    using var cancellationSource = CancellationTokenSource.CreateLinkedTokenSource(token);
+                    var task = await Task.WhenAny(ReadAsync(client, reader, cancellationSource.Token), WriteAsync(client, writer, cancellationSource.Token));
+                    cancellationSource.Cancel();
 
-                            var document = JObject.Parse(message);
-                            if (!document.TryGetValue("event", out var eventToken))
-                                continue;
-
-                            switch (eventToken.ToObject<string>())
-                            {
-                                case "property-change":
-                                    if (!document.TryGetValue("name", out var nameToken)
-                                        || !document.TryGetValue("data", out var dataToken))
-                                        continue;
-
-                                    switch (nameToken.ToObject<string>())
-                                    {
-                                        case "path":
-                                            _eventAggregator.Publish(new VideoFileChangedMessage(dataToken.TryToObject<string>(out var path) && !string.IsNullOrWhiteSpace(path) ? path : null));
-                                            break;
-                                        case "pause":
-                                            if(dataToken.TryToObject<string>(out var paused))
-                                                _eventAggregator.Publish(new VideoPlayingMessage(!string.Equals(paused, "yes", StringComparison.OrdinalIgnoreCase)));
-                                            break;
-                                        case "duration":
-                                            if (dataToken.TryToObject<float>(out var duration) && duration >= 0)
-                                                _eventAggregator.Publish(new VideoDurationMessage(TimeSpan.FromSeconds(duration)));
-                                            break;
-                                        case "time-pos":
-                                            if (dataToken.TryToObject<float>(out var position) && position >= 0)
-                                                _eventAggregator.Publish(new VideoPositionMessage(TimeSpan.FromSeconds(position)));
-                                            break;
-                                        case "speed":
-                                            if (dataToken.TryToObject<float>(out var speed) && speed > 0)
-                                                _eventAggregator.Publish(new VideoSpeedMessage(speed));
-                                            break;
-                                    }
-
-                                    break;
-                            }
-                        }
-                        catch (JsonException) { }
-                    }
+                    if (task.Exception != null)
+                        throw task.Exception;
                 }
             }
             catch (OperationCanceledException) { }
@@ -147,6 +113,89 @@ namespace MultiFunPlayer.VideoSource.ViewModels
 
             _eventAggregator.Publish(new VideoFileChangedMessage(null));
             _eventAggregator.Publish(new VideoPlayingMessage(isPlaying: false));
+        }
+
+        private async Task ReadAsync(NamedPipeClientStream client, StreamReader reader, CancellationToken token)
+        {
+            try
+            {
+                while (!token.IsCancellationRequested && client.IsConnected)
+                {
+                    var message = await reader.ReadLineAsync().WithCancellation(token);
+                    if (message == null)
+                        continue;
+
+                    try
+                    {
+                        Logger.Trace("Received \"{0}\" from \"{1}\"", message, Name);
+
+                        var document = JObject.Parse(message);
+                        if (!document.TryGetValue("event", out var eventToken))
+                            continue;
+
+                        switch (eventToken.ToObject<string>())
+                        {
+                            case "property-change":
+                                if (!document.TryGetValue("name", out var nameToken)
+                                    || !document.TryGetValue("data", out var dataToken))
+                                    continue;
+
+                                switch (nameToken.ToObject<string>())
+                                {
+                                    case "path":
+                                        _eventAggregator.Publish(new VideoFileChangedMessage(dataToken.TryToObject<string>(out var path) && !string.IsNullOrWhiteSpace(path) ? path : null));
+                                        break;
+                                    case "pause":
+                                        if (dataToken.TryToObject<string>(out var paused))
+                                            _eventAggregator.Publish(new VideoPlayingMessage(!string.Equals(paused, "yes", StringComparison.OrdinalIgnoreCase)));
+                                        break;
+                                    case "duration":
+                                        if (dataToken.TryToObject<float>(out var duration) && duration >= 0)
+                                            _eventAggregator.Publish(new VideoDurationMessage(TimeSpan.FromSeconds(duration)));
+                                        break;
+                                    case "time-pos":
+                                        if (dataToken.TryToObject<float>(out var position) && position >= 0)
+                                            _eventAggregator.Publish(new VideoPositionMessage(TimeSpan.FromSeconds(position)));
+                                        break;
+                                    case "speed":
+                                        if (dataToken.TryToObject<float>(out var speed) && speed > 0)
+                                            _eventAggregator.Publish(new VideoSpeedMessage(speed));
+                                        break;
+                                }
+
+                                break;
+                        }
+                    }
+                    catch (JsonException) { }
+                }
+            }
+            catch (OperationCanceledException) { }
+        }
+
+        private async Task WriteAsync(NamedPipeClientStream client, StreamWriter writer, CancellationToken token)
+        {
+            try
+            {
+                while (!token.IsCancellationRequested && client.IsConnected)
+                {
+                    await _writeMessageChannel.Reader.WaitToReadAsync(token);
+                    var message = await _writeMessageChannel.Reader.ReadAsync(token);
+
+                    var messageString = message switch
+                    {
+                        VideoPlayPauseMessage playPauseMessage => $"{{ \"command\": [\"set_property\", \"pause\", {(playPauseMessage.State ? "false" : "true")}] }}",
+                        VideoSeekMessage seekMessage when seekMessage.Position.HasValue => $"{{ \"command\": [\"set_property\", \"time-pos\", {seekMessage.Position.Value.TotalSeconds.ToString("F4").Replace(',', '.')}] }}",
+                        _ => null
+                    };
+
+                    if (string.IsNullOrWhiteSpace(messageString))
+                        continue;
+
+                    Logger.Trace("Sending \"{0}\" to \"{1}\"", messageString, Name);
+                    await writer.WriteLineAsync(messageString).WithCancellation(token);
+                }
+            }
+            catch (OperationCanceledException) { }
         }
 
         protected override void HandleSettings(JObject settings, AppSettingsMessageType type)
@@ -244,6 +293,18 @@ namespace MultiFunPlayer.VideoSource.ViewModels
             }
 
             IsDownloading = false;
+        }
+
+        public async void Handle(VideoSeekMessage message)
+        {
+            if (Status == ConnectionStatus.Connected)
+                await _writeMessageChannel.Writer.WriteAsync(message);
+        }
+
+        public async void Handle(VideoPlayPauseMessage message)
+        {
+            if (Status == ConnectionStatus.Connected)
+                await _writeMessageChannel.Writer.WriteAsync(message);
         }
     }
 }
