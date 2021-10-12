@@ -1,4 +1,5 @@
-﻿using System.Windows;
+﻿using System;
+using System.Windows;
 using System.Windows.Controls;
 
 namespace MultiFunPlayer.Common.Controls
@@ -13,7 +14,17 @@ namespace MultiFunPlayer.Common.Controls
                 return null;
 
             var type = item.GetType().GetGenericArguments()[0];
-            return element.FindResource($"{type.Name}Template") as DataTemplate;
+            var nullableType = Nullable.GetUnderlyingType(type);
+            if (nullableType != null)
+                type = nullableType;
+
+            var resource = type switch
+            {
+                Type t when t.IsEnum => "EnumTemplate",
+                _ => $"{type.Name}Template"
+            };
+
+            return element.FindResource(resource) as DataTemplate;
         }
     }
 }

@@ -564,6 +564,13 @@
 
                     <ItemsControl ItemsSource="{Binding Settings}">
                         <ItemsControl.Resources>
+                            <controls:GenericArgumentTemplateSelector x:Key="GenericArgumentTemplateSelector"/>
+                            
+                            <converters:ValueConverterGroup x:Key="ShortcutSettingEnumToEnumValuesConverter">
+                                <converters:ShortcutActionSettingTypeConverter/>
+                                <converters:EnumToEnumValuesConverter/>
+                            </converters:ValueConverterGroup>
+                            
                             <DataTemplate x:Key="BooleanTemplate" DataType="{x:Type input:IShortcutSetting}">
                                 <CheckBox IsChecked="{Binding Value}" />
                             </DataTemplate>
@@ -578,7 +585,11 @@
                                           ItemsSource="{x:Static common:DeviceAxis.All}"
                                           material:TextFieldAssist.HasClearButton="True" />
                             </DataTemplate>
-                            <controls:GenericArgumentTemplateSelector x:Key="GenericArgumentTemplateSelector"/>
+                            <DataTemplate x:Key="EnumTemplate" DataType="{x:Type input:IShortcutSetting}">
+                                <ComboBox SelectedItem="{Binding Value}" 
+                                          ItemsSource="{Binding Converter={StaticResource ShortcutSettingEnumToEnumValuesConverter}}"
+                                          material:TextFieldAssist.HasClearButton="True" />
+                            </DataTemplate>
                         </ItemsControl.Resources>
                         <ItemsControl.ItemTemplate>
                             <DataTemplate DataType="{x:Type input:IShortcutSetting}">

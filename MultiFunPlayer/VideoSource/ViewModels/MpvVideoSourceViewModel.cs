@@ -295,6 +295,15 @@ namespace MultiFunPlayer.VideoSource.ViewModels
             IsDownloading = false;
         }
 
+        protected override void RegisterShortcuts(IShortcutManager s)
+        {
+            base.RegisterShortcuts(s);
+
+            #region Arguments
+            s.RegisterAction<string>($"{Name}::Arguments::Set", "Arguments", (_, arguments) => Arguments = arguments);
+            #endregion
+        }
+
         public async void Handle(VideoSeekMessage message)
         {
             if (Status == ConnectionStatus.Connected)

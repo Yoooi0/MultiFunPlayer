@@ -97,6 +97,15 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
             }
         }
 
+        protected override void RegisterShortcuts(IShortcutManager s)
+        {
+            base.RegisterShortcuts(s);
+
+            #region PipeName
+            s.RegisterAction<string>($"{Name}::PipeName::Set", "Pipe name", (_, pipeName) => PipeName = pipeName);
+            #endregion
+        }
+
         public override async ValueTask<bool> CanConnectAsync(CancellationToken token)
         {
             try

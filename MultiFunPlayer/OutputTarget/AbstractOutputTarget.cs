@@ -120,10 +120,10 @@ namespace MultiFunPlayer.OutputTarget
 
         protected virtual void RegisterShortcuts(IShortcutManager s)
         {
-            static void SetMinimum(DeviceAxisSettings settings, int value) => settings.Minimum = MathUtils.Clamp(value, 0, settings.Maximum - 1);
-            static void SetMaximum(DeviceAxisSettings settings, int value) => settings.Maximum = MathUtils.Clamp(value, settings.Minimum + 1, 100);
+            static void SetMinimum(DeviceAxisSettings settings, float value) => settings.Minimum = MathUtils.Clamp(value, 0, settings.Maximum - 1);
+            static void SetMaximum(DeviceAxisSettings settings, float value) => settings.Maximum = MathUtils.Clamp(value, settings.Minimum + 1, 100);
 
-            static void OffsetMiddle(DeviceAxisSettings settings, int offset)
+            static void OffsetMiddle(DeviceAxisSettings settings, float offset)
             {
                 if (offset > 0 && settings.Maximum + offset > 100)
                     offset = Math.Min(offset, 100 - settings.Maximum);
@@ -134,7 +134,7 @@ namespace MultiFunPlayer.OutputTarget
                 settings.Maximum = MathUtils.Clamp(settings.Maximum + offset, 1, 100);
             }
 
-            static void OffsetSize(DeviceAxisSettings settings, int offset)
+            static void OffsetSize(DeviceAxisSettings settings, float offset)
             {
                 var middle = (settings.Maximum + settings.Minimum) / 2.0f;
                 var newRange = MathUtils.Clamp(settings.Maximum - settings.Minimum + offset, 1, 100);
@@ -146,9 +146,13 @@ namespace MultiFunPlayer.OutputTarget
                 if (newMinimum < 0)
                     newMaximum += 0 - newMinimum;
 
-                settings.Minimum = MathUtils.Clamp((int)MathF.Round(newMinimum), 0, 99);
-                settings.Maximum = MathUtils.Clamp((int)MathF.Round(newMaximum), 1, 100);
+                settings.Minimum = MathUtils.Clamp(newMinimum, 0, 99);
+                settings.Maximum = MathUtils.Clamp(newMaximum, 1, 100);
             }
+
+            #region UpdateRate
+            s.RegisterAction<int>($"{Name}::UpdateRate::Set", "Update rate", (_, updateRate) => UpdateRate = updateRate);
+            #endregion
 
             #region AutoConnectEnabled
             s.RegisterAction<bool>($"{Name}::AutoConnectEnabled::Set", "Enable auto connect", (_, enabled) => AutoConnectEnabled = enabled);
@@ -172,7 +176,7 @@ namespace MultiFunPlayer.OutputTarget
             {
                 if (gesture is not IAxisInputGesture axisGesture) return;
                 if (axis != null)
-                    SetMinimum(AxisSettings[axis], AxisSettings[axis].Minimum + (int)(axisGesture.Delta * 100));
+                    SetMinimum(AxisSettings[axis], AxisSettings[axis].Minimum + axisGesture.Delta * 100);
             });
             #endregion
 
@@ -193,7 +197,7 @@ namespace MultiFunPlayer.OutputTarget
             {
                 if (gesture is not IAxisInputGesture axisGesture) return;
                 if (axis != null)
-                    SetMaximum(AxisSettings[axis], AxisSettings[axis].Maximum + (int)(axisGesture.Delta * 100));
+                    SetMaximum(AxisSettings[axis], AxisSettings[axis].Maximum + axisGesture.Delta * 100);
             });
             #endregion
 
@@ -214,7 +218,7 @@ namespace MultiFunPlayer.OutputTarget
             {
                 if (gesture is not IAxisInputGesture axisGesture) return;
                 if (axis != null)
-                    OffsetMiddle(AxisSettings[axis], (int)(axisGesture.Delta * 100));
+                    OffsetMiddle(AxisSettings[axis], axisGesture.Delta * 100);
             });
             #endregion
 
@@ -235,7 +239,7 @@ namespace MultiFunPlayer.OutputTarget
             {
                 if (gesture is not IAxisInputGesture axisGesture) return;
                 if (axis != null)
-                    OffsetSize(AxisSettings[axis], (int)(axisGesture.Delta * 100));
+                    OffsetSize(AxisSettings[axis], axisGesture.Delta * 100);
             });
             #endregion
         }

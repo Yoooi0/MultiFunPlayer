@@ -6,8 +6,8 @@ namespace MultiFunPlayer.OutputTarget
     [JsonObject(MemberSerialization.OptIn)]
     public class DeviceAxisSettings : PropertyChangedBase
     {
-        [JsonProperty] public int Minimum { get; set; }
-        [JsonProperty] public int Maximum { get; set; }
+        [JsonProperty] public float Minimum { get; set; }
+        [JsonProperty] public float Maximum { get; set; }
 
         public DeviceAxisSettings()
         {

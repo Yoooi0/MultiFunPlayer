@@ -246,6 +246,19 @@ namespace MultiFunPlayer.VideoSource.ViewModels
             }
         }
 
+        protected override void RegisterShortcuts(IShortcutManager s)
+        {
+            base.RegisterShortcuts(s);
+
+            #region Endpoint
+            s.RegisterAction<string>($"{Name}::Endpoint::Set", "Endpoint", (_, endpointString) =>
+            {
+                if (IPEndPoint.TryParse(endpointString, out var endpoint))
+                    Endpoint = endpoint;
+            });
+            #endregion
+        }
+
         public async void Handle(VideoSeekMessage message)
         {
             if (Status == ConnectionStatus.Connected)

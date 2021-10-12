@@ -151,6 +151,15 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
             }
         }
 
+        protected override void RegisterShortcuts(IShortcutManager s)
+        {
+            base.RegisterShortcuts(s);
+
+            #region ComPort
+            s.RegisterAction<string>($"{Name}::ComPort::Set", "Com port", (_, comPort) => SelectedComPort = comPort);
+            #endregion
+        }
+
         public override async ValueTask<bool> CanConnectAsync(CancellationToken token)
         {
             try

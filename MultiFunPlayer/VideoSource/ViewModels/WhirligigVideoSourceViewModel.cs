@@ -147,5 +147,18 @@ namespace MultiFunPlayer.VideoSource.ViewModels
                 return await ValueTask.FromResult(false);
             }
         }
+
+        protected override void RegisterShortcuts(IShortcutManager s)
+        {
+            base.RegisterShortcuts(s);
+
+            #region Endpoint
+            s.RegisterAction<string>($"{Name}::Endpoint::Set", "Endpoint", (_, endpointString) =>
+            {
+                if (IPEndPoint.TryParse(endpointString, out var endpoint))
+                    Endpoint = endpoint;
+            });
+            #endregion
+        }
     }
 }

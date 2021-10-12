@@ -731,10 +731,24 @@ namespace MultiFunPlayer.ViewModels
                 return;
             if (e.ChangedButton != MouseButton.Left)
                 return;
-            if (!float.IsFinite(VideoDuration))
+
+            SeekVideoToPercent((float)e.GetPosition(element).X / (float)element.ActualWidth);
+        }
+
+        private void SeekVideoToPercent(float percent)
+        {
+            if (!float.IsFinite(VideoDuration) || !float.IsFinite(percent))
                 return;
 
-            _eventAggregator.Publish(new VideoSeekMessage(TimeSpan.FromSeconds(VideoDuration * e.GetPosition(element).X / element.ActualWidth)));
+            _eventAggregator.Publish(new VideoSeekMessage(TimeSpan.FromSeconds(VideoDuration * MathUtils.Clamp01(percent))));
+        }
+
+        private void SeekVideoToTime(float time)
+        {
+            if (!float.IsFinite(VideoDuration) || !float.IsFinite(time))
+                return;
+
+            _eventAggregator.Publish(new VideoSeekMessage(TimeSpan.FromSeconds(MathUtils.Clamp(time, 0, VideoDuration))));
         }
         #endregion
 
@@ -979,6 +993,29 @@ namespace MultiFunPlayer.ViewModels
         #region Shortcuts
         public void RegisterShortcuts(IShortcutManager s)
         {
+            #region Video::PlayPause
+            s.RegisterAction<bool>("Video::PlayPause::Set", "Play", (_, play) =>
+            {
+                if (play && !IsPlaying) OnPlayPauseClick();
+                else if (!play && IsPlaying) OnPlayPauseClick();
+            });
+
+            s.RegisterAction("Video::PlayPause::Toggle", _ => OnPlayPauseClick());
+            #endregion
+
+            #region Video::ScriptOffset
+            s.RegisterAction<float>("Video::ScriptOffset::Offset", "Value offset", (_, offset) => GlobalOffset = MathUtils.Clamp(GlobalOffset + offset, -5, 5));
+            s.RegisterAction<float>("Video::ScriptOffset::Set", "Value", (_, value) => GlobalOffset = MathUtils.Clamp(value, -5, 5));
+            #endregion
+
+            #region Video::Position
+            s.RegisterAction<float>("Video::Position::Time::Offset", "Value offset", (_, offset) => SeekVideoToTime(CurrentPosition + offset));
+            s.RegisterAction<float>("Video::Position::Time::Set", "Value", (_, value) => SeekVideoToTime(value));
+
+            s.RegisterAction<float>("Video::Position::Percent::Offset", "Value offset", (_, offset) => SeekVideoToPercent(CurrentPosition / VideoDuration + offset / 100));
+            s.RegisterAction<float>("Video::Position::Percent::Set", "Value", (_, value) => SeekVideoToPercent(value / 100));
+            #endregion
+
             #region Axis::Value
             s.RegisterAction<DeviceAxis, float>("Axis::Value::Offset", "Target axis", "Value offset", (_, axis, offset) =>
             {
@@ -1069,8 +1106,10 @@ namespace MultiFunPlayer.ViewModels
             #region Axis::SmartLimitEnabled
             s.RegisterAction<DeviceAxis, bool>("Axis::SmartLimitEnabled::Set", "Target axis", "Link has priority", (_, axis, enabled) =>
             {
-                if (axis != null)
-                    AxisSettings[axis].SmartLimitEnabled = enabled;
+                if (axis == null || (axis.Name != "R1" && axis.Name != "R2"))
+                    return;
+
+                AxisSettings[axis].SmartLimitEnabled = enabled;
             });
 
             s.RegisterAction<DeviceAxis>("Axis::SmartLimitEnabled::Toggle", "Target axis", (_, axis) =>
@@ -1141,17 +1180,6 @@ namespace MultiFunPlayer.ViewModels
             });
             #endregion
 
-            #region Axis::Interpolation
-            s.RegisterAction<DeviceAxis, DeviceAxis>("Axis::Interpolation::Set", "Source axis", "Target axis", (_, source, target) =>
-            {
-                if (source == null)
-                    return;
-
-                AxisSettings[source].LinkAxis = target;
-                ReloadScript(source);
-            });
-            #endregion
-
             #region Axis::AutoHomeEnabled
             s.RegisterAction<DeviceAxis, bool>("Axis::AutoHomeEnabled::Set", "Target axis", "Auto home enabled", (_, axis, enabled) =>
             {
@@ -1194,14 +1222,14 @@ namespace MultiFunPlayer.ViewModels
             });
             #endregion
 
-            #region Axis::PositionOffset
-            s.RegisterAction<DeviceAxis, float>("Axis::PositionOffset::Offset", "Target axis", "Value offset", (_, axis, offset) =>
+            #region Axis::ScriptOffset
+            s.RegisterAction<DeviceAxis, float>("Axis::ScriptOffset::Offset", "Target axis", "Value offset", (_, axis, offset) =>
             {
                 if (axis != null)
                     AxisSettings[axis].Offset = MathUtils.Clamp(AxisSettings[axis].Offset + offset, -5, 5);
             });
 
-            s.RegisterAction<DeviceAxis, float>("Axis::PositionOffset::Set", "Target axis", "Value", (_, axis, value) =>
+            s.RegisterAction<DeviceAxis, float>("Axis::ScriptOffset::Set", "Target axis", "Value", (_, axis, value) =>
             {
                 if (axis != null)
                     AxisSettings[axis].Offset = MathUtils.Clamp(value, -5, 5);
