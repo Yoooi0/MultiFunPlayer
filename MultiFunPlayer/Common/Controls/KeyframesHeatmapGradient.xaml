@@ -14,16 +14,22 @@
     <material:Card UniformCornerRadius="5" 
                    material:ShadowAssist.ShadowDepth="Depth1">
         <material:Card.Background>
-            <DrawingBrush Stretch="None" TileMode="Tile" Viewport="0 0 20 20" ViewportUnits="Absolute">
+            <DrawingBrush Stretch="None" TileMode="Tile" Viewport="4 8 20 20" ViewportUnits="Absolute">
                 <DrawingBrush.Drawing>
                     <DrawingGroup>
-                        <GeometryDrawing Brush="White">
+                        <GeometryDrawing>
+                            <GeometryDrawing.Brush>
+                                <SolidColorBrush Color="#FFF"/>
+                            </GeometryDrawing.Brush>
                             <GeometryDrawing.Geometry>
                                 <RectangleGeometry Rect="0 0 20 20" />
                             </GeometryDrawing.Geometry>
                         </GeometryDrawing>
 
-                        <GeometryDrawing Brush="{StaticResource MaterialDesignLightBackground}">
+                        <GeometryDrawing>
+                            <GeometryDrawing.Brush>
+                                <SolidColorBrush Color="#f8f8f8"/>
+                            </GeometryDrawing.Brush>
                             <GeometryDrawing.Geometry>
                                 <GeometryGroup>
                                     <RectangleGeometry Rect="0 0 10 10" />
