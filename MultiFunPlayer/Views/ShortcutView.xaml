@@ -590,6 +590,10 @@
                                           ItemsSource="{Binding Converter={StaticResource ShortcutSettingEnumToEnumValuesConverter}}"
                                           material:TextFieldAssist.HasClearButton="True" />
                             </DataTemplate>
+                            <DataTemplate x:Key="StringTemplate" DataType="{x:Type input:IShortcutSetting}">
+                                <TextBox Text="{Binding Value}"
+                                          material:TextFieldAssist.HasClearButton="True" />
+                            </DataTemplate>
                         </ItemsControl.Resources>
                         <ItemsControl.ItemTemplate>
                             <DataTemplate DataType="{x:Type input:IShortcutSetting}">
