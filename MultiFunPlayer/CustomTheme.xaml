@@ -11,6 +11,7 @@
         <Setter Property="BorderThickness" Value="1"/>
         <Setter Property="Height" Value="35"/>
         <Setter Property="Width" Value="35"/>
+        <Setter Property="Cursor" Value="Hand"/>
         <Setter Property="HorizontalContentAlignment" Value="Center"/>
         <Setter Property="VerticalContentAlignment" Value="Center"/>
         <Setter Property="TextBlock.FontWeight" Value="DemiBold"/>
@@ -174,6 +175,10 @@
         </Setter>
     </Style>
 
+    <Style x:Key="MaterialDesignToolBarButton" BasedOn="{StaticResource {x:Static ToolBar.ButtonStyleKey}}" TargetType="{x:Type Button}">
+        <Setter Property="Cursor" Value="Hand"/>
+    </Style>
+
     <Style x:Key="MaterialDesignToolBarToggleButton" TargetType="{x:Type ToggleButton}">
         <Setter Property="Padding" Value="0"/>
         <Setter Property="Foreground" Value="{DynamicResource MaterialDesignBody}"/>
@@ -182,6 +187,7 @@
         <Setter Property="BorderThickness" Value="1"/>
         <Setter Property="Height" Value="35"/>
         <Setter Property="Width" Value="35"/>
+        <Setter Property="Cursor" Value="Hand"/>
         <Setter Property="HorizontalContentAlignment" Value="Center"/>
         <Setter Property="VerticalContentAlignment" Value="Center"/>
         <Setter Property="TextBlock.FontWeight" Value="DemiBold"/>
@@ -269,6 +275,7 @@
         <Setter Property="BorderBrush" Value="{DynamicResource PrimaryHueMidBrush}"/>
         <Setter Property="Padding" Value="0"/>
         <Setter Property="Height" Value="35" />
+        <Setter Property="Cursor" Value="Hand"/>
         <Setter Property="material:RippleAssist.Feedback" Value="{DynamicResource MaterialDesignFlatButtonRipple}" />
         <Setter Property="Template">
             <Setter.Value>

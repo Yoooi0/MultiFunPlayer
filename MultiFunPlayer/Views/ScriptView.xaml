@@ -31,7 +31,7 @@
                         <DropShadowEffect ShadowDepth="0" Direction="270"/>
                     </DockPanel.Effect>
                     <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
-                        <Button Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}"
+                        <Button Style="{StaticResource MaterialDesignToolBarButton}"
                                 Click="{s:Action OnPlayPauseClick}"
                                 Padding="5"
                                 ToolTipService.InitialShowDelay="0"
@@ -197,7 +197,7 @@
                     <StackPanel DockPanel.Dock="Left" 
                                 Orientation="Horizontal">
                         <Button Click="{s:Action OnOpenVideoLocation}" 
-                                    Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}"
+                                    Style="{StaticResource MaterialDesignToolBarButton}"
                                     IsEnabled="{Binding CanOpenVideoLocation}"
                                     ToolTip="Open video location" 
                                     ToolTipService.InitialShowDelay="0" 
@@ -205,7 +205,7 @@
                                     Padding="8">
                             <material:PackIcon Kind="FolderOpen" Height="19" Width="19"/>
                         </Button>
-                        <Button Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}"
+                        <Button Style="{StaticResource MaterialDesignToolBarButton}"
                                     ToolTip="Script libraries" 
                                     ToolTipService.InitialShowDelay="0" 
                                     ToolTipService.Placement="Top" 
@@ -449,7 +449,7 @@
                                             </ToggleButton>
                                         </StackPanel>
                                         <StackPanel Orientation="Horizontal" DockPanel.Dock="Left">
-                                            <Button Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}"
+                                            <Button Style="{StaticResource MaterialDesignToolBarButton}"
                                                         Command="{s:Action OnAxisOpenFolder}"
                                                         CommandParameter="{Binding Key}"
                                                         IsEnabled="{Binding Value.Script, Converter={StaticResource InvertedNullableToBooleanConverter}}"
@@ -459,7 +459,7 @@
                                                         Padding="8">
                                                 <material:PackIcon Kind="FolderOpen" Width="19" Height="19"/>
                                             </Button>
-                                            <Button Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}"
+                                            <Button Style="{StaticResource MaterialDesignToolBarButton}"
                                                         Command="{s:Action OnAxisLoad}"
                                                         CommandParameter="{Binding Key}"
                                                         IsEnabled="{Binding DataContext.VideoFile, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}, Converter={StaticResource InvertedNullableToBooleanConverter}}"
@@ -469,7 +469,7 @@
                                                         Padding="8">
                                                 <material:PackIcon Kind="FileDownload" Width="19" Height="19"/>
                                             </Button>
-                                            <Button Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}"
+                                            <Button Style="{StaticResource MaterialDesignToolBarButton}"
                                                         Command="{s:Action OnAxisClear}"
                                                         CommandParameter="{Binding Key}"
                                                         IsEnabled="{Binding Value.Script, Converter={StaticResource InvertedNullableToBooleanConverter}}"
@@ -479,7 +479,7 @@
                                                         Padding="8">
                                                 <material:PackIcon Kind="Close" Width="19" Height="19"/>
                                             </Button>
-                                            <Button Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}"
+                                            <Button Style="{StaticResource MaterialDesignToolBarButton}"
                                                         Command="{s:Action OnAxisReload}"
                                                         CommandParameter="{Binding Key}"
                                                         IsEnabled="{Binding DataContext.VideoFile, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}, Converter={StaticResource InvertedNullableToBooleanConverter}}"
