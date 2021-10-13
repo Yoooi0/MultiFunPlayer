@@ -17,7 +17,8 @@ The player's main feature is the ability to play multiple funscripts at the same
 * Supports [buttplug.io](https://buttplug.io), network TCP/UDP, namedpipes and serial output
 * Supports TCode v0.2 and TCode v0.3 devices
 * Auto detection and connection to any supported video player and output
-* Bind keyboard/mouse/gamepad input to almost any action (900+ available actions)
+* Bind keyboard/mouse/gamepad input to almost any customizable action (100+ available actions)
+* Seek and play/pause video from MultiFunPlayer
 * Supports multiple concurrent outputs
 * Real time script smoothing using pchip or makima interpolation
 * Auto-home feature which when video is paused moves axis to its default value after some delay
@@ -26,7 +27,7 @@ The player's main feature is the ability to play multiple funscripts at the same
 * Script libraries to organize funscripts in different folders and load funscripts not located next to the video file
 * Ability to link unscripted axis to a different one with optional random motion
 * Smart limit on R1 (roll) and R2 (pitch) axes to limit values based on L0 (stroke) height
-* Multi funscript heatmap
+* Multi funscript heatmap with stroke length visualization
 * True portable app, no files are created/edited outside of the executable folder
 
 # How To
