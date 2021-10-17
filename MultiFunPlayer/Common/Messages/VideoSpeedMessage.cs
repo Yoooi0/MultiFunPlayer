@@ -1,4 +1,4 @@
-﻿namespace MultiFunPlayer.Common
+﻿namespace MultiFunPlayer.Common.Messages
 {
     public class VideoSpeedMessage
     {

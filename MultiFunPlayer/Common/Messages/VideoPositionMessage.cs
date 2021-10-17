@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace MultiFunPlayer.Common
+namespace MultiFunPlayer.Common.Messages
 {
     public class VideoPositionMessage
     {

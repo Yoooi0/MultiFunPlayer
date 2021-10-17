@@ -7,8 +7,8 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:MultiFunPlayer.OutputTarget.ViewModels"
-             xmlns:converters="clr-namespace:MultiFunPlayer.Common.Converters"
-             xmlns:controls="clr-namespace:MultiFunPlayer.Common.Controls"
+             xmlns:converters="clr-namespace:MultiFunPlayer.UI.Converters"
+             xmlns:ui="clr-namespace:MultiFunPlayer.UI"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
     <UserControl.Resources>
@@ -122,7 +122,7 @@
                              Margin="0 -12 20 0"
                              VerticalAlignment="Center"/>
 
-                    <ComboBox ItemsSource="{Binding Source={controls:EnumBindingSource {x:Type local:ProtocolType}}}"
+                    <ComboBox ItemsSource="{Binding Source={ui:EnumBindingSource {x:Type local:ProtocolType}}}"
                               SelectedItem="{Binding Protocol}"
                               Typography.Capitals="AllSmallCaps"/>
                 </DockPanel>

@@ -1,12 +1,13 @@
 using MultiFunPlayer.Common;
-using MultiFunPlayer.Common.Controls;
-using MultiFunPlayer.Common.Converters;
-using MultiFunPlayer.Common.Input;
-using MultiFunPlayer.Common.Input.RawInput;
-using MultiFunPlayer.Common.Input.XInput;
+using MultiFunPlayer.Input;
+using MultiFunPlayer.Input.RawInput;
+using MultiFunPlayer.Input.XInput;
 using MultiFunPlayer.OutputTarget;
+using MultiFunPlayer.Settings;
+using MultiFunPlayer.Settings.Converters;
+using MultiFunPlayer.UI;
+using MultiFunPlayer.UI.Controls.ViewModels;
 using MultiFunPlayer.VideoSource;
-using MultiFunPlayer.ViewModels;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;
@@ -69,7 +70,7 @@ namespace MultiFunPlayer
 
         private void SetupDevice()
         {
-            var settings = Settings.Read();
+            var settings = SettingsHelper.Read();
             var devices = JObject.Parse(File.ReadAllText("MultiFunPlayer.device.json"));
 
             var serializer = JsonSerializer.Create(new JsonSerializerSettings()
@@ -81,7 +82,7 @@ namespace MultiFunPlayer
             {
                 selectedDevice = devices.Properties().First().Name;
                 settings["SelectedDevice"] = selectedDevice;
-                Settings.Write(settings);
+                SettingsHelper.Write(settings);
             }
 
             DeviceAxis.LoadSettings(devices[selectedDevice] as JObject, serializer);
@@ -117,7 +118,7 @@ namespace MultiFunPlayer
 
         private static void SetupLoging()
         {
-            var settings = Settings.Read();
+            var settings = SettingsHelper.Read();
             var settingsDirty = false;
             if (!settings.ContainsKey("LogLevel"))
             {
@@ -136,7 +137,7 @@ namespace MultiFunPlayer
             }
 
             if (settingsDirty)
-                Settings.Write(settings);
+                SettingsHelper.Write(settings);
 
             var config = new LoggingConfiguration();
             const string layout = "${longdate}|${level:uppercase=true}|${logger}|${message}${onexception:|${exception:format=ToString}}";

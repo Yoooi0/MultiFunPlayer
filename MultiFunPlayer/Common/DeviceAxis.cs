@@ -1,4 +1,4 @@
-﻿using MultiFunPlayer.Common.Converters;
+﻿using MultiFunPlayer.Settings.Converters;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
