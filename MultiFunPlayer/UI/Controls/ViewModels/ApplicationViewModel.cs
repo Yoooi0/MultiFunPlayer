@@ -1,5 +1,6 @@
 ﻿using MultiFunPlayer.Common;
 using MultiFunPlayer.Common.Messages;
+using MultiFunPlayer.Settings;
 using Newtonsoft.Json.Linq;
 using Stylet;
 using System.IO;
@@ -18,7 +19,7 @@ namespace MultiFunPlayer.UI.Controls.ViewModels
         {
             eventAggregator.Subscribe(this);
 
-            var devices = JObject.Parse(File.ReadAllText("MultiFunPlayer.device.json")).Properties().Select(p => p.Name);
+            var devices = SettingsHelper.Read(SettingsType.Devices).Properties().Select(p => p.Name);
             DeviceTypes = new BindableCollection<string>(devices);
         }
 

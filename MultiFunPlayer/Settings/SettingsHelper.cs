@@ -6,42 +6,63 @@ using System.IO;
 
 namespace MultiFunPlayer.Settings
 {
+    public enum SettingsType
+    {
+        Application,
+        Devices
+    }
+
     public static class SettingsHelper
     {
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-        public static string FilePath => Path.Join(FileDirectory, FileName);
-        public static string FileDirectory => Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName);
-        public static string FileName => $"{nameof(MultiFunPlayer)}.config.json";
+        private static string FileFormat => $"{nameof(MultiFunPlayer)}.{{0}}.json";
 
-        public static JObject Read()
+        public static JObject Read(SettingsType type)
         {
-            if (!File.Exists(FilePath))
-                return new JObject();
+            var path = GetFilePath(type);
+            if (!File.Exists(path))
+                return null;
 
-            Logger.Info("Reading settings from \"{0}\"", FilePath);
+            Logger.Info("Reading settings from \"{0}\"", path);
             try
             {
-                return JObject.Parse(File.ReadAllText(FilePath));
+                return JObject.Parse(File.ReadAllText(path));
             }
             catch (Exception e)
             {
                 Logger.Error(e, "Failed to read settings");
-                return new JObject();
+                return null;
             }
         }
 
-        public static void Write(JObject settings)
+        public static JObject ReadOrEmpty(SettingsType type) => Read(type) ?? new JObject();
+
+        public static void Write(SettingsType type, JObject settings)
         {
+            var path = GetFilePath(type);
+
             try
             {
-                Logger.Info("Saving settings to \"{0}\"", FilePath);
-                File.WriteAllText(FilePath, settings.ToString());
+                Logger.Info("Saving settings to \"{0}\"", path);
+                File.WriteAllText(path, settings.ToString());
             }
             catch (Exception e)
             {
                 Logger.Error(e, "Failed to save settings");
             }
+        }
+
+        public static string GetFilePath(SettingsType type)
+        {
+            var filePostFix = type switch
+            {
+                SettingsType.Application => "config",
+                SettingsType.Devices => "device",
+                _ => throw new NotSupportedException(),
+            };
+
+            return string.Format(FileFormat, filePostFix);
         }
     }
 }

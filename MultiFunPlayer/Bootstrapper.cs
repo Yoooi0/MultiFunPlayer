@@ -43,13 +43,17 @@ namespace MultiFunPlayer
 
         protected override void Configure()
         {
+            var logger = LogManager.GetLogger(nameof(MultiFunPlayer));
+            var workingDirectory = Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName);
+            Directory.SetCurrentDirectory(workingDirectory);
+
             _ = Container.Get<DialogHelper>();
 
             SetupDevice();
             SetupJson();
             SetupLoging();
 
-            var logger = LogManager.GetLogger(nameof(AppDomain));
+            logger.Info("Set working directory to \"{0}\"", workingDirectory);
             AppDomain.CurrentDomain.UnhandledException += (s, e) =>
             {
                 logger.Fatal(e.ExceptionObject as Exception);
@@ -70,8 +74,8 @@ namespace MultiFunPlayer
 
         private void SetupDevice()
         {
-            var settings = SettingsHelper.Read();
-            var devices = JObject.Parse(File.ReadAllText("MultiFunPlayer.device.json"));
+            var settings = SettingsHelper.ReadOrEmpty(SettingsType.Application);
+            var devices = SettingsHelper.Read(SettingsType.Devices);
 
             var serializer = JsonSerializer.Create(new JsonSerializerSettings()
             {
@@ -82,7 +86,7 @@ namespace MultiFunPlayer
             {
                 selectedDevice = devices.Properties().First().Name;
                 settings["SelectedDevice"] = selectedDevice;
-                SettingsHelper.Write(settings);
+                SettingsHelper.Write(SettingsType.Application, settings);
             }
 
             DeviceAxis.LoadSettings(devices[selectedDevice] as JObject, serializer);
@@ -118,17 +122,12 @@ namespace MultiFunPlayer
 
         private static void SetupLoging()
         {
-            var settings = SettingsHelper.Read();
-            var settingsDirty = false;
+            var settings = SettingsHelper.ReadOrEmpty(SettingsType.Application);
             if (!settings.ContainsKey("LogLevel"))
-            {
-                settingsDirty = true;
                 settings["LogLevel"] = JToken.FromObject(LogLevel.Info);
-            }
 
             if (!settings.ContainsKey("LogBlacklist"))
             {
-                settingsDirty = true;
                 settings["LogBlacklist"] = JObject.FromObject(new Dictionary<string, LogLevel>() {
                     [$"{typeof(RawInputProcessor).Namespace}.*"] = LogLevel.Trace,
                     [$"{typeof(XInputProcessor).Namespace}.*"] = LogLevel.Trace,
@@ -136,8 +135,7 @@ namespace MultiFunPlayer
                 });
             }
 
-            if (settingsDirty)
-                SettingsHelper.Write(settings);
+            SettingsHelper.Write(SettingsType.Application, settings);
 
             var config = new LoggingConfiguration();
             const string layout = "${longdate}|${level:uppercase=true}|${logger}|${message}${onexception:|${exception:format=ToString}}";

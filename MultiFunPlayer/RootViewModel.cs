@@ -38,7 +38,7 @@ namespace MultiFunPlayer
             ActivateAndSetParent(Items);
             base.OnActivate();
 
-            var settings = SettingsHelper.Read();
+            var settings = SettingsHelper.ReadOrEmpty(SettingsType.Application);
             _eventAggregator.Publish(new AppSettingsMessage(settings, AppSettingsMessageType.Loading));
         }
 
@@ -50,7 +50,7 @@ namespace MultiFunPlayer
         {
             Execute.PostToUIThread(async () =>
             {
-                var settings = SettingsHelper.Read();
+                var settings = SettingsHelper.ReadOrEmpty(SettingsType.Application);
                 if (!settings.TryGetValue("DisablePopup", out var disablePopupToken) || !disablePopupToken.Value<bool>())
                 {
                     var result = await DialogHelper.ShowAsync(new InformationMessageDialogViewModel(showCheckbox: true), "RootDialog").ConfigureAwait(true);
@@ -58,16 +58,16 @@ namespace MultiFunPlayer
                         return;
 
                     settings["DisablePopup"] = true;
-                    SettingsHelper.Write(settings);
+                    SettingsHelper.Write(SettingsType.Application, settings);
                 }
             });
         }
 
         public void OnClosing(object sender, EventArgs e)
         {
-            var settings = SettingsHelper.Read();
+            var settings = SettingsHelper.ReadOrEmpty(SettingsType.Application);
             _eventAggregator.Publish(new AppSettingsMessage(settings, AppSettingsMessageType.Saving));
-            SettingsHelper.Write(settings);
+            SettingsHelper.Write(SettingsType.Application, settings);
         }
 
         public void OnMouseDown(object sender, MouseButtonEventArgs e)
