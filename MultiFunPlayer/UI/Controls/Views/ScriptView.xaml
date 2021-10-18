@@ -385,7 +385,6 @@
 
         <material:Card material:ShadowAssist.ShadowDepth="Depth1" Margin="0 0 0 20">
             <TabControl ItemsSource="{Binding AxisModels}"
-                        SelectionChanged="{s:Action OnSelectedAxisChanged}"
                         behaviours:TabContent.IsCached="True">
                 <TabControl.ItemTemplate>
                     <DataTemplate>
@@ -430,7 +429,7 @@
                                                        Typography.Capitals="AllSmallCaps"/>
                                             
                                             <ToggleButton DockPanel.Dock="Right"
-                                                            IsChecked="{Binding Value.Settings.ContentVisible}"                                
+                                                            IsChecked="{Binding DataContext.AxisContentVisible, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}"                                
                                                             ToolTipService.InitialShowDelay="0"
                                                             ToolTipService.Placement="Top">                            
                                                 <material:PackIcon Kind="ChevronDown" Width="19" Height="19"/>
@@ -843,7 +842,7 @@
                             </DockPanel>
                             <StackPanel DockPanel.Dock="Bottom" 
                                         Margin="20 15 20 20"
-                                        Visibility="{Binding Value.Settings.ContentVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                        Visibility="{Binding DataContext.AxisContentVisible, Converter={StaticResource BooleanToVisibilityConverter}, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}">
                                 <DockPanel LastChildFill="True" 
                                                Margin="0 0 0 10">
                                     <TextBlock Text="File:" 

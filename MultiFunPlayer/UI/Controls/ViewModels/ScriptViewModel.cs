@@ -37,6 +37,7 @@ namespace MultiFunPlayer.UI.Controls.ViewModels
         public bool IsPlaying { get; set; }
         public bool ValuesContentVisible { get; set; }
         public bool VideoContentVisible { get; set; } = true;
+        public bool AxisContentVisible { get; set; } = false;
         public float CurrentPosition { get; set; }
         public float PlaybackSpeed { get; set; }
         public float VideoDuration { get; set; }
@@ -391,6 +392,7 @@ namespace MultiFunPlayer.UI.Controls.ViewModels
                     { nameof(ScriptLibraries), JArray.FromObject(ScriptLibraries) },
                     { nameof(ValuesContentVisible), JToken.FromObject(ValuesContentVisible) },
                     { nameof(VideoContentVisible), JToken.FromObject(VideoContentVisible) },
+                    { nameof(AxisContentVisible), JToken.FromObject(AxisContentVisible) },
                     { nameof(SyncSettings), JObject.FromObject(SyncSettings) },
                     { nameof(HeatmapBucketCount), JToken.FromObject(HeatmapBucketCount) },
                     { nameof(HeatmapShowStrokeLength), JToken.FromObject(HeatmapShowStrokeLength) }
@@ -423,6 +425,9 @@ namespace MultiFunPlayer.UI.Controls.ViewModels
 
                 if (settings.TryGetValue<bool>(nameof(VideoContentVisible), out var videoContentVisible))
                     VideoContentVisible = videoContentVisible;
+
+                if (settings.TryGetValue<bool>(nameof(AxisContentVisible), out var axisContentVisible))
+                    AxisContentVisible = axisContentVisible;
 
                 if (settings.TryGetValue<int>(nameof(HeatmapBucketCount), out var heatmapBucketCount))
                     HeatmapBucketCount = heatmapBucketCount;
@@ -861,20 +866,6 @@ namespace MultiFunPlayer.UI.Controls.ViewModels
             return true;
         }
 
-        [SuppressPropertyChangedWarnings]
-        public void OnSelectedAxisChanged(object sender, SelectionChangedEventArgs e)
-        {
-            if (e.RemovedItems.Count != 1 || e.AddedItems.Count != 1)
-                return;
-
-            if (e.RemovedItems[0] is not KeyValuePair<DeviceAxis, AxisModel> removed
-                || e.AddedItems[0] is not KeyValuePair<DeviceAxis, AxisModel> added)
-                return;
-
-            added.Value.Settings.ContentVisible = removed.Value.Settings.ContentVisible;
-            removed.Value.Settings.ContentVisible = false;
-        }
-
         public void OnAxisMoveToVideo(DeviceAxis axis)
         {
             if (VideoFile != null && MoveScript(axis, new DirectoryInfo(VideoFile.Source)))
@@ -1305,7 +1296,6 @@ namespace MultiFunPlayer.UI.Controls.ViewModels
         [JsonProperty] public bool Inverted { get; set; } = false;
         [JsonProperty] public float Offset { get; set; } = 0;
         [JsonProperty] public bool Bypass { get; set; } = false;
-        [JsonProperty] public bool ContentVisible { get; set; } = true;
     }
 
     [JsonObject(MemberSerialization.OptIn)]
