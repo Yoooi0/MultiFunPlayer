@@ -578,7 +578,7 @@
                                                                    Style="{StaticResource MaterialDesignToolBarPopupBox}"
                                                                    ToolTipService.InitialShowDelay="0"
                                                                    ToolTipService.Placement="Top"
-                                                                   ToolTip="Link axis">
+                                                                   ToolTip="Link script">
                                                 <material:PopupBox.ToggleContent>
                                                     <Border Width="35" Height="35">
                                                         <material:PackIcon Kind="LinkVariant" 
@@ -590,7 +590,7 @@
                                                 </material:PopupBox.ToggleContent>
                                                 <Grid Width="300" Margin="10">
                                                     <StackPanel>
-                                                        <DockPanel Margin="0 0 0 10" LastChildFill="False">
+                                                        <DockPanel LastChildFill="False">
                                                             <TextBlock Text="Target:" 
                                                                            DockPanel.Dock="Left"
                                                                            Margin="0 0 10 0" 
@@ -632,78 +632,64 @@
                                                                           Margin="0 0 5 0"
                                                                           Content="Priority"/>
                                                         </DockPanel>
-
-                                                        <DockPanel LastChildFill="False">
-                                                            <TextBlock DockPanel.Dock="Left"
-                                                                           Text="Randomizer:"
-                                                                           Typography.Capitals="AllSmallCaps"
-                                                                           FontWeight="Bold"
-                                                                           Margin="0 0 5 0"
-                                                                           VerticalAlignment="Center"
-                                                                           HorizontalAlignment="Left"/>
-                                                            <material:ColorZone DockPanel.Dock="Left"
-                                                                                    VerticalAlignment="Center"
-                                                                                    CornerRadius="7"
-                                                                                    Mode="PrimaryLight"
-                                                                                    Width="14"
-                                                                                    Height="14"
-                                                                                    ToolTipService.InitialShowDelay="0"
-                                                                                    ToolTipService.ShowDuration="99999"
-                                                                                    ToolTipService.Placement="Top">
-                                                                <material:ColorZone.ToolTip>
-                                                                    <TextBlock>
-                                                                            Strength: mixes the target axis values with<LineBreak/>randomly generated values where:<LineBreak/>
-                                                                            0=target axis script values<LineBreak/>
-                                                                            100=randomly generated values<LineBreak/><LineBreak/>
-                                                                            Speed: determines the rate of change of<LineBreak/>the randomly generated values
-                                                                    </TextBlock>
-                                                                </material:ColorZone.ToolTip>
-                                                                <material:PackIcon Kind="Help"
-                                                                                       Width="10"
-                                                                                       Height="10"
-                                                                                       HorizontalAlignment="Center"
-                                                                                       VerticalAlignment="Center"/>
-                                                            </material:ColorZone>
-                                                        </DockPanel>
-
-                                                        <DockPanel Margin="0 0 0 10">
-                                                            <TextBlock Text="Strength:" 
+                                                    </StackPanel>
+                                                </Grid>
+                                            </material:PopupBox>
+                                            
+                                            <material:PopupBox DockPanel.Dock="Left"
+                                                               StaysOpen="True" 
+                                                               Style="{StaticResource MaterialDesignToolBarPopupBox}"
+                                                               ToolTipService.InitialShowDelay="0"
+                                                               ToolTipService.Placement="Top"
+                                                               ToolTip="Motion">
+                                                <material:PopupBox.ToggleContent>
+                                                    <Border Width="35" Height="35">
+                                                        <material:PackIcon Kind="Motion" 
+                                                                           Width="19" 
+                                                                           Height="19" 
+                                                                           HorizontalAlignment="Center" 
+                                                                           VerticalAlignment="Center"/>
+                                                    </Border>
+                                                </material:PopupBox.ToggleContent>
+                                                <Grid Width="250" Margin="10">
+                                                    <StackPanel>
+                                                        <DockPanel LastChildFill="True">
+                                                            <DockPanel LastChildFill="True"
+                                                                       DockPanel.Dock="Top" 
+                                                                       Margin="0 0 0 10">
+                                                                <TextBlock Text="Motion provider:" 
                                                                            DockPanel.Dock="Left"
-                                                                           Width="60"
                                                                            Margin="0 0 10 0" 
                                                                            VerticalAlignment="Center"/>
-                                                            <Slider DockPanel.Dock="Right"
-                                                                        Value="{Binding Value.Settings.RandomizerStrength}"
-                                                                        Style="{StaticResource MaterialDesignDiscreteSlider}"
-                                                                        IsEnabled="{Binding Value.Settings.LinkAxis, Converter={StaticResource InvertedNullableToBooleanConverter}}"
-                                                                        Margin="0 -38 0 0"
-                                                                        Minimum="0" 
-                                                                        Maximum="100"
-                                                                        TickFrequency="1"
-                                                                        VerticalAlignment="Center"
-                                                                        IsSnapToTickEnabled="True"
-                                                                        MouseDoubleClick="{s:Action OnSliderDoubleClick}"
-                                                                        ValueChanged="{s:Action OnRandomizerSliderValueChanged}"/>
-                                                        </DockPanel>
+                                                                <ComboBox DockPanel.Dock="Left"
+                                                                          material:TextFieldAssist.HasClearButton="True" 
+                                                                          DisplayMemberPath="Name"
+                                                                          ItemsSource="{Binding Value.Settings.MotionProviders}" 
+                                                                          SelectedValue="{Binding Value.Settings.SelectedMotionProvider}"
+                                                                          SelectedValuePath="Name"/>
+                                                            </DockPanel>
 
-                                                        <DockPanel>
-                                                            <TextBlock Text="Speed:" 
+                                                            <DockPanel DockPanel.Dock="Top">
+                                                                <TextBlock Text="Blending:" 
                                                                            DockPanel.Dock="Left"
-                                                                           Width="60"
                                                                            Margin="0 0 10 0"
                                                                            VerticalAlignment="Center"/>
-                                                            <Slider DockPanel.Dock="Right"
-                                                                        Value="{Binding Value.Settings.RandomizerSpeed}"    
+
+                                                                <Slider DockPanel.Dock="Left"
+                                                                        Value="{Binding Value.Settings.MotionProviderBlend}"    
                                                                         Style="{StaticResource MaterialDesignDiscreteSlider}"
-                                                                        IsEnabled="{Binding Value.Settings.LinkAxis, Converter={StaticResource InvertedNullableToBooleanConverter}}"
                                                                         Margin="0 -38 0 0"
                                                                         Minimum="0" 
                                                                         Maximum="100"
                                                                         TickFrequency="1"
                                                                         VerticalAlignment="Center"
                                                                         IsSnapToTickEnabled="True"
-                                                                        MouseDoubleClick="{s:Action OnSliderDoubleClick}"
-                                                                        ValueChanged="{s:Action OnRandomizerSliderValueChanged}"/>
+                                                                        MouseDoubleClick="{s:Action OnSliderDoubleClick}"/>
+                                                            </DockPanel>
+
+                                                            <Separator DockPanel.Dock="Top" Margin="-10 0 -10 20"/>
+                                                            <ContentControl s:View.Model="{Binding Value.Settings.SelectedMotionProviderInstance}"
+                                                                            DockPanel.Dock="Bottom"/>
                                                         </DockPanel>
                                                     </StackPanel>
                                                 </Grid>
@@ -914,7 +900,7 @@
                       material:ExpanderAssist.HorizontalHeaderPadding="24 6 6 6"
                       Background="{StaticResource MaterialDesignToolBarBackground}">
                 <Expander.Header>
-                    <TextBlock Text="Script values" 
+                    <TextBlock Text="Axis values" 
                                    FontSize="14"
                                    FontWeight="Bold"
                                    Typography.Capitals="AllSmallCaps"/>
@@ -945,7 +931,7 @@
                                         <ProgressBar.Style>
                                             <Style TargetType="ProgressBar" BasedOn="{StaticResource MaterialDesignLinearProgressBar}">
                                                 <Style.Triggers>
-                                                    <DataTrigger Binding="{Binding Value.Valid}" Value="False">
+                                                    <DataTrigger Binding="{Binding Value.InsideScript}" Value="False">
                                                         <Setter Property="Foreground" Value="{StaticResource IdealForegroundDisabledBrush}"/>
                                                     </DataTrigger>
                                                 </Style.Triggers>

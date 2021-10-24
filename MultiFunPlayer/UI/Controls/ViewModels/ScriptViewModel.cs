@@ -21,6 +21,9 @@ using NLog;
 using System.Runtime.CompilerServices;
 using System.Windows.Controls.Primitives;
 using MultiFunPlayer.Input;
+using MultiFunPlayer.MotionProvider;
+using StyletIoC;
+using System.Runtime.Serialization;
 
 namespace MultiFunPlayer.UI.Controls.ViewModels
 {
@@ -97,7 +100,6 @@ namespace MultiFunPlayer.UI.Controls.ViewModels
 
             stopwatch.Start();
 
-            var randomizer = new OpenSimplex(0);
             while (!token.IsCancellationRequested)
             {
                 var dirty = UpdateValues();
@@ -121,13 +123,18 @@ namespace MultiFunPlayer.UI.Controls.ViewModels
 
                     lock (state)
                     {
-                        if (IsPlaying && !settings.Bypass)
+                        var oldValue = state.Value;
+                        if (!settings.Bypass)
                         {
-                            state.Dirty |= UpdateValues(axis, state, settings);
-                            state.Dirty |= UpdateSmartLimit(axis, state, settings);
+                            state.Dirty |= IsPlaying && UpdateScript(axis, state, settings);
+                            state.Dirty |= UpdateMotionProvider(axis, state, settings);
                         }
 
+                        if (state.SyncTime < SyncSettings.Duration)
+                            state.Value = MathUtils.Lerp(!float.IsFinite(oldValue) ? axis.DefaultValue : oldValue, state.Value, GetSyncProgress(state.SyncTime, SyncSettings.Duration));
+
                         state.Dirty |= UpdateAutoHome(axis, state, settings);
+                        state.Dirty |= UpdateSmartLimit(axis, state, settings);
                         dirty |= state.Dirty;
 
                         state.Dirty = false;
@@ -145,7 +152,7 @@ namespace MultiFunPlayer.UI.Controls.ViewModels
                         return false;
 
                     var limitState = AxisStates[strokeAxis];
-                    if (!limitState.Valid)
+                    if (!limitState.InsideScript)
                         return false;
 
                     var value = state.Value;
@@ -157,9 +164,9 @@ namespace MultiFunPlayer.UI.Controls.ViewModels
                     return lastValue != state.Value;
                 }
 
-                bool UpdateValues(DeviceAxis axis, AxisState state, AxisSettings settings)
+                bool UpdateScript(DeviceAxis axis, AxisState state, AxisSettings settings)
                 {
-                    if (!state.Valid)
+                    if (state.AfterScript)
                         return false;
 
                     var lastValue = state.Value;
@@ -167,11 +174,23 @@ namespace MultiFunPlayer.UI.Controls.ViewModels
                         return false;
 
                     var axisPosition = GetAxisPosition(axis);
-                    while (state.Index + 1 < keyframes.Count && keyframes[state.Index + 1].Position < axisPosition)
+                    var beforeIndex = state.Index;
+                    while (state.Index + 1 >= 0 && state.Index + 1 < keyframes.Count && keyframes[state.Index + 1].Position < axisPosition)
                         state.Index++;
 
+                    if(beforeIndex == -1 && state.Index >= 0)
+                        state.SyncTime = 0;
+
                     if (!keyframes.ValidateIndex(state.Index) || !keyframes.ValidateIndex(state.Index + 1))
+                    {
+                        if (state.Index + 1 >= keyframes.Count)
+                        {
+                            state.Invalidate(true);
+                            state.SyncTime = 0;
+                        }
+
                         return false;
+                    }
 
                     var newValue = default(float);
                     if (keyframes.IsRawCollection || state.Index == 0 || state.Index + 2 == keyframes.Count || settings.InterpolationType == InterpolationType.Linear)
@@ -195,15 +214,26 @@ namespace MultiFunPlayer.UI.Controls.ViewModels
                     if (settings.Inverted)
                         newValue = 1 - newValue;
 
-                    if (settings.LinkAxis != null)
-                    {
-                        var speed = MathUtils.Map(settings.RandomizerSpeed, 100, 0, 0.25f, 4);
-                        var randomizerValue = (float)(randomizer.Calculate2D(axisPosition / speed, settings.RandomizerSeed) + 1) / 2;
-                        newValue = MathUtils.Lerp(newValue, randomizerValue, settings.RandomizerStrength / 100.0f);
-                    }
+                    state.Value = newValue;
+                    return lastValue != newValue;
+                }
 
-                    if (state.SyncTime < SyncSettings.Duration)
-                        newValue = MathUtils.Lerp(!float.IsFinite(state.Value) ? axis.DefaultValue : state.Value, newValue, GetSyncProgress(state.SyncTime, SyncSettings.Duration));
+                bool UpdateMotionProvider(DeviceAxis axis, AxisState state, AxisSettings settings)
+                {
+                    if (state.InsideScript && !IsPlaying)
+                        return false;
+
+                    var lastValue = state.Value;
+                    var newValue = default(float);
+
+                    var motionProvider = settings.SelectedMotionProviderInstance;
+                    if (motionProvider == null)
+                        return false;
+
+                    motionProvider.Update();
+                    newValue = motionProvider.Value;
+                    if (state.InsideScript)
+                        newValue = MathUtils.Lerp(state.Value, newValue, MathUtils.Clamp01(settings.MotionProviderBlend / 100));
 
                     state.Value = newValue;
                     return lastValue != newValue;
@@ -263,14 +293,14 @@ namespace MultiFunPlayer.UI.Controls.ViewModels
 
             void UpdateSync()
             {
-                if (!IsPlaying)
-                    return;
-
                 var dirty = false;
                 foreach (var (axis, state) in AxisStates)
                 {
                     lock (state)
                     {
+                        if (state.InsideScript && !IsPlaying)
+                            continue;
+
                         if (state.SyncTime >= SyncSettings.Duration)
                             continue;
 
@@ -377,7 +407,7 @@ namespace MultiFunPlayer.UI.Controls.ViewModels
             foreach (var axis in DeviceAxis.All)
             {
                 var state = AxisStates[axis];
-                if (wasSeek || !state.Valid)
+                if (wasSeek || state.Invalid)
                     SearchForValidIndex(axis, state);
             }
         }
@@ -486,7 +516,6 @@ namespace MultiFunPlayer.UI.Controls.ViewModels
                 Logger.Debug("Linked {0} to {1}", axis.Name, model.Settings.LinkAxis.Name);
 
                 SetScript(axis, LinkedScriptFile.LinkTo(AxisModels[model.Settings.LinkAxis].Script));
-                model.Settings.RandomizerSeed = MathUtils.Random(short.MinValue, short.MaxValue);
                 updated.Add(axis);
             }
 
@@ -524,10 +553,10 @@ namespace MultiFunPlayer.UI.Controls.ViewModels
             ResetSync(true, axes);
 
             Logger.Debug("Reloading axes [Axes: {list}]", axes);
-            foreach (var group in axes.GroupBy(a => AxisModels[a].Settings.LinkAxisHasPriority))
+            foreach (var (enabled, items) in axes.GroupBy(a => AxisModels[a].Settings.LinkAxisHasPriority))
             {
-                var groupAxes = group.ToArray();
-                if (group.Key)
+                var groupAxes = items.ToArray();
+                if (enabled)
                 {
                     UpdateLinkScript(groupAxes);
                 }
@@ -880,19 +909,6 @@ namespace MultiFunPlayer.UI.Controls.ViewModels
         }
 
         [SuppressPropertyChangedWarnings]
-        public void OnRandomizerSliderValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
-        {
-            if (sender is not FrameworkElement element || element.DataContext is not KeyValuePair<DeviceAxis, AxisModel> pair)
-                return;
-
-            var (axis, model) = pair;
-            if (model.Settings.LinkAxis == null)
-                return;
-
-            ResetSync(true, axis);
-        }
-
-        [SuppressPropertyChangedWarnings]
         public void OnLinkAxisPriorityChanged(object sender, RoutedEventArgs e)
         {
             if (sender is not FrameworkElement element || element.DataContext is not KeyValuePair<DeviceAxis, AxisModel> pair)
@@ -1110,56 +1126,6 @@ namespace MultiFunPlayer.UI.Controls.ViewModels
             });
             #endregion
 
-            #region Axis::RandomizerStrength
-            s.RegisterAction<DeviceAxis, int>("Axis::RandomizerStrength::Offset", "Target axis", "Value offset", (_, axis, offset) =>
-            {
-                if (axis != null)
-                    AxisSettings[axis].RandomizerStrength = MathUtils.Clamp(AxisSettings[axis].RandomizerStrength + offset, 0, 100);
-            });
-
-            s.RegisterAction<DeviceAxis, int>("Axis::RandomizerStrength::Set", "Target axis", "Value", (_, axis, value) =>
-            {
-                if (axis != null)
-                    AxisSettings[axis].RandomizerStrength = MathUtils.Clamp(value, 0, 100);
-            });
-
-            s.RegisterAction<DeviceAxis>("Axis::RandomizerStrength::Drive", "Target axis", (gesture, axis) =>
-            {
-                if (gesture is not IAxisInputGesture axisGesture)
-                    return;
-                if (axis == null)
-                    return;
-
-                var offset = (int)Math.Round(axisGesture.Delta * 100);
-                AxisSettings[axis].RandomizerStrength = MathUtils.Clamp(AxisSettings[axis].RandomizerStrength + offset, 0, 100);
-            });
-            #endregion
-
-            #region Axis::RandomizerSpeed
-            s.RegisterAction<DeviceAxis, int>("Axis::RandomizerSpeed::Offset", "Target axis", "Value offset", (_, axis, offset) =>
-            {
-                if (axis != null)
-                    AxisSettings[axis].RandomizerSpeed = MathUtils.Clamp(AxisSettings[axis].RandomizerSpeed + offset, 0, 100);
-            });
-
-            s.RegisterAction<DeviceAxis, int>("Axis::RandomizerSpeed::Set", "Target axis", "Value", (_, axis, value) =>
-            {
-                if (axis != null)
-                    AxisSettings[axis].RandomizerSpeed = MathUtils.Clamp(value, 0, 100);
-            });
-
-            s.RegisterAction<DeviceAxis>("Axis::RandomizerSpeed::Drive", "Target axis", (gesture, axis) =>
-            {
-                if (gesture is not IAxisInputGesture axisGesture)
-                    return;
-                if (axis == null)
-                    return;
-
-                var offset = (int)Math.Round(axisGesture.Delta * 100);
-                AxisSettings[axis].RandomizerSpeed = MathUtils.Clamp(AxisSettings[axis].RandomizerSpeed + offset, 0, 100);
-            });
-            #endregion
-
             #region Axis::LinkAxis
             s.RegisterAction<DeviceAxis, DeviceAxis>("Axis::LinkAxis::Set", "Source axis", "Target axis", (_, source, target) =>
             {
@@ -1267,15 +1233,18 @@ namespace MultiFunPlayer.UI.Controls.ViewModels
         public bool Dirty { get; set; } = true;
         public float SyncTime { get; set; } = 0;
 
-        public bool Valid => Index != int.MinValue;
+        public bool Invalid => Index == int.MinValue;
+        public bool BeforeScript => Index == -1;
+        public bool AfterScript => Index == int.MaxValue;
+        public bool InsideScript => Index >= 0 && Index != int.MaxValue;
 
         public event PropertyChangedEventHandler PropertyChanged;
 
-        public void Invalidate() => Index = int.MinValue;
+        public void Invalidate(bool end = false) => Index = end ? int.MaxValue : int.MinValue;
 
         public void Notify()
         {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Valid)));
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(InsideScript)));
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Value)));
         }
     }
@@ -1290,12 +1259,20 @@ namespace MultiFunPlayer.UI.Controls.ViewModels
         [JsonProperty] public bool AutoHomeEnabled { get; set; } = false;
         [JsonProperty] public float AutoHomeDelay { get; set; } = 5;
         [JsonProperty] public float AutoHomeDuration { get; set; } = 3;
-        [JsonProperty] public int RandomizerSeed { get; set; } = 0;
-        [JsonProperty] public int RandomizerStrength { get; set; } = 0;
-        [JsonProperty] public int RandomizerSpeed { get; set; } = 0;
         [JsonProperty] public bool Inverted { get; set; } = false;
         [JsonProperty] public float Offset { get; set; } = 0;
         [JsonProperty] public bool Bypass { get; set; } = false;
+        [JsonProperty] public float MotionProviderBlend { get; set; } = 100;
+
+        [JsonProperty]
+        [AlsoNotifyFor(nameof(SelectedMotionProviderInstance))]
+        public string SelectedMotionProvider { get; set; } = null;
+
+        [AlsoNotifyFor(nameof(SelectedMotionProviderInstance))]
+        [JsonProperty(ItemTypeNameHandling = TypeNameHandling.Objects)]
+        public MotionProviderCollection MotionProviders { get; set; } = new MotionProviderCollection();
+
+        public IMotionProvider SelectedMotionProviderInstance => MotionProviders[SelectedMotionProvider];
     }
 
     [JsonObject(MemberSerialization.OptIn)]

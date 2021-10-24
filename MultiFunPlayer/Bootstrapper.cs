@@ -32,9 +32,8 @@ namespace MultiFunPlayer
         protected override void ConfigureIoC(IStyletIoCBuilder builder)
         {
             builder.Bind<ScriptViewModel>().And<IDeviceAxisValueProvider>().To<ScriptViewModel>().InSingletonScope();
-            builder.Bind<IVideoSource>().ToAllImplementations();
-            builder.Bind<IOutputTarget>().ToAllImplementations();
-
+            builder.Bind<IVideoSource>().ToAllImplementations().InSingletonScope();
+            builder.Bind<IOutputTarget>().ToAllImplementations().InSingletonScope();
             builder.Bind<IShortcutManager>().To<ShortcutManager>().InSingletonScope();
             builder.Bind<IInputProcessor>().ToAllImplementations().InSingletonScope();
 

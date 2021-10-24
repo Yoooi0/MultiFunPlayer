@@ -1,0 +1,40 @@
+﻿<UserControl x:Class="MultiFunPlayer.MotionProvider.Views.RandomMotionProviderView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:metro="http://metro.mahapps.com/winfx/xaml/controls"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             mc:Ignorable="d" 
+             d:DesignHeight="450" d:DesignWidth="800">
+    <StackPanel>
+        <DockPanel LastChildFill="True">
+            <TextBlock Text="Speed:"
+                       Margin="0 0 10 0"
+                       VerticalAlignment="Center"
+                       DockPanel.Dock="Left"/>
+
+            <metro:NumericUpDown Value="{Binding Speed}"
+                                 Style="{StaticResource MaterialDesignNumericUpDown}"
+                                 Minimum="0.01"
+                                 Interval="0.01"
+                                 StringFormat="P0"
+                                 Validation.ErrorTemplate="{x:Null}"
+                                 HideUpDownButtons="False"/>
+        </DockPanel>
+
+        <DockPanel LastChildFill="True">
+            <TextBlock Text="Seed:"
+                       Margin="0 0 10 0"
+                       VerticalAlignment="Center"
+                       DockPanel.Dock="Left"/>
+
+            <metro:NumericUpDown Value="{Binding Seed}"
+                                 Style="{StaticResource MaterialDesignNumericUpDown}"
+                                 Interval="1"
+                                 StringFormat="G"
+                                 Validation.ErrorTemplate="{x:Null}"
+                                 ParsingNumberStyle="Integer"
+                                 HideUpDownButtons="False"/>
+        </DockPanel>
+    </StackPanel>
+</UserControl>
