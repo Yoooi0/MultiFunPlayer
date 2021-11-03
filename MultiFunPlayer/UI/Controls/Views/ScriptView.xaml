@@ -605,98 +605,117 @@
                                             </ToggleButton>
                                         </StackPanel>
                                         <StackPanel Orientation="Horizontal" DockPanel.Dock="Left">
-                                            <Button Style="{StaticResource MaterialDesignToolBarButton}"
-                                                        Command="{s:Action OnAxisOpenFolder}"
-                                                        CommandParameter="{Binding Key}"
-                                                        IsEnabled="{Binding Value.Script, Converter={StaticResource InvertedNullableToBooleanConverter}}"
-                                                        ToolTipService.InitialShowDelay="0"
-                                                        ToolTipService.Placement="Top"
-                                                        ToolTip="Open script location"
-                                                        Padding="8">
-                                                <material:PackIcon Kind="FolderOpen" Width="19" Height="19"/>
-                                            </Button>
-                                            <Button Style="{StaticResource MaterialDesignToolBarButton}"
-                                                        Command="{s:Action OnAxisLoad}"
-                                                        CommandParameter="{Binding Key}"
-                                                        IsEnabled="{Binding DataContext.VideoFile, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}, Converter={StaticResource InvertedNullableToBooleanConverter}}"
-                                                        ToolTipService.InitialShowDelay="0"
-                                                        ToolTipService.Placement="Top"
-                                                        ToolTip="Load script"
-                                                        Padding="8">
-                                                <material:PackIcon Kind="FileDownload" Width="19" Height="19"/>
-                                            </Button>
-                                            <Button Style="{StaticResource MaterialDesignToolBarButton}"
-                                                        Command="{s:Action OnAxisClear}"
-                                                        CommandParameter="{Binding Key}"
-                                                        IsEnabled="{Binding Value.Script, Converter={StaticResource InvertedNullableToBooleanConverter}}"
-                                                        ToolTipService.InitialShowDelay="0"
-                                                        ToolTipService.Placement="Top"
-                                                        ToolTip="Clear script"
-                                                        Padding="8">
-                                                <material:PackIcon Kind="Close" Width="19" Height="19"/>
-                                            </Button>
-                                            <Button Style="{StaticResource MaterialDesignToolBarButton}"
-                                                        Command="{s:Action OnAxisReload}"
-                                                        CommandParameter="{Binding Key}"
-                                                        IsEnabled="{Binding DataContext.VideoFile, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}, Converter={StaticResource InvertedNullableToBooleanConverter}}"
-                                                        ToolTipService.InitialShowDelay="0"
-                                                        ToolTipService.Placement="Top"
-                                                        ToolTip="Reload script"
-                                                        Padding="8">
-                                                <material:PackIcon Kind="Reload" Width="19" Height="19"/>
-                                            </Button>
                                             <Menu>
-                                                <MenuItem Padding="0" 
+                                                <MenuItem Style="{StaticResource MaterialDesignToolBarMenuItem}"
+                                                          ToolTipService.InitialShowDelay="0"
+                                                          ToolTipService.Placement="Top"
+                                                          ToolTip="Script">
+                                                    <MenuItem.Icon>
+                                                        <material:PackIcon Kind="File" Width="19" Height="19"/>
+                                                    </MenuItem.Icon>
+                                                    
+                                                    <MenuItem Command="{s:Action OnAxisOpenFolder}"
+                                                              CommandParameter="{Binding Key}"
                                                               IsEnabled="{Binding Value.Script, Converter={StaticResource InvertedNullableToBooleanConverter}}"
-                                                              Height="35"
+                                                              Padding="8">
+                                                        <MenuItem.Header>
+                                                            <DockPanel LastChildFill="True">
+                                                                <Border Width="35" Height="35" DockPanel.Dock="Left">
+                                                                    <material:PackIcon Kind="FolderOpen" Width="16" Height="16"/>
+                                                                </Border>
+
+                                                                <TextBlock Text="Open folder" DockPanel.Dock="Right"/>
+                                                            </DockPanel>
+                                                        </MenuItem.Header>
+                                                    </MenuItem>
+                                                    <MenuItem Command="{s:Action OnAxisLoad}"
+                                                              CommandParameter="{Binding Key}"
+                                                              IsEnabled="{Binding DataContext.VideoFile, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}, Converter={StaticResource InvertedNullableToBooleanConverter}}"
+                                                              Padding="8">
+                                                        <MenuItem.Header>
+                                                            <DockPanel LastChildFill="True">
+                                                                <Border Width="35" Height="35" DockPanel.Dock="Left">
+                                                                    <material:PackIcon Kind="FileDownload" Width="16" Height="16"/>
+                                                                </Border>
+
+                                                                <TextBlock Text="Load" DockPanel.Dock="Right"/>
+                                                            </DockPanel>
+                                                        </MenuItem.Header>
+                                                    </MenuItem>
+                                                    <MenuItem Command="{s:Action OnAxisClear}"
+                                                              CommandParameter="{Binding Key}"
+                                                              IsEnabled="{Binding Value.Script, Converter={StaticResource InvertedNullableToBooleanConverter}}"
+                                                              Padding="8">
+                                                        <MenuItem.Header>
+                                                            <DockPanel LastChildFill="True">
+                                                                <Border Width="35" Height="35" DockPanel.Dock="Left">
+                                                                    <material:PackIcon Kind="Close" Width="16" Height="16"/>
+                                                                </Border>
+
+                                                                <TextBlock Text="Clear" DockPanel.Dock="Right"/>
+                                                            </DockPanel>
+                                                        </MenuItem.Header>
+                                                    </MenuItem>
+                                                    <MenuItem Command="{s:Action OnAxisReload}"
+                                                              CommandParameter="{Binding Key}"
+                                                              IsEnabled="{Binding DataContext.VideoFile, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}, Converter={StaticResource InvertedNullableToBooleanConverter}}"
+                                                              Padding="8">
+                                                        <MenuItem.Header>
+                                                            <DockPanel LastChildFill="True">
+                                                                <Border Width="35" Height="35" DockPanel.Dock="Left">
+                                                                    <material:PackIcon Kind="Reload" Width="16" Height="16"/>
+                                                                </Border>
+
+                                                                <TextBlock Text="Reload" DockPanel.Dock="Right"/>
+                                                            </DockPanel>
+                                                        </MenuItem.Header>
+                                                    </MenuItem>
+
+                                                    <MenuItem IsEnabled="{Binding Value.Script, Converter={StaticResource InvertedNullableToBooleanConverter}}"
                                                               Background="{StaticResource MaterialDesignToolBarBackground}"
-                                                              ToolTipService.InitialShowDelay="0"
-                                                              ToolTipService.Placement="Top"
-                                                              ToolTip="Move script">
-                                                    <MenuItem.Header>
-                                                        <Grid Width="35">
-                                                            <Grid.RowDefinitions>
-                                                                <RowDefinition Height="35"/>
-                                                            </Grid.RowDefinitions>
-                                                            <material:PackIcon Grid.Row="0"
-                                                                                   Kind="FileMove"
-                                                                                   Foreground="{DynamicResource MaterialDesignBody}" 
-                                                                                   Width="19" 
-                                                                                   Height="19" 
-                                                                                   HorizontalAlignment="Center"
-                                                                                   VerticalAlignment="Center"/>
-                                                        </Grid>
-                                                    </MenuItem.Header>
-                                                    <MenuItem Header="_Video location" 
+                                                              Padding="8">
+                                                        <MenuItem.Header>
+                                                            <DockPanel LastChildFill="True">
+                                                                <Border Width="35" Height="35" DockPanel.Dock="Left">
+                                                                    <material:PackIcon Kind="FileMove" Width="16" Height="16"/>
+                                                                </Border>
+
+                                                                <TextBlock Text="Move" DockPanel.Dock="Right"/>
+                                                            </DockPanel>
+                                                        </MenuItem.Header>
+                                                        
+                                                        <MenuItem Header="_Video location" 
                                                                   Command="{s:Action OnAxisMoveToVideo}"
                                                                   CommandParameter="{Binding Key}"
                                                                   IsEnabled="{Binding DataContext.VideoFile, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}, Converter={StaticResource InvertedNullableToBooleanConverter}}"/>
-                                                    <MenuItem Header="_Library location" 
+                                                        
+                                                        <MenuItem Header="_Library location" 
                                                                   ItemsSource="{Binding DataContext.ScriptLibraries, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}">
-                                                        <MenuItem.Resources>
-                                                            <Style TargetType="{x:Type MenuItem}" BasedOn="{StaticResource MaterialDesignMenuItem}">
-                                                                <Style.Triggers>
-                                                                    <DataTrigger Binding="{Binding DataContext.ScriptLibraries.Count, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}"
+                                                            <MenuItem.Resources>
+                                                                <Style TargetType="{x:Type MenuItem}" BasedOn="{StaticResource MaterialDesignMenuItem}">
+                                                                    <Style.Triggers>
+                                                                        <DataTrigger Binding="{Binding DataContext.ScriptLibraries.Count, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}"
                                                                                      Value="0">
-                                                                        <Setter Property="IsEnabled" Value="False"/>
-                                                                    </DataTrigger>
-                                                                </Style.Triggers>
-                                                            </Style>
-                                                        </MenuItem.Resources>
-                                                        <MenuItem.ItemContainerStyle>
-                                                            <Style TargetType="{x:Type MenuItem}" BasedOn="{StaticResource MaterialDesignMenuItem}">
-                                                                <Setter Property="Header" Value="{Binding Directory}"/>
-                                                                <Setter Property="Command" Value="{Binding DataContext.OnAxisMoveToLibraryCommand, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}"/>
-                                                                <Setter Property="CommandParameter">
-                                                                    <Setter.Value>
-                                                                        <MultiBinding Converter="{StaticResource MultiObjectToArrayConverter}">
-                                                                            <Binding Path="DataContext.Key" RelativeSource="{RelativeSource FindAncestor, AncestorType={x:Type Menu}}"/>
-                                                                            <Binding/>
-                                                                        </MultiBinding>
-                                                                    </Setter.Value>
-                                                                </Setter>
-                                                            </Style>
-                                                        </MenuItem.ItemContainerStyle>
+                                                                            <Setter Property="IsEnabled" Value="False"/>
+                                                                        </DataTrigger>
+                                                                    </Style.Triggers>
+                                                                </Style>
+                                                            </MenuItem.Resources>
+                                                            <MenuItem.ItemContainerStyle>
+                                                                <Style TargetType="{x:Type MenuItem}" BasedOn="{StaticResource MaterialDesignMenuItem}">
+                                                                    <Setter Property="Header" Value="{Binding Directory}"/>
+                                                                    <Setter Property="Command" Value="{Binding DataContext.OnAxisMoveToLibraryCommand, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}"/>
+                                                                    <Setter Property="CommandParameter">
+                                                                        <Setter.Value>
+                                                                            <MultiBinding Converter="{StaticResource MultiObjectToArrayConverter}">
+                                                                                <Binding Path="DataContext.Key" RelativeSource="{RelativeSource FindAncestor, AncestorType={x:Type Menu}}"/>
+                                                                                <Binding/>
+                                                                            </MultiBinding>
+                                                                        </Setter.Value>
+                                                                    </Setter>
+                                                                </Style>
+                                                            </MenuItem.ItemContainerStyle>
+                                                        </MenuItem>
                                                     </MenuItem>
                                                 </MenuItem>
                                             </Menu>
