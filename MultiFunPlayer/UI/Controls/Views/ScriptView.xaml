@@ -309,6 +309,162 @@
                             </Button.CommandParameter>
                             <material:PackIcon Kind="FolderSearch" Height="19" Width="19"/>
                         </Button>
+
+                        <Button Style="{StaticResource MaterialDesignToolBarButton}"
+                                    ToolTip="Video path modifiers" 
+                                    ToolTipService.InitialShowDelay="0" 
+                                    ToolTipService.Placement="Top" 
+                                    Padding="8"
+                                    Command="{x:Static material:DialogHost.OpenDialogCommand}">
+                            <Button.CommandParameter>
+                                <material:DialogHost Identifier="MediaPathModifierDialog">
+                                    <Grid Margin="20" Width="500" MaxHeight="400"
+                                              s:View.ActionTarget="{Binding}">
+                                        <Button DockPanel.Dock="Top"
+                                                    Style="{StaticResource MaterialDesignFlatButton}"
+                                                    material:RippleAssist.Feedback="Black"
+                                                    Foreground="Black"
+                                                    Height="24"
+                                                    Width="24"
+                                                    Padding="0"
+                                                    HorizontalAlignment="Right"
+                                                    VerticalAlignment="Top"
+                                                    Margin="0 -15 -15 0"
+                                                    Command="{x:Static material:DialogHost.CloseDialogCommand}">
+                                            <material:PackIcon Kind="Close" 
+                                                               Height="20" 
+                                                               Width="20"/>
+                                        </Button>
+                                        <DockPanel LastChildFill="True">
+                                            <TextBlock Text="Video path modifiers:"
+                                                           DockPanel.Dock="Top"
+                                                           FontSize="16"
+                                                           FontWeight="Bold"
+                                                           Margin="0 0 0 10"/>
+
+                                            <material:PopupBox Style="{StaticResource MaterialDesignMultiFloatingActionLightPopupBox}"
+                                                               Width="32"
+                                                               Height="32"
+                                                               DockPanel.Dock="Bottom"
+                                                               HorizontalAlignment="Center">
+
+                                                <material:PopupBox.ToggleContent>
+                                                    <material:PackIcon Kind="Plus" 
+                                                                       Width="22" 
+                                                                       Height="22" 
+                                                                       HorizontalAlignment="Center" 
+                                                                       VerticalAlignment="Center"/>
+                                                </material:PopupBox.ToggleContent>
+
+                                                <material:Card>
+                                                    <ItemsControl ItemsSource="{Binding VideoPathModifierTypes}"
+                                                                  Margin="10">
+                                                        <ItemsControl.ItemsPanel>
+                                                            <ItemsPanelTemplate>
+                                                                <VirtualizingStackPanel/>
+                                                            </ItemsPanelTemplate>
+                                                        </ItemsControl.ItemsPanel>
+
+                                                        <ItemsControl.ItemTemplate>
+                                                            <DataTemplate>
+                                                                <Button Style="{StaticResource MaterialDesignRaisedLightButton}"
+                                                                        Click="{s:Action OnVideoPathModifierAdd}"
+                                                                        Content="{Binding Key}"
+                                                                        Margin="5"
+                                                                        Padding="10 0 10 0"
+                                                                        Height="20"/>
+                                                            </DataTemplate>
+                                                        </ItemsControl.ItemTemplate>
+                                                    </ItemsControl>
+                                                </material:Card>
+                                            </material:PopupBox>
+
+                                            <material:Card material:ShadowAssist.ShadowDepth="Depth1" Margin="0 0 0 10">
+                                                <ItemsControl DockPanel.Dock="Bottom"
+                                                              ItemsSource="{Binding VideoPathModifiers}">
+                                                    <ItemsControl.Template>
+                                                        <ControlTemplate>
+                                                            <ScrollViewer VerticalScrollBarVisibility="Visible" 
+                                                                          HorizontalScrollBarVisibility="Disabled">
+                                                                <ItemsPresenter/>
+                                                            </ScrollViewer>
+                                                        </ControlTemplate>
+                                                    </ItemsControl.Template>
+                                                    <ItemsControl.ItemTemplate>
+                                                        <DataTemplate>
+                                                            <Border Padding="5" Background="{StaticResource MaterialDesignLightBackground}">
+                                                                <DockPanel LastChildFill="True" Margin="5 0 0 0">
+                                                                    <Button DockPanel.Dock="Right"   
+                                                                                Style="{StaticResource MaterialDesignFlatButton}"
+                                                                                ToolTip="Remove"
+                                                                                ToolTipService.InitialShowDelay="0"
+                                                                                ToolTipService.Placement="Top"
+                                                                                material:RippleAssist.Feedback="Red"
+                                                                                Foreground="Red"
+                                                                                Height="24" 
+                                                                                Width="24" 
+                                                                                Padding="0"
+                                                                                Click="{s:Action OnVideoPathModifierRemove}" >
+                                                                        <material:PackIcon Kind="Delete"/>
+                                                                    </Button>
+
+                                                                    <Button DockPanel.Dock="Right"   
+                                                                        Style="{StaticResource MaterialDesignFlatButton}"
+                                                                        Click="{s:Action OnVideoPathModifierConfigure}"
+                                                                        ToolTip="Configure"
+                                                                        ToolTipService.InitialShowDelay="0"
+                                                                        ToolTipService.Placement="Top"
+                                                                        Height="24" 
+                                                                        Width="24" 
+                                                                        Padding="0">
+                                                                        <material:PackIcon Kind="Wrench" Width="14" Height="14"/>
+                                                                    </Button>
+
+                                                                    <TextBlock Text="{Binding Name, StringFormat={}{0}:}"
+                                                                           Margin="0 0 10 0"
+                                                                           FontWeight="Bold"
+                                                                           DockPanel.Dock="Left"
+                                                                           VerticalAlignment="Center"/>
+                                                                    <TextBlock Text="{Binding Description}"
+                                                                           DockPanel.Dock="Left"
+                                                                           VerticalAlignment="Center"/>
+                                                                </DockPanel>
+                                                            </Border>
+                                                        </DataTemplate>
+                                                    </ItemsControl.ItemTemplate>
+                                                </ItemsControl>
+                                            </material:Card>
+                                        </DockPanel>
+                                    </Grid>
+
+                                    <material:DialogHost.DialogContentTemplate>
+                                        <DataTemplate>
+                                            <DockPanel Margin="20" Width="475">
+                                                <Button DockPanel.Dock="Top"
+                                                    Style="{StaticResource MaterialDesignFlatButton}"
+                                                    material:RippleAssist.Feedback="Black"
+                                                    Foreground="Black"
+                                                    Height="24"
+                                                    Width="24"
+                                                    Padding="0"
+                                                    HorizontalAlignment="Right"
+                                                    VerticalAlignment="Top"
+                                                    Margin="0 -15 -15 0"
+                                                    Command="{x:Static material:DialogHost.CloseDialogCommand}">
+                                                    <material:PackIcon Kind="Close" 
+                                                                       Height="20" 
+                                                                       Width="20"/>
+                                                </Button>
+
+                                                <ContentControl s:View.Model="{Binding}"
+                                                                DockPanel.Dock="Bottom"/>
+                                            </DockPanel>
+                                        </DataTemplate>
+                                    </material:DialogHost.DialogContentTemplate>
+                                </material:DialogHost>
+                            </Button.CommandParameter>
+                            <material:PackIcon Kind="FileReplaceOutline" Height="19" Width="19"/>
+                        </Button>
                     </StackPanel>
                 </DockPanel>
                 <StackPanel Margin="20 15 20 15"

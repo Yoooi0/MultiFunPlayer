@@ -8,6 +8,7 @@ using MultiFunPlayer.Settings.Converters;
 using MultiFunPlayer.UI;
 using MultiFunPlayer.UI.Controls.ViewModels;
 using MultiFunPlayer.VideoSource;
+using MultiFunPlayer.VideoSource.MediaResource;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;
@@ -32,6 +33,8 @@ namespace MultiFunPlayer
         protected override void ConfigureIoC(IStyletIoCBuilder builder)
         {
             builder.Bind<ScriptViewModel>().And<IDeviceAxisValueProvider>().To<ScriptViewModel>().InSingletonScope();
+            builder.Bind<IMediaResourceFactory>().To<MediaResourceFactory>().InSingletonScope();
+
             builder.Bind<IVideoSource>().ToAllImplementations().InSingletonScope();
             builder.Bind<IOutputTarget>().ToAllImplementations().InSingletonScope();
             builder.Bind<IShortcutManager>().To<ShortcutManager>().InSingletonScope();
@@ -104,6 +107,7 @@ namespace MultiFunPlayer
                 settings.Converters.Add(new LogLevelConverter());
                 settings.Converters.Add(new FileSystemInfoConverter());
                 settings.Converters.Add(new StringEnumConverter());
+                settings.Converters.Add(new IPEndPointConverter());
                 settings.Converters.Add(new DeviceAxisConverter());
                 settings.Converters.Add(new ShortcutActionDescriptorConverter());
                 settings.Error += (s, e) =>

@@ -326,7 +326,7 @@ namespace MultiFunPlayer.OutputTarget.ViewModels
             }
             else if (type == AppSettingsMessageType.Loading)
             {
-                if (settings.TryGetValue<string>(nameof(Endpoint), out var endpointString) && IPEndPoint.TryParse(endpointString, out var endpoint))
+                if (settings.TryGetValue<IPEndPoint>(nameof(Endpoint), out var endpoint))
                     Endpoint = endpoint;
 
                 if (settings.TryGetValue<List<ButtplugClientDeviceSettings>>(nameof(DeviceSettings), out var deviceSettings))

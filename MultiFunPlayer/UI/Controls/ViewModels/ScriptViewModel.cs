@@ -22,25 +22,26 @@ using System.Runtime.CompilerServices;
 using System.Windows.Controls.Primitives;
 using MultiFunPlayer.Input;
 using MultiFunPlayer.MotionProvider;
-using StyletIoC;
-using System.Runtime.Serialization;
+using MultiFunPlayer.VideoSource.MediaResource;
+using MaterialDesignThemes.Wpf;
+using System.Threading.Tasks;
+using System.Reflection;
 
 namespace MultiFunPlayer.UI.Controls.ViewModels
 {
+    [JsonObject(MemberSerialization = MemberSerialization.OptIn)]
     public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         IHandle<VideoPositionMessage>, IHandle<VideoPlayingMessage>, IHandle<VideoFileChangedMessage>, IHandle<VideoDurationMessage>, IHandle<VideoSpeedMessage>, IHandle<AppSettingsMessage>
     {
         protected Logger Logger = LogManager.GetCurrentClassLogger();
 
         private readonly IEventAggregator _eventAggregator;
+        private readonly IMediaResourceFactory _mediaResourceFactory;
         private Thread _updateThread;
         private CancellationTokenSource _cancellationSource;
         private float _playbackSpeedCorrection;
 
         public bool IsPlaying { get; set; }
-        public bool ValuesContentVisible { get; set; }
-        public bool VideoContentVisible { get; set; } = true;
-        public bool AxisContentVisible { get; set; } = false;
         public float CurrentPosition { get; set; }
         public float PlaybackSpeed { get; set; }
         public float VideoDuration { get; set; }
@@ -48,25 +49,40 @@ namespace MultiFunPlayer.UI.Controls.ViewModels
 
         public ObservableConcurrentDictionary<DeviceAxis, AxisModel> AxisModels { get; set; }
         public ObservableConcurrentDictionaryView<DeviceAxis, AxisModel, AxisState> AxisStates { get; }
-        public ObservableConcurrentDictionaryView<DeviceAxis, AxisModel, AxisSettings> AxisSettings { get; }
         public ObservableConcurrentDictionaryView<DeviceAxis, AxisModel, KeyframeCollection> AxisKeyframes { get; }
 
-        public BindableCollection<ScriptLibrary> ScriptLibraries { get; }
-        public SyncSettings SyncSettings { get; set; }
+        public Dictionary<string, Type> VideoPathModifierTypes { get; }
 
-        public VideoFileInfo VideoFile { get; set; }
-        public bool HeatmapShowStrokeLength { get; set; }
-        public int HeatmapBucketCount { get; set; } = 333;
+        public MediaResourceInfo VideoFile { get; set; }
+
+        [JsonProperty] public bool ValuesContentVisible { get; set; }
+        [JsonProperty] public bool VideoContentVisible { get; set; } = true;
+        [JsonProperty] public bool AxisContentVisible { get; set; } = false;
+        [JsonProperty] public ObservableConcurrentDictionaryView<DeviceAxis, AxisModel, AxisSettings> AxisSettings { get; }
+        [JsonProperty(ItemTypeNameHandling = TypeNameHandling.Objects)] public BindableCollection<IMediaPathModifier> VideoPathModifiers => _mediaResourceFactory.PathModifiers;
+        [JsonProperty] public BindableCollection<ScriptLibrary> ScriptLibraries { get; }
+        [JsonProperty] public SyncSettings SyncSettings { get; set; }
+        [JsonProperty] public bool HeatmapShowStrokeLength { get; set; }
+        [JsonProperty] public int HeatmapBucketCount { get; set; } = 333;
 
         public bool IsSyncing => AxisStates.Values.Any(s => s.SyncTime < SyncSettings.Duration);
         public float SyncProgress => !IsSyncing ? 100 : GetSyncProgress(AxisStates.Values.Min(s => s.SyncTime), SyncSettings.Duration) * 100;
 
-        public ScriptViewModel(IShortcutManager shortcutManager, IEventAggregator eventAggregator)
+        public ScriptViewModel(IShortcutManager shortcutManager, IMediaResourceFactory mediaResourceFactory, IEventAggregator eventAggregator)
         {
             _eventAggregator = eventAggregator;
             _eventAggregator.Subscribe(this);
 
+            _mediaResourceFactory = mediaResourceFactory;
+
             AxisModels = new ObservableConcurrentDictionary<DeviceAxis, AxisModel>(DeviceAxis.All.ToDictionary(a => a, _ => new AxisModel()));
+            VideoPathModifierTypes = Assembly.GetExecutingAssembly()
+                                             .GetTypes()
+                                             .Where(t => t.IsClass && !t.IsAbstract)
+                                             .Where(t => typeof(IMediaPathModifier).IsAssignableFrom(t))
+                                             .Select(t => (IMediaPathModifier)Activator.CreateInstance(t))
+                                             .ToDictionary(i => i.Name, i => i.GetType());
+
             ScriptLibraries = new BindableCollection<ScriptLibrary>();
             SyncSettings = new SyncSettings();
 
@@ -82,8 +98,8 @@ namespace MultiFunPlayer.UI.Controls.ViewModels
             AxisStates = AxisModels.CreateView(model => model.State);
             AxisSettings = AxisModels.CreateView(model => model.Settings);
             AxisKeyframes = AxisModels.CreateView(model => model.Script?.Keyframes, "Script");
-            _cancellationSource = new CancellationTokenSource();
 
+            _cancellationSource = new CancellationTokenSource();
             _updateThread = new Thread(() => UpdateThread(_cancellationSource.Token)) { IsBackground = true };
             _updateThread.Start();
 
@@ -320,16 +336,17 @@ namespace MultiFunPlayer.UI.Controls.ViewModels
         #region Events
         public void Handle(VideoFileChangedMessage message)
         {
-            if (VideoFile == null && message.VideoFile == null)
+            var resource = _mediaResourceFactory.CreateFromPath(message.Path);
+            if (VideoFile == null && resource == null)
                 return;
-            if (VideoFile != null && message.VideoFile != null)
-                if (string.Equals(VideoFile.Name, message.VideoFile.Name, StringComparison.OrdinalIgnoreCase)
-                 && string.Equals(VideoFile.Source, message.VideoFile.Source, StringComparison.OrdinalIgnoreCase))
+            if (VideoFile != null && resource != null)
+                if (string.Equals(VideoFile.Name, resource.Name, StringComparison.OrdinalIgnoreCase)
+                 && string.Equals(VideoFile.Source, resource.Source, StringComparison.OrdinalIgnoreCase))
                     return;
 
-            Logger.Info("Received VideoFileChangedMessage [Source: \"{0}\" Name: \"{1}\"]", message.VideoFile?.Source, message.VideoFile?.Name);
+            Logger.Info("Received VideoFileChangedMessage [Source: \"{0}\" Name: \"{1}\"]", resource?.Source, resource?.Name);
 
-            VideoFile = message.VideoFile;
+            VideoFile = resource;
             if (SyncSettings.SyncOnVideoFileChanged)
                 ResetSync(isSyncing: VideoFile != null);
 
@@ -416,17 +433,7 @@ namespace MultiFunPlayer.UI.Controls.ViewModels
         {
             if (message.Type == AppSettingsMessageType.Saving)
             {
-                message.Settings["Script"] = new JObject
-                {
-                    { nameof(AxisSettings), JObject.FromObject(AxisSettings) },
-                    { nameof(ScriptLibraries), JArray.FromObject(ScriptLibraries) },
-                    { nameof(ValuesContentVisible), JToken.FromObject(ValuesContentVisible) },
-                    { nameof(VideoContentVisible), JToken.FromObject(VideoContentVisible) },
-                    { nameof(AxisContentVisible), JToken.FromObject(AxisContentVisible) },
-                    { nameof(SyncSettings), JObject.FromObject(SyncSettings) },
-                    { nameof(HeatmapBucketCount), JToken.FromObject(HeatmapBucketCount) },
-                    { nameof(HeatmapShowStrokeLength), JToken.FromObject(HeatmapShowStrokeLength) }
-                };
+                message.Settings["Script"] = JObject.FromObject(this);
             }
             else if (message.Type == AppSettingsMessageType.Loading)
             {
@@ -444,29 +451,25 @@ namespace MultiFunPlayer.UI.Controls.ViewModels
                     }
                 }
 
+                if (settings.TryGetValue<List<IMediaPathModifier>>(nameof(VideoPathModifiers), new JsonSerializerSettings() { TypeNameHandling = TypeNameHandling.Objects }, out var videoPathModifiers))
+                {
+                    foreach (var modifier in videoPathModifiers)
+                        VideoPathModifiers.Add(modifier);
+                }
+
                 if (settings.TryGetValue<List<ScriptLibrary>>(nameof(ScriptLibraries), out var scriptDirectories))
                 {
                     foreach (var library in scriptDirectories)
                         ScriptLibraries.Add(library);
                 }
 
-                if (settings.TryGetValue<bool>(nameof(ValuesContentVisible), out var valuesContentVisible))
-                    ValuesContentVisible = valuesContentVisible;
+                if (settings.TryGetValue<bool>(nameof(ValuesContentVisible), out var valuesContentVisible)) ValuesContentVisible = valuesContentVisible;
+                if (settings.TryGetValue<bool>(nameof(VideoContentVisible), out var videoContentVisible)) VideoContentVisible = videoContentVisible;
+                if (settings.TryGetValue<bool>(nameof(AxisContentVisible), out var axisContentVisible)) AxisContentVisible = axisContentVisible;
+                if (settings.TryGetValue<int>(nameof(HeatmapBucketCount), out var heatmapBucketCount)) HeatmapBucketCount = heatmapBucketCount;
+                if (settings.TryGetValue<bool>(nameof(HeatmapShowStrokeLength), out var heatmapShowStrokeLength)) HeatmapShowStrokeLength = heatmapShowStrokeLength;
 
-                if (settings.TryGetValue<bool>(nameof(VideoContentVisible), out var videoContentVisible))
-                    VideoContentVisible = videoContentVisible;
-
-                if (settings.TryGetValue<bool>(nameof(AxisContentVisible), out var axisContentVisible))
-                    AxisContentVisible = axisContentVisible;
-
-                if (settings.TryGetValue<int>(nameof(HeatmapBucketCount), out var heatmapBucketCount))
-                    HeatmapBucketCount = heatmapBucketCount;
-
-                if (settings.TryGetValue<bool>(nameof(HeatmapShowStrokeLength), out var heatmapShowStrokeLength))
-                    HeatmapShowStrokeLength = heatmapShowStrokeLength;
-
-                if (settings.TryGetValue(nameof(SyncSettings), out var syncSettingsToken))
-                    syncSettingsToken.Populate(SyncSettings);
+                if (settings.TryGetValue(nameof(SyncSettings), out var syncSettingsToken)) syncSettingsToken.Populate(SyncSettings);
             }
         }
         #endregion
@@ -962,6 +965,34 @@ namespace MultiFunPlayer.UI.Controls.ViewModels
         }
         #endregion
 
+        #region MediaResource
+        public async void OnVideoPathModifierConfigure(object sender, RoutedEventArgs e)
+        {
+            if (sender is not FrameworkElement element || element.DataContext is not IMediaPathModifier modifier)
+                return;
+
+            _ = await DialogHost.Show(modifier, "MediaPathModifierDialog").ConfigureAwait(true);
+        }
+
+        public void OnVideoPathModifierAdd(object sender, RoutedEventArgs e)
+        {
+            if (sender is not FrameworkElement element || element.DataContext is not KeyValuePair<string, Type> pair)
+                return;
+
+            var (_, type) = pair;
+            var modifier = (IMediaPathModifier)Activator.CreateInstance(type);
+            VideoPathModifiers.Add(modifier);
+        }
+
+        public void OnVideoPathModifierRemove(object sender, RoutedEventArgs e)
+        {
+            if (sender is not FrameworkElement element || element.DataContext is not IMediaPathModifier modifier)
+                return;
+
+            VideoPathModifiers.Remove(modifier);
+        }
+        #endregion
+
         #region ScriptLibrary
         public void OnLibraryAdd(object sender, RoutedEventArgs e)
         {
@@ -1295,17 +1326,6 @@ namespace MultiFunPlayer.UI.Controls.ViewModels
         [JsonProperty] public DirectoryInfo Directory { get; }
         [JsonProperty] public bool Recursive { get; set; }
 
-        public IEnumerable<FileInfo> EnumerateFiles(string searchPattern)
-        {
-            try
-            {
-                Directory.Refresh();
-                if (Directory.Exists)
-                    return Directory.EnumerateFiles(searchPattern, Recursive ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly);
-            }
-            catch { }
-
-            return Enumerable.Empty<FileInfo>();
-        }
+        public IEnumerable<FileInfo> EnumerateFiles(string searchPattern) => Directory.SafeEnumerateFiles(searchPattern);
     }
 }

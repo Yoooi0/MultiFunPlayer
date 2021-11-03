@@ -23,8 +23,10 @@ namespace MultiFunPlayer.Common
 
     public static class JsonExtensions
     {
-        public static bool TryToObject<T>(this JToken token, out T value) => TryToObject(token, null, out value);
-        public static bool TryToObject<T>(this JToken token, JsonSerializer serializer, out T value)
+        public static bool TryToObject<T>(this JToken token, out T value) => TryToObject(token, null, null, out value);
+        public static bool TryToObject<T>(this JToken token, JsonSerializer serializer, out T value) => TryToObject(token, serializer, null, out value);
+        public static bool TryToObject<T>(this JToken token, JsonSerializerSettings settings, out T value) => TryToObject(token, null, settings, out value);
+        public static bool TryToObject<T>(this JToken token, JsonSerializer serializer, JsonSerializerSettings settings, out T value)
         {
             value = default;
 
@@ -33,7 +35,7 @@ namespace MultiFunPlayer.Common
                 if (token.Type == JTokenType.Null)
                     return false;
 
-                serializer ??= JsonSerializer.CreateDefault();
+                serializer ??= JsonSerializer.CreateDefault(settings);
                 value = token.ToObject<T>(serializer);
                 return value != null;
             }
@@ -43,11 +45,13 @@ namespace MultiFunPlayer.Common
             }
         }
 
-        public static bool TryGetValue<T>(this JObject o, string propertyName, out T value) => TryGetValue(o, propertyName, null, out value);
-        public static bool TryGetValue<T>(this JObject o, string propertyName, JsonSerializer serializer, out T value)
+        public static bool TryGetValue<T>(this JObject o, string propertyName, out T value) => TryGetValue(o, propertyName, null, null, out value);
+        public static bool TryGetValue<T>(this JObject o, string propertyName, JsonSerializer serializer, out T value) => TryGetValue(o, propertyName, serializer, null, out value);
+        public static bool TryGetValue<T>(this JObject o, string propertyName, JsonSerializerSettings settings, out T value) => TryGetValue(o, propertyName, null, settings, out value);
+        public static bool TryGetValue<T>(this JObject o, string propertyName, JsonSerializer serializer, JsonSerializerSettings settings, out T value)
         {
             value = default;
-            return o.TryGetValue(propertyName, out var token) && token.TryToObject(serializer, out value);
+            return o.TryGetValue(propertyName, out var token) && token.TryToObject(serializer, settings, out value);
         }
 
         public static bool EnsureContainsObjects(this JToken token, params string[] propertyNames)
@@ -136,6 +140,30 @@ namespace MultiFunPlayer.Common
             info.Refresh();
             return info;
         }
+
+        private static IEnumerable<T> GuardEnumerate<T>(DirectoryInfo directory, Func<DirectoryInfo, IEnumerable<T>> action) where T : FileSystemInfo
+        {
+            try
+            {
+                directory.Refresh();
+                if (!directory.Exists)
+                    return action.Invoke(directory);
+            } catch { }
+
+            return Enumerable.Empty<T>();
+        }
+
+        public static IEnumerable<DirectoryInfo> SafeEnumerateDirectories(this DirectoryInfo directory) => GuardEnumerate(directory, d => d.EnumerateDirectories());
+        public static IEnumerable<DirectoryInfo> SafeEnumerateDirectories(this DirectoryInfo directory, string searchPattern) => GuardEnumerate(directory, d => d.EnumerateDirectories(searchPattern));
+        public static IEnumerable<DirectoryInfo> SafeEnumerateDirectories(this DirectoryInfo directory, string searchPattern, SearchOption searchOption) => GuardEnumerate(directory, d => d.EnumerateDirectories(searchPattern, searchOption));
+
+        public static IEnumerable<FileInfo> SafeEnumerateFiles(this DirectoryInfo directory) => GuardEnumerate(directory, d => d.EnumerateFiles());
+        public static IEnumerable<FileInfo> SafeEnumerateFiles(this DirectoryInfo directory, string searchPattern) => GuardEnumerate(directory, d => d.EnumerateFiles(searchPattern));
+        public static IEnumerable<FileInfo> SafeEnumerateFiles(this DirectoryInfo directory, string searchPattern, SearchOption searchOption) => GuardEnumerate(directory, d => d.EnumerateFiles(searchPattern, searchOption));
+
+        public static IEnumerable<FileSystemInfo> SafeEnumerateFileSystemInfos(this DirectoryInfo directory) => GuardEnumerate(directory, d => d.EnumerateFileSystemInfos());
+        public static IEnumerable<FileSystemInfo> SafeEnumerateFileSystemInfos(this DirectoryInfo directory, string searchPattern) => GuardEnumerate(directory, d => d.EnumerateFileSystemInfos(searchPattern));
+        public static IEnumerable<FileSystemInfo> SafeEnumerateFileSystemInfos(this DirectoryInfo directory, string searchPattern, SearchOption searchOption) => GuardEnumerate(directory, d => d.EnumerateFileSystemInfos(searchPattern, searchOption));
     }
 
     public static class CollectionExtensions
