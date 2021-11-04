@@ -69,7 +69,7 @@ namespace MultiFunPlayer.VideoSource.MediaResource.Modifier.ViewModels
                 else
                 {
                     var replaced = path.Replace(Find, Replace, MatchCase ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase);
-                    if (!string.Equals(path, Replace, StringComparison.Ordinal))
+                    if (string.Equals(replaced, path, StringComparison.Ordinal))
                         return false;
 
                     path = replaced;
