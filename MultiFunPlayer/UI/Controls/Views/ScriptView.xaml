@@ -18,6 +18,7 @@
         <converters:NullableToBooleanConverter x:Key="NullableToBooleanConverter"/>
         <converters:InvertedNullableToBooleanConverter x:Key="InvertedNullableToBooleanConverter"/>
         <converters:MultiObjectToArrayConverter x:Key="MultiObjectToArrayConverter"/>
+        <converters:MultiBooleanToBooleanAndConverter x:Key="MultiBooleanToBooleanAndConverter"/>
         <material:NullableToVisibilityConverter x:Key="NullableToVisibilityConverter"/>
     </UserControl.Resources>
     <StackPanel Margin="0 0 0 20">
@@ -199,7 +200,7 @@
                                 Orientation="Horizontal">
                         <Button Click="{s:Action OnOpenVideoLocation}" 
                                     Style="{StaticResource MaterialDesignToolBarButton}"
-                                    IsEnabled="{Binding CanOpenVideoLocation}"
+                                    IsEnabled="{Binding VideoFile, Converter={StaticResource notNullBooleanConverter}}"
                                     ToolTip="Open video location" 
                                     ToolTipService.InitialShowDelay="0" 
                                     ToolTipService.Placement="Top" 
@@ -465,6 +466,26 @@
                             </Button.CommandParameter>
                             <material:PackIcon Kind="FileReplaceOutline" Height="19" Width="19"/>
                         </Button>
+
+
+                        <Button Style="{StaticResource MaterialDesignToolBarButton}"
+                                Click="{s:Action OnMapCurrentVideoPathToFile}"
+                                ToolTip="Map video path to file" 
+                                ToolTipService.InitialShowDelay="0" 
+                                ToolTipService.Placement="Top" 
+                                Padding="8">
+
+                            <Button.IsEnabled>
+                                <MultiBinding Converter="{StaticResource MultiBooleanToBooleanAndConverter}">
+                                    <MultiBinding.Bindings>
+                                        <Binding Path="VideoFile" Converter="{StaticResource notNullBooleanConverter}"/>
+                                        <Binding Path="VideoFile.IsUrl"/>
+                                    </MultiBinding.Bindings>
+                                </MultiBinding>
+                            </Button.IsEnabled>
+                            <material:PackIcon Kind="LinkPlus" Width="19" Height="19"/>
+                        </Button>
+
                     </StackPanel>
                 </DockPanel>
                 <StackPanel Margin="20 15 20 15"

@@ -2,13 +2,18 @@
 {
     public class MediaResourceInfo
     {
-        public string Source { get; }
-        public string Name { get; }
+        public bool IsPath { get; init; }
+        public bool IsUrl { get; init; }
+        public bool IsUnc { get; init; }
 
-        public MediaResourceInfo(string source, string name)
-        {
-            Source = source;
-            Name = name;
-        }
+        public bool Local { get; init; }
+        public bool Remote => !Local;
+
+        public bool IsModified { get; init; }
+        public string ModifiedPath { get; init; }
+
+        public string OriginalPath { get; init; }
+        public string Source { get; init; }
+        public string Name { get; init; }
     }
 }

@@ -26,6 +26,7 @@ using MultiFunPlayer.VideoSource.MediaResource;
 using MaterialDesignThemes.Wpf;
 using System.Threading.Tasks;
 using System.Reflection;
+using MultiFunPlayer.VideoSource.MediaResource.Modifier.ViewModels;
 
 namespace MultiFunPlayer.UI.Controls.ViewModels
 {
@@ -746,15 +747,26 @@ namespace MultiFunPlayer.UI.Controls.ViewModels
         #endregion
 
         #region Video
-        public bool CanOpenVideoLocation => VideoFile != null && Directory.Exists(VideoFile.Source);
-
         public void OnOpenVideoLocation()
         {
             if (VideoFile == null)
                 return;
 
-            if (Directory.Exists(VideoFile.Source))
-                Process.Start("explorer.exe", VideoFile.Source);
+            var fullPath = VideoFile.IsModified ? VideoFile.ModifiedPath : VideoFile.OriginalPath;
+            if (VideoFile.IsUrl)
+            {
+                Process.Start(new ProcessStartInfo
+                { 
+                    FileName = fullPath, 
+                    UseShellExecute = true
+                });
+            }
+            else
+            {
+                var directory = Path.GetDirectoryName(fullPath);
+                if (Directory.Exists(directory))
+                    Process.Start("explorer.exe", directory);
+            }
         }
 
         public void OnPlayPauseClick()
@@ -990,6 +1002,29 @@ namespace MultiFunPlayer.UI.Controls.ViewModels
                 return;
 
             VideoPathModifiers.Remove(modifier);
+        }
+
+        public void OnMapCurrentVideoPathToFile(object sender, RoutedEventArgs e)
+        {
+            if (VideoFile == null || !VideoFile.IsUrl)
+                return;
+
+            var dialog = new CommonOpenFileDialog()
+            {
+                IsFolderPicker = false,
+                EnsureFileExists = true
+            };
+
+            if (dialog.ShowDialog() != CommonFileDialogResult.Ok)
+                return;
+
+            VideoPathModifiers.Add(new FindReplaceMediaPathModifierViewModel()
+            {
+                Find = VideoFile.OriginalPath,
+                Replace = dialog.FileName
+            });
+
+            Handle(new VideoFileChangedMessage(VideoFile.OriginalPath));
         }
         #endregion
 
