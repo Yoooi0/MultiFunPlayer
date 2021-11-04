@@ -1,6 +1,4 @@
-﻿using Newtonsoft.Json;
-
-namespace MultiFunPlayer.VideoSource.MediaResource
+﻿namespace MultiFunPlayer.VideoSource.MediaResource
 {
     public interface IMediaPathModifier
     {

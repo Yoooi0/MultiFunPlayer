@@ -1,7 +1,6 @@
 ﻿using Newtonsoft.Json.Linq;
 using NLog;
 using System;
-using System.Diagnostics;
 using System.IO;
 
 namespace MultiFunPlayer.Settings

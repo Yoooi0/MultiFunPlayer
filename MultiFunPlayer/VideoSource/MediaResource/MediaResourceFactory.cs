@@ -1,7 +1,5 @@
-﻿using MultiFunPlayer.VideoSource.MediaResource.Modifier.ViewModels;
-using Stylet;
+﻿using Stylet;
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;

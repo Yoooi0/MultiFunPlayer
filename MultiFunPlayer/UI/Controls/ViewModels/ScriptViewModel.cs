@@ -24,7 +24,6 @@ using MultiFunPlayer.Input;
 using MultiFunPlayer.MotionProvider;
 using MultiFunPlayer.VideoSource.MediaResource;
 using MaterialDesignThemes.Wpf;
-using System.Threading.Tasks;
 using System.Reflection;
 using MultiFunPlayer.VideoSource.MediaResource.Modifier.ViewModels;
 

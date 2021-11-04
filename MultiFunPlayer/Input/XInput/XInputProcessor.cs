@@ -1,5 +1,4 @@
 ﻿using MultiFunPlayer.Common;
-using MultiFunPlayer.Input;
 using NLog;
 using System;
 using System.Threading;

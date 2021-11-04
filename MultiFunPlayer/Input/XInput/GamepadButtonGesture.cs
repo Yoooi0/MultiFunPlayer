@@ -1,5 +1,4 @@
-﻿using MultiFunPlayer.Input;
-using Vortice.XInput;
+﻿using Vortice.XInput;
 
 namespace MultiFunPlayer.Input.XInput
 {

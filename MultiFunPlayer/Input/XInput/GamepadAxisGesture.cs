@@ -1,6 +1,4 @@
-﻿using MultiFunPlayer.Input;
-
-namespace MultiFunPlayer.Input.XInput
+﻿namespace MultiFunPlayer.Input.XInput
 {
     public enum GamepadAxis
     {

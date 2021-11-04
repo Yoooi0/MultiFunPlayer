@@ -1,7 +1,6 @@
 ﻿using Linearstar.Windows.RawInput;
 using Linearstar.Windows.RawInput.Native;
 using MultiFunPlayer.Common;
-using MultiFunPlayer.Input;
 using NLog;
 using System;
 using System.Collections.Generic;

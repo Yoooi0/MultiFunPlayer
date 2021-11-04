@@ -72,7 +72,7 @@ namespace MultiFunPlayer.VideoSource.MediaResource
         }
 
         public MediaResourceInfo Build()
-            => new MediaResourceInfo()
+            => new()
             {
                 IsPath = _flags.HasFlag(BuilderFlags.IsPath),
                 IsUnc = _flags.HasFlag(BuilderFlags.IsUnc),

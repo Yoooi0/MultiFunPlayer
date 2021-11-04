@@ -1,5 +1,4 @@
-﻿using MultiFunPlayer.Input;
-using System.Windows.Input;
+﻿using System.Windows.Input;
 
 namespace MultiFunPlayer.Input.RawInput
 {
