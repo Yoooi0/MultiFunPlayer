@@ -9,8 +9,6 @@ namespace MultiFunPlayer.VideoSource.MediaResource.Modifier.ViewModels
     [JsonObject(MemberSerialization = MemberSerialization.OptIn)]
     public class FindReplaceMediaPathModifierViewModel : PropertyChangedBase, IMediaPathModifier
     {
-        private Regex _compiledRegex;
-
         public string Name => "Find/Replace";
 
         [DependsOn(nameof(Find))]
@@ -21,46 +19,13 @@ namespace MultiFunPlayer.VideoSource.MediaResource.Modifier.ViewModels
         [JsonProperty] public bool MatchCase { get; set; } = true;
         [JsonProperty] public bool UseRegularExpressions { get; set; }
 
-        private void OnFindChanged()
-        {
-            if(UseRegularExpressions)
-                CompileRegex();
-        }
-
-        private void OnMatchCaseChanged()
-        {
-            if (UseRegularExpressions)
-                CompileRegex();
-        }
-
-        private void OnUseRegularExpressionsChanged()
-        {
-            if (UseRegularExpressions)
-                CompileRegex();
-            else
-                _compiledRegex = null;
-        }
-
-        private void CompileRegex() 
-        {
-            var flags = RegexOptions.Compiled;
-
-            if (!MatchCase)
-                flags |= RegexOptions.IgnoreCase;
-
-            _compiledRegex = new Regex(Find, flags);
-        }
-
         public bool Process(ref string path)
         {
             try
             {
                 if (UseRegularExpressions)
                 {
-                    if (_compiledRegex == null)
-                        CompileRegex();
-
-                    var replaced = _compiledRegex.Replace(path, Replace);
+                    var replaced = Regex.Replace(path, Find, Replace, MatchCase ? RegexOptions.None : RegexOptions.IgnoreCase);
                     if (ReferenceEquals(replaced, path))
                         return false;
 

@@ -71,10 +71,9 @@ namespace MultiFunPlayer
         {
             base.OnStart();
 
-            var vcRegex = new Regex(@"VC,redist\.x64,amd64,14\.\d+,bundle");
             var vcInstalled = Registry.ClassesRoot?.OpenSubKey("Installer")?.OpenSubKey("Dependencies")
                                                   ?.GetSubKeyNames()
-                                                  ?.Where(s => vcRegex.IsMatch(s))
+                                                  ?.Where(s => Regex.IsMatch(s, @"VC,redist\.x64,amd64,14\.\d+,bundle"))
                                                   .Any() ?? false;
 
             if (!vcInstalled)
