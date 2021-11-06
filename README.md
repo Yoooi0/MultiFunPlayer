@@ -80,6 +80,7 @@ To synchronize with videos, start your desired video player and wait for automat
 
 > The above file names are matched in all script libraries and in the currently playing video directory.
 
-# Requirements
+# Prerequisites
 
-* [.NET 5.0 Runtime](https://dotnet.microsoft.com/download/dotnet/current/runtime)
+* [.NET 5.0 x64 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/current/runtime)
+* [Visual C++ 2019 x64 Redistributable](https://docs.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist)

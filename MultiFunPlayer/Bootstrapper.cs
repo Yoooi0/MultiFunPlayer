@@ -1,3 +1,4 @@
+using Microsoft.Win32;
 using MultiFunPlayer.Common;
 using MultiFunPlayer.Input;
 using MultiFunPlayer.Input.RawInput;
@@ -23,6 +24,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Interop;
 
@@ -63,6 +65,35 @@ namespace MultiFunPlayer
                 if(e.IsTerminating)
                     LogManager.Shutdown();
             };
+        }
+
+        protected override void OnStart()
+        {
+            base.OnStart();
+
+            var vcRegex = new Regex(@"VC,redist\.x64,amd64,14\.\d+,bundle");
+            var vcInstalled = Registry.ClassesRoot?.OpenSubKey("Installer")?.OpenSubKey("Dependencies")
+                                                  ?.GetSubKeyNames()
+                                                  ?.Where(s => vcRegex.IsMatch(s))
+                                                  .Any() ?? false;
+
+            if (!vcInstalled)
+            {
+                var result = MessageBox.Show("To run this application, you must install Visual C++ 2019 x64 redistributable.\nWould you like to download it now?",
+                                             $"{nameof(MultiFunPlayer)}.exe",
+                                             MessageBoxButton.YesNo, MessageBoxImage.Error);
+
+                if (result == MessageBoxResult.Yes)
+                {
+                    Process.Start(new ProcessStartInfo
+                    {
+                        FileName = "https://docs.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist",
+                        UseShellExecute = true
+                    });
+                }
+
+                Environment.Exit(1157 /* ERROR_DLL_NOT_FOUND */);
+            }
         }
 
         protected override void OnLaunch()
