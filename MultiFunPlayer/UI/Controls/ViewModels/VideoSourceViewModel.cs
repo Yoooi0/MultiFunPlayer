@@ -18,6 +18,8 @@ namespace MultiFunPlayer.UI.Controls.ViewModels
         private IVideoSource _currentSource;
         private SemaphoreSlim _semaphore;
 
+        public bool ContentVisible { get; set; }
+
         public VideoSourceViewModel(IShortcutManager shortcutManager, IEventAggregator eventAggregator, IEnumerable<IVideoSource> sources)
         {
             eventAggregator.Subscribe(this);
@@ -44,6 +46,8 @@ namespace MultiFunPlayer.UI.Controls.ViewModels
                  || !message.Settings.TryGetObject(out var settings, "VideoSource"))
                     return;
 
+                settings[nameof(ContentVisible)] = ContentVisible;
+
                 if (ActiveItem != null)
                     settings[nameof(ActiveItem)] = ActiveItem.Name;
             }
@@ -51,6 +55,9 @@ namespace MultiFunPlayer.UI.Controls.ViewModels
             {
                 if (!message.Settings.TryGetObject(out var settings, "VideoSource"))
                     return;
+
+                if(settings.TryGetValue<bool>(nameof(ContentVisible), out var contentVisible))
+                    ContentVisible = contentVisible;
 
                 if (settings.TryGetValue<string>(nameof(ActiveItem), out var selectedItem))
                     ChangeActiveItem(Items.FirstOrDefault(x => string.Equals(x.Name, selectedItem)) ?? Items[0], closePrevious: false);
@@ -151,17 +158,6 @@ namespace MultiFunPlayer.UI.Controls.ViewModels
                 }
             }
             catch (OperationCanceledException) { }
-        }
-
-        protected override void ChangeActiveItem(IVideoSource newItem, bool closePrevious)
-        {
-            if (ActiveItem != null && newItem != null)
-            {
-                newItem.ContentVisible = ActiveItem.ContentVisible;
-                ActiveItem.ContentVisible = false;
-            }
-
-            base.ChangeActiveItem(newItem, closePrevious);
         }
 
         private void RegisterShortcuts(IShortcutManager s)

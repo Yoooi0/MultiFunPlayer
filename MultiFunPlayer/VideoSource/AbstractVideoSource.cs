@@ -19,7 +19,6 @@ namespace MultiFunPlayer.VideoSource
         private Task _task;
 
         [SuppressPropertyChangedWarnings] public abstract ConnectionStatus Status { get; protected set; }
-        public bool ContentVisible { get; set; } = false;
         public bool AutoConnectEnabled { get; set; } = true;
 
         protected AbstractVideoSource(IShortcutManager shortcutManager, IEventAggregator eventAggregator)

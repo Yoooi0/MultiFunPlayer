@@ -9,7 +9,6 @@
              xmlns:ui="clr-namespace:MultiFunPlayer.UI"
              xmlns:converters="clr-namespace:MultiFunPlayer.UI.Converters"
              xmlns:controls="clr-namespace:MultiFunPlayer.UI.Controls"
-             xmlns:behaviours="clr-namespace:MultiFunPlayer.UI.Behaviours"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
     <UserControl.Resources>
@@ -24,105 +23,104 @@
     <StackPanel Margin="0 0 0 20">
         <material:Card material:ShadowAssist.ShadowDepth="Depth1"
                       Margin="0 0 0 20">
-            <DockPanel LastChildFill="True">
-                <DockPanel DockPanel.Dock="Top" 
-                               LastChildFill="True" 
-                               Height="35"
-                               Background="{StaticResource MaterialDesignToolBarBackground}">
-                    <DockPanel.Effect>
-                        <DropShadowEffect ShadowDepth="0" Direction="270"/>
-                    </DockPanel.Effect>
-                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
-                        <Button Style="{StaticResource MaterialDesignToolBarButton}"
-                                Click="{s:Action OnPlayPauseClick}"
-                                Padding="5"
-                                ToolTipService.InitialShowDelay="0"
-                                ToolTipService.Placement="Top"
-                                ToolTip="Play/Pause">
-                            <material:PackIcon Width="28" 
-                                               Height="28"
-                                               VerticalAlignment="Center">
-                                <material:PackIcon.Style>
-                                    <Style TargetType="material:PackIcon">
-                                        <Setter Property="Foreground" Value="Red"/>
-                                        <Setter Property="Kind" Value="Pause"/>
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding IsPlaying}" Value="True">
-                                                <Setter Property="Foreground" Value="Green"/>
-                                                <Setter Property="Kind" Value="Play"/>
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </material:PackIcon.Style>
-                            </material:PackIcon>
-                        </Button>
+            <Expander material:ExpanderAssist.HorizontalHeaderPadding="0 0 6 0"
+                      Style="{StaticResource MaterialDesignToolBarExpander}"
+                      Background="{StaticResource MaterialDesignToolBarBackground}"
+                      IsExpanded="{Binding VideoContentVisible}">
+                <Expander.Header>
+                    <DockPanel LastChildFill="True" 
+                               Height="35">
+                        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                            <Button Style="{StaticResource MaterialDesignToolBarButton}"
+                                    Click="{s:Action OnPlayPauseClick}"
+                                    Padding="5"
+                                    ToolTipService.InitialShowDelay="0"
+                                    ToolTipService.Placement="Top"
+                                    ToolTip="Play/Pause">
+                                <material:PackIcon Width="28" 
+                                                   Height="28"
+                                                   VerticalAlignment="Center">
+                                    <material:PackIcon.Style>
+                                        <Style TargetType="material:PackIcon">
+                                            <Setter Property="Foreground" Value="Red"/>
+                                            <Setter Property="Kind" Value="Pause"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsPlaying}" Value="True">
+                                                    <Setter Property="Foreground" Value="Green"/>
+                                                    <Setter Property="Kind" Value="Play"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </material:PackIcon.Style>
+                                </material:PackIcon>
+                            </Button>
 
-                        <material:PopupBox StaysOpen="True" 
+                            <material:PopupBox StaysOpen="True" 
                                                PlacementMode="BottomAndAlignRightEdges"
                                                Style="{StaticResource MaterialDesignToolBarPopupBox}"
                                                ToolTipService.InitialShowDelay="0"
                                                ToolTipService.Placement="Top"
                                                ToolTip="Sync settings">
-                            <material:PopupBox.ToggleContent>
-                                <Border Width="35" 
+                                <material:PopupBox.ToggleContent>
+                                    <Border Width="35" 
                                             Height="35" 
                                             VerticalAlignment="Center"
                                             HorizontalAlignment="Center">
-                                    <Grid Width="24" Height="24">
-                                        <Grid.RowDefinitions>
-                                            <RowDefinition Height="24" />
-                                            <RowDefinition Height="24" />
-                                        </Grid.RowDefinitions>
+                                        <Grid Width="24" Height="24">
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="24" />
+                                                <RowDefinition Height="24" />
+                                            </Grid.RowDefinitions>
 
-                                        <material:PackIcon Grid.Row="0"
+                                            <material:PackIcon Grid.Row="0"
                                                                Width="16" 
                                                                Height="16"
                                                                VerticalAlignment="Center"
                                                                HorizontalAlignment="Center"
                                                                Kind="FastForward">
-                                            <material:PackIcon.Style>
-                                                <Style TargetType="material:PackIcon">
-                                                    <Setter Property="Foreground" Value="{StaticResource PrimaryHueLightBrush}"/>
-                                                    <Style.Triggers>
-                                                        <DataTrigger Binding="{Binding IsSyncing}" Value="True">
-                                                            <Setter Property="Foreground" Value="Red"/>
-                                                        </DataTrigger>
-                                                    </Style.Triggers>
-                                                </Style>
-                                            </material:PackIcon.Style>
-                                        </material:PackIcon>
-                                        <ProgressBar Value="{Binding SyncProgress, Mode=OneWay}"
+                                                <material:PackIcon.Style>
+                                                    <Style TargetType="material:PackIcon">
+                                                        <Setter Property="Foreground" Value="{StaticResource PrimaryHueLightBrush}"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding IsSyncing}" Value="True">
+                                                                <Setter Property="Foreground" Value="Red"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </material:PackIcon.Style>
+                                            </material:PackIcon>
+                                            <ProgressBar Value="{Binding SyncProgress, Mode=OneWay}"
                                                          VerticalAlignment="Center"
                                                          Grid.Row="1"
                                                          Width="24"
                                                          Height="24"
                                                          Margin="0 -24 0 24">
-                                            <ProgressBar.Style>
-                                                <Style TargetType="ProgressBar" BasedOn="{StaticResource MaterialDesignCircularProgressBar}">
-                                                    <Setter Property="Foreground" Value="{StaticResource PrimaryHueLightBrush}"/>
-                                                    <Style.Triggers>
-                                                        <DataTrigger Binding="{Binding IsSyncing}" Value="True">
-                                                            <Setter Property="Foreground" Value="Red"/>
-                                                        </DataTrigger>
-                                                    </Style.Triggers>
-                                                </Style>
-                                            </ProgressBar.Style>
-                                        </ProgressBar>
-                                    </Grid>
-                                </Border>
-                            </material:PopupBox.ToggleContent>
+                                                <ProgressBar.Style>
+                                                    <Style TargetType="ProgressBar" BasedOn="{StaticResource MaterialDesignCircularProgressBar}">
+                                                        <Setter Property="Foreground" Value="{StaticResource PrimaryHueLightBrush}"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding IsSyncing}" Value="True">
+                                                                <Setter Property="Foreground" Value="Red"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </ProgressBar.Style>
+                                            </ProgressBar>
+                                        </Grid>
+                                    </Border>
+                                </material:PopupBox.ToggleContent>
 
-                            <Grid Width="300" Margin="10">
-                                <StackPanel Orientation="Vertical">
-                                    <DockPanel LastChildFill="False">
-                                        <TextBlock DockPanel.Dock="Left"
+                                <Grid Width="300" Margin="10">
+                                    <StackPanel Orientation="Vertical">
+                                        <DockPanel LastChildFill="False">
+                                            <TextBlock DockPanel.Dock="Left"
                                                        Text="Sync when:"
                                                        Typography.Capitals="AllSmallCaps"
                                                        FontWeight="Bold"
                                                        Margin="0 0 5 0"
                                                        VerticalAlignment="Center"
                                                        HorizontalAlignment="Left"/>
-                                        <material:ColorZone DockPanel.Dock="Left"
+                                            <material:ColorZone DockPanel.Dock="Left"
                                                                 VerticalAlignment="Center"
                                                                 CornerRadius="7"
                                                                 Mode="Custom"
@@ -132,37 +130,37 @@
                                                                 ToolTipService.InitialShowDelay="0"
                                                                 ToolTipService.ShowDuration="99999"
                                                                 ToolTipService.Placement="Top">
-                                            <material:ColorZone.ToolTip>
-                                                <TextBlock>
+                                                <material:ColorZone.ToolTip>
+                                                    <TextBlock>
                                                         The sync feature is there to prevent<LineBreak/>sudden unwanted motion.<LineBreak/>
                                                         These settings are for advanced usage only.
-                                                </TextBlock>
-                                            </material:ColorZone.ToolTip>
-                                            <material:PackIcon Kind="ExclamationBold"
+                                                    </TextBlock>
+                                                </material:ColorZone.ToolTip>
+                                                <material:PackIcon Kind="ExclamationBold"
                                                                    Foreground="Black"
                                                                    Width="10"
                                                                    Height="10"
                                                                    HorizontalAlignment="Center"
                                                                    VerticalAlignment="Center"/>
-                                        </material:ColorZone>
-                                    </DockPanel>
-                                    <DockPanel LastChildFill="False" Margin="0 0 0 10">
-                                        <TextBlock Text="Video file changed:" Width="120"/>
-                                        <ToggleButton IsChecked="{Binding SyncSettings.SyncOnVideoFileChanged}"/>
-                                    </DockPanel>
+                                            </material:ColorZone>
+                                        </DockPanel>
+                                        <DockPanel LastChildFill="False" Margin="0 0 0 10">
+                                            <TextBlock Text="Video file changed:" Width="120"/>
+                                            <ToggleButton IsChecked="{Binding SyncSettings.SyncOnVideoFileChanged}"/>
+                                        </DockPanel>
 
-                                    <DockPanel LastChildFill="False" Margin="0 0 0 10">
-                                        <TextBlock Text="Video resume:" Width="120"/>
-                                        <ToggleButton IsChecked="{Binding SyncSettings.SyncOnVideoResume}"/>
-                                    </DockPanel>
+                                        <DockPanel LastChildFill="False" Margin="0 0 0 10">
+                                            <TextBlock Text="Video resume:" Width="120"/>
+                                            <ToggleButton IsChecked="{Binding SyncSettings.SyncOnVideoResume}"/>
+                                        </DockPanel>
 
-                                    <DockPanel LastChildFill="False" Margin="0 0 0 20">
-                                        <TextBlock Text="Seek:" Width="120"/>
-                                        <ToggleButton IsChecked="{Binding SyncSettings.SyncOnSeek}"/>
-                                    </DockPanel>
-                                    <DockPanel LastChildFill="True">
-                                        <TextBlock Text="Duration:" Width="120"/>
-                                        <Slider DockPanel.Dock="Right"
+                                        <DockPanel LastChildFill="False" Margin="0 0 0 20">
+                                            <TextBlock Text="Seek:" Width="120"/>
+                                            <ToggleButton IsChecked="{Binding SyncSettings.SyncOnSeek}"/>
+                                        </DockPanel>
+                                        <DockPanel LastChildFill="True">
+                                            <TextBlock Text="Duration:" Width="120"/>
+                                            <Slider DockPanel.Dock="Right"
                                                     Value="{Binding SyncSettings.Duration}"
                                                     Style="{StaticResource MaterialDesignDiscreteSlider}"
                                                     Margin="0 -38 0 0"
@@ -171,52 +169,32 @@
                                                     TickFrequency="0.5"
                                                     VerticalAlignment="Center"
                                                     IsSnapToTickEnabled="True"/>
-                                    </DockPanel>
-                                </StackPanel>
-                            </Grid>
-                        </material:PopupBox>
-                        
-                        <ToggleButton DockPanel.Dock="Right"
-                                      IsChecked="{Binding VideoContentVisible}"                                
-                                      ToolTipService.InitialShowDelay="0"
-                                      ToolTipService.Placement="Top">                            
-                            <material:PackIcon Kind="ChevronDown" Width="19" Height="19"/>
-                            <material:ToggleButtonAssist.OnContent>
-                                <material:PackIcon Kind="ChevronUp" Width="19" Height="19"/>
-                            </material:ToggleButtonAssist.OnContent>
-                            <ToggleButton.Resources>
-                                <Style TargetType="{x:Type ToggleButton}" BasedOn="{StaticResource MaterialDesignToolBarToggleButton}">
-                                    <Setter Property="ToolTip" Value="Open settings" />
-                                    <Style.Triggers>
-                                        <Trigger Property="IsChecked" Value="True">
-                                            <Setter Property="ToolTip" Value="Close settings" />
-                                        </Trigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </ToggleButton.Resources>
-                        </ToggleButton>
-                    </StackPanel>
-                    <StackPanel DockPanel.Dock="Left" 
+                                        </DockPanel>
+                                    </StackPanel>
+                                </Grid>
+                            </material:PopupBox>
+                        </StackPanel>
+                        <StackPanel DockPanel.Dock="Left" 
                                 Orientation="Horizontal">
-                        <Button Click="{s:Action OnOpenVideoLocation}" 
+                            <Button Click="{s:Action OnOpenVideoLocation}" 
                                     Style="{StaticResource MaterialDesignToolBarButton}"
                                     IsEnabled="{Binding VideoFile, Converter={StaticResource notNullBooleanConverter}}"
                                     ToolTip="Open video location" 
                                     ToolTipService.InitialShowDelay="0" 
                                     ToolTipService.Placement="Top" 
                                     Padding="8">
-                            <material:PackIcon Kind="FolderOpen" Height="19" Width="19"/>
-                        </Button>
-                        <Button Style="{StaticResource MaterialDesignToolBarButton}"
+                                <material:PackIcon Kind="FolderOpen" Height="19" Width="19"/>
+                            </Button>
+                            <Button Style="{StaticResource MaterialDesignToolBarButton}"
                                     ToolTip="Script libraries" 
                                     ToolTipService.InitialShowDelay="0" 
                                     ToolTipService.Placement="Top" 
                                     Padding="8"
                                     Command="{x:Static material:DialogHost.OpenDialogCommand}">
-                            <Button.CommandParameter>
-                                <Grid Margin="20" Width="500" MaxHeight="400"
+                                <Button.CommandParameter>
+                                    <Grid Margin="20" Width="500" MaxHeight="400"
                                           s:View.ActionTarget="{Binding}">
-                                    <Button DockPanel.Dock="Top"
+                                        <Button DockPanel.Dock="Top"
                                                 Style="{StaticResource MaterialDesignFlatButton}"
                                                 material:RippleAssist.Feedback="Black"
                                                 Foreground="Black"
@@ -227,162 +205,32 @@
                                                 VerticalAlignment="Top"
                                                 Margin="0 -15 -15 0"
                                                 Command="{x:Static material:DialogHost.CloseDialogCommand}">
-                                        <material:PackIcon Kind="Close" 
+                                            <material:PackIcon Kind="Close" 
                                                                Height="20" 
                                                                Width="20"/>
-                                    </Button>
-                                    <DockPanel LastChildFill="True">
-                                        <TextBlock Text="Libraries:"
+                                        </Button>
+                                        <DockPanel LastChildFill="True">
+                                            <TextBlock Text="Libraries:"
                                                        DockPanel.Dock="Top"
                                                        FontSize="16"
                                                        FontWeight="Bold"
                                                        Margin="0 0 0 10"/>
 
-                                        <Button DockPanel.Dock="Bottom"
+                                            <Button DockPanel.Dock="Bottom"
                                                     Style="{StaticResource MaterialDesignFloatingActionMiniLightButton}"
                                                     Width="32"
                                                     Height="32"
                                                     Margin="0 0 0 10"
                                                     Padding="0"
                                                     Click="{s:Action OnLibraryAdd}">
-                                            <material:PackIcon Kind="Plus"
+                                                <material:PackIcon Kind="Plus"
                                                                    Width="24"
                                                                    Height="24"/>
-                                        </Button>
-
-                                        <material:Card material:ShadowAssist.ShadowDepth="Depth1" Margin="0 0 0 10">
-                                            <ItemsControl DockPanel.Dock="Bottom"
-                                                            ItemsSource="{Binding ScriptLibraries}">
-                                                <ItemsControl.Template>
-                                                    <ControlTemplate>
-                                                        <ScrollViewer VerticalScrollBarVisibility="Visible" 
-                                                                          HorizontalScrollBarVisibility="Disabled">
-                                                            <ItemsPresenter/>
-                                                        </ScrollViewer>
-                                                    </ControlTemplate>
-                                                </ItemsControl.Template>
-                                                <ItemsControl.ItemTemplate>
-                                                    <DataTemplate>
-                                                        <Border Padding="5" Background="{StaticResource MaterialDesignLightBackground}">
-                                                            <DockPanel LastChildFill="True">
-                                                                <Button DockPanel.Dock="Right"   
-                                                                            Style="{StaticResource MaterialDesignFlatButton}"
-                                                                            ToolTip="Remove"
-                                                                            ToolTipService.InitialShowDelay="0"
-                                                                            ToolTipService.Placement="Top"
-                                                                            material:RippleAssist.Feedback="Red"
-                                                                            Foreground="Red"
-                                                                            Height="24" 
-                                                                            Width="24" 
-                                                                            Padding="0"
-                                                                            Click="{s:Action OnLibraryDelete}" >
-                                                                    <material:PackIcon Kind="Delete"/>
-                                                                </Button>
-                                                                <Button DockPanel.Dock="Right"   
-                                                                            Style="{StaticResource MaterialDesignFlatButton}"
-                                                                            ToolTip="Open location"
-                                                                            ToolTipService.InitialShowDelay="0"
-                                                                            ToolTipService.Placement="Top"
-                                                                            Height="24" 
-                                                                            Width="24" 
-                                                                            Padding="0"
-                                                                            Click="{s:Action OnLibraryOpenFolder}">
-                                                                    <material:PackIcon Kind="FolderOpen"/>
-                                                                </Button>
-                                                                <CheckBox IsChecked="{Binding Recursive}"
-                                                                              DockPanel.Dock="Right"
-                                                                              Width="24"
-                                                                              ToolTip="Recursive"
-                                                                              ToolTipService.InitialShowDelay="0"
-                                                                              ToolTipService.Placement="Top"/>
-                                                                <TextBlock Text="{Binding Directory.FullName}"
-                                                                               VerticalAlignment="Center"
-                                                                               FontSize="12"
-                                                                               DockPanel.Dock="Left"/>
-                                                            </DockPanel>
-                                                        </Border>
-                                                    </DataTemplate>
-                                                </ItemsControl.ItemTemplate>
-                                            </ItemsControl>
-                                        </material:Card>
-                                    </DockPanel>
-                                </Grid>
-                            </Button.CommandParameter>
-                            <material:PackIcon Kind="FolderSearch" Height="19" Width="19"/>
-                        </Button>
-
-                        <Button Style="{StaticResource MaterialDesignToolBarButton}"
-                                    ToolTip="Video path modifiers" 
-                                    ToolTipService.InitialShowDelay="0" 
-                                    ToolTipService.Placement="Top" 
-                                    Padding="8"
-                                    Command="{x:Static material:DialogHost.OpenDialogCommand}">
-                            <Button.CommandParameter>
-                                <material:DialogHost Identifier="MediaPathModifierDialog">
-                                    <Grid Margin="20" Width="500" MaxHeight="400"
-                                              s:View.ActionTarget="{Binding}">
-                                        <Button DockPanel.Dock="Top"
-                                                    Style="{StaticResource MaterialDesignFlatButton}"
-                                                    material:RippleAssist.Feedback="Black"
-                                                    Foreground="Black"
-                                                    Height="24"
-                                                    Width="24"
-                                                    Padding="0"
-                                                    HorizontalAlignment="Right"
-                                                    VerticalAlignment="Top"
-                                                    Margin="0 -15 -15 0"
-                                                    Command="{x:Static material:DialogHost.CloseDialogCommand}">
-                                            <material:PackIcon Kind="Close" 
-                                                               Height="20" 
-                                                               Width="20"/>
-                                        </Button>
-                                        <DockPanel LastChildFill="True">
-                                            <TextBlock Text="Video path modifiers:"
-                                                           DockPanel.Dock="Top"
-                                                           FontSize="16"
-                                                           FontWeight="Bold"
-                                                           Margin="0 0 0 10"/>
-
-                                            <material:PopupBox Style="{StaticResource MaterialDesignMultiFloatingActionLightPopupBox}"
-                                                               Width="32"
-                                                               Height="32"
-                                                               DockPanel.Dock="Bottom"
-                                                               HorizontalAlignment="Center">
-
-                                                <material:PopupBox.ToggleContent>
-                                                    <material:PackIcon Kind="Plus" 
-                                                                       Width="22" 
-                                                                       Height="22" 
-                                                                       HorizontalAlignment="Center" 
-                                                                       VerticalAlignment="Center"/>
-                                                </material:PopupBox.ToggleContent>
-
-                                                <material:Card>
-                                                    <ItemsControl ItemsSource="{Binding VideoPathModifierTypes}"
-                                                                  Margin="10">
-                                                        <ItemsControl.ItemsPanel>
-                                                            <ItemsPanelTemplate>
-                                                                <VirtualizingStackPanel/>
-                                                            </ItemsPanelTemplate>
-                                                        </ItemsControl.ItemsPanel>
-
-                                                        <ItemsControl.ItemTemplate>
-                                                            <DataTemplate>
-                                                                <Button Style="{StaticResource MaterialDesignRaisedLightButton}"
-                                                                        Click="{s:Action OnVideoPathModifierAdd}"
-                                                                        Content="{Binding Key}"
-                                                                        Margin="5"
-                                                                        Padding="10 0 10 0"
-                                                                        Height="20"/>
-                                                            </DataTemplate>
-                                                        </ItemsControl.ItemTemplate>
-                                                    </ItemsControl>
-                                                </material:Card>
-                                            </material:PopupBox>
+                                            </Button>
 
                                             <material:Card material:ShadowAssist.ShadowDepth="Depth1" Margin="0 0 0 10">
                                                 <ItemsControl DockPanel.Dock="Bottom"
-                                                              ItemsSource="{Binding VideoPathModifiers}">
+                                                            ItemsSource="{Binding ScriptLibraries}">
                                                     <ItemsControl.Template>
                                                         <ControlTemplate>
                                                             <ScrollViewer VerticalScrollBarVisibility="Visible" 
@@ -394,41 +242,41 @@
                                                     <ItemsControl.ItemTemplate>
                                                         <DataTemplate>
                                                             <Border Padding="5" Background="{StaticResource MaterialDesignLightBackground}">
-                                                                <DockPanel LastChildFill="True" Margin="5 0 0 0">
+                                                                <DockPanel LastChildFill="True">
                                                                     <Button DockPanel.Dock="Right"   
-                                                                                Style="{StaticResource MaterialDesignFlatButton}"
-                                                                                ToolTip="Remove"
-                                                                                ToolTipService.InitialShowDelay="0"
-                                                                                ToolTipService.Placement="Top"
-                                                                                material:RippleAssist.Feedback="Red"
-                                                                                Foreground="Red"
-                                                                                Height="24" 
-                                                                                Width="24" 
-                                                                                Padding="0"
-                                                                                Click="{s:Action OnVideoPathModifierRemove}" >
+                                                                            Style="{StaticResource MaterialDesignFlatButton}"
+                                                                            ToolTip="Remove"
+                                                                            ToolTipService.InitialShowDelay="0"
+                                                                            ToolTipService.Placement="Top"
+                                                                            material:RippleAssist.Feedback="Red"
+                                                                            Foreground="Red"
+                                                                            Height="24" 
+                                                                            Width="24" 
+                                                                            Padding="0"
+                                                                            Click="{s:Action OnLibraryDelete}" >
                                                                         <material:PackIcon Kind="Delete"/>
                                                                     </Button>
-
                                                                     <Button DockPanel.Dock="Right"   
-                                                                        Style="{StaticResource MaterialDesignFlatButton}"
-                                                                        Click="{s:Action OnVideoPathModifierConfigure}"
-                                                                        ToolTip="Configure"
-                                                                        ToolTipService.InitialShowDelay="0"
-                                                                        ToolTipService.Placement="Top"
-                                                                        Height="24" 
-                                                                        Width="24" 
-                                                                        Padding="0">
-                                                                        <material:PackIcon Kind="Wrench" Width="14" Height="14"/>
+                                                                            Style="{StaticResource MaterialDesignFlatButton}"
+                                                                            ToolTip="Open location"
+                                                                            ToolTipService.InitialShowDelay="0"
+                                                                            ToolTipService.Placement="Top"
+                                                                            Height="24" 
+                                                                            Width="24" 
+                                                                            Padding="0"
+                                                                            Click="{s:Action OnLibraryOpenFolder}">
+                                                                        <material:PackIcon Kind="FolderOpen"/>
                                                                     </Button>
-
-                                                                    <TextBlock Text="{Binding Name, StringFormat={}{0}:}"
-                                                                           Margin="0 0 10 0"
-                                                                           FontWeight="Bold"
-                                                                           DockPanel.Dock="Left"
-                                                                           VerticalAlignment="Center"/>
-                                                                    <TextBlock Text="{Binding Description}"
-                                                                           DockPanel.Dock="Left"
-                                                                           VerticalAlignment="Center"/>
+                                                                    <CheckBox IsChecked="{Binding Recursive}"
+                                                                              DockPanel.Dock="Right"
+                                                                              Width="24"
+                                                                              ToolTip="Recursive"
+                                                                              ToolTipService.InitialShowDelay="0"
+                                                                              ToolTipService.Placement="Top"/>
+                                                                    <TextBlock Text="{Binding Directory.FullName}"
+                                                                               VerticalAlignment="Center"
+                                                                               FontSize="12"
+                                                                               DockPanel.Dock="Left"/>
                                                                 </DockPanel>
                                                             </Border>
                                                         </DataTemplate>
@@ -437,11 +285,21 @@
                                             </material:Card>
                                         </DockPanel>
                                     </Grid>
+                                </Button.CommandParameter>
+                                <material:PackIcon Kind="FolderSearch" Height="19" Width="19"/>
+                            </Button>
 
-                                    <material:DialogHost.DialogContentTemplate>
-                                        <DataTemplate>
-                                            <DockPanel Margin="20" Width="475">
-                                                <Button DockPanel.Dock="Top"
+                            <Button Style="{StaticResource MaterialDesignToolBarButton}"
+                                    ToolTip="Video path modifiers" 
+                                    ToolTipService.InitialShowDelay="0" 
+                                    ToolTipService.Placement="Top" 
+                                    Padding="8"
+                                    Command="{x:Static material:DialogHost.OpenDialogCommand}">
+                                <Button.CommandParameter>
+                                    <material:DialogHost Identifier="MediaPathModifierDialog">
+                                        <Grid Margin="20" Width="500" MaxHeight="400"
+                                              s:View.ActionTarget="{Binding}">
+                                            <Button DockPanel.Dock="Top"
                                                     Style="{StaticResource MaterialDesignFlatButton}"
                                                     material:RippleAssist.Feedback="Black"
                                                     Foreground="Black"
@@ -452,68 +310,190 @@
                                                     VerticalAlignment="Top"
                                                     Margin="0 -15 -15 0"
                                                     Command="{x:Static material:DialogHost.CloseDialogCommand}">
-                                                    <material:PackIcon Kind="Close" 
+                                                <material:PackIcon Kind="Close" 
+                                                               Height="20" 
+                                                               Width="20"/>
+                                            </Button>
+                                            <DockPanel LastChildFill="True">
+                                                <TextBlock Text="Video path modifiers:"
+                                                           DockPanel.Dock="Top"
+                                                           FontSize="16"
+                                                           FontWeight="Bold"
+                                                           Margin="0 0 0 10"/>
+
+                                                <material:PopupBox Style="{StaticResource MaterialDesignMultiFloatingActionLightPopupBox}"
+                                                               Width="32"
+                                                               Height="32"
+                                                               DockPanel.Dock="Bottom"
+                                                               HorizontalAlignment="Center">
+
+                                                    <material:PopupBox.ToggleContent>
+                                                        <material:PackIcon Kind="Plus" 
+                                                                       Width="22" 
+                                                                       Height="22" 
+                                                                       HorizontalAlignment="Center" 
+                                                                       VerticalAlignment="Center"/>
+                                                    </material:PopupBox.ToggleContent>
+
+                                                    <material:Card>
+                                                        <ItemsControl ItemsSource="{Binding VideoPathModifierTypes}"
+                                                                  Margin="10">
+                                                            <ItemsControl.ItemsPanel>
+                                                                <ItemsPanelTemplate>
+                                                                    <VirtualizingStackPanel/>
+                                                                </ItemsPanelTemplate>
+                                                            </ItemsControl.ItemsPanel>
+
+                                                            <ItemsControl.ItemTemplate>
+                                                                <DataTemplate>
+                                                                    <Button Style="{StaticResource MaterialDesignRaisedLightButton}"
+                                                                        Click="{s:Action OnVideoPathModifierAdd}"
+                                                                        Content="{Binding Key}"
+                                                                        Margin="5"
+                                                                        Padding="10 0 10 0"
+                                                                        Height="20"/>
+                                                                </DataTemplate>
+                                                            </ItemsControl.ItemTemplate>
+                                                        </ItemsControl>
+                                                    </material:Card>
+                                                </material:PopupBox>
+
+                                                <material:Card material:ShadowAssist.ShadowDepth="Depth1" Margin="0 0 0 10">
+                                                    <ItemsControl DockPanel.Dock="Bottom"
+                                                              ItemsSource="{Binding VideoPathModifiers}">
+                                                        <ItemsControl.Template>
+                                                            <ControlTemplate>
+                                                                <ScrollViewer VerticalScrollBarVisibility="Visible" 
+                                                                          HorizontalScrollBarVisibility="Disabled">
+                                                                    <ItemsPresenter/>
+                                                                </ScrollViewer>
+                                                            </ControlTemplate>
+                                                        </ItemsControl.Template>
+                                                        <ItemsControl.ItemTemplate>
+                                                            <DataTemplate>
+                                                                <Border Padding="5" Background="{StaticResource MaterialDesignLightBackground}">
+                                                                    <DockPanel LastChildFill="True" Margin="5 0 0 0">
+                                                                        <Button DockPanel.Dock="Right"   
+                                                                                Style="{StaticResource MaterialDesignFlatButton}"
+                                                                                ToolTip="Remove"
+                                                                                ToolTipService.InitialShowDelay="0"
+                                                                                ToolTipService.Placement="Top"
+                                                                                material:RippleAssist.Feedback="Red"
+                                                                                Foreground="Red"
+                                                                                Height="24" 
+                                                                                Width="24" 
+                                                                                Padding="0"
+                                                                                Click="{s:Action OnVideoPathModifierRemove}" >
+                                                                            <material:PackIcon Kind="Delete"/>
+                                                                        </Button>
+
+                                                                        <Button DockPanel.Dock="Right"   
+                                                                        Style="{StaticResource MaterialDesignFlatButton}"
+                                                                        Click="{s:Action OnVideoPathModifierConfigure}"
+                                                                        ToolTip="Configure"
+                                                                        ToolTipService.InitialShowDelay="0"
+                                                                        ToolTipService.Placement="Top"
+                                                                        Height="24" 
+                                                                        Width="24" 
+                                                                        Padding="0">
+                                                                            <material:PackIcon Kind="Wrench" Width="14" Height="14"/>
+                                                                        </Button>
+
+                                                                        <TextBlock Text="{Binding Name, StringFormat={}{0}:}"
+                                                                           Margin="0 0 10 0"
+                                                                           FontWeight="Bold"
+                                                                           DockPanel.Dock="Left"
+                                                                           VerticalAlignment="Center"/>
+                                                                        <TextBlock Text="{Binding Description}"
+                                                                           DockPanel.Dock="Left"
+                                                                           VerticalAlignment="Center"/>
+                                                                    </DockPanel>
+                                                                </Border>
+                                                            </DataTemplate>
+                                                        </ItemsControl.ItemTemplate>
+                                                    </ItemsControl>
+                                                </material:Card>
+                                            </DockPanel>
+                                        </Grid>
+
+                                        <material:DialogHost.DialogContentTemplate>
+                                            <DataTemplate>
+                                                <DockPanel Margin="20" Width="475">
+                                                    <Button DockPanel.Dock="Top"
+                                                    Style="{StaticResource MaterialDesignFlatButton}"
+                                                    material:RippleAssist.Feedback="Black"
+                                                    Foreground="Black"
+                                                    Height="24"
+                                                    Width="24"
+                                                    Padding="0"
+                                                    HorizontalAlignment="Right"
+                                                    VerticalAlignment="Top"
+                                                    Margin="0 -15 -15 0"
+                                                    Command="{x:Static material:DialogHost.CloseDialogCommand}">
+                                                        <material:PackIcon Kind="Close" 
                                                                        Height="20" 
                                                                        Width="20"/>
-                                                </Button>
+                                                    </Button>
 
-                                                <ContentControl s:View.Model="{Binding}"
+                                                    <ContentControl s:View.Model="{Binding}"
                                                                 DockPanel.Dock="Bottom"/>
-                                            </DockPanel>
-                                        </DataTemplate>
-                                    </material:DialogHost.DialogContentTemplate>
-                                </material:DialogHost>
-                            </Button.CommandParameter>
-                            <material:PackIcon Kind="FileReplaceOutline" Height="19" Width="19"/>
-                        </Button>
+                                                </DockPanel>
+                                            </DataTemplate>
+                                        </material:DialogHost.DialogContentTemplate>
+                                    </material:DialogHost>
+                                </Button.CommandParameter>
+                                <material:PackIcon Kind="FileReplaceOutline" Height="19" Width="19"/>
+                            </Button>
 
 
-                        <Button Style="{StaticResource MaterialDesignToolBarButton}"
+                            <Button Style="{StaticResource MaterialDesignToolBarButton}"
                                 Click="{s:Action OnMapCurrentVideoPathToFile}"
                                 ToolTip="Map video path to file" 
                                 ToolTipService.InitialShowDelay="0" 
                                 ToolTipService.Placement="Top" 
                                 Padding="8">
 
-                            <Button.IsEnabled>
-                                <MultiBinding Converter="{StaticResource MultiBooleanToBooleanAndConverter}">
-                                    <MultiBinding.Bindings>
-                                        <Binding Path="VideoFile" Converter="{StaticResource notNullBooleanConverter}"/>
-                                        <Binding Path="VideoFile.IsUrl"/>
-                                    </MultiBinding.Bindings>
-                                </MultiBinding>
-                            </Button.IsEnabled>
-                            <material:PackIcon Kind="LinkPlus" Width="19" Height="19"/>
-                        </Button>
+                                <Button.IsEnabled>
+                                    <MultiBinding Converter="{StaticResource MultiBooleanToBooleanAndConverter}">
+                                        <MultiBinding.Bindings>
+                                            <Binding Path="VideoFile" Converter="{StaticResource notNullBooleanConverter}"/>
+                                            <Binding Path="VideoFile.IsUrl"/>
+                                        </MultiBinding.Bindings>
+                                    </MultiBinding>
+                                </Button.IsEnabled>
+                                <material:PackIcon Kind="LinkPlus" Width="19" Height="19"/>
+                            </Button>
 
-                    </StackPanel>
-                </DockPanel>
-                <StackPanel Margin="20 15 20 15"
-                            DockPanel.Dock="Bottom"
-                            Visibility="{Binding VideoContentVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
-                    <DockPanel LastChildFill="True" Margin="0 0 0 10">
-                        <TextBlock Text="Video:"
+                        </StackPanel>
+                    </DockPanel>
+                </Expander.Header>
+                <Border Background="{StaticResource MaterialDesignBackground}"
+                        BorderThickness="0 1 0 0"
+                        BorderBrush="{StaticResource PrimaryHueLightBrush}">
+                    <StackPanel Margin="20 15 20 15">
+                        <DockPanel LastChildFill="True" Margin="0 0 0 10">
+                            <TextBlock Text="Video:"
                                        DockPanel.Dock="Left"
                                        Margin="0 0 10 0"
                                        VerticalAlignment="Center"/>
 
-                        <TextBox IsReadOnly="True"
+                            <TextBox IsReadOnly="True"
                                      Text="{Binding VideoFile.Name, Mode=OneWay}"
                                      Style="{StaticResource MaterialDesignFloatingHintTextBox}"
                                      material:HintAssist.Hint="{Binding VideoFile.Source}"
                                      DockPanel.Dock="Left"
                                      Margin="5 -10 0 0"
                                      VerticalAlignment="Center"/>
-                    </DockPanel>
-                    <DockPanel LastChildFill="True" Margin="0 0 0 10">
-                        <TextBlock Text="Global Offset:" DockPanel.Dock="Left" Margin="0 0 10 0" VerticalAlignment="Center"/>
-                        <TextBlock Text="{Binding GlobalOffset, StringFormat={}{0:0.00}s}" 
+                        </DockPanel>
+                        <DockPanel LastChildFill="True" Margin="0 0 0 10">
+                            <TextBlock Text="Global Offset:" DockPanel.Dock="Left" Margin="0 0 10 0" VerticalAlignment="Center"/>
+                            <TextBlock Text="{Binding GlobalOffset, StringFormat={}{0:0.00}s}" 
                                        VerticalAlignment="Center"
                                        DockPanel.Dock="Right" 
                                        Width="50"
                                        TextAlignment="Right"/>
 
-                        <Slider Value="{Binding GlobalOffset}" 
+                            <Slider Value="{Binding GlobalOffset}" 
                                     DockPanel.Dock="Left"
                                     Minimum="-5" 
                                     Maximum="5"
@@ -521,8 +501,8 @@
                                     IsSnapToTickEnabled="True"
                                     MouseDoubleClick="{s:Action OnSliderDoubleClick}"
                                     ValueChanged="{s:Action OnOffsetSliderValueChanged}"/>
-                    </DockPanel>
-                    <controls:KeyframesHeatmapGradient Height="35" 
+                        </DockPanel>
+                        <controls:KeyframesHeatmapGradient Height="35" 
                                                        Cursor="Hand"
                                                        MouseUp="{s:Action OnKeyframesHeatmapMouseUp}"
                                                        Keyframes="{Binding AxisKeyframes, Mode=OneWay}"
@@ -530,39 +510,39 @@
                                                        Position="{Binding CurrentPosition, Mode=OneWay}"
                                                        BucketCount="{Binding HeatmapBucketCount}"
                                                        ShowStrokeLength="{Binding HeatmapShowStrokeLength}">
-                        <controls:KeyframesHeatmapGradient.ContextMenu>
-                            <ContextMenu>
-                                <MenuItem Header="Show stroke length" 
+                            <controls:KeyframesHeatmapGradient.ContextMenu>
+                                <ContextMenu>
+                                    <MenuItem Header="Show stroke length" 
                                           IsCheckable="True"
                                           IsChecked="{Binding HeatmapShowStrokeLength}"/>
-                                <Separator/>
-                                <MenuItem Header="Quality" IsEnabled="False"/>
-                                <MenuItem material:RippleAssist.IsDisabled="True">
-                                    <MenuItem.Icon>
-                                        <TextBlock Text="{Binding HeatmapBucketCount}"
+                                    <Separator/>
+                                    <MenuItem Header="Quality" IsEnabled="False"/>
+                                    <MenuItem material:RippleAssist.IsDisabled="True">
+                                        <MenuItem.Icon>
+                                            <TextBlock Text="{Binding HeatmapBucketCount}"
                                                    FontSize="10"
                                                    Padding="0"/>
-                                    </MenuItem.Icon>
-                                    <MenuItem.HeaderTemplate>
-                                        <DataTemplate>
-                                            <Slider Minimum="100"
+                                        </MenuItem.Icon>
+                                        <MenuItem.HeaderTemplate>
+                                            <DataTemplate>
+                                                <Slider Minimum="100"
                                                     Maximum="{Binding Source={x:Static controls:KeyframesHeatmapGradient.MaxBucketCount}}"
                                                     Value="{Binding PlacementTarget.DataContext.HeatmapBucketCount, RelativeSource={RelativeSource FindAncestor, AncestorType=ContextMenu}}"/>
-                                        </DataTemplate>
-                                    </MenuItem.HeaderTemplate>
-                                </MenuItem>
-                                <Separator/>
-                            </ContextMenu>
-                        </controls:KeyframesHeatmapGradient.ContextMenu>
-                    </controls:KeyframesHeatmapGradient>
-                </StackPanel>
-            </DockPanel>
+                                            </DataTemplate>
+                                        </MenuItem.HeaderTemplate>
+                                    </MenuItem>
+                                    <Separator/>
+                                </ContextMenu>
+                            </controls:KeyframesHeatmapGradient.ContextMenu>
+                        </controls:KeyframesHeatmapGradient>
+                    </StackPanel>
+                </Border>
+            </Expander>
         </material:Card>
 
 
         <material:Card material:ShadowAssist.ShadowDepth="Depth1" Margin="0 0 0 20">
-            <TabControl ItemsSource="{Binding AxisModels}"
-                        behaviours:TabContent.IsCached="True">
+            <controls:NonReloadingTabControl ItemsSource="{Binding AxisModels}">
                 <TabControl.ItemTemplate>
                     <DataTemplate>
                         <TextBlock Text="{Binding Key}"
@@ -587,15 +567,16 @@
                         </TextBlock>
                     </DataTemplate>
                 </TabControl.ItemTemplate>
-                <behaviours:TabContent.Template>
+                <TabControl.ContentTemplate>
                     <DataTemplate>
                         <DockPanel LastChildFill="True">
-                            <DockPanel DockPanel.Dock="Top" LastChildFill="True">
-                                <Border BorderThickness="0 0 0 1"
-                                            Height="35"
-                                            BorderBrush="{StaticResource PrimaryHueLightBrush}">
+                            <Expander material:ExpanderAssist.HorizontalHeaderPadding="0 0 6 0"
+                                      Style="{StaticResource MaterialDesignToolBarExpander}"
+                                      Background="{StaticResource MaterialDesignToolBarBackground}"
+                                      IsExpanded="{Binding DataContext.AxisContentVisible, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}">
+                                <Expander.Header>
                                     <DockPanel LastChildFill="True"
-                                                   Background="{StaticResource MaterialDesignToolBarBackground}">
+                                               Height="35">
                                         <StackPanel Orientation="Horizontal" DockPanel.Dock="Right">
                                             <TextBlock Text="{Binding Key, Converter={StaticResource DeviceAxisFriendlyNameConverter}}"
                                                        Foreground="{StaticResource PrimaryHueLightBrush}"
@@ -604,26 +585,6 @@
                                                        FontSize="14"
                                                        FontWeight="Bold"
                                                        Typography.Capitals="AllSmallCaps"/>
-                                            
-                                            <ToggleButton DockPanel.Dock="Right"
-                                                            IsChecked="{Binding DataContext.AxisContentVisible, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}"                                
-                                                            ToolTipService.InitialShowDelay="0"
-                                                            ToolTipService.Placement="Top">                            
-                                                <material:PackIcon Kind="ChevronDown" Width="19" Height="19"/>
-                                                <material:ToggleButtonAssist.OnContent>
-                                                    <material:PackIcon Kind="ChevronUp" Width="19" Height="19"/>
-                                                </material:ToggleButtonAssist.OnContent>
-                                                <ToggleButton.Resources>
-                                                    <Style TargetType="{x:Type ToggleButton}" BasedOn="{StaticResource MaterialDesignToolBarToggleButton}">
-                                                        <Setter Property="ToolTip" Value="Open settings" />
-                                                        <Style.Triggers>
-                                                            <Trigger Property="IsChecked" Value="True">
-                                                                <Setter Property="ToolTip" Value="Close settings" />
-                                                            </Trigger>
-                                                        </Style.Triggers>
-                                                    </Style>
-                                                </ToggleButton.Resources>
-                                            </ToggleButton>
                                         </StackPanel>
                                         <StackPanel Orientation="Horizontal" DockPanel.Dock="Left">
                                             <Menu>
@@ -634,7 +595,7 @@
                                                     <MenuItem.Icon>
                                                         <material:PackIcon Kind="File" Width="19" Height="19"/>
                                                     </MenuItem.Icon>
-                                                    
+
                                                     <MenuItem Command="{s:Action OnAxisOpenFolder}"
                                                               CommandParameter="{Binding Key}"
                                                               IsEnabled="{Binding Value.Script, Converter={StaticResource InvertedNullableToBooleanConverter}}"
@@ -704,12 +665,12 @@
                                                                 <TextBlock Text="Move" DockPanel.Dock="Right"/>
                                                             </DockPanel>
                                                         </MenuItem.Header>
-                                                        
+
                                                         <MenuItem Header="_Video location" 
                                                                   Command="{s:Action OnAxisMoveToVideo}"
                                                                   CommandParameter="{Binding Key}"
                                                                   IsEnabled="{Binding DataContext.VideoFile, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}, Converter={StaticResource InvertedNullableToBooleanConverter}}"/>
-                                                        
+
                                                         <MenuItem Header="_Library location" 
                                                                   ItemsSource="{Binding DataContext.ScriptLibraries, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}">
                                                             <MenuItem.Resources>
@@ -831,7 +792,7 @@
                                                     </StackPanel>
                                                 </Grid>
                                             </material:PopupBox>
-                                            
+
                                             <material:PopupBox DockPanel.Dock="Left"
                                                                StaysOpen="True" 
                                                                Style="{StaticResource MaterialDesignToolBarPopupBox}"
@@ -1020,19 +981,20 @@
                                             </material:PopupBox>
                                         </StackPanel>
                                     </DockPanel>
-                                </Border>
-                            </DockPanel>
-                            <StackPanel DockPanel.Dock="Bottom" 
-                                        Margin="20 15 20 20"
-                                        Visibility="{Binding DataContext.AxisContentVisible, Converter={StaticResource BooleanToVisibilityConverter}, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}">
-                                <DockPanel LastChildFill="True" 
-                                               Margin="0 0 0 10">
-                                    <TextBlock Text="File:" 
+                                </Expander.Header>
+
+                                <Border Background="{StaticResource MaterialDesignBackground}"
+                                        BorderThickness="0 1 0 0"
+                                        BorderBrush="{StaticResource PrimaryHueLightBrush}">
+                                    <StackPanel Margin="20 15 20 20">
+                                        <DockPanel LastChildFill="True" 
+                                                   Margin="0 0 0 10">
+                                            <TextBlock Text="File:" 
                                                    DockPanel.Dock="Left" 
                                                    Margin="0 0 10 0" 
                                                    VerticalAlignment="Center"/>
 
-                                    <TextBlock Text="RAW" 
+                                            <TextBlock Text="RAW" 
                                                    DockPanel.Dock="Right"
                                                    VerticalAlignment="Center"
                                                    Typography.Capitals="AllSmallCaps"
@@ -1040,22 +1002,22 @@
                                                    FontSize="12"
                                                    Margin="10 0 0 0"
                                                    Padding="0">
-                                        <TextBlock.LayoutTransform>
-                                            <ScaleTransform ScaleY="1.35"/>
-                                        </TextBlock.LayoutTransform>
-                                        <TextBlock.Style>
-                                            <Style TargetType="{x:Type TextBlock}">
-                                                <Setter Property="Foreground" Value="{StaticResource PrimaryHueLightBrush}"/>
-                                                <Style.Triggers>
-                                                    <DataTrigger Binding="{Binding Value.Script.Keyframes.IsRawCollection}" Value="True">
-                                                        <Setter Property="Foreground" Value="Red"/>
-                                                    </DataTrigger>
-                                                </Style.Triggers>
-                                            </Style>
-                                        </TextBlock.Style>
-                                    </TextBlock>
+                                                <TextBlock.LayoutTransform>
+                                                    <ScaleTransform ScaleY="1.35"/>
+                                                </TextBlock.LayoutTransform>
+                                                <TextBlock.Style>
+                                                    <Style TargetType="{x:Type TextBlock}">
+                                                        <Setter Property="Foreground" Value="{StaticResource PrimaryHueLightBrush}"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding Value.Script.Keyframes.IsRawCollection}" Value="True">
+                                                                <Setter Property="Foreground" Value="Red"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
 
-                                    <TextBox Text="{Binding Value.Script.Name, Mode=OneWay}"
+                                            <TextBox Text="{Binding Value.Script.Name, Mode=OneWay}"
                                                  Style="{StaticResource MaterialDesignFloatingHintTextBox}"
                                                  material:HintAssist.Hint="{Binding Value.Script.Source.DirectoryName}"
                                                  Drop="{s:Action OnAxisDrop}"
@@ -1066,16 +1028,16 @@
                                                  DockPanel.Dock="Right" 
                                                  Margin="0 -10 0 0"
                                                  TextAlignment="Left"/>
-                                </DockPanel>
-                                <DockPanel LastChildFill="True" Margin="0 0 0 -5">
-                                    <TextBlock Text="Offset:" DockPanel.Dock="Left" Margin="0 0 10 0" VerticalAlignment="Center"/>
-                                    <TextBlock Text="{Binding Value.Settings.Offset, StringFormat={}{0:0.00}s}" 
+                                        </DockPanel>
+                                        <DockPanel LastChildFill="True" Margin="0 0 0 -5">
+                                            <TextBlock Text="Offset:" DockPanel.Dock="Left" Margin="0 0 10 0" VerticalAlignment="Center"/>
+                                            <TextBlock Text="{Binding Value.Settings.Offset, StringFormat={}{0:0.00}s}" 
                                                    VerticalAlignment="Center"
                                                    DockPanel.Dock="Right" 
                                                    Width="50"
                                                    TextAlignment="Right"/>
 
-                                    <Slider Value="{Binding Value.Settings.Offset}" 
+                                            <Slider Value="{Binding Value.Settings.Offset}" 
                                                 DockPanel.Dock="Left"
                                                 Minimum="-5" 
                                                 Maximum="5"
@@ -1083,62 +1045,72 @@
                                                 IsSnapToTickEnabled="True"
                                                 MouseDoubleClick="{s:Action OnSliderDoubleClick}"
                                                 ValueChanged="{s:Action OnOffsetSliderValueChanged}"/>
-                                </DockPanel>
-                            </StackPanel>
+                                        </DockPanel>
+                                    </StackPanel>
+                                </Border>
+                            </Expander>
                         </DockPanel>
                     </DataTemplate>
-                </behaviours:TabContent.Template>
-            </TabControl>
+                </TabControl.ContentTemplate>
+            </controls:NonReloadingTabControl>
         </material:Card>
 
         <material:Card material:ShadowAssist.ShadowDepth="Depth1">
             <Expander IsExpanded="{Binding ValuesContentVisible}"
+                      Style="{StaticResource MaterialDesignToolBarExpander}"
                       material:ExpanderAssist.HorizontalHeaderPadding="24 6 6 6"
                       Background="{StaticResource MaterialDesignToolBarBackground}">
                 <Expander.Header>
                     <TextBlock Text="Axis values" 
-                                   FontSize="14"
-                                   FontWeight="Bold"
-                                   Typography.Capitals="AllSmallCaps"/>
+                               VerticalAlignment="Center"
+                               Margin="12 0 0 0"
+                               FontSize="14"
+                               FontWeight="Bold"
+                               Typography.Capitals="AllSmallCaps"/>
                 </Expander.Header>
-                <StackPanel Margin="15 0 15 10">
-                    <ItemsControl ItemsSource="{Binding AxisStates}">
-                        <ItemsControl.ItemsPanel>
-                            <ItemsPanelTemplate>
-                                <UniformGrid Columns="3" Rows="3" IsItemsHost="True"/>
-                            </ItemsPanelTemplate>
-                        </ItemsControl.ItemsPanel>
-                        <ItemsControl.ItemContainerStyle>
-                            <Style>
-                                <Setter Property="FrameworkElement.Margin" Value="5 0 5 0"/>
-                            </Style>
-                        </ItemsControl.ItemContainerStyle>
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate>
-                                <DockPanel Margin="0" LastChildFill="True">
-                                    <TextBlock DockPanel.Dock="Left" Margin="0 0 5 0" Text="{Binding Key, Mode=OneWay}"/>
-                                    <ProgressBar material:TransitionAssist.DisableTransitions="True"
+
+                <Border Background="{StaticResource MaterialDesignBackground}"
+                        BorderThickness="0 1 0 0"
+                        BorderBrush="{StaticResource PrimaryHueLightBrush}">
+                    <StackPanel Margin="15 15 15 15">
+                        <ItemsControl ItemsSource="{Binding AxisStates}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <UniformGrid Columns="3" Rows="3" IsItemsHost="True"/>
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemContainerStyle>
+                                <Style>
+                                    <Setter Property="FrameworkElement.Margin" Value="5 0 5 0"/>
+                                </Style>
+                            </ItemsControl.ItemContainerStyle>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <DockPanel Margin="0" LastChildFill="True">
+                                        <TextBlock DockPanel.Dock="Left" Margin="0 0 5 0" Text="{Binding Key, Mode=OneWay}"/>
+                                        <ProgressBar material:TransitionAssist.DisableTransitions="True"
                                                  DockPanel.Dock="Right"
                                                  Minimum="0"
                                                  Maximum="100"
                                                  Height="10"
                                                  Width="155"
                                                  Value="{Binding Value.Value, Mode=OneWay, Converter={StaticResource DeviceAxisValueToPercentConverter}}">
-                                        <ProgressBar.Style>
-                                            <Style TargetType="ProgressBar" BasedOn="{StaticResource MaterialDesignLinearProgressBar}">
-                                                <Style.Triggers>
-                                                    <DataTrigger Binding="{Binding Value.InsideScript}" Value="False">
-                                                        <Setter Property="Foreground" Value="{StaticResource IdealForegroundDisabledBrush}"/>
-                                                    </DataTrigger>
-                                                </Style.Triggers>
-                                            </Style>
-                                        </ProgressBar.Style>
-                                    </ProgressBar>
-                                </DockPanel>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-                </StackPanel>
+                                            <ProgressBar.Style>
+                                                <Style TargetType="ProgressBar" BasedOn="{StaticResource MaterialDesignLinearProgressBar}">
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding Value.InsideScript}" Value="False">
+                                                            <Setter Property="Foreground" Value="{StaticResource IdealForegroundDisabledBrush}"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </ProgressBar.Style>
+                                        </ProgressBar>
+                                    </DockPanel>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Border>
             </Expander>
         </material:Card>
     </StackPanel>
