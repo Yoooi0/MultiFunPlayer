@@ -1,13 +1,11 @@
-﻿using System;
-using System.Globalization;
+﻿using System.Globalization;
 using System.Windows.Data;
 
-namespace MultiFunPlayer.UI.Converters
+namespace MultiFunPlayer.UI.Converters;
+
+public class InvertedNullableToBooleanConverter : IValueConverter
 {
-    public class InvertedNullableToBooleanConverter : IValueConverter
-    {
-        public object Convert(object value, Type targetType, object parameter, CultureInfo culture) => value != null;
-        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
-            => throw new NotSupportedException();
-    }
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture) => value != null;
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        => throw new NotSupportedException();
 }

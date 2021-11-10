@@ -1,43 +1,41 @@
-﻿using System;
-using System.Windows.Markup;
+﻿using System.Windows.Markup;
 
-namespace MultiFunPlayer.UI
+namespace MultiFunPlayer.UI;
+
+public class EnumBindingSourceExtension : MarkupExtension
 {
-    public class EnumBindingSourceExtension : MarkupExtension
+    private Type _enumType;
+    public Type EnumType
     {
-        private Type _enumType;
-        public Type EnumType
+        get => _enumType;
+        set
         {
-            get => _enumType;
-            set
-            {
-                if (value == null)
-                    throw new ArgumentNullException(nameof(value));
+            if (value == null)
+                throw new ArgumentNullException(nameof(value));
 
-                var enumType = Nullable.GetUnderlyingType(value) ?? value;
-                if (!enumType.IsEnum)
-                    throw new ArgumentException("{enumType} is not an Enum");
+            var enumType = Nullable.GetUnderlyingType(value) ?? value;
+            if (!enumType.IsEnum)
+                throw new ArgumentException("{enumType} is not an Enum");
 
-                _enumType = value;
-            }
+            _enumType = value;
         }
+    }
 
-        public EnumBindingSourceExtension(Type enumType)
-        {
-            EnumType = enumType;
-        }
+    public EnumBindingSourceExtension(Type enumType)
+    {
+        EnumType = enumType;
+    }
 
-        public override object ProvideValue(IServiceProvider serviceProvider)
-        {
-            var actualEnumType = Nullable.GetUnderlyingType(_enumType) ?? _enumType;
-            var enumValues = Enum.GetValues(actualEnumType);
+    public override object ProvideValue(IServiceProvider serviceProvider)
+    {
+        var actualEnumType = Nullable.GetUnderlyingType(_enumType) ?? _enumType;
+        var enumValues = Enum.GetValues(actualEnumType);
 
-            if (actualEnumType == _enumType)
-                return enumValues;
+        if (actualEnumType == _enumType)
+            return enumValues;
 
-            var result = Array.CreateInstance(actualEnumType, enumValues.Length + 1);
-            enumValues.CopyTo(result, 1);
-            return result;
-        }
+        var result = Array.CreateInstance(actualEnumType, enumValues.Length + 1);
+        enumValues.CopyTo(result, 1);
+        return result;
     }
 }

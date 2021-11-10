@@ -1,238 +1,245 @@
 ﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using System;
 using System.Collections;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Linq.Expressions;
+using System.Net.Http;
 using System.Net.Sockets;
 using System.Runtime.CompilerServices;
-using System.Threading;
-using System.Threading.Tasks;
 
-namespace MultiFunPlayer.Common
+namespace MultiFunPlayer.Common;
+
+public static class ConnectableExtensions
 {
-    public static class ConnectableExtensions
+    public static Task WaitForIdle(this IConnectable connectable, CancellationToken token)
+        => connectable.WaitForStatus(new[] { ConnectionStatus.Connected, ConnectionStatus.Disconnected }, token);
+    public static Task WaitForDisconnect(this IConnectable connectable, CancellationToken token)
+        => connectable.WaitForStatus(new[] { ConnectionStatus.Disconnected }, token);
+}
+
+public static class JsonExtensions
+{
+    public static bool TryToObject<T>(this JToken token, out T value) => TryToObject(token, null, null, out value);
+    public static bool TryToObject<T>(this JToken token, JsonSerializer serializer, out T value) => TryToObject(token, serializer, null, out value);
+    public static bool TryToObject<T>(this JToken token, JsonSerializerSettings settings, out T value) => TryToObject(token, null, settings, out value);
+    public static bool TryToObject<T>(this JToken token, JsonSerializer serializer, JsonSerializerSettings settings, out T value)
     {
-        public static Task WaitForIdle(this IConnectable connectable, CancellationToken token)
-            => connectable.WaitForStatus(new[] { ConnectionStatus.Connected, ConnectionStatus.Disconnected }, token);
-        public static Task WaitForDisconnect(this IConnectable connectable, CancellationToken token)
-            => connectable.WaitForStatus(new[] { ConnectionStatus.Disconnected }, token);
+        value = default;
+
+        try
+        {
+            if (token.Type == JTokenType.Null)
+                return false;
+
+            serializer ??= JsonSerializer.CreateDefault(settings);
+            value = token.ToObject<T>(serializer);
+            return value != null;
+        }
+        catch (JsonException)
+        {
+            return false;
+        }
     }
 
-    public static class JsonExtensions
+    public static bool TryGetValue<T>(this JObject o, string propertyName, out T value) => TryGetValue(o, propertyName, null, null, out value);
+    public static bool TryGetValue<T>(this JObject o, string propertyName, JsonSerializer serializer, out T value) => TryGetValue(o, propertyName, serializer, null, out value);
+    public static bool TryGetValue<T>(this JObject o, string propertyName, JsonSerializerSettings settings, out T value) => TryGetValue(o, propertyName, null, settings, out value);
+    public static bool TryGetValue<T>(this JObject o, string propertyName, JsonSerializer serializer, JsonSerializerSettings settings, out T value)
     {
-        public static bool TryToObject<T>(this JToken token, out T value) => TryToObject(token, null, null, out value);
-        public static bool TryToObject<T>(this JToken token, JsonSerializer serializer, out T value) => TryToObject(token, serializer, null, out value);
-        public static bool TryToObject<T>(this JToken token, JsonSerializerSettings settings, out T value) => TryToObject(token, null, settings, out value);
-        public static bool TryToObject<T>(this JToken token, JsonSerializer serializer, JsonSerializerSettings settings, out T value)
+        value = default;
+        return o.TryGetValue(propertyName, out var token) && token.TryToObject(serializer, settings, out value);
+    }
+
+    public static bool EnsureContainsObjects(this JToken token, params string[] propertyNames)
+    {
+        if (token is not JObject o)
+            return false;
+
+        foreach (var propertyName in propertyNames)
         {
-            value = default;
+            if (!o.ContainsKey(propertyName))
+                o[propertyName] = new JObject();
 
-            try
-            {
-                if (token.Type == JTokenType.Null)
-                    return false;
-
-                serializer ??= JsonSerializer.CreateDefault(settings);
-                value = token.ToObject<T>(serializer);
-                return value != null;
-            }
-            catch (JsonException)
-            {
-                return false;
-            }
-        }
-
-        public static bool TryGetValue<T>(this JObject o, string propertyName, out T value) => TryGetValue(o, propertyName, null, null, out value);
-        public static bool TryGetValue<T>(this JObject o, string propertyName, JsonSerializer serializer, out T value) => TryGetValue(o, propertyName, serializer, null, out value);
-        public static bool TryGetValue<T>(this JObject o, string propertyName, JsonSerializerSettings settings, out T value) => TryGetValue(o, propertyName, null, settings, out value);
-        public static bool TryGetValue<T>(this JObject o, string propertyName, JsonSerializer serializer, JsonSerializerSettings settings, out T value)
-        {
-            value = default;
-            return o.TryGetValue(propertyName, out var token) && token.TryToObject(serializer, settings, out value);
-        }
-
-        public static bool EnsureContainsObjects(this JToken token, params string[] propertyNames)
-        {
-            if (token is not JObject o)
-                return false;
-
-            foreach (var propertyName in propertyNames)
-            {
-                if (!o.ContainsKey(propertyName))
-                    o[propertyName] = new JObject();
-
-                if (o[propertyName] is JObject child)
-                    o = child;
-                else
-                    return false;
-            }
-
-            return true;
-        }
-
-        public static bool TryGetObject(this JToken token, out JObject result, params string[] propertyNames)
-        {
-            result = null;
-            if (token is not JObject o)
-                return false;
-
-            foreach (var propertyName in propertyNames)
-            {
-                if (!o.ContainsKey(propertyName) || o[propertyName] is not JObject child)
-                    return false;
-
+            if (o[propertyName] is JObject child)
                 o = child;
-            }
-
-            result = o;
-            return true;
+            else
+                return false;
         }
 
-        public static void Populate(this JToken token, object target)
-        {
-            using var reader = token.CreateReader();
-            JsonSerializer.CreateDefault().Populate(reader, target);
-        }
+        return true;
     }
 
-    public static class TaskExtensions
+    public static bool TryGetObject(this JToken token, out JObject result, params string[] propertyNames)
     {
-        public static Task WithCancellation(this Task task, CancellationToken cancellationToken)
+        result = null;
+        if (token is not JObject o)
+            return false;
+
+        foreach (var propertyName in propertyNames)
         {
-            static async Task DoWaitAsync(Task task, CancellationToken cancellationToken)
-            {
-                var tcs = new TaskCompletionSource();
-                using var registration = cancellationToken.Register(() => tcs.TrySetCanceled(cancellationToken), useSynchronizationContext: false);
-                await await Task.WhenAny(task, tcs.Task);
-            }
-
-            if (!cancellationToken.CanBeCanceled)
-                return task;
-            if (cancellationToken.IsCancellationRequested)
-                return Task.FromCanceled(cancellationToken);
-            return DoWaitAsync(task, cancellationToken);
-        }
-
-        public static Task<TResult> WithCancellation<TResult>(this Task<TResult> task, CancellationToken cancellationToken)
-        {
-            static async Task<T> DoWaitAsync<T>(Task<T> task, CancellationToken cancellationToken)
-            {
-                var tcs = new TaskCompletionSource<T>();
-                using var registration = cancellationToken.Register(() => tcs.TrySetCanceled(cancellationToken), useSynchronizationContext: false);
-                return await await Task.WhenAny(task, tcs.Task);
-            }
-
-            if (!cancellationToken.CanBeCanceled)
-                return task;
-            if (cancellationToken.IsCancellationRequested)
-                return Task.FromCanceled<TResult>(cancellationToken);
-            return DoWaitAsync(task, cancellationToken);
-        }
-    }
-
-    public static class IOExtensions
-    {
-        public static T AsRefreshed<T>(this T info) where T : FileSystemInfo
-        {
-            info.Refresh();
-            return info;
-        }
-
-        private static IEnumerable<T> GuardEnumerate<T>(DirectoryInfo directory, Func<DirectoryInfo, IEnumerable<T>> action) where T : FileSystemInfo
-        {
-            try
-            {
-                directory.Refresh();
-                if (!directory.Exists)
-                    return action.Invoke(directory);
-            } catch { }
-
-            return Enumerable.Empty<T>();
-        }
-
-        public static IEnumerable<DirectoryInfo> SafeEnumerateDirectories(this DirectoryInfo directory) => GuardEnumerate(directory, d => d.EnumerateDirectories());
-        public static IEnumerable<DirectoryInfo> SafeEnumerateDirectories(this DirectoryInfo directory, string searchPattern) => GuardEnumerate(directory, d => d.EnumerateDirectories(searchPattern));
-        public static IEnumerable<DirectoryInfo> SafeEnumerateDirectories(this DirectoryInfo directory, string searchPattern, SearchOption searchOption) => GuardEnumerate(directory, d => d.EnumerateDirectories(searchPattern, searchOption));
-
-        public static IEnumerable<FileInfo> SafeEnumerateFiles(this DirectoryInfo directory) => GuardEnumerate(directory, d => d.EnumerateFiles());
-        public static IEnumerable<FileInfo> SafeEnumerateFiles(this DirectoryInfo directory, string searchPattern) => GuardEnumerate(directory, d => d.EnumerateFiles(searchPattern));
-        public static IEnumerable<FileInfo> SafeEnumerateFiles(this DirectoryInfo directory, string searchPattern, SearchOption searchOption) => GuardEnumerate(directory, d => d.EnumerateFiles(searchPattern, searchOption));
-
-        public static IEnumerable<FileSystemInfo> SafeEnumerateFileSystemInfos(this DirectoryInfo directory) => GuardEnumerate(directory, d => d.EnumerateFileSystemInfos());
-        public static IEnumerable<FileSystemInfo> SafeEnumerateFileSystemInfos(this DirectoryInfo directory, string searchPattern) => GuardEnumerate(directory, d => d.EnumerateFileSystemInfos(searchPattern));
-        public static IEnumerable<FileSystemInfo> SafeEnumerateFileSystemInfos(this DirectoryInfo directory, string searchPattern, SearchOption searchOption) => GuardEnumerate(directory, d => d.EnumerateFileSystemInfos(searchPattern, searchOption));
-    }
-
-    public static class CollectionExtensions
-    {
-        public static ObservableConcurrentDictionaryView<TKey, TValue, TView> CreateView<TKey, TValue, TView>(
-            this ObservableConcurrentDictionary<TKey, TValue> dictionary, Expression<Func<TValue, TView>> selector) where TValue : class
-            => new(dictionary, selector);
-
-        public static ObservableConcurrentDictionaryView<TKey, TValue, TView> CreateView<TKey, TValue, TView>(
-            this ObservableConcurrentDictionary<TKey, TValue> dictionary, Func<TValue, TView> selector, string propertyName) where TValue : class
-            => new(dictionary, selector, propertyName);
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool ValidateIndex<T>(this ICollection<T> collection, int index)
-            => index >= 0 && index < collection.Count;
-
-        public static bool TryGet<T>(this IList list, int index, out T value)
-        {
-            value = default;
-            if (index < 0 || index >= list.Count)
+            if (!o.ContainsKey(propertyName) || o[propertyName] is not JObject child)
                 return false;
 
-            var o = list[index];
-            if (o == null)
-                return !typeof(T).IsValueType || Nullable.GetUnderlyingType(typeof(T)) != null;
-
-            if (o is not T)
-                return false;
-
-            value = (T)o;
-            return true;
+            o = child;
         }
 
-        public static bool TryGet<T>(this IList<T> list, int index, out T value)
-        {
-            value = default;
-            if (!list.ValidateIndex(index))
-                return false;
-
-            value = list[index];
-            return true;
-        }
+        result = o;
+        return true;
     }
 
-    public static class StreamExtensions
+    public static void Populate(this JToken token, object target)
     {
-        public static async Task<byte[]> ReadAllBytesAsync(this NetworkStream stream, CancellationToken token)
-        {
-            var result = 0;
-            var buffer = new ArraySegment<byte>(new byte[1024]);
-            using var memory = new MemoryStream();
-            do
-            {
-                result = await stream.ReadAsync(buffer, token);
-                await memory.WriteAsync(buffer.AsMemory(buffer.Offset, result), token);
-            }
-            while (result > 0 && stream.DataAvailable);
+        using var reader = token.CreateReader();
+        JsonSerializer.CreateDefault().Populate(reader, target);
+    }
+}
 
-            memory.Seek(0, SeekOrigin.Begin);
-            return memory.ToArray();
+public static class TaskExtensions
+{
+    public static Task WithCancellation(this Task task, CancellationToken cancellationToken)
+    {
+        static async Task DoWaitAsync(Task task, CancellationToken cancellationToken)
+        {
+            var tcs = new TaskCompletionSource();
+            using var registration = cancellationToken.Register(() => tcs.TrySetCanceled(cancellationToken), useSynchronizationContext: false);
+            await await Task.WhenAny(task, tcs.Task);
         }
+
+        if (!cancellationToken.CanBeCanceled)
+            return task;
+        if (cancellationToken.IsCancellationRequested)
+            return Task.FromCanceled(cancellationToken);
+        return DoWaitAsync(task, cancellationToken);
     }
 
-    public static class DeconstructExtensions
+    public static Task<TResult> WithCancellation<TResult>(this Task<TResult> task, CancellationToken cancellationToken)
     {
-        public static void Deconstruct<TKey, TItems>(this IGrouping<TKey, TItems> grouping, out TKey key, out IEnumerable<TItems> items)
+        static async Task<T> DoWaitAsync<T>(Task<T> task, CancellationToken cancellationToken)
         {
-            key = grouping.Key;
-            items = grouping.AsEnumerable();
+            var tcs = new TaskCompletionSource<T>();
+            using var registration = cancellationToken.Register(() => tcs.TrySetCanceled(cancellationToken), useSynchronizationContext: false);
+            return await await Task.WhenAny(task, tcs.Task);
         }
+
+        if (!cancellationToken.CanBeCanceled)
+            return task;
+        if (cancellationToken.IsCancellationRequested)
+            return Task.FromCanceled<TResult>(cancellationToken);
+        return DoWaitAsync(task, cancellationToken);
+    }
+}
+
+public static class IOExtensions
+{
+    public static T AsRefreshed<T>(this T info) where T : FileSystemInfo
+    {
+        info.Refresh();
+        return info;
+    }
+
+    private static IEnumerable<T> GuardEnumerate<T>(DirectoryInfo directory, Func<DirectoryInfo, IEnumerable<T>> action) where T : FileSystemInfo
+    {
+        try
+        {
+            directory.Refresh();
+            if (!directory.Exists)
+                return action.Invoke(directory);
+        } catch { }
+
+        return Enumerable.Empty<T>();
+    }
+
+    public static IEnumerable<DirectoryInfo> SafeEnumerateDirectories(this DirectoryInfo directory) => GuardEnumerate(directory, d => d.EnumerateDirectories());
+    public static IEnumerable<DirectoryInfo> SafeEnumerateDirectories(this DirectoryInfo directory, string searchPattern) => GuardEnumerate(directory, d => d.EnumerateDirectories(searchPattern));
+    public static IEnumerable<DirectoryInfo> SafeEnumerateDirectories(this DirectoryInfo directory, string searchPattern, SearchOption searchOption) => GuardEnumerate(directory, d => d.EnumerateDirectories(searchPattern, searchOption));
+
+    public static IEnumerable<FileInfo> SafeEnumerateFiles(this DirectoryInfo directory) => GuardEnumerate(directory, d => d.EnumerateFiles());
+    public static IEnumerable<FileInfo> SafeEnumerateFiles(this DirectoryInfo directory, string searchPattern) => GuardEnumerate(directory, d => d.EnumerateFiles(searchPattern));
+    public static IEnumerable<FileInfo> SafeEnumerateFiles(this DirectoryInfo directory, string searchPattern, SearchOption searchOption) => GuardEnumerate(directory, d => d.EnumerateFiles(searchPattern, searchOption));
+
+    public static IEnumerable<FileSystemInfo> SafeEnumerateFileSystemInfos(this DirectoryInfo directory) => GuardEnumerate(directory, d => d.EnumerateFileSystemInfos());
+    public static IEnumerable<FileSystemInfo> SafeEnumerateFileSystemInfos(this DirectoryInfo directory, string searchPattern) => GuardEnumerate(directory, d => d.EnumerateFileSystemInfos(searchPattern));
+    public static IEnumerable<FileSystemInfo> SafeEnumerateFileSystemInfos(this DirectoryInfo directory, string searchPattern, SearchOption searchOption) => GuardEnumerate(directory, d => d.EnumerateFileSystemInfos(searchPattern, searchOption));
+}
+
+public static class CollectionExtensions
+{
+    public static ObservableConcurrentDictionaryView<TKey, TValue, TView> CreateView<TKey, TValue, TView>(
+        this ObservableConcurrentDictionary<TKey, TValue> dictionary, Expression<Func<TValue, TView>> selector) where TValue : class
+        => new(dictionary, selector);
+
+    public static ObservableConcurrentDictionaryView<TKey, TValue, TView> CreateView<TKey, TValue, TView>(
+        this ObservableConcurrentDictionary<TKey, TValue> dictionary, Func<TValue, TView> selector, string propertyName) where TValue : class
+        => new(dictionary, selector, propertyName);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool ValidateIndex<T>(this ICollection<T> collection, int index)
+        => index >= 0 && index < collection.Count;
+
+    public static bool TryGet<T>(this IList list, int index, out T value)
+    {
+        value = default;
+        if (index < 0 || index >= list.Count)
+            return false;
+
+        var o = list[index];
+        if (o == null)
+            return !typeof(T).IsValueType || Nullable.GetUnderlyingType(typeof(T)) != null;
+
+        if (o is not T)
+            return false;
+
+        value = (T)o;
+        return true;
+    }
+
+    public static bool TryGet<T>(this IList<T> list, int index, out T value)
+    {
+        value = default;
+        if (!list.ValidateIndex(index))
+            return false;
+
+        value = list[index];
+        return true;
+    }
+}
+
+public static class StreamExtensions
+{
+    public static async Task<byte[]> ReadAllBytesAsync(this NetworkStream stream, CancellationToken token)
+    {
+        var buffer = new ArraySegment<byte>(new byte[1024]);
+        using var memory = new MemoryStream();
+
+        for(int result = 0; result > 0 && stream.DataAvailable;)
+        {
+            result = await stream.ReadAsync(buffer, token);
+            await memory.WriteAsync(buffer.AsMemory(buffer.Offset, result), token);
+        }
+
+        memory.Seek(0, SeekOrigin.Begin);
+        return memory.ToArray();
+    }
+}
+
+public static class DeconstructExtensions
+{
+    public static void Deconstruct<TKey, TItems>(this IGrouping<TKey, TItems> grouping, out TKey key, out IEnumerable<TItems> items)
+    {
+        key = grouping.Key;
+        items = grouping.AsEnumerable();
+    }
+}
+
+public static class WebExtensions
+{
+    public static async Task DownloadFileAsync(this HttpClient client, Uri address, string fileName)
+    {
+        using var response = await client.GetAsync(address);
+        response.EnsureSuccessStatusCode();
+
+        var stream = await response.Content.ReadAsStreamAsync();
+        using var fileStream = File.Create(fileName);
+        stream.CopyTo(fileStream);
     }
 }

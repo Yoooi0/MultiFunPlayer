@@ -6,186 +6,181 @@ using MultiFunPlayer.UI.Controls.ViewModels;
 using Newtonsoft.Json.Linq;
 using NLog;
 using Stylet;
-using System;
 using System.IO;
 using System.IO.Ports;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 
-namespace MultiFunPlayer.OutputTarget.ViewModels
+namespace MultiFunPlayer.OutputTarget.ViewModels;
+
+public class SerialOutputTargetViewModel : ThreadAbstractOutputTarget
 {
-    public class SerialOutputTargetViewModel : ThreadAbstractOutputTarget
+    protected Logger Logger = LogManager.GetCurrentClassLogger();
+
+    public override string Name => "Serial";
+    public override ConnectionStatus Status { get; protected set; }
+
+    public BindableCollection<string> ComPorts { get; set; }
+    public string SelectedComPort { get; set; }
+
+    public SerialOutputTargetViewModel(IShortcutManager shortcutManager, IEventAggregator eventAggregator, IDeviceAxisValueProvider valueProvider)
+        : base(shortcutManager, eventAggregator, valueProvider)
     {
-        protected Logger Logger = LogManager.GetCurrentClassLogger();
+        ComPorts = new BindableCollection<string>(SerialPort.GetPortNames());
+    }
 
-        public override string Name => "Serial";
-        public override ConnectionStatus Status { get; protected set; }
+    public bool CanChangePort => !IsRefreshBusy && !IsConnectBusy && !IsConnected;
+    public bool IsRefreshBusy { get; set; }
+    public bool CanRefreshPorts => !IsRefreshBusy && !IsConnectBusy && !IsConnected;
+    public async Task RefreshPorts()
+    {
+        IsRefreshBusy = true;
+        await Task.Delay(750).ConfigureAwait(true);
 
-        public BindableCollection<string> ComPorts { get; set; }
-        public string SelectedComPort { get; set; }
-
-        public SerialOutputTargetViewModel(IShortcutManager shortcutManager, IEventAggregator eventAggregator, IDeviceAxisValueProvider valueProvider)
-            : base(shortcutManager, eventAggregator, valueProvider)
+        var lastSelected = SelectedComPort;
+        ComPorts.Clear();
+        try
         {
-            ComPorts = new BindableCollection<string>(SerialPort.GetPortNames());
+            ComPorts.AddRange(SerialPort.GetPortNames());
         }
+        catch { }
 
-        public bool CanChangePort => !IsRefreshBusy && !IsConnectBusy && !IsConnected;
-        public bool IsRefreshBusy { get; set; }
-        public bool CanRefreshPorts => !IsRefreshBusy && !IsConnectBusy && !IsConnected;
-        public async Task RefreshPorts()
+        SelectedComPort = lastSelected;
+        await Task.Delay(250).ConfigureAwait(true);
+        IsRefreshBusy = false;
+    }
+
+    public bool IsConnected => Status == ConnectionStatus.Connected;
+    public bool IsConnectBusy => Status == ConnectionStatus.Connecting || Status == ConnectionStatus.Disconnecting;
+    public bool CanToggleConnect => !IsConnectBusy && SelectedComPort != null;
+
+    public override async Task ConnectAsync()
+    {
+        if (!ComPorts.Contains(SelectedComPort))
+            await RefreshPorts();
+
+        await base.ConnectAsync();
+    }
+
+    protected override void Run(CancellationToken token)
+    {
+        var serialPort = default(SerialPort);
+
+        try
         {
-            IsRefreshBusy = true;
-            await Task.Delay(750).ConfigureAwait(true);
+            Logger.Info("Connecting to {0}", SelectedComPort);
 
-            var lastSelected = SelectedComPort;
-            ComPorts.Clear();
-            try
+            serialPort = new SerialPort(SelectedComPort, 115200)
             {
-                ComPorts.AddRange(SerialPort.GetPortNames());
-            }
-            catch { }
+                ReadTimeout = 1000,
+                WriteTimeout = 1000,
+                DtrEnable = true,
+                RtsEnable = true
+            };
 
-            SelectedComPort = lastSelected;
-            await Task.Delay(250).ConfigureAwait(true);
-            IsRefreshBusy = false;
+            serialPort.Open();
+            serialPort.ReadExisting();
+            Status = ConnectionStatus.Connected;
         }
-
-        public bool IsConnected => Status == ConnectionStatus.Connected;
-        public bool IsConnectBusy => Status == ConnectionStatus.Connecting || Status == ConnectionStatus.Disconnecting;
-        public bool CanToggleConnect => !IsConnectBusy && SelectedComPort != null;
-
-        public override async Task ConnectAsync()
+        catch (Exception e)
         {
-            if (!ComPorts.Contains(SelectedComPort))
-                await RefreshPorts();
-
-            await base.ConnectAsync();
-        }
-
-        protected override void Run(CancellationToken token)
-        {
-            var serialPort = default(SerialPort);
-
-            try
-            {
-                Logger.Info("Connecting to {0}", SelectedComPort);
-
-                serialPort = new SerialPort(SelectedComPort, 115200)
-                {
-                    ReadTimeout = 1000,
-                    WriteTimeout = 1000,
-                    DtrEnable = true,
-                    RtsEnable = true
-                };
-
-                serialPort.Open();
-                serialPort.ReadExisting();
-                Status = ConnectionStatus.Connected;
-            }
-            catch (Exception e)
-            {
-                Logger.Warn(e, "Error when opening serial port");
-
-                try { serialPort?.Close(); }
-                catch (IOException) { }
-
-                _ = Execute.OnUIThreadAsync(async () =>
-                {
-                    _ = DialogHelper.ShowOnUIThreadAsync(new ErrorMessageDialogViewModel($"Error when opening serial port:\n\n{e}"), "RootDialog");
-                    await RefreshPorts().ConfigureAwait(true);
-                });
-
-                return;
-            }
-
-            try
-            {
-                var lastSentValues = DeviceAxis.All.ToDictionary(a => a, _ => float.NaN);
-                while (!token.IsCancellationRequested && serialPort?.IsOpen == true)
-                {
-                    var interval = MathF.Max(1, 1000.0f / UpdateRate);
-                    UpdateValues();
-
-                    var dirtyValues = Values.Where(x => DeviceAxis.IsDirty(x.Value, lastSentValues[x.Key]));
-                    var commands = DeviceAxis.ToString(dirtyValues, (int)interval);
-                    if (serialPort?.IsOpen == true && !string.IsNullOrWhiteSpace(commands))
-                    {
-                        Logger.Trace("Sending \"{0}\" to \"{1}\"", commands.Trim(), SelectedComPort);
-                        serialPort?.Write(commands);
-                    }
-
-                    foreach (var (axis, value) in dirtyValues)
-                        lastSentValues[axis] = value;
-
-                    Thread.Sleep((int)interval);
-                }
-            }
-            catch (Exception e) when (e is TimeoutException || e is IOException)
-            {
-                Logger.Error(e, $"{Name} failed with exception");
-                _ = Execute.OnUIThreadAsync(async () =>
-                {
-                    _ = DialogHelper.ShowOnUIThreadAsync(new ErrorMessageDialogViewModel($"{Name} failed with exception:\n\n{e}"), "RootDialog");
-                    await RefreshPorts().ConfigureAwait(true);
-                });
-            }
-            catch (Exception e) { Logger.Debug(e, $"{Name} failed with exception"); }
+            Logger.Warn(e, "Error when opening serial port");
 
             try { serialPort?.Close(); }
             catch (IOException) { }
+
+            _ = Execute.OnUIThreadAsync(async () =>
+            {
+                _ = DialogHelper.ShowOnUIThreadAsync(new ErrorMessageDialogViewModel($"Error when opening serial port:\n\n{e}"), "RootDialog");
+                await RefreshPorts().ConfigureAwait(true);
+            });
+
+            return;
         }
 
-        protected override void HandleSettings(JObject settings, AppSettingsMessageType type)
+        try
         {
-            if (type == AppSettingsMessageType.Saving)
+            var lastSentValues = DeviceAxis.All.ToDictionary(a => a, _ => float.NaN);
+            while (!token.IsCancellationRequested && serialPort?.IsOpen == true)
             {
-                if(SelectedComPort != null)
-                    settings[nameof(SelectedComPort)] = new JValue(SelectedComPort);
-            }
-            else if (type == AppSettingsMessageType.Loading)
-            {
-                if (settings.TryGetValue<string>(nameof(SelectedComPort), out var selectedComPort))
-                    SelectedComPort = selectedComPort;
-            }
-        }
+                var interval = MathF.Max(1, 1000.0f / UpdateRate);
+                UpdateValues();
 
-        protected override void RegisterShortcuts(IShortcutManager s)
-        {
-            base.RegisterShortcuts(s);
-
-            #region ComPort
-            s.RegisterAction<string>($"{Name}::ComPort::Set", "Com port", (_, comPort) => SelectedComPort = comPort);
-            #endregion
-        }
-
-        public override async ValueTask<bool> CanConnectAsync(CancellationToken token)
-        {
-            try
-            {
-                await RefreshPorts();
-                if (!ComPorts.Contains(SelectedComPort))
-                    return await ValueTask.FromResult(false);
-
-                using var serialPort = new SerialPort(SelectedComPort, 115200)
+                var dirtyValues = Values.Where(x => DeviceAxis.IsDirty(x.Value, lastSentValues[x.Key]));
+                var commands = DeviceAxis.ToString(dirtyValues, (int)interval);
+                if (serialPort?.IsOpen == true && !string.IsNullOrWhiteSpace(commands))
                 {
-                    ReadTimeout = 1000,
-                    WriteTimeout = 1000,
-                    DtrEnable = true,
-                    RtsEnable = true
-                };
+                    Logger.Trace("Sending \"{0}\" to \"{1}\"", commands.Trim(), SelectedComPort);
+                    serialPort?.Write(commands);
+                }
 
-                serialPort.Open();
-                serialPort.ReadExisting();
-                serialPort.Close();
+                foreach (var (axis, value) in dirtyValues)
+                    lastSentValues[axis] = value;
 
-                return await ValueTask.FromResult(true);
+                Thread.Sleep((int)interval);
             }
-            catch
+        }
+        catch (Exception e) when (e is TimeoutException || e is IOException)
+        {
+            Logger.Error(e, $"{Name} failed with exception");
+            _ = Execute.OnUIThreadAsync(async () =>
             {
+                _ = DialogHelper.ShowOnUIThreadAsync(new ErrorMessageDialogViewModel($"{Name} failed with exception:\n\n{e}"), "RootDialog");
+                await RefreshPorts().ConfigureAwait(true);
+            });
+        }
+        catch (Exception e) { Logger.Debug(e, $"{Name} failed with exception"); }
+
+        try { serialPort?.Close(); }
+        catch (IOException) { }
+    }
+
+    protected override void HandleSettings(JObject settings, AppSettingsMessageType type)
+    {
+        if (type == AppSettingsMessageType.Saving)
+        {
+            if (SelectedComPort != null)
+                settings[nameof(SelectedComPort)] = new JValue(SelectedComPort);
+        }
+        else if (type == AppSettingsMessageType.Loading)
+        {
+            if (settings.TryGetValue<string>(nameof(SelectedComPort), out var selectedComPort))
+                SelectedComPort = selectedComPort;
+        }
+    }
+
+    protected override void RegisterShortcuts(IShortcutManager s)
+    {
+        base.RegisterShortcuts(s);
+
+        #region ComPort
+        s.RegisterAction<string>($"{Name}::ComPort::Set", "Com port", (_, comPort) => SelectedComPort = comPort);
+        #endregion
+    }
+
+    public override async ValueTask<bool> CanConnectAsync(CancellationToken token)
+    {
+        try
+        {
+            await RefreshPorts();
+            if (!ComPorts.Contains(SelectedComPort))
                 return await ValueTask.FromResult(false);
-            }
+
+            using var serialPort = new SerialPort(SelectedComPort, 115200)
+            {
+                ReadTimeout = 1000,
+                WriteTimeout = 1000,
+                DtrEnable = true,
+                RtsEnable = true
+            };
+
+            serialPort.Open();
+            serialPort.ReadExisting();
+            serialPort.Close();
+
+            return await ValueTask.FromResult(true);
+        }
+        catch
+        {
+            return await ValueTask.FromResult(false);
         }
     }
 }

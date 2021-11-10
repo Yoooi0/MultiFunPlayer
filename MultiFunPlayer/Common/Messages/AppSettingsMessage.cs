@@ -1,22 +1,21 @@
 ﻿using Newtonsoft.Json.Linq;
 
-namespace MultiFunPlayer.Common.Messages
+namespace MultiFunPlayer.Common.Messages;
+
+public enum AppSettingsMessageType
 {
-    public enum AppSettingsMessageType
-    {
-        Saving,
-        Loading
-    }
+    Saving,
+    Loading
+}
 
-    public class AppSettingsMessage
-    {
-        public AppSettingsMessageType Type { get; }
-        public JObject Settings { get; }
+public class AppSettingsMessage
+{
+    public AppSettingsMessageType Type { get; }
+    public JObject Settings { get; }
 
-        public AppSettingsMessage(JObject settings, AppSettingsMessageType type)
-        {
-            Settings = settings;
-            Type = type;
-        }
+    public AppSettingsMessage(JObject settings, AppSettingsMessageType type)
+    {
+        Settings = settings;
+        Type = type;
     }
 }

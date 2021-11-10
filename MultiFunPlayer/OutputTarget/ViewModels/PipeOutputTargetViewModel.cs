@@ -6,116 +6,112 @@ using MultiFunPlayer.UI.Controls.ViewModels;
 using Newtonsoft.Json.Linq;
 using NLog;
 using Stylet;
-using System;
 using System.IO;
 using System.IO.Pipes;
 using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 
-namespace MultiFunPlayer.OutputTarget.ViewModels
+namespace MultiFunPlayer.OutputTarget.ViewModels;
+
+public class PipeOutputTargetViewModel : ThreadAbstractOutputTarget
 {
-    public class PipeOutputTargetViewModel : ThreadAbstractOutputTarget
+    protected Logger Logger = LogManager.GetCurrentClassLogger();
+
+    public override string Name => "Pipe";
+    public override ConnectionStatus Status { get; protected set; }
+
+    public string PipeName { get; set; } = "mfp-pipe";
+
+    public PipeOutputTargetViewModel(IShortcutManager shortcutManager, IEventAggregator eventAggregator, IDeviceAxisValueProvider valueProvider)
+        : base(shortcutManager, eventAggregator, valueProvider) { }
+
+    public bool IsConnected => Status == ConnectionStatus.Connected;
+    public bool IsConnectBusy => Status == ConnectionStatus.Connecting || Status == ConnectionStatus.Disconnecting;
+    public bool CanToggleConnect => !IsConnectBusy;
+
+    protected override void Run(CancellationToken token)
     {
-        protected Logger Logger = LogManager.GetCurrentClassLogger();
+        var client = default(NamedPipeClientStream);
 
-        public override string Name => "Pipe";
-        public override ConnectionStatus Status { get; protected set; }
-
-        public string PipeName { get; set; } = "mfp-pipe";
-
-        public PipeOutputTargetViewModel(IShortcutManager shortcutManager, IEventAggregator eventAggregator, IDeviceAxisValueProvider valueProvider)
-            : base(shortcutManager, eventAggregator, valueProvider) { }
-
-        public bool IsConnected => Status == ConnectionStatus.Connected;
-        public bool IsConnectBusy => Status == ConnectionStatus.Connecting || Status == ConnectionStatus.Disconnecting;
-        public bool CanToggleConnect => !IsConnectBusy;
-
-        protected override void Run(CancellationToken token)
+        try
         {
-            var client = default(NamedPipeClientStream);
+            Logger.Info("Connecting to {0}", PipeName);
 
-            try
-            {
-                Logger.Info("Connecting to {0}", PipeName);
+            client = new NamedPipeClientStream(".", PipeName, PipeDirection.Out);
+            client.Connect(2500);
 
-                client = new NamedPipeClientStream(".", PipeName, PipeDirection.Out);
-                client.Connect(2500);
-
-                Status = ConnectionStatus.Connected;
-            }
-            catch (Exception e)
-            {
-                Logger.Warn(e, "Error when opening pipe");
-                if (client?.IsConnected == true)
-                    client.Close();
-
-                _ = Execute.OnUIThreadAsync(() => _ = DialogHelper.ShowOnUIThreadAsync(new ErrorMessageDialogViewModel($"Error when opening pipe:\n\n{e}"), "RootDialog"));
-                return;
-            }
-
-            try
-            {
-                var buffer = new byte[256];
-                while (!token.IsCancellationRequested && client?.IsConnected == true)
-                {
-                    var interval = MathF.Max(1, 1000.0f / UpdateRate);
-                    UpdateValues();
-
-                    var commands = DeviceAxis.ToString(Values, (int)interval);
-                    if (client?.IsConnected == true && !string.IsNullOrWhiteSpace(commands))
-                    {
-                        Logger.Trace("Sending \"{0}\" to \"{1}\"", commands.Trim(), PipeName);
-                        var encoded = Encoding.ASCII.GetBytes(commands, buffer);
-                        client?.Write(buffer, 0, encoded);
-                    }
-
-                    Thread.Sleep((int)interval);
-                }
-            }
-            catch (Exception e)
-            {
-                Logger.Error(e, $"{Name} failed with exception");
-                _ = Execute.OnUIThreadAsync(() => _ = DialogHelper.ShowOnUIThreadAsync(new ErrorMessageDialogViewModel($"{Name} failed with exception:\n\n{e}"), "RootDialog"));
-            }
-
+            Status = ConnectionStatus.Connected;
+        }
+        catch (Exception e)
+        {
+            Logger.Warn(e, "Error when opening pipe");
             if (client?.IsConnected == true)
                 client.Close();
+
+            _ = Execute.OnUIThreadAsync(() => _ = DialogHelper.ShowOnUIThreadAsync(new ErrorMessageDialogViewModel($"Error when opening pipe:\n\n{e}"), "RootDialog"));
+            return;
         }
 
-        protected override void HandleSettings(JObject settings, AppSettingsMessageType type)
+        try
         {
-            if (type == AppSettingsMessageType.Saving)
+            var buffer = new byte[256];
+            while (!token.IsCancellationRequested && client?.IsConnected == true)
             {
-                if (PipeName != null)
-                    settings[nameof(PipeName)] = new JValue(PipeName);
-            }
-            else if (type == AppSettingsMessageType.Loading)
-            {
-                if (settings.TryGetValue<string>(nameof(PipeName), out var pipeName))
-                    PipeName = pipeName;
+                var interval = MathF.Max(1, 1000.0f / UpdateRate);
+                UpdateValues();
+
+                var commands = DeviceAxis.ToString(Values, (int)interval);
+                if (client?.IsConnected == true && !string.IsNullOrWhiteSpace(commands))
+                {
+                    Logger.Trace("Sending \"{0}\" to \"{1}\"", commands.Trim(), PipeName);
+                    var encoded = Encoding.ASCII.GetBytes(commands, buffer);
+                    client?.Write(buffer, 0, encoded);
+                }
+
+                Thread.Sleep((int)interval);
             }
         }
-
-        protected override void RegisterShortcuts(IShortcutManager s)
+        catch (Exception e)
         {
-            base.RegisterShortcuts(s);
-
-            #region PipeName
-            s.RegisterAction<string>($"{Name}::PipeName::Set", "Pipe name", (_, pipeName) => PipeName = pipeName);
-            #endregion
+            Logger.Error(e, $"{Name} failed with exception");
+            _ = Execute.OnUIThreadAsync(() => _ = DialogHelper.ShowOnUIThreadAsync(new ErrorMessageDialogViewModel($"{Name} failed with exception:\n\n{e}"), "RootDialog"));
         }
 
-        public override async ValueTask<bool> CanConnectAsync(CancellationToken token)
+        if (client?.IsConnected == true)
+            client.Close();
+    }
+
+    protected override void HandleSettings(JObject settings, AppSettingsMessageType type)
+    {
+        if (type == AppSettingsMessageType.Saving)
         {
-            try
-            {
-                return await ValueTask.FromResult(File.Exists($@"\\.\pipe\{PipeName}"));
-            }
-            catch
-            {
-                return await ValueTask.FromResult(false);
-            }
+            if (PipeName != null)
+                settings[nameof(PipeName)] = new JValue(PipeName);
+        }
+        else if (type == AppSettingsMessageType.Loading)
+        {
+            if (settings.TryGetValue<string>(nameof(PipeName), out var pipeName))
+                PipeName = pipeName;
+        }
+    }
+
+    protected override void RegisterShortcuts(IShortcutManager s)
+    {
+        base.RegisterShortcuts(s);
+
+        #region PipeName
+        s.RegisterAction<string>($"{Name}::PipeName::Set", "Pipe name", (_, pipeName) => PipeName = pipeName);
+        #endregion
+    }
+
+    public override async ValueTask<bool> CanConnectAsync(CancellationToken token)
+    {
+        try
+        {
+            return await ValueTask.FromResult(File.Exists($@"\\.\pipe\{PipeName}"));
+        }
+        catch
+        {
+            return await ValueTask.FromResult(false);
         }
     }
 }

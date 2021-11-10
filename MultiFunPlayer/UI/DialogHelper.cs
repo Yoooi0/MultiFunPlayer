@@ -1,39 +1,37 @@
 ﻿using MaterialDesignThemes.Wpf;
 using Stylet;
-using System.Threading.Tasks;
 using System.Windows;
 
-namespace MultiFunPlayer.UI
+namespace MultiFunPlayer.UI;
+
+public class DialogHelper
 {
-    public class DialogHelper
+    private static DialogHelper Instance { get; set; }
+    private IViewManager ViewManager { get; }
+
+    public DialogHelper(IViewManager viewManager)
     {
-        private static DialogHelper Instance { get; set; }
-        private IViewManager ViewManager { get; }
+        Instance = this;
+        ViewManager = viewManager;
+    }
 
-        public DialogHelper(IViewManager viewManager)
-        {
-            Instance = this;
-            ViewManager = viewManager;
-        }
+    public static Task ShowOnUIThreadAsync(object model, string dialogName)
+        => _ = Execute.OnUIThreadAsync(async () => await ShowAsync(model, dialogName));
 
-        public static Task ShowOnUIThreadAsync(object model, string dialogName)
-            => _ = Execute.OnUIThreadAsync(async () => await ShowAsync(model, dialogName));
+    public static async Task<object> ShowAsync(object model, string dialogName)
+    {
+        var view = Instance.ViewManager.CreateAndBindViewForModelIfNecessary(model);
+        var session = DialogHost.GetDialogSession(dialogName);
+        var sessionContext = (session?.Content as FrameworkElement)?.DataContext;
+        if (model.Equals(sessionContext))
+            return null;
 
-        public static async Task<object> ShowAsync(object model, string dialogName)
-        {
-            var view = Instance.ViewManager.CreateAndBindViewForModelIfNecessary(model);
-            var session = DialogHost.GetDialogSession(dialogName);
-            var sessionContext = (session?.Content as FrameworkElement)?.DataContext;
-            if (model.Equals(sessionContext))
-                return null;
+        if (DialogHost.IsDialogOpen(dialogName))
+            DialogHost.Close(dialogName);
 
-            if (DialogHost.IsDialogOpen(dialogName))
-                DialogHost.Close(dialogName);
-
-            (model as IScreenState)?.Activate();
-            var result = await DialogHost.Show(view, dialogName).ConfigureAwait(true);
-            (model as IScreenState)?.Deactivate();
-            return result;
-        }
+        (model as IScreenState)?.Activate();
+        var result = await DialogHost.Show(view, dialogName).ConfigureAwait(true);
+        (model as IScreenState)?.Deactivate();
+        return result;
     }
 }

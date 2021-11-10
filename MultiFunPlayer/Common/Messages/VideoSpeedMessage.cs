@@ -1,8 +1,7 @@
-﻿namespace MultiFunPlayer.Common.Messages
+﻿namespace MultiFunPlayer.Common.Messages;
+
+public class VideoSpeedMessage
 {
-    public class VideoSpeedMessage
-    {
-        public float Speed { get; }
-        public VideoSpeedMessage(float speed) => Speed = speed;
-    }
+    public float Speed { get; }
+    public VideoSpeedMessage(float speed) => Speed = speed;
 }

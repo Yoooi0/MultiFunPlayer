@@ -1,25 +1,23 @@
-﻿using System;
-using System.Globalization;
+﻿using System.Globalization;
 using System.Windows.Data;
 
-namespace MultiFunPlayer.UI.Converters
+namespace MultiFunPlayer.UI.Converters;
+
+public class CallObjectMethodWithArgumentConverter : IMultiValueConverter
 {
-    public class CallObjectMethodWithArgumentConverter : IMultiValueConverter
+    public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
     {
-        public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
-        {
-            if (values.Length != 3)
-                return null;
+        if (values.Length != 3)
+            return null;
 
-            var dataContext = values[0];
-            var methodName = values[1] as string;
-            var argument = values[2];
+        var dataContext = values[0];
+        var methodName = values[1] as string;
+        var argument = values[2];
 
-            var method = dataContext.GetType().GetMethod(methodName);
-            return method.Invoke(dataContext, new[] { argument });
-        }
-
-        public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture)
-            => throw new NotSupportedException();
+        var method = dataContext.GetType().GetMethod(methodName);
+        return method.Invoke(dataContext, new[] { argument });
     }
+
+    public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture)
+        => throw new NotSupportedException();
 }

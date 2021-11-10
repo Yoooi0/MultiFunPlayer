@@ -1,8 +1,7 @@
-﻿namespace MultiFunPlayer.Common.Messages
+﻿namespace MultiFunPlayer.Common.Messages;
+
+public class VideoPlayPauseMessage
 {
-    public class VideoPlayPauseMessage
-    {
-        public bool State { get; }
-        public VideoPlayPauseMessage(bool state) => State = state;
-    }
+    public bool State { get; }
+    public VideoPlayPauseMessage(bool state) => State = state;
 }

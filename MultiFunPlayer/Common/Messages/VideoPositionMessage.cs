@@ -1,10 +1,7 @@
-﻿using System;
+﻿namespace MultiFunPlayer.Common.Messages;
 
-namespace MultiFunPlayer.Common.Messages
+public class VideoPositionMessage
 {
-    public class VideoPositionMessage
-    {
-        public TimeSpan? Position { get; }
-        public VideoPositionMessage(TimeSpan? position) => Position = position;
-    }
+    public TimeSpan? Position { get; }
+    public VideoPositionMessage(TimeSpan? position) => Position = position;
 }

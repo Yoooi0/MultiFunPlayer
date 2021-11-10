@@ -1,9 +1,8 @@
 ﻿using MultiFunPlayer.Common;
 
-namespace MultiFunPlayer.OutputTarget
+namespace MultiFunPlayer.OutputTarget;
+
+public interface IDeviceAxisValueProvider
 {
-    public interface IDeviceAxisValueProvider
-    {
-        public float GetValue(DeviceAxis axis);
-    }
+    public float GetValue(DeviceAxis axis);
 }

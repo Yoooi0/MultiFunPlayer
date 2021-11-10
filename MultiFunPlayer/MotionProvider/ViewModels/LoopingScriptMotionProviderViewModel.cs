@@ -1,100 +1,97 @@
 ﻿using Microsoft.WindowsAPICodePack.Dialogs;
 using MultiFunPlayer.Common;
 using Newtonsoft.Json;
-using System;
 using System.IO;
-using System.Linq;
 
-namespace MultiFunPlayer.MotionProvider.ViewModels
+namespace MultiFunPlayer.MotionProvider.ViewModels;
+
+[JsonObject(MemberSerialization = MemberSerialization.OptIn)]
+public class LoopingScriptMotionProviderViewModel : AbstractMotionProvider
 {
-    [JsonObject(MemberSerialization = MemberSerialization.OptIn)]
-    public class LoopingScriptMotionProviderViewModel : AbstractMotionProvider
+    private float _time;
+    private long _lastTime;
+
+    private float _scriptStart;
+    private float _scriptEnd;
+    private int _scriptIndex;
+
+    public override string Name => "Looping Script";
+    public IScriptFile Script { get; private set; }
+
+    [JsonProperty] public float Speed { get; set; } = 1;
+    [JsonProperty] public FileInfo SourceFile { get; set; } = null;
+    [JsonProperty] public InterpolationType InterpolationType { get; set; } = InterpolationType.Pchip;
+
+    public void OnSourceFileChanged()
     {
-        private float _time;
-        private long _lastTime;
+        Script = ScriptFile.FromFileInfo(SourceFile, true);
+        _scriptStart = Script?.Keyframes?.First().Position ?? float.NaN;
+        _scriptEnd = Script?.Keyframes?.Last().Position ?? float.NaN;
+        _time = 0;
+    }
 
-        private float _scriptStart;
-        private float _scriptEnd;
-        private int _scriptIndex;
+    public LoopingScriptMotionProviderViewModel()
+    {
+        _lastTime = Environment.TickCount64;
+        _time = 0;
+    }
 
-        public override string Name => "Looping Script";
-        public IScriptFile Script { get; private set; }
+    public override void Update()
+    {
+        if (Script == null)
+            return;
 
-        [JsonProperty] public float Speed { get; set; } = 1;
-        [JsonProperty] public FileInfo SourceFile { get; set; } = null;
-        [JsonProperty] public InterpolationType InterpolationType { get; set; } = InterpolationType.Pchip;
+        var keyframes = Script.Keyframes;
+        var currentTime = Environment.TickCount64;
+        if (keyframes == null || keyframes.Count == 0)
+            return;
 
-        public void OnSourceFileChanged()
+        if (_time >= _scriptEnd)
         {
-            Script = ScriptFile.FromFileInfo(SourceFile, true);
-            _scriptStart = Script?.Keyframes?.First().Position ?? float.NaN;
-            _scriptEnd = Script?.Keyframes?.Last().Position ?? float.NaN;
-            _time = 0;
+            _scriptIndex = 0;
+            _time = _scriptStart;
         }
 
-        public LoopingScriptMotionProviderViewModel()
+        while (_scriptIndex + 1 < keyframes.Count && keyframes[_scriptIndex + 1].Position < _time)
+            _scriptIndex++;
+
+        if (!keyframes.ValidateIndex(_scriptIndex) || !keyframes.ValidateIndex(_scriptIndex + 1))
+            return;
+
+        if (keyframes.IsRawCollection || _scriptIndex == 0 || _scriptIndex + 2 == keyframes.Count || InterpolationType == InterpolationType.Linear)
         {
-            _lastTime = Environment.TickCount64;
-            _time = 0;
+            var p0 = keyframes[_scriptIndex];
+            var p1 = keyframes[_scriptIndex + 1];
+
+            Value = MathUtils.Interpolate(p0.Position, p0.Value, p1.Position, p1.Value, _time, InterpolationType.Linear);
+        }
+        else
+        {
+            var p0 = keyframes[_scriptIndex - 1];
+            var p1 = keyframes[_scriptIndex + 0];
+            var p2 = keyframes[_scriptIndex + 1];
+            var p3 = keyframes[_scriptIndex + 2];
+
+            Value = MathUtils.Interpolate(p0.Position, p0.Value, p1.Position, p1.Value, p2.Position, p2.Value, p3.Position, p3.Value,
+                                             _time, InterpolationType);
         }
 
-        public override void Update()
+        _time += Speed * (currentTime - _lastTime) / 1000.0f;
+        _lastTime = currentTime;
+    }
+
+    public void SelectScript()
+    {
+        var dialog = new CommonOpenFileDialog()
         {
-            if (Script == null)
-                return;
+            IsFolderPicker = false,
+            EnsureFileExists = true
+        };
+        dialog.Filters.Add(new CommonFileDialogFilter("Funscript", "*.funscript"));
 
-            var keyframes = Script.Keyframes;
-            var currentTime = Environment.TickCount64;
-            if (keyframes == null || keyframes.Count == 0)
-                return;
+        if (dialog.ShowDialog() != CommonFileDialogResult.Ok)
+            return;
 
-            if(_time >= _scriptEnd)
-            {
-                _scriptIndex = 0;
-                _time = _scriptStart;
-            }
-
-            while (_scriptIndex + 1 < keyframes.Count && keyframes[_scriptIndex + 1].Position < _time)
-                _scriptIndex++;
-
-            if (!keyframes.ValidateIndex(_scriptIndex) || !keyframes.ValidateIndex(_scriptIndex + 1))
-                return;
-
-            if (keyframes.IsRawCollection || _scriptIndex == 0 || _scriptIndex + 2 == keyframes.Count || InterpolationType == InterpolationType.Linear)
-            {
-                var p0 = keyframes[_scriptIndex];
-                var p1 = keyframes[_scriptIndex + 1];
-
-                Value = MathUtils.Interpolate(p0.Position, p0.Value, p1.Position, p1.Value, _time, InterpolationType.Linear);
-            }
-            else
-            {
-                var p0 = keyframes[_scriptIndex - 1];
-                var p1 = keyframes[_scriptIndex + 0];
-                var p2 = keyframes[_scriptIndex + 1];
-                var p3 = keyframes[_scriptIndex + 2];
-
-                Value = MathUtils.Interpolate(p0.Position, p0.Value, p1.Position, p1.Value, p2.Position, p2.Value, p3.Position, p3.Value,
-                                                 _time, InterpolationType);
-            }
-
-            _time += Speed * (currentTime - _lastTime) / 1000.0f;
-            _lastTime = currentTime;
-        }
-
-        public void SelectScript()
-        {
-            var dialog = new CommonOpenFileDialog()
-            {
-                IsFolderPicker = false,
-                EnsureFileExists = true
-            };
-            dialog.Filters.Add(new CommonFileDialogFilter("Funscript", "*.funscript"));
-
-            if (dialog.ShowDialog() != CommonFileDialogResult.Ok)
-                return;
-
-            SourceFile = new FileInfo(dialog.FileName);
-        }
+        SourceFile = new FileInfo(dialog.FileName);
     }
 }

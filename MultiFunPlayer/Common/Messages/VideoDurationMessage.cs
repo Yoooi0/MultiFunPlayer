@@ -1,10 +1,7 @@
-﻿using System;
+﻿namespace MultiFunPlayer.Common.Messages;
 
-namespace MultiFunPlayer.Common.Messages
+public class VideoDurationMessage
 {
-    public class VideoDurationMessage
-    {
-        public TimeSpan? Duration { get; }
-        public VideoDurationMessage(TimeSpan? duration) => Duration = duration;
-    }
+    public TimeSpan? Duration { get; }
+    public VideoDurationMessage(TimeSpan? duration) => Duration = duration;
 }

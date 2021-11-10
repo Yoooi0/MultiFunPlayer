@@ -6,193 +6,189 @@ using MultiFunPlayer.UI.Controls.ViewModels;
 using Newtonsoft.Json.Linq;
 using NLog;
 using Stylet;
-using System;
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 
-namespace MultiFunPlayer.OutputTarget.ViewModels
+namespace MultiFunPlayer.OutputTarget.ViewModels;
+
+public enum ProtocolType
 {
-    public enum ProtocolType
+    Tcp,
+    Udp
+}
+
+public class NetworkOutputTargetViewModel : ThreadAbstractOutputTarget
+{
+    protected Logger Logger = LogManager.GetCurrentClassLogger();
+
+    public override string Name => "Network";
+    public override ConnectionStatus Status { get; protected set; }
+
+    public IPEndPoint Endpoint { get; set; } = new IPEndPoint(IPAddress.Loopback, 8080);
+    public ProtocolType Protocol { get; set; } = ProtocolType.Tcp;
+
+    public NetworkOutputTargetViewModel(IShortcutManager shortcutManager, IEventAggregator eventAggregator, IDeviceAxisValueProvider valueProvider)
+        : base(shortcutManager, eventAggregator, valueProvider) { }
+
+    public bool IsConnected => Status == ConnectionStatus.Connected;
+    public bool IsConnectBusy => Status == ConnectionStatus.Connecting || Status == ConnectionStatus.Disconnecting;
+    public bool CanToggleConnect => !IsConnectBusy;
+
+    protected override void Run(CancellationToken token)
     {
-        Tcp,
-        Udp
+        if (Endpoint == null)
+            return;
+
+        if (Protocol == ProtocolType.Tcp)
+            RunTcp(token);
+        else if (Protocol == ProtocolType.Udp)
+            RunUdp(token);
     }
 
-    public class NetworkOutputTargetViewModel : ThreadAbstractOutputTarget
+    private void RunTcp(CancellationToken token)
     {
-        protected Logger Logger = LogManager.GetCurrentClassLogger();
+        using var client = new TcpClient();
 
-        public override string Name => "Network";
-        public override ConnectionStatus Status { get; protected set; }
-
-        public IPEndPoint Endpoint { get; set; } = new IPEndPoint(IPAddress.Loopback, 8080);
-        public ProtocolType Protocol { get; set; } = ProtocolType.Tcp;
-
-        public NetworkOutputTargetViewModel(IShortcutManager shortcutManager, IEventAggregator eventAggregator, IDeviceAxisValueProvider valueProvider)
-            : base(shortcutManager, eventAggregator, valueProvider) { }
-
-        public bool IsConnected => Status == ConnectionStatus.Connected;
-        public bool IsConnectBusy => Status == ConnectionStatus.Connecting || Status == ConnectionStatus.Disconnecting;
-        public bool CanToggleConnect => !IsConnectBusy;
-
-        protected override void Run(CancellationToken token)
+        try
         {
-            if (Endpoint == null)
-                return;
-
-            if (Protocol == ProtocolType.Tcp)
-                RunTcp(token);
-            else if (Protocol == ProtocolType.Udp)
-                RunUdp(token);
+            Logger.Info("Connecting to {0}", $"tcp://{Endpoint}");
+            client.Connect(Endpoint);
+            Status = ConnectionStatus.Connected;
+        }
+        catch (Exception e)
+        {
+            Logger.Warn(e, "Error when connecting to server");
+            _ = Execute.OnUIThreadAsync(() => _ = DialogHelper.ShowOnUIThreadAsync(new ErrorMessageDialogViewModel($"Error when connecting to server:\n\n{e}"), "RootDialog"));
+            return;
         }
 
-        private void RunTcp(CancellationToken token)
+        try
         {
-            using var client = new TcpClient();
+            using var stream = new StreamWriter(client.GetStream(), Encoding.ASCII);
+            while (!token.IsCancellationRequested && client?.Connected == true)
+            {
+                var interval = MathF.Max(1, 1000.0f / UpdateRate);
+                UpdateValues();
 
-            try
-            {
-                Logger.Info("Connecting to {0}", $"tcp://{Endpoint}");
-                client.Connect(Endpoint);
-                Status = ConnectionStatus.Connected;
-            }
-            catch (Exception e)
-            {
-                Logger.Warn(e, "Error when connecting to server");
-                _ = Execute.OnUIThreadAsync(() => _ = DialogHelper.ShowOnUIThreadAsync(new ErrorMessageDialogViewModel($"Error when connecting to server:\n\n{e}"), "RootDialog"));
-                return;
-            }
-
-            try
-            {
-                using var stream = new StreamWriter(client.GetStream(), Encoding.ASCII);
-                while (!token.IsCancellationRequested && client?.Connected == true)
+                var commands = DeviceAxis.ToString(Values, (int)interval);
+                if (client.Connected && !string.IsNullOrWhiteSpace(commands))
                 {
-                    var interval = MathF.Max(1, 1000.0f / UpdateRate);
-                    UpdateValues();
-
-                    var commands = DeviceAxis.ToString(Values, (int)interval);
-                    if (client.Connected && !string.IsNullOrWhiteSpace(commands))
-                    {
-                        Logger.Trace("Sending \"{0}\" to \"{1}\"", commands.Trim(), $"tcp://{Endpoint}");
-                        stream.WriteLine(commands);
-                    }
-
-                    Thread.Sleep((int)interval);
+                    Logger.Trace("Sending \"{0}\" to \"{1}\"", commands.Trim(), $"tcp://{Endpoint}");
+                    stream.WriteLine(commands);
                 }
-            }
-            catch (Exception e)
-            {
-                Logger.Error(e, "Unhandled error");
-                _ = Execute.OnUIThreadAsync(() => _ = DialogHelper.ShowOnUIThreadAsync(new ErrorMessageDialogViewModel($"Unhandled error:\n\n{e}"), "RootDialog"));
+
+                Thread.Sleep((int)interval);
             }
         }
-
-        private void RunUdp(CancellationToken token)
+        catch (Exception e)
         {
-            using var client = new UdpClient();
+            Logger.Error(e, "Unhandled error");
+            _ = Execute.OnUIThreadAsync(() => _ = DialogHelper.ShowOnUIThreadAsync(new ErrorMessageDialogViewModel($"Unhandled error:\n\n{e}"), "RootDialog"));
+        }
+    }
 
-            try
-            {
-                Logger.Info("Connecting to {0}", $"udp://{Endpoint}");
-                client.Connect(Endpoint);
-                Status = ConnectionStatus.Connected;
-            }
-            catch (Exception e)
-            {
-                Logger.Warn(e, "Error when connecting to server");
-                _ = Execute.OnUIThreadAsync(() => _ = DialogHelper.ShowOnUIThreadAsync(new ErrorMessageDialogViewModel($"Error when connecting to server:\n\n{e}"), "RootDialog"));
-                return;
-            }
+    private void RunUdp(CancellationToken token)
+    {
+        using var client = new UdpClient();
 
-            try
+        try
+        {
+            Logger.Info("Connecting to {0}", $"udp://{Endpoint}");
+            client.Connect(Endpoint);
+            Status = ConnectionStatus.Connected;
+        }
+        catch (Exception e)
+        {
+            Logger.Warn(e, "Error when connecting to server");
+            _ = Execute.OnUIThreadAsync(() => _ = DialogHelper.ShowOnUIThreadAsync(new ErrorMessageDialogViewModel($"Error when connecting to server:\n\n{e}"), "RootDialog"));
+            return;
+        }
+
+        try
+        {
+            var sb = new StringBuilder(256);
+            var buffer = new byte[256];
+            while (!token.IsCancellationRequested)
             {
-                var sb = new StringBuilder(256);
-                var buffer = new byte[256];
-                while (!token.IsCancellationRequested)
+                var interval = MathF.Max(1, 1000.0f / UpdateRate);
+                UpdateValues();
+
+                var commands = DeviceAxis.ToString(Values, (int)interval);
+                if (!string.IsNullOrWhiteSpace(commands))
                 {
-                    var interval = MathF.Max(1, 1000.0f / UpdateRate);
-                    UpdateValues();
+                    Logger.Trace("Sending \"{0}\" to \"{1}\"", commands.Trim(), $"udp://{Endpoint}");
 
-                    var commands = DeviceAxis.ToString(Values, (int)interval);
-                    if (!string.IsNullOrWhiteSpace(commands))
-                    {
-                        Logger.Trace("Sending \"{0}\" to \"{1}\"", commands.Trim(), $"udp://{Endpoint}");
-
-                        var encoded = Encoding.ASCII.GetBytes(commands, buffer);
-                        client.Send(buffer, encoded);
-                    }
-
-                    Thread.Sleep((int)interval);
+                    var encoded = Encoding.ASCII.GetBytes(commands, buffer);
+                    client.Send(buffer, encoded);
                 }
-            }
-            catch (Exception e)
-            {
-                Logger.Error(e, $"{Name} failed with exception");
-                _ = Execute.OnUIThreadAsync(() => _ = DialogHelper.ShowOnUIThreadAsync(new ErrorMessageDialogViewModel($"{Name} failed with exception:\n\n{e}"), "RootDialog"));
+
+                Thread.Sleep((int)interval);
             }
         }
-
-        protected override void HandleSettings(JObject settings, AppSettingsMessageType type)
+        catch (Exception e)
         {
-            if (type == AppSettingsMessageType.Saving)
-            {
-                if(Endpoint != null)
-                    settings[nameof(Endpoint)] = new JValue(Endpoint.ToString());
-
-                settings[nameof(Protocol)] = new JValue(Protocol.ToString());
-            }
-            else if (type == AppSettingsMessageType.Loading)
-            {
-                if (settings.TryGetValue<IPEndPoint>(nameof(Endpoint), out var endpoint))
-                    Endpoint = endpoint;
-
-                if (settings.TryGetValue<ProtocolType>(nameof(Protocol), out var protocol))
-                    Protocol = protocol;
-            }
+            Logger.Error(e, $"{Name} failed with exception");
+            _ = Execute.OnUIThreadAsync(() => _ = DialogHelper.ShowOnUIThreadAsync(new ErrorMessageDialogViewModel($"{Name} failed with exception:\n\n{e}"), "RootDialog"));
         }
+    }
 
-        protected override void RegisterShortcuts(IShortcutManager s)
+    protected override void HandleSettings(JObject settings, AppSettingsMessageType type)
+    {
+        if (type == AppSettingsMessageType.Saving)
         {
-            base.RegisterShortcuts(s);
+            if (Endpoint != null)
+                settings[nameof(Endpoint)] = new JValue(Endpoint.ToString());
 
-            #region Endpoint
-            s.RegisterAction<string>($"{Name}::Endpoint::Set", "Endpoint", (_, endpointString) =>
-            {
-                if (IPEndPoint.TryParse(endpointString, out var endpoint))
-                    Endpoint = endpoint;
-            });
-            #endregion
-
-            #region Protocol
-            s.RegisterAction<ProtocolType?>($"{Name}::Protocol::Set", "Protocol", (_, protocol) =>
-            {
-                if (protocol.HasValue)
-                    Protocol = protocol.Value;
-            });
-            #endregion
+            settings[nameof(Protocol)] = new JValue(Protocol.ToString());
         }
-
-        public override async ValueTask<bool> CanConnectAsync(CancellationToken token)
+        else if (type == AppSettingsMessageType.Loading)
         {
-            try
-            {
-                if (Protocol == ProtocolType.Udp)
-                    return await ValueTask.FromResult(true);
+            if (settings.TryGetValue<IPEndPoint>(nameof(Endpoint), out var endpoint))
+                Endpoint = endpoint;
 
-                using var client = new TcpClient();
-                client.Connect(Endpoint);
-                client.GetStream();
+            if (settings.TryGetValue<ProtocolType>(nameof(Protocol), out var protocol))
+                Protocol = protocol;
+        }
+    }
+
+    protected override void RegisterShortcuts(IShortcutManager s)
+    {
+        base.RegisterShortcuts(s);
+
+        #region Endpoint
+        s.RegisterAction<string>($"{Name}::Endpoint::Set", "Endpoint", (_, endpointString) =>
+        {
+            if (IPEndPoint.TryParse(endpointString, out var endpoint))
+                Endpoint = endpoint;
+        });
+        #endregion
+
+        #region Protocol
+        s.RegisterAction<ProtocolType?>($"{Name}::Protocol::Set", "Protocol", (_, protocol) =>
+        {
+            if (protocol.HasValue)
+                Protocol = protocol.Value;
+        });
+        #endregion
+    }
+
+    public override async ValueTask<bool> CanConnectAsync(CancellationToken token)
+    {
+        try
+        {
+            if (Protocol == ProtocolType.Udp)
                 return await ValueTask.FromResult(true);
-            }
-            catch
-            {
-                return await ValueTask.FromResult(false);
-            }
+
+            using var client = new TcpClient();
+            client.Connect(Endpoint);
+            client.GetStream();
+            return await ValueTask.FromResult(true);
+        }
+        catch
+        {
+            return await ValueTask.FromResult(false);
         }
     }
 }

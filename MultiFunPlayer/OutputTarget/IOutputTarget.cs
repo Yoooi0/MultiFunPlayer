@@ -1,10 +1,8 @@
 ﻿using MultiFunPlayer.Common;
-using System;
 
-namespace MultiFunPlayer.OutputTarget
+namespace MultiFunPlayer.OutputTarget;
+
+public interface IOutputTarget : IConnectable, IDisposable
 {
-    public interface IOutputTarget : IConnectable, IDisposable
-    {
-        string Name { get; }
-    }
+    string Name { get; }
 }

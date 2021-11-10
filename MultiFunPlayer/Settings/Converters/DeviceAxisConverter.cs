@@ -1,53 +1,51 @@
 ﻿using MultiFunPlayer.Common;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using System;
 using System.ComponentModel;
 using System.Globalization;
 
-namespace MultiFunPlayer.Settings.Converters
+namespace MultiFunPlayer.Settings.Converters;
+
+public class DeviceAxisConverter : JsonConverter<DeviceAxis>
 {
-    public class DeviceAxisConverter : JsonConverter<DeviceAxis>
+    public override DeviceAxis ReadJson(JsonReader reader, Type objectType, DeviceAxis existingValue, bool hasExistingValue, JsonSerializer serializer)
     {
-        public override DeviceAxis ReadJson(JsonReader reader, Type objectType, DeviceAxis existingValue, bool hasExistingValue, JsonSerializer serializer)
-        {
-            if (reader.Value is not string name)
-                return null;
-
-            if (DeviceAxis.TryParse(name, out var axis))
-                return axis;
-
+        if (reader.Value is not string name)
             return null;
-        }
 
-        public override void WriteJson(JsonWriter writer, DeviceAxis value, JsonSerializer serializer)
-        {
-            if (value == null)
-                return;
+        if (DeviceAxis.TryParse(name, out var axis))
+            return axis;
 
-            JToken.FromObject(value.Name).WriteTo(writer);
-        }
+        return null;
     }
 
-    public class DeviceAxisTypeConverter : TypeConverter
+    public override void WriteJson(JsonWriter writer, DeviceAxis value, JsonSerializer serializer)
     {
-        public override bool CanConvertFrom(ITypeDescriptorContext context, Type sourceType) => sourceType == typeof(string);
-        public override bool CanConvertTo(ITypeDescriptorContext context, Type destinationType) => destinationType == typeof(string);
+        if (value == null)
+            return;
 
-        public override object ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, object value)
-        {
-            if (value is string name && DeviceAxis.TryParse(name, out var axis))
-                return axis;
+        JToken.FromObject(value.Name).WriteTo(writer);
+    }
+}
 
-            return base.ConvertFrom(context, culture, value);
-        }
+public class DeviceAxisTypeConverter : TypeConverter
+{
+    public override bool CanConvertFrom(ITypeDescriptorContext context, Type sourceType) => sourceType == typeof(string);
+    public override bool CanConvertTo(ITypeDescriptorContext context, Type destinationType) => destinationType == typeof(string);
 
-        public override object ConvertTo(ITypeDescriptorContext context, CultureInfo culture, object value, Type destinationType)
-        {
-            if (destinationType == typeof(string) && value is DeviceAxis axis)
-                return axis.Name;
+    public override object ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, object value)
+    {
+        if (value is string name && DeviceAxis.TryParse(name, out var axis))
+            return axis;
 
-            return base.ConvertTo(context, culture, value, destinationType);
-        }
+        return base.ConvertFrom(context, culture, value);
+    }
+
+    public override object ConvertTo(ITypeDescriptorContext context, CultureInfo culture, object value, Type destinationType)
+    {
+        if (destinationType == typeof(string) && value is DeviceAxis axis)
+            return axis.Name;
+
+        return base.ConvertTo(context, culture, value, destinationType);
     }
 }

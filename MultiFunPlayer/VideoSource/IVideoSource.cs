@@ -1,10 +1,8 @@
 ﻿using MultiFunPlayer.Common;
-using System;
 
-namespace MultiFunPlayer.VideoSource
+namespace MultiFunPlayer.VideoSource;
+
+public interface IVideoSource : IConnectable, IDisposable
 {
-    public interface IVideoSource : IConnectable, IDisposable
-    {
-        string Name { get; }
-    }
+    string Name { get; }
 }
