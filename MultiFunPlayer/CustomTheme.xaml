@@ -1,4 +1,4 @@
-﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:material="http://materialdesigninxaml.net/winfx/xaml/themes"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:controls="clr-namespace:MultiFunPlayer.UI.Controls">
@@ -738,11 +738,15 @@
                                       Margin="{TemplateBinding Padding}"
                                       HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
                                       VerticalAlignment="{TemplateBinding VerticalContentAlignment}">
-                                    <ContentPresenter Name="PART_Content" Focusable="False"
+
+                                    <Border Background="{StaticResource MaterialDesignBackground}"
+                                            BorderThickness="0 1 0 0"
+                                            BorderBrush="{StaticResource PrimaryHueLightBrush}">
+                                        <ContentPresenter Name="PART_Content" Focusable="False"
                                                       ContentTemplate="{TemplateBinding ContentTemplate}"
                                                       ContentStringFormat="{TemplateBinding ContentStringFormat}"
                                                       ContentTemplateSelector="{TemplateBinding ContentTemplateSelector}"/>
-
+                                    </Border>
                                 </Grid>
                             </Border>
 

@@ -90,38 +90,35 @@
             </StackPanel>
         </Expander.Header>
 
-        <Border Background="{StaticResource MaterialDesignBackground}"
-                BorderThickness="0 1 0 0"
-                BorderBrush="{StaticResource PrimaryHueLightBrush}">
-            <StackPanel Margin="20">
-                <DockPanel LastChildFill="True" Margin="0 0 0 20">
-                    <DockPanel DockPanel.Dock="Left"
+        <StackPanel Margin="20">
+            <DockPanel LastChildFill="True" Margin="0 0 0 20">
+                <DockPanel DockPanel.Dock="Left"
                                LastChildFill="False">
-                        <DockPanel.Resources>
-                            <Style TargetType="{x:Type DockPanel}">
-                                <Setter Property="IsEnabled" Value="False" />
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{Binding Status}" Value="Disconnected">
-                                        <Setter Property="IsEnabled" Value="True" />
-                                    </DataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </DockPanel.Resources>
-                        <TextBox Text="{Binding Endpoint, Converter={StaticResource IPEndPointToStringConverter}}"
+                    <DockPanel.Resources>
+                        <Style TargetType="{x:Type DockPanel}">
+                            <Setter Property="IsEnabled" Value="False" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding Status}" Value="Disconnected">
+                                    <Setter Property="IsEnabled" Value="True" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </DockPanel.Resources>
+                    <TextBox Text="{Binding Endpoint, Converter={StaticResource IPEndPointToStringConverter}}"
                                  material:HintAssist.Hint="address:port"
                                  Style="{StaticResource MaterialDesignFloatingHintTextBox}"
                                  DockPanel.Dock="Left"
                                  Width="150"
                                  Margin="0 -12 20 0"
                                  VerticalAlignment="Center"/>
-                    </DockPanel>
+                </DockPanel>
 
-                    <StackPanel DockPanel.Dock="Right" 
+                <StackPanel DockPanel.Dock="Right" 
                                 Orientation="Horizontal" 
                                 HorizontalAlignment="Right"
                                 VerticalAlignment="Center">
-                        <TextBlock VerticalAlignment="Center" Text="Update rate:" Margin="0 0 10 0"/>
-                        <Slider Value="{Binding UpdateRate, Mode=TwoWay}"
+                    <TextBlock VerticalAlignment="Center" Text="Update rate:" Margin="0 0 10 0"/>
+                    <Slider Value="{Binding UpdateRate, Mode=TwoWay}"
                                 HorizontalAlignment="Stretch"
                                 VerticalAlignment="Top"
                                 Margin="0 0 10 0"
@@ -132,32 +129,32 @@
                                 IsSnapToTickEnabled="True" 
                                 TickFrequency="1" 
                                 Orientation="Horizontal"/>
-                        <TextBlock VerticalAlignment="Center" 
+                    <TextBlock VerticalAlignment="Center" 
                                    HorizontalAlignment="Right" 
                                    TextAlignment="Right"
                                    Width="40"
                                    Text="{Binding UpdateRate, StringFormat={}{0} hz}"/>
-                    </StackPanel>
-                </DockPanel>
+                </StackPanel>
+            </DockPanel>
 
-                <TextBlock Text="Output Range:"
+            <TextBlock Text="Output Range:"
                            Typography.Capitals="AllSmallCaps"
                            FontWeight="Bold"
                            VerticalAlignment="Center"
                            HorizontalAlignment="Left"/>
-                <ItemsControl ItemsSource="{Binding AxisSettings}">
-                    <ItemsControl.ItemsPanel>
-                        <ItemsPanelTemplate>
-                            <UniformGrid Columns="3" Rows="3" IsItemsHost="True" Margin="0 0 -10 0"/>
-                        </ItemsPanelTemplate>
-                    </ItemsControl.ItemsPanel>
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate>
-                            <DockPanel LastChildFill="True">
-                                <TextBlock DockPanel.Dock="Left" 
+            <ItemsControl ItemsSource="{Binding AxisSettings}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <UniformGrid Columns="3" Rows="3" IsItemsHost="True" Margin="0 0 -10 0"/>
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <DockPanel LastChildFill="True">
+                            <TextBlock DockPanel.Dock="Left" 
                                            VerticalAlignment="Center" 
                                            Text="{Binding Key}"/>
-                                <metro:RangeSlider Style="{StaticResource MaterialDesignRangeSlider}" 
+                            <metro:RangeSlider Style="{StaticResource MaterialDesignRangeSlider}" 
                                                    DockPanel.Dock="Right"
                                                    HorizontalAlignment="Stretch"
                                                    Margin="5 0 10 0"
@@ -169,105 +166,105 @@
                                                    UseLayoutRounding="False"
                                                    LowerValue="{Binding Value.Minimum, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
                                                    UpperValue="{Binding Value.Maximum, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
-                                    <metro:RangeSlider.AutoToolTipLowerValueTemplate>
-                                        <DataTemplate>
-                                            <TextBlock HorizontalAlignment="Right" Text="{Binding StringFormat='{}{0:D}%'}" />
-                                        </DataTemplate>
-                                    </metro:RangeSlider.AutoToolTipLowerValueTemplate>
-                                    <metro:RangeSlider.AutoToolTipUpperValueTemplate>
-                                        <DataTemplate>
-                                            <TextBlock HorizontalAlignment="Right" Text="{Binding StringFormat='{}{0:D}%'}" />
-                                        </DataTemplate>
-                                    </metro:RangeSlider.AutoToolTipUpperValueTemplate>
-                                    <metro:RangeSlider.AutoToolTipRangeValuesTemplate>
-                                        <DataTemplate DataType="mah:RangeSliderAutoTooltipValues">
-                                            <StackPanel Orientation="Horizontal">
-                                                <TextBlock Text="{Binding LowerValue, StringFormat='{}{0:D}%'}" />
-                                                <TextBlock Text=" - " />
-                                                <TextBlock Text="{Binding UpperValue, StringFormat='{}{0:D}%'}" />
-                                            </StackPanel>
-                                        </DataTemplate>
-                                    </metro:RangeSlider.AutoToolTipRangeValuesTemplate>
-                                </metro:RangeSlider>
-                            </DockPanel>
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
+                                <metro:RangeSlider.AutoToolTipLowerValueTemplate>
+                                    <DataTemplate>
+                                        <TextBlock HorizontalAlignment="Right" Text="{Binding StringFormat='{}{0:D}%'}" />
+                                    </DataTemplate>
+                                </metro:RangeSlider.AutoToolTipLowerValueTemplate>
+                                <metro:RangeSlider.AutoToolTipUpperValueTemplate>
+                                    <DataTemplate>
+                                        <TextBlock HorizontalAlignment="Right" Text="{Binding StringFormat='{}{0:D}%'}" />
+                                    </DataTemplate>
+                                </metro:RangeSlider.AutoToolTipUpperValueTemplate>
+                                <metro:RangeSlider.AutoToolTipRangeValuesTemplate>
+                                    <DataTemplate DataType="mah:RangeSliderAutoTooltipValues">
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="{Binding LowerValue, StringFormat='{}{0:D}%'}" />
+                                            <TextBlock Text=" - " />
+                                            <TextBlock Text="{Binding UpperValue, StringFormat='{}{0:D}%'}" />
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </metro:RangeSlider.AutoToolTipRangeValuesTemplate>
+                            </metro:RangeSlider>
+                        </DockPanel>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
 
-                <material:Card material:ShadowAssist.ShadowDepth="Depth1" 
+            <material:Card material:ShadowAssist.ShadowDepth="Depth1" 
                                Margin="0 20 0 0">
-                    <Expander material:ExpanderAssist.HorizontalHeaderPadding="24 6 6 6">
-                        <Expander.Header>
-                            <TextBlock Text="Device map" 
+                <Expander material:ExpanderAssist.HorizontalHeaderPadding="24 6 6 6">
+                    <Expander.Header>
+                        <TextBlock Text="Device map" 
                                        FontSize="14"
                                        FontWeight="Bold"
                                        Typography.Capitals="AllSmallCaps"/>
-                        </Expander.Header>
-                        <StackPanel Margin="10 0 10 10">
-                            <ListView ItemsSource="{Binding DeviceSettings}"
+                    </Expander.Header>
+                    <StackPanel Margin="10 0 10 10">
+                        <ListView ItemsSource="{Binding DeviceSettings}"
                                       material:ListViewAssist.ListViewItemPadding="0"
                                       ScrollViewer.HorizontalScrollBarVisibility="Disabled">
-                                <ListView.ItemContainerStyle>
-                                    <Style TargetType="ListViewItem" BasedOn="{StaticResource MaterialDesignGridViewItem}">
-                                        <Setter Property="Focusable" Value="False"/>
-                                        <Setter Property="Height" Value="35"/>
-                                        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
-                                        <Setter Property="VerticalContentAlignment" Value="Center" />
-                                    </Style>
-                                </ListView.ItemContainerStyle>
-                                <ListView.View>
-                                    <GridView AllowsColumnReorder="False">
-                                        <GridView.ColumnHeaderContainerStyle>
-                                            <Style TargetType="{x:Type GridViewColumnHeader}">
-                                                <Setter Property="Template">
-                                                    <Setter.Value>
-                                                        <ControlTemplate TargetType="{x:Type GridViewColumnHeader}">
-                                                            <TextBlock x:Name="ContentHeader" 
+                            <ListView.ItemContainerStyle>
+                                <Style TargetType="ListViewItem" BasedOn="{StaticResource MaterialDesignGridViewItem}">
+                                    <Setter Property="Focusable" Value="False"/>
+                                    <Setter Property="Height" Value="35"/>
+                                    <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                                    <Setter Property="VerticalContentAlignment" Value="Center" />
+                                </Style>
+                            </ListView.ItemContainerStyle>
+                            <ListView.View>
+                                <GridView AllowsColumnReorder="False">
+                                    <GridView.ColumnHeaderContainerStyle>
+                                        <Style TargetType="{x:Type GridViewColumnHeader}">
+                                            <Setter Property="Template">
+                                                <Setter.Value>
+                                                    <ControlTemplate TargetType="{x:Type GridViewColumnHeader}">
+                                                        <TextBlock x:Name="ContentHeader" 
                                                                        Text="{TemplateBinding Content}"
                                                                        Padding="5 10 5 10"
                                                                        HorizontalAlignment="Left"/>
-                                                        </ControlTemplate>
-                                                    </Setter.Value>
-                                                </Setter>
-                                            </Style>
-                                        </GridView.ColumnHeaderContainerStyle>
+                                                    </ControlTemplate>
+                                                </Setter.Value>
+                                            </Setter>
+                                        </Style>
+                                    </GridView.ColumnHeaderContainerStyle>
 
-                                        <GridViewColumn Header="Axis"
+                                    <GridViewColumn Header="Axis"
                                                         Width="60"
                                                         DisplayMemberBinding="{Binding SourceAxis}"/>
-                                        <GridViewColumn Header="Device Name"
+                                    <GridViewColumn Header="Device Name"
                                                         Width="225">
-                                            <GridViewColumn.CellTemplate>
-                                                <DataTemplate>
-                                                    <material:Badged BadgePlacementMode="TopRight"
+                                        <GridViewColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <material:Badged BadgePlacementMode="TopRight"
                                                                      Padding="0 0 10 0">
-                                                        <material:Badged.Resources>
-                                                            <system:String x:Key="MethodName">GetNumberOfDevices</system:String>
-                                                        </material:Badged.Resources>
-                                                        <material:Badged.Badge>
-                                                            <MultiBinding Converter="{StaticResource CallObjectMethodWithArgumentConverter}">
-                                                                <Binding Path="DataContext" RelativeSource="{RelativeSource FindAncestor, AncestorType={x:Type UserControl}}"/>
-                                                                <Binding Source="{StaticResource MethodName}"/>
-                                                                <Binding Path="DeviceName"/>
-                                                            </MultiBinding>
-                                                        </material:Badged.Badge>
-                                                        <TextBlock Text="{Binding DeviceName}"/>
-                                                    </material:Badged>
-                                                </DataTemplate>
-                                            </GridViewColumn.CellTemplate>
-                                        </GridViewColumn>
-                                        <GridViewColumn Header="Message Type"
+                                                    <material:Badged.Resources>
+                                                        <system:String x:Key="MethodName">GetNumberOfDevices</system:String>
+                                                    </material:Badged.Resources>
+                                                    <material:Badged.Badge>
+                                                        <MultiBinding Converter="{StaticResource CallObjectMethodWithArgumentConverter}">
+                                                            <Binding Path="DataContext" RelativeSource="{RelativeSource FindAncestor, AncestorType={x:Type UserControl}}"/>
+                                                            <Binding Source="{StaticResource MethodName}"/>
+                                                            <Binding Path="DeviceName"/>
+                                                        </MultiBinding>
+                                                    </material:Badged.Badge>
+                                                    <TextBlock Text="{Binding DeviceName}"/>
+                                                </material:Badged>
+                                            </DataTemplate>
+                                        </GridViewColumn.CellTemplate>
+                                    </GridViewColumn>
+                                    <GridViewColumn Header="Message Type"
                                                         Width="140"
                                                         DisplayMemberBinding="{Binding MessageType}"/>
-                                        <GridViewColumn Header="Index"
+                                    <GridViewColumn Header="Index"
                                                         Width="50"
                                                         DisplayMemberBinding="{Binding FeatureIndex}"/>
 
-                                        <GridViewColumn Header=""
+                                    <GridViewColumn Header=""
                                                         Width="50">
-                                            <GridViewColumn.CellTemplate>
-                                                <DataTemplate>
-                                                    <Button Style="{StaticResource MaterialDesignFlatButton}"
+                                        <GridViewColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <Button Style="{StaticResource MaterialDesignFlatButton}"
                                                             ToolTip="Remove"
                                                             ToolTipService.InitialShowDelay="0"
                                                             ToolTipService.Placement="Top"
@@ -277,76 +274,75 @@
                                                             Width="24" 
                                                             Padding="0"
                                                             Click="{s:Action OnSettingsDelete}" >
-                                                        <material:PackIcon Kind="Delete"/>
-                                                    </Button>
-                                                </DataTemplate>
-                                            </GridViewColumn.CellTemplate>
-                                        </GridViewColumn>
-                                    </GridView>
-                                </ListView.View>
-                            </ListView>
+                                                    <material:PackIcon Kind="Delete"/>
+                                                </Button>
+                                            </DataTemplate>
+                                        </GridViewColumn.CellTemplate>
+                                    </GridViewColumn>
+                                </GridView>
+                            </ListView.View>
+                        </ListView>
 
-                            <StackPanel Orientation="Horizontal"
-                                        Margin="0 0 0 10">
-                                <ComboBox Margin="5 0 10 0" 
-                                          Width="50"
-                                          material:TextFieldAssist.HasClearButton="True"
-                                          material:HintAssist.HelperText="Axes"
-                                          HorizontalAlignment="Center"
-                                          ItemsSource="{Binding Source={x:Static common:DeviceAxis.All}}" 
-                                          SelectedItem="{Binding SelectedDeviceAxis}"/>
+                        <StackPanel Orientation="Horizontal"
+                                    Margin="0 0 0 10">
+                            <ComboBox Margin="5 0 10 0" 
+                                      Width="50"
+                                      material:TextFieldAssist.HasClearButton="True"
+                                      material:HintAssist.HelperText="Axes"
+                                      HorizontalAlignment="Center"
+                                      ItemsSource="{Binding Source={x:Static common:DeviceAxis.All}}" 
+                                      SelectedItem="{Binding SelectedDeviceAxis}"/>
 
-                                <ComboBox Margin="0 0 10 0"
-                                          Width="215"
-                                          material:TextFieldAssist.HasClearButton="True"
-                                          material:HintAssist.HelperText="Connected devices"
-                                          ItemsSource="{Binding AvailableDevices}" 
-                                          SelectedItem="{Binding SelectedDevice}"
-                                          IsEnabled="{Binding AvailableDevices.Count, Converter={StaticResource NotZeroConverter}}">
-                                    <ComboBox.ItemTemplate>
-                                        <DataTemplate>
-                                            <StackPanel Orientation="Horizontal">
-                                                <TextBlock Text="{Binding Name}"/>
-                                                <TextBlock Text="{Binding Index, StringFormat=[{0}]}" />
-                                            </StackPanel>
-                                        </DataTemplate>
-                                    </ComboBox.ItemTemplate>
-                                </ComboBox>
+                            <ComboBox Margin="0 0 10 0"
+                                      Width="215"
+                                      material:TextFieldAssist.HasClearButton="True"
+                                      material:HintAssist.HelperText="Connected devices"
+                                      ItemsSource="{Binding AvailableDevices}" 
+                                      SelectedItem="{Binding SelectedDevice}"
+                                      IsEnabled="{Binding AvailableDevices.Count, Converter={StaticResource NotZeroConverter}}">
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="{Binding Name}"/>
+                                            <TextBlock Text="{Binding Index, StringFormat=[{0}]}" />
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
 
-                                <ComboBox Margin="0 0 10 0" 
-                                          Width="130"
-                                          material:TextFieldAssist.HasClearButton="True"
-                                          material:HintAssist.HelperText="Message types"
-                                          ItemsSource="{Binding AvailableMessageTypes}" 
-                                          SelectedItem="{Binding SelectedMessageType}"
-                                          IsEnabled="{Binding SelectedDevice, Converter={StaticResource notNullBooleanConverter}}"/>
+                            <ComboBox Margin="0 0 10 0" 
+                                      Width="130"
+                                      material:TextFieldAssist.HasClearButton="True"
+                                      material:HintAssist.HelperText="Message types"
+                                      ItemsSource="{Binding AvailableMessageTypes}" 
+                                      SelectedItem="{Binding SelectedMessageType}"
+                                      IsEnabled="{Binding SelectedDevice, Converter={StaticResource notNullBooleanConverter}}"/>
 
-                                <ComboBox Margin="0 0 10 0" 
-                                          Width="50"
-                                          material:TextFieldAssist.HasClearButton="True"
-                                          material:HintAssist.HelperText="Indices"
-                                          ItemsSource="{Binding AvailableFeatureIndices}" 
-                                          SelectedItem="{Binding SelectedFeatureIndex}"
-                                          IsEnabled="{Binding SelectedMessageType, Converter={StaticResource notNullBooleanConverter}}"/>
+                            <ComboBox Margin="0 0 10 0" 
+                                      Width="50"
+                                      material:TextFieldAssist.HasClearButton="True"
+                                      material:HintAssist.HelperText="Indices"
+                                      ItemsSource="{Binding AvailableFeatureIndices}" 
+                                      SelectedItem="{Binding SelectedFeatureIndex}"
+                                      IsEnabled="{Binding SelectedMessageType, Converter={StaticResource notNullBooleanConverter}}"/>
 
-                                <Button Style="{StaticResource MaterialDesignFlatButton}"
-                                        ToolTip="Add"
-                                        ToolTipService.InitialShowDelay="0"
-                                        ToolTipService.Placement="Top"
-                                        material:RippleAssist.Feedback="Green"
-                                        Foreground="Green"
-                                        Height="24" 
-                                        Width="24" 
-                                        Padding="0"
-                                        Click="{s:Action OnSettingsAdd}"
-                                        IsEnabled="{Binding CanAddSelected}">
-                                    <material:PackIcon Kind="Plus"/>
-                                </Button>
-                            </StackPanel>
+                            <Button Style="{StaticResource MaterialDesignFlatButton}"
+                                    ToolTip="Add"
+                                    ToolTipService.InitialShowDelay="0"
+                                    ToolTipService.Placement="Top"
+                                    material:RippleAssist.Feedback="Green"
+                                    Foreground="Green"
+                                    Height="24" 
+                                    Width="24" 
+                                    Padding="0"
+                                    Click="{s:Action OnSettingsAdd}"
+                                    IsEnabled="{Binding CanAddSelected}">
+                                <material:PackIcon Kind="Plus"/>
+                            </Button>
                         </StackPanel>
-                    </Expander>
-                </material:Card>
-            </StackPanel>
-        </Border>
+                    </StackPanel>
+                </Expander>
+            </material:Card>
+        </StackPanel>
     </Expander>
 </UserControl>

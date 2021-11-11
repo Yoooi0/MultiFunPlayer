@@ -2,28 +2,16 @@
 using System.Windows;
 using System.Windows.Automation.Peers;
 using System.Windows.Controls;
-using System.Windows.Controls.Primitives;
 
 namespace MultiFunPlayer.UI.Controls;
 
-/// <summary>
-/// Extended TabControl which saves the displayed item so you don't get the performance hit of
-/// unloading and reloading the VisualTree when switching tabs
-/// </summary>
-/// <remarks>
-/// Based on example from http://stackoverflow.com/a/9802346, which in turn is based on
-/// http://www.pluralsight-training.net/community/blogs/eburke/archive/2009/04/30/keeping-the-wpf-tab-control-from-destroying-its-children.aspx
-/// with some modifications so it reuses a TabItem's ContentPresenter when doing drag/drop operations
-/// </remarks>
 [TemplatePart(Name = "PART_ItemsHolder", Type = typeof(Panel))]
 public class NonReloadingTabControl : TabControl
 {
-    private Panel itemsHolderPanel;
+    private Panel _itemsHolderPanel;
 
     public NonReloadingTabControl()
     {
-        ItemContainerGenerator.StatusChanged += ItemContainerGeneratorStatusChanged;
-
         Loaded += (_, _) =>
         {
             foreach (var item in Items)
@@ -34,19 +22,11 @@ public class NonReloadingTabControl : TabControl
                 selectedCp.Loaded += (_, _) => UpdateSelectedItem();
         };
     }
-    private void ItemContainerGeneratorStatusChanged(object sender, EventArgs e)
-    {
-        if (ItemContainerGenerator.Status == GeneratorStatus.ContainersGenerated)
-        {
-            ItemContainerGenerator.StatusChanged -= ItemContainerGeneratorStatusChanged;
-
-        }
-    }
 
     public override void OnApplyTemplate()
     {
         base.OnApplyTemplate();
-        itemsHolderPanel = GetTemplateChild("PART_ItemsHolder") as Panel;
+        _itemsHolderPanel = GetTemplateChild("PART_ItemsHolder") as Panel;
         UpdateSelectedItem();
     }
 
@@ -54,13 +34,13 @@ public class NonReloadingTabControl : TabControl
     {
         base.OnItemsChanged(e);
 
-        if (itemsHolderPanel == null)
+        if (_itemsHolderPanel == null)
             return;
 
         switch (e.Action)
         {
             case NotifyCollectionChangedAction.Reset:
-                itemsHolderPanel.Children.Clear();
+                _itemsHolderPanel.Children.Clear();
                 break;
 
             case NotifyCollectionChangedAction.Add:
@@ -71,7 +51,7 @@ public class NonReloadingTabControl : TabControl
                     {
                         var cp = FindChildContentPresenter(item);
                         if (cp != null)
-                            itemsHolderPanel.Children.Remove(cp);
+                            _itemsHolderPanel.Children.Remove(cp);
                     }
                 }
 
@@ -92,14 +72,14 @@ public class NonReloadingTabControl : TabControl
 
     private void UpdateSelectedItem()
     {
-        if (itemsHolderPanel == null)
+        if (_itemsHolderPanel == null)
             return;
 
         var item = GetSelectedTabItem();
         if (item != null)
             CreateChildContentPresenter(item);
 
-        foreach (ContentPresenter child in itemsHolderPanel.Children)
+        foreach (ContentPresenter child in _itemsHolderPanel.Children)
             child.Visibility = (child.Tag as TabItem).IsSelected ? Visibility.Visible : Visibility.Collapsed;
     }
 
@@ -123,7 +103,7 @@ public class NonReloadingTabControl : TabControl
             Tag = tabItem ?? ItemContainerGenerator.ContainerFromItem(item)
         };
 
-        itemsHolderPanel.Children.Add(cp);
+        _itemsHolderPanel.Children.Add(cp);
         return cp;
     }
 
@@ -135,10 +115,10 @@ public class NonReloadingTabControl : TabControl
         if (data == null)
             return null;
 
-        if (itemsHolderPanel == null)
+        if (_itemsHolderPanel == null)
             return null;
 
-        foreach (var cp in itemsHolderPanel.Children.Cast<ContentPresenter>())
+        foreach (var cp in _itemsHolderPanel.Children.Cast<ContentPresenter>())
             if (cp.Content == data)
                 return cp;
 

@@ -73,17 +73,21 @@
             </StackPanel>
         </Expander.Header>
 
-        <Border Background="{StaticResource MaterialDesignBackground}"
-                BorderThickness="0 1 0 0"
-                BorderBrush="{StaticResource PrimaryHueLightBrush}">
-            <StackPanel Margin="20">
+        <StackPanel Margin="20">
+            <DockPanel LastChildFill="True">
+                <TextBlock Text="Endpoint:"
+                           DockPanel.Dock="Left"
+                           Margin="0 0 10 0"
+                           VerticalAlignment="Center"/>
+
                 <TextBox Text="{Binding Endpoint, Converter={StaticResource IPEndPointToStringConverter}}"
                          material:HintAssist.Hint="address:port"
                          Style="{StaticResource MaterialDesignFloatingHintTextBox}"
+                         DockPanel.Dock="Left"
                          Width="150"
                          Margin="0 -12 20 0"
                          HorizontalAlignment="Left"/>
-            </StackPanel>
-        </Border>
+            </DockPanel>
+        </StackPanel>
     </Expander>
 </UserControl>

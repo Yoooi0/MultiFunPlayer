@@ -69,70 +69,66 @@
             </StackPanel>
         </Expander.Header>
 
-        <Border Background="{StaticResource MaterialDesignBackground}"
-                BorderThickness="0 1 0 0"
-                BorderBrush="{StaticResource PrimaryHueLightBrush}">
-            <StackPanel Margin="20">
-                <DockPanel LastChildFill="True" 
-                           IsEnabled="{Binding IsDownloading, Converter={StaticResource NotConverter}}">
-                    <TextBlock Text="Executable:"
-                               DockPanel.Dock="Left"
-                               Margin="0 0 10 0"
-                               VerticalAlignment="Center"/>
+        <StackPanel Margin="20">
+            <DockPanel LastChildFill="True" 
+                       IsEnabled="{Binding IsDownloading, Converter={StaticResource NotConverter}}">
+                <TextBlock Text="Executable:"
+                           DockPanel.Dock="Left"
+                           Margin="0 0 10 0"
+                           VerticalAlignment="Center"/>
 
-                    <Button Style="{StaticResource MaterialDesignFloatingActionMiniLightButton}"
-                            Click="{s:Action OnLoadExecutable}"
-                            ToolTip="Set path" 
-                            ToolTipService.InitialShowDelay="0" 
-                            ToolTipService.Placement="Top" 
-                            DockPanel.Dock="Right"
-                            Height="24"
-                            Width="24">
-                        <material:PackIcon Kind="FileDownload"/>
-                    </Button>
-                    <Button Style="{StaticResource MaterialDesignFloatingActionMiniLightButton}"
-                            Click="{s:Action OnClearExecutable}"
-                            ToolTip="Clear path" 
-                            ToolTipService.InitialShowDelay="0" 
-                            ToolTipService.Placement="Top" 
-                            DockPanel.Dock="Right"
-                            Margin="0 0 5 0"
-                            Height="24"
-                            Width="24">
-                        <material:PackIcon Kind="Close"/>
-                    </Button>
-                    <Button Style="{StaticResource MaterialDesignFloatingActionMiniLightButton}"
-                            Click="{s:Action OnDownloadExecutable}"
-                            material:ButtonProgressAssist.IsIndicatorVisible="{Binding IsDownloading}"
-                            material:ButtonProgressAssist.Value="-1"
-                            material:ButtonProgressAssist.IsIndeterminate="True"
-                            ToolTip="Download MPV" 
-                            ToolTipService.InitialShowDelay="0" 
-                            ToolTipService.Placement="Top" 
-                            DockPanel.Dock="Right"
-                            Margin="0 0 5 0"
-                            Height="24"
-                            Width="24">
-                        <material:PackIcon Kind="Download"/>
-                    </Button>
+                <Button Style="{StaticResource MaterialDesignFloatingActionMiniLightButton}"
+                        Click="{s:Action OnLoadExecutable}"
+                        ToolTip="Set path" 
+                        ToolTipService.InitialShowDelay="0" 
+                        ToolTipService.Placement="Top" 
+                        DockPanel.Dock="Right"
+                        Height="24"
+                        Width="24">
+                    <material:PackIcon Kind="FileDownload"/>
+                </Button>
+                <Button Style="{StaticResource MaterialDesignFloatingActionMiniLightButton}"
+                        Click="{s:Action OnClearExecutable}"
+                        ToolTip="Clear path" 
+                        ToolTipService.InitialShowDelay="0" 
+                        ToolTipService.Placement="Top" 
+                        DockPanel.Dock="Right"
+                        Margin="0 0 5 0"
+                        Height="24"
+                        Width="24">
+                    <material:PackIcon Kind="Close"/>
+                </Button>
+                <Button Style="{StaticResource MaterialDesignFloatingActionMiniLightButton}"
+                        Click="{s:Action OnDownloadExecutable}"
+                        material:ButtonProgressAssist.IsIndicatorVisible="{Binding IsDownloading}"
+                        material:ButtonProgressAssist.Value="-1"
+                        material:ButtonProgressAssist.IsIndeterminate="True"
+                        ToolTip="Download MPV" 
+                        ToolTipService.InitialShowDelay="0" 
+                        ToolTipService.Placement="Top" 
+                        DockPanel.Dock="Right"
+                        Margin="0 0 5 0"
+                        Height="24"
+                        Width="24">
+                    <material:PackIcon Kind="Download"/>
+                </Button>
 
-                    <TextBox IsReadOnly="True"
-                             Text="{Binding Executable.FullName, Mode=OneWay}"
-                             DockPanel.Dock="Left"
-                             Margin="5 0 10 0"
-                             VerticalAlignment="Center"/>
-                </DockPanel>
-                <DockPanel LastChildFill="True" 
-                           Margin="0 10 0 0" >
-                    <TextBlock Text="Arguments:"
-                               DockPanel.Dock="Left"
-                               Margin="0 0 10 0"
-                               VerticalAlignment="Center"/>
+                <TextBox IsReadOnly="True"
+                         Text="{Binding Executable.FullName, Mode=OneWay}"
+                         DockPanel.Dock="Left"
+                         Margin="5 0 10 0"
+                         VerticalAlignment="Center"/>
+            </DockPanel>
+            <DockPanel LastChildFill="True" 
+                       Margin="0 10 0 0" >
+                <TextBlock Text="Arguments:"
+                           DockPanel.Dock="Left"
+                           Margin="0 0 10 0"
+                           VerticalAlignment="Center"/>
 
-                    <TextBox DockPanel.Dock="Right" 
-                             Text="{Binding Arguments}"/>
-                </DockPanel>
-            </StackPanel>
-        </Border>
+                <TextBox DockPanel.Dock="Right" 
+                         Text="{Binding Arguments}"/>
+            </DockPanel>
+        </StackPanel>
     </Expander>
 </UserControl>

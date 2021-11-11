@@ -467,42 +467,40 @@
                         </StackPanel>
                     </DockPanel>
                 </Expander.Header>
-                <Border Background="{StaticResource MaterialDesignBackground}"
-                        BorderThickness="0 1 0 0"
-                        BorderBrush="{StaticResource PrimaryHueLightBrush}">
-                    <StackPanel Margin="20 15 20 15">
-                        <DockPanel LastChildFill="True" Margin="0 0 0 10">
-                            <TextBlock Text="Video:"
-                                       DockPanel.Dock="Left"
-                                       Margin="0 0 10 0"
-                                       VerticalAlignment="Center"/>
 
-                            <TextBox IsReadOnly="True"
-                                     Text="{Binding VideoFile.Name, Mode=OneWay}"
-                                     Style="{StaticResource MaterialDesignFloatingHintTextBox}"
-                                     material:HintAssist.Hint="{Binding VideoFile.Source}"
-                                     DockPanel.Dock="Left"
-                                     Margin="5 -10 0 0"
-                                     VerticalAlignment="Center"/>
-                        </DockPanel>
-                        <DockPanel LastChildFill="True" Margin="0 0 0 10">
-                            <TextBlock Text="Global Offset:" DockPanel.Dock="Left" Margin="0 0 10 0" VerticalAlignment="Center"/>
-                            <TextBlock Text="{Binding GlobalOffset, StringFormat={}{0:0.00}s}" 
-                                       VerticalAlignment="Center"
-                                       DockPanel.Dock="Right" 
-                                       Width="50"
-                                       TextAlignment="Right"/>
+                <StackPanel Margin="20 15 20 15">
+                    <DockPanel LastChildFill="True" Margin="0 0 0 10">
+                        <TextBlock Text="Video:"
+                                   DockPanel.Dock="Left"
+                                   Margin="0 0 10 0"
+                                   VerticalAlignment="Center"/>
 
-                            <Slider Value="{Binding GlobalOffset}" 
-                                    DockPanel.Dock="Left"
-                                    Minimum="-5" 
-                                    Maximum="5"
-                                    TickFrequency="0.01"
-                                    IsSnapToTickEnabled="True"
-                                    MouseDoubleClick="{s:Action OnSliderDoubleClick}"
-                                    ValueChanged="{s:Action OnOffsetSliderValueChanged}"/>
-                        </DockPanel>
-                        <controls:KeyframesHeatmapGradient Height="35" 
+                        <TextBox IsReadOnly="True"
+                                 Text="{Binding VideoFile.Name, Mode=OneWay}"
+                                 Style="{StaticResource MaterialDesignFloatingHintTextBox}"
+                                 material:HintAssist.Hint="{Binding VideoFile.Source}"
+                                 DockPanel.Dock="Left"
+                                 Margin="5 -10 0 0"
+                                 VerticalAlignment="Center"/>
+                    </DockPanel>
+                    <DockPanel LastChildFill="True" Margin="0 0 0 10">
+                        <TextBlock Text="Global Offset:" DockPanel.Dock="Left" Margin="0 0 10 0" VerticalAlignment="Center"/>
+                        <TextBlock Text="{Binding GlobalOffset, StringFormat={}{0:0.00}s}" 
+                                   VerticalAlignment="Center"
+                                   DockPanel.Dock="Right" 
+                                   Width="50"
+                                   TextAlignment="Right"/>
+
+                        <Slider Value="{Binding GlobalOffset}" 
+                                DockPanel.Dock="Left"
+                                Minimum="-5" 
+                                Maximum="5"
+                                TickFrequency="0.01"
+                                IsSnapToTickEnabled="True"
+                                MouseDoubleClick="{s:Action OnSliderDoubleClick}"
+                                ValueChanged="{s:Action OnOffsetSliderValueChanged}"/>
+                    </DockPanel>
+                    <controls:KeyframesHeatmapGradient Height="35" 
                                                        Cursor="Hand"
                                                        MouseUp="{s:Action OnKeyframesHeatmapMouseUp}"
                                                        Keyframes="{Binding AxisKeyframes, Mode=OneWay}"
@@ -510,33 +508,32 @@
                                                        Position="{Binding CurrentPosition, Mode=OneWay}"
                                                        BucketCount="{Binding HeatmapBucketCount}"
                                                        ShowStrokeLength="{Binding HeatmapShowStrokeLength}">
-                            <controls:KeyframesHeatmapGradient.ContextMenu>
-                                <ContextMenu>
-                                    <MenuItem Header="Show stroke length" 
+                        <controls:KeyframesHeatmapGradient.ContextMenu>
+                            <ContextMenu>
+                                <MenuItem Header="Show stroke length" 
                                           IsCheckable="True"
                                           IsChecked="{Binding HeatmapShowStrokeLength}"/>
-                                    <Separator/>
-                                    <MenuItem Header="Quality" IsEnabled="False"/>
-                                    <MenuItem material:RippleAssist.IsDisabled="True">
-                                        <MenuItem.Icon>
-                                            <TextBlock Text="{Binding HeatmapBucketCount}"
+                                <Separator/>
+                                <MenuItem Header="Quality" IsEnabled="False"/>
+                                <MenuItem material:RippleAssist.IsDisabled="True">
+                                    <MenuItem.Icon>
+                                        <TextBlock Text="{Binding HeatmapBucketCount}"
                                                    FontSize="10"
                                                    Padding="0"/>
-                                        </MenuItem.Icon>
-                                        <MenuItem.HeaderTemplate>
-                                            <DataTemplate>
-                                                <Slider Minimum="100"
+                                    </MenuItem.Icon>
+                                    <MenuItem.HeaderTemplate>
+                                        <DataTemplate>
+                                            <Slider Minimum="100"
                                                     Maximum="{Binding Source={x:Static controls:KeyframesHeatmapGradient.MaxBucketCount}}"
                                                     Value="{Binding PlacementTarget.DataContext.HeatmapBucketCount, RelativeSource={RelativeSource FindAncestor, AncestorType=ContextMenu}}"/>
-                                            </DataTemplate>
-                                        </MenuItem.HeaderTemplate>
-                                    </MenuItem>
-                                    <Separator/>
-                                </ContextMenu>
-                            </controls:KeyframesHeatmapGradient.ContextMenu>
-                        </controls:KeyframesHeatmapGradient>
-                    </StackPanel>
-                </Border>
+                                        </DataTemplate>
+                                    </MenuItem.HeaderTemplate>
+                                </MenuItem>
+                                <Separator/>
+                            </ContextMenu>
+                        </controls:KeyframesHeatmapGradient.ContextMenu>
+                    </controls:KeyframesHeatmapGradient>
+                </StackPanel>
             </Expander>
         </material:Card>
 
@@ -983,18 +980,15 @@
                                     </DockPanel>
                                 </Expander.Header>
 
-                                <Border Background="{StaticResource MaterialDesignBackground}"
-                                        BorderThickness="0 1 0 0"
-                                        BorderBrush="{StaticResource PrimaryHueLightBrush}">
-                                    <StackPanel Margin="20 15 20 20">
-                                        <DockPanel LastChildFill="True" 
-                                                   Margin="0 0 0 10">
-                                            <TextBlock Text="File:" 
+                                <StackPanel Margin="20 15 20 20">
+                                    <DockPanel LastChildFill="True" 
+                                               Margin="0 0 0 10">
+                                        <TextBlock Text="File:" 
                                                    DockPanel.Dock="Left" 
                                                    Margin="0 0 10 0" 
                                                    VerticalAlignment="Center"/>
 
-                                            <TextBlock Text="RAW" 
+                                        <TextBlock Text="RAW" 
                                                    DockPanel.Dock="Right"
                                                    VerticalAlignment="Center"
                                                    Typography.Capitals="AllSmallCaps"
@@ -1002,22 +996,22 @@
                                                    FontSize="12"
                                                    Margin="10 0 0 0"
                                                    Padding="0">
-                                                <TextBlock.LayoutTransform>
-                                                    <ScaleTransform ScaleY="1.35"/>
-                                                </TextBlock.LayoutTransform>
-                                                <TextBlock.Style>
-                                                    <Style TargetType="{x:Type TextBlock}">
-                                                        <Setter Property="Foreground" Value="{StaticResource PrimaryHueLightBrush}"/>
-                                                        <Style.Triggers>
-                                                            <DataTrigger Binding="{Binding Value.Script.Keyframes.IsRawCollection}" Value="True">
-                                                                <Setter Property="Foreground" Value="Red"/>
-                                                            </DataTrigger>
-                                                        </Style.Triggers>
-                                                    </Style>
-                                                </TextBlock.Style>
-                                            </TextBlock>
+                                            <TextBlock.LayoutTransform>
+                                                <ScaleTransform ScaleY="1.35"/>
+                                            </TextBlock.LayoutTransform>
+                                            <TextBlock.Style>
+                                                <Style TargetType="{x:Type TextBlock}">
+                                                    <Setter Property="Foreground" Value="{StaticResource PrimaryHueLightBrush}"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding Value.Script.Keyframes.IsRawCollection}" Value="True">
+                                                            <Setter Property="Foreground" Value="Red"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
 
-                                            <TextBox Text="{Binding Value.Script.Name, Mode=OneWay}"
+                                        <TextBox Text="{Binding Value.Script.Name, Mode=OneWay}"
                                                  Style="{StaticResource MaterialDesignFloatingHintTextBox}"
                                                  material:HintAssist.Hint="{Binding Value.Script.Source.DirectoryName}"
                                                  Drop="{s:Action OnAxisDrop}"
@@ -1028,16 +1022,16 @@
                                                  DockPanel.Dock="Right" 
                                                  Margin="0 -10 0 0"
                                                  TextAlignment="Left"/>
-                                        </DockPanel>
-                                        <DockPanel LastChildFill="True" Margin="0 0 0 -5">
-                                            <TextBlock Text="Offset:" DockPanel.Dock="Left" Margin="0 0 10 0" VerticalAlignment="Center"/>
-                                            <TextBlock Text="{Binding Value.Settings.Offset, StringFormat={}{0:0.00}s}" 
+                                    </DockPanel>
+                                    <DockPanel LastChildFill="True" Margin="0 0 0 -5">
+                                        <TextBlock Text="Offset:" DockPanel.Dock="Left" Margin="0 0 10 0" VerticalAlignment="Center"/>
+                                        <TextBlock Text="{Binding Value.Settings.Offset, StringFormat={}{0:0.00}s}" 
                                                    VerticalAlignment="Center"
                                                    DockPanel.Dock="Right" 
                                                    Width="50"
                                                    TextAlignment="Right"/>
 
-                                            <Slider Value="{Binding Value.Settings.Offset}" 
+                                        <Slider Value="{Binding Value.Settings.Offset}" 
                                                 DockPanel.Dock="Left"
                                                 Minimum="-5" 
                                                 Maximum="5"
@@ -1045,9 +1039,8 @@
                                                 IsSnapToTickEnabled="True"
                                                 MouseDoubleClick="{s:Action OnSliderDoubleClick}"
                                                 ValueChanged="{s:Action OnOffsetSliderValueChanged}"/>
-                                        </DockPanel>
-                                    </StackPanel>
-                                </Border>
+                                    </DockPanel>
+                                </StackPanel>
                             </Expander>
                         </DockPanel>
                     </DataTemplate>
@@ -1069,48 +1062,44 @@
                                Typography.Capitals="AllSmallCaps"/>
                 </Expander.Header>
 
-                <Border Background="{StaticResource MaterialDesignBackground}"
-                        BorderThickness="0 1 0 0"
-                        BorderBrush="{StaticResource PrimaryHueLightBrush}">
-                    <StackPanel Margin="15 15 15 15">
-                        <ItemsControl ItemsSource="{Binding AxisStates}">
-                            <ItemsControl.ItemsPanel>
-                                <ItemsPanelTemplate>
-                                    <UniformGrid Columns="3" Rows="3" IsItemsHost="True"/>
-                                </ItemsPanelTemplate>
-                            </ItemsControl.ItemsPanel>
-                            <ItemsControl.ItemContainerStyle>
-                                <Style>
-                                    <Setter Property="FrameworkElement.Margin" Value="5 0 5 0"/>
-                                </Style>
-                            </ItemsControl.ItemContainerStyle>
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate>
-                                    <DockPanel Margin="0" LastChildFill="True">
-                                        <TextBlock DockPanel.Dock="Left" Margin="0 0 5 0" Text="{Binding Key, Mode=OneWay}"/>
-                                        <ProgressBar material:TransitionAssist.DisableTransitions="True"
+                <StackPanel Margin="15 15 15 15">
+                    <ItemsControl ItemsSource="{Binding AxisStates}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <UniformGrid Columns="3" Rows="3" IsItemsHost="True"/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemContainerStyle>
+                            <Style>
+                                <Setter Property="FrameworkElement.Margin" Value="5 0 5 0"/>
+                            </Style>
+                        </ItemsControl.ItemContainerStyle>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <DockPanel Margin="0" LastChildFill="True">
+                                    <TextBlock DockPanel.Dock="Left" Margin="0 0 5 0" Text="{Binding Key, Mode=OneWay}"/>
+                                    <ProgressBar material:TransitionAssist.DisableTransitions="True"
                                                  DockPanel.Dock="Right"
                                                  Minimum="0"
                                                  Maximum="100"
                                                  Height="10"
                                                  Width="155"
                                                  Value="{Binding Value.Value, Mode=OneWay, Converter={StaticResource DeviceAxisValueToPercentConverter}}">
-                                            <ProgressBar.Style>
-                                                <Style TargetType="ProgressBar" BasedOn="{StaticResource MaterialDesignLinearProgressBar}">
-                                                    <Style.Triggers>
-                                                        <DataTrigger Binding="{Binding Value.InsideScript}" Value="False">
-                                                            <Setter Property="Foreground" Value="{StaticResource IdealForegroundDisabledBrush}"/>
-                                                        </DataTrigger>
-                                                    </Style.Triggers>
-                                                </Style>
-                                            </ProgressBar.Style>
-                                        </ProgressBar>
-                                    </DockPanel>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
-                    </StackPanel>
-                </Border>
+                                        <ProgressBar.Style>
+                                            <Style TargetType="ProgressBar" BasedOn="{StaticResource MaterialDesignLinearProgressBar}">
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding Value.InsideScript}" Value="False">
+                                                        <Setter Property="Foreground" Value="{StaticResource IdealForegroundDisabledBrush}"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </ProgressBar.Style>
+                                    </ProgressBar>
+                                </DockPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
             </Expander>
         </material:Card>
     </StackPanel>

@@ -70,128 +70,124 @@
             </StackPanel>
         </Expander.Header>
 
-        <Border Background="{StaticResource MaterialDesignBackground}"
-                BorderThickness="0 1 0 0"
-                BorderBrush="{StaticResource PrimaryHueLightBrush}">
-            <StackPanel Margin="20">
-                <DockPanel LastChildFill="True" Margin="0 0 0 20">
-                    <DockPanel DockPanel.Dock="Left"
-                               LastChildFill="False">
-                        <DockPanel.Resources>
-                            <Style TargetType="{x:Type DockPanel}">
-                                <Setter Property="IsEnabled" Value="False" />
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{Binding Status}" Value="Disconnected">
-                                        <Setter Property="IsEnabled" Value="True" />
-                                    </DataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </DockPanel.Resources>
-                        <ComboBox Style="{StaticResource MaterialDesignFloatingHintComboBox}"
-                                  IsEnabled="{Binding CanChangePort}"
-                                  DockPanel.Dock="Left"
-                                  material:HintAssist.Hint="serial port"
-                                  material:TextFieldAssist.HasClearButton="True"
-                                  Margin="0 -12 20 0"
-                                  Width="150"
-                                  ItemsSource="{Binding ComPorts}"
-                                  SelectedItem="{Binding SelectedComPort}"/>
+        <StackPanel Margin="20">
+            <DockPanel LastChildFill="True" Margin="0 0 0 20">
+                <DockPanel DockPanel.Dock="Left"
+                           LastChildFill="False">
+                    <DockPanel.Resources>
+                        <Style TargetType="{x:Type DockPanel}">
+                            <Setter Property="IsEnabled" Value="False" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding Status}" Value="Disconnected">
+                                    <Setter Property="IsEnabled" Value="True" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </DockPanel.Resources>
+                    <ComboBox Style="{StaticResource MaterialDesignFloatingHintComboBox}"
+                              IsEnabled="{Binding CanChangePort}"
+                              DockPanel.Dock="Left"
+                              material:HintAssist.Hint="serial port"
+                              material:TextFieldAssist.HasClearButton="True"
+                              Margin="0 -12 20 0"
+                              Width="150"
+                              ItemsSource="{Binding ComPorts}"
+                              SelectedItem="{Binding SelectedComPort}"/>
 
-                        <Button DockPanel.Dock="Left"
-                                Style="{StaticResource MaterialDesignFloatingActionMiniLightButton}"
-                                Command="{s:Action RefreshPorts}"
-                                IsEnabled="{Binding CanRefreshPorts}"
-                                Margin="0 -12 0 0"
-                                Height="24"
-                                Width="24"
-                                ToolTip="Refresh" 
-                                ToolTipService.InitialShowDelay="0" 
-                                ToolTipService.Placement="Top" 
-                                material:ButtonProgressAssist.IsIndicatorVisible="{Binding IsRefreshBusy}"
-                                material:ButtonProgressAssist.Value="-1"
-                                material:ButtonProgressAssist.IsIndeterminate="True">
-                            <material:PackIcon Kind="Refresh"/>
-                        </Button>
-                    </DockPanel>
-
-                    <StackPanel DockPanel.Dock="Right" 
-                                Orientation="Horizontal" 
-                                HorizontalAlignment="Right"
-                                VerticalAlignment="Center">
-                        <TextBlock VerticalAlignment="Center" Text="Update rate:" Margin="0 0 10 0"/>
-                        <Slider Value="{Binding UpdateRate, Mode=TwoWay}"
-                                HorizontalAlignment="Stretch"
-                                VerticalAlignment="Top"
-                                Margin="0 0 10 0"
-                                Width="100"
-                                Minimum="30" 
-                                Maximum="330" 
-                                Interval="10" 
-                                IsSnapToTickEnabled="True" 
-                                TickFrequency="10" 
-                                Orientation="Horizontal"/>
-                        <TextBlock VerticalAlignment="Center" 
-                                   HorizontalAlignment="Right" 
-                                   TextAlignment="Right"
-                                   Width="40"
-                                   Text="{Binding UpdateRate, StringFormat={}{0} hz}"/>
-                    </StackPanel>
+                    <Button DockPanel.Dock="Left"
+                            Style="{StaticResource MaterialDesignFloatingActionMiniLightButton}"
+                            Command="{s:Action RefreshPorts}"
+                            IsEnabled="{Binding CanRefreshPorts}"
+                            Margin="0 -12 0 0"
+                            Height="24"
+                            Width="24"
+                            ToolTip="Refresh" 
+                            ToolTipService.InitialShowDelay="0" 
+                            ToolTipService.Placement="Top" 
+                            material:ButtonProgressAssist.IsIndicatorVisible="{Binding IsRefreshBusy}"
+                            material:ButtonProgressAssist.Value="-1"
+                            material:ButtonProgressAssist.IsIndeterminate="True">
+                        <material:PackIcon Kind="Refresh"/>
+                    </Button>
                 </DockPanel>
 
-                <TextBlock Text="Output Range:"
-                           Typography.Capitals="AllSmallCaps"
-                           FontWeight="Bold"
-                           VerticalAlignment="Center"
-                           HorizontalAlignment="Left"/>
-                <ItemsControl ItemsSource="{Binding AxisSettings}">
-                    <ItemsControl.ItemsPanel>
-                        <ItemsPanelTemplate>
-                            <UniformGrid Columns="3" Rows="3" IsItemsHost="True" Margin="0 0 -10 0"/>
-                        </ItemsPanelTemplate>
-                    </ItemsControl.ItemsPanel>
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate>
-                            <DockPanel LastChildFill="True">
-                                <TextBlock DockPanel.Dock="Left" 
-                                           VerticalAlignment="Center" 
-                                           Text="{Binding Key}"/>
-                                <metro:RangeSlider Style="{StaticResource MaterialDesignRangeSlider}" 
-                                                   DockPanel.Dock="Right"
-                                                   HorizontalAlignment="Stretch"
-                                                   Margin="5 0 10 0"
-                                                   Minimum="0" 
-                                                   Maximum="100" 
-                                                   MinRangeWidth="10" 
-                                                   MinRange="1"
-                                                   AutoToolTipPlacement="TopLeft" 
-                                                   UseLayoutRounding="False"
-                                                   LowerValue="{Binding Value.Minimum, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
-                                                   UpperValue="{Binding Value.Maximum, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
-                                    <metro:RangeSlider.AutoToolTipLowerValueTemplate>
-                                        <DataTemplate>
-                                            <TextBlock HorizontalAlignment="Right" Text="{Binding StringFormat='{}{0:D}%'}" />
-                                        </DataTemplate>
-                                    </metro:RangeSlider.AutoToolTipLowerValueTemplate>
-                                    <metro:RangeSlider.AutoToolTipUpperValueTemplate>
-                                        <DataTemplate>
-                                            <TextBlock HorizontalAlignment="Right" Text="{Binding StringFormat='{}{0:D}%'}" />
-                                        </DataTemplate>
-                                    </metro:RangeSlider.AutoToolTipUpperValueTemplate>
-                                    <metro:RangeSlider.AutoToolTipRangeValuesTemplate>
-                                        <DataTemplate DataType="mah:RangeSliderAutoTooltipValues">
-                                            <StackPanel Orientation="Horizontal">
-                                                <TextBlock Text="{Binding LowerValue, StringFormat='{}{0:D}%'}" />
-                                                <TextBlock Text=" - " />
-                                                <TextBlock Text="{Binding UpperValue, StringFormat='{}{0:D}%'}" />
-                                            </StackPanel>
-                                        </DataTemplate>
-                                    </metro:RangeSlider.AutoToolTipRangeValuesTemplate>
-                                </metro:RangeSlider>
-                            </DockPanel>
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
-            </StackPanel>
-        </Border>
+                <StackPanel DockPanel.Dock="Right" 
+                            Orientation="Horizontal" 
+                            HorizontalAlignment="Right"
+                            VerticalAlignment="Center">
+                    <TextBlock VerticalAlignment="Center" Text="Update rate:" Margin="0 0 10 0"/>
+                    <Slider Value="{Binding UpdateRate, Mode=TwoWay}"
+                            HorizontalAlignment="Stretch"
+                            VerticalAlignment="Top"
+                            Margin="0 0 10 0"
+                            Width="100"
+                            Minimum="30" 
+                            Maximum="330" 
+                            Interval="10" 
+                            IsSnapToTickEnabled="True" 
+                            TickFrequency="10" 
+                            Orientation="Horizontal"/>
+                    <TextBlock VerticalAlignment="Center" 
+                               HorizontalAlignment="Right" 
+                               TextAlignment="Right"
+                               Width="40"
+                               Text="{Binding UpdateRate, StringFormat={}{0} hz}"/>
+                </StackPanel>
+            </DockPanel>
+
+            <TextBlock Text="Output Range:"
+                       Typography.Capitals="AllSmallCaps"
+                       FontWeight="Bold"
+                       VerticalAlignment="Center"
+                       HorizontalAlignment="Left"/>
+            <ItemsControl ItemsSource="{Binding AxisSettings}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <UniformGrid Columns="3" Rows="3" IsItemsHost="True" Margin="0 0 -10 0"/>
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <DockPanel LastChildFill="True">
+                            <TextBlock DockPanel.Dock="Left" 
+                                       VerticalAlignment="Center" 
+                                       Text="{Binding Key}"/>
+                            <metro:RangeSlider Style="{StaticResource MaterialDesignRangeSlider}" 
+                                               DockPanel.Dock="Right"
+                                               HorizontalAlignment="Stretch"
+                                               Margin="5 0 10 0"
+                                               Minimum="0" 
+                                               Maximum="100" 
+                                               MinRangeWidth="10" 
+                                               MinRange="1"
+                                               AutoToolTipPlacement="TopLeft" 
+                                               UseLayoutRounding="False"
+                                               LowerValue="{Binding Value.Minimum, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
+                                               UpperValue="{Binding Value.Maximum, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                                <metro:RangeSlider.AutoToolTipLowerValueTemplate>
+                                    <DataTemplate>
+                                        <TextBlock HorizontalAlignment="Right" Text="{Binding StringFormat='{}{0:D}%'}" />
+                                    </DataTemplate>
+                                </metro:RangeSlider.AutoToolTipLowerValueTemplate>
+                                <metro:RangeSlider.AutoToolTipUpperValueTemplate>
+                                    <DataTemplate>
+                                        <TextBlock HorizontalAlignment="Right" Text="{Binding StringFormat='{}{0:D}%'}" />
+                                    </DataTemplate>
+                                </metro:RangeSlider.AutoToolTipUpperValueTemplate>
+                                <metro:RangeSlider.AutoToolTipRangeValuesTemplate>
+                                    <DataTemplate DataType="mah:RangeSliderAutoTooltipValues">
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="{Binding LowerValue, StringFormat='{}{0:D}%'}" />
+                                            <TextBlock Text=" - " />
+                                            <TextBlock Text="{Binding UpperValue, StringFormat='{}{0:D}%'}" />
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </metro:RangeSlider.AutoToolTipRangeValuesTemplate>
+                            </metro:RangeSlider>
+                        </DockPanel>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </StackPanel>
     </Expander>
 </UserControl>
