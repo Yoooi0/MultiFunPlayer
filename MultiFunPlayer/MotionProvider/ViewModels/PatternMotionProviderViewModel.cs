@@ -36,7 +36,7 @@ public class PatternMotionProviderViewModel : AbstractMotionProvider
     public override void Update()
     {
         var currentTime = Environment.TickCount64;
-        Value = MathUtils.Map(Calculate(Pattern, _time), 0, 1, Minimum / 100.0f, Maximum / 100.0f);
+        Value = MathUtils.Map(Calculate(Pattern, _time), 0, 1, Minimum / 100, Maximum / 100);
 
         _time += Speed * (currentTime - _lastTime) / 1000.0f;
         _lastTime = currentTime;

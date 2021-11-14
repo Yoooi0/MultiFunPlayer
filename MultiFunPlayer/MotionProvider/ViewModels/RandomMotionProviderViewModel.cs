@@ -13,6 +13,8 @@ public class RandomMotionProviderViewModel : AbstractMotionProvider
     public override string Name => "Random";
 
     [JsonProperty] public float Speed { get; set; } = 1;
+    [JsonProperty] public float Minimum { get; set; } = 0;
+    [JsonProperty] public float Maximum { get; set; } = 100;
     [JsonProperty] public int Seed { get; set; } = 0;
 
     public RandomMotionProviderViewModel()
@@ -25,9 +27,7 @@ public class RandomMotionProviderViewModel : AbstractMotionProvider
     public override void Update()
     {
         var currentTime = Environment.TickCount64;
-
-        if (_noise != null)
-            Value = (float)(_noise.Calculate2D(Seed, _time) + 1) / 2;
+        Value = MathUtils.Map((float)(_noise?.Calculate2D(Seed, _time) + 1 ?? 0) / 2, 0, 1, Minimum / 100, Maximum / 100);
 
         _time += Speed * (currentTime - _lastTime) / 1000.0f;
         _lastTime = currentTime;

@@ -19,6 +19,8 @@ public class LoopingScriptMotionProviderViewModel : AbstractMotionProvider
     public IScriptFile Script { get; private set; }
 
     [JsonProperty] public float Speed { get; set; } = 1;
+    [JsonProperty] public float Minimum { get; set; } = 0;
+    [JsonProperty] public float Maximum { get; set; } = 100;
     [JsonProperty] public FileInfo SourceFile { get; set; } = null;
     [JsonProperty] public InterpolationType InterpolationType { get; set; } = InterpolationType.Pchip;
 
@@ -58,12 +60,13 @@ public class LoopingScriptMotionProviderViewModel : AbstractMotionProvider
         if (!keyframes.ValidateIndex(_scriptIndex) || !keyframes.ValidateIndex(_scriptIndex + 1))
             return;
 
+        var newValue = default(float);
         if (keyframes.IsRawCollection || _scriptIndex == 0 || _scriptIndex + 2 == keyframes.Count || InterpolationType == InterpolationType.Linear)
         {
             var p0 = keyframes[_scriptIndex];
             var p1 = keyframes[_scriptIndex + 1];
 
-            Value = MathUtils.Interpolate(p0.Position, p0.Value, p1.Position, p1.Value, _time, InterpolationType.Linear);
+            newValue = MathUtils.Interpolate(p0.Position, p0.Value, p1.Position, p1.Value, _time, InterpolationType.Linear);
         }
         else
         {
@@ -72,9 +75,11 @@ public class LoopingScriptMotionProviderViewModel : AbstractMotionProvider
             var p2 = keyframes[_scriptIndex + 1];
             var p3 = keyframes[_scriptIndex + 2];
 
-            Value = MathUtils.Interpolate(p0.Position, p0.Value, p1.Position, p1.Value, p2.Position, p2.Value, p3.Position, p3.Value,
+            newValue = MathUtils.Interpolate(p0.Position, p0.Value, p1.Position, p1.Value, p2.Position, p2.Value, p3.Position, p3.Value,
                                              _time, InterpolationType);
         }
+
+        Value = MathUtils.Map(newValue, 0, 1, Minimum / 100, Maximum / 100);
 
         _time += Speed * (currentTime - _lastTime) / 1000.0f;
         _lastTime = currentTime;
