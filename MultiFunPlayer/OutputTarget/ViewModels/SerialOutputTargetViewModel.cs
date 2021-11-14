@@ -6,16 +6,17 @@ using MultiFunPlayer.UI.Controls.ViewModels;
 using Newtonsoft.Json.Linq;
 using NLog;
 using Stylet;
+using System.ComponentModel;
 using System.IO;
 using System.IO.Ports;
 
 namespace MultiFunPlayer.OutputTarget.ViewModels;
 
+[DisplayName("Serial")]
 public class SerialOutputTargetViewModel : ThreadAbstractOutputTarget
 {
     protected Logger Logger = LogManager.GetCurrentClassLogger();
 
-    public override string Name => "Serial";
     public override ConnectionStatus Status { get; protected set; }
 
     public BindableCollection<string> ComPorts { get; set; }

@@ -6,6 +6,7 @@ using MultiFunPlayer.UI.Controls.ViewModels;
 using Newtonsoft.Json.Linq;
 using NLog;
 using Stylet;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
@@ -14,13 +15,13 @@ using System.Net.Sockets;
 
 namespace MultiFunPlayer.VideoSource.ViewModels;
 
+[DisplayName("Whirligig")]
 public class WhirligigVideoSourceViewModel : AbstractVideoSource
 {
     protected Logger Logger = LogManager.GetCurrentClassLogger();
 
     private readonly IEventAggregator _eventAggregator;
 
-    public override string Name => "Whirligig";
     public override ConnectionStatus Status { get; protected set; }
 
     public IPEndPoint Endpoint { get; set; } = new IPEndPoint(IPAddress.Loopback, 2000);

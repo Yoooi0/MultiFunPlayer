@@ -1,5 +1,6 @@
 ﻿using MultiFunPlayer.Common;
 using Newtonsoft.Json;
+using System.ComponentModel;
 
 namespace MultiFunPlayer.MotionProvider.ViewModels;
 
@@ -13,13 +14,12 @@ public enum PatternType
     Square
 }
 
+[DisplayName("Pattern")]
 [JsonObject(MemberSerialization = MemberSerialization.OptIn)]
 public class PatternMotionProviderViewModel : AbstractMotionProvider
 {
     private float _time;
     private long _lastTime;
-
-    public override string Name => "Pattern";
 
     [JsonProperty] public float Speed { get; set; } = 1;
     [JsonProperty] public float Period { get; set; } = 1;

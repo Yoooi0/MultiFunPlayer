@@ -76,8 +76,7 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                                          .GetTypes()
                                          .Where(t => t.IsClass && !t.IsAbstract)
                                          .Where(t => typeof(IMediaPathModifier).IsAssignableFrom(t))
-                                         .Select(t => (IMediaPathModifier)Activator.CreateInstance(t))
-                                         .ToDictionary(i => i.Name, i => i.GetType());
+                                         .ToDictionary(t => t.GetCustomAttribute<DisplayNameAttribute>(inherit: false).DisplayName, t => t);
 
         ScriptLibraries = new BindableCollection<ScriptLibrary>();
         SyncSettings = new SyncSettings();

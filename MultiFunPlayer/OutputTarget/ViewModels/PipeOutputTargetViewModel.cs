@@ -6,17 +6,18 @@ using MultiFunPlayer.UI.Controls.ViewModels;
 using Newtonsoft.Json.Linq;
 using NLog;
 using Stylet;
+using System.ComponentModel;
 using System.IO;
 using System.IO.Pipes;
 using System.Text;
 
 namespace MultiFunPlayer.OutputTarget.ViewModels;
 
+[DisplayName("Pipe")]
 public class PipeOutputTargetViewModel : ThreadAbstractOutputTarget
 {
     protected Logger Logger = LogManager.GetCurrentClassLogger();
 
-    public override string Name => "Pipe";
     public override ConnectionStatus Status { get; protected set; }
 
     public string PipeName { get; set; } = "mfp-pipe";

@@ -4,6 +4,8 @@ using MultiFunPlayer.Input;
 using Newtonsoft.Json.Linq;
 using PropertyChanged;
 using Stylet;
+using System.ComponentModel;
+using System.Reflection;
 
 namespace MultiFunPlayer.OutputTarget;
 
@@ -12,7 +14,8 @@ public abstract class AbstractOutputTarget : Screen, IHandle<AppSettingsMessage>
     private readonly IDeviceAxisValueProvider _valueProvider;
     private readonly AsyncManualResetEvent _statusEvent;
 
-    public abstract string Name { get; }
+    public string Name => GetType().GetCustomAttribute<DisplayNameAttribute>(inherit: false).DisplayName;
+
     [SuppressPropertyChangedWarnings] public abstract ConnectionStatus Status { get; protected set; }
     public bool ContentVisible { get; set; } = false;
     public bool AutoConnectEnabled { get; set; } = false;

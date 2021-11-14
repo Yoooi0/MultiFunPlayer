@@ -1,10 +1,12 @@
 ﻿using Microsoft.WindowsAPICodePack.Dialogs;
 using MultiFunPlayer.Common;
 using Newtonsoft.Json;
+using System.ComponentModel;
 using System.IO;
 
 namespace MultiFunPlayer.MotionProvider.ViewModels;
 
+[DisplayName("Looping Script")]
 [JsonObject(MemberSerialization = MemberSerialization.OptIn)]
 public class LoopingScriptMotionProviderViewModel : AbstractMotionProvider
 {
@@ -15,7 +17,6 @@ public class LoopingScriptMotionProviderViewModel : AbstractMotionProvider
     private float _scriptEnd;
     private int _scriptIndex;
 
-    public override string Name => "Looping Script";
     public IScriptFile Script { get; private set; }
 
     [JsonProperty] public float Speed { get; set; } = 1;

@@ -4,6 +4,8 @@ using MultiFunPlayer.Input;
 using Newtonsoft.Json.Linq;
 using PropertyChanged;
 using Stylet;
+using System.ComponentModel;
+using System.Reflection;
 
 namespace MultiFunPlayer.VideoSource;
 
@@ -30,7 +32,8 @@ public abstract class AbstractVideoSource : Screen, IVideoSource, IHandle<AppSet
         RegisterShortcuts(shortcutManager);
     }
 
-    public abstract string Name { get; }
+    public string Name => GetType().GetCustomAttribute<DisplayNameAttribute>(inherit: false).DisplayName;
+
     protected abstract Task RunAsync(CancellationToken token);
 
     public async virtual Task ConnectAsync()

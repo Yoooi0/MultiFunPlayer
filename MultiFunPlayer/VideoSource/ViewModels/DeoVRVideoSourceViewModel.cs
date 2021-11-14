@@ -7,6 +7,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NLog;
 using Stylet;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Net;
@@ -16,6 +17,7 @@ using System.Threading.Channels;
 
 namespace MultiFunPlayer.VideoSource.ViewModels;
 
+[DisplayName("DeoVR")]
 public class DeoVRVideoSourceViewModel : AbstractVideoSource, IHandle<VideoPlayPauseMessage>, IHandle<VideoSeekMessage>
 {
     protected Logger Logger = LogManager.GetCurrentClassLogger();
@@ -23,7 +25,6 @@ public class DeoVRVideoSourceViewModel : AbstractVideoSource, IHandle<VideoPlayP
     private readonly IEventAggregator _eventAggregator;
     private readonly Channel<object> _writeMessageChannel;
 
-    public override string Name => "DeoVR";
     public override ConnectionStatus Status { get; protected set; }
 
     public IPEndPoint Endpoint { get; set; } = new IPEndPoint(IPAddress.Loopback, 23554);

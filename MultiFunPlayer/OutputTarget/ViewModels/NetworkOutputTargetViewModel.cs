@@ -6,6 +6,7 @@ using MultiFunPlayer.UI.Controls.ViewModels;
 using Newtonsoft.Json.Linq;
 using NLog;
 using Stylet;
+using System.ComponentModel;
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
@@ -19,11 +20,11 @@ public enum ProtocolType
     Udp
 }
 
+[DisplayName("Network")]
 public class NetworkOutputTargetViewModel : ThreadAbstractOutputTarget
 {
     protected Logger Logger = LogManager.GetCurrentClassLogger();
 
-    public override string Name => "Network";
     public override ConnectionStatus Status { get; protected set; }
 
     public IPEndPoint Endpoint { get; set; } = new IPEndPoint(IPAddress.Loopback, 8080);

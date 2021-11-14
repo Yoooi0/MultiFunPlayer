@@ -8,6 +8,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NLog;
 using Stylet;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
@@ -16,6 +17,7 @@ using System.Threading.Channels;
 
 namespace MultiFunPlayer.VideoSource.ViewModels;
 
+[DisplayName("MPV")]
 public class MpvVideoSourceViewModel : AbstractVideoSource, IHandle<VideoPlayPauseMessage>, IHandle<VideoSeekMessage>
 {
     protected Logger Logger = LogManager.GetCurrentClassLogger();
@@ -24,7 +26,6 @@ public class MpvVideoSourceViewModel : AbstractVideoSource, IHandle<VideoPlayPau
     private readonly IEventAggregator _eventAggregator;
     private readonly Channel<object> _writeMessageChannel;
 
-    public override string Name => "MPV";
     public override ConnectionStatus Status { get; protected set; }
 
     public FileInfo Executable { get; set; } = null;

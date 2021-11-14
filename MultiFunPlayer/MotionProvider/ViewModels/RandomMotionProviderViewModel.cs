@@ -1,16 +1,16 @@
 ﻿using MultiFunPlayer.Common;
 using Newtonsoft.Json;
+using System.ComponentModel;
 
 namespace MultiFunPlayer.MotionProvider.ViewModels;
 
+[DisplayName("Random")]
 [JsonObject(MemberSerialization = MemberSerialization.OptIn)]
 public class RandomMotionProviderViewModel : AbstractMotionProvider
 {
     private readonly OpenSimplex _noise;
     private float _time;
     private long _lastTime;
-
-    public override string Name => "Random";
 
     [JsonProperty] public float Speed { get; set; } = 1;
     [JsonProperty] public float Minimum { get; set; } = 0;

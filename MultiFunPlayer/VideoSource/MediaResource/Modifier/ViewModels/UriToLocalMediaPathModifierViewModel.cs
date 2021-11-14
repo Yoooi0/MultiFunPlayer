@@ -1,25 +1,24 @@
 ﻿using Newtonsoft.Json;
 using PropertyChanged;
-using Stylet;
 using System.IO;
 using System.Net;
 using MultiFunPlayer.Common;
 using Microsoft.WindowsAPICodePack.Dialogs;
 using System.Net.Http;
+using System.ComponentModel;
 
 namespace MultiFunPlayer.VideoSource.MediaResource.Modifier.ViewModels;
 
+[DisplayName("Uri To Local")]
 [JsonObject(MemberSerialization = MemberSerialization.OptIn)]
-public class UriToLocalMediaPathModifierViewModel : PropertyChangedBase, IMediaPathModifier
+public class UriToLocalMediaPathModifierViewModel : AbstractMediaPathModifier
 {
     private readonly Dictionary<string, string> _videoPathCache;
     private readonly Dictionary<long, FileInfo> _videoSizeCache;
     private readonly HttpClient _client;
 
-    public string Name => "Uri To Local";
-
     [DependsOn(nameof(UriEndpoint))]
-    public string Description => UriEndpoint?.ToString();
+    public override string Description => UriEndpoint?.ToString();
 
     [JsonProperty] public DirectoryInfo VideoDirectory { get; set; }
     [JsonProperty] public IPEndPoint UriEndpoint { get; set; }
@@ -43,7 +42,7 @@ public class UriToLocalMediaPathModifierViewModel : PropertyChangedBase, IMediaP
                 _videoSizeCache[length] = files.First();
     }
 
-    public bool Process(ref string path)
+    public override bool Process(ref string path)
     {
         if (VideoDirectory == null || UriEndpoint == null)
             return false;

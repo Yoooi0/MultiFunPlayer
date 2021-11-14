@@ -1,24 +1,23 @@
 ﻿using Newtonsoft.Json;
 using PropertyChanged;
-using Stylet;
+using System.ComponentModel;
 using System.Text.RegularExpressions;
 
 namespace MultiFunPlayer.VideoSource.MediaResource.Modifier.ViewModels;
 
+[DisplayName("Find/Replace")]
 [JsonObject(MemberSerialization = MemberSerialization.OptIn)]
-public class FindReplaceMediaPathModifierViewModel : PropertyChangedBase, IMediaPathModifier
+public class FindReplaceMediaPathModifierViewModel : AbstractMediaPathModifier
 {
-    public string Name => "Find/Replace";
-
     [DependsOn(nameof(Find))]
-    public string Description => Find?.Length > 50 ? $"{Find[..50]}..." : Find;
+    public override string Description => Find?.Length > 50 ? $"{Find[..50]}..." : Find;
 
     [JsonProperty] public string Find { get; set; }
     [JsonProperty] public string Replace { get; set; }
     [JsonProperty] public bool MatchCase { get; set; } = true;
     [JsonProperty] public bool UseRegularExpressions { get; set; }
 
-    public bool Process(ref string path)
+    public override bool Process(ref string path)
     {
         try
         {

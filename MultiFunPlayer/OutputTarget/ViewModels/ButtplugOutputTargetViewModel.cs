@@ -9,12 +9,14 @@ using Newtonsoft.Json.Linq;
 using NLog;
 using PropertyChanged;
 using Stylet;
+using System.ComponentModel;
 using System.Net;
 using System.Net.WebSockets;
 using System.Windows;
 
 namespace MultiFunPlayer.OutputTarget.ViewModels;
 
+[DisplayName("Buttplug.io")]
 public class ButtplugOutputTargetViewModel : AsyncAbstractOutputTarget
 {
     protected Logger Logger = LogManager.GetCurrentClassLogger();
@@ -28,7 +30,6 @@ public class ButtplugOutputTargetViewModel : AsyncAbstractOutputTarget
     private SemaphoreSlim _startScanSemaphore;
     private SemaphoreSlim _endScanSemaphore;
 
-    public override string Name => "Buttplug.io";
     public override ConnectionStatus Status { get; protected set; }
     public IPEndPoint Endpoint { get; set; } = new IPEndPoint(IPAddress.Loopback, 12345);
     public BindableCollection<ButtplugClientDevice> AvailableDevices { get; protected set; }
