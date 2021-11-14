@@ -20,7 +20,8 @@
                       SelectedItem="{Binding Pattern}"/>
         </DockPanel>
 
-        <DockPanel LastChildFill="True">
+        <DockPanel LastChildFill="True"
+                   Margin="0 0 0 10">
             <TextBlock Text="Speed:"
                        Margin="0 0 10 0"
                        VerticalAlignment="Center"
@@ -33,6 +34,61 @@
                                  StringFormat="P0"
                                  Validation.ErrorTemplate="{x:Null}"
                                  HideUpDownButtons="False"/>
+        </DockPanel>
+
+        <DockPanel LastChildFill="True"
+                   Margin="0 0 0 10">
+            <TextBlock Text="Period:"
+                       Margin="0 0 10 0"
+                       VerticalAlignment="Center"
+                       DockPanel.Dock="Left"/>
+
+            <metro:NumericUpDown Value="{Binding Period}"
+                                 Style="{StaticResource MaterialDesignNumericUpDown}"
+                                 Minimum="0.01"
+                                 Interval="0.01"
+                                 StringFormat="{}{0:F2}s"
+                                 Validation.ErrorTemplate="{x:Null}"
+                                 HideUpDownButtons="False"/>
+        </DockPanel>
+
+        <DockPanel LastChildFill="True">
+            <TextBlock Text="Range:"
+                       Margin="0 0 10 0"
+                       VerticalAlignment="Center"
+                       DockPanel.Dock="Left"/>
+
+            <metro:RangeSlider Style="{StaticResource MaterialDesignRangeSlider}" 
+                                               DockPanel.Dock="Right"
+                                               HorizontalAlignment="Stretch"
+                                               Minimum="0" 
+                                               Maximum="100" 
+                                               MinRangeWidth="10" 
+                                               MinRange="1"
+                                               AutoToolTipPlacement="TopLeft" 
+                                               UseLayoutRounding="False"
+                                               LowerValue="{Binding Minimum, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
+                                               UpperValue="{Binding Maximum, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                <metro:RangeSlider.AutoToolTipLowerValueTemplate>
+                    <DataTemplate>
+                        <TextBlock HorizontalAlignment="Right" Text="{Binding StringFormat='{}{0:D}%'}" />
+                    </DataTemplate>
+                </metro:RangeSlider.AutoToolTipLowerValueTemplate>
+                <metro:RangeSlider.AutoToolTipUpperValueTemplate>
+                    <DataTemplate>
+                        <TextBlock HorizontalAlignment="Right" Text="{Binding StringFormat='{}{0:D}%'}" />
+                    </DataTemplate>
+                </metro:RangeSlider.AutoToolTipUpperValueTemplate>
+                <metro:RangeSlider.AutoToolTipRangeValuesTemplate>
+                    <DataTemplate DataType="mah:RangeSliderAutoTooltipValues">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="{Binding LowerValue, StringFormat='{}{0:D}%'}" />
+                            <TextBlock Text=" - " />
+                            <TextBlock Text="{Binding UpperValue, StringFormat='{}{0:D}%'}" />
+                        </StackPanel>
+                    </DataTemplate>
+                </metro:RangeSlider.AutoToolTipRangeValuesTemplate>
+            </metro:RangeSlider>
         </DockPanel>
     </StackPanel>
 </UserControl>

@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using MultiFunPlayer.Common;
+using Newtonsoft.Json;
 
 namespace MultiFunPlayer.MotionProvider.ViewModels;
 
@@ -21,6 +22,9 @@ public class PatternMotionProviderViewModel : AbstractMotionProvider
     public override string Name => "Pattern";
 
     [JsonProperty] public float Speed { get; set; } = 1;
+    [JsonProperty] public float Period { get; set; } = 1;
+    [JsonProperty] public float Minimum { get; set; } = 0;
+    [JsonProperty] public float Maximum { get; set; } = 100;
     [JsonProperty] public PatternType Pattern { get; set; } = PatternType.Triangle;
 
     public PatternMotionProviderViewModel()
@@ -32,7 +36,7 @@ public class PatternMotionProviderViewModel : AbstractMotionProvider
     public override void Update()
     {
         var currentTime = Environment.TickCount64;
-        Value = Calculate(Pattern, _time);
+        Value = MathUtils.Map(Calculate(Pattern, _time), 0, 1, Minimum / 100.0f, Maximum / 100.0f);
 
         _time += Speed * (currentTime - _lastTime) / 1000.0f;
         _lastTime = currentTime;
@@ -40,7 +44,7 @@ public class PatternMotionProviderViewModel : AbstractMotionProvider
 
     private float Calculate(PatternType pattern, float time)
     {
-        var t = time % 1;
+        var t = MathUtils.Clamp01((time % Period) / Period);
         switch (pattern)
         {
             case PatternType.Triangle: return MathF.Abs(MathF.Abs(t * 2 - 1.5f) - 1);
