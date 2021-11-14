@@ -4,6 +4,9 @@ on:
   push:
     tags:
       - '*'
+      
+permissions:
+  contents: write
 
 jobs:
   build:
@@ -14,16 +17,16 @@ jobs:
       with:
           fetch-depth: 0
     - name: Setup Dotnet
-      uses: actions/setup-dotnet@v1.7.2
+      uses: actions/setup-dotnet@v1.8.2
       with:
-        dotnet-version: '5.0.x'
+        dotnet-version: '6.x'
     - name: Setup GitVersion
-      uses: gittools/actions/gitversion/setup@v0.9.7
+      uses: gittools/actions/gitversion/setup@v0.9.11
       with:
         versionSpec: '5.x'
     - name: Determine Version
       id:   gitversion
-      uses: gittools/actions/gitversion/execute@v0.9.7
+      uses: gittools/actions/gitversion/execute@v0.9.11
     - name: Install Dependencies
       run: dotnet restore
     - name: Build
@@ -32,20 +35,11 @@ jobs:
       run: 7z a MultiFunPlayer-${{ steps.gitversion.outputs.semVer }}.zip .\MultiFunPlayer\bin\Release\win-x64\publish\*
     - name: Create Release
       id: create-release
-      uses: actions/create-release@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      uses: softprops/action-gh-release@v1
       with:
-        tag_name: ${{ github.ref }}
-        release_name: MultiFunPlayer v${{ steps.gitversion.outputs.semVer }}
         draft: false
         prerelease: false
-    - name: Upload Release Artifact
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create-release.outputs.upload_url }}
-        asset_name: MultiFunPlayer-${{ steps.gitversion.outputs.semVer }}.zip
-        asset_path: ./MultiFunPlayer-${{ steps.gitversion.outputs.semVer }}.zip
-        asset_content_type: application/zip
+        fail_on_unmatched_files: true
+        name: MultiFunPlayer v${{ steps.gitversion.outputs.semVer }}
+        files: MultiFunPlayer-${{ steps.gitversion.outputs.semVer }}.zip
+        
