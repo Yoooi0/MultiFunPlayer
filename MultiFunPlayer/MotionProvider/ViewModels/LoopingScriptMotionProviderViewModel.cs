@@ -28,6 +28,7 @@ public class LoopingScriptMotionProviderViewModel : AbstractMotionProvider
     public void OnSourceFileChanged()
     {
         Script = ScriptFile.FromFileInfo(SourceFile, true);
+        _scriptIndex = 0;
         _scriptStart = Script?.Keyframes?.First().Position ?? float.NaN;
         _scriptEnd = Script?.Keyframes?.Last().Position ?? float.NaN;
         _time = 0;
@@ -49,7 +50,7 @@ public class LoopingScriptMotionProviderViewModel : AbstractMotionProvider
         if (keyframes == null || keyframes.Count == 0)
             return;
 
-        if (_time >= _scriptEnd)
+        if (_time >= _scriptEnd || _scriptIndex >= keyframes.Count)
         {
             _scriptIndex = 0;
             _time = _scriptStart;
