@@ -1061,196 +1061,269 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
     public void RegisterShortcuts(IShortcutManager s)
     {
         #region Video::PlayPause
-        s.RegisterAction<bool>("Video::PlayPause::Set", "Play", (_, play) =>
-        {
-            if (play && !IsPlaying) OnPlayPauseClick();
-            else if (!play && IsPlaying) OnPlayPauseClick();
-        });
+        s.RegisterAction("Video::PlayPause::Set", 
+            b => b.WithSetting<bool>(p => p.WithLabel("Play"))
+                  .WithSetting<DeviceAxis>(p => p.WithLabel("Axis").WithItemsSource(DeviceAxis.All))
+                  .WithCallback((_, play, axis) =>
+                  {
+                      if (play && !IsPlaying) OnPlayPauseClick();
+                      else if (!play && IsPlaying) OnPlayPauseClick();
+                  }));
 
-        s.RegisterAction("Video::PlayPause::Toggle", _ => OnPlayPauseClick());
+        s.RegisterAction("Video::PlayPause::Toggle", b => b.WithCallback(_ => OnPlayPauseClick()));
         #endregion
 
         #region Video::ScriptOffset
-        s.RegisterAction<float>("Video::ScriptOffset::Offset", "Value offset", (_, offset) => GlobalOffset = MathUtils.Clamp(GlobalOffset + offset, -5, 5));
-        s.RegisterAction<float>("Video::ScriptOffset::Set", "Value", (_, value) => GlobalOffset = MathUtils.Clamp(value, -5, 5));
+        s.RegisterAction("Video::ScriptOffset::Offset", b => b.WithSetting<float>(p => p.WithLabel("Value offset").WithStringFormat("{}{0}s"))
+                                                              .WithCallback((_, offset) => GlobalOffset = MathUtils.Clamp(GlobalOffset + offset, -5, 5)));
+        s.RegisterAction("Video::ScriptOffset::Set", b => b.WithSetting<float>(p => p.WithLabel("Value").WithStringFormat("{}{0}s"))
+                                                           .WithCallback((_, value) => GlobalOffset = MathUtils.Clamp(value, -5, 5)));
         #endregion
 
         #region Video::Position
-        s.RegisterAction<float>("Video::Position::Time::Offset", "Value offset", (_, offset) => SeekVideoToTime(CurrentPosition + offset));
-        s.RegisterAction<float>("Video::Position::Time::Set", "Value", (_, value) => SeekVideoToTime(value));
+        s.RegisterAction("Video::Position::Time::Offset", b => b.WithSetting<float>(p => p.WithLabel("Value offset").WithStringFormat("{}{0}s"))
+                                                                .WithCallback((_, offset) => SeekVideoToTime(CurrentPosition + offset)));
+        s.RegisterAction("Video::Position::Time::Set", b => b.WithSetting<float>(p => p.WithLabel("Value").WithStringFormat("{}{0}s"))
+                                                             .WithCallback((_, value) => SeekVideoToTime(value)));
 
-        s.RegisterAction<float>("Video::Position::Percent::Offset", "Value offset", (_, offset) => SeekVideoToPercent(CurrentPosition / VideoDuration + offset / 100));
-        s.RegisterAction<float>("Video::Position::Percent::Set", "Value", (_, value) => SeekVideoToPercent(value / 100));
+        s.RegisterAction("Video::Position::Percent::Offset", b => b.WithSetting<float>(p => p.WithLabel("Value offset").WithStringFormat("{}{0}%"))
+                                                                   .WithCallback((_, offset) => SeekVideoToPercent(CurrentPosition / VideoDuration + offset / 100)));
+        s.RegisterAction("Video::Position::Percent::Set", b => b.WithSetting<float>(p => p.WithLabel("Value").WithStringFormat("{}{0}%"))
+                                                                .WithCallback((_, value) => SeekVideoToPercent(value / 100)));
         #endregion
 
         #region Axis::Value
-        s.RegisterAction<DeviceAxis, float>("Axis::Value::Offset", "Target axis", "Value offset", (_, axis, offset) =>
-        {
-            if (axis != null)
-                SetAxisValue(axis, offset, offset: true);
-        });
+        s.RegisterAction("Axis::Value::Offset", 
+            b => b.WithSetting<DeviceAxis>(p => p.WithLabel("Target axis").WithItemsSource(DeviceAxis.All))
+                  .WithSetting<float>(p => p.WithLabel("Value offset"))
+                  .WithCallback((_, axis, offset) =>
+                  {
+                      if (axis != null)
+                          SetAxisValue(axis, offset, offset: true);
+                  }));
 
-        s.RegisterAction<DeviceAxis, float>("Axis::Value::Set", "Target axis", "Value", (_, axis, value) =>
-        {
-            if (axis != null)
-                SetAxisValue(axis, value);
-        });
+        s.RegisterAction("Axis::Value::Set",
+            b => b.WithSetting<DeviceAxis>(p => p.WithLabel("Target axis").WithItemsSource(DeviceAxis.All))
+                  .WithSetting<float>(p => p.WithLabel("Value"))
+                  .WithCallback((_, axis, value) =>
+                  {
+                      if (axis != null)
+                          SetAxisValue(axis, value);
+                  }));
 
-        s.RegisterAction<DeviceAxis>("Axis::Value::Drive", "Target axis", (gesture, axis) =>
-        {
-            if (gesture is not IAxisInputGesture axisGesture) return;
-            if (axis != null)
-                SetAxisValue(axis, axisGesture.Delta, offset: true);
-        });
+        s.RegisterAction("Axis::Value::Drive", 
+            b => b.WithSetting<DeviceAxis>(p => p.WithLabel("Target axis").WithItemsSource(DeviceAxis.All))
+                  .WithCallback((gesture, axis) =>
+                  {
+                      if (gesture is not IAxisInputGesture axisGesture) 
+                          return;
+
+                      if (axis != null)
+                          SetAxisValue(axis, axisGesture.Delta, offset: true);
+                  }));
         #endregion
 
         #region Axis::Sync
-        s.RegisterAction<DeviceAxis>("Axis::Sync", "Target axis", (_, axis) =>
-        {
-            if (axis != null)
-                ResetSync(true, axis);
-        });
+        s.RegisterAction("Axis::Sync",
+            b => b.WithSetting<DeviceAxis>(p => p.WithLabel("Target axis").WithItemsSource(DeviceAxis.All))
+                  .WithCallback((_, axis) =>
+                  {
+                      if (axis != null)
+                          ResetSync(true, axis);
+                  }));
         #endregion
 
         #region Axis::Bypass
-        s.RegisterAction<DeviceAxis, bool>("Axis::Bypass::Set", "Target axis", "Bypass", (_, axis, enabled) =>
-        {
-            if (axis != null)
-                SetAxisBypass(axis, enabled);
-        });
+        s.RegisterAction("Axis::Bypass::Set",
+            b => b.WithSetting<DeviceAxis>(p => p.WithLabel("Target axis").WithItemsSource(DeviceAxis.All))
+                  .WithSetting<bool>(p => p.WithLabel("Bypass"))
+                  .WithCallback((_, axis, enabled) =>
+                  {
+                      if (axis != null)
+                          SetAxisBypass(axis, enabled);
+                  }));
 
-        s.RegisterAction<DeviceAxis>("Axis::Bypass::Toggle", "Target axis", (_, axis) =>
-        {
-            if (axis != null)
-                SetAxisBypass(axis, !AxisSettings[axis].Bypass);
-        });
+        s.RegisterAction("Axis::Bypass::Toggle",
+            b => b.WithSetting<DeviceAxis>(p => p.WithLabel("Target axis").WithItemsSource(DeviceAxis.All))
+                  .WithCallback((_, axis) =>
+                  {
+                      if (axis != null)
+                          SetAxisBypass(axis, !AxisSettings[axis].Bypass);
+                  }));
         #endregion
 
         #region Axis::ClearScript
-        s.RegisterAction<DeviceAxis>("Axis::ClearScript", "Target axis", (_, axis) =>
-        {
-            if (axis != null)
-                OnAxisClear(axis);
-        });
+        s.RegisterAction("Axis::ClearScript",
+            b => b.WithSetting<DeviceAxis>(p => p.WithLabel("Target axis").WithItemsSource(DeviceAxis.All))
+                  .WithCallback((_, axis) =>
+                  {
+                      if (axis != null)
+                          OnAxisClear(axis);
+                  }));
         #endregion
 
         #region Axis::ReloadScript
-        s.RegisterAction<DeviceAxis>("Axis::ReloadScript", "Target axis", (_, axis) =>
-        {
-            if (axis != null)
-                OnAxisReload(axis);
-        });
+        s.RegisterAction("Axis::ReloadScript",
+            b => b.WithSetting<DeviceAxis>(p => p.WithLabel("Target axis").WithItemsSource(DeviceAxis.All))
+                  .WithCallback((_, axis) =>
+                  {
+                      if (axis != null)
+                          OnAxisReload(axis);
+                  }));
         #endregion
 
         #region Axis::Inverted
-        s.RegisterAction<DeviceAxis, bool>("Axis::Inverted::Set", "Target axis", "Invert", (_, axis, enabled) =>
-        {
-            if (axis != null)
-                SetAxisInverted(axis, enabled);
-        });
+        s.RegisterAction("Axis::Inverted::Set",
+            b => b.WithSetting<DeviceAxis>(p => p.WithLabel("Target axis").WithItemsSource(DeviceAxis.All))
+                  .WithSetting<bool>(p => p.WithLabel("Invert"))
+                  .WithCallback((_, axis, enabled) =>
+                  {
+                      if (axis != null)
+                          SetAxisInverted(axis, enabled);
+                  }));
 
-        s.RegisterAction<DeviceAxis>("Axis::Inverted::Toggle", "Target axis", (_, axis) =>
-        {
-            if (axis != null)
-                SetAxisInverted(axis, !AxisSettings[axis].Inverted);
-        });
+        s.RegisterAction("Axis::Inverted::Toggle",
+            b => b.WithSetting<DeviceAxis>(p => p.WithLabel("Target axis").WithItemsSource(DeviceAxis.All))
+                  .WithCallback((_, axis) =>
+                  {
+                      if (axis != null)
+                          SetAxisInverted(axis, !AxisSettings[axis].Inverted);
+                  }));
         #endregion
 
         #region Axis::LinkPriority
-        s.RegisterAction<DeviceAxis, bool>("Axis::LinkPriority::Set", "Target axis", "Link has priority", (_, axis, enabled) =>
-        {
-            if (axis != null)
-                AxisSettings[axis].LinkAxisHasPriority = enabled;
-        });
+        s.RegisterAction("Axis::LinkPriority::Set",
+            b => b.WithSetting<DeviceAxis>(p => p.WithLabel("Target axis").WithItemsSource(DeviceAxis.All))
+                  .WithSetting<bool>(p => p.WithLabel("Link has priority"))
+                  .WithCallback((_, axis, enabled) =>
+                  {
+                      if (axis != null)
+                          AxisSettings[axis].LinkAxisHasPriority = enabled;
+                  }));
 
-        s.RegisterAction<DeviceAxis>("Axis::LinkPriority::Toggle", "Target axis", (_, axis) =>
-        {
-            if (axis != null)
-                AxisSettings[axis].LinkAxisHasPriority = !AxisSettings[axis].LinkAxisHasPriority;
-        });
+        s.RegisterAction("Axis::LinkPriority::Toggle",
+            b => b.WithSetting<DeviceAxis>(p => p.WithLabel("Target axis").WithItemsSource(DeviceAxis.All))
+                  .WithCallback((_, axis) =>
+                  {
+                      if (axis != null)
+                          AxisSettings[axis].LinkAxisHasPriority = !AxisSettings[axis].LinkAxisHasPriority;
+                  }));
         #endregion
 
         #region Axis::SmartLimitEnabled
-        s.RegisterAction<DeviceAxis, bool>("Axis::SmartLimitEnabled::Set", "Target axis", "Link has priority", (_, axis, enabled) =>
-        {
-            if (axis == null || (axis.Name != "R1" && axis.Name != "R2"))
-                return;
+        s.RegisterAction("Axis::SmartLimitEnabled::Set",
+            b => b.WithSetting<DeviceAxis>(p => p.WithLabel("Target axis").WithItemsSource(DeviceAxis.All))
+                  .WithSetting<bool>(p => p.WithLabel("Smart limit enabled"))
+                  .WithCallback((_, axis, enabled) =>
+                  {
+                      if (axis == null || (axis.Name != "R1" && axis.Name != "R2"))
+                          return;
 
-            AxisSettings[axis].SmartLimitEnabled = enabled;
-        });
+                      AxisSettings[axis].SmartLimitEnabled = enabled;
+                  }));
 
-        s.RegisterAction<DeviceAxis>("Axis::SmartLimitEnabled::Toggle", "Target axis", (_, axis) =>
-        {
-            if (axis != null)
-                AxisSettings[axis].SmartLimitEnabled = !AxisSettings[axis].SmartLimitEnabled;
-        });
+        s.RegisterAction("Axis::SmartLimitEnabled::Toggle",
+            b => b.WithSetting<DeviceAxis>(p => p.WithLabel("Target axis").WithItemsSource(DeviceAxis.All))
+                  .WithCallback((_, axis) =>
+                  {
+                      if (axis == null || (axis.Name != "R1" && axis.Name != "R2"))
+                          return;
+
+                      AxisSettings[axis].SmartLimitEnabled = !AxisSettings[axis].SmartLimitEnabled;
+                  }));
         #endregion
 
         #region Axis::LinkAxis
-        s.RegisterAction<DeviceAxis, DeviceAxis>("Axis::LinkAxis::Set", "Source axis", "Target axis", (_, source, target) =>
-        {
-            if (source == null)
-                return;
+        s.RegisterAction("Axis::LinkAxis::Set",
+            b => b.WithSetting<DeviceAxis>(p => p.WithLabel("Source axis").WithItemsSource(DeviceAxis.All))
+                  .WithSetting<DeviceAxis>(p => p.WithLabel("Target axis").WithItemsSource(DeviceAxis.All))
+                  .WithCallback((_, source, target) =>
+                  {
+                      if (source == null || source == target)
+                          return;
 
-            AxisSettings[source].LinkAxis = target;
-            ReloadScript(source);
-        });
+                      AxisSettings[source].LinkAxis = target;
+                      ReloadScript(source);
+                  }));
         #endregion
 
         #region Axis::AutoHomeEnabled
-        s.RegisterAction<DeviceAxis, bool>("Axis::AutoHomeEnabled::Set", "Target axis", "Auto home enabled", (_, axis, enabled) =>
-        {
-            if (axis != null)
-                AxisSettings[axis].AutoHomeEnabled = enabled;
-        });
+        s.RegisterAction("Axis::AutoHomeEnabled::Set",
+            b => b.WithSetting<DeviceAxis>(p => p.WithLabel("Target axis").WithItemsSource(DeviceAxis.All))
+                  .WithSetting<bool>(p => p.WithLabel("Auto home enabled"))
+                  .WithCallback((_, axis, enabled) =>
+                  {
+                      if (axis != null)
+                          AxisSettings[axis].AutoHomeEnabled = enabled;
+                  }));
 
-        s.RegisterAction<DeviceAxis>("Axis::AutoHomeEnabled::Toggle", "Target axis", (_, axis) =>
-        {
-            if (axis != null)
-                AxisSettings[axis].AutoHomeEnabled = !AxisSettings[axis].AutoHomeEnabled;
-        });
+        s.RegisterAction("Axis::AutoHomeEnabled::Toggle",
+            b => b.WithSetting<DeviceAxis>(p => p.WithLabel("Target axis").WithItemsSource(DeviceAxis.All))
+                  .WithCallback((_, axis) =>
+                  {
+                      if (axis != null)
+                          AxisSettings[axis].AutoHomeEnabled = !AxisSettings[axis].AutoHomeEnabled;
+                  }));
         #endregion
 
         #region Axis::AutoHomeDelay
-        s.RegisterAction<DeviceAxis, float>("Axis::AutoHomeDelay::Offset", "Target axis", "Value offset", (_, axis, offset) =>
-        {
-            if (axis != null)
-                AxisSettings[axis].AutoHomeDelay = MathF.Max(0, AxisSettings[axis].AutoHomeDelay + offset);
-        });
+        s.RegisterAction("Axis::AutoHomeDelay::Offset",
+            b => b.WithSetting<DeviceAxis>(p => p.WithLabel("Target axis").WithItemsSource(DeviceAxis.All))
+                  .WithSetting<float>(p => p.WithLabel("Value offset").WithStringFormat("{}{0}s"))
+                  .WithCallback((_, axis, offset) =>
+                  {
+                      if (axis != null)
+                          AxisSettings[axis].AutoHomeDelay = MathF.Max(0, AxisSettings[axis].AutoHomeDelay + offset);
+                  }));
 
-        s.RegisterAction<DeviceAxis, float>("Axis::AutoHomeDelay::Set", "Target axis", "Value", (_, axis, value) =>
-        {
-            if (axis != null)
-                AxisSettings[axis].AutoHomeDelay = MathF.Max(0, value);
-        });
+        s.RegisterAction("Axis::AutoHomeDelay::Set",
+            b => b.WithSetting<DeviceAxis>(p => p.WithLabel("Target axis").WithItemsSource(DeviceAxis.All))
+                  .WithSetting<float>(p => p.WithLabel("Value").WithStringFormat("{}{0}s"))
+                  .WithCallback((_, axis, value) =>
+                  {
+                      if (axis != null)
+                          AxisSettings[axis].AutoHomeDelay = MathF.Max(0, value);
+                  }));
         #endregion
 
         #region Axis::AutoHomeDuration
-        s.RegisterAction<DeviceAxis, float>("Axis::AutoHomeDuration::Offset", "Target axis", "Value offset", (_, axis, offset) =>
-        {
-            if (axis != null)
-                AxisSettings[axis].AutoHomeDuration = MathF.Max(0, AxisSettings[axis].AutoHomeDuration + offset);
-        });
+        s.RegisterAction("Axis::AutoHomeDuration::Offset",
+            b => b.WithSetting<DeviceAxis>(p => p.WithLabel("Target axis").WithItemsSource(DeviceAxis.All))
+                  .WithSetting<float>(p => p.WithLabel("Value offset").WithStringFormat("{}{0}s"))
+                  .WithCallback((_, axis, offset) =>
+                  {
+                      if (axis != null)
+                          AxisSettings[axis].AutoHomeDuration = MathF.Max(0, AxisSettings[axis].AutoHomeDuration + offset);
+                  }));
 
-        s.RegisterAction<DeviceAxis, float>("Axis::AutoHomeDuration::Set", "Target axis", "Value", (_, axis, value) =>
-        {
-            if (axis != null)
-                AxisSettings[axis].AutoHomeDuration = MathF.Max(0, value);
-        });
+        s.RegisterAction("Axis::AutoHomeDuration::Set",
+            b => b.WithSetting<DeviceAxis>(p => p.WithLabel("Target axis").WithItemsSource(DeviceAxis.All))
+                  .WithSetting<float>(p => p.WithLabel("Value").WithStringFormat("{}{0}s"))
+                  .WithCallback((_, axis, value) =>
+                  {
+                      if (axis != null)
+                          AxisSettings[axis].AutoHomeDuration = MathF.Max(0, value);
+                  }));
         #endregion
 
         #region Axis::ScriptOffset
-        s.RegisterAction<DeviceAxis, float>("Axis::ScriptOffset::Offset", "Target axis", "Value offset", (_, axis, offset) =>
-        {
-            if (axis != null)
-                AxisSettings[axis].Offset = MathUtils.Clamp(AxisSettings[axis].Offset + offset, -5, 5);
-        });
+        s.RegisterAction("Axis::ScriptOffset::Offset",
+            b => b.WithSetting<DeviceAxis>(p => p.WithLabel("Target axis").WithItemsSource(DeviceAxis.All))
+                  .WithSetting<float>(p => p.WithLabel("Value offset").WithStringFormat("{}{0}s"))
+                  .WithCallback((_, axis, offset) =>
+                  {
+                      if (axis != null)
+                          AxisSettings[axis].Offset = MathUtils.Clamp(AxisSettings[axis].Offset + offset, -5, 5);
+                  }));
 
-        s.RegisterAction<DeviceAxis, float>("Axis::ScriptOffset::Set", "Target axis", "Value", (_, axis, value) =>
-        {
-            if (axis != null)
-                AxisSettings[axis].Offset = MathUtils.Clamp(value, -5, 5);
-        });
+        s.RegisterAction("Axis::ScriptOffset::Set",
+            b => b.WithSetting<DeviceAxis>(p => p.WithLabel("Target axis").WithItemsSource(DeviceAxis.All))
+                  .WithSetting<float>(p => p.WithLabel("Value").WithStringFormat("{}{0}s"))
+                  .WithCallback((_, axis, value) =>
+                  {
+                      if (axis != null)
+                          AxisSettings[axis].Offset = MathUtils.Clamp(value, -5, 5);
+                  }));
         #endregion
     }
     #endregion

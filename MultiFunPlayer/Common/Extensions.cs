@@ -19,10 +19,9 @@ public static class ConnectableExtensions
 
 public static class JsonExtensions
 {
-    public static bool TryToObject<T>(this JToken token, out T value) => TryToObject(token, null, null, out value);
-    public static bool TryToObject<T>(this JToken token, JsonSerializer serializer, out T value) => TryToObject(token, serializer, null, out value);
-    public static bool TryToObject<T>(this JToken token, JsonSerializerSettings settings, out T value) => TryToObject(token, null, settings, out value);
-    public static bool TryToObject<T>(this JToken token, JsonSerializer serializer, JsonSerializerSettings settings, out T value)
+    public static bool TryToObject<T>(this JToken token, out T value) => TryToObject(token, JsonSerializer.CreateDefault(), out value);
+    public static bool TryToObject<T>(this JToken token, JsonSerializerSettings settings, out T value) => TryToObject(token, JsonSerializer.CreateDefault(settings), out value);
+    public static bool TryToObject<T>(this JToken token, JsonSerializer serializer, out T value)
     {
         value = default;
 
@@ -31,7 +30,6 @@ public static class JsonExtensions
             if (token.Type == JTokenType.Null)
                 return false;
 
-            serializer ??= JsonSerializer.CreateDefault(settings);
             value = token.ToObject<T>(serializer);
             return value != null;
         }
@@ -41,13 +39,12 @@ public static class JsonExtensions
         }
     }
 
-    public static bool TryGetValue<T>(this JObject o, string propertyName, out T value) => TryGetValue(o, propertyName, null, null, out value);
-    public static bool TryGetValue<T>(this JObject o, string propertyName, JsonSerializer serializer, out T value) => TryGetValue(o, propertyName, serializer, null, out value);
-    public static bool TryGetValue<T>(this JObject o, string propertyName, JsonSerializerSettings settings, out T value) => TryGetValue(o, propertyName, null, settings, out value);
-    public static bool TryGetValue<T>(this JObject o, string propertyName, JsonSerializer serializer, JsonSerializerSettings settings, out T value)
+    public static bool TryGetValue<T>(this JObject o, string propertyName, out T value) => TryGetValue(o, propertyName, JsonSerializer.CreateDefault(), out value);
+    public static bool TryGetValue<T>(this JObject o, string propertyName, JsonSerializerSettings settings, out T value) => TryGetValue(o, propertyName, JsonSerializer.CreateDefault(settings), out value);
+    public static bool TryGetValue<T>(this JObject o, string propertyName, JsonSerializer serializer, out T value)
     {
         value = default;
-        return o.TryGetValue(propertyName, out var token) && token.TryToObject(serializer, settings, out value);
+        return o.TryGetValue(propertyName, out var token) && token.TryToObject(serializer, out value);
     }
 
     public static bool EnsureContainsObjects(this JToken token, params string[] propertyNames)
@@ -87,10 +84,12 @@ public static class JsonExtensions
         return true;
     }
 
-    public static void Populate(this JToken token, object target)
+    public static void Populate(this JToken token, object target) => Populate(token, target, JsonSerializer.CreateDefault());
+    public static void Populate(this JToken token, object target, JsonSerializerSettings settings) => Populate(token, target, JsonSerializer.CreateDefault(settings));
+    public static void Populate(this JToken token, object target, JsonSerializer serializer)
     {
         using var reader = token.CreateReader();
-        JsonSerializer.CreateDefault().Populate(reader, target);
+        serializer.Populate(reader, target);
     }
 }
 

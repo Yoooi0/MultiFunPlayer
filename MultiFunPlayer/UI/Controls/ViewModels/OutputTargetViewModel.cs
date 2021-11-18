@@ -112,8 +112,8 @@ public class OutputTargetViewModel : Conductor<IOutputTarget>.Collection.OneActi
         foreach (var target in Items)
         {
             #region Connection
-            s.RegisterAction($"{target.Name}::Connection::Toggle", async (_) => await ToggleConnectAsync(target));
-            s.RegisterAction($"{target.Name}::Connection::Connect", async (_) =>
+            s.RegisterAction($"{target.Name}::Connection::Toggle", b => b.WithCallback(async (_) => await ToggleConnectAsync(target)));
+            s.RegisterAction($"{target.Name}::Connection::Connect", b => b.WithCallback(async (_) =>
             {
                 await _semaphores[target].WaitAsync(token);
 
@@ -124,8 +124,8 @@ public class OutputTargetViewModel : Conductor<IOutputTarget>.Collection.OneActi
                 }
 
                 _semaphores[target].Release();
-            });
-            s.RegisterAction($"{target.Name}::Connection::Disconnect", async (_) =>
+            }));
+            s.RegisterAction($"{target.Name}::Connection::Disconnect", b => b.WithCallback(async (_) =>
             {
                 await _semaphores[target].WaitAsync(token);
 
@@ -136,7 +136,7 @@ public class OutputTargetViewModel : Conductor<IOutputTarget>.Collection.OneActi
                 }
 
                 _semaphores[target].Release();
-            });
+            }));
             #endregion
         }
     }

@@ -15,6 +15,7 @@ using System.Windows.Data;
 
 namespace MultiFunPlayer.UI.Controls.ViewModels;
 
+[JsonObject(MemberSerialization = MemberSerialization.OptIn)]
 public class ShortcutViewModel : Screen, IHandle<AppSettingsMessage>, IDisposable
 {
     protected static readonly Logger Logger = LogManager.GetCurrentClassLogger();
@@ -31,11 +32,11 @@ public class ShortcutViewModel : Screen, IHandle<AppSettingsMessage>, IDisposabl
     public IInputGestureDescriptor CapturedGesture { get; set; }
     public KeyValuePair<IInputGestureDescriptor, BindableCollection<IShortcutAction>>? SelectedBinding { get; set; }
 
-    public bool IsKeyboardKeysGestureEnabled { get; set; } = true;
-    public bool IsMouseAxisGestureEnabled { get; set; } = false;
-    public bool IsMouseButtonGestureEnabled { get; set; } = false;
-    public bool IsGamepadAxisGestureEnabled { get; set; } = true;
-    public bool IsGamepadButtonGestureEnabled { get; set; } = true;
+    [JsonProperty] public bool IsKeyboardKeysGestureEnabled { get; set; } = true;
+    [JsonProperty] public bool IsMouseAxisGestureEnabled { get; set; } = false;
+    [JsonProperty] public bool IsMouseButtonGestureEnabled { get; set; } = false;
+    [JsonProperty] public bool IsGamepadAxisGestureEnabled { get; set; } = true;
+    [JsonProperty] public bool IsGamepadButtonGestureEnabled { get; set; } = true;
 
     public ShortcutViewModel(IShortcutManager manager, IEventAggregator eventAggregator)
     {
@@ -52,9 +53,9 @@ public class ShortcutViewModel : Screen, IHandle<AppSettingsMessage>, IDisposabl
             if (SelectedBinding == null)
                 return false;
 
-                //TODO: filter based on gesture type
+            //TODO: filter based on gesture type
 
-                if (!string.IsNullOrWhiteSpace(ActionsFilter))
+            if (!string.IsNullOrWhiteSpace(ActionsFilter))
             {
                 var filterWords = ActionsFilter.Split(' ');
                 if (!filterWords.All(w => actionDescriptor.Name.Contains(w, StringComparison.InvariantCultureIgnoreCase)))
@@ -229,34 +230,31 @@ public class ShortcutViewModel : Screen, IHandle<AppSettingsMessage>, IDisposabl
         CapturedGesture = gesture?.Descriptor;
     }
 
-    private class BindingConfigModel
+    private class BindingsSettingsModel
     {
         [JsonProperty(TypeNameHandling = TypeNameHandling.Objects)]
-        public IInputGestureDescriptor Gesture { get; }
+        public IInputGestureDescriptor Gesture { get; init; }
 
         [JsonProperty(ItemTypeNameHandling = TypeNameHandling.Objects)]
-        public List<IShortcutAction> Actions { get; }
-
-        public BindingConfigModel(IInputGestureDescriptor gesture, [JsonProperty(ItemTypeNameHandling = TypeNameHandling.Objects)] IEnumerable<IShortcutAction> actions)
-        {
-            Gesture = gesture;
-            Actions = actions?.ToList();
-        }
+        public IList<IShortcutAction> Actions { get; init; }
     }
 
     public void Handle(AppSettingsMessage message)
     {
         if (message.Type == AppSettingsMessageType.Saving)
         {
-            message.Settings["Shortcuts"] = new JObject
-                {
-                    { nameof(IsKeyboardKeysGestureEnabled), JValue.FromObject(IsKeyboardKeysGestureEnabled) },
-                    { nameof(IsMouseAxisGestureEnabled), JValue.FromObject(IsMouseAxisGestureEnabled) },
-                    { nameof(IsMouseButtonGestureEnabled), JValue.FromObject(IsMouseButtonGestureEnabled) },
-                    { nameof(IsGamepadAxisGestureEnabled), JValue.FromObject(IsGamepadAxisGestureEnabled) },
-                    { nameof(IsGamepadButtonGestureEnabled), JValue.FromObject(IsGamepadButtonGestureEnabled) },
-                    { nameof(Bindings), JArray.FromObject(Bindings.Select(x => new BindingConfigModel(x.Key, x.Value)).ToList()) },
-                };
+            message.Settings["Shortcuts"] = JObject.FromObject(this);
+
+            if (!message.Settings.TryGetObject(out var settings, "Shortcuts"))
+                return;
+
+            var x = Bindings.Select(x => new BindingsSettingsModel()
+            {
+                Gesture = x.Key,
+                Actions = x.Value
+            });
+
+            settings[nameof(Bindings)] = JArray.FromObject(x);
         }
         else if (message.Type == AppSettingsMessageType.Loading)
         {
@@ -274,7 +272,7 @@ public class ShortcutViewModel : Screen, IHandle<AppSettingsMessage>, IDisposabl
             if (settings.TryGetValue<bool>(nameof(IsGamepadButtonGestureEnabled), out var isHidButtonGestureEnabled))
                 IsGamepadButtonGestureEnabled = isHidButtonGestureEnabled;
 
-            if (settings.TryGetValue<List<BindingConfigModel>>(nameof(Bindings), out var loadedBindings))
+            if (settings.TryGetValue<List<BindingsSettingsModel>>(nameof(Bindings), out var loadedBindings))
             {
                 foreach (var gestureDescriptor in Bindings.Keys.ToList())
                     _manager.UnregisterGesture(gestureDescriptor);
@@ -283,7 +281,7 @@ public class ShortcutViewModel : Screen, IHandle<AppSettingsMessage>, IDisposabl
                 {
                     var gestureDescriptor = binding.Gesture;
                     _manager.RegisterGesture(gestureDescriptor);
-
+                
                     if (binding.Actions != null)
                     {
                         foreach (var action in binding.Actions)
@@ -293,7 +291,7 @@ public class ShortcutViewModel : Screen, IHandle<AppSettingsMessage>, IDisposabl
                                 Logger.Warn($"Action \"{action.Descriptor.Name}\" not found!");
                                 continue;
                             }
-
+                
                             _manager.BindActionWithSettings(gestureDescriptor, action.Descriptor, action.Settings);
                         }
                     }

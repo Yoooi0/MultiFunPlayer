@@ -1,9 +1,10 @@
-﻿using System.Windows;
+﻿using MultiFunPlayer.Input;
+using System.Windows;
 using System.Windows.Controls;
 
 namespace MultiFunPlayer.UI;
 
-public class GenericArgumentTemplateSelector : DataTemplateSelector
+public class ShortcutSettingTemplateSelector : DataTemplateSelector
 {
     public override DataTemplate SelectTemplate(object item, DependencyObject container)
     {
@@ -17,12 +18,13 @@ public class GenericArgumentTemplateSelector : DataTemplateSelector
         if (nullableType != null)
             type = nullableType;
 
-        var resource = type switch
+        var prefix = item switch
         {
-            Type t when t.IsEnum => "EnumTemplate",
-            _ => $"{type.Name}Template"
+            IOneOfShortcutSetting _ => "OneOf",
+            _ => ""
         };
 
-        return element.FindResource(resource) as DataTemplate;
+        var resource = element.TryFindResource($"{prefix}{type.Name}Template") ?? element.FindResource($"{prefix}DefaultTemplate");
+        return resource as DataTemplate;
     }
 }

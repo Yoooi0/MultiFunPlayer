@@ -122,8 +122,8 @@ public abstract class AbstractVideoSource : Screen, IVideoSource, IHandle<AppSet
     protected virtual void RegisterShortcuts(IShortcutManager s)
     {
         #region AutoConnectEnabled
-        s.RegisterAction<bool>($"{Name}::AutoConnectEnabled::Set", "Enable auto connect", (_, enabled) => AutoConnectEnabled = enabled);
-        s.RegisterAction($"{Name}::AutoConnectEnabled::Toggle", (_) => AutoConnectEnabled = !AutoConnectEnabled);
+        s.RegisterAction($"{Name}::AutoConnectEnabled::Set", b => b.WithSetting<bool>(s => s.WithLabel("Enable auto connect")).WithCallback((_, enabled) => AutoConnectEnabled = enabled));
+        s.RegisterAction($"{Name}::AutoConnectEnabled::Toggle", b => b.WithCallback(_ => AutoConnectEnabled = !AutoConnectEnabled));
         #endregion
     }
 

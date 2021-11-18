@@ -149,96 +149,128 @@ public abstract class AbstractOutputTarget : Screen, IHandle<AppSettingsMessage>
         }
 
         #region UpdateRate
-        s.RegisterAction<int>($"{Name}::UpdateRate::Set", "Update rate", (_, updateRate) => UpdateRate = updateRate);
+        s.RegisterAction($"{Name}::UpdateRate::Set", b => b.WithSetting<int>(s => s.WithLabel("Update rate").WithStringFormat("{}{0} Hz")).WithCallback((_, updateRate) => UpdateRate = updateRate));
         #endregion
 
         #region AutoConnectEnabled
-        s.RegisterAction<bool>($"{Name}::AutoConnectEnabled::Set", "Enable auto connect", (_, enabled) => AutoConnectEnabled = enabled);
-        s.RegisterAction($"{Name}::AutoConnectEnabled::Toggle", (_) => AutoConnectEnabled = !AutoConnectEnabled);
+        s.RegisterAction($"{Name}::AutoConnectEnabled::Set", b => b.WithSetting<bool>(s => s.WithLabel("Enable auto connect")).WithCallback((_, enabled) => AutoConnectEnabled = enabled));
+        s.RegisterAction($"{Name}::AutoConnectEnabled::Toggle", b => b.WithCallback(_ => AutoConnectEnabled = !AutoConnectEnabled));
         #endregion
 
         #region Axis::Range::Minimum
-        s.RegisterAction<DeviceAxis, int>($"{Name}::Axis::Range::Minimum::Offset", "Target axis", "Value offset", (_, axis, offset) =>
-        {
-            if (axis != null)
-                SetMinimum(AxisSettings[axis], AxisSettings[axis].Minimum + offset);
-        });
+        s.RegisterAction($"{Name}::Axis::Range::Minimum::Offset", 
+            b => b.WithSetting<DeviceAxis>(s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All))
+                  .WithSetting<int>(s => s.WithLabel("Value offset").WithStringFormat("{}{0}%"))
+                  .WithCallback((_, axis, offset) =>
+                    {
+                        if (axis != null)
+                            SetMinimum(AxisSettings[axis], AxisSettings[axis].Minimum + offset);
+                    }));
 
-        s.RegisterAction<DeviceAxis, int>($"{Name}::Axis::Range::Minimum::Set", "Target axis", "Value", (_, axis, value) =>
-        {
-            if (axis != null)
-                SetMinimum(AxisSettings[axis], value);
-        });
+        s.RegisterAction($"{Name}::Axis::Range::Minimum::Set",
+            b => b.WithSetting<DeviceAxis>(s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All))
+                  .WithSetting<int>(s => s.WithLabel("Value").WithStringFormat("{}{0}%"))
+                  .WithCallback((_, axis, value) => 
+                    {
+                        if (axis != null)
+                            SetMinimum(AxisSettings[axis], value);
+                    }));
 
-        s.RegisterAction<DeviceAxis>($"{Name}::Axis::Range::Minimum::Drive", "Target axis", (gesture, axis) =>
-        {
-            if (gesture is not IAxisInputGesture axisGesture) return;
-            if (axis != null)
-                SetMinimum(AxisSettings[axis], AxisSettings[axis].Minimum + axisGesture.Delta * 100);
-        });
+        s.RegisterAction($"{Name}::Axis::Range::Minimum::Drive",
+            b => b.WithSetting<DeviceAxis>(s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All))
+                  .WithCallback((gesture, axis) =>
+                    {
+                        if (gesture is not IAxisInputGesture axisGesture) return;
+                        if (axis != null)
+                            SetMinimum(AxisSettings[axis], AxisSettings[axis].Minimum + axisGesture.Delta * 100);
+                    }));
         #endregion
 
         #region Axis::Range::Maximum
-        s.RegisterAction<DeviceAxis, int>($"{Name}::Axis::Range::Maximum::Offset", "Target axis", "Value offset", (_, axis, offset) =>
-        {
-            if (axis != null)
-                SetMaximum(AxisSettings[axis], AxisSettings[axis].Maximum + offset);
-        });
+        s.RegisterAction($"{Name}::Axis::Range::Maximum::Offset",
+            b => b.WithSetting<DeviceAxis>(s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All))
+                  .WithSetting<int>(s => s.WithLabel("Value offset").WithStringFormat("{}{0}%"))
+                  .WithCallback((_, axis, offset) =>
+                    {
+                        if (axis != null)
+                            SetMaximum(AxisSettings[axis], AxisSettings[axis].Maximum + offset);
+                    }));
 
-        s.RegisterAction<DeviceAxis, int>($"{Name}::Axis::Range::Maximum::Set", "Target axis", "Value", (_, axis, value) =>
-        {
-            if (axis != null)
-                SetMaximum(AxisSettings[axis], value);
-        });
+        s.RegisterAction($"{Name}::Axis::Range::Maximum::Set",
+            b => b.WithSetting<DeviceAxis>(s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All))
+                  .WithSetting<int>(s => s.WithLabel("Value").WithStringFormat("{}{0}%"))
+                  .WithCallback((_, axis, value) =>
+                    {
+                        if (axis != null)
+                            SetMaximum(AxisSettings[axis], value);
+                    }));
 
-        s.RegisterAction<DeviceAxis>($"{Name}::Axis::Range::Maximum::Drive", "Target axis", (gesture, axis) =>
-        {
-            if (gesture is not IAxisInputGesture axisGesture) return;
-            if (axis != null)
-                SetMaximum(AxisSettings[axis], AxisSettings[axis].Maximum + axisGesture.Delta * 100);
-        });
+        s.RegisterAction($"{Name}::Axis::Range::Maximum::Drive",
+            b => b.WithSetting<DeviceAxis>(s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All))
+                  .WithCallback((gesture, axis) =>
+                    {
+                        if (gesture is not IAxisInputGesture axisGesture) return;
+                        if (axis != null)
+                            SetMaximum(AxisSettings[axis], AxisSettings[axis].Maximum + axisGesture.Delta * 100);
+                    }));
         #endregion
 
         #region Axis::Range::Middle
-        s.RegisterAction<DeviceAxis, int>($"{Name}::Axis::Range::Middle::Offset", "Target axis", "Value offset", (_, axis, offset) =>
-        {
-            if (axis != null)
-                OffsetMiddle(AxisSettings[axis], offset);
-        });
+        s.RegisterAction($"{Name}::Axis::Range::Middle::Offset",
+            b => b.WithSetting<DeviceAxis>(s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All))
+                  .WithSetting<int>(s => s.WithLabel("Value offset").WithStringFormat("{}{0}%"))
+                  .WithCallback((_, axis, offset) =>
+                  {
+                      if (axis != null)
+                          OffsetMiddle(AxisSettings[axis], offset);
+                  }));
 
-        s.RegisterAction<DeviceAxis, int>($"{Name}::Axis::Range::Middle::Set", "Target axis", "Value", (_, axis, value) =>
-        {
-            if (axis != null)
-                OffsetMiddle(AxisSettings[axis], value - (AxisSettings[axis].Maximum - AxisSettings[axis].Minimum) / 2);
-        });
+        s.RegisterAction($"{Name}::Axis::Range::Middle::Set",
+            b => b.WithSetting<DeviceAxis>(s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All))
+                  .WithSetting<int>(s => s.WithLabel("Value").WithStringFormat("{}{0}%"))
+                  .WithCallback((_, axis, value) =>
+                  {
+                      if (axis != null)
+                          OffsetMiddle(AxisSettings[axis], value - (AxisSettings[axis].Maximum - AxisSettings[axis].Minimum) / 2);
+                  }));
 
-        s.RegisterAction<DeviceAxis>($"{Name}::Axis::Range::Middle::Drive", "Target axis", (gesture, axis) =>
-        {
-            if (gesture is not IAxisInputGesture axisGesture) return;
-            if (axis != null)
-                OffsetMiddle(AxisSettings[axis], axisGesture.Delta * 100);
-        });
+        s.RegisterAction($"{Name}::Axis::Range::Middle::Drive",
+            b => b.WithSetting<DeviceAxis>(s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All))
+                  .WithCallback((gesture, axis) =>
+                  {
+                      if (gesture is not IAxisInputGesture axisGesture) return;
+                      if (axis != null)
+                          OffsetMiddle(AxisSettings[axis], axisGesture.Delta * 100);
+                  }));
         #endregion
 
         #region Axis::Range::Size
-        s.RegisterAction<DeviceAxis, int>($"{Name}::Axis::Range::Size::Offset", "Target axis", "Value offset", (_, axis, offset) =>
-        {
-            if (axis != null)
-                OffsetSize(AxisSettings[axis], offset);
-        });
+        s.RegisterAction($"{Name}::Axis::Range::Size::Offset",
+            b => b.WithSetting<DeviceAxis>(s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All))
+                  .WithSetting<int>(s => s.WithLabel("Value offset").WithStringFormat("{}{0}%"))
+                  .WithCallback((_, axis, offset) =>
+                  {
+                      if (axis != null)
+                          OffsetSize(AxisSettings[axis], offset);
+                  }));
 
-        s.RegisterAction<DeviceAxis, int>($"{Name}::Axis::Range::Size::Set", "Target axis", "Value", (_, axis, value) =>
-        {
-            if (axis != null)
-                OffsetSize(AxisSettings[axis], value - (AxisSettings[axis].Maximum - AxisSettings[axis].Minimum));
-        });
+        s.RegisterAction($"{Name}::Axis::Range::Size::Set",
+            b => b.WithSetting<DeviceAxis>(s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All))
+                  .WithSetting<int>(s => s.WithLabel("Value").WithStringFormat("{}{0}%"))
+                  .WithCallback((_, axis, value) =>
+                  {
+                      if (axis != null)
+                          OffsetSize(AxisSettings[axis], value - (AxisSettings[axis].Maximum - AxisSettings[axis].Minimum));
+                  }));
 
-        s.RegisterAction<DeviceAxis>($"{Name}::Axis::Range::Size::Drive", "Target axis", (gesture, axis) =>
-        {
-            if (gesture is not IAxisInputGesture axisGesture) return;
-            if (axis != null)
-                OffsetSize(AxisSettings[axis], axisGesture.Delta * 100);
-        });
+        s.RegisterAction($"{Name}::Axis::Range::Size::Drive",
+            b => b.WithSetting<DeviceAxis>(s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All))
+                  .WithCallback((gesture, axis) =>
+                  {
+                      if (gesture is not IAxisInputGesture axisGesture) return;
+                      if (axis != null)
+                          OffsetSize(AxisSettings[axis], axisGesture.Delta * 100);
+                  }));
         #endregion
     }
 

@@ -153,7 +153,7 @@ public class SerialOutputTargetViewModel : ThreadAbstractOutputTarget
         base.RegisterShortcuts(s);
 
         #region ComPort
-        s.RegisterAction<string>($"{Name}::ComPort::Set", "Com port", (_, comPort) => SelectedComPort = comPort);
+        s.RegisterAction($"{Name}::ComPort::Set", b => b.WithSetting<string>(s => s.WithLabel("Com port")).WithCallback((_, comPort) => SelectedComPort = comPort));
         #endregion
     }
 

@@ -159,19 +159,19 @@ public class NetworkOutputTargetViewModel : ThreadAbstractOutputTarget
         base.RegisterShortcuts(s);
 
         #region Endpoint
-        s.RegisterAction<string>($"{Name}::Endpoint::Set", "Endpoint", (_, endpointString) =>
+        s.RegisterAction($"{Name}::Endpoint::Set", b => b.WithSetting<string>(s => s.WithLabel("Endpoint")).WithCallback((_, endpointString) =>
         {
             if (IPEndPoint.TryParse(endpointString, out var endpoint))
                 Endpoint = endpoint;
-        });
+        }));
         #endregion
 
         #region Protocol
-        s.RegisterAction<ProtocolType?>($"{Name}::Protocol::Set", "Protocol", (_, protocol) =>
+        s.RegisterAction($"{Name}::Protocol::Set", b => b.WithSetting<ProtocolType?>(s => s.WithLabel("Protocol").WithItemsSource(EnumUtils.GetValues<ProtocolType?>())).WithCallback((_, protocol) =>
         {
             if (protocol.HasValue)
                 Protocol = protocol.Value;
-        });
+        }));
         #endregion
     }
 

@@ -100,7 +100,7 @@ public class PipeOutputTargetViewModel : ThreadAbstractOutputTarget
         base.RegisterShortcuts(s);
 
         #region PipeName
-        s.RegisterAction<string>($"{Name}::PipeName::Set", "Pipe name", (_, pipeName) => PipeName = pipeName);
+        s.RegisterAction($"{Name}::PipeName::Set", b => b.WithSetting<string>(s => s.WithLabel("Pipe name")).WithCallback((_, pipeName) => PipeName = pipeName));
         #endregion
     }
 

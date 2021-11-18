@@ -26,22 +26,7 @@ public interface IShortcutManager : IDisposable
     void BindActionWithSettings(IInputGestureDescriptor gestureDescriptor, IShortcutActionDescriptor actionDescriptor, IEnumerable<IShortcutSetting> settings);
     void UnbindAction(IInputGestureDescriptor gestureDescriptor, IShortcutAction action);
 
-    void RegisterAction(string name, Action<IInputGesture> action)
-        => RegisterAction(name, new List<string>(), action.Method, action.Target);
-
-    void RegisterAction<T0>(string name, string description0, Action<IInputGesture, T0> action)
-        => RegisterAction(name, new List<string>() { description0 }, action.Method, action.Target);
-
-    void RegisterAction<T0, T1>(string name, string description0, string description1, Action<IInputGesture, T0, T1> action)
-        => RegisterAction(name, new List<string>() { description0, description1 }, action.Method, action.Target);
-
-    void RegisterAction<T0, T1, T2>(string name, string description0, string description1, string description2, Action<IInputGesture, T0, T1, T2> action)
-        => RegisterAction(name, new List<string>() { description0, description1, description2 }, action.Method, action.Target);
-
-    void RegisterAction<T0, T1, T2, T3>(string name, string description0, string description1, string description2, string description3, Action<IInputGesture, T0, T1, T2, T3> action)
-        => RegisterAction(name, new List<string>() { description0, description1, description2, description3 }, action.Method, action.Target);
-
-    void RegisterAction(string name, List<string> descriptions, MethodInfo method, object target);
+    void RegisterAction(string name, Func<INoSettingsShortcutActionBuilder, IShortcutActionBuilder> configure);
 
     void RegisterGesture(IInputGestureDescriptor gestureDescriptor);
     void UnregisterGesture(IInputGestureDescriptor gestureDescriptor);
@@ -51,7 +36,7 @@ public class ShortcutManager : IShortcutManager
 {
     protected static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-    private readonly Dictionary<IShortcutActionDescriptor, (Delegate Delegate, List<string> Descriptions)> _actions;
+    private readonly Dictionary<IShortcutActionDescriptor, IShortcutActionBuilder> _actions;
     private readonly ObservableConcurrentDictionary<IInputGestureDescriptor, BindableCollection<IShortcutAction>> _bindings;
     private readonly List<IInputProcessor> _processors;
 
@@ -64,7 +49,7 @@ public class ShortcutManager : IShortcutManager
 
     public ShortcutManager(IEnumerable<IInputProcessor> processors)
     {
-        _actions = new Dictionary<IShortcutActionDescriptor, (Delegate Delegate, List<string> Descriptions)>();
+        _actions = new Dictionary<IShortcutActionDescriptor, IShortcutActionBuilder>();
         _bindings = new ObservableConcurrentDictionary<IInputGestureDescriptor, BindableCollection<IShortcutAction>>();
 
         _processors = processors.ToList();
@@ -72,18 +57,11 @@ public class ShortcutManager : IShortcutManager
             processor.OnGesture += HandleGesture;
     }
 
-    public void RegisterAction(string name, List<string> descriptions, MethodInfo method, object target)
+    public void RegisterAction(string name, Func<INoSettingsShortcutActionBuilder, IShortcutActionBuilder> configure)
     {
-        var methodParameters = method.GetParameters();
-        var parametersTypes = methodParameters.Select(p => p.ParameterType).ToArray();
-        if (methodParameters.Length == 0 || methodParameters[0].ParameterType != typeof(IInputGesture))
-            throw new ArgumentException($"Provided method must have \"{nameof(IInputGesture)}\" as its first argument", nameof(method));
-
-        var delegateType = Type.GetType($"System.Action`{methodParameters.Length}").MakeGenericType(parametersTypes);
-        var delegateInstance = method.CreateDelegate(delegateType, target);
         var descriptor = new ShortcutActionDescriptor(name);
-
-        _actions.Add(descriptor, (delegateInstance, descriptions));
+        var builder = configure(new ShortcutBuilder(descriptor));
+        _actions.Add(descriptor, builder);
     }
 
     public void BindAction(IInputGestureDescriptor gestureDescriptor, IShortcutActionDescriptor actionDescriptor)
@@ -131,12 +109,9 @@ public class ShortcutManager : IShortcutManager
 
     private IShortcutAction CreateShortcutInstanceFromDescriptor(IShortcutActionDescriptor actionDescriptor)
     {
-        var (delegateInstance, descriptions) = _actions[actionDescriptor];
-        var methodParameters = delegateInstance.GetType().GetGenericArguments();
-        var settings = methodParameters[1..].Zip(descriptions, (p, d) => (Type: p, Description: d));
-
-        var actionType = typeof(ShortcutAction);
-        return (IShortcutAction)Activator.CreateInstance(actionType, new object[] { actionDescriptor, delegateInstance, settings });
+        var builder = _actions[actionDescriptor];
+        var action = builder.Build();
+        return action;
     }
 
     public void UnbindAction(IInputGestureDescriptor gestureDescriptor, IShortcutAction action)

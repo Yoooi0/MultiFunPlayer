@@ -159,22 +159,22 @@ public class VideoSourceViewModel : Conductor<IVideoSource>.Collection.OneActive
     {
         var token = _cancellationSource.Token;
         foreach (var source in Items)
-        {
-            s.RegisterAction($"{source.Name}::Connection::Toggle", async (_) => await ToggleConnectAsync(source));
-            s.RegisterAction($"{source.Name}::Connection::Connect", async (_) =>
+        {   
+            s.RegisterAction($"{source.Name}::Connection::Toggle", b => b.WithCallback(async (_) => await ToggleConnectAsync(source)));
+            s.RegisterAction($"{source.Name}::Connection::Connect", b => b.WithCallback(async (_) =>
             {
                 await _semaphore.WaitAsync(token);
                 if (_currentSource != source)
                     await ConnectAndSetAsCurrentSourceAsync(source, token);
                 _semaphore.Release();
-            });
-            s.RegisterAction($"{source.Name}::Connection::Disconnect", async (_) =>
+            }));
+            s.RegisterAction($"{source.Name}::Connection::Disconnect", b => b.WithCallback(async (_) =>
             {
                 await _semaphore.WaitAsync(token);
                 if (_currentSource == source)
                     await DisconnectCurrentSourceAsync(token);
                 _semaphore.Release();
-            });
+            }));
         }
     }
 

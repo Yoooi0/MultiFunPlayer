@@ -297,7 +297,7 @@ public class MpvVideoSourceViewModel : AbstractVideoSource, IHandle<VideoPlayPau
         base.RegisterShortcuts(s);
 
         #region Arguments
-        s.RegisterAction<string>($"{Name}::Arguments::Set", "Arguments", (_, arguments) => Arguments = arguments);
+        s.RegisterAction($"{Name}::Arguments::Set", b => b.WithSetting<string>(s => s.WithLabel("Arguments")).WithCallback((_, arguments) => Arguments = arguments));
         #endregion
     }
 
