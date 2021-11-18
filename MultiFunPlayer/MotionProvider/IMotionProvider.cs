@@ -5,5 +5,5 @@ public interface IMotionProvider
     string Name { get; }
     float Value { get; }
 
-    void Update();
+    void Update(float deltaTime);
 }

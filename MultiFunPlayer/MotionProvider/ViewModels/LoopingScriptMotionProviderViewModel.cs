@@ -11,7 +11,6 @@ namespace MultiFunPlayer.MotionProvider.ViewModels;
 public class LoopingScriptMotionProviderViewModel : AbstractMotionProvider
 {
     private float _time;
-    private long _lastTime;
 
     private float _scriptStart;
     private float _scriptEnd;
@@ -34,19 +33,12 @@ public class LoopingScriptMotionProviderViewModel : AbstractMotionProvider
         _time = 0;
     }
 
-    public LoopingScriptMotionProviderViewModel()
-    {
-        _lastTime = Environment.TickCount64;
-        _time = 0;
-    }
-
-    public override void Update()
+    public override void Update(float deltaTime)
     {
         if (Script == null)
             return;
 
         var keyframes = Script.Keyframes;
-        var currentTime = Environment.TickCount64;
         if (keyframes == null || keyframes.Count == 0)
             return;
 
@@ -82,9 +74,7 @@ public class LoopingScriptMotionProviderViewModel : AbstractMotionProvider
         }
 
         Value = MathUtils.Map(newValue, 0, 1, Minimum / 100, Maximum / 100);
-
-        _time += Speed * (currentTime - _lastTime) / 1000.0f;
-        _lastTime = currentTime;
+        _time += Speed * deltaTime;
     }
 
     public void SelectScript()

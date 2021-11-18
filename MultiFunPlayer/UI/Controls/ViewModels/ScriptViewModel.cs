@@ -241,7 +241,7 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                 if (motionProvider == null)
                     return false;
 
-                motionProvider.Update();
+                motionProvider.Update((float) stopwatch.Elapsed.TotalSeconds);
                 newValue = motionProvider.Value;
                 if (state.InsideScript)
                     newValue = MathUtils.Lerp(state.Value, newValue, MathUtils.Clamp01(settings.MotionProviderBlend / 100));

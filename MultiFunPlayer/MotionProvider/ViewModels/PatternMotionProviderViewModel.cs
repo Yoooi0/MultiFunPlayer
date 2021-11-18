@@ -19,7 +19,6 @@ public enum PatternType
 public class PatternMotionProviderViewModel : AbstractMotionProvider
 {
     private float _time;
-    private long _lastTime;
 
     [JsonProperty] public float Speed { get; set; } = 1;
     [JsonProperty] public float Period { get; set; } = 1;
@@ -27,19 +26,10 @@ public class PatternMotionProviderViewModel : AbstractMotionProvider
     [JsonProperty] public float Maximum { get; set; } = 100;
     [JsonProperty] public PatternType Pattern { get; set; } = PatternType.Triangle;
 
-    public PatternMotionProviderViewModel()
+    public override void Update(float deltaTime)
     {
-        _lastTime = Environment.TickCount64;
-        _time = 0;
-    }
-
-    public override void Update()
-    {
-        var currentTime = Environment.TickCount64;
         Value = MathUtils.Map(Calculate(Pattern, _time), 0, 1, Minimum / 100, Maximum / 100);
-
-        _time += Speed * (currentTime - _lastTime) / 1000.0f;
-        _lastTime = currentTime;
+        _time += Speed * deltaTime;
     }
 
     private float Calculate(PatternType pattern, float time)

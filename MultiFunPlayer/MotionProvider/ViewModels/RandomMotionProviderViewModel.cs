@@ -10,7 +10,6 @@ public class RandomMotionProviderViewModel : AbstractMotionProvider
 {
     private readonly OpenSimplex _noise;
     private float _time;
-    private long _lastTime;
 
     [JsonProperty] public float Speed { get; set; } = 1;
     [JsonProperty] public float Minimum { get; set; } = 0;
@@ -20,16 +19,11 @@ public class RandomMotionProviderViewModel : AbstractMotionProvider
     public RandomMotionProviderViewModel()
     {
         _noise = new OpenSimplex(0);
-        _lastTime = Environment.TickCount64;
-        _time = 0;
     }
 
-    public override void Update()
+    public override void Update(float deltaTime)
     {
-        var currentTime = Environment.TickCount64;
         Value = MathUtils.Map((float)(_noise?.Calculate2D(Seed, _time) + 1 ?? 0) / 2, 0, 1, Minimum / 100, Maximum / 100);
-
-        _time += Speed * (currentTime - _lastTime) / 1000.0f;
-        _lastTime = currentTime;
+        _time += Speed * deltaTime;
     }
 }
