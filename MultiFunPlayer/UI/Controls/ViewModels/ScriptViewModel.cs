@@ -1325,6 +1325,18 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                           AxisSettings[axis].Offset = MathUtils.Clamp(value, -5, 5);
                   }));
         #endregion
+
+        #region Axis::MotionProvider
+        var motionProviderNames = new MotionProviderCollection().Select(p => p.Name).ToHashSet();
+        s.RegisterAction("Axis::MotionProvider::Set",
+            b => b.WithSetting<DeviceAxis>(p => p.WithLabel("Target axis").WithItemsSource(DeviceAxis.All))
+                  .WithSetting<string>(p => p.WithLabel("Motion provider").WithItemsSource(motionProviderNames))
+                  .WithCallback((_, axis, motionProviderName) =>
+                  {
+                      if (axis != null)
+                          AxisSettings[axis].SelectedMotionProvider = motionProviderNames.Contains(motionProviderName) ? motionProviderName : null;
+                  }));
+        #endregion
     }
     #endregion
 
