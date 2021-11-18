@@ -159,7 +159,7 @@ public class NetworkOutputTargetViewModel : ThreadAbstractOutputTarget
         base.RegisterShortcuts(s);
 
         #region Endpoint
-        s.RegisterAction($"{Name}::Endpoint::Set", b => b.WithSetting<string>(s => s.WithLabel("Endpoint")).WithCallback((_, endpointString) =>
+        s.RegisterAction($"{Name}::Endpoint::Set", b => b.WithSetting<string>(s => s.WithLabel("Endpoint").WithDescription("ip:port")).WithCallback((_, endpointString) =>
         {
             if (IPEndPoint.TryParse(endpointString, out var endpoint))
                 Endpoint = endpoint;

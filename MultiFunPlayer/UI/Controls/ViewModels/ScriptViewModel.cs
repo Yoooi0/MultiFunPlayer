@@ -1194,7 +1194,7 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         #region Axis::LinkPriority
         s.RegisterAction("Axis::LinkPriority::Set",
             b => b.WithSetting<DeviceAxis>(p => p.WithLabel("Target axis").WithItemsSource(DeviceAxis.All))
-                  .WithSetting<bool>(p => p.WithLabel("Link has priority"))
+                  .WithSetting<bool>(p => p.WithLabel("Link has priority").WithDescription("When enabled the link has priority\nover automatically loaded scripts"))
                   .WithCallback((_, axis, enabled) =>
                   {
                       if (axis != null)

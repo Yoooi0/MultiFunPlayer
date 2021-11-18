@@ -543,7 +543,7 @@
 
         <material:DialogHost.DialogContentTemplate>
             <DataTemplate>
-                <DockPanel Margin="20" Width="300">
+                <DockPanel Margin="20" MaxWidth="300" MinWidth="150">
                     <Button DockPanel.Dock="Top"
                         Style="{StaticResource MaterialDesignFlatButton}"
                         material:RippleAssist.Feedback="Black"
@@ -587,10 +587,30 @@
                             <DataTemplate DataType="{x:Type input:IShortcutSetting}">
                                 <DockPanel LastChildFill="True">
                                     <TextBlock Text="{Binding Label, StringFormat={}{0}:}"
-                                               Width="125"
                                                VerticalAlignment="Center"
-                                               Margin="0 0 20 0"
+                                               Margin="0 0 10 0"
                                                DockPanel.Dock="Left" />
+
+
+                                    <material:ColorZone DockPanel.Dock="Right"
+                                                        VerticalAlignment="Center"
+                                                        CornerRadius="7"
+                                                        Mode="PrimaryLight"
+                                                        Width="14"
+                                                        Height="14"
+                                                        Margin="10 0 0 0"
+                                                        ToolTipService.InitialShowDelay="0"
+                                                        ToolTipService.ShowDuration="99999"
+                                                        ToolTipService.Placement="Top"
+                                                        ToolTip="{Binding Description}"
+                                                        Visibility="{Binding Description, Converter={StaticResource NullableToVisibilityConverter}}">
+                                        <material:PackIcon Kind="Help"
+                                                           Width="10"
+                                                           Height="10"
+                                                           HorizontalAlignment="Center"
+                                                           VerticalAlignment="Center"/>
+                                    </material:ColorZone>
+                                    
                                     <ContentControl Content="{Binding}" 
                                                     ContentTemplateSelector="{StaticResource ShortcutSettingTemplateSelector}"
                                                     DockPanel.Dock="Left" />
