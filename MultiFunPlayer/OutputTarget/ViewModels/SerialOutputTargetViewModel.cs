@@ -138,8 +138,7 @@ public class SerialOutputTargetViewModel : ThreadAbstractOutputTarget
     {
         if (type == AppSettingsMessageType.Saving)
         {
-            if (SelectedComPort != null)
-                settings[nameof(SelectedComPort)] = new JValue(SelectedComPort);
+            settings[nameof(SelectedComPort)] = new JValue(SelectedComPort);
         }
         else if (type == AppSettingsMessageType.Loading)
         {
