@@ -175,9 +175,18 @@ public class ButtplugOutputTargetViewModel : AsyncAbstractOutputTarget
         {
             _ = ScanAsync(client, token);
 
-            var lastSentValues = DeviceAxis.All.ToDictionary(a => a, _ => float.NaN);
-            bool CheckDirtyAndUpdate(DeviceAxis axis)
+            var lastSentValuesPerDevice = new Dictionary<ButtplugClientDevice, Dictionary<DeviceAxis, float>>();
+            bool CheckDirtyAndUpdate(ButtplugClientDeviceSettings settings)
             {
+                var device = GetDeviceFromSettings(settings);
+                if (device == null)
+                    return false;
+
+                if (!lastSentValuesPerDevice.ContainsKey(device))
+                    lastSentValuesPerDevice.Add(device, DeviceAxis.All.ToDictionary(a => a, _ => float.NaN));
+
+                var axis = settings.SourceAxis;
+                var lastSentValues = lastSentValuesPerDevice[device];
                 var currentValue = Values[axis];
                 var lastValue = lastSentValues[axis];
                 lastSentValues[axis] = currentValue;
@@ -193,8 +202,10 @@ public class ButtplugOutputTargetViewModel : AsyncAbstractOutputTarget
                 var interval = MathF.Max(1, 1000.0f / UpdateRate);
                 UpdateValues();
 
-                var dirtyAxes = DeviceAxis.All.Where(CheckDirtyAndUpdate).ToList();
-                var dirtySettings = DeviceSettings.Where(s => dirtyAxes.Contains(s.SourceAxis));
+                foreach (var orphanedSettings in lastSentValuesPerDevice.Keys.Except(AvailableDevices))
+                    lastSentValuesPerDevice.Remove(orphanedSettings);
+
+                var dirtySettings = DeviceSettings.Where(CheckDirtyAndUpdate);
                 var tasks = GetDeviceTasks(interval, dirtySettings);
 
                 try
@@ -253,28 +264,28 @@ public class ButtplugOutputTargetViewModel : AsyncAbstractOutputTarget
                     if (type == ServerMessage.Types.MessageAttributeType.VibrateCmd)
                     {
                         var cmds = typeGroup.ToDictionary(m => m.FeatureIndex,
-                                                              m => (double)Values[m.SourceAxis]);
+                                                            m => (double)Values[m.SourceAxis]);
 
-                            Logger.Trace("Sending vibrate commands \"{data}\" to \"{name}\"", cmds, device.Name);
-                            return device.SendVibrateCmd(cmds);
-                        }
+                        Logger.Trace("Sending vibrate commands \"{data}\" to \"{name}\"", cmds, device.Name);
+                        return device.SendVibrateCmd(cmds);
+                    }
 
-                        if (type == ServerMessage.Types.MessageAttributeType.LinearCmd)
-                        {
-                            var cmds = typeGroup.ToDictionary(m => m.FeatureIndex,
-                                                              m => ((uint)interval, (double)Values[m.SourceAxis]));
+                    if (type == ServerMessage.Types.MessageAttributeType.LinearCmd)
+                    {
+                        var cmds = typeGroup.ToDictionary(m => m.FeatureIndex,
+                                                            m => ((uint)interval, (double)Values[m.SourceAxis]));
 
-                            Logger.Trace("Sending linear commands \"{data}\" to \"{name}\"", cmds, device.Name);
-                            return device.SendLinearCmd(cmds);
-                        }
+                        Logger.Trace("Sending linear commands \"{data}\" to \"{name}\"", cmds, device.Name);
+                        return device.SendLinearCmd(cmds);
+                    }
 
-                        if (type == ServerMessage.Types.MessageAttributeType.RotateCmd)
-                        {
-                            var cmds = typeGroup.ToDictionary(m => m.FeatureIndex,
-                                                              m => (Math.Clamp(Math.Abs(Values[m.SourceAxis] - 0.5) / 0.5, 0, 1), Values[m.SourceAxis] > 0.5));
+                    if (type == ServerMessage.Types.MessageAttributeType.RotateCmd)
+                    {
+                        var cmds = typeGroup.ToDictionary(m => m.FeatureIndex,
+                                                            m => (Math.Clamp(Math.Abs(Values[m.SourceAxis] - 0.5) / 0.5, 0, 1), Values[m.SourceAxis] > 0.5));
 
-                            Logger.Trace("Sending rotate commands \"{data}\" to \"{name}\"", cmds, device.Name);
-                            return device.SendRotateCmd(cmds);
+                        Logger.Trace("Sending rotate commands \"{data}\" to \"{name}\"", cmds, device.Name);
+                        return device.SendRotateCmd(cmds);
                     }
 
                     return Task.CompletedTask;
