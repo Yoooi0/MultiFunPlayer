@@ -34,7 +34,7 @@ public class PatternMotionProviderViewModel : AbstractMotionProvider
 
     private float Calculate(PatternType pattern, float time)
     {
-        var t = MathUtils.Clamp01((time % Period) / Period);
+        var t = MathUtils.Clamp01(time % Period / Period);
         switch (pattern)
         {
             case PatternType.Triangle: return MathF.Abs(MathF.Abs(t * 2 - 1.5f) - 1);

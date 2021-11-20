@@ -16,7 +16,7 @@ public class ShortcutActionConverter : JsonConverter<IShortcutAction>
         var followBrackets = false;
         for (var i = 0; i < fullyQualifiedTypeName.Length; i++)
         {
-            char current = fullyQualifiedTypeName[i];
+            var current = fullyQualifiedTypeName[i];
             switch (current)
             {
                 case '[':
@@ -45,6 +45,7 @@ public class ShortcutActionConverter : JsonConverter<IShortcutAction>
                     {
                         skippingAssemblyDetails = true;
                     }
+
                     break;
                 default:
                     followBrackets = false;
@@ -110,8 +111,8 @@ public class ShortcutActionConverter : JsonConverter<IShortcutAction>
     public override IShortcutAction ReadJson(JsonReader reader, Type objectType, IShortcutAction existingValue, bool hasExistingValue, JsonSerializer serializer)
     {
         var o = JObject.Load(reader);
-        var typeNameKey = SplitFullyQualifiedTypeName(o["$type"].ToString());
-        var specifiedType = Type.GetType(typeNameKey.TypeName);
+        var (_, typeName) = SplitFullyQualifiedTypeName(o["$type"].ToString());
+        var specifiedType = Type.GetType(typeName);
 
         var descriptor = o["Descriptor"].ToObject<IShortcutActionDescriptor>(); 
         var args = new List<object>
