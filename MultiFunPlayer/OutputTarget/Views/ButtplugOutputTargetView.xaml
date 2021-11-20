@@ -13,7 +13,6 @@
              d:DesignHeight="450" d:DesignWidth="800">
     <UserControl.Resources>
         <converters:IPEndPointToStringConverter x:Key="IPEndPointToStringConverter"/>
-        <converters:CallObjectMethodWithArgumentConverter x:Key="CallObjectMethodWithArgumentConverter"/>
     </UserControl.Resources>
     <Expander material:ExpanderAssist.HorizontalHeaderPadding="0 0 6 0"
               Style="{StaticResource MaterialDesignToolBarExpander}"
@@ -237,18 +236,41 @@
                                         <GridViewColumn.CellTemplate>
                                             <DataTemplate>
                                                 <material:Badged BadgePlacementMode="TopRight"
-                                                                     Padding="0 0 10 0">
+                                                                 Padding="0 0 10 0">
                                                     <material:Badged.Resources>
-                                                        <system:String x:Key="MethodName">GetNumberOfDevices</system:String>
+                                                        <Style TargetType="{x:Type material:Badged}">
+                                                            <Setter Property="BadgeBackground">
+                                                                <Setter.Value>
+                                                                    <SolidColorBrush Color="red" Opacity="0.7"/>
+                                                                </Setter.Value>
+                                                            </Setter>
+                                                            <Setter Property="Badge">
+                                                                <Setter.Value>
+                                                                    <material:PackIcon Kind="CloseBold" Width="12" Height="12"/>
+                                                                </Setter.Value>
+                                                            </Setter>
+                                                            
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding IsConnected}" Value="True">
+                                                                    <Setter Property="BadgeBackground">
+                                                                        <Setter.Value>
+                                                                            <SolidColorBrush Color="green" Opacity="0.5"/>
+                                                                        </Setter.Value>
+                                                                    </Setter>
+                                                                    <Setter Property="Badge">
+                                                                        <Setter.Value>
+                                                                            <material:PackIcon Kind="CheckBold" Width="12" Height="12"/>
+                                                                        </Setter.Value>
+                                                                    </Setter>
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
                                                     </material:Badged.Resources>
-                                                    <material:Badged.Badge>
-                                                        <MultiBinding Converter="{StaticResource CallObjectMethodWithArgumentConverter}">
-                                                            <Binding Path="DataContext" RelativeSource="{RelativeSource FindAncestor, AncestorType={x:Type UserControl}}"/>
-                                                            <Binding Source="{StaticResource MethodName}"/>
-                                                            <Binding Path="DeviceName"/>
-                                                        </MultiBinding>
-                                                    </material:Badged.Badge>
-                                                    <TextBlock Text="{Binding DeviceName}"/>
+
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <TextBlock Text="{Binding DeviceName}"/>
+                                                        <TextBlock Text="{Binding DeviceIndex, StringFormat=[{0}]}" />
+                                                    </StackPanel>
                                                 </material:Badged>
                                             </DataTemplate>
                                         </GridViewColumn.CellTemplate>

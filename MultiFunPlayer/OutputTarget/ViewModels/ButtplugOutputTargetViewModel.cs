@@ -126,6 +126,10 @@ public class ButtplugOutputTargetViewModel : AsyncAbstractOutputTarget
         void OnDeviceRemoved(ButtplugClientDevice device)
         {
             Logger.Info($"Device removed: \"{device.Name}\"");
+
+            foreach (var settings in DeviceSettings.Where(s => GetDeviceFromSettings(s) == device))
+                settings.IsConnected = false;
+
             AvailableDevices.Remove(device);
             if (device == SelectedDevice)
                 SelectedDevice = null;
@@ -134,7 +138,11 @@ public class ButtplugOutputTargetViewModel : AsyncAbstractOutputTarget
         void OnDeviceAdded(ButtplugClientDevice device)
         {
             Logger.Info($"Device added: \"{device.Name}\"");
+
             AvailableDevices.Add(device);
+
+            foreach (var settings in DeviceSettings.Where(s => GetDeviceFromSettings(s) == device))
+                settings.IsConnected = true;
         }
 
         using var client = new ButtplugClient(nameof(MultiFunPlayer));
@@ -216,6 +224,11 @@ public class ButtplugOutputTargetViewModel : AsyncAbstractOutputTarget
         AvailableDevices.Clear();
     }
 
+    private ButtplugClientDevice GetDeviceFromSettings(ButtplugClientDeviceSettings settings)
+        => GetDeviceByNameAndIndex(settings.DeviceName, settings.DeviceIndex);
+    private ButtplugClientDevice GetDeviceByNameAndIndex(string deviceName, uint deviceIndex)
+        => AvailableDevices.FirstOrDefault(d => string.Equals(deviceName, d.Name, StringComparison.OrdinalIgnoreCase) && deviceIndex == d.Index);
+
     protected override float CoerceProviderValue(DeviceAxis axis, float value)
     {
         value = base.CoerceProviderValue(axis, value);
@@ -227,37 +240,41 @@ public class ButtplugOutputTargetViewModel : AsyncAbstractOutputTarget
         return settings.GroupBy(m => m.DeviceName).SelectMany(deviceGroup =>
         {
             var deviceName = deviceGroup.Key;
-            var devices = AvailableDevices.Where(d => string.Equals(d.Name, deviceName, StringComparison.OrdinalIgnoreCase));
-            return deviceGroup.GroupBy(m => m.MessageType).SelectMany(typeGroup =>
+            return deviceGroup.GroupBy(m => m.DeviceIndex).SelectMany(indexGroup =>
             {
-                var type = typeGroup.Key;
-                return devices.Select(device =>
+                var deviceIndex = indexGroup.Key;
+                var device = GetDeviceByNameAndIndex(deviceName, deviceIndex);
+                if(device == null)
+                    return Enumerable.Empty<Task>();
+
+                return indexGroup.GroupBy(m => m.MessageType).Select(typeGroup =>
                 {
+                    var type = typeGroup.Key;
                     if (type == ServerMessage.Types.MessageAttributeType.VibrateCmd)
                     {
                         var cmds = typeGroup.ToDictionary(m => m.FeatureIndex,
-                                                          m => (double)Values[m.SourceAxis]);
+                                                              m => (double)Values[m.SourceAxis]);
 
-                        Logger.Trace("Sending vibrate commands \"{data}\" to \"{name}\"", cmds, device.Name);
-                        return device.SendVibrateCmd(cmds);
-                    }
+                            Logger.Trace("Sending vibrate commands \"{data}\" to \"{name}\"", cmds, device.Name);
+                            return device.SendVibrateCmd(cmds);
+                        }
 
-                    if (type == ServerMessage.Types.MessageAttributeType.LinearCmd)
-                    {
-                        var cmds = typeGroup.ToDictionary(m => m.FeatureIndex,
-                                                          m => ((uint)interval, (double)Values[m.SourceAxis]));
+                        if (type == ServerMessage.Types.MessageAttributeType.LinearCmd)
+                        {
+                            var cmds = typeGroup.ToDictionary(m => m.FeatureIndex,
+                                                              m => ((uint)interval, (double)Values[m.SourceAxis]));
 
-                        Logger.Trace("Sending linear commands \"{data}\" to \"{name}\"", cmds, device.Name);
-                        return device.SendLinearCmd(cmds);
-                    }
+                            Logger.Trace("Sending linear commands \"{data}\" to \"{name}\"", cmds, device.Name);
+                            return device.SendLinearCmd(cmds);
+                        }
 
-                    if (type == ServerMessage.Types.MessageAttributeType.RotateCmd)
-                    {
-                        var cmds = typeGroup.ToDictionary(m => m.FeatureIndex,
-                                                          m => (Math.Clamp(Math.Abs(Values[m.SourceAxis] - 0.5) / 0.5, 0, 1), Values[m.SourceAxis] > 0.5));
+                        if (type == ServerMessage.Types.MessageAttributeType.RotateCmd)
+                        {
+                            var cmds = typeGroup.ToDictionary(m => m.FeatureIndex,
+                                                              m => (Math.Clamp(Math.Abs(Values[m.SourceAxis] - 0.5) / 0.5, 0, 1), Values[m.SourceAxis] > 0.5));
 
-                        Logger.Trace("Sending rotate commands \"{data}\" to \"{name}\"", cmds, device.Name);
-                        return device.SendRotateCmd(cmds);
+                            Logger.Trace("Sending rotate commands \"{data}\" to \"{name}\"", cmds, device.Name);
+                            return device.SendRotateCmd(cmds);
                     }
 
                     return Task.CompletedTask;
@@ -306,9 +323,6 @@ public class ButtplugOutputTargetViewModel : AsyncAbstractOutputTarget
 
         CleanupSemaphores();
     }
-
-    public int GetNumberOfDevices(string deviceName)
-        => AvailableDevices.Count(d => string.Equals(d.Name, deviceName, StringComparison.OrdinalIgnoreCase));
 
     protected override void HandleSettings(JObject settings, AppSettingsMessageType type)
     {
@@ -397,4 +411,5 @@ public class ButtplugClientDeviceSettings : PropertyChangedBase
     [JsonProperty] public DeviceAxis SourceAxis { get; set; }
     [JsonProperty] public ServerMessage.Types.MessageAttributeType MessageType { get; set; }
     [JsonProperty] public uint FeatureIndex { get; set; }
+    public bool IsConnected { get; set; }
 }
