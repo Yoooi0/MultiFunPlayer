@@ -246,7 +246,7 @@
                                                             </Setter>
                                                             <Setter Property="Badge">
                                                                 <Setter.Value>
-                                                                    <material:PackIcon Kind="CloseBold" Width="12" Height="12"/>
+                                                                    <material:PackIcon Kind="PowerPlugOff" Width="12" Height="12"/>
                                                                 </Setter.Value>
                                                             </Setter>
                                                             
@@ -259,7 +259,7 @@
                                                                     </Setter>
                                                                     <Setter Property="Badge">
                                                                         <Setter.Value>
-                                                                            <material:PackIcon Kind="CheckBold" Width="12" Height="12"/>
+                                                                            <material:PackIcon Kind="PowerPlug" Width="12" Height="12"/>
                                                                         </Setter.Value>
                                                                     </Setter>
                                                                 </DataTrigger>

@@ -194,7 +194,7 @@ public class ButtplugOutputTargetViewModel : AsyncAbstractOutputTarget
                     return false;
 
                 var shouldUpdate = !float.IsFinite(lastValue)
-                                || currentValue == 0 && lastValue != 0
+                                || (currentValue == 0 && lastValue != 0)
                                 || MathF.Abs(lastValue - currentValue) >= 0.005f;
 
                 if(shouldUpdate)
