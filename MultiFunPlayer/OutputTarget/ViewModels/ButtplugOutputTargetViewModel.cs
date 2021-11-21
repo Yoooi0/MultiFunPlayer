@@ -189,12 +189,18 @@ public class ButtplugOutputTargetViewModel : AsyncAbstractOutputTarget
                 var lastSentValues = lastSentValuesPerDevice[device];
                 var currentValue = Values[axis];
                 var lastValue = lastSentValues[axis];
-                lastSentValues[axis] = currentValue;
 
-                if (!float.IsFinite(currentValue)) return false;
-                if (!float.IsFinite(lastValue)) return true;
-                if (currentValue == 0 && lastValue != 0) return true;
-                return MathF.Abs(lastValue - currentValue) >= 0.005f;
+                if (!float.IsFinite(currentValue)) 
+                    return false;
+
+                var shouldUpdate = !float.IsFinite(lastValue)
+                                || currentValue == 0 && lastValue != 0
+                                || MathF.Abs(lastValue - currentValue) >= 0.005f;
+
+                if(shouldUpdate)
+                    lastSentValues[axis] = currentValue;
+
+                return shouldUpdate;
             }
 
             while (!token.IsCancellationRequested && client.Connected)
