@@ -1,9 +1,10 @@
-﻿using MaterialDesignThemes.Wpf;
+using MaterialDesignThemes.Wpf;
 using MultiFunPlayer.Common;
 using MultiFunPlayer.Common.Messages;
 using MultiFunPlayer.Input;
 using MultiFunPlayer.Input.RawInput;
 using MultiFunPlayer.Input.XInput;
+using MultiFunPlayer.Settings;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NLog;
@@ -234,15 +235,6 @@ public class ShortcutViewModel : Screen, IHandle<AppSettingsMessage>, IDisposabl
         CapturedGesture = gesture?.Descriptor;
     }
 
-    private class BindingsSettingsModel
-    {
-        [JsonProperty(TypeNameHandling = TypeNameHandling.Objects)]
-        public IInputGestureDescriptor Gesture { get; init; }
-
-        [JsonProperty(ItemTypeNameHandling = TypeNameHandling.Objects)]
-        public IList<IShortcutAction> Actions { get; init; }
-    }
-
     public void Handle(AppSettingsMessage message)
     {
         if (message.Type == AppSettingsMessageType.Saving)
@@ -252,13 +244,7 @@ public class ShortcutViewModel : Screen, IHandle<AppSettingsMessage>, IDisposabl
             if (!message.Settings.TryGetObject(out var settings, "Shortcuts"))
                 return;
 
-            var x = Bindings.Select(x => new BindingsSettingsModel()
-            {
-                Gesture = x.Key,
-                Actions = x.Value
-            });
-
-            settings[nameof(Bindings)] = JArray.FromObject(x);
+            settings[nameof(Bindings)] = JArray.FromObject(Bindings.Select(x => BindingSettingsModel.FromBinding(x)));
         }
         else if (message.Type == AppSettingsMessageType.Loading)
         {
@@ -276,7 +262,7 @@ public class ShortcutViewModel : Screen, IHandle<AppSettingsMessage>, IDisposabl
             if (settings.TryGetValue<bool>(nameof(IsGamepadButtonGestureEnabled), out var isHidButtonGestureEnabled))
                 IsGamepadButtonGestureEnabled = isHidButtonGestureEnabled;
 
-            if (settings.TryGetValue<List<BindingsSettingsModel>>(nameof(Bindings), out var loadedBindings))
+            if (settings.TryGetValue<List<BindingSettingsModel>>(nameof(Bindings), out var loadedBindings))
             {
                 foreach (var gestureDescriptor in Bindings.Keys.ToList())
                     _manager.UnregisterGesture(gestureDescriptor);
@@ -285,19 +271,17 @@ public class ShortcutViewModel : Screen, IHandle<AppSettingsMessage>, IDisposabl
                 {
                     var gestureDescriptor = binding.Gesture;
                     _manager.RegisterGesture(gestureDescriptor);
-                
-                    if (binding.Actions != null)
+
+                    if (binding.Actions == null)
+                        continue;
+
+                    foreach (var action in binding.Actions)
                     {
-                        foreach (var action in binding.Actions)
-                        {
-                            if (!ActionDescriptors.Contains(action.Descriptor))
-                            {
-                                Logger.Warn($"Action \"{action.Descriptor.Name}\" not found!");
-                                continue;
-                            }
-                
-                            _manager.BindActionWithSettings(gestureDescriptor, action.Descriptor, action.Settings);
-                        }
+                        var actionDescriptor = ActionDescriptors.FirstOrDefault(d => string.Equals(d.Name, action.Descriptor, StringComparison.OrdinalIgnoreCase));
+                        if (actionDescriptor == null)
+                            Logger.Warn($"Action \"{action.Descriptor}\" not found!");
+                        else
+                            _manager.BindActionWithSettings(gestureDescriptor, actionDescriptor, action.Values);
                     }
                 }
             }
@@ -314,4 +298,30 @@ public class ShortcutViewModel : Screen, IHandle<AppSettingsMessage>, IDisposabl
         Dispose(disposing: true);
         GC.SuppressFinalize(this);
     }
+}
+
+public class BindingSettingsModel
+{
+    [JsonProperty(TypeNameHandling = TypeNameHandling.Objects)]
+    public IInputGestureDescriptor Gesture { get; init; }
+    public List<ActionSettingsModel> Actions { get; init; }
+
+    public static BindingSettingsModel FromBinding(KeyValuePair<IInputGestureDescriptor, BindableCollection<IShortcutAction>> binding)
+        => new()
+        {
+            Gesture = binding.Key,
+            Actions = binding.Value.Select(x => new ActionSettingsModel()
+            {
+                Descriptor = x.Descriptor.Name,
+                Values = x.Settings.Select(s => new TypedValue(s.GetType().GetGenericArguments()[0], s.Value)).ToList()
+            }).ToList()
+        };
+}
+
+public class ActionSettingsModel
+{
+    public string Descriptor { get; init; }
+
+    [JsonProperty("Settings")]
+    public List<TypedValue> Values { get; init; }
 }

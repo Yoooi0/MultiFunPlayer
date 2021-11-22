@@ -1,11 +1,10 @@
-﻿using MultiFunPlayer.Input;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System.Text;
 
 namespace MultiFunPlayer.Settings.Converters;
 
-public class ShortcutActionConverter : JsonConverter<IShortcutAction>
+public class TypedValueConverter : JsonConverter<TypedValue>
 {
     private string RemoveAssemblyDetails(string fullyQualifiedTypeName)
     {
@@ -101,65 +100,32 @@ public class ShortcutActionConverter : JsonConverter<IShortcutAction>
         var assemblyDelimiterIndex = GetAssemblyDelimiterIndex(fullyQualifiedTypeName);
         if (assemblyDelimiterIndex != null)
         {
-            return (Trim(fullyQualifiedTypeName, (int)assemblyDelimiterIndex + 1, fullyQualifiedTypeName.Length - (int)assemblyDelimiterIndex - 1), 
+            return (Trim(fullyQualifiedTypeName, (int)assemblyDelimiterIndex + 1, fullyQualifiedTypeName.Length - (int)assemblyDelimiterIndex - 1),
                     Trim(fullyQualifiedTypeName, 0, (int)assemblyDelimiterIndex));
         }
 
         return (null, fullyQualifiedTypeName);
     }
 
-    public override IShortcutAction ReadJson(JsonReader reader, Type objectType, IShortcutAction existingValue, bool hasExistingValue, JsonSerializer serializer)
+    public override TypedValue ReadJson(JsonReader reader, Type objectType, TypedValue existingValue, bool hasExistingValue, JsonSerializer serializer)
     {
-        var o = JObject.Load(reader);
-        var (_, typeName) = SplitFullyQualifiedTypeName(o["$type"].ToString());
-        var specifiedType = Type.GetType(typeName);
+        var o = JToken.ReadFrom(reader);
 
-        var descriptor = o["Descriptor"].ToObject<IShortcutActionDescriptor>(); 
-        var args = new List<object>
-        {
-            descriptor,
-            null
-        };
+        var (_, valueTypeName) = SplitFullyQualifiedTypeName(o["$type"].ToString());
+        var valueType = Type.GetType(valueTypeName);
+        var value = o["Value"].ToObject(valueType);
 
-        if (o.ContainsKey("Settings"))
-        {
-            var values = o["Settings"].ToArray();
-
-            var genericTypes = specifiedType.GetGenericArguments();
-            var settings = new List<IShortcutSetting>();
-            for (var i = 0; i < values.Length; i++)
-            {
-                var valueType = genericTypes[i];
-                var settingType = typeof(ShortcutSetting<>).MakeGenericType(valueType);
-                var setting = (IShortcutSetting)Activator.CreateInstance(settingType);
-
-                setting.Value = values[i].ToObject(valueType);
-                settings.Add(setting);
-            }
-
-            args.AddRange(settings);
-        }
-
-        return (IShortcutAction)Activator.CreateInstance(specifiedType, args.ToArray());
+        return new TypedValue(valueType, value);
     }
 
-    public override void WriteJson(JsonWriter writer, IShortcutAction value, JsonSerializer serializer)
+    public override void WriteJson(JsonWriter writer, TypedValue value, JsonSerializer serializer)
     {
-        writer.WriteStartObject();
-
-        var typeName = RemoveAssemblyDetails(value.GetType().AssemblyQualifiedName);
-        writer.WritePropertyName("$type", false);
-        writer.WriteValue(typeName);
-
-        writer.WritePropertyName("Descriptor", false);
-        serializer.Serialize(writer, value.Descriptor);
-
-        if (value.Settings.Any())
+        var valueToken = new JObject
         {
-            writer.WritePropertyName("Settings", false);
-            serializer.Serialize(writer, value.Settings.Select(s => s.Value));
-        }
+            { "$type", RemoveAssemblyDetails(value.Type.AssemblyQualifiedName) },
+            { "Value", JToken.FromObject(value.Value, serializer) }
+        };
 
-        writer.WriteEndObject();
+        serializer.Serialize(writer, valueToken);
     }
 }

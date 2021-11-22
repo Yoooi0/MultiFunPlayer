@@ -19,8 +19,6 @@ public interface IShortcutActionDescriptor
 
 public record ShortcutActionDescriptor(string Name, ShortcutActionDescriptorFlags Flags) : IShortcutActionDescriptor
 {
-    public ShortcutActionDescriptor(string name) : this(name, ShortcutActionDescriptorFlags.All) { }
-
     public virtual bool Equals(ShortcutActionDescriptor other) => other != null && string.Equals(Name, other.Name, StringComparison.OrdinalIgnoreCase);
     public bool Equals(IShortcutActionDescriptor other) => other is IShortcutActionDescriptor d && Equals(d);
     public override int GetHashCode() => Name.GetHashCode();

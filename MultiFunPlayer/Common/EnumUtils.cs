@@ -1,6 +1,4 @@
-﻿using System.Collections;
-
-namespace MultiFunPlayer.Common;
+﻿namespace MultiFunPlayer.Common;
 
 public static class EnumUtils
 {

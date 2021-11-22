@@ -136,8 +136,7 @@ public class Bootstrapper : Bootstrapper<RootViewModel>
             settings.Converters.Add(new StringEnumConverter());
             settings.Converters.Add(new IPEndPointConverter());
             settings.Converters.Add(new DeviceAxisConverter());
-            settings.Converters.Add(new ShortcutActionConverter());
-            settings.Converters.Add(new ShortcutActionDescriptorConverter());
+            settings.Converters.Add(new TypedValueConverter());
             settings.Error += (s, e) =>
             {
                 if (e.ErrorContext.Error is JsonSerializationException or JsonReaderException)

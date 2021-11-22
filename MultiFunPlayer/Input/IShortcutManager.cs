@@ -1,7 +1,7 @@
 using MultiFunPlayer.Common;
+using MultiFunPlayer.Settings;
 using NLog;
 using Stylet;
-using System.Reflection;
 
 namespace MultiFunPlayer.Input;
 
@@ -23,7 +23,7 @@ public interface IShortcutManager : IDisposable
     IReadOnlyDictionary<IInputGestureDescriptor, BindableCollection<IShortcutAction>> Bindings { get; }
 
     void BindAction(IInputGestureDescriptor gestureDescriptor, IShortcutActionDescriptor actionDescriptor);
-    void BindActionWithSettings(IInputGestureDescriptor gestureDescriptor, IShortcutActionDescriptor actionDescriptor, IEnumerable<IShortcutSetting> settings);
+    void BindActionWithSettings(IInputGestureDescriptor gestureDescriptor, IShortcutActionDescriptor actionDescriptor, IEnumerable<TypedValue> values);
     void UnbindAction(IInputGestureDescriptor gestureDescriptor, IShortcutAction action);
 
     void RegisterAction(string name, Func<INoSettingsShortcutActionBuilder, IShortcutActionBuilder> configure) => RegisterAction(name, configure, ShortcutActionDescriptorFlags.AcceptsSimpleGesture);
@@ -77,7 +77,7 @@ public class ShortcutManager : IShortcutManager
         actions.Add(action);
     }
 
-    public void BindActionWithSettings(IInputGestureDescriptor gestureDescriptor, IShortcutActionDescriptor actionDescriptor, IEnumerable<IShortcutSetting> settings)
+    public void BindActionWithSettings(IInputGestureDescriptor gestureDescriptor, IShortcutActionDescriptor actionDescriptor, IEnumerable<TypedValue> values)
     {
         if (gestureDescriptor == null || actionDescriptor == null)
             return;
@@ -85,26 +85,26 @@ public class ShortcutManager : IShortcutManager
         RegisterGesture(gestureDescriptor);
 
         var action = CreateShortcutInstanceFromDescriptor(actionDescriptor);
-        PopulateShortcutInstanceWithSettings(action, settings);
+        PopulateShortcutInstanceWithSettings(action, values);
 
         var actions = _bindings[gestureDescriptor];
         actions.Add(action);
     }
 
-    private void PopulateShortcutInstanceWithSettings(IShortcutAction action, IEnumerable<IShortcutSetting> settings)
+    private void PopulateShortcutInstanceWithSettings(IShortcutAction action, IEnumerable<TypedValue> values)
     {
-        foreach (var (actionSetting, setting) in action.Settings.Zip(settings))
+        foreach (var (actionSetting, value) in action.Settings.Zip(values))
         {
             var actionSettingType = actionSetting.GetType().GetGenericArguments()[0];
-            var settingType = setting.GetType().GetGenericArguments()[0];
+            var valueType = value.Type;
 
-            if (actionSettingType != settingType)
+            if (actionSettingType != valueType)
             {
-                Logger.Warn($"Action \"{action.Descriptor}\" setting type mismatch! [\"{actionSettingType}\" != \"{settingType}\"]");
+                Logger.Warn($"Action \"{action.Descriptor}\" setting type mismatch! [\"{actionSettingType}\" != \"{valueType}\"]");
                 continue;
             }
 
-            actionSetting.Value = setting.Value;
+            actionSetting.Value = value.Value;
         }
     }
 
