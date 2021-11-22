@@ -26,7 +26,8 @@ public interface IShortcutManager : IDisposable
     void BindActionWithSettings(IInputGestureDescriptor gestureDescriptor, IShortcutActionDescriptor actionDescriptor, IEnumerable<IShortcutSetting> settings);
     void UnbindAction(IInputGestureDescriptor gestureDescriptor, IShortcutAction action);
 
-    void RegisterAction(string name, Func<INoSettingsShortcutActionBuilder, IShortcutActionBuilder> configure);
+    void RegisterAction(string name, Func<INoSettingsShortcutActionBuilder, IShortcutActionBuilder> configure) => RegisterAction(name, configure, ShortcutActionDescriptorFlags.AcceptsSimpleGesture);
+    void RegisterAction(string name, Func<INoSettingsShortcutActionBuilder, IShortcutActionBuilder> configure, ShortcutActionDescriptorFlags flags);
 
     void RegisterGesture(IInputGestureDescriptor gestureDescriptor);
     void UnregisterGesture(IInputGestureDescriptor gestureDescriptor);
@@ -57,9 +58,9 @@ public class ShortcutManager : IShortcutManager
             processor.OnGesture += HandleGesture;
     }
 
-    public void RegisterAction(string name, Func<INoSettingsShortcutActionBuilder, IShortcutActionBuilder> configure)
+    public void RegisterAction(string name, Func<INoSettingsShortcutActionBuilder, IShortcutActionBuilder> configure, ShortcutActionDescriptorFlags flags)
     {
-        var descriptor = new ShortcutActionDescriptor(name);
+        var descriptor = new ShortcutActionDescriptor(name, flags);
         var builder = configure(new ShortcutBuilder(descriptor));
         _actions.Add(descriptor, builder);
     }

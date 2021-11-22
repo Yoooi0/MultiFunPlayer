@@ -183,7 +183,7 @@ public abstract class AbstractOutputTarget : Screen, IHandle<AppSettingsMessage>
                         if (gesture is not IAxisInputGesture axisGesture) return;
                         if (axis != null)
                             SetMinimum(AxisSettings[axis], AxisSettings[axis].Minimum + axisGesture.Delta * 100);
-                    }));
+                    }), ShortcutActionDescriptorFlags.AcceptsAxisGesture);
         #endregion
 
         #region Axis::Range::Maximum
@@ -212,7 +212,7 @@ public abstract class AbstractOutputTarget : Screen, IHandle<AppSettingsMessage>
                         if (gesture is not IAxisInputGesture axisGesture) return;
                         if (axis != null)
                             SetMaximum(AxisSettings[axis], AxisSettings[axis].Maximum + axisGesture.Delta * 100);
-                    }));
+                    }), ShortcutActionDescriptorFlags.AcceptsAxisGesture);
         #endregion
 
         #region Axis::Range::Middle
@@ -241,7 +241,7 @@ public abstract class AbstractOutputTarget : Screen, IHandle<AppSettingsMessage>
                       if (gesture is not IAxisInputGesture axisGesture) return;
                       if (axis != null)
                           OffsetMiddle(AxisSettings[axis], axisGesture.Delta * 100);
-                  }));
+                  }), ShortcutActionDescriptorFlags.AcceptsAxisGesture);
         #endregion
 
         #region Axis::Range::Size
@@ -270,7 +270,7 @@ public abstract class AbstractOutputTarget : Screen, IHandle<AppSettingsMessage>
                       if (gesture is not IAxisInputGesture axisGesture) return;
                       if (axis != null)
                           OffsetSize(AxisSettings[axis], axisGesture.Delta * 100);
-                  }));
+                  }), ShortcutActionDescriptorFlags.AcceptsAxisGesture);
         #endregion
     }
 

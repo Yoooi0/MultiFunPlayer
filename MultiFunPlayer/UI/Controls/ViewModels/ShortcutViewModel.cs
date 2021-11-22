@@ -53,7 +53,11 @@ public class ShortcutViewModel : Screen, IHandle<AppSettingsMessage>, IDisposabl
             if (SelectedBinding == null)
                 return false;
 
-            //TODO: filter based on gesture type
+            var (selectedGesture, _) = SelectedBinding.Value;
+            if (!actionDescriptor.AcceptsSimpleGesture && selectedGesture is ISimpleInputGestureDescriptor)
+                return false;
+            if (!actionDescriptor.AcceptsAxisGesture && selectedGesture is IAxisInputGestureDescriptor)
+                return false;
 
             if (!string.IsNullOrWhiteSpace(ActionsFilter))
             {

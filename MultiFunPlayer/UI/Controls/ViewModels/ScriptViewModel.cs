@@ -1115,12 +1115,10 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
             b => b.WithSetting<DeviceAxis>(p => p.WithLabel("Target axis").WithItemsSource(DeviceAxis.All))
                   .WithCallback((gesture, axis) =>
                   {
-                      if (gesture is not IAxisInputGesture axisGesture) 
-                          return;
-
+                      if (gesture is not IAxisInputGesture axisGesture) return;
                       if (axis != null)
                           SetAxisValue(axis, axisGesture.Delta, offset: true);
-                  }));
+                  }), ShortcutActionDescriptorFlags.AcceptsAxisGesture);
         #endregion
 
         #region Axis::Sync
