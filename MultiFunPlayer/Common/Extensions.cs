@@ -141,7 +141,7 @@ public static class IOExtensions
         try
         {
             directory.Refresh();
-            if (!directory.Exists)
+            if (directory.Exists)
                 return action.Invoke(directory);
         } catch { }
 
