@@ -44,7 +44,7 @@ public class ScriptFile : IScriptFile
     {
         var path = file.FullName;
         if (!file.Exists)
-            throw new FileNotFoundException("File not found!", path);
+            return null;
 
         var origin = userLoaded ? ScriptFileOrigin.User : ScriptFileOrigin.Automatic;
         return new ScriptFile(Path.GetFileName(path), file, File.ReadAllBytes(path), ScriptDataType.Funscript, origin);
