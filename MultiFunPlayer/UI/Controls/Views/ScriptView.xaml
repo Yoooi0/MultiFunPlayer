@@ -742,9 +742,9 @@
                                                                                VerticalAlignment="Center"/>
                                                     </Border>
                                                 </material:PopupBox.ToggleContent>
-                                                <Grid Width="300" Margin="10">
+                                                <Grid Width="100" Margin="10">
                                                     <StackPanel>
-                                                        <DockPanel LastChildFill="False">
+                                                        <DockPanel LastChildFill="True">
                                                             <TextBlock Text="Target:" 
                                                                            DockPanel.Dock="Left"
                                                                            Margin="0 0 10 0" 
@@ -756,16 +756,25 @@
                                                                           ItemsSource="{Binding Source={x:Static common:DeviceAxis.All}}" 
                                                                           SelectedItem="{Binding Value.Settings.LinkAxis}"
                                                                           SelectionChanged="{s:Action OnSelectedLinkAxisChanged}"/>
+                                                        </DockPanel>
+                                                        <DockPanel LastChildFill="False"
+                                                                   Margin="0 10 0 0">
+                                                            <CheckBox IsChecked="{Binding Value.Settings.LinkAxisHasPriority}"
+                                                                      Checked="{s:Action OnLinkAxisPriorityChanged}"
+                                                                      Unchecked="{s:Action OnLinkAxisPriorityChanged}"
+                                                                      DockPanel.Dock="Left"
+                                                                      Margin="0 0 5 0"
+                                                                      Content="Priority"/>
 
-                                                            <material:ColorZone DockPanel.Dock="Right"
-                                                                                    VerticalAlignment="Center"
-                                                                                    CornerRadius="7"
-                                                                                    Mode="PrimaryLight"
-                                                                                    Width="14"
-                                                                                    Height="14"
-                                                                                    ToolTipService.InitialShowDelay="0"
-                                                                                    ToolTipService.ShowDuration="99999"
-                                                                                    ToolTipService.Placement="Top">
+                                                            <material:ColorZone DockPanel.Dock="Left"
+                                                                                VerticalAlignment="Center"
+                                                                                CornerRadius="7"
+                                                                                Mode="PrimaryLight"
+                                                                                Width="14"
+                                                                                Height="14"
+                                                                                ToolTipService.InitialShowDelay="0"
+                                                                                ToolTipService.ShowDuration="99999"
+                                                                                ToolTipService.Placement="Top">
                                                                 <material:ColorZone.ToolTip>
                                                                     <TextBlock>
                                                                             When enabled the link has priority<LineBreak/>
@@ -773,18 +782,11 @@
                                                                     </TextBlock>
                                                                 </material:ColorZone.ToolTip>
                                                                 <material:PackIcon Kind="Help"
-                                                                                       Width="10"
-                                                                                       Height="10"
-                                                                                       HorizontalAlignment="Center"
-                                                                                       VerticalAlignment="Center"/>
+                                                                                   Width="10"
+                                                                                   Height="10"
+                                                                                   HorizontalAlignment="Center"
+                                                                                   VerticalAlignment="Center"/>
                                                             </material:ColorZone>
-
-                                                            <CheckBox IsChecked="{Binding Value.Settings.LinkAxisHasPriority}"
-                                                                          Checked="{s:Action OnLinkAxisPriorityChanged}"
-                                                                          Unchecked="{s:Action OnLinkAxisPriorityChanged}"
-                                                                          DockPanel.Dock="Right"
-                                                                          Margin="0 0 5 0"
-                                                                          Content="Priority"/>
                                                         </DockPanel>
                                                     </StackPanel>
                                                 </Grid>
