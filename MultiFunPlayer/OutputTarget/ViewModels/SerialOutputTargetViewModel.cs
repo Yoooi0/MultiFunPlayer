@@ -7,6 +7,7 @@ using Newtonsoft.Json.Linq;
 using NLog;
 using Stylet;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
 using System.IO.Ports;
 
@@ -99,14 +100,14 @@ public class SerialOutputTargetViewModel : ThreadAbstractOutputTarget
 
         try
         {
+            var stopwatch = Stopwatch.StartNew();
             var lastSentValues = DeviceAxis.All.ToDictionary(a => a, _ => float.NaN);
             while (!token.IsCancellationRequested && serialPort?.IsOpen == true)
             {
-                var interval = MathF.Max(1, 1000.0f / UpdateRate);
                 UpdateValues();
 
                 var dirtyValues = Values.Where(x => DeviceAxis.IsDirty(x.Value, lastSentValues[x.Key]));
-                var commands = DeviceAxis.ToString(dirtyValues, (int)interval);
+                var commands = DeviceAxis.ToString(dirtyValues, UpdateInterval);
                 if (serialPort?.IsOpen == true && !string.IsNullOrWhiteSpace(commands))
                 {
                     Logger.Trace("Sending \"{0}\" to \"{1}\"", commands.Trim(), SelectedComPort);
@@ -116,7 +117,8 @@ public class SerialOutputTargetViewModel : ThreadAbstractOutputTarget
                 foreach (var (axis, value) in dirtyValues)
                     lastSentValues[axis] = value;
 
-                Thread.Sleep((int)interval);
+                Sleep(stopwatch);
+                stopwatch.Restart();
             }
         }
         catch (Exception e) when (e is TimeoutException || e is IOException)
@@ -136,6 +138,8 @@ public class SerialOutputTargetViewModel : ThreadAbstractOutputTarget
 
     protected override void HandleSettings(JObject settings, AppSettingsMessageType type)
     {
+        base.HandleSettings(settings, type);
+
         if (type == AppSettingsMessageType.Saving)
         {
             settings[nameof(SelectedComPort)] = new JValue(SelectedComPort);

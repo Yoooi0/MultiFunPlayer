@@ -7,6 +7,7 @@ using Newtonsoft.Json.Linq;
 using NLog;
 using Stylet;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
 using System.IO.Pipes;
 using System.Text;
@@ -55,12 +56,12 @@ public class PipeOutputTargetViewModel : ThreadAbstractOutputTarget
         try
         {
             var buffer = new byte[256];
+            var stopwatch = Stopwatch.StartNew();
             while (!token.IsCancellationRequested && client?.IsConnected == true)
             {
-                var interval = MathF.Max(1, 1000.0f / UpdateRate);
                 UpdateValues();
 
-                var commands = DeviceAxis.ToString(Values, (int)interval);
+                var commands = DeviceAxis.ToString(Values, UpdateInterval);
                 if (client?.IsConnected == true && !string.IsNullOrWhiteSpace(commands))
                 {
                     Logger.Trace("Sending \"{0}\" to \"{1}\"", commands.Trim(), PipeName);
@@ -68,7 +69,8 @@ public class PipeOutputTargetViewModel : ThreadAbstractOutputTarget
                     client?.Write(buffer, 0, encoded);
                 }
 
-                Thread.Sleep((int)interval);
+                Sleep(stopwatch);
+                stopwatch.Restart();
             }
         }
         catch (Exception e)
@@ -83,6 +85,8 @@ public class PipeOutputTargetViewModel : ThreadAbstractOutputTarget
 
     protected override void HandleSettings(JObject settings, AppSettingsMessageType type)
     {
+        base.HandleSettings(settings, type);
+
         if (type == AppSettingsMessageType.Saving)
         {
             if (PipeName != null)

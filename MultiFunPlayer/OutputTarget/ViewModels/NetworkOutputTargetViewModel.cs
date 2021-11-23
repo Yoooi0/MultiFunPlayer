@@ -7,6 +7,7 @@ using Newtonsoft.Json.Linq;
 using NLog;
 using Stylet;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
@@ -67,20 +68,21 @@ public class NetworkOutputTargetViewModel : ThreadAbstractOutputTarget
 
         try
         {
+            var stopwatch = Stopwatch.StartNew();
             using var stream = new StreamWriter(client.GetStream(), Encoding.ASCII);
             while (!token.IsCancellationRequested && client?.Connected == true)
             {
-                var interval = MathF.Max(1, 1000.0f / UpdateRate);
                 UpdateValues();
 
-                var commands = DeviceAxis.ToString(Values, (int)interval);
+                var commands = DeviceAxis.ToString(Values, UpdateInterval);
                 if (client.Connected && !string.IsNullOrWhiteSpace(commands))
                 {
                     Logger.Trace("Sending \"{0}\" to \"{1}\"", commands.Trim(), $"tcp://{Endpoint}");
                     stream.WriteLine(commands);
                 }
 
-                Thread.Sleep((int)interval);
+                Sleep(stopwatch);
+                stopwatch.Restart();
             }
         }
         catch (Exception e)
@@ -111,12 +113,12 @@ public class NetworkOutputTargetViewModel : ThreadAbstractOutputTarget
         {
             var sb = new StringBuilder(256);
             var buffer = new byte[256];
+            var stopwatch = Stopwatch.StartNew();
             while (!token.IsCancellationRequested)
             {
-                var interval = MathF.Max(1, 1000.0f / UpdateRate);
                 UpdateValues();
 
-                var commands = DeviceAxis.ToString(Values, (int)interval);
+                var commands = DeviceAxis.ToString(Values, UpdateInterval);
                 if (!string.IsNullOrWhiteSpace(commands))
                 {
                     Logger.Trace("Sending \"{0}\" to \"{1}\"", commands.Trim(), $"udp://{Endpoint}");
@@ -125,7 +127,8 @@ public class NetworkOutputTargetViewModel : ThreadAbstractOutputTarget
                     client.Send(buffer, encoded);
                 }
 
-                Thread.Sleep((int)interval);
+                Sleep(stopwatch);
+                stopwatch.Restart();
             }
         }
         catch (Exception e)
@@ -137,6 +140,8 @@ public class NetworkOutputTargetViewModel : ThreadAbstractOutputTarget
 
     protected override void HandleSettings(JObject settings, AppSettingsMessageType type)
     {
+        base.HandleSettings(settings, type);
+
         if (type == AppSettingsMessageType.Saving)
         {
             if (Endpoint != null)

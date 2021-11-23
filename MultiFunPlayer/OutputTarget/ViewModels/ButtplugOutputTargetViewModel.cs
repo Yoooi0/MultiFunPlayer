@@ -10,6 +10,7 @@ using NLog;
 using PropertyChanged;
 using Stylet;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Net;
 using System.Net.WebSockets;
 using System.Windows;
@@ -29,6 +30,9 @@ public class ButtplugOutputTargetViewModel : AsyncAbstractOutputTarget
     };
     private SemaphoreSlim _startScanSemaphore;
     private SemaphoreSlim _endScanSemaphore;
+
+    public override int MinimumUpdateInterval => 16;
+    public override int MaximumUpdateInterval => 200;
 
     public override ConnectionStatus Status { get; protected set; }
     public IPEndPoint Endpoint { get; set; } = new IPEndPoint(IPAddress.Loopback, 12345);
@@ -70,7 +74,7 @@ public class ButtplugOutputTargetViewModel : AsyncAbstractOutputTarget
     {
         AvailableDevices = new BindableCollection<ButtplugClientDevice>();
         DeviceSettings = new BindableCollection<ButtplugClientDeviceSettings>();
-        UpdateRate = 20;
+        UpdateInterval = 50;
 
         AvailableDevices.CollectionChanged += (s, e) => DeviceSettings.Refresh();
 
@@ -203,16 +207,16 @@ public class ButtplugOutputTargetViewModel : AsyncAbstractOutputTarget
                 return shouldUpdate;
             }
 
+            var stopwatch = Stopwatch.StartNew();
             while (!token.IsCancellationRequested && client.Connected)
             {
-                var interval = MathF.Max(1, 1000.0f / UpdateRate);
                 UpdateValues();
 
                 foreach (var orphanedSettings in lastSentValuesPerDevice.Keys.Except(AvailableDevices))
                     lastSentValuesPerDevice.Remove(orphanedSettings);
 
                 var dirtySettings = DeviceSettings.Where(CheckDirtyAndUpdate);
-                var tasks = GetDeviceTasks(interval, dirtySettings);
+                var tasks = GetDeviceTasks(UpdateInterval, dirtySettings);
 
                 try
                 {
@@ -224,7 +228,8 @@ public class ButtplugOutputTargetViewModel : AsyncAbstractOutputTarget
                         Logger.Debug(exception, "Buttplug device exception");
                 }
 
-                await Task.Delay((int)interval, token);
+                await Sleep(stopwatch, token);
+                stopwatch.Restart();
             }
         }
         catch (OperationCanceledException) { }
@@ -343,6 +348,8 @@ public class ButtplugOutputTargetViewModel : AsyncAbstractOutputTarget
 
     protected override void HandleSettings(JObject settings, AppSettingsMessageType type)
     {
+        base.HandleSettings(settings, type);
+
         if (type == AppSettingsMessageType.Saving)
         {
             if (Endpoint != null)

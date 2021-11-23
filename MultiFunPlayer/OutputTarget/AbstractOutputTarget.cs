@@ -5,7 +5,10 @@ using Newtonsoft.Json.Linq;
 using PropertyChanged;
 using Stylet;
 using System.ComponentModel;
+using System.Diagnostics;
+using System.Drawing.Text;
 using System.Reflection;
+using System.Windows.Media;
 
 namespace MultiFunPlayer.OutputTarget;
 
@@ -13,6 +16,9 @@ public abstract class AbstractOutputTarget : Screen, IHandle<AppSettingsMessage>
 {
     private readonly IDeviceAxisValueProvider _valueProvider;
     private readonly AsyncManualResetEvent _statusEvent;
+    private float _statsTime;
+    private int _statsCount;
+    private int _statsJitter = int.MinValue;
 
     public string Name => GetType().GetCustomAttribute<DisplayNameAttribute>(inherit: false).DisplayName;
 
@@ -21,7 +27,22 @@ public abstract class AbstractOutputTarget : Screen, IHandle<AppSettingsMessage>
     public bool AutoConnectEnabled { get; set; } = false;
 
     public ObservableConcurrentDictionary<DeviceAxis, DeviceAxisSettings> AxisSettings { get; protected set; }
-    public int UpdateRate { get; set; }
+    public int UpdateInterval { get; set; }
+    public virtual int MinimumUpdateInterval { get; } = 3;
+    public virtual int MaximumUpdateInterval { get; } = 33;
+    public int AverageUpdateRate { get; private set; }
+    public int UpdateRateJitter { get; private set; }
+    public virtual DoubleCollection UpdateIntervalTicks { 
+        get
+        {
+            var ticks = new DoubleCollection();
+            for (var i = MaximumUpdateInterval; i >= MinimumUpdateInterval; i--)
+                ticks.Add(i);
+
+            return ticks;
+        }
+    }
+
     protected Dictionary<DeviceAxis, float> Values { get; }
 
     protected AbstractOutputTarget(IShortcutManager shortcutManager, IEventAggregator eventAggregator, IDeviceAxisValueProvider valueProvider)
@@ -32,7 +53,7 @@ public abstract class AbstractOutputTarget : Screen, IHandle<AppSettingsMessage>
 
         Values = DeviceAxis.All.ToDictionary(a => a, a => a.DefaultValue);
         AxisSettings = new ObservableConcurrentDictionary<DeviceAxis, DeviceAxisSettings>(DeviceAxis.All.ToDictionary(a => a, _ => new DeviceAxisSettings()));
-        UpdateRate = 60;
+        UpdateInterval = 10;
 
         PropertyChanged += (s, e) =>
         {
@@ -84,6 +105,25 @@ public abstract class AbstractOutputTarget : Screen, IHandle<AppSettingsMessage>
         }
     }
 
+    protected void UpdateStats(Stopwatch stopwatch)
+    {
+        var elapsed = (float)stopwatch.Elapsed.TotalSeconds;
+        _statsTime += elapsed;
+        _statsCount++;
+
+        var updateRateDiff = (int)MathF.Round(MathF.Abs(1000f / UpdateInterval - 1 / elapsed));
+        _statsJitter = Math.Max(_statsJitter, updateRateDiff);
+
+        if (_statsTime > 0.25f)
+        {
+            UpdateRateJitter = _statsJitter;
+            AverageUpdateRate = (int)MathF.Round(1 / (_statsTime / _statsCount));
+            _statsTime = 0;
+            _statsCount = 0;
+            _statsJitter = int.MinValue;
+        }
+    }
+
     protected abstract void HandleSettings(JObject settings, AppSettingsMessageType type);
     public void Handle(AppSettingsMessage message)
     {
@@ -93,7 +133,7 @@ public abstract class AbstractOutputTarget : Screen, IHandle<AppSettingsMessage>
              || !message.Settings.TryGetObject(out var settings, "OutputTarget", Name))
                 return;
 
-            settings[nameof(UpdateRate)] = new JValue(UpdateRate);
+            settings[nameof(UpdateInterval)] = new JValue(UpdateInterval);
             settings[nameof(AxisSettings)] = JObject.FromObject(AxisSettings);
             settings[nameof(AutoConnectEnabled)] = new JValue(AutoConnectEnabled);
 
@@ -104,8 +144,8 @@ public abstract class AbstractOutputTarget : Screen, IHandle<AppSettingsMessage>
             if (!message.Settings.TryGetObject(out var settings, "OutputTarget", Name))
                 return;
 
-            if (settings.TryGetValue<int>(nameof(UpdateRate), out var updateRate))
-                UpdateRate = updateRate;
+            if (settings.TryGetValue<int>(nameof(UpdateInterval), out var updateInterval))
+                UpdateInterval = updateInterval;
             if (settings.TryGetValue<Dictionary<DeviceAxis, DeviceAxisSettings>>(nameof(AxisSettings), out var axisSettingsMap))
                 foreach (var (axis, axisSettings) in axisSettingsMap)
                     AxisSettings[axis] = axisSettings;
@@ -149,7 +189,12 @@ public abstract class AbstractOutputTarget : Screen, IHandle<AppSettingsMessage>
         }
 
         #region UpdateRate
-        s.RegisterAction($"{Name}::UpdateRate::Set", b => b.WithSetting<int>(s => s.WithLabel("Update rate").WithStringFormat("{}{0} Hz")).WithCallback((_, updateRate) => UpdateRate = updateRate));
+        s.RegisterAction($"{Name}::UpdateRate::Set", b => b.WithSetting<int>(s => s.WithLabel("Update rate").WithDescription("Will be set to closest\npossible value.").WithStringFormat("{}{0} Hz"))
+                                                           .WithCallback((_, updateRate) =>
+                                                           {
+                                                               var interval = 1000f / updateRate;
+                                                               UpdateInterval = (int) UpdateIntervalTicks.OrderBy(x => Math.Abs(interval - x)).First();
+                                                           }));
         #endregion
 
         #region AutoConnectEnabled
@@ -288,6 +333,8 @@ public abstract class ThreadAbstractOutputTarget : AbstractOutputTarget
     private CancellationTokenSource _cancellationSource;
     private Thread _thread;
 
+    public bool UsePreciseSleep { get; set; }
+
     protected ThreadAbstractOutputTarget(IShortcutManager shortcutManager, IEventAggregator eventAggregator, IDeviceAxisValueProvider valueProvider)
         : base(shortcutManager, eventAggregator, valueProvider) { }
 
@@ -330,6 +377,49 @@ public abstract class ThreadAbstractOutputTarget : AbstractOutputTarget
         _thread = null;
 
         Status = ConnectionStatus.Disconnected;
+    }
+
+    protected override void HandleSettings(JObject settings, AppSettingsMessageType type)
+    {
+        if (type == AppSettingsMessageType.Saving)
+        {
+            settings[nameof(UsePreciseSleep)] = JValue.FromObject(UsePreciseSleep);
+        }
+        else if (type == AppSettingsMessageType.Loading)
+        {
+            if (settings.TryGetValue<bool>(nameof(UsePreciseSleep), out var usePreciseSleep))
+                UsePreciseSleep = usePreciseSleep;
+        }
+    }
+
+    protected void Sleep(Stopwatch stopwatch)
+    {
+        static float ElapsedMiliseconds(Stopwatch stopwatch)
+            => stopwatch.ElapsedTicks * 1000f / Stopwatch.Frequency;
+
+        static void SleepPrecise(Stopwatch stopwatch, float desiredMs)
+        {
+            while (true)
+            {
+                var elapsed = ElapsedMiliseconds(stopwatch);
+                var diff = desiredMs - elapsed;
+                if (diff <= 0f)
+                    break;
+
+                if (diff < 1f) Thread.SpinWait(10);
+                else if (diff < 2f) Thread.SpinWait(100);
+                else if (diff < 5f) Thread.Sleep(1);
+                else if (diff < 15f) Thread.Sleep(5);
+                else Thread.Sleep(10);
+            }
+        }
+
+        if (!UsePreciseSleep)
+            Thread.Sleep((int)MathF.Max(1, UpdateInterval - ElapsedMiliseconds(stopwatch)));
+        else
+            SleepPrecise(stopwatch, UpdateInterval);
+
+        UpdateStats(stopwatch);
     }
 
     protected override async void Dispose(bool disposing)
@@ -385,6 +475,17 @@ public abstract class AsyncAbstractOutputTarget : AbstractOutputTarget
         _task = null;
 
         Status = ConnectionStatus.Disconnected;
+    }
+
+    protected override void HandleSettings(JObject settings, AppSettingsMessageType type) { }
+
+    protected async Task Sleep(Stopwatch stopwatch, CancellationToken token)
+    {
+        static float ElapsedMiliseconds(Stopwatch stopwatch)
+            => stopwatch.ElapsedTicks * 1000f / Stopwatch.Frequency;
+
+        await Task.Delay((int)MathF.Max(1, UpdateInterval - ElapsedMiliseconds(stopwatch)), token);
+        UpdateStats(stopwatch);
     }
 
     protected override async void Dispose(bool disposing)
