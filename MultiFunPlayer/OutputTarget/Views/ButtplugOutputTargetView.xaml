@@ -119,6 +119,7 @@
                             VerticalAlignment="Center">
                     <TextBlock VerticalAlignment="Center" Text="Update rate:" Margin="0 0 10 0"/>
                     <Slider Value="{Binding UpdateInterval, Mode=TwoWay}"
+                            Style="{StaticResource MaterialDesignReversedSlider}"
                             HorizontalAlignment="Stretch"
                             VerticalAlignment="Top"
                             Margin="0 0 10 0"
@@ -127,8 +128,9 @@
                             Maximum="{Binding MaximumUpdateInterval}"
                             Ticks="{Binding UpdateIntervalTicks}" 
                             IsDirectionReversed="True"
-                            IsSnapToTickEnabled="True" 
-                            Orientation="Horizontal"/>
+                            IsSnapToTickEnabled="True"
+                            Orientation="Horizontal"
+                            material:SliderAssist.OnlyShowFocusVisualWhileDragging="True"/>
                     <TextBlock VerticalAlignment="Center" 
                                HorizontalAlignment="Right" 
                                Margin="0 0 5 0"
@@ -188,12 +190,13 @@
                     <DataTemplate>
                         <DockPanel LastChildFill="True">
                             <TextBlock DockPanel.Dock="Left" 
-                                           VerticalAlignment="Center" 
-                                           Text="{Binding Key}"/>
-                            <metro:RangeSlider Style="{StaticResource MaterialDesignRangeSlider}" 
-                                                   DockPanel.Dock="Right"
-                                                   HorizontalAlignment="Stretch"
-                                                   Margin="5 0 10 0"
+                                       VerticalAlignment="Center" 
+                                       Text="{Binding Key}"/>
+                            <Canvas DockPanel.Dock="Right" 
+                                    HorizontalAlignment="Stretch"
+                                    Margin="0 0 20 0">
+                                <metro:RangeSlider Style="{StaticResource MaterialDesignCompactRangeSlider}"
+                                                   Width="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType={x:Type Canvas}}}"
                                                    Minimum="0" 
                                                    Maximum="100" 
                                                    MinRangeWidth="10" 
@@ -202,26 +205,27 @@
                                                    UseLayoutRounding="False"
                                                    LowerValue="{Binding Value.Minimum, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
                                                    UpperValue="{Binding Value.Maximum, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
-                                <metro:RangeSlider.AutoToolTipLowerValueTemplate>
-                                    <DataTemplate>
-                                        <TextBlock HorizontalAlignment="Right" Text="{Binding StringFormat='{}{0:D}%'}" />
-                                    </DataTemplate>
-                                </metro:RangeSlider.AutoToolTipLowerValueTemplate>
-                                <metro:RangeSlider.AutoToolTipUpperValueTemplate>
-                                    <DataTemplate>
-                                        <TextBlock HorizontalAlignment="Right" Text="{Binding StringFormat='{}{0:D}%'}" />
-                                    </DataTemplate>
-                                </metro:RangeSlider.AutoToolTipUpperValueTemplate>
-                                <metro:RangeSlider.AutoToolTipRangeValuesTemplate>
-                                    <DataTemplate DataType="mah:RangeSliderAutoTooltipValues">
-                                        <StackPanel Orientation="Horizontal">
-                                            <TextBlock Text="{Binding LowerValue, StringFormat='{}{0:D}%'}" />
-                                            <TextBlock Text=" - " />
-                                            <TextBlock Text="{Binding UpperValue, StringFormat='{}{0:D}%'}" />
-                                        </StackPanel>
-                                    </DataTemplate>
-                                </metro:RangeSlider.AutoToolTipRangeValuesTemplate>
-                            </metro:RangeSlider>
+                                    <metro:RangeSlider.AutoToolTipLowerValueTemplate>
+                                        <DataTemplate>
+                                            <TextBlock HorizontalAlignment="Right" Text="{Binding StringFormat='{}{0:D}%'}" />
+                                        </DataTemplate>
+                                    </metro:RangeSlider.AutoToolTipLowerValueTemplate>
+                                    <metro:RangeSlider.AutoToolTipUpperValueTemplate>
+                                        <DataTemplate>
+                                            <TextBlock HorizontalAlignment="Right" Text="{Binding StringFormat='{}{0:D}%'}" />
+                                        </DataTemplate>
+                                    </metro:RangeSlider.AutoToolTipUpperValueTemplate>
+                                    <metro:RangeSlider.AutoToolTipRangeValuesTemplate>
+                                        <DataTemplate DataType="mah:RangeSliderAutoTooltipValues">
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBlock Text="{Binding LowerValue, StringFormat='{}{0:D}%'}" />
+                                                <TextBlock Text=" - " />
+                                                <TextBlock Text="{Binding UpperValue, StringFormat='{}{0:D}%'}" />
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </metro:RangeSlider.AutoToolTipRangeValuesTemplate>
+                                </metro:RangeSlider>
+                            </Canvas>
                         </DockPanel>
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>

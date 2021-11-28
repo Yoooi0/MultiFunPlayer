@@ -154,7 +154,7 @@
                                             <ToggleButton IsChecked="{Binding SyncSettings.SyncOnVideoResume}"/>
                                         </DockPanel>
 
-                                        <DockPanel LastChildFill="False" Margin="0 0 0 20">
+                                        <DockPanel LastChildFill="False" Margin="0 0 0 10">
                                             <TextBlock Text="Seek:" Width="120"/>
                                             <ToggleButton IsChecked="{Binding SyncSettings.SyncOnSeek}"/>
                                         </DockPanel>
@@ -163,12 +163,12 @@
                                             <Slider DockPanel.Dock="Right"
                                                     Value="{Binding SyncSettings.Duration}"
                                                     Style="{StaticResource MaterialDesignDiscreteSlider}"
-                                                    Margin="0 -38 0 0"
                                                     Minimum="2" 
                                                     Maximum="8"
                                                     TickFrequency="0.5"
                                                     VerticalAlignment="Center"
-                                                    IsSnapToTickEnabled="True"/>
+                                                    IsSnapToTickEnabled="True"
+                                                    material:SliderAssist.OnlyShowFocusVisualWhileDragging="True"/>
                                         </DockPanel>
                                     </StackPanel>
                                 </Grid>
@@ -498,7 +498,8 @@
                                 TickFrequency="0.01"
                                 IsSnapToTickEnabled="True"
                                 MouseDoubleClick="{s:Action OnSliderDoubleClick}"
-                                ValueChanged="{s:Action OnOffsetSliderValueChanged}"/>
+                                ValueChanged="{s:Action OnOffsetSliderValueChanged}"
+                                material:SliderAssist.OnlyShowFocusVisualWhileDragging="True"/>
                     </DockPanel>
                     <controls:KeyframesHeatmapGradient Height="35" 
                                                        Cursor="Hand"
@@ -507,7 +508,8 @@
                                                        Duration="{Binding VideoDuration, Mode=OneWay}"
                                                        Position="{Binding CurrentPosition, Mode=OneWay}"
                                                        BucketCount="{Binding HeatmapBucketCount}"
-                                                       ShowStrokeLength="{Binding HeatmapShowStrokeLength}">
+                                                       ShowStrokeLength="{Binding HeatmapShowStrokeLength}"
+                                                       Panel.ZIndex="-1">
                         <controls:KeyframesHeatmapGradient.ContextMenu>
                             <ContextMenu>
                                 <MenuItem Header="Show stroke length" 
@@ -525,7 +527,8 @@
                                         <DataTemplate>
                                             <Slider Minimum="100"
                                                     Maximum="{Binding Source={x:Static controls:KeyframesHeatmapGradient.MaxBucketCount}}"
-                                                    Value="{Binding PlacementTarget.DataContext.HeatmapBucketCount, RelativeSource={RelativeSource FindAncestor, AncestorType=ContextMenu}}"/>
+                                                    Value="{Binding PlacementTarget.DataContext.HeatmapBucketCount, RelativeSource={RelativeSource FindAncestor, AncestorType=ContextMenu}}"
+                                                    material:SliderAssist.OnlyShowFocusVisualWhileDragging="True"/>
                                         </DataTemplate>
                                     </MenuItem.HeaderTemplate>
                                 </MenuItem>
@@ -834,13 +837,13 @@
                                                                 <Slider DockPanel.Dock="Left"
                                                                         Value="{Binding Value.Settings.MotionProviderBlend}"    
                                                                         Style="{StaticResource MaterialDesignDiscreteSlider}"
-                                                                        Margin="0 -38 0 0"
                                                                         Minimum="0" 
                                                                         Maximum="100"
                                                                         TickFrequency="1"
                                                                         VerticalAlignment="Center"
                                                                         IsSnapToTickEnabled="True"
-                                                                        MouseDoubleClick="{s:Action OnSliderDoubleClick}"/>
+                                                                        MouseDoubleClick="{s:Action OnSliderDoubleClick}"
+                                                                        material:SliderAssist.OnlyShowFocusVisualWhileDragging="True"/>
                                                             </DockPanel>
 
                                                             <Separator DockPanel.Dock="Top" Margin="-10 0 -10 20"/>
@@ -948,13 +951,13 @@
                                                             <Slider DockPanel.Dock="Left"
                                                                         Value="{Binding Value.Settings.AutoHomeDelay}"    
                                                                         Style="{StaticResource MaterialDesignDiscreteSlider}"
-                                                                        Margin="0 -38 0 0"
                                                                         Minimum="0" 
                                                                         Maximum="60"
                                                                         TickFrequency="1"
                                                                         VerticalAlignment="Center"
                                                                         IsSnapToTickEnabled="True"
-                                                                        MouseDoubleClick="{s:Action OnSliderDoubleClick}"/>
+                                                                        MouseDoubleClick="{s:Action OnSliderDoubleClick}"
+                                                                        material:SliderAssist.OnlyShowFocusVisualWhileDragging="True"/>
                                                         </DockPanel>
 
                                                         <DockPanel>
@@ -967,13 +970,13 @@
                                                             <Slider DockPanel.Dock="Left"
                                                                         Value="{Binding Value.Settings.AutoHomeDuration}"    
                                                                         Style="{StaticResource MaterialDesignDiscreteSlider}"
-                                                                        Margin="0 -38 0 0"
                                                                         Minimum="0" 
                                                                         Maximum="10"
                                                                         TickFrequency="0.25"
                                                                         VerticalAlignment="Center"
                                                                         IsSnapToTickEnabled="True"
-                                                                        MouseDoubleClick="{s:Action OnSliderDoubleClick}"/>
+                                                                        MouseDoubleClick="{s:Action OnSliderDoubleClick}"
+                                                                        material:SliderAssist.OnlyShowFocusVisualWhileDragging="True"/>
                                                         </DockPanel>
                                                     </StackPanel>
                                                 </Grid>
@@ -1040,7 +1043,8 @@
                                                 TickFrequency="0.01"
                                                 IsSnapToTickEnabled="True"
                                                 MouseDoubleClick="{s:Action OnSliderDoubleClick}"
-                                                ValueChanged="{s:Action OnOffsetSliderValueChanged}"/>
+                                                ValueChanged="{s:Action OnOffsetSliderValueChanged}"
+                                                material:SliderAssist.OnlyShowFocusVisualWhileDragging="True"/>
                                     </DockPanel>
                                 </StackPanel>
                             </Expander>
@@ -1079,7 +1083,9 @@
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
                                 <DockPanel Margin="0" LastChildFill="True">
-                                    <TextBlock DockPanel.Dock="Left" Margin="0 0 5 0" Text="{Binding Key, Mode=OneWay}"/>
+                                    <TextBlock DockPanel.Dock="Left" Margin="0 0 5 0" 
+                                               Width="15" 
+                                               Text="{Binding Key, Mode=OneWay}"/>
                                     <ProgressBar material:TransitionAssist.DisableTransitions="True"
                                                  DockPanel.Dock="Right"
                                                  Minimum="0"
