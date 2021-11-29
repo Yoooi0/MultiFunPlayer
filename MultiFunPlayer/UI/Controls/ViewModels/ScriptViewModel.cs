@@ -234,17 +234,19 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
 
             bool UpdateMotionProvider(DeviceAxis axis, AxisState state, AxisSettings settings)
             {
-                if (state.InsideScript && !IsPlaying)
+                var shouldUpdate = (state.InsideScript && !IsPlaying && settings.UpdateMotionProviderWhenPaused)
+                                || (!state.InsideScript && settings.UpdateMotionProviderWithoutScript)
+                                || (IsPlaying && state.InsideScript);
+
+                if (!shouldUpdate || settings.SelectedMotionProviderInstance == null)
                     return false;
+
+                var motionProvider = settings.SelectedMotionProviderInstance;
+                motionProvider.Update((float) stopwatch.Elapsed.TotalSeconds);
 
                 var lastValue = state.Value;
-                var motionProvider = settings.SelectedMotionProviderInstance;
-                if (motionProvider == null)
-                    return false;
-
-                motionProvider.Update((float) stopwatch.Elapsed.TotalSeconds);
                 var newValue = motionProvider.Value;
-                if (state.InsideScript)
+                if (IsPlaying && state.InsideScript)
                     newValue = MathUtils.Lerp(state.Value, newValue, MathUtils.Clamp01(settings.MotionProviderBlend / 100));
 
                 state.Value = newValue;
@@ -359,8 +361,8 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
 
         Logger.Info("Received VideoPlayingMessage [IsPlaying: {0}]", message.IsPlaying);
 
-        if (!IsPlaying && message.IsPlaying)
-            if (SyncSettings.SyncOnVideoResume)
+        if (IsPlaying != message.IsPlaying)
+            if (SyncSettings.SyncOnVideoPlayPause)
                 ResetSync();
 
         IsPlaying = message.IsPlaying;
@@ -694,7 +696,7 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
     {
         axes ??= DeviceAxis.All;
 
-        Logger.Debug("Resetting sync");
+        Logger.Debug("Resetting sync [Axes: {list}]", axes);
 
         foreach (var axis in axes)
         {
@@ -923,6 +925,16 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
 
         var (axis, _) = pair;
         ReloadScript(axis);
+    }
+
+    [SuppressPropertyChangedWarnings]
+    public void OnPreviewSelectedMotionProviderChanged(SelectionChangedEventArgs e)
+    {
+        if (e.Source is not FrameworkElement element || element.DataContext is not KeyValuePair<DeviceAxis, AxisModel> pair)
+            return;
+
+        var (axis, _) = pair;
+        ResetSync(true, axis);
     }
 
     [SuppressPropertyChangedWarnings]
@@ -1405,6 +1417,8 @@ public class AxisSettings : PropertyChangedBase
     [JsonProperty] public float Offset { get; set; } = 0;
     [JsonProperty] public bool Bypass { get; set; } = false;
     [JsonProperty] public float MotionProviderBlend { get; set; } = 100;
+    [JsonProperty] public bool UpdateMotionProviderWhenPaused { get; set; } = false;
+    [JsonProperty] public bool UpdateMotionProviderWithoutScript { get; set; } = false;
 
     [JsonProperty]
     [AlsoNotifyFor(nameof(SelectedMotionProviderInstance))]
@@ -1422,7 +1436,7 @@ public class SyncSettings : PropertyChangedBase
 {
     [JsonProperty] public float Duration { get; set; } = 4;
     [JsonProperty] public bool SyncOnVideoFileChanged { get; set; } = true;
-    [JsonProperty] public bool SyncOnVideoResume { get; set; } = true;
+    [JsonProperty] public bool SyncOnVideoPlayPause { get; set; } = true;
     [JsonProperty] public bool SyncOnSeek { get; set; } = true;
 }
 

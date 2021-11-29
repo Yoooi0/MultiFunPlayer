@@ -9,6 +9,7 @@
              xmlns:ui="clr-namespace:MultiFunPlayer.UI"
              xmlns:converters="clr-namespace:MultiFunPlayer.UI.Converters"
              xmlns:controls="clr-namespace:MultiFunPlayer.UI.Controls"
+             xmlns:behaviours="clr-namespace:MultiFunPlayer.UI.Behaviours"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
     <UserControl.Resources>
@@ -150,8 +151,8 @@
                                         </DockPanel>
 
                                         <DockPanel LastChildFill="False" Margin="0 0 0 10">
-                                            <TextBlock Text="Video resume:" Width="120"/>
-                                            <ToggleButton IsChecked="{Binding SyncSettings.SyncOnVideoResume}"/>
+                                            <TextBlock Text="Video play/pause:" Width="120"/>
+                                            <ToggleButton IsChecked="{Binding SyncSettings.SyncOnVideoPlayPause}"/>
                                         </DockPanel>
 
                                         <DockPanel LastChildFill="False" Margin="0 0 0 10">
@@ -824,12 +825,13 @@
                                                                           material:TextFieldAssist.HasClearButton="True" 
                                                                           DisplayMemberPath="Name"
                                                                           ItemsSource="{Binding Value.Settings.MotionProviders}" 
-                                                                          SelectedValue="{Binding Value.Settings.SelectedMotionProvider}"
+                                                                          SelectedValue="{Binding Value.Settings.SelectedMotionProvider, UpdateSourceTrigger=Explicit}"
+                                                                          behaviours:ComboBoxAssist.PreviewSelectionChanged="{s:Action OnPreviewSelectedMotionProviderChanged}"
                                                                           SelectedValuePath="Name"/>
                                                             </DockPanel>
 
                                                             <DockPanel DockPanel.Dock="Top">
-                                                                <TextBlock Text="Blending:" 
+                                                                <TextBlock Text="Script blending:" 
                                                                            DockPanel.Dock="Left"
                                                                            Margin="0 0 10 0"
                                                                            VerticalAlignment="Center"/>
@@ -846,6 +848,28 @@
                                                                         material:SliderAssist.OnlyShowFocusVisualWhileDragging="True"/>
                                                             </DockPanel>
 
+                                                            <DockPanel DockPanel.Dock="Top" LastChildFill="False">
+                                                                <TextBlock Text="Update when paused:" 
+                                                                           DockPanel.Dock="Left"
+                                                                           Margin="0 0 10 0"
+                                                                           Width="125"
+                                                                           VerticalAlignment="Center"/>
+
+                                                                <ToggleButton Style="{StaticResource MaterialDesignSwitchToggleButton}"
+                                                                              IsChecked="{Binding Value.Settings.UpdateMotionProviderWhenPaused}"/>
+                                                            </DockPanel>
+                                                            
+                                                            <DockPanel DockPanel.Dock="Top" LastChildFill="False">
+                                                                <TextBlock Text="Update without script:" 
+                                                                           DockPanel.Dock="Left"
+                                                                           Margin="0 0 10 0"
+                                                                           Width="125"
+                                                                           VerticalAlignment="Center"/>
+
+                                                                <ToggleButton Style="{StaticResource MaterialDesignSwitchToggleButton}"
+                                                                              IsChecked="{Binding Value.Settings.UpdateMotionProviderWithoutScript}"/>
+                                                            </DockPanel>
+                                                            
                                                             <Separator DockPanel.Dock="Top" Margin="-10 0 -10 20"/>
                                                             <ContentControl s:View.Model="{Binding Value.Settings.SelectedMotionProviderInstance}"
                                                                             DockPanel.Dock="Bottom"/>
