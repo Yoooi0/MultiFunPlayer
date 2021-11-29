@@ -105,6 +105,9 @@ public class UriToLocalMediaPathModifierViewModel : AbstractMediaPathModifier
 
     private IPEndPoint FindEndpoint(Uri uri)
     {
+        if (uri.IsFile)
+            return null;
+
         if (IPEndPoint.TryParse(uri.Authority, out var endpoint))
             return endpoint;
 
