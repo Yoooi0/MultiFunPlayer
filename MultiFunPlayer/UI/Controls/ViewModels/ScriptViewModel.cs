@@ -137,7 +137,7 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                     var oldValue = state.Value;
                     if (!settings.Bypass)
                     {
-                        state.Dirty |= IsPlaying && UpdateScript(axis, state, settings);
+                        state.Dirty |= UpdateScript(axis, state, settings);
                         state.Dirty |= UpdateMotionProvider(axis, state, settings);
                     }
 
@@ -177,6 +177,9 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
 
             bool UpdateScript(DeviceAxis axis, AxisState state, AxisSettings settings)
             {
+                if (!IsPlaying)
+                    return false;
+
                 if (state.AfterScript)
                     return false;
 
@@ -235,14 +238,12 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                     return false;
 
                 var lastValue = state.Value;
-                var newValue = default(float);
-
                 var motionProvider = settings.SelectedMotionProviderInstance;
                 if (motionProvider == null)
                     return false;
 
                 motionProvider.Update((float) stopwatch.Elapsed.TotalSeconds);
-                newValue = motionProvider.Value;
+                var newValue = motionProvider.Value;
                 if (state.InsideScript)
                     newValue = MathUtils.Lerp(state.Value, newValue, MathUtils.Clamp01(settings.MotionProviderBlend / 100));
 
@@ -264,24 +265,20 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                 if (!settings.AutoHomeEnabled)
                     return false;
 
+                var lastValue = state.Value;
                 if (settings.AutoHomeDuration < 0.0001f)
                 {
-                    var lastValue = state.Value;
                     state.Value = axis.DefaultValue;
-                    return lastValue != state.Value;
+                    return state.Value != lastValue;
                 }
 
                 autoHomeTimes[axis] += (float)stopwatch.Elapsed.TotalSeconds;
+                var t = (autoHomeTimes[axis] - settings.AutoHomeDelay) / settings.AutoHomeDuration;
+                if (t < 0 || t > 1)
+                    return false;
 
-                var t = autoHomeTimes[axis] - settings.AutoHomeDelay;
-                if (t >= 0 && t / settings.AutoHomeDuration <= 1)
-                {
-                    var lastValue = state.Value;
-                    state.Value = MathUtils.Lerp(state.Value, axis.DefaultValue, MathF.Pow(2, 10 * (t / settings.AutoHomeDuration - 1)));
-                    return lastValue != state.Value;
-                }
-
-                return false;
+                state.Value = MathUtils.Lerp(state.Value, axis.DefaultValue, MathF.Pow(2, 10 * (t - 1)));
+                return state.Value != lastValue;
             }
         }
 
@@ -871,7 +868,7 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         var state = AxisStates[axis];
         lock (state)
         {
-            float lastValue = state.Value;
+            var lastValue = state.Value;
 
             if (offset)
             {
