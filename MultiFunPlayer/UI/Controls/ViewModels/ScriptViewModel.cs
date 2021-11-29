@@ -526,6 +526,10 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         foreach (var axis in axes)
         {
             Logger.Debug("Reset {0} script", axis);
+
+            if (AxisModels[axis].Script != null)
+                ResetSync(true, axis);
+
             SetScript(axis, null);
         }
     }
