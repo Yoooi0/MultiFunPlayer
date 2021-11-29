@@ -941,7 +941,8 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
             return;
 
         var (axis, _) = pair;
-        SetAxisBypass(axis, button.IsChecked.GetValueOrDefault());
+        if(button.IsChecked.GetValueOrDefault(true))
+            ResetSync(true, axis);
     }
 
     [SuppressPropertyChangedWarnings]
