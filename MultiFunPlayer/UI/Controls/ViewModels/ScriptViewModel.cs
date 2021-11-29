@@ -226,7 +226,7 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                     newValue = 1 - newValue;
 
                 state.Value = newValue;
-                return lastValue != newValue;
+                return true;
             }
 
             bool UpdateMotionProvider(DeviceAxis axis, AxisState state, AxisSettings settings)
@@ -247,7 +247,7 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                     newValue = MathUtils.Lerp(state.Value, newValue, MathUtils.Clamp01(settings.MotionProviderBlend / 100));
 
                 state.Value = newValue;
-                return lastValue != newValue;
+                return true;
             }
 
             bool UpdateAutoHome(DeviceAxis axis, AxisState state, AxisSettings settings)
