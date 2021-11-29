@@ -1336,7 +1336,12 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         #endregion
 
         #region Axis::MotionProvider
-        var motionProviderNames = new MotionProviderCollection().Select(p => p.Name).ToHashSet();
+        var motionProviderNames = Assembly.GetExecutingAssembly()
+                                          .GetTypes()
+                                          .Where(t => t.IsClass && !t.IsAbstract)
+                                          .Where(t => typeof(IMotionProvider).IsAssignableFrom(t))
+                                          .Select(t => t.GetCustomAttribute<DisplayNameAttribute>(inherit: false).DisplayName)
+                                          .ToHashSet();
         s.RegisterAction("Axis::MotionProvider::Set",
             b => b.WithSetting<DeviceAxis>(p => p.WithLabel("Target axis").WithItemsSource(DeviceAxis.All))
                   .WithSetting<string>(p => p.WithLabel("Motion provider").WithItemsSource(motionProviderNames))
