@@ -306,9 +306,6 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
             {
                 lock (state)
                 {
-                    if (state.InsideScript && !IsPlaying)
-                        continue;
-
                     if (state.SyncTime >= SyncSettings.Duration)
                         continue;
 
