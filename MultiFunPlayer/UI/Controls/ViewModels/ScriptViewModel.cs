@@ -72,11 +72,8 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         _mediaResourceFactory = mediaResourceFactory;
 
         AxisModels = new ObservableConcurrentDictionary<DeviceAxis, AxisModel>(DeviceAxis.All.ToDictionary(a => a, _ => new AxisModel()));
-        VideoPathModifierTypes = Assembly.GetExecutingAssembly()
-                                         .GetTypes()
-                                         .Where(t => t.IsClass && !t.IsAbstract)
-                                         .Where(t => typeof(IMediaPathModifier).IsAssignableFrom(t))
-                                         .ToDictionary(t => t.GetCustomAttribute<DisplayNameAttribute>(inherit: false).DisplayName, t => t);
+        VideoPathModifierTypes = ReflectionUtils.FindImplementations<IMediaPathModifier>()
+                                                .ToDictionary(t => t.GetCustomAttribute<DisplayNameAttribute>(inherit: false).DisplayName, t => t);
 
         ScriptLibraries = new BindableCollection<ScriptLibrary>();
         SyncSettings = new SyncSettings();
@@ -1336,12 +1333,9 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         #endregion
 
         #region Axis::MotionProvider
-        var motionProviderNames = Assembly.GetExecutingAssembly()
-                                          .GetTypes()
-                                          .Where(t => t.IsClass && !t.IsAbstract)
-                                          .Where(t => typeof(IMotionProvider).IsAssignableFrom(t))
-                                          .Select(t => t.GetCustomAttribute<DisplayNameAttribute>(inherit: false).DisplayName)
-                                          .ToHashSet();
+        var motionProviderNames = ReflectionUtils.FindImplementations<IMotionProvider>()
+                                                 .Select(t => t.GetCustomAttribute<DisplayNameAttribute>(inherit: false).DisplayName)
+                                                 .ToHashSet();
         s.RegisterAction("Axis::MotionProvider::Set",
             b => b.WithSetting<DeviceAxis>(p => p.WithLabel("Target axis").WithItemsSource(DeviceAxis.All))
                   .WithSetting<string>(p => p.WithLabel("Motion provider").WithItemsSource(motionProviderNames))

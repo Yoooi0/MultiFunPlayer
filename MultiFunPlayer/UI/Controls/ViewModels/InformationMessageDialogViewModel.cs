@@ -1,4 +1,5 @@
 ﻿using MaterialDesignThemes.Wpf;
+using MultiFunPlayer.Common;
 using Stylet;
 using System.Diagnostics;
 using System.Reflection;
@@ -8,7 +9,7 @@ namespace MultiFunPlayer.UI.Controls.ViewModels;
 
 public class InformationMessageDialogViewModel : Screen
 {
-    public string VersionText => $"v{Assembly.GetEntryAssembly().GetName().Version}";
+    public string VersionText => $"v{ReflectionUtils.AssemblyVersion}";
     public bool ShowCheckbox { get; }
     public bool DontShowAgain { get; set; }
 

@@ -1,4 +1,5 @@
-﻿using System.Collections.ObjectModel;
+﻿using MultiFunPlayer.Common;
+using System.Collections.ObjectModel;
 using System.Reflection;
 
 namespace MultiFunPlayer.MotionProvider;
@@ -13,11 +14,7 @@ public class MotionProviderCollection : Collection<IMotionProvider>
     {
         _dictionary = new Dictionary<string, IMotionProvider>();
 
-        var types = Assembly.GetExecutingAssembly()
-                            .GetTypes()
-                            .Where(t => t.IsClass && !t.IsAbstract)
-                            .Where(t => typeof(IMotionProvider).IsAssignableFrom(t));
-
+        var types = ReflectionUtils.FindImplementations<IMotionProvider>();
         foreach (var type in types)
             Add((IMotionProvider)Activator.CreateInstance(type));
     }
