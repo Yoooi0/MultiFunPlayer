@@ -442,6 +442,7 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
 
             if (settings.TryGetValue<List<IMediaPathModifier>>(nameof(VideoPathModifiers), new JsonSerializerSettings() { TypeNameHandling = TypeNameHandling.Objects }, out var videoPathModifiers))
             {
+                VideoPathModifiers.Clear();
                 foreach (var modifier in videoPathModifiers)
                     VideoPathModifiers.Add(modifier);
             }
