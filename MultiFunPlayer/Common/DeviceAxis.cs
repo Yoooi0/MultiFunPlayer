@@ -29,9 +29,12 @@ public sealed class DeviceAxis
     private static Dictionary<string, DeviceAxis> _axes;
     public static IReadOnlyCollection<DeviceAxis> All => _axes.Values;
 
+    public static DeviceAxis Parse(string name) => _axes.GetValueOrDefault(name, null);
+    public static IEnumerable<DeviceAxis> Parse(params string[] names) => names.Select(n => Parse(n));
+
     public static bool TryParse(string name, out DeviceAxis axis)
     {
-        axis = _axes.GetValueOrDefault(name, null);
+        axis = Parse(name);
         return axis != null;
     }
 
