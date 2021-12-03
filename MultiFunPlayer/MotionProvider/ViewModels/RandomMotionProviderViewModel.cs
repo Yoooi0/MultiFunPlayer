@@ -11,9 +11,6 @@ public class RandomMotionProviderViewModel : AbstractMotionProvider
     private readonly OpenSimplex _noise;
     private float _time;
 
-    [JsonProperty] public float Speed { get; set; } = 1;
-    [JsonProperty] public float Minimum { get; set; } = 0;
-    [JsonProperty] public float Maximum { get; set; } = 100;
     [JsonProperty] public int Seed { get; set; } = 0;
 
     public RandomMotionProviderViewModel()

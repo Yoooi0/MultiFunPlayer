@@ -18,9 +18,6 @@ public class LoopingScriptMotionProviderViewModel : AbstractMotionProvider
 
     public IScriptFile Script { get; private set; }
 
-    [JsonProperty] public float Speed { get; set; } = 1;
-    [JsonProperty] public float Minimum { get; set; } = 0;
-    [JsonProperty] public float Maximum { get; set; } = 100;
     [JsonProperty] public FileInfo SourceFile { get; set; } = null;
     [JsonProperty] public InterpolationType InterpolationType { get; set; } = InterpolationType.Pchip;
 

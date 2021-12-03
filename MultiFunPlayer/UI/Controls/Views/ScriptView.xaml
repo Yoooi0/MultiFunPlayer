@@ -19,6 +19,7 @@
         <converters:InvertedNullableToBooleanConverter x:Key="InvertedNullableToBooleanConverter"/>
         <converters:MultiObjectToArrayConverter x:Key="MultiObjectToArrayConverter"/>
         <converters:MultiBooleanToBooleanAndConverter x:Key="MultiBooleanToBooleanAndConverter"/>
+        <converters:MotionProviderSelectorConverter x:Key="MotionProviderSelectorConverter"/>
         <material:NullableToVisibilityConverter x:Key="NullableToVisibilityConverter"/>
     </UserControl.Resources>
     <StackPanel Margin="0 0 0 20">
@@ -823,11 +824,9 @@
                                                                            VerticalAlignment="Center"/>
                                                                 <ComboBox DockPanel.Dock="Left"
                                                                           material:TextFieldAssist.HasClearButton="True" 
-                                                                          DisplayMemberPath="Name"
-                                                                          ItemsSource="{Binding Value.Settings.MotionProviders}" 
+                                                                          ItemsSource="{Binding DataContext.MotionProviderManager.MotionProviderNames, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}" 
                                                                           SelectedValue="{Binding Value.Settings.SelectedMotionProvider, UpdateSourceTrigger=Explicit}"
-                                                                          behaviours:ComboBoxAssist.PreviewSelectionChanged="{s:Action OnPreviewSelectedMotionProviderChanged}"
-                                                                          SelectedValuePath="Name"/>
+                                                                          behaviours:ComboBoxAssist.PreviewSelectionChanged="{s:Action OnPreviewSelectedMotionProviderChanged}"/>
                                                             </DockPanel>
 
                                                             <DockPanel DockPanel.Dock="Top">
@@ -871,8 +870,15 @@
                                                             </DockPanel>
                                                             
                                                             <Separator DockPanel.Dock="Top" Margin="-10 0 -10 20"/>
-                                                            <ContentControl s:View.Model="{Binding Value.Settings.SelectedMotionProviderInstance}"
-                                                                            DockPanel.Dock="Bottom"/>
+                                                            <ContentControl DockPanel.Dock="Bottom">
+                                                                <s:View.Model>
+                                                                    <MultiBinding Converter="{StaticResource MotionProviderSelectorConverter}">
+                                                                        <Binding Path="DataContext.MotionProviderManager" RelativeSource="{RelativeSource FindAncestor, AncestorType={x:Type UserControl}}"/>
+                                                                        <Binding Path="Key"/>
+                                                                        <Binding Path="Value.Settings.SelectedMotionProvider"/>
+                                                                    </MultiBinding>
+                                                                </s:View.Model>
+                                                            </ContentControl>
                                                         </DockPanel>
                                                     </StackPanel>
                                                 </Grid>

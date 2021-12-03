@@ -3,6 +3,7 @@ using MultiFunPlayer.Common;
 using MultiFunPlayer.Input;
 using MultiFunPlayer.Input.RawInput;
 using MultiFunPlayer.Input.XInput;
+using MultiFunPlayer.MotionProvider;
 using MultiFunPlayer.OutputTarget;
 using MultiFunPlayer.Settings;
 using MultiFunPlayer.Settings.Converters;
@@ -37,6 +38,7 @@ public class Bootstrapper : Bootstrapper<RootViewModel>
         builder.Bind<IVideoSource>().ToAllImplementations().InSingletonScope();
         builder.Bind<IOutputTarget>().ToAllImplementations().InSingletonScope();
         builder.Bind<IShortcutManager>().To<ShortcutManager>().InSingletonScope();
+        builder.Bind<IMotionProviderManager>().To<MotionProviderManager>().InSingletonScope();
         builder.Bind<IInputProcessor>().ToAllImplementations().InSingletonScope();
 
         builder.Bind<DialogHelper>().To<DialogHelper>().InSingletonScope();

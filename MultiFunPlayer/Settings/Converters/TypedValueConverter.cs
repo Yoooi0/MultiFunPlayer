@@ -109,23 +109,31 @@ public class TypedValueConverter : JsonConverter<TypedValue>
 
     public override TypedValue ReadJson(JsonReader reader, Type objectType, TypedValue existingValue, bool hasExistingValue, JsonSerializer serializer)
     {
-        var o = JToken.ReadFrom(reader);
+        var o = JToken.ReadFrom(reader) as JObject;
 
         var (_, valueTypeName) = SplitFullyQualifiedTypeName(o["$type"].ToString());
         var valueType = Type.GetType(valueTypeName);
-        var value = o["Value"].ToObject(valueType);
 
-        return new TypedValue(valueType, value);
+        if (o.ContainsKey("Value"))
+            return new TypedValue(valueType, o["Value"].ToObject(valueType));
+
+        o.Remove("$type");
+        return new TypedValue(valueType, o.ToObject(valueType));
     }
 
     public override void WriteJson(JsonWriter writer, TypedValue value, JsonSerializer serializer)
     {
-        var valueToken = new JObject
+        var valueToken = JToken.FromObject(value.Value, serializer);
+        var o = new JObject
         {
-            { "$type", RemoveAssemblyDetails(value.Type.AssemblyQualifiedName) },
-            { "Value", JToken.FromObject(value.Value, serializer) }
+            { "$type", RemoveAssemblyDetails(value.Type.AssemblyQualifiedName) }
         };
 
-        serializer.Serialize(writer, valueToken);
+        if (valueToken.Type == JTokenType.Object)
+            o.Merge(valueToken, new JsonMergeSettings() { MergeArrayHandling = MergeArrayHandling.Union });
+        else
+            o["Value"] = valueToken;
+
+        serializer.Serialize(writer, o);
     }
 }

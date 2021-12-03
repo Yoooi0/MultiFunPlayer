@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using MultiFunPlayer.MotionProvider;
+using Newtonsoft.Json;
 
 namespace MultiFunPlayer.Settings;
 
@@ -8,6 +9,7 @@ public class TypedValue
     public Type Type { get; }
     public object Value { get; }
 
+    public TypedValue(object value) : this(value.GetType(), value) { }
     public TypedValue(Type type, object value)
     {
         Type = type;

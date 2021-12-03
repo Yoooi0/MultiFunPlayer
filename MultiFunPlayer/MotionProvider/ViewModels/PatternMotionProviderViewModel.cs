@@ -20,10 +20,7 @@ public class PatternMotionProviderViewModel : AbstractMotionProvider
 {
     private float _time;
 
-    [JsonProperty] public float Speed { get; set; } = 1;
     [JsonProperty] public float Period { get; set; } = 1;
-    [JsonProperty] public float Minimum { get; set; } = 0;
-    [JsonProperty] public float Maximum { get; set; } = 100;
     [JsonProperty] public PatternType Pattern { get; set; } = PatternType.Triangle;
 
     public override void Update(float deltaTime)

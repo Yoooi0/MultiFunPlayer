@@ -48,6 +48,7 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
     public ObservableConcurrentDictionaryView<DeviceAxis, AxisModel, KeyframeCollection> AxisKeyframes { get; }
 
     public Dictionary<string, Type> VideoPathModifierTypes { get; }
+    public IMotionProviderManager MotionProviderManager { get; }
 
     public MediaResourceInfo VideoFile { get; set; }
 
@@ -64,11 +65,12 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
     public bool IsSyncing => AxisStates.Values.Any(s => s.SyncTime < SyncSettings.Duration);
     public float SyncProgress => !IsSyncing ? 100 : GetSyncProgress(AxisStates.Values.Min(s => s.SyncTime), SyncSettings.Duration) * 100;
 
-    public ScriptViewModel(IShortcutManager shortcutManager, IMediaResourceFactory mediaResourceFactory, IEventAggregator eventAggregator)
+    public ScriptViewModel(IShortcutManager shortcutManager, IMotionProviderManager motionProviderManager, IMediaResourceFactory mediaResourceFactory, IEventAggregator eventAggregator)
     {
         _eventAggregator = eventAggregator;
         _eventAggregator.Subscribe(this);
 
+        MotionProviderManager = motionProviderManager;
         _mediaResourceFactory = mediaResourceFactory;
 
         AxisModels = new ObservableConcurrentDictionary<DeviceAxis, AxisModel>(DeviceAxis.All.ToDictionary(a => a, _ => new AxisModel()));
@@ -235,18 +237,17 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                                 || (!state.InsideScript && settings.UpdateMotionProviderWithoutScript)
                                 || (IsPlaying && state.InsideScript);
 
-                if (!shouldUpdate || settings.SelectedMotionProviderInstance == null)
+                if (!shouldUpdate)
                     return false;
 
-                var motionProvider = settings.SelectedMotionProviderInstance;
-                motionProvider.Update((float) stopwatch.Elapsed.TotalSeconds);
+                var newValue = MotionProviderManager.Update(axis, settings.SelectedMotionProvider, (float)stopwatch.Elapsed.TotalSeconds);
+                if (newValue == null)
+                    return false;
 
-                var lastValue = state.Value;
-                var newValue = motionProvider.Value;
                 if (IsPlaying && state.InsideScript)
-                    newValue = MathUtils.Lerp(state.Value, newValue, MathUtils.Clamp01(settings.MotionProviderBlend / 100));
+                    newValue = MathUtils.Lerp(state.Value, newValue.Value, MathUtils.Clamp01(settings.MotionProviderBlend / 100));
 
-                state.Value = newValue;
+                state.Value = newValue.Value;
                 return true;
             }
 
@@ -1333,9 +1334,7 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         #endregion
 
         #region Axis::MotionProvider
-        var motionProviderNames = ReflectionUtils.FindImplementations<IMotionProvider>()
-                                                 .Select(t => t.GetCustomAttribute<DisplayNameAttribute>(inherit: false).DisplayName)
-                                                 .ToHashSet();
+        var motionProviderNames = MotionProviderManager.MotionProviderNames;
         s.RegisterAction("Axis::MotionProvider::Set",
             b => b.WithSetting<DeviceAxis>(p => p.WithLabel("Target axis").WithItemsSource(DeviceAxis.All))
                   .WithSetting<string>(p => p.WithLabel("Motion provider").WithItemsSource(motionProviderNames))
@@ -1344,6 +1343,8 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                       if (axis != null)
                           AxisSettings[axis].SelectedMotionProvider = motionProviderNames.Contains(motionProviderName) ? motionProviderName : null;
                   }));
+
+        MotionProviderManager.RegisterShortcuts(s);
         #endregion
     }
     #endregion
@@ -1418,16 +1419,7 @@ public class AxisSettings : PropertyChangedBase
     [JsonProperty] public float MotionProviderBlend { get; set; } = 100;
     [JsonProperty] public bool UpdateMotionProviderWhenPaused { get; set; } = false;
     [JsonProperty] public bool UpdateMotionProviderWithoutScript { get; set; } = false;
-
-    [JsonProperty]
-    [AlsoNotifyFor(nameof(SelectedMotionProviderInstance))]
-    public string SelectedMotionProvider { get; set; } = null;
-
-    [AlsoNotifyFor(nameof(SelectedMotionProviderInstance))]
-    [JsonProperty(ItemTypeNameHandling = TypeNameHandling.Objects)]
-    public MotionProviderCollection MotionProviders { get; set; } = new MotionProviderCollection();
-
-    public IMotionProvider SelectedMotionProviderInstance => MotionProviders[SelectedMotionProvider];
+    [JsonProperty] public string SelectedMotionProvider { get; set; } = null;
 }
 
 [JsonObject(MemberSerialization.OptIn)]
