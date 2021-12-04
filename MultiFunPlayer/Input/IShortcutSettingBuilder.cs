@@ -7,6 +7,7 @@ public interface IShortcutSettingBuilder { }
 public interface IShortcutSettingBuilder<T> : IShortcutSettingBuilder
 {
     public IShortcutSetting<T> Build();
+    public IShortcutSettingBuilder<T> WithDefaultValue(T defaultValue);
     public IShortcutSettingBuilder<T> WithLabel(string label);
     public IShortcutSettingBuilder<T> WithDescription(string description);
     public IShortcutSettingBuilder<T> WithItemsSource(IEnumerable<T> items);
@@ -15,6 +16,7 @@ public interface IShortcutSettingBuilder<T> : IShortcutSettingBuilder
 
 public class ShortcutSettingBuilder<T> : IShortcutSettingBuilder<T>
 {
+    private T _defaultValue;
     public string _description;
     public string _label;
     public BindableCollection<T> _items;
@@ -27,7 +29,8 @@ public class ShortcutSettingBuilder<T> : IShortcutSettingBuilder<T>
             {
                 Description = _description,
                 Label = _label,
-                StringFormat = _stringFormat
+                StringFormat = _stringFormat,
+                Value = _defaultValue
             };
 
         return new OneOfShortcutSetting<T>()
@@ -35,10 +38,12 @@ public class ShortcutSettingBuilder<T> : IShortcutSettingBuilder<T>
             Description = _description,
             Label = _label,
             ItemsSource = _items,
-            StringFormat = _stringFormat
+            StringFormat = _stringFormat,
+            Value = _defaultValue
         };
     }
 
+    public IShortcutSettingBuilder<T> WithDefaultValue(T defaultValue) { _defaultValue = defaultValue; return this; }
     public IShortcutSettingBuilder<T> WithItemsSource(IEnumerable<T> items) { _items = new BindableCollection<T>(items); return this; }
     public IShortcutSettingBuilder<T> WithDescription(string description) { _description = description; return this; }
     public IShortcutSettingBuilder<T> WithLabel(string label) { _label = label; return this; }

@@ -158,34 +158,42 @@ public abstract class AbstractOutputTarget : Screen, IHandle<AppSettingsMessage>
 
     protected virtual void RegisterShortcuts(IShortcutManager s)
     {
-        static void SetMinimum(DeviceAxisSettings settings, float value) => settings.Minimum = MathUtils.Clamp(value, 0, settings.Maximum - 1);
-        static void SetMaximum(DeviceAxisSettings settings, float value) => settings.Maximum = MathUtils.Clamp(value, settings.Minimum + 1, 100);
-
-        static void OffsetMiddle(DeviceAxisSettings settings, float offset)
+        void UpdateSettings(DeviceAxis axis, Action<DeviceAxisSettings> callback)
         {
-            if (offset > 0 && settings.Maximum + offset > 100)
-                offset = Math.Min(offset, 100 - settings.Maximum);
-            else if (offset < 0 && settings.Minimum + offset < 0)
-                offset = Math.Max(offset, 0 - settings.Minimum);
+            if (axis == null)
+                return;
 
-            settings.Minimum = MathUtils.Clamp(settings.Minimum + offset, 0, 99);
-            settings.Maximum = MathUtils.Clamp(settings.Maximum + offset, 1, 100);
+            callback(AxisSettings[axis]);
         }
 
-        static void OffsetSize(DeviceAxisSettings settings, float offset)
+        static void SetMinimum(DeviceAxisSettings settings, float value, float minimumLimit) => settings.Minimum = MathUtils.Clamp(value, minimumLimit, settings.Maximum - 1);
+        static void SetMaximum(DeviceAxisSettings settings, float value, float maximumLimit) => settings.Maximum = MathUtils.Clamp(value, settings.Minimum + 1, maximumLimit);
+
+        static void OffsetMiddle(DeviceAxisSettings settings, float offset, float minimumLimit, float maximumLimit)
+        {
+            if (offset > 0 && settings.Maximum + offset > maximumLimit)
+                offset = Math.Min(offset, maximumLimit - settings.Maximum);
+            else if (offset < 0 && settings.Minimum + offset < minimumLimit)
+                offset = Math.Max(offset, minimumLimit - settings.Minimum);
+
+            settings.Minimum = MathUtils.Clamp(settings.Minimum + offset, minimumLimit, maximumLimit - 1);
+            settings.Maximum = MathUtils.Clamp(settings.Maximum + offset, minimumLimit + 1, maximumLimit);
+        }
+
+        static void OffsetSize(DeviceAxisSettings settings, float offset, float minimumLimit, float maximumLimit)
         {
             var middle = (settings.Maximum + settings.Minimum) / 2.0f;
-            var newRange = MathUtils.Clamp(settings.Maximum - settings.Minimum + offset, 1, 100);
+            var newRange = MathUtils.Clamp(settings.Maximum - settings.Minimum + offset, 1, maximumLimit - minimumLimit);
             var newMaximum = middle + newRange / 2;
             var newMinimum = middle - newRange / 2;
 
-            if (newMaximum > 100)
-                newMinimum -= newMaximum - 100;
-            if (newMinimum < 0)
-                newMaximum += 0 - newMinimum;
+            if (newMaximum > maximumLimit)
+                newMinimum -= newMaximum - maximumLimit;
+            if (newMinimum < minimumLimit)
+                newMaximum += minimumLimit - newMinimum;
 
-            settings.Minimum = MathUtils.Clamp(newMinimum, 0, 99);
-            settings.Maximum = MathUtils.Clamp(newMaximum, 1, 100);
+            settings.Minimum = MathUtils.Clamp(newMinimum, minimumLimit, maximumLimit - 1);
+            settings.Maximum = MathUtils.Clamp(newMaximum, minimumLimit + 1, maximumLimit);
         }
 
         #region UpdateRate
@@ -206,28 +214,21 @@ public abstract class AbstractOutputTarget : Screen, IHandle<AppSettingsMessage>
         s.RegisterAction($"{Name}::Axis::Range::Minimum::Offset", 
             b => b.WithSetting<DeviceAxis>(s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All))
                   .WithSetting<int>(s => s.WithLabel("Value offset").WithStringFormat("{}{0}%"))
-                  .WithCallback((_, axis, offset) =>
-                    {
-                        if (axis != null)
-                            SetMinimum(AxisSettings[axis], AxisSettings[axis].Minimum + offset);
-                    }));
+                  .WithSetting<float>(s => s.WithDefaultValue(0).WithLabel("Value limit").WithStringFormat("{}{0}%"))
+                  .WithCallback((_, axis, offset, limit) => UpdateSettings(axis, s => SetMinimum(s, s.Minimum + offset, limit))));
 
         s.RegisterAction($"{Name}::Axis::Range::Minimum::Set",
             b => b.WithSetting<DeviceAxis>(s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All))
                   .WithSetting<int>(s => s.WithLabel("Value").WithStringFormat("{}{0}%"))
-                  .WithCallback((_, axis, value) => 
-                    {
-                        if (axis != null)
-                            SetMinimum(AxisSettings[axis], value);
-                    }));
+                  .WithCallback((_, axis, value) => UpdateSettings(axis, s => SetMinimum(s, value, 0))));
 
         s.RegisterAction($"{Name}::Axis::Range::Minimum::Drive",
             b => b.WithSetting<DeviceAxis>(s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All))
-                  .WithCallback((gesture, axis) =>
+                  .WithSetting<float>(s => s.WithDefaultValue(0).WithLabel("Value limit").WithStringFormat("{}{0}%"))
+                  .WithCallback((gesture, axis, limit) =>
                     {
-                        if (gesture is not IAxisInputGesture axisGesture) return;
-                        if (axis != null)
-                            SetMinimum(AxisSettings[axis], AxisSettings[axis].Minimum + axisGesture.Delta * 100);
+                        if (gesture is IAxisInputGesture axisGesture)
+                            UpdateSettings(axis, s => SetMinimum(s, s.Minimum + axisGesture.Delta * 100, limit));
                     }), ShortcutActionDescriptorFlags.AcceptsAxisGesture);
         #endregion
 
@@ -235,28 +236,21 @@ public abstract class AbstractOutputTarget : Screen, IHandle<AppSettingsMessage>
         s.RegisterAction($"{Name}::Axis::Range::Maximum::Offset",
             b => b.WithSetting<DeviceAxis>(s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All))
                   .WithSetting<int>(s => s.WithLabel("Value offset").WithStringFormat("{}{0}%"))
-                  .WithCallback((_, axis, offset) =>
-                    {
-                        if (axis != null)
-                            SetMaximum(AxisSettings[axis], AxisSettings[axis].Maximum + offset);
-                    }));
+                  .WithSetting<float>(s => s.WithDefaultValue(100).WithLabel("Value limit").WithStringFormat("{}{0}%"))
+                  .WithCallback((_, axis, offset, limit) => UpdateSettings(axis, s => SetMaximum(s, s.Maximum + offset, limit))));
 
         s.RegisterAction($"{Name}::Axis::Range::Maximum::Set",
             b => b.WithSetting<DeviceAxis>(s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All))
                   .WithSetting<int>(s => s.WithLabel("Value").WithStringFormat("{}{0}%"))
-                  .WithCallback((_, axis, value) =>
-                    {
-                        if (axis != null)
-                            SetMaximum(AxisSettings[axis], value);
-                    }));
+                  .WithCallback((_, axis, value) => UpdateSettings(axis, s => SetMaximum(s, value, 100))));
 
         s.RegisterAction($"{Name}::Axis::Range::Maximum::Drive",
             b => b.WithSetting<DeviceAxis>(s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All))
-                  .WithCallback((gesture, axis) =>
+                  .WithSetting<float>(s => s.WithDefaultValue(100).WithLabel("Value limit").WithStringFormat("{}{0}%"))
+                  .WithCallback((gesture, axis, limit) =>
                     {
-                        if (gesture is not IAxisInputGesture axisGesture) return;
-                        if (axis != null)
-                            SetMaximum(AxisSettings[axis], AxisSettings[axis].Maximum + axisGesture.Delta * 100);
+                        if (gesture is IAxisInputGesture axisGesture)
+                            UpdateSettings(axis, s => SetMaximum(s, s.Maximum + axisGesture.Delta * 100, limit));
                     }), ShortcutActionDescriptorFlags.AcceptsAxisGesture);
         #endregion
 
@@ -264,58 +258,48 @@ public abstract class AbstractOutputTarget : Screen, IHandle<AppSettingsMessage>
         s.RegisterAction($"{Name}::Axis::Range::Middle::Offset",
             b => b.WithSetting<DeviceAxis>(s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All))
                   .WithSetting<int>(s => s.WithLabel("Value offset").WithStringFormat("{}{0}%"))
-                  .WithCallback((_, axis, offset) =>
-                  {
-                      if (axis != null)
-                          OffsetMiddle(AxisSettings[axis], offset);
-                  }));
+                  .WithSetting<float>(s => s.WithDefaultValue(0).WithLabel("Minimum limit").WithStringFormat("{}{0}%"))
+                  .WithSetting<float>(s => s.WithDefaultValue(100).WithLabel("Maximium limit").WithStringFormat("{}{0}%"))
+                  .WithCallback((_, axis, offset, minimumLimit, maximumLimit) => UpdateSettings(axis, s => OffsetMiddle(s, offset, minimumLimit, maximumLimit))));
 
         s.RegisterAction($"{Name}::Axis::Range::Middle::Set",
             b => b.WithSetting<DeviceAxis>(s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All))
                   .WithSetting<int>(s => s.WithLabel("Value").WithStringFormat("{}{0}%"))
-                  .WithCallback((_, axis, value) =>
-                  {
-                      if (axis != null)
-                          OffsetMiddle(AxisSettings[axis], value - (AxisSettings[axis].Maximum - AxisSettings[axis].Minimum) / 2);
-                  }));
+                  .WithCallback((_, axis, value) => UpdateSettings(axis, s => OffsetMiddle(s, value - (s.Maximum - s.Minimum) / 2, 0, 100))));
 
         s.RegisterAction($"{Name}::Axis::Range::Middle::Drive",
             b => b.WithSetting<DeviceAxis>(s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All))
-                  .WithCallback((gesture, axis) =>
-                  {
-                      if (gesture is not IAxisInputGesture axisGesture) return;
-                      if (axis != null)
-                          OffsetMiddle(AxisSettings[axis], axisGesture.Delta * 100);
-                  }), ShortcutActionDescriptorFlags.AcceptsAxisGesture);
+                  .WithSetting<float>(s => s.WithDefaultValue(0).WithLabel("Minimum limit").WithStringFormat("{}{0}%"))
+                  .WithSetting<float>(s => s.WithDefaultValue(100).WithLabel("Maximium limit").WithStringFormat("{}{0}%"))
+                  .WithCallback((gesture, axis, minimumLimit, maximumLimit) =>
+                    {
+                        if (gesture is IAxisInputGesture axisGesture)
+                            UpdateSettings(axis, s => OffsetMiddle(s, axisGesture.Delta * 100, minimumLimit, maximumLimit));
+                    }), ShortcutActionDescriptorFlags.AcceptsAxisGesture);
         #endregion
 
         #region Axis::Range::Size
         s.RegisterAction($"{Name}::Axis::Range::Size::Offset",
             b => b.WithSetting<DeviceAxis>(s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All))
                   .WithSetting<int>(s => s.WithLabel("Value offset").WithStringFormat("{}{0}%"))
-                  .WithCallback((_, axis, offset) =>
-                  {
-                      if (axis != null)
-                          OffsetSize(AxisSettings[axis], offset);
-                  }));
+                  .WithSetting<float>(s => s.WithDefaultValue(0).WithLabel("Minimum limit").WithStringFormat("{}{0}%"))
+                  .WithSetting<float>(s => s.WithDefaultValue(100).WithLabel("Maximium limit").WithStringFormat("{}{0}%"))
+                  .WithCallback((_, axis, offset, minimumLimit, maximumLimit) => UpdateSettings(axis, s => OffsetSize(s, offset, minimumLimit, maximumLimit))));
 
         s.RegisterAction($"{Name}::Axis::Range::Size::Set",
             b => b.WithSetting<DeviceAxis>(s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All))
                   .WithSetting<int>(s => s.WithLabel("Value").WithStringFormat("{}{0}%"))
-                  .WithCallback((_, axis, value) =>
-                  {
-                      if (axis != null)
-                          OffsetSize(AxisSettings[axis], value - (AxisSettings[axis].Maximum - AxisSettings[axis].Minimum));
-                  }));
+                  .WithCallback((_, axis, value) => UpdateSettings(axis, s => OffsetSize(s, value - (s.Maximum - s.Minimum), 0, 100))));
 
         s.RegisterAction($"{Name}::Axis::Range::Size::Drive",
             b => b.WithSetting<DeviceAxis>(s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All))
-                  .WithCallback((gesture, axis) =>
-                  {
-                      if (gesture is not IAxisInputGesture axisGesture) return;
-                      if (axis != null)
-                          OffsetSize(AxisSettings[axis], axisGesture.Delta * 100);
-                  }), ShortcutActionDescriptorFlags.AcceptsAxisGesture);
+                  .WithSetting<float>(s => s.WithDefaultValue(0).WithLabel("Minimum limit").WithStringFormat("{}{0}%"))
+                  .WithSetting<float>(s => s.WithDefaultValue(100).WithLabel("Maximium limit").WithStringFormat("{}{0}%"))
+                  .WithCallback((gesture, axis, minimumLimit, maximumLimit) =>
+                    {
+                        if (gesture is IAxisInputGesture axisGesture)
+                            UpdateSettings(axis, s => OffsetSize(s, axisGesture.Delta * 100, minimumLimit, maximumLimit));
+                    }), ShortcutActionDescriptorFlags.AcceptsAxisGesture);
         #endregion
     }
 
