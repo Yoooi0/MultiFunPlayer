@@ -705,8 +705,6 @@
                                             </Menu>
 
                                             <ToggleButton IsChecked="{Binding Value.Settings.Inverted}"
-                                                          Checked="{s:Action OnInvertedCheckedChanged}"
-                                                          Unchecked="{s:Action OnInvertedCheckedChanged}"
                                                           Style="{StaticResource MaterialDesignToolBarToggleButton}"
                                                           ToolTipService.InitialShowDelay="0"
                                                           ToolTipService.Placement="Top"
@@ -719,8 +717,6 @@
                                             </ToggleButton>
 
                                             <ToggleButton IsChecked="{Binding Value.Settings.Bypass}"
-                                                          Checked="{s:Action OnBypassCheckedChanged}"
-                                                          Unchecked="{s:Action OnBypassCheckedChanged}"
                                                           Style="{StaticResource MaterialDesignToolBarToggleButton}"
                                                           ToolTipService.InitialShowDelay="0"
                                                           ToolTipService.Placement="Top"
@@ -885,8 +881,6 @@
                                             </material:PopupBox>
 
                                             <ToggleButton IsChecked="{Binding Value.Settings.SmartLimitEnabled}"
-                                                              Checked="{s:Action OnSmartLimitCheckedChanged}"
-                                                              Unchecked="{s:Action OnSmartLimitCheckedChanged}"
                                                               ToolTipService.InitialShowDelay="0"
                                                               ToolTipService.Placement="Top"
                                                               ToolTip="Smart limit">

@@ -93,6 +93,9 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         AxisSettings = AxisModels.CreateView(model => model.Settings);
         AxisKeyframes = AxisModels.CreateView(model => model.Script?.Keyframes, "Script");
 
+        foreach (var (_, settings) in AxisSettings)
+            settings.PropertyChanged += OnAxisSettingsPropertyChanged;
+
         _cancellationSource = new CancellationTokenSource();
         _updateThread = new Thread(() => UpdateThread(_cancellationSource.Token)) { IsBackground = true };
         _updateThread.Start();
@@ -795,6 +798,25 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
     #endregion
 
     #region AxisSettings
+    public void OnAxisSettingsPropertyChanged(object sender, PropertyChangedEventArgs e)
+    {
+        if (sender is not AxisSettings settings)
+            return;
+
+        switch (e.PropertyName)
+        {
+            case "UpdateMotionProviderWhenPaused":
+            case "UpdateMotionProviderWithoutScript":
+            case "Inverted":
+            case "SmartLimitEnabled":
+            case "Bypass":
+                var (axis, _) = AxisSettings.FirstOrDefault(x => x.Value == settings);
+                if(axis != null)
+                    ResetSync(true, axis);
+                break;
+        }
+    }
+
     public void OnAxisDrop(object sender, DragEventArgs e)
     {
         if (sender is not FrameworkElement element || element.DataContext is not KeyValuePair<DeviceAxis, AxisModel> pair)
@@ -847,26 +869,11 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
     public void OnAxisClear(DeviceAxis axis) => ResetScript(axis);
     public void OnAxisReload(DeviceAxis axis) => ReloadScript(axis);
 
-    public void SetAxisBypass(DeviceAxis axis, bool value)
-    {
-        var current = AxisSettings[axis].Bypass;
-
-        AxisSettings[axis].Bypass = value;
-        if (current && !value)
-            ResetSync(true, axis);
-    }
-
-    public void SetAxisInverted(DeviceAxis axis, bool value)
-    {
-        var current = AxisSettings[axis].Inverted;
-
-        AxisSettings[axis].Inverted = value;
-        if (current && !value)
-            ResetSync(true, axis);
-    }
-
     public void SetAxisValue(DeviceAxis axis, float value, bool offset = false)
     {
+        if (axis == null)
+            return;
+
         var state = AxisStates[axis];
         lock (state)
         {
@@ -927,37 +934,6 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
     }
 
     [SuppressPropertyChangedWarnings]
-    public void OnPreviewSelectedMotionProviderChanged(SelectionChangedEventArgs e)
-    {
-        if (e.Source is not FrameworkElement element || element.DataContext is not KeyValuePair<DeviceAxis, AxisModel> pair)
-            return;
-
-        var (axis, _) = pair;
-        ResetSync(true, axis);
-    }
-
-    [SuppressPropertyChangedWarnings]
-    public void OnInvertedCheckedChanged(object sender, RoutedEventArgs e)
-    {
-        if (sender is not FrameworkElement element || element.DataContext is not KeyValuePair<DeviceAxis, AxisModel> pair)
-            return;
-
-        var (axis, _) = pair;
-        ResetSync(true, axis);
-    }
-
-    [SuppressPropertyChangedWarnings]
-    public void OnBypassCheckedChanged(object sender, RoutedEventArgs e)
-    {
-        if (sender is not ToggleButton button || button.DataContext is not KeyValuePair<DeviceAxis, AxisModel> pair)
-            return;
-
-        var (axis, _) = pair;
-        if(button.IsChecked.GetValueOrDefault(true))
-            ResetSync(true, axis);
-    }
-
-    [SuppressPropertyChangedWarnings]
     public void OnSelectedLinkAxisChanged(object sender, SelectionChangedEventArgs e)
     {
         if (sender is not FrameworkElement element || element.DataContext is not KeyValuePair<DeviceAxis, AxisModel> pair)
@@ -971,9 +947,9 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
     }
 
     [SuppressPropertyChangedWarnings]
-    public void OnSmartLimitCheckedChanged(object sender, RoutedEventArgs e)
+    public void OnPreviewSelectedMotionProviderChanged(SelectionChangedEventArgs e)
     {
-        if (sender is not FrameworkElement element || element.DataContext is not KeyValuePair<DeviceAxis, AxisModel> pair)
+        if (e.Source is not FrameworkElement element || element.DataContext is not KeyValuePair<DeviceAxis, AxisModel> pair)
             return;
 
         var (axis, _) = pair;
@@ -1259,7 +1235,7 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         s.RegisterAction("Axis::MotionProvider::Set",
             b => b.WithSetting<DeviceAxis>(p => p.WithLabel("Target axis").WithItemsSource(DeviceAxis.All))
                   .WithSetting<string>(p => p.WithLabel("Motion provider").WithItemsSource(motionProviderNames))
-                  .WithCallback((_, axis, motionProviderName) =>
+                  .WithCallback((_, axis, motionProviderName) => 
                         UpdateSettings(axis, s => s.SelectedMotionProvider = motionProviderNames.Contains(motionProviderName) ? motionProviderName : null)));
 
         MotionProviderManager.RegisterShortcuts(s);
