@@ -84,4 +84,4 @@ To synchronize with videos, start your desired video player and wait for automat
 # Prerequisites
 
 * [.NET 6.0 x64 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/thank-you/runtime-desktop-6.0.0-windows-x64-installer)
-* [Visual C++ 2019 x64 Redistributable](https://docs.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist)
+* [Visual C++ 2019 x64 Redistributable](https://aka.ms/vs/17/release/vc_redist.x64.exe)
