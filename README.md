@@ -17,7 +17,7 @@ The player's main feature is the ability to play multiple funscripts at the same
 * Supports [buttplug.io](https://buttplug.io), network TCP/UDP, namedpipes and serial output
 * Supports TCode v0.2 and TCode v0.3 devices
 * Auto detection and connection to any supported video player and output
-* Bind keyboard/mouse/gamepad input to almost any customizable action (100+ available actions)
+* Bind keyboard/mouse/gamepad input to almost any customizable action (150+ available actions)
 * Seek and play/pause video from MultiFunPlayer
 * Supports multiple concurrent outputs
 * Real time script smoothing using pchip or makima interpolation
@@ -25,7 +25,8 @@ The player's main feature is the ability to play multiple funscripts at the same
 * Supports local, DLNA, web and unc video paths
 * Soft start sync feature to prevent unwanted motion
 * Script libraries to organize funscripts in different folders and load funscripts not located next to the video file
-* Ability to link unscripted axis to a different one with optional random motion
+* Ability to link unscripted axes to scripted axes
+* Ability to generate motion for unscripted axes with motion providers
 * Smart limit on R1 (roll) and R2 (pitch) axes to limit values based on L0 (stroke) height
 * Multi funscript heatmap with stroke length visualization
 * True portable app, no files are created/edited outside of the executable folder
@@ -82,5 +83,5 @@ To synchronize with videos, start your desired video player and wait for automat
 
 # Prerequisites
 
-* [.NET 5.0 x64 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/current/runtime)
+* [.NET 6.0 x64 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/thank-you/runtime-desktop-6.0.0-windows-x64-installer)
 * [Visual C++ 2019 x64 Redistributable](https://docs.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist)
