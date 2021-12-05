@@ -6,7 +6,6 @@ using PropertyChanged;
 using Stylet;
 using System.ComponentModel;
 using System.Diagnostics;
-using System.Drawing.Text;
 using System.Reflection;
 using System.Windows.Media;
 

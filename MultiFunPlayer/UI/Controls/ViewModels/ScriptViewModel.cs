@@ -15,7 +15,6 @@ using System.ComponentModel;
 using MultiFunPlayer.OutputTarget;
 using NLog;
 using System.Runtime.CompilerServices;
-using System.Windows.Controls.Primitives;
 using MultiFunPlayer.Input;
 using MultiFunPlayer.MotionProvider;
 using MultiFunPlayer.VideoSource.MediaResource;
@@ -798,6 +797,7 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
     #endregion
 
     #region AxisSettings
+    [SuppressPropertyChangedWarnings]
     public void OnAxisSettingsPropertyChanged(object sender, PropertyChangedEventArgs e)
     {
         if (sender is not AxisSettings settings)

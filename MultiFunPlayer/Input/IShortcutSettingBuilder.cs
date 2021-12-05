@@ -2,15 +2,13 @@
 
 namespace MultiFunPlayer.Input;
 
-public interface IShortcutSettingBuilder { }
-
-public interface IShortcutSettingBuilder<T> : IShortcutSettingBuilder
+public interface IShortcutSettingBuilder<T>
 {
     public IShortcutSetting<T> Build();
     public IShortcutSettingBuilder<T> WithDefaultValue(T defaultValue);
     public IShortcutSettingBuilder<T> WithLabel(string label);
     public IShortcutSettingBuilder<T> WithDescription(string description);
-    public IShortcutSettingBuilder<T> WithItemsSource(IEnumerable<T> items);
+    public IShortcutSettingBuilder<T> WithItemsSource(IEnumerable<T> itemsSource);
     public IShortcutSettingBuilder<T> WithStringFormat(string stringFormat);
 }
 
@@ -19,12 +17,12 @@ public class ShortcutSettingBuilder<T> : IShortcutSettingBuilder<T>
     private T _defaultValue;
     public string _description;
     public string _label;
-    public BindableCollection<T> _items;
+    public BindableCollection<T> _itemsSource;
     private string _stringFormat;
 
     public IShortcutSetting<T> Build()
     {
-        if (_items == null)
+        if (_itemsSource == null)
             return new ShortcutSetting<T>()
             {
                 Description = _description,
@@ -37,14 +35,14 @@ public class ShortcutSettingBuilder<T> : IShortcutSettingBuilder<T>
         {
             Description = _description,
             Label = _label,
-            ItemsSource = _items,
+            ItemsSource = _itemsSource,
             StringFormat = _stringFormat,
             Value = _defaultValue
         };
     }
 
     public IShortcutSettingBuilder<T> WithDefaultValue(T defaultValue) { _defaultValue = defaultValue; return this; }
-    public IShortcutSettingBuilder<T> WithItemsSource(IEnumerable<T> items) { _items = new BindableCollection<T>(items); return this; }
+    public IShortcutSettingBuilder<T> WithItemsSource(IEnumerable<T> itemsSource) { _itemsSource = new BindableCollection<T>(itemsSource); return this; }
     public IShortcutSettingBuilder<T> WithDescription(string description) { _description = description; return this; }
     public IShortcutSettingBuilder<T> WithLabel(string label) { _label = label; return this; }
     public IShortcutSettingBuilder<T> WithStringFormat(string stringFormat) { _stringFormat = stringFormat; return this; }

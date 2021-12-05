@@ -1,5 +1,4 @@
-﻿using MultiFunPlayer.MotionProvider;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 
 namespace MultiFunPlayer.Settings;
 

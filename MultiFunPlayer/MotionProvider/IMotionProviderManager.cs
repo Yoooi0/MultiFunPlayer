@@ -4,13 +4,8 @@ using MultiFunPlayer.Input;
 using MultiFunPlayer.Settings;
 using Newtonsoft.Json.Linq;
 using Stylet;
-using System;
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace MultiFunPlayer.MotionProvider;
 

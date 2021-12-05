@@ -2,7 +2,6 @@
 using MultiFunPlayer.Common;
 using Stylet;
 using System.Diagnostics;
-using System.Reflection;
 using System.Windows.Navigation;
 
 namespace MultiFunPlayer.UI.Controls.ViewModels;
