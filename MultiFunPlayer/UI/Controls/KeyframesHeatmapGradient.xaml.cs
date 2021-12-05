@@ -160,6 +160,7 @@ public partial class KeyframesHeatmapGradient : UserControl, INotifyPropertyChan
     {
         Stops = new GradientStopCollection();
         Points = new PointCollection();
+
         if (Keyframes == null || Keyframes.Count == 0 || !float.IsFinite(Duration) || Duration <= 0 || ActualWidth < 1 || ActualHeight < 1)
             return;
 
@@ -170,8 +171,7 @@ public partial class KeyframesHeatmapGradient : UserControl, INotifyPropertyChan
             buckets[i].Clear();
 
         UpdateHeat(buckets, bucketSize);
-        if (ShowStrokeLength)
-            UpdateStroke(buckets, bucketSize);
+        UpdateStroke(buckets, bucketSize);
     }
 
     private void UpdateHeat(Span<HeatmapBucket> buckets, float bucketSize)
@@ -242,11 +242,24 @@ public partial class KeyframesHeatmapGradient : UserControl, INotifyPropertyChan
 
     private void UpdateStroke(Span<HeatmapBucket> buckets, float bucketSize)
     {
-        if (!DeviceAxis.TryParse("L0", out var axis) || !Keyframes.TryGetValue(axis, out var keyframes))
-            return;
+        void AddPoint(float x, float y)
+            => Points.Add(new Point(float.IsFinite(x) ? x : 0, float.IsFinite(y) ? y : 0));
 
-        if (keyframes == null || keyframes.Count < 2)
+        void AddPointForBucket(int index, float value)
+            => AddPoint(index * bucketSize / Duration * (float)ActualWidth, (1 - value) * (float)ActualHeight);
+
+        if (!ShowStrokeLength || !DeviceAxis.TryParse("L0", out var axis) || !Keyframes.TryGetValue(axis, out var keyframes) || keyframes == null || keyframes.Count < 2)
+        {
+            var width = (float)ActualWidth;
+            var height = (float)ActualHeight;
+
+            AddPoint(0, 0);
+            AddPoint(width, 0);
+            AddPoint(width, height);
+            AddPoint(0, height);
+
             return;
+        }
 
         for (var i = 0; i < keyframes.Count - 1;)
         {
@@ -287,12 +300,6 @@ public partial class KeyframesHeatmapGradient : UserControl, INotifyPropertyChan
 
             i = j;
         }
-
-        void AddPoint(float x, float y)
-            => Points.Add(new Point(float.IsFinite(x) ? x : 0, float.IsFinite(y) ? y : 0));
-
-        void AddPointForBucket(int index, float value)
-            => AddPoint(index * bucketSize / Duration * (float)ActualWidth, (1 - value) * (float)ActualHeight);
 
         for (var i = 0; i < buckets.Length; i++)
             AddPointForBucket(i, buckets[i].Top.Count > 0 ? buckets[i].Top.Average : axis.DefaultValue);
