@@ -569,22 +569,32 @@
                             <ui:ShortcutSettingTemplateSelector x:Key="ShortcutSettingTemplateSelector"/>
                             
                             <DataTemplate x:Key="BooleanTemplate" DataType="{x:Type input:IShortcutSetting}">
-                                <CheckBox IsChecked="{Binding Value}" />
+                                <DockPanel>
+                                    <CheckBox IsChecked="{Binding Value}" />
+                                </DockPanel>
                             </DataTemplate>
                             <DataTemplate x:Key="Int32Template" DataType="{x:Type input:IShortcutSetting}">
-                                <metro:NumericUpDown Value="{Binding Value}" StringFormat="{Binding StringFormat}"/>
+                                <DockPanel>
+                                    <metro:NumericUpDown Value="{Binding Value}" StringFormat="{Binding StringFormat}"/>
+                                </DockPanel>
                             </DataTemplate>
                             <DataTemplate x:Key="SingleTemplate" DataType="{x:Type input:IShortcutSetting}">
-                                <metro:NumericUpDown Value="{Binding Value}" StringFormat="{Binding StringFormat}"/>
+                                <DockPanel>
+                                    <metro:NumericUpDown Value="{Binding Value}" StringFormat="{Binding StringFormat}"/>
+                                </DockPanel>
                             </DataTemplate>
                             <DataTemplate x:Key="StringTemplate" DataType="{x:Type input:IShortcutSetting}">
-                                <TextBox Text="{Binding Value}"
+                                <DockPanel>
+                                    <TextBox Text="{Binding Value}"
                                          material:TextFieldAssist.HasClearButton="True" />
+                                </DockPanel>
                             </DataTemplate>
                             <DataTemplate x:Key="OneOfDefaultTemplate" DataType="{x:Type input:IOneOfShortcutSetting}">
-                                <ComboBox SelectedItem="{Binding Value}" 
+                                <DockPanel>
+                                    <ComboBox SelectedItem="{Binding Value}" 
                                           ItemsSource="{Binding ItemsSource}"
                                           material:TextFieldAssist.HasClearButton="True" />
+                                </DockPanel>
                             </DataTemplate>
                         </ItemsControl.Resources>
                         <ItemsControl.ItemTemplate>
