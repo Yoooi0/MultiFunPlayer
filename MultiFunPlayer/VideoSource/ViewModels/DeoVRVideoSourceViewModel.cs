@@ -95,17 +95,18 @@ public class DeoVRVideoSourceViewModel : AbstractVideoSource, IHandle<VideoPlayP
             var playerState = new PlayerState();
             while (!token.IsCancellationRequested && client.Connected)
             {
-                var data = await stream.ReadAllBytesAsync(token);
-                if (data.Length <= 4)
+                var lengthBuffer = await stream.ReadBytesAsync(4, token);
+                if (lengthBuffer.Length < 4)
                     continue;
 
-                var length = BitConverter.ToInt32(data[0..4], 0);
-                if (length <= 0 || data.Length != length + 4)
+                var length = BitConverter.ToInt32(lengthBuffer, 0);
+                if (length <= 0)
                     continue;
 
+                var dataBuffer = await stream.ReadBytesAsync(length, token);
                 try
                 {
-                    var json = Encoding.UTF8.GetString(data[4..(length + 4)]);
+                    var json = Encoding.UTF8.GetString(dataBuffer);
                     var document = JObject.Parse(json);
                     Logger.Trace("Received \"{0}\" from \"{1}\"", json, Name);
 

@@ -205,15 +205,19 @@ public static class CollectionExtensions
 
 public static class StreamExtensions
 {
-    public static async Task<byte[]> ReadAllBytesAsync(this NetworkStream stream, CancellationToken token)
+    private static readonly byte[] _readBuffer = new byte[1024];
+
+    public static async Task<byte[]> ReadBytesAsync(this NetworkStream stream, int count, CancellationToken token)
     {
-        var buffer = new ArraySegment<byte>(new byte[1024]);
         using var memory = new MemoryStream();
 
-        for(int result = 0; result > 0 && stream.DataAvailable;)
+        while(memory.Position < count)
         {
-            result = await stream.ReadAsync(buffer, token);
-            await memory.WriteAsync(buffer.AsMemory(buffer.Offset, result), token);
+            var read = await stream.ReadAsync(_readBuffer.AsMemory(0, Math.Min(_readBuffer.Length, count)), token);
+            if (read == 0)
+                break;
+
+            await memory.WriteAsync(_readBuffer.AsMemory(0, read), token);
         }
 
         memory.Seek(0, SeekOrigin.Begin);
