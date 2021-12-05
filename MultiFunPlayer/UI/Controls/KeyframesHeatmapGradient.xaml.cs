@@ -160,7 +160,7 @@ public partial class KeyframesHeatmapGradient : UserControl, INotifyPropertyChan
     {
         Stops = new GradientStopCollection();
         Points = new PointCollection();
-        if (Keyframes == null || Keyframes.Count == 0 || !float.IsFinite(Duration) || Duration <= 0)
+        if (Keyframes == null || Keyframes.Count == 0 || !float.IsFinite(Duration) || Duration <= 0 || ActualWidth < 1 || ActualHeight < 1)
             return;
 
         var bucketSize = Duration / BucketCount;
@@ -332,8 +332,8 @@ public partial class KeyframesHeatmapGradient : UserControl, INotifyPropertyChan
         }
     }
 
-    private void OnPreviewMouseDown(object sender, MouseButtonEventArgs e)
-    {
-        e.Handled = true;
-    }
+    private void OnPreviewMouseDown(object sender, MouseButtonEventArgs e) => e.Handled = true;
+
+    [SuppressPropertyChangedWarnings]
+    private void OnSizeChanged(object sender, SizeChangedEventArgs e) => Refresh();
 }
