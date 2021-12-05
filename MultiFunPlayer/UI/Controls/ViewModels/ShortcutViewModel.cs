@@ -134,6 +134,8 @@ public class ShortcutViewModel : Screen, IHandle<AppSettingsMessage>, IDisposabl
             return;
 
         _manager.RegisterGesture(CapturedGesture);
+        SelectedBinding = KeyValuePair.Create(CapturedGesture, Bindings[CapturedGesture]);
+
         CapturedGesture = null;
     }
 
