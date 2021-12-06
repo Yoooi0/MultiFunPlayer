@@ -123,7 +123,7 @@ public class TypedValueConverter : JsonConverter<TypedValue>
 
     public override void WriteJson(JsonWriter writer, TypedValue value, JsonSerializer serializer)
     {
-        var valueToken = JToken.FromObject(value.Value, serializer);
+        var valueToken = value.Value == null ? JValue.CreateNull() : JToken.FromObject(value.Value, serializer);
         var o = new JObject
         {
             { "$type", RemoveAssemblyDetails(value.Type.AssemblyQualifiedName) }
