@@ -194,12 +194,16 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                     state.Index++;
 
                 if (beforeIndex == -1 && state.Index >= 0)
+                {
+                    Logger.Debug("Resetting sync on script start [Axis: {0}]", axis);
                     state.SyncTime = 0;
+                }
 
                 if (!keyframes.ValidateIndex(state.Index) || !keyframes.ValidateIndex(state.Index + 1))
                 {
                     if (state.Index + 1 >= keyframes.Count)
                     {
+                        Logger.Debug("Resetting sync on script end [Axis: {0}]", axis);
                         state.Invalidate(true);
                         state.SyncTime = 0;
                     }
