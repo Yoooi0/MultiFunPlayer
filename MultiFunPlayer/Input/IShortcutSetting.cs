@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using MultiFunPlayer.Common;
+using Newtonsoft.Json;
 using PropertyChanged;
 using Stylet;
 using System.Collections;
@@ -34,7 +35,7 @@ public interface IOneOfShortcutSetting<T> : IShortcutSetting<T>, IOneOfShortcutS
     IEnumerable IOneOfShortcutSetting.ItemsSource
     {
         get => ItemsSource;
-        init => ItemsSource = new BindableCollection<T>(value.Cast<T>());
+        init => ItemsSource = new ObservableConcurrentCollection<T>(value.Cast<T>());
     }
 
     new IEnumerable<T> ItemsSource { get; init; }

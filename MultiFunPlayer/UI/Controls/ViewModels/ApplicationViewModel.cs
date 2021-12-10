@@ -8,7 +8,7 @@ namespace MultiFunPlayer.UI.Controls.ViewModels;
 
 public class ApplicationViewModel : Screen, IHandle<AppSettingsMessage>
 {
-    public BindableCollection<string> DeviceTypes { get; }
+    public ObservableConcurrentCollection<string> DeviceTypes { get; }
     public string SelectedDevice { get; set; }
     public bool AlwaysOnTop { get; set; }
 
@@ -17,7 +17,7 @@ public class ApplicationViewModel : Screen, IHandle<AppSettingsMessage>
         eventAggregator.Subscribe(this);
 
         var devices = SettingsHelper.Read(SettingsType.Devices).Properties().Select(p => p.Name);
-        DeviceTypes = new BindableCollection<string>(devices);
+        DeviceTypes = new ObservableConcurrentCollection<string>(devices);
     }
 
     public void OnAlwaysOnTopChanged()

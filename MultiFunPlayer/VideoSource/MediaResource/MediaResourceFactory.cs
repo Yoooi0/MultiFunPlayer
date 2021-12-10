@@ -1,4 +1,5 @@
-﻿using Stylet;
+﻿using MultiFunPlayer.Common;
+using Stylet;
 using System.IO;
 using System.Net;
 using System.Text;
@@ -7,17 +8,17 @@ namespace MultiFunPlayer.VideoSource.MediaResource;
 
 public interface IMediaResourceFactory
 {
-    BindableCollection<IMediaPathModifier> PathModifiers { get; }
+    ObservableConcurrentCollection<IMediaPathModifier> PathModifiers { get; }
     MediaResourceInfo CreateFromPath(string path);
 }
 
 public class MediaResourceFactory : IMediaResourceFactory
 {
-    public BindableCollection<IMediaPathModifier> PathModifiers { get; }
+    public ObservableConcurrentCollection<IMediaPathModifier> PathModifiers { get; }
 
     public MediaResourceFactory()
     {
-        PathModifiers = new BindableCollection<IMediaPathModifier>();
+        PathModifiers = new ObservableConcurrentCollection<IMediaPathModifier>();
     }
 
     public MediaResourceInfo CreateFromPath(string path)

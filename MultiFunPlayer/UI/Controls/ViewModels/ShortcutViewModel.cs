@@ -25,13 +25,13 @@ public class ShortcutViewModel : Screen, IHandle<AppSettingsMessage>, IDisposabl
     private CancellationTokenSource _captureGestureCancellationSource;
 
     public string ActionsFilter { get; set; }
-    public BindableCollection<IShortcutActionDescriptor> ActionDescriptors { get; }
+    public ObservableConcurrentCollection<IShortcutActionDescriptor> ActionDescriptors { get; }
     public ICollectionView AvailableActionDescriptors { get; }
-    public IReadOnlyDictionary<IInputGestureDescriptor, BindableCollection<IShortcutAction>> Bindings => _manager.Bindings;
+    public IReadOnlyDictionary<IInputGestureDescriptor, ObservableConcurrentCollection<IShortcutAction>> Bindings => _manager.Bindings;
 
     public bool IsCapturingGesture { get; private set; }
     public IInputGestureDescriptor CapturedGesture { get; set; }
-    public KeyValuePair<IInputGestureDescriptor, BindableCollection<IShortcutAction>>? SelectedBinding { get; set; }
+    public KeyValuePair<IInputGestureDescriptor, ObservableConcurrentCollection<IShortcutAction>>? SelectedBinding { get; set; }
 
     [JsonProperty] public bool IsKeyboardKeysGestureEnabled { get; set; } = true;
     [JsonProperty] public bool IsMouseAxisGestureEnabled { get; set; } = false;
@@ -45,7 +45,7 @@ public class ShortcutViewModel : Screen, IHandle<AppSettingsMessage>, IDisposabl
 
         Logger.Debug($"Found {manager.Actions.Count} available actions");
 
-        ActionDescriptors = new BindableCollection<IShortcutActionDescriptor>(manager.Actions);
+        ActionDescriptors = new ObservableConcurrentCollection<IShortcutActionDescriptor>(manager.Actions);
         AvailableActionDescriptors = CollectionViewSource.GetDefaultView(ActionDescriptors);
         AvailableActionDescriptors.Filter = o =>
         {
@@ -141,7 +141,7 @@ public class ShortcutViewModel : Screen, IHandle<AppSettingsMessage>, IDisposabl
 
     public void RemoveGesture(object sender, RoutedEventArgs e)
     {
-        if (sender is not FrameworkElement element || element.DataContext is not KeyValuePair<IInputGestureDescriptor, BindableCollection<IShortcutAction>> pair)
+        if (sender is not FrameworkElement element || element.DataContext is not KeyValuePair<IInputGestureDescriptor, ObservableConcurrentCollection<IShortcutAction>> pair)
             return;
 
         var (gestureDescriptor, _) = pair;
@@ -308,7 +308,7 @@ public class BindingSettingsModel
     public IInputGestureDescriptor Gesture { get; init; }
     public List<ActionSettingsModel> Actions { get; init; }
 
-    public static BindingSettingsModel FromBinding(KeyValuePair<IInputGestureDescriptor, BindableCollection<IShortcutAction>> binding)
+    public static BindingSettingsModel FromBinding(KeyValuePair<IInputGestureDescriptor, ObservableConcurrentCollection<IShortcutAction>> binding)
         => new()
         {
             Gesture = binding.Key,

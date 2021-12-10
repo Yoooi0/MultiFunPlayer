@@ -36,14 +36,14 @@ public class ButtplugOutputTargetViewModel : AsyncAbstractOutputTarget
 
     public override ConnectionStatus Status { get; protected set; }
     public IPEndPoint Endpoint { get; set; } = new IPEndPoint(IPAddress.Loopback, 12345);
-    public BindableCollection<ButtplugClientDevice> AvailableDevices { get; protected set; }
+    public ObservableConcurrentCollection<ButtplugClientDevice> AvailableDevices { get; protected set; }
 
     [DependsOn(nameof(SelectedDevice))]
-    public BindableCollection<ServerMessage.Types.MessageAttributeType> AvailableMessageTypes
+    public ObservableConcurrentCollection<ServerMessage.Types.MessageAttributeType> AvailableMessageTypes
         => SelectedDevice != null ? new(SelectedDevice.AllowedMessages.Keys.Join(_supportedMessages, x => x, x => x, (x, _) => x)) : null;
 
     [DependsOn(nameof(SelectedDevice), nameof(AvailableMessageTypes))]
-    public BindableCollection<uint> AvailableFeatureIndices
+    public ObservableConcurrentCollection<uint> AvailableFeatureIndices
     {
         get
         {
@@ -67,13 +67,13 @@ public class ButtplugOutputTargetViewModel : AsyncAbstractOutputTarget
     public uint? SelectedFeatureIndex { get; set; }
     public bool CanAddSelected => SelectedDevice != null && SelectedDeviceAxis != null && SelectedMessageType != null && SelectedFeatureIndex != null;
 
-    public BindableCollection<ButtplugClientDeviceSettings> DeviceSettings { get; protected set; }
+    public ObservableConcurrentCollection<ButtplugClientDeviceSettings> DeviceSettings { get; protected set; }
 
     public ButtplugOutputTargetViewModel(IShortcutManager shortcutManager, IEventAggregator eventAggregator, IDeviceAxisValueProvider valueProvider)
         : base(shortcutManager, eventAggregator, valueProvider)
     {
-        AvailableDevices = new BindableCollection<ButtplugClientDevice>();
-        DeviceSettings = new BindableCollection<ButtplugClientDeviceSettings>();
+        AvailableDevices = new ObservableConcurrentCollection<ButtplugClientDevice>();
+        DeviceSettings = new ObservableConcurrentCollection<ButtplugClientDeviceSettings>();
         UpdateInterval = 50;
 
         AvailableDevices.CollectionChanged += (s, e) => DeviceSettings.Refresh();

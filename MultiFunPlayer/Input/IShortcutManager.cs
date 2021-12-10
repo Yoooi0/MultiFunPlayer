@@ -20,7 +20,7 @@ public interface IShortcutManager : IDisposable
     event EventHandler<GestureEventArgs> OnGesture;
 
     IReadOnlyCollection<IShortcutActionDescriptor> Actions { get; }
-    IReadOnlyDictionary<IInputGestureDescriptor, BindableCollection<IShortcutAction>> Bindings { get; }
+    IReadOnlyDictionary<IInputGestureDescriptor, ObservableConcurrentCollection<IShortcutAction>> Bindings { get; }
 
     void BindAction(IInputGestureDescriptor gestureDescriptor, IShortcutActionDescriptor actionDescriptor);
     void BindActionWithSettings(IInputGestureDescriptor gestureDescriptor, IShortcutActionDescriptor actionDescriptor, IEnumerable<TypedValue> values);
@@ -38,20 +38,20 @@ public class ShortcutManager : IShortcutManager
     protected static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
     private readonly Dictionary<IShortcutActionDescriptor, IShortcutActionBuilder> _actions;
-    private readonly ObservableConcurrentDictionary<IInputGestureDescriptor, BindableCollection<IShortcutAction>> _bindings;
+    private readonly ObservableConcurrentDictionary<IInputGestureDescriptor, ObservableConcurrentCollection<IShortcutAction>> _bindings;
     private readonly List<IInputProcessor> _processors;
 
     public event EventHandler<GestureEventArgs> OnGesture;
 
     public IReadOnlyCollection<IShortcutActionDescriptor> Actions => _actions.Keys;
-    public IReadOnlyDictionary<IInputGestureDescriptor, BindableCollection<IShortcutAction>> Bindings => _bindings;
+    public IReadOnlyDictionary<IInputGestureDescriptor, ObservableConcurrentCollection<IShortcutAction>> Bindings => _bindings;
 
     public bool HandleGestures { get; set; } = true;
 
     public ShortcutManager(IEnumerable<IInputProcessor> processors)
     {
         _actions = new Dictionary<IShortcutActionDescriptor, IShortcutActionBuilder>();
-        _bindings = new ObservableConcurrentDictionary<IInputGestureDescriptor, BindableCollection<IShortcutAction>>();
+        _bindings = new ObservableConcurrentDictionary<IInputGestureDescriptor, ObservableConcurrentCollection<IShortcutAction>>();
 
         _processors = processors.ToList();
         foreach (var processor in _processors)
@@ -133,7 +133,7 @@ public class ShortcutManager : IShortcutManager
         if (_bindings.ContainsKey(gestureDescriptor))
             return;
 
-        _bindings.Add(gestureDescriptor, new BindableCollection<IShortcutAction>());
+        _bindings.Add(gestureDescriptor, new ObservableConcurrentCollection<IShortcutAction>());
     }
 
     public void UnregisterGesture(IInputGestureDescriptor gestureDescriptor)

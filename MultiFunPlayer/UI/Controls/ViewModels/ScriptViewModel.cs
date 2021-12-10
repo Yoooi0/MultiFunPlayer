@@ -55,8 +55,8 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
     [JsonProperty] public bool VideoContentVisible { get; set; } = true;
     [JsonProperty] public bool AxisContentVisible { get; set; } = false;
     [JsonProperty] public ObservableConcurrentDictionaryView<DeviceAxis, AxisModel, AxisSettings> AxisSettings { get; }
-    [JsonProperty(ItemTypeNameHandling = TypeNameHandling.Objects)] public BindableCollection<IMediaPathModifier> VideoPathModifiers => _mediaResourceFactory.PathModifiers;
-    [JsonProperty] public BindableCollection<ScriptLibrary> ScriptLibraries { get; }
+    [JsonProperty(ItemTypeNameHandling = TypeNameHandling.Objects)] public ObservableConcurrentCollection<IMediaPathModifier> VideoPathModifiers => _mediaResourceFactory.PathModifiers;
+    [JsonProperty] public ObservableConcurrentCollection<ScriptLibrary> ScriptLibraries { get; }
     [JsonProperty] public SyncSettings SyncSettings { get; set; }
     [JsonProperty] public bool HeatmapShowStrokeLength { get; set; }
     [JsonProperty] public int HeatmapBucketCount { get; set; } = 333;
@@ -76,7 +76,7 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         VideoPathModifierTypes = ReflectionUtils.FindImplementations<IMediaPathModifier>()
                                                 .ToDictionary(t => t.GetCustomAttribute<DisplayNameAttribute>(inherit: false).DisplayName, t => t);
 
-        ScriptLibraries = new BindableCollection<ScriptLibrary>();
+        ScriptLibraries = new ObservableConcurrentCollection<ScriptLibrary>();
         SyncSettings = new SyncSettings();
 
         VideoFile = null;

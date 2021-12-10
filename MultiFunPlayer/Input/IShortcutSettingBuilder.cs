@@ -1,4 +1,5 @@
-﻿using Stylet;
+﻿using MultiFunPlayer.Common;
+using Stylet;
 
 namespace MultiFunPlayer.Input;
 
@@ -17,7 +18,7 @@ public class ShortcutSettingBuilder<T> : IShortcutSettingBuilder<T>
     private T _defaultValue;
     public string _description;
     public string _label;
-    public BindableCollection<T> _itemsSource;
+    public ObservableConcurrentCollection<T> _itemsSource;
     private string _stringFormat;
 
     public IShortcutSetting<T> Build()
@@ -42,7 +43,7 @@ public class ShortcutSettingBuilder<T> : IShortcutSettingBuilder<T>
     }
 
     public IShortcutSettingBuilder<T> WithDefaultValue(T defaultValue) { _defaultValue = defaultValue; return this; }
-    public IShortcutSettingBuilder<T> WithItemsSource(IEnumerable<T> itemsSource) { _itemsSource = new BindableCollection<T>(itemsSource); return this; }
+    public IShortcutSettingBuilder<T> WithItemsSource(IEnumerable<T> itemsSource) { _itemsSource = new ObservableConcurrentCollection<T>(itemsSource); return this; }
     public IShortcutSettingBuilder<T> WithDescription(string description) { _description = description; return this; }
     public IShortcutSettingBuilder<T> WithLabel(string label) { _label = label; return this; }
     public IShortcutSettingBuilder<T> WithStringFormat(string stringFormat) { _stringFormat = stringFormat; return this; }
