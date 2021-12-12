@@ -9,8 +9,7 @@
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
     <StackPanel>
-        <DockPanel LastChildFill="True"
-                   Margin="0 0 0 10">
+        <DockPanel LastChildFill="True">
             <TextBlock Text="Pattern:"
                        Margin="0 0 10 0"
                        VerticalAlignment="Center"
@@ -20,8 +19,7 @@
                       SelectedItem="{Binding Pattern}"/>
         </DockPanel>
 
-        <DockPanel LastChildFill="True"
-                   Margin="0 0 0 10">
+        <DockPanel LastChildFill="True">
             <TextBlock Text="Speed:"
                        Margin="0 0 10 0"
                        VerticalAlignment="Center"

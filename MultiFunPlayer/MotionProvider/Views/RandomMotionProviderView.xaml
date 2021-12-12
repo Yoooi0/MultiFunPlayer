@@ -1,9 +1,11 @@
 ﻿<UserControl x:Class="MultiFunPlayer.MotionProvider.Views.RandomMotionProviderView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:material="http://materialdesigninxaml.net/winfx/xaml/themes"
              xmlns:metro="http://metro.mahapps.com/winfx/xaml/controls"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:controls="clr-namespace:MultiFunPlayer.UI.Controls"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
     <StackPanel>
@@ -25,21 +27,6 @@
 
         <DockPanel LastChildFill="True"
                    Margin="0 0 0 10">
-            <TextBlock Text="Seed:"
-                       Margin="0 0 10 0"
-                       VerticalAlignment="Center"
-                       DockPanel.Dock="Left"/>
-
-            <metro:NumericUpDown Value="{Binding Seed}"
-                                 Style="{StaticResource MaterialDesignNumericUpDown}"
-                                 Interval="1"
-                                 StringFormat="G"
-                                 Validation.ErrorTemplate="{x:Null}"
-                                 ParsingNumberStyle="Integer"
-                                 HideUpDownButtons="False"/>
-        </DockPanel>
-
-        <DockPanel LastChildFill="True">
             <TextBlock Text="Range:"
                        Margin="0 0 10 0"
                        VerticalAlignment="Center"
@@ -77,5 +64,80 @@
                 </metro:RangeSlider.AutoToolTipRangeValuesTemplate>
             </metro:RangeSlider>
         </DockPanel>
+
+        <material:Card material:ShadowAssist.ShadowDepth="Depth1">
+            <Expander>
+                <Expander.Header>
+                    <TextBlock Text="Advanced" 
+                               VerticalAlignment="Center"
+                               Margin="12 0 0 0"
+                               FontSize="14"
+                               FontWeight="Bold"
+                               Typography.Capitals="AllSmallCaps"/>
+                </Expander.Header>
+                
+                <StackPanel Margin="10">
+                    <DockPanel LastChildFill="True">
+                        <TextBlock Text="Octaves:"
+                                   Margin="0 0 10 0"
+                                   VerticalAlignment="Center"
+                                   DockPanel.Dock="Left"/>
+
+                        <metro:NumericUpDown Value="{Binding Octaves}"
+                                             Style="{StaticResource MaterialDesignNumericUpDown}"
+                                             Interval="1"
+                                             Minimum="1"
+                                             Maximum="8"
+                                             StringFormat="G"
+                                             Validation.ErrorTemplate="{x:Null}"
+                                             ParsingNumberStyle="Integer"
+                                             HideUpDownButtons="False"/>
+                    </DockPanel>
+
+                    <DockPanel LastChildFill="True">
+                        <TextBlock Text="Persistence:"
+                                   Margin="0 0 10 0"
+                                   VerticalAlignment="Center"
+                                   DockPanel.Dock="Left"/>
+
+                        <metro:NumericUpDown Value="{Binding Persistence}"
+                                             Style="{StaticResource MaterialDesignNumericUpDown}"
+                                             Interval="0.01"
+                                             Minimum="0.01"
+                                             StringFormat="F2"
+                                             Validation.ErrorTemplate="{x:Null}"
+                                             ParsingNumberStyle="Float"
+                                             HideUpDownButtons="False"/>
+                    </DockPanel>
+
+                    <DockPanel LastChildFill="True"
+                               Margin="0 0 0 10">
+                        <TextBlock Text="Lacunarity:"
+                                   Margin="0 0 10 0"
+                                   VerticalAlignment="Center"
+                                   DockPanel.Dock="Left"/>
+
+                        <metro:NumericUpDown Value="{Binding Lacunarity}"
+                                             Style="{StaticResource MaterialDesignNumericUpDown}"
+                                             Interval="0.01"
+                                             Minimum="0.1"
+                                             Maximum="2"
+                                             StringFormat="F2"
+                                             Validation.ErrorTemplate="{x:Null}"
+                                             ParsingNumberStyle="Float"
+                                             HideUpDownButtons="False"/>
+                    </DockPanel>
+
+                    <DockPanel LastChildFill="True">
+                        <controls:OpenSimplexPreview Height="32" 
+                                         Length="5" 
+                                         PointCount="300"
+                                         Octaves="{Binding Octaves}" 
+                                         Persistence="{Binding Persistence}" 
+                                         Lacunarity="{Binding Lacunarity}"/>
+                    </DockPanel>
+                </StackPanel>
+            </Expander>
+        </material:Card>
     </StackPanel>
 </UserControl>

@@ -808,7 +808,7 @@
                                                                            VerticalAlignment="Center"/>
                                                     </Border>
                                                 </material:PopupBox.ToggleContent>
-                                                <Grid Width="250" Margin="10">
+                                                <Grid Width="250" Margin="10 0 10 0">
                                                     <StackPanel>
                                                         <DockPanel LastChildFill="True">
                                                             <DockPanel LastChildFill="True"

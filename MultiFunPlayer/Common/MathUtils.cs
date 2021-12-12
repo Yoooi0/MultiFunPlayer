@@ -256,6 +256,23 @@ public class OpenSimplex
         return Calculate2DImpl(x + s, y + s);
     }
 
+    public double Calculate2D(double x, double y, int octaves, double persistence, double lacunarity)
+    {
+        var frequency = 1.0;
+        var amplitude = 1.0;
+        var totalValue = 0.0;
+        var totalAmplitude = 0.0;
+        for (var i = 0; i < octaves; i++)
+        {
+            totalValue += Calculate2D(x * frequency, y * frequency) * amplitude;
+            totalAmplitude += amplitude;
+            amplitude *= persistence;
+            frequency *= lacunarity;
+        }
+
+        return totalValue / totalAmplitude;
+    }
+
     private double Calculate2DImpl(double xs, double ys)
     {
         var value = 0.0;
