@@ -20,7 +20,6 @@ public class PatternMotionProviderViewModel : AbstractMotionProvider
 {
     private float _time;
 
-    [JsonProperty] public float Period { get; set; } = 1;
     [JsonProperty] public PatternType Pattern { get; set; } = PatternType.Triangle;
 
     public override void Update(float deltaTime)
@@ -31,7 +30,7 @@ public class PatternMotionProviderViewModel : AbstractMotionProvider
 
     private float Calculate(PatternType pattern, float time)
     {
-        var t = MathUtils.Clamp01(time % Period / Period);
+        var t = MathUtils.Clamp01(time % 4 / 4);
         switch (pattern)
         {
             case PatternType.Triangle: return MathF.Abs(MathF.Abs(t * 2 - 1.5f) - 1);

@@ -19,7 +19,8 @@
                       SelectedItem="{Binding Pattern}"/>
         </DockPanel>
 
-        <DockPanel LastChildFill="True">
+        <DockPanel LastChildFill="True"
+                   Margin="0 0 0 10">
             <TextBlock Text="Speed:"
                        Margin="0 0 10 0"
                        VerticalAlignment="Center"
@@ -30,22 +31,6 @@
                                  Minimum="0.01"
                                  Interval="0.01"
                                  StringFormat="P0"
-                                 Validation.ErrorTemplate="{x:Null}"
-                                 HideUpDownButtons="False"/>
-        </DockPanel>
-
-        <DockPanel LastChildFill="True"
-                   Margin="0 0 0 10">
-            <TextBlock Text="Period:"
-                       Margin="0 0 10 0"
-                       VerticalAlignment="Center"
-                       DockPanel.Dock="Left"/>
-
-            <metro:NumericUpDown Value="{Binding Period}"
-                                 Style="{StaticResource MaterialDesignNumericUpDown}"
-                                 Minimum="0.01"
-                                 Interval="0.01"
-                                 StringFormat="{}{0:F2}s"
                                  Validation.ErrorTemplate="{x:Null}"
                                  HideUpDownButtons="False"/>
         </DockPanel>
