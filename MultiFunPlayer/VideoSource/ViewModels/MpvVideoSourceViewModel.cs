@@ -30,6 +30,7 @@ public class MpvVideoSourceViewModel : AbstractVideoSource, IHandle<VideoPlayPau
 
     public FileInfo Executable { get; set; } = null;
     public string Arguments { get; set; } = "--keep-open=always --pause";
+    public bool AutoStartEnabled { get; set; } = false;
 
     public MpvVideoSourceViewModel(IShortcutManager shortcutManager, IEventAggregator eventAggregator)
         : base(shortcutManager, eventAggregator)
@@ -203,6 +204,8 @@ public class MpvVideoSourceViewModel : AbstractVideoSource, IHandle<VideoPlayPau
                 settings[nameof(Executable)] = JToken.FromObject(Executable);
             if (Arguments != null)
                 settings[nameof(Arguments)] = new JValue(Arguments);
+
+            settings[nameof(AutoStartEnabled)] = new JValue(AutoStartEnabled);
         }
         else if (type == AppSettingsMessageType.Loading)
         {
@@ -210,10 +213,12 @@ public class MpvVideoSourceViewModel : AbstractVideoSource, IHandle<VideoPlayPau
                 Executable = executable;
             if (settings.TryGetValue<string>(nameof(Arguments), out var arguments))
                 Arguments = arguments;
+            if (settings.TryGetValue<bool>(nameof(AutoStartEnabled), out var autoStartEnabled))
+                AutoStartEnabled = autoStartEnabled;
         }
     }
 
-    public override async ValueTask<bool> CanConnectAsync(CancellationToken token) => await ValueTask.FromResult(File.Exists(@$"\\.\\pipe\\{_pipeName}"));
+    public override async ValueTask<bool> CanConnectAsync(CancellationToken token) => await ValueTask.FromResult(AutoStartEnabled || File.Exists(@$"\\.\\pipe\\{_pipeName}"));
 
     public void OnLoadExecutable()
     {

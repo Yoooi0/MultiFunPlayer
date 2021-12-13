@@ -66,6 +66,18 @@
                         <material:PackIcon Kind="MotionPlayOutline" Width="20" Height="20"/>
                     </material:ToggleButtonAssist.OnContent>
                 </ToggleButton>
+
+                <ToggleButton DockPanel.Dock="Left"
+                              IsChecked="{Binding AutoStartEnabled}"           
+                              Style="{StaticResource MaterialDesignToolBarToggleButton}"
+                              ToolTipService.InitialShowDelay="0"
+                              ToolTipService.Placement="Top"
+                              ToolTip="Auto-start mpv">
+                    <material:PackIcon Kind="AutoStart" Opacity=".56" Width="20" Height="20"/>
+                    <material:ToggleButtonAssist.OnContent>
+                        <material:PackIcon Kind="AutoStart" Width="20" Height="20"/>
+                    </material:ToggleButtonAssist.OnContent>
+                </ToggleButton>
             </StackPanel>
         </Expander.Header>
 
