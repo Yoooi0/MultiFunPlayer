@@ -55,6 +55,8 @@ public class PipeOutputTargetViewModel : ThreadAbstractOutputTarget
 
         try
         {
+            EventAggregator.Publish(new SyncRequestMessage());
+
             var buffer = new byte[256];
             var stopwatch = Stopwatch.StartNew();
             while (!token.IsCancellationRequested && client?.IsConnected == true)

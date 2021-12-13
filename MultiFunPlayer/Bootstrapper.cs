@@ -37,6 +37,7 @@ public class Bootstrapper : Bootstrapper<RootViewModel>
 
         builder.Bind<IVideoSource>().ToAllImplementations().InSingletonScope();
         builder.Bind<IOutputTarget>().ToAllImplementations().InSingletonScope();
+        builder.Bind<IMotionProvider>().ToAllImplementations();
         builder.Bind<IShortcutManager>().To<ShortcutManager>().InSingletonScope();
         builder.Bind<IMotionProviderManager>().To<MotionProviderManager>().InSingletonScope();
         builder.Bind<IInputProcessor>().ToAllImplementations().InSingletonScope();

@@ -43,12 +43,15 @@ public abstract class AbstractOutputTarget : Screen, IHandle<AppSettingsMessage>
     }
 
     protected Dictionary<DeviceAxis, float> Values { get; }
+    protected IEventAggregator EventAggregator { get; }
 
     protected AbstractOutputTarget(IShortcutManager shortcutManager, IEventAggregator eventAggregator, IDeviceAxisValueProvider valueProvider)
     {
         _statusEvent = new AsyncManualResetEvent();
-        eventAggregator.Subscribe(this);
         _valueProvider = valueProvider;
+
+        EventAggregator = eventAggregator;
+        EventAggregator.Subscribe(this);
 
         Values = DeviceAxis.All.ToDictionary(a => a, a => a.DefaultValue);
         AxisSettings = new ObservableConcurrentDictionary<DeviceAxis, DeviceAxisSettings>(DeviceAxis.All.ToDictionary(a => a, _ => new DeviceAxisSettings()));

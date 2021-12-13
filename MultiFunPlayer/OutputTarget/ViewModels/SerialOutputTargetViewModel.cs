@@ -100,6 +100,8 @@ public class SerialOutputTargetViewModel : ThreadAbstractOutputTarget
 
         try
         {
+            EventAggregator.Publish(new SyncRequestMessage());
+
             var stopwatch = Stopwatch.StartNew();
             var lastSentValues = DeviceAxis.All.ToDictionary(a => a, _ => float.NaN);
             while (!token.IsCancellationRequested && serialPort?.IsOpen == true)

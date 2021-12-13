@@ -207,6 +207,8 @@ public class ButtplugOutputTargetViewModel : AsyncAbstractOutputTarget
                 return shouldUpdate;
             }
 
+            EventAggregator.Publish(new SyncRequestMessage());
+
             var stopwatch = Stopwatch.StartNew();
             while (!token.IsCancellationRequested && client.Connected)
             {

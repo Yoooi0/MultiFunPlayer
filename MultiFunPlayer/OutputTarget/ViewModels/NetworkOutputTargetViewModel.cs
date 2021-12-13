@@ -68,6 +68,8 @@ public class NetworkOutputTargetViewModel : ThreadAbstractOutputTarget
 
         try
         {
+            EventAggregator.Publish(new SyncRequestMessage());
+
             var stopwatch = Stopwatch.StartNew();
             using var stream = new StreamWriter(client.GetStream(), Encoding.ASCII);
             while (!token.IsCancellationRequested && client?.Connected == true)
@@ -111,7 +113,8 @@ public class NetworkOutputTargetViewModel : ThreadAbstractOutputTarget
 
         try
         {
-            var sb = new StringBuilder(256);
+            EventAggregator.Publish(new SyncRequestMessage());
+
             var buffer = new byte[256];
             var stopwatch = Stopwatch.StartNew();
             while (!token.IsCancellationRequested)

@@ -3,6 +3,7 @@ using MultiFunPlayer.Common.Messages;
 using MultiFunPlayer.Input;
 using MultiFunPlayer.Settings;
 using Newtonsoft.Json.Linq;
+using NLog;
 using Stylet;
 using System.ComponentModel;
 using System.Reflection;
@@ -20,20 +21,43 @@ public interface IMotionProviderManager
 
 public class MotionProviderManager : IMotionProviderManager, IHandle<AppSettingsMessage>
 {
+    protected Logger Logger = LogManager.GetCurrentClassLogger();
+
+    private readonly IEventAggregator _eventAggregator;
     private readonly HashSet<string> _motionProviderNames;
     private readonly Dictionary<DeviceAxis, Dictionary<string, IMotionProvider>> _motionProviders;
 
     public IEnumerable<string> MotionProviderNames => _motionProviderNames;
 
-    public MotionProviderManager(IEventAggregator eventAggregator)
+    public MotionProviderManager(IEventAggregator eventAggregator, Func<IEnumerable<IMotionProvider>> motionProviderFactory)
     {
-        eventAggregator.Subscribe(this);
+        _eventAggregator = eventAggregator;
+        _eventAggregator.Subscribe(this);
 
         var motionProviderTypes = ReflectionUtils.FindImplementations<IMotionProvider>();
         _motionProviderNames = motionProviderTypes.Select(t => t.GetCustomAttribute<DisplayNameAttribute>(inherit: false).DisplayName)
                                                   .ToHashSet();
-        _motionProviders = DeviceAxis.All.ToDictionary(a => a, a => motionProviderTypes.ToDictionary(t => t.GetCustomAttribute<DisplayNameAttribute>(inherit: false).DisplayName,
-                                                                                                     t => (IMotionProvider)Activator.CreateInstance(t)));
+        _motionProviders = DeviceAxis.All.ToDictionary(a => a, a => motionProviderFactory().ToDictionary(p => p.GetType().GetCustomAttribute<DisplayNameAttribute>(inherit: false).DisplayName, 
+                                                                                                         p => p));
+
+        foreach(var (_, motionProviders) in _motionProviders)
+            foreach(var (_, motionProvider) in motionProviders)
+                motionProvider.SyncRequest += OnMotionProviderSyncRequest;
+    }
+
+    private void OnMotionProviderSyncRequest(object sender, EventArgs e)
+    {
+        if (sender is not IMotionProvider motionProvider)
+            return;
+
+        var axis = GetDeviceAxis(motionProvider);
+        if(axis == null)
+        {
+            Logger.Warn("Could not find motion provider for axis! [Axis: {0}, Name: {1}]", axis, motionProvider.Name);
+            return;
+        }
+
+        _eventAggregator.Publish(new SyncRequestMessage(axis));
     }
 
     public IMotionProvider GetMotionProvider(DeviceAxis axis, string motionProviderName)
@@ -46,6 +70,16 @@ public class MotionProviderManager : IMotionProviderManager, IHandle<AppSettings
             return null;
 
         return motionProvider;
+    }
+
+    private DeviceAxis GetDeviceAxis(IMotionProvider provider)
+    {
+        foreach (var (axis, motionProviders) in _motionProviders)
+            foreach (var (_, motionProvider) in motionProviders)
+                if (motionProvider == provider)
+                    return axis;
+        
+        return null;
     }
 
     public float? Update(DeviceAxis axis, string motionProviderName, float deltaTime)
@@ -66,8 +100,17 @@ public class MotionProviderManager : IMotionProviderManager, IHandle<AppSettings
             if (message.Settings.TryGetValue<Dictionary<DeviceAxis, List<TypedValue>>>("MotionProvider", out var motionProviderMap))
             {
                 foreach (var (axis, motionProviders) in motionProviderMap)
+                {
                     foreach (var motionProvider in motionProviders.Select(x => x.Value as IMotionProvider))
+                    {
+                        var currentMotionProvider = _motionProviders[axis][motionProvider.Name];
+                        if (currentMotionProvider != null)
+                            currentMotionProvider.SyncRequest -= OnMotionProviderSyncRequest;
+
+                        motionProvider.SyncRequest += OnMotionProviderSyncRequest;
                         _motionProviders[axis][motionProvider.Name] = motionProvider;
+                    }
+                }
             }
         }
     }
