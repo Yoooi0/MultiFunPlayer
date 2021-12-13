@@ -1,6 +1,5 @@
 using MultiFunPlayer.Common;
 using PropertyChanged;
-using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
@@ -86,6 +85,7 @@ public partial class OpenSimplexPreview : UserControl, INotifyPropertyChanged
             return;
 
         @this.Refresh();
+        @this.PropertyChanged?.Invoke(@this, new PropertyChangedEventArgs(e.Property.Name));
     }
 
     public OpenSimplexPreview()
@@ -105,7 +105,6 @@ public partial class OpenSimplexPreview : UserControl, INotifyPropertyChanged
         for (var x = 0f; x < Length; x += step)
             AddPoint(x, (float)_noise.Calculate2D(x, _seed, Octaves, Persistence, Lacunarity));
     }
-
 
     public event PropertyChangedEventHandler PropertyChanged;
 

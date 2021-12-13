@@ -1,5 +1,4 @@
 ﻿using MultiFunPlayer.Common;
-using Stylet;
 
 namespace MultiFunPlayer.Input;
 
