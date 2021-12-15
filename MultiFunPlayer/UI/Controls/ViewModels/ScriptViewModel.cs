@@ -239,11 +239,11 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
 
             bool UpdateMotionProvider(DeviceAxis axis, AxisState state, AxisSettings settings)
             {
-                var shouldUpdate = (state.InsideScript && !IsPlaying && settings.UpdateMotionProviderWhenPaused)
-                                || (!state.InsideScript && settings.UpdateMotionProviderWithoutScript)
-                                || (IsPlaying && state.InsideScript);
-
-                if (!shouldUpdate)
+                if (settings.SelectedMotionProvider == null)
+                    return false;
+                if (!settings.UpdateMotionProviderWhenPaused && !IsPlaying)
+                    return false;
+                if (!settings.UpdateMotionProviderWithoutScript && !state.InsideScript)
                     return false;
 
                 var newValue = MotionProviderManager.Update(axis, settings.SelectedMotionProvider, (float)stopwatch.Elapsed.TotalSeconds);
