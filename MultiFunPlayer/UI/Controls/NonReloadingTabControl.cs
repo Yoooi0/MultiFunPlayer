@@ -10,6 +10,17 @@ public class NonReloadingTabControl : TabControl
 {
     private Panel _itemsHolderPanel;
 
+    public static readonly DependencyProperty AdditionalPanelContentProperty = 
+        DependencyProperty.Register("AdditionalPanelContent", 
+            typeof(DataTemplate), typeof(NonReloadingTabControl), 
+                new FrameworkPropertyMetadata(null));
+
+    public DataTemplate AdditionalPanelContent
+    {
+        get => (DataTemplate)GetValue(AdditionalPanelContentProperty);
+        set => SetValue(AdditionalPanelContentProperty, value);
+    }
+
     public NonReloadingTabControl()
     {
         Loaded += (_, _) =>

@@ -13,6 +13,8 @@ public class OutputTargetViewModel : Conductor<IOutputTarget>.Collection.OneActi
     private Dictionary<IOutputTarget, SemaphoreSlim> _semaphores;
 
     public bool ContentVisible { get; set; }
+    public int ScanDelay { get; set; } = 2500;
+    public int ScanInterval { get; set; } = 5000;
 
     public OutputTargetViewModel(IShortcutManager shortcutManager, IEventAggregator eventAggregator, IEnumerable<IOutputTarget> targets)
     {
@@ -20,15 +22,23 @@ public class OutputTargetViewModel : Conductor<IOutputTarget>.Collection.OneActi
         Items.AddRange(targets);
 
         _semaphores = targets.ToDictionary(t => t, _ => new SemaphoreSlim(1, 1));
-
         _cancellationSource = new CancellationTokenSource();
+
+        RegisterShortcuts(shortcutManager);
+    }
+
+    protected override void OnViewLoaded()
+    {
+        base.OnViewLoaded();
+
+        if (_task != null)
+            return;
+
         _task = Task.Factory.StartNew(() => ScanAsync(_cancellationSource.Token),
             _cancellationSource.Token,
             TaskCreationOptions.LongRunning,
             TaskScheduler.Default)
             .Unwrap();
-
-        RegisterShortcuts(shortcutManager);
     }
 
     public void Handle(AppSettingsMessage message)
@@ -40,6 +50,8 @@ public class OutputTargetViewModel : Conductor<IOutputTarget>.Collection.OneActi
                 return;
 
             settings[nameof(ContentVisible)] = ContentVisible;
+            settings[nameof(ScanDelay)] = ScanDelay;
+            settings[nameof(ScanInterval)] = ScanInterval;
 
             if (ActiveItem != null)
                 settings[nameof(ActiveItem)] = ActiveItem.Name;
@@ -51,6 +63,10 @@ public class OutputTargetViewModel : Conductor<IOutputTarget>.Collection.OneActi
 
             if (settings.TryGetValue<bool>(nameof(ContentVisible), out var contentVisible))
                 ContentVisible = contentVisible;
+            if (settings.TryGetValue<int>(nameof(ScanDelay), out var scanDelay))
+                ScanDelay = scanDelay;
+            if (settings.TryGetValue<int>(nameof(ScanInterval), out var scanInterval))
+                ScanInterval = scanInterval;
 
             if (settings.TryGetValue<string>(nameof(ActiveItem), out var selectedItem))
                 ChangeActiveItem(Items.FirstOrDefault(x => string.Equals(x.Name, selectedItem)) ?? Items[0], closePrevious: false);
@@ -82,7 +98,7 @@ public class OutputTargetViewModel : Conductor<IOutputTarget>.Collection.OneActi
     {
         try
         {
-            await Task.Delay(2500, token);
+            await Task.Delay(ScanDelay, token);
             while (!token.IsCancellationRequested)
             {
                 foreach (var target in Items.ToList())
@@ -100,7 +116,7 @@ public class OutputTargetViewModel : Conductor<IOutputTarget>.Collection.OneActi
                     _semaphores[target].Release();
                 }
 
-                await Task.Delay(5000, token);
+                await Task.Delay(ScanInterval, token);
             }
         }
         catch (OperationCanceledException) { }

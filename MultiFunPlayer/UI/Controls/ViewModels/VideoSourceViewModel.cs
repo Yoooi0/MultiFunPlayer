@@ -14,6 +14,8 @@ public class VideoSourceViewModel : Conductor<IVideoSource>.Collection.OneActive
     private SemaphoreSlim _semaphore;
 
     public bool ContentVisible { get; set; }
+    public int ScanDelay { get; set; } = 2500;
+    public int ScanInterval { get; set; } = 5000;
 
     public VideoSourceViewModel(IShortcutManager shortcutManager, IEventAggregator eventAggregator, IEnumerable<IVideoSource> sources)
     {
@@ -24,13 +26,22 @@ public class VideoSourceViewModel : Conductor<IVideoSource>.Collection.OneActive
 
         _semaphore = new SemaphoreSlim(1, 1);
         _cancellationSource = new CancellationTokenSource();
+
+        RegisterShortcuts(shortcutManager);
+    }
+
+    protected override void OnViewLoaded()
+    {
+        base.OnViewLoaded();
+
+        if (_task != null)
+            return;
+
         _task = Task.Factory.StartNew(() => ScanAsync(_cancellationSource.Token),
             _cancellationSource.Token,
             TaskCreationOptions.LongRunning,
             TaskScheduler.Default)
             .Unwrap();
-
-        RegisterShortcuts(shortcutManager);
     }
 
     public void Handle(AppSettingsMessage message)
@@ -42,6 +53,8 @@ public class VideoSourceViewModel : Conductor<IVideoSource>.Collection.OneActive
                 return;
 
             settings[nameof(ContentVisible)] = ContentVisible;
+            settings[nameof(ScanDelay)] = ScanDelay;
+            settings[nameof(ScanInterval)] = ScanInterval;
 
             if (ActiveItem != null)
                 settings[nameof(ActiveItem)] = ActiveItem.Name;
@@ -53,6 +66,10 @@ public class VideoSourceViewModel : Conductor<IVideoSource>.Collection.OneActive
 
             if (settings.TryGetValue<bool>(nameof(ContentVisible), out var contentVisible))
                 ContentVisible = contentVisible;
+            if (settings.TryGetValue<int>(nameof(ScanDelay), out var scanDelay))
+                ScanDelay = scanDelay;
+            if (settings.TryGetValue<int>(nameof(ScanInterval), out var scanInterval))
+                ScanInterval = scanInterval;
 
             if (settings.TryGetValue<string>(nameof(ActiveItem), out var selectedItem))
                 ChangeActiveItem(Items.FirstOrDefault(x => string.Equals(x.Name, selectedItem)) ?? Items[0], closePrevious: false);
@@ -113,7 +130,7 @@ public class VideoSourceViewModel : Conductor<IVideoSource>.Collection.OneActive
     {
         try
         {
-            await Task.Delay(2500, token);
+            await Task.Delay(ScanDelay, token);
             while (!token.IsCancellationRequested)
             {
                 if (_currentSource != null)
@@ -149,7 +166,7 @@ public class VideoSourceViewModel : Conductor<IVideoSource>.Collection.OneActive
                     }
                 }
 
-                await Task.Delay(5000, token);
+                await Task.Delay(ScanInterval, token);
             }
         }
         catch (OperationCanceledException) { }

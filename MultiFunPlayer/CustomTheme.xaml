@@ -370,21 +370,27 @@
     <Style TargetType="{x:Type controls:NonReloadingTabControl}">
         <Setter Property="Template">
             <Setter.Value>
-                <ControlTemplate TargetType="TabControl">
+                <ControlTemplate TargetType="{x:Type controls:NonReloadingTabControl}">
                     <Grid ClipToBounds="True">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="*" />
                         </Grid.RowDefinitions>
-                        <TabPanel IsItemsHost="True"
-                                  Grid.Row="0"
-                                  Panel.ZIndex="100"
-                                  Background="{StaticResource MaterialDesignToolBarBackground}">
-                            <TabPanel.Effect>
+                        <DockPanel Grid.Row="0"
+                                   Panel.ZIndex="100"
+                                   Background="{StaticResource MaterialDesignToolBarBackground}">
+                            <DockPanel.Effect>
                                 <DropShadowEffect ShadowDepth="0" Direction="270" po:Freeze="True"/>
-                            </TabPanel.Effect>
-                        </TabPanel>
-                        
+                            </DockPanel.Effect>
+
+                            <ContentPresenter ContentTemplate="{TemplateBinding AdditionalPanelContent}"
+                                              DockPanel.Dock="Right"/>
+                            
+                            <TabPanel IsItemsHost="True"
+                                      DockPanel.Dock="Left">
+                            </TabPanel>
+                        </DockPanel>
+
                         <Grid x:Name="PART_ItemsHolder"
                               Margin="0"
                               Grid.Row="1"
