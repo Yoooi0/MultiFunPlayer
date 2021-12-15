@@ -108,6 +108,9 @@ public class SerialOutputTargetViewModel : ThreadAbstractOutputTarget
             {
                 UpdateValues();
 
+                if (serialPort?.IsOpen == true && serialPort?.BytesToRead > 0)
+                    Logger.Debug("Received \"{0}\" from \"{1}\"", serialPort.ReadExisting(), SelectedComPort);
+
                 var dirtyValues = Values.Where(x => DeviceAxis.IsDirty(x.Value, lastSentValues[x.Key]));
                 var commands = DeviceAxis.ToString(dirtyValues, UpdateInterval);
                 if (serialPort?.IsOpen == true && !string.IsNullOrWhiteSpace(commands))
