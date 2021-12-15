@@ -1256,7 +1256,7 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
 
         s.RegisterAction("Axis::MotionProviderBlend::Set",
             b => b.WithSetting<DeviceAxis>(p => p.WithLabel("Target axis").WithItemsSource(DeviceAxis.All))
-                  .WithSetting<float>(p => p.WithLabel("Value"))
+                  .WithSetting<float>(p => p.WithLabel("Value").WithStringFormat("{}{0}%"))
                   .WithCallback((_, axis, value) =>
                         UpdateSettings(axis, s => s.MotionProviderBlend = MathUtils.Clamp(value, 0, 100))));
 

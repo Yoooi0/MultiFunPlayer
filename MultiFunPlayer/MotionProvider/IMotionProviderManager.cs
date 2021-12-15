@@ -122,26 +122,26 @@ public class MotionProviderManager : IMotionProviderManager, IHandle<AppSettings
             #region MotionProvider::Speed
             s.RegisterAction($"MotionProvider::{name}::Speed::Offset",
             b => b.WithSetting<DeviceAxis>(p => p.WithLabel("Target axis").WithItemsSource(DeviceAxis.All))
-                  .WithSetting<float>(p => p.WithLabel("Value offset"))
+                  .WithSetting<float>(p => p.WithLabel("Value offset").WithStringFormat("{}{0}%"))
                   .WithCallback((_, axis, offset) =>
                   {
                       var motionProvider = GetMotionProvider(axis, name);
                       if (motionProvider == null)
                           return;
 
-                      motionProvider.Speed = MathF.Max(0.01f, motionProvider.Speed + offset);
+                      motionProvider.Speed = MathF.Max(0.01f, motionProvider.Speed + offset / 100);
                   }));
 
             s.RegisterAction($"MotionProvider::{name}::Speed::Set",
                 b => b.WithSetting<DeviceAxis>(p => p.WithLabel("Target axis").WithItemsSource(DeviceAxis.All))
-                      .WithSetting<float>(p => p.WithLabel("Value"))
+                      .WithSetting<float>(p => p.WithLabel("Value").WithStringFormat("{}{0}%"))
                       .WithCallback((_, axis, value) =>
                       {
                           var motionProvider = GetMotionProvider(axis, name);
                           if (motionProvider == null)
                               return;
 
-                          motionProvider.Speed = MathF.Max(0.01f, value);
+                          motionProvider.Speed = MathF.Max(0.01f, value / 100);
                       }));
 
             s.RegisterAction($"MotionProvider::{name}::Speed::Drive",
@@ -162,7 +162,7 @@ public class MotionProviderManager : IMotionProviderManager, IHandle<AppSettings
             #region MotionProvider::Minimum
             s.RegisterAction($"MotionProvider::{name}::Minimum::Offset",
             b => b.WithSetting<DeviceAxis>(p => p.WithLabel("Target axis").WithItemsSource(DeviceAxis.All))
-                  .WithSetting<float>(p => p.WithLabel("Value offset"))
+                  .WithSetting<float>(p => p.WithLabel("Value offset").WithStringFormat("{}{0}%"))
                   .WithCallback((_, axis, offset) =>
                   {
                       var motionProvider = GetMotionProvider(axis, name);
@@ -174,7 +174,7 @@ public class MotionProviderManager : IMotionProviderManager, IHandle<AppSettings
 
             s.RegisterAction($"MotionProvider::{name}::Minimum::Set",
                 b => b.WithSetting<DeviceAxis>(p => p.WithLabel("Target axis").WithItemsSource(DeviceAxis.All))
-                      .WithSetting<float>(p => p.WithLabel("Value"))
+                      .WithSetting<float>(p => p.WithLabel("Value").WithStringFormat("{}{0}%"))
                       .WithCallback((_, axis, value) =>
                       {
                           var motionProvider = GetMotionProvider(axis, name);
@@ -202,7 +202,7 @@ public class MotionProviderManager : IMotionProviderManager, IHandle<AppSettings
             #region MotionProvider::Maximum
             s.RegisterAction($"MotionProvider::{name}::Maximum::Offset",
             b => b.WithSetting<DeviceAxis>(p => p.WithLabel("Target axis").WithItemsSource(DeviceAxis.All))
-                  .WithSetting<float>(p => p.WithLabel("Value offset"))
+                  .WithSetting<float>(p => p.WithLabel("Value offset").WithStringFormat("{}{0}%"))
                   .WithCallback((_, axis, offset) =>
                   {
                       var motionProvider = GetMotionProvider(axis, name);
@@ -214,7 +214,7 @@ public class MotionProviderManager : IMotionProviderManager, IHandle<AppSettings
 
             s.RegisterAction($"MotionProvider::{name}::Maximum::Set",
                 b => b.WithSetting<DeviceAxis>(p => p.WithLabel("Target axis").WithItemsSource(DeviceAxis.All))
-                      .WithSetting<float>(p => p.WithLabel("Value"))
+                      .WithSetting<float>(p => p.WithLabel("Value").WithStringFormat("{}{0}%"))
                       .WithCallback((_, axis, value) =>
                       {
                           var motionProvider = GetMotionProvider(axis, name);
