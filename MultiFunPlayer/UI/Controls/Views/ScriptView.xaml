@@ -724,7 +724,7 @@
 
                                                 <material:PackIcon Kind="MotionPauseOutline" Opacity=".56" Width="21" Height="21"/>
                                                 <material:ToggleButtonAssist.OnContent>
-                                                    <material:PackIcon Kind="MotionPauseOutline" Width="21" Height="21"/>
+                                                    <material:PackIcon Kind="MotionPauseOutline" Width="21" Height="21" Foreground="red"/>
                                                 </material:ToggleButtonAssist.OnContent>
                                             </ToggleButton>
 
