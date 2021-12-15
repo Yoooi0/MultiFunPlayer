@@ -196,6 +196,14 @@
                                 <Button.CommandParameter>
                                     <Grid Margin="20" Width="500" MaxHeight="400"
                                           s:View.ActionTarget="{Binding}">
+                                        <TextBlock Text="Script libraries" 
+                                                   HorizontalAlignment="Left"
+                                                   VerticalAlignment="Top"
+                                                   Margin="0 -12 -15 0"
+                                                   FontSize="14"
+                                                   FontWeight="Bold"
+                                                   Typography.Capitals="AllSmallCaps"/>
+
                                         <Button DockPanel.Dock="Top"
                                                 Style="{StaticResource MaterialDesignFlatButton}"
                                                 material:RippleAssist.Feedback="Black"
@@ -211,13 +219,8 @@
                                                                Height="20" 
                                                                Width="20"/>
                                         </Button>
-                                        <DockPanel LastChildFill="True">
-                                            <TextBlock Text="Libraries:"
-                                                       DockPanel.Dock="Top"
-                                                       FontSize="16"
-                                                       FontWeight="Bold"
-                                                       Margin="0 0 0 10"/>
-
+                                        <DockPanel LastChildFill="True"
+                                                   Margin="0 20 0 0">
                                             <Button DockPanel.Dock="Bottom"
                                                     Style="{StaticResource MaterialDesignFloatingActionMiniLightButton}"
                                                     Width="32"
@@ -301,6 +304,14 @@
                                     <material:DialogHost Identifier="MediaPathModifierDialog">
                                         <Grid Margin="20" Width="500" MaxHeight="400"
                                               s:View.ActionTarget="{Binding}">
+                                            <TextBlock Text="Video path modifiers" 
+                                                       HorizontalAlignment="Left"
+                                                       VerticalAlignment="Top"
+                                                       Margin="0 -12 -15 0"
+                                                       FontSize="14"
+                                                       FontWeight="Bold"
+                                                       Typography.Capitals="AllSmallCaps"/>
+
                                             <Button DockPanel.Dock="Top"
                                                     Style="{StaticResource MaterialDesignFlatButton}"
                                                     material:RippleAssist.Feedback="Black"
@@ -316,13 +327,8 @@
                                                                Height="20" 
                                                                Width="20"/>
                                             </Button>
-                                            <DockPanel LastChildFill="True">
-                                                <TextBlock Text="Video path modifiers:"
-                                                           DockPanel.Dock="Top"
-                                                           FontSize="16"
-                                                           FontWeight="Bold"
-                                                           Margin="0 0 0 10"/>
-
+                                            <DockPanel LastChildFill="True"
+                                                       Margin="0 20 0 0">
                                                 <material:PopupBox Style="{StaticResource MaterialDesignMultiFloatingActionLightPopupBox}"
                                                                Width="32"
                                                                Height="32"

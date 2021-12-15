@@ -7,12 +7,16 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
-    <DockPanel Width="250" 
-               MaxHeight="600"
-               LastChildFill="True"
-               Margin="20">        
-        <Button DockPanel.Dock="Top"
-                Style="{StaticResource MaterialDesignFlatButton}"
+    <Grid Width="250" MaxHeight="600" Margin="20">
+        <TextBlock Text="Application settings" 
+                   HorizontalAlignment="Left"
+                   VerticalAlignment="Top"
+                   Margin="0 -12 -15 0"
+                   FontSize="14"
+                   FontWeight="Bold"
+                   Typography.Capitals="AllSmallCaps"/>
+
+        <Button Style="{StaticResource MaterialDesignFlatButton}"
                 material:RippleAssist.Feedback="Black"
                 Foreground="Black"
                 Height="24"
@@ -28,53 +32,56 @@
         </Button>
 
         <DockPanel LastChildFill="True"
-                   DockPanel.Dock="Top">
-            <TextBlock Text="Always on top:" 
-                       DockPanel.Dock="Left"
-                       Margin="0 0 10 0" 
-                       VerticalAlignment="Center"/>
+                   Margin="0 20 0 0">
+            <DockPanel LastChildFill="True"
+                       DockPanel.Dock="Top">
+                <TextBlock Text="Always on top:" 
+                           DockPanel.Dock="Left"
+                           Margin="0 0 10 0" 
+                           VerticalAlignment="Center"/>
 
-            <CheckBox IsChecked="{Binding AlwaysOnTop}"
-                      DockPanel.Dock="Left"
-                      Margin="0 0 10 0"/>
-        </DockPanel>
+                <CheckBox IsChecked="{Binding AlwaysOnTop}"
+                          DockPanel.Dock="Left"
+                          Margin="0 0 10 0"/>
+            </DockPanel>
         
-        <DockPanel Margin="0 0 10 0" 
-                   LastChildFill="True"
-                   DockPanel.Dock="Top">
-            <TextBlock Text="Device type:" 
-                       DockPanel.Dock="Left"
-                       Margin="0 0 10 0" 
-                       VerticalAlignment="Center"/>
+            <DockPanel Margin="0 0 10 0" 
+                       LastChildFill="True"
+                       DockPanel.Dock="Top">
+                <TextBlock Text="Device type:" 
+                           DockPanel.Dock="Left"
+                           Margin="0 0 10 0" 
+                           VerticalAlignment="Center"/>
 
-            <material:ColorZone DockPanel.Dock="Right"
-                                VerticalAlignment="Center"
-                                CornerRadius="7"
-                                Mode="Custom"
-                                Background="#ff0f0f"
-                                Width="14"
-                                Height="14" 
-                                ToolTipService.InitialShowDelay="0"
-                                ToolTipService.ShowDuration="99999"
-                                ToolTipService.Placement="Top">
-                <material:ColorZone.ToolTip>
-                    <TextBlock>
-                        Some settings might be lost or reset after change!<LineBreak/>
-                        Requires application restart!
-                    </TextBlock>
-                </material:ColorZone.ToolTip>
-                <material:PackIcon Kind="ExclamationBold"
-                                        Foreground="Black"
-                                        Width="10"
-                                        Height="10"
-                                        HorizontalAlignment="Center"
-                                        VerticalAlignment="Center"/>
-            </material:ColorZone>
+                <material:ColorZone DockPanel.Dock="Right"
+                                    VerticalAlignment="Center"
+                                    CornerRadius="7"
+                                    Mode="Custom"
+                                    Background="#ff0f0f"
+                                    Width="14"
+                                    Height="14" 
+                                    ToolTipService.InitialShowDelay="0"
+                                    ToolTipService.ShowDuration="99999"
+                                    ToolTipService.Placement="Top">
+                    <material:ColorZone.ToolTip>
+                        <TextBlock>
+                            Some settings might be lost or reset after change!<LineBreak/>
+                            Requires application restart!
+                        </TextBlock>
+                    </material:ColorZone.ToolTip>
+                    <material:PackIcon Kind="ExclamationBold"
+                                            Foreground="Black"
+                                            Width="10"
+                                            Height="10"
+                                            HorizontalAlignment="Center"
+                                            VerticalAlignment="Center"/>
+                </material:ColorZone>
             
-            <ComboBox DockPanel.Dock="Left"
-                      Margin="0 0 10 0"
-                      ItemsSource="{Binding DeviceTypes}" 
-                      SelectedItem="{Binding SelectedDevice}"/>
+                <ComboBox DockPanel.Dock="Left"
+                          Margin="0 0 10 0"
+                          ItemsSource="{Binding DeviceTypes}" 
+                          SelectedItem="{Binding SelectedDevice}"/>
+            </DockPanel>
         </DockPanel>
-    </DockPanel>
+    </Grid>
 </UserControl>

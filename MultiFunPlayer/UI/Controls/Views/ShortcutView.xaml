@@ -195,11 +195,14 @@
     </UserControl.Resources>
 
     <material:DialogHost Identifier="ShortcutDialog">
-        <DockPanel Width="500" 
-                   MinHeight="300"
-                   Height="650"
-                   LastChildFill="True"
-                   Margin="20">
+        <Grid Width="500" MinHeight="300" Height="650" Margin="20">
+            <TextBlock Text="Shortcut settings" 
+                       HorizontalAlignment="Left"
+                       VerticalAlignment="Top"
+                       Margin="0 -12 -15 0"
+                       FontSize="14"
+                       FontWeight="Bold"
+                       Typography.Capitals="AllSmallCaps"/>
 
             <Button DockPanel.Dock="Top"
                     Style="{StaticResource MaterialDesignFlatButton}"
@@ -217,159 +220,226 @@
                                    Width="20"/>
             </Button>
 
-            <material:Card DockPanel.Dock="Top"
-                           material:ShadowAssist.ShadowDepth="Depth1"
-                           Margin="0 5 0 10">
-                <DockPanel LastChildFill="True">
-                    <DockPanel LastChildFill="True"
-                               Margin="5"
+            <DockPanel LastChildFill="True"
+                       Margin="0 20 0 0">
+                <material:Card material:ShadowAssist.ShadowDepth="Depth1"
+                               Margin="0 0 0 10"
                                DockPanel.Dock="Top">
-                        <material:PopupBox DockPanel.Dock="Right"
-                                           Style="{StaticResource MaterialDesignToolBarPopupBox}"
-                                           VerticalAlignment="Center"
-                                           StaysOpen="True"
-                                           ToolTipService.InitialShowDelay="0"
-                                           ToolTipService.Placement="Top"
-                                           PlacementMode="BottomAndAlignRightEdges"
-                                           ToolTip="Filter gestures"
-                                           Height="32"
-                                           Width="32">
-                            <material:PopupBox.ToggleContent>
-                                <Border Width="32" Height="32">
-                                    <material:PackIcon Kind="FormatListBulleted" 
-                                                       Width="24" 
-                                                       Height="24"
-                                                       HorizontalAlignment="Center" 
-                                                       VerticalAlignment="Center"/>
-                                </Border>
-                            </material:PopupBox.ToggleContent>
-                            <Grid Width="150" Margin="10">
-                                <StackPanel>
+                    <DockPanel LastChildFill="True">
+                        <DockPanel LastChildFill="True"
+                                   Margin="5"
+                                   DockPanel.Dock="Top">
+                            <material:PopupBox DockPanel.Dock="Right"
+                                               Style="{StaticResource MaterialDesignToolBarPopupBox}"
+                                               VerticalAlignment="Center"
+                                               StaysOpen="True"
+                                               ToolTipService.InitialShowDelay="0"
+                                               ToolTipService.Placement="Top"
+                                               PlacementMode="BottomAndAlignRightEdges"
+                                               ToolTip="Filter gestures"
+                                               Height="32"
+                                               Width="32">
+                                <material:PopupBox.ToggleContent>
+                                    <Border Width="32" Height="32">
+                                        <material:PackIcon Kind="FormatListBulleted" 
+                                                           Width="24" 
+                                                           Height="24"
+                                                           HorizontalAlignment="Center" 
+                                                           VerticalAlignment="Center"/>
+                                    </Border>
+                                </material:PopupBox.ToggleContent>
+                                <Grid Width="150" Margin="10">
                                     <StackPanel>
-                                        <CheckBox IsChecked="{Binding IsKeyboardKeysGestureEnabled}" Content="Keyboard keys"/>
-                                        <CheckBox IsChecked="{Binding IsMouseAxisGestureEnabled}" Content="Mouse axis"/>
-                                        <CheckBox IsChecked="{Binding IsMouseButtonGestureEnabled}" Content="Mouse button"/>
-                                        <CheckBox IsChecked="{Binding IsGamepadAxisGestureEnabled}" Content="Gamepad axis"/>
-                                        <CheckBox IsChecked="{Binding IsGamepadButtonGestureEnabled}" Content="Gamepad button"/>
+                                        <StackPanel>
+                                            <CheckBox IsChecked="{Binding IsKeyboardKeysGestureEnabled}" Content="Keyboard keys"/>
+                                            <CheckBox IsChecked="{Binding IsMouseAxisGestureEnabled}" Content="Mouse axis"/>
+                                            <CheckBox IsChecked="{Binding IsMouseButtonGestureEnabled}" Content="Mouse button"/>
+                                            <CheckBox IsChecked="{Binding IsGamepadAxisGestureEnabled}" Content="Gamepad axis"/>
+                                            <CheckBox IsChecked="{Binding IsGamepadButtonGestureEnabled}" Content="Gamepad button"/>
+                                        </StackPanel>
                                     </StackPanel>
-                                </StackPanel>
-                            </Grid>
-                        </material:PopupBox>
+                                </Grid>
+                            </material:PopupBox>
 
-                        <Button DockPanel.Dock="Right"
-                                Style="{StaticResource MaterialDesignFlatButton}"
-                                Click="{s:Action AddGesture}"
-                                IsEnabled="{Binding CapturedGesture, Converter={StaticResource InvertedNullableToBooleanConverter}}"
-                                Foreground="Green"
-                                ToolTipService.InitialShowDelay="0" 
-                                ToolTipService.Placement="Top"
-                                ToolTip="Add captured gesture"
-                                VerticalAlignment="Center"
-                                Width="32" 
-                                Height="32"
-                                Margin="0" 
-                                Padding="0">
-                            <material:PackIcon Kind="Plus" Width="28" Height="28" />
-                        </Button>
+                            <Button DockPanel.Dock="Right"
+                                    Style="{StaticResource MaterialDesignFlatButton}"
+                                    Click="{s:Action AddGesture}"
+                                    IsEnabled="{Binding CapturedGesture, Converter={StaticResource InvertedNullableToBooleanConverter}}"
+                                    Foreground="Green"
+                                    ToolTipService.InitialShowDelay="0" 
+                                    ToolTipService.Placement="Top"
+                                    ToolTip="Add captured gesture"
+                                    VerticalAlignment="Center"
+                                    Width="32" 
+                                    Height="32"
+                                    Margin="0" 
+                                    Padding="0">
+                                <material:PackIcon Kind="Plus" Width="28" Height="28" />
+                            </Button>
 
-                        <Button DockPanel.Dock="Right"
-                                Style="{StaticResource MaterialDesignFlatButton}"
-                                Click="{s:Action CaptureGesture}"
-                                IsEnabled="{Binding IsCapturingGesture, Converter={StaticResource NotConverter}}"
-                                ToolTipService.InitialShowDelay="0" 
-                                ToolTipService.Placement="Top"
-                                ToolTip="Capture gesture"
-                                VerticalAlignment="Center"
-                                Width="32" 
-                                Height="32"
-                                Margin="0" 
-                                Padding="0">
-                            <material:PackIcon Kind="Input" Width="28" Height="28" />
-                        </Button>
+                            <Button DockPanel.Dock="Right"
+                                    Style="{StaticResource MaterialDesignFlatButton}"
+                                    Click="{s:Action CaptureGesture}"
+                                    IsEnabled="{Binding IsCapturingGesture, Converter={StaticResource NotConverter}}"
+                                    ToolTipService.InitialShowDelay="0" 
+                                    ToolTipService.Placement="Top"
+                                    ToolTip="Capture gesture"
+                                    VerticalAlignment="Center"
+                                    Width="32" 
+                                    Height="32"
+                                    Margin="0" 
+                                    Padding="0">
+                                <material:PackIcon Kind="Input" Width="28" Height="28" />
+                            </Button>
 
-                        <TextBlock DockPanel.Dock="Left"
-                                   Text="Captured:"
-                                   Margin="5 0 10 0"
-                                   VerticalAlignment="Center"
+                            <TextBlock DockPanel.Dock="Left"
+                                       Text="Captured:"
+                                       Margin="5 0 10 0"
+                                       VerticalAlignment="Center"
+                                       Typography.Capitals="AllSmallCaps"
+                                       FontWeight="Medium"/>
+
+                            <material:Card Margin="0 0 30 0"
+                                           Height="28"
+                                           material:ShadowAssist.ShadowDepth="Depth1"
+                                           VerticalAlignment="Center"
+                                           DockPanel.Dock="Left">
+                                <ContentControl Content="{Binding CapturedGesture}"/>
+                            </material:Card>
+                        </DockPanel>
+
+                        <ListBox DockPanel.Dock="Top"
+                                 ItemsSource="{Binding Bindings}"
+                                 SelectedItem="{Binding SelectedBinding}"
+                                 Height="275"
+                                 VirtualizingStackPanel.IsVirtualizing="True"
+                                 VirtualizingStackPanel.VirtualizationMode="Recycling"
+                                 ScrollViewer.VerticalScrollBarVisibility="Visible">
+                            <ListBox.Resources>
+                                <Style TargetType="{x:Type ListBoxItem}" x:Key="ContainerStyle">
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="ListBoxItem">
+                                                <material:Card Name="Container"
+                                                               Margin="8 8 8 0"
+                                                               material:ShadowAssist.ShadowDepth="Depth1">
+                                                    <ContentPresenter/>
+                                                </material:Card>
+
+                                                <ControlTemplate.Triggers>
+                                                    <Trigger Property="UIElement.IsMouseOver" Value="True">
+                                                        <Setter Property="Panel.Background" TargetName="Container">
+                                                            <Setter.Value>
+                                                                <SolidColorBrush>#f5f5f5</SolidColorBrush>
+                                                            </Setter.Value>
+                                                        </Setter>
+                                                    </Trigger>
+                                                    <Trigger Property="IsSelected" Value="True">
+                                                        <Setter Property="material:ShadowAssist.ShadowDepth" TargetName="Container" Value="Depth2"/>
+                                                        <Setter Property="Background" TargetName="Container">
+                                                            <Setter.Value>
+                                                                <SolidColorBrush>#f0f0f0</SolidColorBrush>
+                                                            </Setter.Value>
+                                                        </Setter>
+                                                    </Trigger>
+                                                </ControlTemplate.Triggers>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+
+                                <Style TargetType="ListBox">
+                                    <Setter Property="ItemContainerStyle" Value="{StaticResource ContainerStyle}"/>
+                                </Style>
+                            </ListBox.Resources>
+
+                            <ListBox.Template>
+                                <ControlTemplate TargetType="ItemsControl">
+                                    <ScrollViewer CanContentScroll="True" 
+                                                  Focusable="False">
+                                        <ItemsPresenter/>
+                                    </ScrollViewer>
+                                </ControlTemplate>
+                            </ListBox.Template>
+                            <ListBox.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <VirtualizingStackPanel IsVirtualizing="True"
+                                                            VirtualizationMode="Recycling" />
+                                </ItemsPanelTemplate>
+                            </ListBox.ItemsPanel>
+
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <Border>
+                                        <DockPanel LastChildFill="True">
+                                            <Button DockPanel.Dock="Right"   
+                                                    Style="{StaticResource MaterialDesignFlatButton}"
+                                                    Click="{s:Action RemoveGesture}"
+                                                    ToolTip="Remove"
+                                                    ToolTipService.InitialShowDelay="0"
+                                                    ToolTipService.Placement="Top"
+                                                    material:RippleAssist.Feedback="Red"
+                                                    Foreground="Red"
+                                                    Margin="0 0 5 0"
+                                                    Height="24" 
+                                                    Width="24" 
+                                                    Padding="0">
+                                                <material:PackIcon Kind="Delete"/>
+                                            </Button>
+
+                                            <TextBlock Text="{Binding Value.Count, StringFormat=Actions: {0}}"
+                                                       DockPanel.Dock="Right"
+                                                       VerticalAlignment="Center"
+                                                       Margin="5 0 5 0"
+                                                       FontWeight="Medium"
+                                                       Typography.Capitals="AllPetiteCaps"/>
+
+                                            <ContentControl Content="{Binding Key}"
+                                                            VerticalAlignment="Center"/>
+                                        </DockPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </DockPanel>
+                </material:Card>
+
+                <material:Card material:ShadowAssist.ShadowDepth="Depth1"
+                               DockPanel.Dock="Top"
+                               Margin="0 0 0 0">
+                    <DockPanel LastChildFill="True">
+                        <TextBlock Text="Assigned actions:"
+                                   Margin="5 5 0 0"
+                                   DockPanel.Dock="Top"
                                    Typography.Capitals="AllSmallCaps"
                                    FontWeight="Medium"/>
 
-                        <material:Card Margin="0 0 30 0"
-                                       Height="28"
-                                       material:ShadowAssist.ShadowDepth="Depth1"
-                                       VerticalAlignment="Center"
-                                       DockPanel.Dock="Left">
-                            <ContentControl Content="{Binding CapturedGesture}"/>
-                        </material:Card>
-                    </DockPanel>
-
-                    <ListBox DockPanel.Dock="Top"
-                             ItemsSource="{Binding Bindings}"
-                             SelectedItem="{Binding SelectedBinding}"
-                             Height="275"
-                             VirtualizingStackPanel.IsVirtualizing="True"
-                             VirtualizingStackPanel.VirtualizationMode="Recycling"
-                             ScrollViewer.VerticalScrollBarVisibility="Visible">
-                        <ListBox.Resources>
-                            <Style TargetType="{x:Type ListBoxItem}" x:Key="ContainerStyle">
-                                <Setter Property="Template">
-                                    <Setter.Value>
-                                        <ControlTemplate TargetType="ListBoxItem">
-                                            <material:Card Name="Container"
-                                                           Margin="8 8 8 0"
-                                                           material:ShadowAssist.ShadowDepth="Depth1">
-                                                <ContentPresenter/>
-                                            </material:Card>
-
-                                            <ControlTemplate.Triggers>
-                                                <Trigger Property="UIElement.IsMouseOver" Value="True">
-                                                    <Setter Property="Panel.Background" TargetName="Container">
-                                                        <Setter.Value>
-                                                            <SolidColorBrush>#f5f5f5</SolidColorBrush>
-                                                        </Setter.Value>
-                                                    </Setter>
-                                                </Trigger>
-                                                <Trigger Property="IsSelected" Value="True">
-                                                    <Setter Property="material:ShadowAssist.ShadowDepth" TargetName="Container" Value="Depth2"/>
-                                                    <Setter Property="Background" TargetName="Container">
-                                                        <Setter.Value>
-                                                            <SolidColorBrush>#f0f0f0</SolidColorBrush>
-                                                        </Setter.Value>
-                                                    </Setter>
-                                                </Trigger>
-                                            </ControlTemplate.Triggers>
-                                        </ControlTemplate>
-                                    </Setter.Value>
-                                </Setter>
-                            </Style>
-
-                            <Style TargetType="ListBox">
-                                <Setter Property="ItemContainerStyle" Value="{StaticResource ContainerStyle}"/>
-                            </Style>
-                        </ListBox.Resources>
-
-                        <ListBox.Template>
-                            <ControlTemplate TargetType="ItemsControl">
-                                <ScrollViewer CanContentScroll="True" 
-                                              Focusable="False">
-                                    <ItemsPresenter/>
-                                </ScrollViewer>
-                            </ControlTemplate>
-                        </ListBox.Template>
-                        <ListBox.ItemsPanel>
-                            <ItemsPanelTemplate>
-                                <VirtualizingStackPanel IsVirtualizing="True"
-                                                        VirtualizationMode="Recycling" />
-                            </ItemsPanelTemplate>
-                        </ListBox.ItemsPanel>
-
-                        <ListBox.ItemTemplate>
-                            <DataTemplate>
-                                <Border>
-                                    <DockPanel LastChildFill="True">
+                        <ItemsControl DockPanel.Dock="Top"
+                                      ItemsSource="{Binding SelectedBinding.Value}"
+                                      Margin="5 5 0 0"
+                                      Height="100"
+                                      VirtualizingStackPanel.IsVirtualizing="True"
+                                      VirtualizingStackPanel.VirtualizationMode="Recycling">
+                            <ItemsControl.Template>
+                                <ControlTemplate TargetType="ItemsControl">
+                                    <ScrollViewer CanContentScroll="True" 
+                                                  Focusable="False">
+                                        <ItemsPresenter/>
+                                    </ScrollViewer>
+                                </ControlTemplate>
+                            </ItemsControl.Template>
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <VirtualizingStackPanel IsVirtualizing="True"
+                                                            VirtualizationMode="Recycling" />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <DockPanel>
                                         <Button DockPanel.Dock="Right"   
                                                 Style="{StaticResource MaterialDesignFlatButton}"
-                                                Click="{s:Action RemoveGesture}"
+                                                Click="{s:Action RemoveAssignedAction}"
                                                 ToolTip="Remove"
                                                 ToolTipService.InitialShowDelay="0"
                                                 ToolTipService.Placement="Top"
@@ -382,186 +452,122 @@
                                             <material:PackIcon Kind="Delete"/>
                                         </Button>
 
-                                        <TextBlock Text="{Binding Value.Count, StringFormat=Actions: {0}}"
-                                                   DockPanel.Dock="Right"
-                                                   VerticalAlignment="Center"
-                                                   Margin="5 0 5 0"
-                                                   FontWeight="Medium"
-                                                   Typography.Capitals="AllPetiteCaps"/>
+                                        <Button DockPanel.Dock="Right"   
+                                                Style="{StaticResource MaterialDesignFlatButton}"
+                                                Click="{s:Action MoveAssignedActionUp}"
+                                                ToolTip="Move Up"
+                                                ToolTipService.InitialShowDelay="0"
+                                                ToolTipService.Placement="Top"
+                                                Height="24" 
+                                                Width="24" 
+                                                Padding="0">
+                                            <material:PackIcon Kind="ArrowUp"/>
+                                        </Button>
+                                        <Button DockPanel.Dock="Right"   
+                                                Style="{StaticResource MaterialDesignFlatButton}"
+                                                Click="{s:Action MoveAssignedActionDown}"
+                                                ToolTip="Move Down"
+                                                ToolTipService.InitialShowDelay="0"
+                                                ToolTipService.Placement="Top"
+                                                Height="24" 
+                                                Width="24" 
+                                                Padding="0">
+                                            <material:PackIcon Kind="ArrowDown"/>
+                                        </Button>
 
-                                        <ContentControl Content="{Binding Key}"
-                                                        VerticalAlignment="Center"/>
+                                        <Button DockPanel.Dock="Right"   
+                                                Style="{StaticResource MaterialDesignFlatButton}"
+                                                Click="{s:Action ConfigureAssignedAction}"
+                                                Visibility="{Binding Settings.Count, Converter={StaticResource NotZeroToVisibilityConverter}}"
+                                                ToolTip="Configure"
+                                                ToolTipService.InitialShowDelay="0"
+                                                ToolTipService.Placement="Top"
+                                                Height="22" 
+                                                Width="22" 
+                                                Padding="0">
+                                            <material:PackIcon Kind="Wrench" Width="14" Height="14"/>
+                                        </Button>
+
+                                        <TextBlock Text="{Binding DisplayName}"
+                                                   DockPanel.Dock="Left"
+                                                   Margin="0"/>
                                     </DockPanel>
-                                </Border>
-                            </DataTemplate>
-                        </ListBox.ItemTemplate>
-                    </ListBox>
-                </DockPanel>
-            </material:Card>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
 
-            <material:Card material:ShadowAssist.ShadowDepth="Depth1"
-                        DockPanel.Dock="Top"
-                        Margin="0 0 0 0">
-                <DockPanel LastChildFill="True">
-                    <TextBlock Text="Assigned actions:"
-                           Margin="5 5 0 0"
-                           DockPanel.Dock="Top"
-                           Typography.Capitals="AllSmallCaps"
-                           FontWeight="Medium"/>
+                        <TextBox DockPanel.Dock="Top"
+                                 Text="{Binding ActionsFilter}"
+                                 Style="{StaticResource MaterialDesignFloatingHintTextBox}"
+                                 Margin="5 0 5 0"
+                                 material:HintAssist.Hint="Filter actions"
+                                 behaviours:InputAssist.UpdateSourceOnEnter="TextBox.Text"/>
 
-                    <ItemsControl DockPanel.Dock="Top"
-                              ItemsSource="{Binding SelectedBinding.Value}"
-                              Margin="5 5 0 0"
-                              Height="100"
-                              VirtualizingStackPanel.IsVirtualizing="True"
-                              VirtualizingStackPanel.VirtualizationMode="Recycling">
-                        <ItemsControl.Template>
-                            <ControlTemplate TargetType="ItemsControl">
-                                <ScrollViewer CanContentScroll="True" 
-                                          Focusable="False">
-                                    <ItemsPresenter/>
-                                </ScrollViewer>
-                            </ControlTemplate>
-                        </ItemsControl.Template>
-                        <ItemsControl.ItemsPanel>
-                            <ItemsPanelTemplate>
-                                <VirtualizingStackPanel IsVirtualizing="True"
-                                                    VirtualizationMode="Recycling" />
-                            </ItemsPanelTemplate>
-                        </ItemsControl.ItemsPanel>
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate>
-                                <DockPanel>
-                                    <Button DockPanel.Dock="Right"   
-                                        Style="{StaticResource MaterialDesignFlatButton}"
-                                        Click="{s:Action RemoveAssignedAction}"
-                                        ToolTip="Remove"
-                                        ToolTipService.InitialShowDelay="0"
-                                        ToolTipService.Placement="Top"
-                                        material:RippleAssist.Feedback="Red"
-                                        Foreground="Red"
-                                        Margin="0 0 5 0"
-                                        Height="24" 
-                                        Width="24" 
-                                        Padding="0">
-                                        <material:PackIcon Kind="Delete"/>
-                                    </Button>
+                        <ItemsControl DockPanel.Dock="Top"
+                                      ItemsSource="{Binding AvailableActionDescriptors}"
+                                      Margin="5 5 0 0"
+                                      VirtualizingStackPanel.IsVirtualizing="True"
+                                      VirtualizingStackPanel.VirtualizationMode="Recycling"
+                                      ScrollViewer.VerticalScrollBarVisibility="Visible">
+                            <ItemsControl.Template>
+                                <ControlTemplate TargetType="ItemsControl">
+                                    <ScrollViewer CanContentScroll="True" 
+                                                  Focusable="False">
+                                        <ItemsPresenter/>
+                                    </ScrollViewer>
+                                </ControlTemplate>
+                            </ItemsControl.Template>
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <VirtualizingStackPanel IsVirtualizing="True"
+                                                            VirtualizationMode="Recycling" />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <DockPanel>
+                                        <Button DockPanel.Dock="Right"   
+                                                Style="{StaticResource MaterialDesignFlatButton}"
+                                                Click="{s:Action AssignAction}"
+                                                ToolTip="Assign action"
+                                                ToolTipService.InitialShowDelay="0"
+                                                ToolTipService.Placement="Top"
+                                                Margin="0 0 5 0"
+                                                Height="24" 
+                                                Width="24" 
+                                                Padding="0">
+                                            <material:PackIcon Kind="Plus"/>
+                                        </Button>
 
-                                    <Button DockPanel.Dock="Right"   
-                                        Style="{StaticResource MaterialDesignFlatButton}"
-                                        Click="{s:Action MoveAssignedActionUp}"
-                                        ToolTip="Move Up"
-                                        ToolTipService.InitialShowDelay="0"
-                                        ToolTipService.Placement="Top"
-                                        Height="24" 
-                                        Width="24" 
-                                        Padding="0">
-                                        <material:PackIcon Kind="ArrowUp"/>
-                                    </Button>
-                                    <Button DockPanel.Dock="Right"   
-                                        Style="{StaticResource MaterialDesignFlatButton}"
-                                        Click="{s:Action MoveAssignedActionDown}"
-                                        ToolTip="Move Down"
-                                        ToolTipService.InitialShowDelay="0"
-                                        ToolTipService.Placement="Top"
-                                        Height="24" 
-                                        Width="24" 
-                                        Padding="0">
-                                        <material:PackIcon Kind="ArrowDown"/>
-                                    </Button>
-
-                                    <Button DockPanel.Dock="Right"   
-                                        Style="{StaticResource MaterialDesignFlatButton}"
-                                        Click="{s:Action ConfigureAssignedAction}"
-                                        Visibility="{Binding Settings.Count, Converter={StaticResource NotZeroToVisibilityConverter}}"
-                                        ToolTip="Configure"
-                                        ToolTipService.InitialShowDelay="0"
-                                        ToolTipService.Placement="Top"
-                                        Height="22" 
-                                        Width="22" 
-                                        Padding="0">
-                                        <material:PackIcon Kind="Wrench" Width="14" Height="14"/>
-                                    </Button>
-
-                                    <TextBlock Text="{Binding DisplayName}"
-                                           DockPanel.Dock="Left"
-                                           Margin="0"/>
-                                </DockPanel>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-
-                    <TextBox DockPanel.Dock="Top"
-                         Text="{Binding ActionsFilter}"
-                         Style="{StaticResource MaterialDesignFloatingHintTextBox}"
-                         Margin="5 0 5 0"
-                         material:HintAssist.Hint="Filter actions"
-                         behaviours:InputAssist.UpdateSourceOnEnter="TextBox.Text"/>
-
-                    <ItemsControl DockPanel.Dock="Top"
-                         ItemsSource="{Binding AvailableActionDescriptors}"
-                         Margin="5 5 0 0"
-                         VirtualizingStackPanel.IsVirtualizing="True"
-                         VirtualizingStackPanel.VirtualizationMode="Recycling"
-                         ScrollViewer.VerticalScrollBarVisibility="Visible">
-                        <ItemsControl.Template>
-                            <ControlTemplate TargetType="ItemsControl">
-                                <ScrollViewer CanContentScroll="True" 
-                                        Focusable="False">
-                                    <ItemsPresenter/>
-                                </ScrollViewer>
-                            </ControlTemplate>
-                        </ItemsControl.Template>
-                        <ItemsControl.ItemsPanel>
-                            <ItemsPanelTemplate>
-                                <VirtualizingStackPanel IsVirtualizing="True"
-                                                    VirtualizationMode="Recycling" />
-                            </ItemsPanelTemplate>
-                        </ItemsControl.ItemsPanel>
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate>
-                                <DockPanel>
-                                    <Button DockPanel.Dock="Right"   
-                                        Style="{StaticResource MaterialDesignFlatButton}"
-                                        Click="{s:Action AssignAction}"
-                                        ToolTip="Assign action"
-                                        ToolTipService.InitialShowDelay="0"
-                                        ToolTipService.Placement="Top"
-                                        Margin="0 0 5 0"
-                                        Height="24" 
-                                        Width="24" 
-                                        Padding="0">
-                                        <material:PackIcon Kind="Plus"/>
-                                    </Button>
-
-                                    <TextBlock Text="{Binding Name}"
-                                           DockPanel.Dock="Left"
-                                           Margin="0"/>
-                                </DockPanel>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-                </DockPanel>
-            </material:Card>
-        </DockPanel>
+                                        <TextBlock Text="{Binding Name}"
+                                                   DockPanel.Dock="Left"
+                                                   Margin="0"/>
+                                    </DockPanel>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </DockPanel>
+                </material:Card>
+            </DockPanel>
+        </Grid>
 
         <material:DialogHost.DialogContentTemplate>
             <DataTemplate>
                 <DockPanel Margin="20" MaxWidth="300" MinWidth="150">
                     <Button DockPanel.Dock="Top"
-                        Style="{StaticResource MaterialDesignFlatButton}"
-                        material:RippleAssist.Feedback="Black"
-                        Foreground="Black"
-                        Height="24"
-                        Width="24"
-                        Padding="0"
-                        HorizontalAlignment="Right"
-                        VerticalAlignment="Top"
-                        Margin="0 -15 -15 0"
-                        Command="{x:Static material:DialogHost.CloseDialogCommand}">
+                            Style="{StaticResource MaterialDesignFlatButton}"
+                            material:RippleAssist.Feedback="Black"
+                            Foreground="Black"
+                            Height="24"
+                            Width="24"
+                            Padding="0"
+                            HorizontalAlignment="Right"
+                            VerticalAlignment="Top"
+                            Margin="0 -15 -15 0"
+                            Command="{x:Static material:DialogHost.CloseDialogCommand}">
                         <material:PackIcon Kind="Close" 
-                               Height="20" 
-                               Width="20"/>
+                                           Height="20" 
+                                           Width="20"/>
                     </Button>
 
                     <ItemsControl ItemsSource="{Binding Settings}">
