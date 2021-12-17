@@ -165,6 +165,7 @@
                                             <Slider DockPanel.Dock="Right"
                                                     Value="{Binding SyncSettings.Duration}"
                                                     Style="{StaticResource MaterialDesignDiscreteSlider}"
+                                                    ValueChanged="{s:Action OnSyncDurationSliderValueChanged}"
                                                     Minimum="2" 
                                                     Maximum="8"
                                                     TickFrequency="0.5"

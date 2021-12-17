@@ -963,6 +963,24 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
     }
     #endregion
 
+    #region SyncSettings
+    [SuppressPropertyChangedWarnings]
+    public void OnSyncDurationSliderValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (e.NewValue <= e.OldValue)
+            return;
+
+        foreach(var (axis, state) in AxisStates)
+        {
+            lock (state)
+            {
+                if(state.SyncTime >= e.OldValue)
+                    state.SyncTime = (float)e.NewValue;
+            }
+        }
+    }
+    #endregion 
+
     #region MediaResource
     public async void OnVideoPathModifierConfigure(object sender, RoutedEventArgs e)
     {
