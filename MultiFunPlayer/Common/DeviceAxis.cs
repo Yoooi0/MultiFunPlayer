@@ -45,7 +45,7 @@ public sealed class DeviceAxis
         => $"{values.Aggregate(string.Empty, (s, x) => $"{s} {ToString(x.Key, x.Value, interval)}")}\n".TrimStart();
 
     public static bool IsDirty(float value, float lastValue)
-        => float.IsFinite(value) && (!float.IsFinite(lastValue) || MathF.Abs(lastValue - value) * 999 >= 1);
+        => float.IsFinite(value) && (!float.IsFinite(lastValue) || MathF.Abs(lastValue - value) * (_outputMaximum + 1) >= 1);
 
     public static void LoadSettings(JObject settings, JsonSerializer serializer)
     {
