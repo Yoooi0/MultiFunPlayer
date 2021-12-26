@@ -72,7 +72,7 @@
                               Style="{StaticResource MaterialDesignToolBarToggleButton}"
                               ToolTipService.InitialShowDelay="0"
                               ToolTipService.Placement="Top"
-                              ToolTip="Auto-start mpv">
+                              ToolTip="Auto-start">
                     <material:PackIcon Kind="AutoStart" Opacity=".56" Width="20" Height="20"/>
                     <material:ToggleButtonAssist.OnContent>
                         <material:PackIcon Kind="AutoStart" Width="20" Height="20"/>
