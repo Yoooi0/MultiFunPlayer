@@ -4,7 +4,6 @@ public class MediaResourceInfo
 {
     public bool IsPath { get; init; }
     public bool IsUrl { get; init; }
-    public bool IsUnc { get; init; }
 
     public bool Local { get; init; }
     public bool Remote => !Local;

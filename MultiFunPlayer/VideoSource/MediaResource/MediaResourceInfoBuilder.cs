@@ -4,9 +4,9 @@ public interface IMediaResourceInfoBuilder
 {
     IMediaResourceInfoBuilder WithOriginalPath(string originalPath);
     IMediaResourceInfoBuilder WithSourceAndName(string source, string name);
-    IMediaResourceInfoBuilder AsPath(bool local);
-    IMediaResourceInfoBuilder AsUrl(bool local);
-    IMediaResourceInfoBuilder AsUnc();
+    IMediaResourceInfoBuilder AsPath();
+    IMediaResourceInfoBuilder AsUrl();
+    IMediaResourceInfoBuilder AsLocal();
     IMediaResourceInfoBuilder AsModified(string modifiedPath);
 
     MediaResourceInfo Build();
@@ -19,9 +19,8 @@ public class MediaResourceInfoBuilder : IMediaResourceInfoBuilder
     {
         IsPath = 1 << 0,
         IsUrl = 1 << 1,
-        IsUnc = 1 << 2,
-        IsLocal = 1 << 3,
-        Modified = 1 << 4
+        IsLocal = 1 << 2,
+        Modified = 1 << 3
     }
 
     private string _source;
@@ -30,23 +29,21 @@ public class MediaResourceInfoBuilder : IMediaResourceInfoBuilder
     private string _modifiedPath;
     private BuilderFlags _flags;
 
-    public IMediaResourceInfoBuilder AsPath(bool local)
+    public IMediaResourceInfoBuilder AsPath()
     {
-        _flags &= (BuilderFlags)~3;
-        _flags |= BuilderFlags.IsPath | (BuilderFlags)((int)BuilderFlags.IsLocal * (local ? 1 : 0));
+        _flags |= BuilderFlags.IsPath;
         return this;
     }
 
-    public IMediaResourceInfoBuilder AsUnc()
+    public IMediaResourceInfoBuilder AsUrl()
     {
-        _flags = BuilderFlags.IsUnc | BuilderFlags.IsLocal;
+        _flags |= BuilderFlags.IsUrl;
         return this;
     }
 
-    public IMediaResourceInfoBuilder AsUrl(bool local)
+    public IMediaResourceInfoBuilder AsLocal()
     {
-        _flags &= (BuilderFlags)~3;
-        _flags |= BuilderFlags.IsUrl | (BuilderFlags)((int)BuilderFlags.IsLocal * (local ? 1 : 0));
+        _flags |= BuilderFlags.IsLocal;
         return this;
     }
 
@@ -62,6 +59,7 @@ public class MediaResourceInfoBuilder : IMediaResourceInfoBuilder
         _originalPath = originalPath;
         return this;
     }
+
     public IMediaResourceInfoBuilder WithSourceAndName(string source, string name)
     {
         _source = source;
@@ -73,7 +71,6 @@ public class MediaResourceInfoBuilder : IMediaResourceInfoBuilder
         => new()
         {
             IsPath = _flags.HasFlag(BuilderFlags.IsPath),
-            IsUnc = _flags.HasFlag(BuilderFlags.IsUnc),
             IsUrl = _flags.HasFlag(BuilderFlags.IsUrl),
             IsModified = _flags.HasFlag(BuilderFlags.Modified),
             Local = _flags.HasFlag(BuilderFlags.IsLocal),

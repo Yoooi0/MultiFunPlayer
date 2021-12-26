@@ -66,11 +66,12 @@ public class MediaResourceFactory : IMediaResourceFactory
                 sb.Append(':').Append(uri.Port);
             sb.Append(string.Concat(uri.Segments.Take(uri.Segments.Length - 1)));
 
-            var source = sb.ToString();
-            source = source.TrimEnd('\\', '/');
+            if (uri.IsLoopback || IsLocalHost(uri.Host))
+                builder.AsLocal();
 
-            builder.WithSourceAndName(source, name);
-            builder.AsUrl(uri.IsLoopback || IsLocalHost(uri.Host));
+            var source = sb.ToString().TrimEnd('\\', '/');
+            builder.WithSourceAndName(source, name)
+                   .AsUrl();
 
             return true;
         }
@@ -88,21 +89,24 @@ public class MediaResourceFactory : IMediaResourceFactory
         if (!path.EndsWith(name))
             return false;
 
-        var source = path.Remove(path.Length - name.Length);
-        source = source.TrimEnd('\\', '/');
-
-        builder.WithSourceAndName(source, name);
-
-        var root = Path.GetPathRoot(path);
-        if (root.StartsWith(@"\\"))
+        if (Path.IsPathFullyQualified(path))
         {
-            builder.AsUnc();
+            if (File.Exists(path))
+                builder.AsLocal();
         }
         else
         {
-            var driveInfo = new DriveInfo(root);
-            builder.AsPath(driveInfo.DriveType != DriveType.Network);
+            var absolutePath = Path.Join(Environment.CurrentDirectory, path);
+            if (File.Exists(absolutePath))
+            {
+                builder.AsLocal();
+                path = absolutePath;
+            }
         }
+
+        var source = path.Remove(path.Length - name.Length).TrimEnd('\\', '/');
+        builder.WithSourceAndName(source, name)
+               .AsPath();
 
         return true;
     }
