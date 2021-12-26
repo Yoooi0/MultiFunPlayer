@@ -51,7 +51,7 @@ public class MpvVideoSourceViewModel : AbstractVideoSource, IHandle<VideoPlayPau
     {
         try
         {
-            Logger.Info("Connecting to {0}", Name);
+            Logger.Info("Connecting to {0} at \"{1}\"", Name, _pipeName);
             using var client = new NamedPipeClientStream(".", _pipeName, PipeDirection.InOut, PipeOptions.Asynchronous);
 
             try

@@ -161,7 +161,7 @@ public class ButtplugOutputTargetViewModel : AsyncAbstractOutputTarget
 
         try
         {
-            Logger.Info("Connecting to {0}", $"ws://{Endpoint}");
+            Logger.Info("Connecting to {0} at \"{1}\"", Name, $"ws://{Endpoint}");
             await client.ConnectAsync(new ButtplugWebsocketConnectorOptions(new Uri($"ws://{Endpoint}"))).WithCancellation(token);
             Status = ConnectionStatus.Connected;
         }

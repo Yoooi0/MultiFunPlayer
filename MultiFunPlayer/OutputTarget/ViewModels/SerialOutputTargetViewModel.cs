@@ -68,7 +68,7 @@ public class SerialOutputTargetViewModel : ThreadAbstractOutputTarget
 
         try
         {
-            Logger.Info("Connecting to {0}", SelectedComPort);
+            Logger.Info("Connecting to {0} at \"{1}\"", Name, SelectedComPort);
 
             serialPort = new SerialPort(SelectedComPort, 115200)
             {

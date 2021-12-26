@@ -36,7 +36,7 @@ public class PipeOutputTargetViewModel : ThreadAbstractOutputTarget
 
         try
         {
-            Logger.Info("Connecting to {0}", PipeName);
+            Logger.Info("Connecting to {0} at \"{1}\"", Name, PipeName);
 
             client = new NamedPipeClientStream(".", PipeName, PipeDirection.Out);
             client.Connect(2500);

@@ -55,7 +55,7 @@ public class NetworkOutputTargetViewModel : ThreadAbstractOutputTarget
 
         try
         {
-            Logger.Info("Connecting to {0}", $"tcp://{Endpoint}");
+            Logger.Info("Connecting to {0} at \"{1}\"", Name, $"tcp://{Endpoint}");
             client.Connect(Endpoint);
             Status = ConnectionStatus.Connected;
         }
@@ -89,8 +89,8 @@ public class NetworkOutputTargetViewModel : ThreadAbstractOutputTarget
         }
         catch (Exception e)
         {
-            Logger.Error(e, "Unhandled error");
-            _ = Execute.OnUIThreadAsync(() => _ = DialogHelper.ShowOnUIThreadAsync(new ErrorMessageDialogViewModel($"Unhandled error:\n\n{e}"), "RootDialog"));
+            Logger.Error(e, $"{Name} failed with exception");
+            _ = Execute.OnUIThreadAsync(() => _ = DialogHelper.ShowOnUIThreadAsync(new ErrorMessageDialogViewModel($"{Name} failed with exception:\n\n{e}"), "RootDialog"));
         }
     }
 
@@ -100,7 +100,7 @@ public class NetworkOutputTargetViewModel : ThreadAbstractOutputTarget
 
         try
         {
-            Logger.Info("Connecting to {0}", $"udp://{Endpoint}");
+            Logger.Info("Connecting to {0} at \"{1}\"", Name, $"udp://{Endpoint}");
             client.Connect(Endpoint);
             Status = ConnectionStatus.Connected;
         }

@@ -48,7 +48,7 @@ public class HereSphereVideoSourceViewModel : AbstractVideoSource, IHandle<Video
     {
         try
         {
-            Logger.Info("Connecting to {0}", Name);
+            Logger.Info("Connecting to {0} at \"{1}\"", Name, Endpoint);
             if (Endpoint == null)
                 throw new Exception("Endpoint cannot be null.");
 
@@ -156,7 +156,7 @@ public class HereSphereVideoSourceViewModel : AbstractVideoSource, IHandle<Video
     {
         try
         {
-            var pingBuffer = new byte[4];
+            var keepAliveBuffer = new byte[4];
             while (!token.IsCancellationRequested && client.Connected)
             {
                 using var cancellationSource = CancellationTokenSource.CreateLinkedTokenSource(token);
@@ -194,7 +194,9 @@ public class HereSphereVideoSourceViewModel : AbstractVideoSource, IHandle<Video
                 }
                 else if (completedTask == timeoutTask)
                 {
-                    await stream.WriteAsync(pingBuffer, token);
+                    Logger.Trace("Sending keep-alive to \"{0}\"", Name);
+
+                    await stream.WriteAsync(keepAliveBuffer, token);
                     await stream.FlushAsync(token);
                 }
             }

@@ -40,7 +40,7 @@ public class WhirligigVideoSourceViewModel : AbstractVideoSource
     {
         try
         {
-            Logger.Info("Connecting to {0}", Name);
+            Logger.Info("Connecting to {0} at \"{1}\"", Name, Endpoint);
 
             if (string.Equals(Endpoint.Address.ToString(), "localhost") || string.Equals(Endpoint.Address.ToString(), "127.0.0.1"))
                 if (Process.GetProcessesByName("Whirligig").Length == 0)
