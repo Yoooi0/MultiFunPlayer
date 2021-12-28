@@ -454,7 +454,6 @@
                                 <material:PackIcon Kind="FileReplaceOutline" Height="19" Width="19"/>
                             </Button>
 
-
                             <Button Style="{StaticResource MaterialDesignToolBarButton}"
                                 Click="{s:Action OnMapCurrentVideoPathToFile}"
                                 ToolTip="Map video path to file" 
@@ -838,15 +837,19 @@
                                                                            Margin="0 0 10 0"
                                                                            VerticalAlignment="Center"/>
 
+                                                                <TextBlock Text="{Binding Value.Settings.MotionProviderBlend, StringFormat={}{0:0}%}" 
+                                                                           VerticalAlignment="Center"
+                                                                           DockPanel.Dock="Right" 
+                                                                           Width="40"
+                                                                           TextAlignment="Right"/>
+
                                                                 <Slider DockPanel.Dock="Left"
                                                                         Value="{Binding Value.Settings.MotionProviderBlend}"    
-                                                                        Style="{StaticResource MaterialDesignDiscreteSlider}"
                                                                         Minimum="0" 
                                                                         Maximum="100"
                                                                         TickFrequency="1"
                                                                         VerticalAlignment="Center"
                                                                         IsSnapToTickEnabled="True"
-                                                                        MouseDoubleClick="{s:Action OnSliderDoubleClick}"
                                                                         material:SliderAssist.OnlyShowFocusVisualWhileDragging="True"/>
                                                             </DockPanel>
 
@@ -950,7 +953,7 @@
                                                                    Style="{StaticResource MaterialDesignToolBarPopupBox}"
                                                                    ToolTipService.InitialShowDelay="0"
                                                                    ToolTipService.Placement="Top"
-                                                                   ToolTip="Auto home">
+                                                                   ToolTip="Auto-home">
                                                 <material:PopupBox.ToggleContent>
                                                     <Border Width="35" Height="35">
                                                         <material:PackIcon Kind="Home" 
@@ -979,9 +982,14 @@
                                                                            Margin="0 0 10 0"
                                                                            VerticalAlignment="Center"/>
 
+                                                            <TextBlock Text="{Binding Value.Settings.AutoHomeDelay, StringFormat={}{0:0}s}" 
+                                                                       VerticalAlignment="Center"
+                                                                       DockPanel.Dock="Right" 
+                                                                       Width="50"
+                                                                       TextAlignment="Right"/>
+
                                                             <Slider DockPanel.Dock="Left"
-                                                                        Value="{Binding Value.Settings.AutoHomeDelay}"    
-                                                                        Style="{StaticResource MaterialDesignDiscreteSlider}"
+                                                                        Value="{Binding Value.Settings.AutoHomeDelay}"
                                                                         Minimum="0" 
                                                                         Maximum="60"
                                                                         TickFrequency="1"
@@ -998,9 +1006,14 @@
                                                                            Margin="0 0 10 0"
                                                                            VerticalAlignment="Center"/>
 
+                                                            <TextBlock Text="{Binding Value.Settings.AutoHomeDuration, StringFormat={}{0:0.00}s}" 
+                                                                       VerticalAlignment="Center"
+                                                                       DockPanel.Dock="Right" 
+                                                                       Width="50"
+                                                                       TextAlignment="Right"/>
+
                                                             <Slider DockPanel.Dock="Left"
                                                                         Value="{Binding Value.Settings.AutoHomeDuration}"    
-                                                                        Style="{StaticResource MaterialDesignDiscreteSlider}"
                                                                         Minimum="0" 
                                                                         Maximum="10"
                                                                         TickFrequency="0.25"

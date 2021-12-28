@@ -811,11 +811,11 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
 
         switch (e.PropertyName)
         {
-            case "UpdateMotionProviderWhenPaused":
-            case "UpdateMotionProviderWithoutScript":
-            case "Inverted":
-            case "SmartLimitEnabled":
-            case "Bypass":
+            case nameof(ViewModels.AxisSettings.UpdateMotionProviderWhenPaused):
+            case nameof(ViewModels.AxisSettings.UpdateMotionProviderWithoutScript):
+            case nameof(ViewModels.AxisSettings.Inverted):
+            case nameof(ViewModels.AxisSettings.SmartLimitEnabled):
+            case nameof(ViewModels.AxisSettings.Bypass):
                 var (axis, _) = AxisSettings.FirstOrDefault(x => x.Value == settings);
                 if(axis != null)
                     ResetSync(true, axis);
