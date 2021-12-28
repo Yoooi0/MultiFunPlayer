@@ -472,6 +472,58 @@
                                 <material:PackIcon Kind="LinkPlus" Width="19" Height="19"/>
                             </Button>
 
+                            <material:PopupBox DockPanel.Dock="Left"
+                                               StaysOpen="True" 
+                                               Style="{StaticResource MaterialDesignToolBarPopupBox}"
+                                               ToolTipService.InitialShowDelay="0"
+                                               ToolTipService.Placement="Top"
+                                               ToolTip="Auto-skip">
+                                <material:PopupBox.ToggleContent>
+                                    <Border Width="35" Height="35">
+                                        <material:PackIcon Kind="SkipForward" 
+                                                           Width="22" 
+                                                           Height="22" 
+                                                           HorizontalAlignment="Center" 
+                                                           VerticalAlignment="Center"/>
+                                    </Border>
+                                </material:PopupBox.ToggleContent>
+                                <Grid Width="200" Margin="10">
+                                    <StackPanel>
+                                        <StackPanel Margin="0 0 0 10" Orientation="Horizontal">
+                                            <TextBlock Text="Enabled:" 
+                                                       Width="50"
+                                                       Margin="0 0 10 0"
+                                                       VerticalAlignment="Center"/>
+
+                                            <CheckBox IsChecked="{Binding AutoSkipToScriptStartEnabled}"
+                                                      Style="{StaticResource MaterialDesignSwitchToggleButton}"/>
+                                        </StackPanel>
+
+                                        <DockPanel Margin="0 0 0 10">
+                                            <TextBlock Text="Offset:" 
+                                                       DockPanel.Dock="Left"
+                                                       Width="50"
+                                                       Margin="0 0 10 0"
+                                                       VerticalAlignment="Center"/>
+
+                                            <TextBlock Text="{Binding AutoSkipToScriptStartOffset, StringFormat={}{0:0.0}s}" 
+                                                       VerticalAlignment="Center"
+                                                       DockPanel.Dock="Right" 
+                                                       Width="40"
+                                                       TextAlignment="Right"/>
+
+                                            <Slider DockPanel.Dock="Left"
+                                                    Value="{Binding AutoSkipToScriptStartOffset}"    
+                                                    Minimum="0" 
+                                                    Maximum="10"
+                                                    TickFrequency="0.1"
+                                                    VerticalAlignment="Center"
+                                                    IsSnapToTickEnabled="True"
+                                                    material:SliderAssist.OnlyShowFocusVisualWhileDragging="True"/>
+                                        </DockPanel>
+                                    </StackPanel>
+                                </Grid>
+                            </material:PopupBox>
                         </StackPanel>
                     </DockPanel>
                 </Expander.Header>

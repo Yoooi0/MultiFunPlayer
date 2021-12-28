@@ -60,6 +60,8 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
     [JsonProperty] public SyncSettings SyncSettings { get; set; }
     [JsonProperty] public bool HeatmapShowStrokeLength { get; set; }
     [JsonProperty] public int HeatmapBucketCount { get; set; } = 333;
+    [JsonProperty] public bool AutoSkipToScriptStartEnabled { get; set; } = true;
+    [JsonProperty] public float AutoSkipToScriptStartOffset { get; set; } = 5;
 
     public bool IsSyncing => AxisStates.Values.Any(s => s.SyncTime < SyncSettings.Duration);
     public float SyncProgress => !IsSyncing ? 100 : GetSyncProgress(AxisStates.Values.Min(s => s.SyncTime), SyncSettings.Duration) * 100;
@@ -353,6 +355,11 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
             VideoDuration = float.NaN;
             CurrentPosition = float.NaN;
             PlaybackSpeed = 1;
+        }
+        else
+        {
+            if (AutoSkipToScriptStartEnabled)
+                SeekVideoToScriptStart(AutoSkipToScriptStartOffset / 1000f);
         }
 
         InvalidateState(null);
@@ -800,6 +807,18 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
 
         _eventAggregator.Publish(new VideoSeekMessage(TimeSpan.FromSeconds(MathUtils.Clamp(time, 0, VideoDuration))));
     }
+
+    private void SeekVideoToScriptStart(float offset)
+    {
+        if (!float.IsFinite(VideoDuration) || !float.IsFinite(offset))
+            return;
+
+        var scriptStart = AxisKeyframes.Select(x => x.Value?.FirstOrDefault()?.Position)
+                                       .Where(k => k != null)
+                                       .FirstOrDefault(float.NaN);
+        if (scriptStart != null)
+            SeekVideoToTime(MathF.Max(0, scriptStart.Value - offset));
+    }
     #endregion
 
     #region AxisSettings
@@ -1106,6 +1125,21 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                                                                    .WithCallback((_, offset) => SeekVideoToPercent(CurrentPosition / VideoDuration + offset / 100)));
         s.RegisterAction("Video::Position::Percent::Set", b => b.WithSetting<float>(p => p.WithLabel("Value").WithStringFormat("{}{0}%"))
                                                                 .WithCallback((_, value) => SeekVideoToPercent(value / 100)));
+        #endregion
+
+        #region AutoSkipToScriptStartEnabled
+        s.RegisterAction("Video::AutoSkipToScriptStartEnabled::Set",
+            b => b.WithSetting<bool>(p => p.WithLabel("Auto-skip to script start enabled"))
+                  .WithCallback((_, enabled) => AutoSkipToScriptStartEnabled = enabled));
+
+        s.RegisterAction("Video::AutoSkipToScriptStartEnabled::Toggle",
+            b => b.WithCallback(_ => AutoSkipToScriptStartEnabled = !AutoSkipToScriptStartEnabled));
+        #endregion
+
+        #region AutoSkipToScriptStartOffset
+        s.RegisterAction("Video::AutoSkipToScriptStartOffset::Set",
+            b => b.WithSetting<float>(p => p.WithLabel("Script start auto-skip offset").WithStringFormat("{}{0}s"))
+                  .WithCallback((_, offset) => AutoSkipToScriptStartOffset = offset));
         #endregion
 
         #region Axis::Value
