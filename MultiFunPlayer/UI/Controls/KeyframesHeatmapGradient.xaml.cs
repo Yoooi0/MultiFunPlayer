@@ -246,7 +246,7 @@ public partial class KeyframesHeatmapGradient : UserControl, INotifyPropertyChan
             => Points.Add(new Point(float.IsFinite(x) ? x : 0, float.IsFinite(y) ? y : 0));
 
         void AddPointForBucket(int index, float value)
-            => AddPoint(index * bucketSize / Duration * (float)ActualWidth, (1 - value) * (float)ActualHeight);
+            => AddPoint(index * bucketSize / Duration * (float)ActualWidth, MathUtils.Clamp01(value) * (float)ActualHeight);
 
         if (!ShowStrokeLength || !DeviceAxis.TryParse("L0", out var axis) || !Keyframes.TryGetValue(axis, out var keyframes) || keyframes == null || keyframes.Count < 2)
         {
