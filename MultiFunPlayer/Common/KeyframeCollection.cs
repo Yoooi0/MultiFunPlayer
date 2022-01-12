@@ -1,0 +1,44 @@
+﻿namespace MultiFunPlayer.Common;
+
+public class KeyframeCollection : List<Keyframe>
+{
+    public bool IsRawCollection { get; init; }
+
+    public int BinarySearch(float position)
+    {
+        var bestIndex = BinarySearch(new Keyframe(position, float.NaN), KeyframePositionComparer.Default);
+        if (bestIndex >= 0)
+            return bestIndex;
+
+        bestIndex = ~bestIndex;
+        return bestIndex == Count ? Count : bestIndex - 1;
+    }
+
+    public int AdvanceIndex(int index, float position)
+    {
+        while (index + 1 >= 0 && index + 1 < Count && this[index + 1].Position < position)
+            index++;
+        return index;
+    }
+
+    public float Interpolate(int index, float position, InterpolationType interpolationType)
+    {
+        if (IsRawCollection || index == 0 || index + 2 == Count || interpolationType == InterpolationType.Linear)
+        {
+            var p0 = this[index];
+            var p1 = this[index + 1];
+
+            return MathUtils.Interpolate(p0.Position, p0.Value, p1.Position, p1.Value, position, InterpolationType.Linear);
+        }
+        else
+        {
+            var p0 = this[index - 1];
+            var p1 = this[index + 0];
+            var p2 = this[index + 1];
+            var p3 = this[index + 2];
+
+            return MathUtils.Interpolate(p0.Position, p0.Value, p1.Position, p1.Value, p2.Position, p2.Value, p3.Position, p3.Value,
+                                         position, interpolationType);
+        }
+    }
+}

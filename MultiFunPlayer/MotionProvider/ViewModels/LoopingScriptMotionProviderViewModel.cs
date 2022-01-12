@@ -45,31 +45,11 @@ public class LoopingScriptMotionProviderViewModel : AbstractMotionProvider
             _time = _scriptStart;
         }
 
-        while (_scriptIndex + 1 < keyframes.Count && keyframes[_scriptIndex + 1].Position < _time)
-            _scriptIndex++;
-
+        _scriptIndex = keyframes.AdvanceIndex(_scriptIndex, _time);
         if (!keyframes.ValidateIndex(_scriptIndex) || !keyframes.ValidateIndex(_scriptIndex + 1))
             return;
 
-        var newValue = default(float);
-        if (keyframes.IsRawCollection || _scriptIndex == 0 || _scriptIndex + 2 == keyframes.Count || InterpolationType == InterpolationType.Linear)
-        {
-            var p0 = keyframes[_scriptIndex];
-            var p1 = keyframes[_scriptIndex + 1];
-
-            newValue = MathUtils.Interpolate(p0.Position, p0.Value, p1.Position, p1.Value, _time, InterpolationType.Linear);
-        }
-        else
-        {
-            var p0 = keyframes[_scriptIndex - 1];
-            var p1 = keyframes[_scriptIndex + 0];
-            var p2 = keyframes[_scriptIndex + 1];
-            var p3 = keyframes[_scriptIndex + 2];
-
-            newValue = MathUtils.Interpolate(p0.Position, p0.Value, p1.Position, p1.Value, p2.Position, p2.Value, p3.Position, p3.Value,
-                                             _time, InterpolationType);
-        }
-
+        var newValue = keyframes.Interpolate(_scriptIndex, _time, InterpolationType);
         Value = MathUtils.Map(newValue, 0, 1, Minimum / 100, Maximum / 100);
         _time += Speed * deltaTime;
     }
