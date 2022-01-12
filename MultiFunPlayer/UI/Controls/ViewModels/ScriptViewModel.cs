@@ -121,7 +121,7 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
             UpdateSync();
 
             stopwatch.Restart();
-            Thread.Sleep(IsPlaying && dirty ? 2 : 10);
+            Thread.Sleep(IsPlaying || dirty ? 2 : 10);
         }
 
         bool UpdateValues()

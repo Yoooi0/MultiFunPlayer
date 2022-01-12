@@ -106,13 +106,16 @@ public class SerialOutputTargetViewModel : ThreadAbstractOutputTarget
             var lastSentValues = DeviceAxis.All.ToDictionary(a => a, _ => float.NaN);
             while (!token.IsCancellationRequested && serialPort?.IsOpen == true)
             {
+                stopwatch.Restart();
+                Sleep(stopwatch);
+
                 UpdateValues();
 
                 if (serialPort?.IsOpen == true && serialPort?.BytesToRead > 0)
                     Logger.Debug("Received \"{0}\" from \"{1}\"", serialPort.ReadExisting(), SelectedComPort);
 
                 var dirtyValues = Values.Where(x => DeviceAxis.IsDirty(x.Value, lastSentValues[x.Key]));
-                var commands = DeviceAxis.ToString(dirtyValues, UpdateInterval);
+                var commands = DeviceAxis.ToString(dirtyValues, (int) stopwatch.ElapsedMilliseconds);
                 if (serialPort?.IsOpen == true && !string.IsNullOrWhiteSpace(commands))
                 {
                     Logger.Trace("Sending \"{0}\" to \"{1}\"", commands.Trim(), SelectedComPort);
@@ -121,9 +124,6 @@ public class SerialOutputTargetViewModel : ThreadAbstractOutputTarget
 
                 foreach (var (axis, value) in dirtyValues)
                     lastSentValues[axis] = value;
-
-                Sleep(stopwatch);
-                stopwatch.Restart();
             }
         }
         catch (Exception e) when (e is TimeoutException || e is IOException)

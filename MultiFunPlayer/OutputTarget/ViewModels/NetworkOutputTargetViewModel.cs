@@ -74,17 +74,17 @@ public class NetworkOutputTargetViewModel : ThreadAbstractOutputTarget
             using var stream = new StreamWriter(client.GetStream(), Encoding.ASCII);
             while (!token.IsCancellationRequested && client?.Connected == true)
             {
+                stopwatch.Restart();
+                Sleep(stopwatch);
+
                 UpdateValues();
 
-                var commands = DeviceAxis.ToString(Values, UpdateInterval);
+                var commands = DeviceAxis.ToString(Values, (int) stopwatch.ElapsedMilliseconds);
                 if (client.Connected && !string.IsNullOrWhiteSpace(commands))
                 {
                     Logger.Trace("Sending \"{0}\" to \"{1}\"", commands.Trim(), $"tcp://{Endpoint}");
                     stream.WriteLine(commands);
                 }
-
-                Sleep(stopwatch);
-                stopwatch.Restart();
             }
         }
         catch (Exception e)
@@ -119,9 +119,12 @@ public class NetworkOutputTargetViewModel : ThreadAbstractOutputTarget
             var stopwatch = Stopwatch.StartNew();
             while (!token.IsCancellationRequested)
             {
+                stopwatch.Restart();
+                Sleep(stopwatch);
+
                 UpdateValues();
 
-                var commands = DeviceAxis.ToString(Values, UpdateInterval);
+                var commands = DeviceAxis.ToString(Values, (int) stopwatch.ElapsedMilliseconds);
                 if (!string.IsNullOrWhiteSpace(commands))
                 {
                     Logger.Trace("Sending \"{0}\" to \"{1}\"", commands.Trim(), $"udp://{Endpoint}");
@@ -129,9 +132,6 @@ public class NetworkOutputTargetViewModel : ThreadAbstractOutputTarget
                     var encoded = Encoding.ASCII.GetBytes(commands, buffer);
                     client.Send(buffer, encoded);
                 }
-
-                Sleep(stopwatch);
-                stopwatch.Restart();
             }
         }
         catch (Exception e)

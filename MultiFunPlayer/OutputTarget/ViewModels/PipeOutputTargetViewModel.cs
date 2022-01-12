@@ -61,18 +61,18 @@ public class PipeOutputTargetViewModel : ThreadAbstractOutputTarget
             var stopwatch = Stopwatch.StartNew();
             while (!token.IsCancellationRequested && client?.IsConnected == true)
             {
+                stopwatch.Restart();
+                Sleep(stopwatch);
+
                 UpdateValues();
 
-                var commands = DeviceAxis.ToString(Values, UpdateInterval);
+                var commands = DeviceAxis.ToString(Values, (int) stopwatch.ElapsedMilliseconds);
                 if (client?.IsConnected == true && !string.IsNullOrWhiteSpace(commands))
                 {
                     Logger.Trace("Sending \"{0}\" to \"{1}\"", commands.Trim(), PipeName);
                     var encoded = Encoding.ASCII.GetBytes(commands, buffer);
                     client?.Write(buffer, 0, encoded);
                 }
-
-                Sleep(stopwatch);
-                stopwatch.Restart();
             }
         }
         catch (Exception e)
