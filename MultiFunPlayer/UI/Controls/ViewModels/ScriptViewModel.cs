@@ -814,7 +814,7 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
             return;
 
         Task.Delay(500, _cancellationSource.Token)
-            .ContinueWith(_ => SeekVideoToScriptStart(AutoSkipToScriptStartOffset / 1000f, onlyWhenBefore: true));
+            .ContinueWith(_ => SeekVideoToScriptStart(AutoSkipToScriptStartOffset, onlyWhenBefore: true));
     }
 
     private void SeekVideoToScriptStart(float offset, bool onlyWhenBefore)
