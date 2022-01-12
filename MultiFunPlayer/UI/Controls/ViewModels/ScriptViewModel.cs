@@ -810,14 +810,21 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
 
     private void SeekVideoToScriptStart(float offset)
     {
-        if (!float.IsFinite(VideoDuration) || !float.IsFinite(offset))
-            return;
+        Task.Delay(500, _cancellationSource.Token)
+            .ContinueWith(_ =>
+            {
+                if (!float.IsFinite(VideoDuration) || !float.IsFinite(offset))
+                    return;
 
-        var scriptStart = AxisKeyframes.Select(x => x.Value?.FirstOrDefault()?.Position)
-                                       .Where(k => k != null)
-                                       .FirstOrDefault(float.NaN);
-        if (scriptStart != null)
-            SeekVideoToTime(MathF.Max(0, scriptStart.Value - offset));
+                var scriptStart = AxisKeyframes.Select(x => x.Value?.FirstOrDefault()?.Position)
+                                               .Where(k => k != null)
+                                               .FirstOrDefault(float.NaN);
+                if (scriptStart == null || scriptStart.Value >= CurrentPosition)
+                    return;
+
+                Logger.Info($"Skipping to script start at {0}s", scriptStart.Value);
+                SeekVideoToTime(MathF.Max(0, scriptStart.Value - offset));
+            });
     }
     #endregion
 
