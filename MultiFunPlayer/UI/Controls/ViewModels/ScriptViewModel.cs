@@ -359,7 +359,7 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         else
         {
             if (AutoSkipToScriptStartEnabled)
-                SeekVideoToScriptStart(AutoSkipToScriptStartOffset / 1000f);
+                ScheduleAutoSkipToScriptStart();
         }
 
         InvalidateState(null);
@@ -808,23 +808,32 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         _eventAggregator.Publish(new VideoSeekMessage(TimeSpan.FromSeconds(MathUtils.Clamp(time, 0, VideoDuration))));
     }
 
-    private void SeekVideoToScriptStart(float offset)
+    private void ScheduleAutoSkipToScriptStart()
     {
+        if (!AutoSkipToScriptStartEnabled)
+            return;
+
         Task.Delay(500, _cancellationSource.Token)
-            .ContinueWith(_ =>
-            {
-                if (!float.IsFinite(VideoDuration) || !float.IsFinite(offset))
-                    return;
+            .ContinueWith(_ => SeekVideoToScriptStart(AutoSkipToScriptStartOffset / 1000f, onlyWhenBefore: true));
+    }
 
-                var scriptStart = AxisKeyframes.Select(x => x.Value?.FirstOrDefault()?.Position)
-                                               .Where(k => k != null)
-                                               .FirstOrDefault(float.NaN);
-                if (scriptStart == null || scriptStart.Value >= CurrentPosition)
-                    return;
+    private void SeekVideoToScriptStart(float offset, bool onlyWhenBefore)
+    {
+        if (!float.IsFinite(VideoDuration) || !float.IsFinite(offset))
+            return;
 
-                Logger.Info($"Skipping to script start at {0}s", scriptStart.Value);
-                SeekVideoToTime(MathF.Max(0, scriptStart.Value - offset));
-            });
+        var scriptStart = AxisKeyframes.Select(x => x.Value?.FirstOrDefault()?.Position)
+                                       .Where(k => k != null)
+                                       .FirstOrDefault(float.NaN);
+        if (scriptStart == null)
+            return;
+
+        var targetVideoTime = MathF.Max(0, scriptStart.Value - offset);
+        if (onlyWhenBefore && targetVideoTime <= CurrentPosition)
+            return;
+
+        Logger.Info("Skipping to script start at {0}s", targetVideoTime);
+        SeekVideoToTime(targetVideoTime);
     }
     #endregion
 
@@ -1132,9 +1141,12 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                                                                    .WithCallback((_, offset) => SeekVideoToPercent(CurrentPosition / VideoDuration + offset / 100)));
         s.RegisterAction("Video::Position::Percent::Set", b => b.WithSetting<float>(p => p.WithLabel("Value").WithStringFormat("{}{0}%"))
                                                                 .WithCallback((_, value) => SeekVideoToPercent(value / 100)));
+
+        s.RegisterAction("Video::Position::SkipToScriptStart", b => b.WithSetting<float>(p => p.WithLabel("Offset").WithStringFormat("{}{0}s"))
+                                                                     .WithCallback((_, offset) => SeekVideoToScriptStart(offset, onlyWhenBefore: false)));
         #endregion
 
-        #region AutoSkipToScriptStartEnabled
+        #region Video::AutoSkipToScriptStartEnabled
         s.RegisterAction("Video::AutoSkipToScriptStartEnabled::Set",
             b => b.WithSetting<bool>(p => p.WithLabel("Auto-skip to script start enabled"))
                   .WithCallback((_, enabled) => AutoSkipToScriptStartEnabled = enabled));
@@ -1143,7 +1155,7 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
             b => b.WithCallback(_ => AutoSkipToScriptStartEnabled = !AutoSkipToScriptStartEnabled));
         #endregion
 
-        #region AutoSkipToScriptStartOffset
+        #region Video::AutoSkipToScriptStartOffset
         s.RegisterAction("Video::AutoSkipToScriptStartOffset::Set",
             b => b.WithSetting<float>(p => p.WithLabel("Script start auto-skip offset").WithStringFormat("{}{0}s"))
                   .WithCallback((_, offset) => AutoSkipToScriptStartOffset = offset));
