@@ -39,9 +39,9 @@ public sealed class DeviceAxis
     }
 
     public static string ToString(DeviceAxis axis, float value) => $"{axis}{string.Format(_outputFormat, value * _outputMaximum)}";
-    public static string ToString(DeviceAxis axis, float value, int interval) => $"{ToString(axis, value)}I{interval}";
+    public static string ToString(DeviceAxis axis, float value, float interval) => $"{ToString(axis, value)}I{(int)Math.Floor(interval + 0.75f)}";
 
-    public static string ToString(IEnumerable<KeyValuePair<DeviceAxis, float>> values, int interval)
+    public static string ToString(IEnumerable<KeyValuePair<DeviceAxis, float>> values, float interval)
         => $"{values.Aggregate(string.Empty, (s, x) => $"{s} {ToString(x.Key, x.Value, interval)}")}\n".TrimStart();
 
     public static bool IsDirty(float value, float lastValue)

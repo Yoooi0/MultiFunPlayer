@@ -79,7 +79,7 @@ public class NetworkOutputTargetViewModel : ThreadAbstractOutputTarget
 
                 UpdateValues();
 
-                var commands = DeviceAxis.ToString(Values, (int) stopwatch.ElapsedMilliseconds);
+                var commands = DeviceAxis.ToString(Values, (float) stopwatch.Elapsed.TotalMilliseconds);
                 if (client.Connected && !string.IsNullOrWhiteSpace(commands))
                 {
                     Logger.Trace("Sending \"{0}\" to \"{1}\"", commands.Trim(), $"tcp://{Endpoint}");
@@ -124,7 +124,7 @@ public class NetworkOutputTargetViewModel : ThreadAbstractOutputTarget
 
                 UpdateValues();
 
-                var commands = DeviceAxis.ToString(Values, (int) stopwatch.ElapsedMilliseconds);
+                var commands = DeviceAxis.ToString(Values, (float) stopwatch.Elapsed.TotalMilliseconds);
                 if (!string.IsNullOrWhiteSpace(commands))
                 {
                     Logger.Trace("Sending \"{0}\" to \"{1}\"", commands.Trim(), $"udp://{Endpoint}");
