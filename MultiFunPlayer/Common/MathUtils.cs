@@ -4,13 +4,6 @@ namespace MultiFunPlayer.Common;
 
 public static class MathUtils
 {
-    private static readonly Random _random;
-
-    static MathUtils()
-    {
-        _random = new Random();
-    }
-
     public static float Clamp(float x, float from, float to)
                 => from <= to ? MathF.Max(MathF.Min(x, to), from) : MathF.Min(MathF.Max(x, to), from);
     public static int Clamp(int x, int from, int to)
@@ -23,15 +16,6 @@ public static class MathUtils
     public static float UnLerpUnclamped(float from, float to, float t) => (t - from) / (to - from);
     public static float Map(float x, float from0, float to0, float from1, float to1) => Lerp(from1, to1, UnLerp(from0, to0, x));
     public static float MapUnclamped(float x, float from0, float to0, float from1, float to1) => LerpUnclamped(from1, to1, UnLerpUnclamped(from0, to0, x));
-    public static void Swap<T>(ref T a, ref T b)
-    {
-        var temp = a;
-        a = b;
-        b = temp;
-    }
-
-    public static int Random(int from, int to) => _random.Next(from, to);
-    public static double Random() => _random.NextDouble();
 
     [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     public static float Interpolate(float x0, float y0, float x1, float y1, float x, InterpolationType type)
@@ -151,9 +135,7 @@ public static class Interpolation
     [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     public static float Linear(float x0, float y0, float x1, float y1, float x)
     {
-        var d = x1 - x0;
-        var dx = x - x0;
-        var t = dx / d;
+        var t = (x - x0) / (x1 - x0);
         return MathUtils.Lerp(y0, y1, t);
     }
 }
@@ -173,8 +155,8 @@ public class OpenSimplex
     {
         _perm = new short[PSIZE];
         _grad = new Gradient[PSIZE];
-        var source = new short[PSIZE];
 
+        var source = new short[PSIZE];
         for (var i = 0; i < PSIZE; i++)
             source[i] = (short)i;
 
@@ -219,7 +201,8 @@ public class OpenSimplex
         }
 
         const double n = 0.05481866495625118;
-        var grad = new Gradient[]{
+        var grad = new Gradient[]
+        {
                 new( 0.130526192220052 / n,  0.991444861373810 / n),
                 new( 0.382683432365090 / n,  0.923879532511287 / n),
                 new( 0.608761429008721 / n,  0.793353340291235 / n),
@@ -343,7 +326,8 @@ public class OpenSimplex
 
         public Gradient(double dx, double dy)
         {
-            this.dx = dx; this.dy = dy;
+            this.dx = dx; 
+            this.dy = dy;
         }
     }
 }
