@@ -204,7 +204,7 @@ public partial class KeyframesHeatmapGradient : UserControl, INotifyPropertyChan
                     var positionFrom = MathF.Max(index * bucketSize, prev.Position);
                     var positionTo = MathF.Min((index + 1) * bucketSize, next.Position);
 
-                    buckets[index].Length.Add(ady * (positionTo - positionFrom) / adx);
+                    buckets[index].TotalLength += ady * (positionTo - positionFrom) / adx;
                 }
             }
         }
@@ -213,22 +213,16 @@ public partial class KeyframesHeatmapGradient : UserControl, INotifyPropertyChan
 
         AddStop(Color.FromRgb(0, 0, 0), 0);
 
-        var maxLength = float.NaN;
-        for (var i = 0; i < buckets.Length; i++)
-        {
-            var value = buckets[i].Length.Average;
-            if (!float.IsFinite(value))
-                continue;
-
-            maxLength = !float.IsFinite(maxLength) ? value : MathF.Max(maxLength, value);
-        }
+        var maxLength = buckets.Length > 0 ? buckets[0].TotalLength : 0;
+        for (var i = 1; i < buckets.Length; i++)
+            maxLength = MathF.Max(maxLength, buckets[i].TotalLength);
 
         var normalizationFactor = 1.0f / maxLength;
         if (float.IsFinite(normalizationFactor))
         {
             for (var i = 0; i < buckets.Length; i++)
             {
-                var heat = buckets[i].Length.Count > 0 ? MathUtils.Clamp01(buckets[i].Length.Average * normalizationFactor) : 0;
+                var heat = MathUtils.Clamp01(buckets[i].TotalLength * normalizationFactor);
                 var color = heat < 0.001f ? Color.FromRgb(0, 0, 0) : _colors[(int)MathF.Round(heat * (_colors.Length - 1))];
 
                 AddStop(color, i * bucketSize / Duration);
@@ -314,13 +308,13 @@ public partial class KeyframesHeatmapGradient : UserControl, INotifyPropertyChan
 
     private struct HeatmapBucket
     {
-        public HeatmapBucketValue Length;
+        public float TotalLength;
         public HeatmapBucketValue Top;
         public HeatmapBucketValue Bottom;
 
         public void Clear()
         {
-            Length = new();
+            TotalLength = 0;
             Top = new();
             Bottom = new();
         }
