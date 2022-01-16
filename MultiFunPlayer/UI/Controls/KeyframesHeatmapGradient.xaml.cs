@@ -262,45 +262,51 @@ public partial class KeyframesHeatmapGradient : UserControl, INotifyPropertyChan
             for (var k = j + 1; k < keyframes.Count; j = k++)
             {
                 var currentDirection = MathF.Sign(keyframes[k].Value - keyframes[j].Value);
-
                 if (!direction.HasValue)
                     direction = currentDirection;
-
+            
                 if (direction.HasValue && direction != currentDirection)
                     break;
             }
-
+        
             var prev = keyframes[i];
             var next = keyframes[j];
 
             var startBucket = (int)MathF.Floor(prev.Position / bucketSize);
             var endBucket = (int)MathF.Floor(next.Position / bucketSize);
-
-            if (startBucket >= buckets.Length)
-                break;
-
-            if (direction > 0) buckets[startBucket].Bottom.Add(prev.Value);
-            else if (direction < 0) buckets[startBucket].Top.Add(prev.Value);
-            else if (prev.Value > axis.DefaultValue) buckets[startBucket].Top.Add(prev.Value);
-            else buckets[startBucket].Bottom.Add(prev.Value);
-
-            if (endBucket < buckets.Length)
+            for(var index = startBucket; index < buckets.Length && index <= endBucket; index++)
             {
-                if (direction > 0) buckets[endBucket].Top.Add(next.Value);
-                else if (direction < 0) buckets[endBucket].Bottom.Add(next.Value);
-                else if (next.Value > axis.DefaultValue) buckets[endBucket].Top.Add(next.Value);
-                else buckets[endBucket].Bottom.Add(next.Value);
+                var positionFrom = MathF.Max(index * bucketSize, prev.Position);
+                var positionTo = MathF.Min((index + 1) * bucketSize, next.Position);
+                var valueFrom = MathUtils.Map(positionFrom, prev.Position, next.Position, prev.Value, next.Value);
+                var valueTo = MathUtils.Map(positionTo, prev.Position, next.Position, prev.Value, next.Value);
+
+                if(direction > 0)
+                {
+                    buckets[index].Bottom.Add(valueFrom);
+                    buckets[index].Top.Add(valueTo);
+                }
+                else if(direction < 0)
+                {
+                    buckets[index].Top.Add(valueFrom);
+                    buckets[index].Bottom.Add(valueTo);
+                }
+                else
+                {
+                    buckets[index].Top.Add((valueFrom + valueTo) / 2);
+                    buckets[index].Bottom.Add((valueFrom + valueTo) / 2);
+                }
             }
 
             i = j;
         }
-
+        
         for (var i = 0; i < buckets.Length; i++)
             AddPointForBucket(i, buckets[i].Top.Count > 0 ? buckets[i].Top.Average : axis.DefaultValue);
-
+        
         for (var i = buckets.Length - 1; i >= 0; i--)
             AddPointForBucket(i, buckets[i].Bottom.Count > 0 ? buckets[i].Bottom.Average : axis.DefaultValue);
-
+        
         AddPointForBucket(0, buckets[0].Top.Count > 0 ? buckets[0].Top.Average : axis.DefaultValue);
     }
 

@@ -41,10 +41,10 @@
                 </DrawingBrush.Drawing>
             </DrawingBrush>
         </material:Card.Background>
-        <Canvas>
+        <Canvas ClipToBounds="True">
             <Polygon Points="{Binding Points, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}"
                      Visibility="{Binding ShowStrokeLength, Converter={StaticResource BooleanToVisibilityConverter}, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}"
-                     StrokeThickness="0.5" 
+                     StrokeThickness="0.5"
                      Stroke="Black">
                 <Polygon.Fill>
                     <LinearGradientBrush StartPoint="0,0" EndPoint="1,0"
