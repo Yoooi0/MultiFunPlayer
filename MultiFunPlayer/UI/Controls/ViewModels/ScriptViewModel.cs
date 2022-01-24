@@ -794,7 +794,7 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         if (!AutoSkipToScriptStartEnabled)
             return;
 
-        Task.Delay(500, _cancellationSource.Token)
+        Task.Delay(1000, _cancellationSource.Token)
             .ContinueWith(_ => SeekVideoToScriptStart(AutoSkipToScriptStartOffset, onlyWhenBefore: true));
     }
 
@@ -803,13 +803,14 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         if (!float.IsFinite(VideoDuration) || !float.IsFinite(offset))
             return;
 
-        var scriptStart = AxisKeyframes.Select(x => x.Value?.FirstOrDefault()?.Position)
-                                       .Where(k => k != null)
-                                       .FirstOrDefault(float.NaN);
-        if (scriptStart == null)
+        var startPosition = AxisKeyframes.Select(x => x.Value)
+                                         .Where(ks => ks != null)
+                                         .Select(ks => ks.TryGet(ks.SkipGap(startIndex: 0), out var k) ? k.Position : default(float?))
+                                         .FirstOrDefault();
+        if (startPosition == null)
             return;
 
-        var targetVideoTime = MathF.Max(0, scriptStart.Value - offset);
+        var targetVideoTime = MathF.Max(0, startPosition.Value - offset);
         if (onlyWhenBefore && targetVideoTime <= CurrentPosition)
             return;
 

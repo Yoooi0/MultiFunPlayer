@@ -41,4 +41,25 @@ public class KeyframeCollection : List<Keyframe>
                                          position, interpolationType);
         }
     }
+
+    public int SkipGap(int index)
+    {
+        if (!this.ValidateIndex(index))
+            return -1;
+
+        for(int i = index, j = index + 1; j < Count; i = j++)
+        {
+            var prev = this[i];
+            var next = this[j];
+
+            var adx = MathF.Abs(next.Position - prev.Position);
+            var ady = MathF.Abs(next.Value - prev.Value);
+            if (ady < 0.001f || adx < 0.001f)
+                continue;
+
+            return i;
+        }
+
+        return -1;
+    }
 }
