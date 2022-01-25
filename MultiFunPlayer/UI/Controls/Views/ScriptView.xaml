@@ -883,51 +883,85 @@
                                                                           behaviours:ComboBoxAssist.PreviewSelectionChanged="{s:Action OnPreviewSelectedMotionProviderChanged}"/>
                                                             </DockPanel>
 
-                                                            <DockPanel DockPanel.Dock="Top">
-                                                                <TextBlock Text="Script blending:" 
-                                                                           DockPanel.Dock="Left"
-                                                                           Margin="0 0 10 0"
-                                                                           VerticalAlignment="Center"/>
+                                                            <material:Card material:ShadowAssist.ShadowDepth="Depth1"
+                                                                           DockPanel.Dock="Top">
+                                                                <Expander>
+                                                                    <Expander.Header>
+                                                                        <TextBlock Text="Common settings" 
+                                                                                   VerticalAlignment="Center"
+                                                                                   Margin="12 0 0 0"
+                                                                                   FontSize="14"
+                                                                                   FontWeight="Bold"
+                                                                                   Typography.Capitals="AllSmallCaps"/>
+                                                                    </Expander.Header>
 
-                                                                <TextBlock Text="{Binding Value.Settings.MotionProviderBlend, StringFormat={}{0:0}%}" 
-                                                                           VerticalAlignment="Center"
-                                                                           DockPanel.Dock="Right" 
-                                                                           Width="40"
-                                                                           TextAlignment="Right"/>
+                                                                    <StackPanel Margin="10">
+                                                                        <DockPanel DockPanel.Dock="Top"
+                                                                                   Margin="0 0 0 10">
+                                                                            <TextBlock Text="Script blending:" 
+                                                                                       DockPanel.Dock="Left"
+                                                                                       Margin="0 0 10 0"
+                                                                                       VerticalAlignment="Center"/>
 
-                                                                <Slider DockPanel.Dock="Left"
-                                                                        Value="{Binding Value.Settings.MotionProviderBlend}"    
-                                                                        Minimum="0" 
-                                                                        Maximum="100"
-                                                                        TickFrequency="1"
-                                                                        VerticalAlignment="Center"
-                                                                        IsSnapToTickEnabled="True"
-                                                                        material:SliderAssist.OnlyShowFocusVisualWhileDragging="True"/>
-                                                            </DockPanel>
+                                                                            <TextBlock Text="{Binding Value.Settings.MotionProviderBlend, StringFormat={}{0:0}%}" 
+                                                                                       VerticalAlignment="Center"
+                                                                                       DockPanel.Dock="Right" 
+                                                                                       Width="40"
+                                                                                       TextAlignment="Right"/>
 
-                                                            <DockPanel DockPanel.Dock="Top" LastChildFill="False">
-                                                                <TextBlock Text="Update when paused:" 
-                                                                           DockPanel.Dock="Left"
-                                                                           Margin="0 0 10 0"
-                                                                           Width="125"
-                                                                           VerticalAlignment="Center"/>
+                                                                            <Slider DockPanel.Dock="Left"
+                                                                                    Value="{Binding Value.Settings.MotionProviderBlend}"    
+                                                                                    Minimum="0" 
+                                                                                    Maximum="100"
+                                                                                    TickFrequency="1"
+                                                                                    VerticalAlignment="Center"
+                                                                                    IsSnapToTickEnabled="True"
+                                                                                    material:SliderAssist.OnlyShowFocusVisualWhileDragging="True"/>
+                                                                        </DockPanel>
+                                                                        
+                                                                        <TextBlock Text="Update when..." 
+                                                                                   VerticalAlignment="Center"
+                                                                                   FontSize="12"
+                                                                                   FontWeight="Bold"
+                                                                                   Typography.Capitals="AllSmallCaps"/>
+                                                                        
+                                                                        <DockPanel LastChildFill="False">
+                                                                            <TextBlock Text="Video is paused" 
+                                                                                       DockPanel.Dock="Left"
+                                                                                       VerticalAlignment="Center"/>
 
-                                                                <ToggleButton Style="{StaticResource MaterialDesignSwitchToggleButton}"
-                                                                              IsChecked="{Binding Value.Settings.UpdateMotionProviderWhenPaused}"/>
-                                                            </DockPanel>
-                                                            
-                                                            <DockPanel DockPanel.Dock="Top" LastChildFill="False">
-                                                                <TextBlock Text="Update without script:" 
-                                                                           DockPanel.Dock="Left"
-                                                                           Margin="0 0 10 0"
-                                                                           Width="125"
-                                                                           VerticalAlignment="Center"/>
+                                                                            <ToggleButton Style="{StaticResource MaterialDesignSwitchToggleButton}"
+                                                                                          IsChecked="{Binding Value.Settings.UpdateMotionProviderWhenPaused}"
+                                                                                          DockPanel.Dock="Right"/>
+                                                                        </DockPanel>
 
-                                                                <ToggleButton Style="{StaticResource MaterialDesignSwitchToggleButton}"
-                                                                              IsChecked="{Binding Value.Settings.UpdateMotionProviderWithoutScript}"/>
-                                                            </DockPanel>
-                                                            
-                                                            <Separator DockPanel.Dock="Top" Margin="-10 0 -10 20"/>
+                                                                        <DockPanel LastChildFill="False">
+                                                                            <TextBlock Text="{Binding Key, StringFormat={}{0} axis has no script}" 
+                                                                                       DockPanel.Dock="Left"
+                                                                                       VerticalAlignment="Center"/>
+
+                                                                            <ToggleButton Style="{StaticResource MaterialDesignSwitchToggleButton}"
+                                                                                          IsChecked="{Binding Value.Settings.UpdateMotionProviderWithoutScript}"
+                                                                                          DockPanel.Dock="Right"/>
+                                                                        </DockPanel>
+
+                                                                        <DockPanel LastChildFill="False">
+                                                                            <ComboBox material:TextFieldAssist.HasClearButton="True"
+                                                                                      DockPanel.Dock="Left"
+                                                                                      Width="50" 
+                                                                                      ItemsSource="{Binding Source={x:Static common:DeviceAxis.All}}" 
+                                                                                      SelectedItem="{Binding Value.Settings.UpdateMotionProviderWithAxis}"
+                                                                                      SelectionChanged="{s:Action OnSelectedLinkAxisChanged}"/>
+                                                                            
+                                                                            <TextBlock Text=" axis is moving" 
+                                                                                       DockPanel.Dock="Left"
+                                                                                       VerticalAlignment="Center"/>
+                                                                        </DockPanel>
+                                                                    </StackPanel>
+                                                                </Expander>
+                                                            </material:Card>
+
+                                                            <Separator DockPanel.Dock="Top" Margin="-10 0 -10 0"/>
                                                             <ContentControl DockPanel.Dock="Bottom">
                                                                 <s:View.Model>
                                                                     <MultiBinding Converter="{StaticResource MotionProviderSelectorConverter}">

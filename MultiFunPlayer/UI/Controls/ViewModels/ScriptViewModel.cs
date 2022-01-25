@@ -137,21 +137,19 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
 
                 lock (state)
                 {
-                    var oldValue = state.Value;
+                    state.Dirty = false;
+
+                    var lastValue = state.Value;
                     if (!settings.Bypass)
                     {
                         state.Dirty |= UpdateScript(axis, state, settings);
                         state.Dirty |= UpdateMotionProvider(axis, state, settings);
                     }
 
-                    if (state.SyncTime < SyncSettings.Duration)
-                        state.Value = MathUtils.Lerp(!float.IsFinite(oldValue) ? axis.DefaultValue : oldValue, state.Value, GetSyncProgress(state.SyncTime, SyncSettings.Duration));
-
+                    state.Dirty |= UpdateSync(axis, state, lastValue);
                     state.Dirty |= UpdateAutoHome(axis, state, settings);
                     state.Dirty |= UpdateSmartLimit(axis, state, settings);
                     dirty |= state.Dirty;
-
-                    state.Dirty = false;
                 }
             }
 
@@ -169,13 +167,14 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                 if (!limitState.InsideScript)
                     return false;
 
+                var lastValue = state.Value;
                 var value = state.Value;
                 var limitValue = limitState.Value;
 
                 var factor = MathUtils.Map(limitValue, 0.25f, 0.9f, 1f, 0f);
-                var lastValue = state.Value;
-                state.Value = MathUtils.Lerp(axis.DefaultValue, state.Value, factor);
-                return lastValue != state.Value;
+                var newValue = MathUtils.Lerp(axis.DefaultValue, state.Value, factor);
+                state.Value = newValue;
+                return MathF.Abs(lastValue - newValue) > 0.000001f;
             }
 
             bool UpdateScript(DeviceAxis axis, AxisState state, AxisSettings settings)
@@ -217,7 +216,7 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                     newValue = 1 - newValue;
 
                 state.Value = newValue;
-                return true;
+                return MathF.Abs(lastValue - newValue) > 0.000001f;
             }
 
             bool UpdateMotionProvider(DeviceAxis axis, AxisState state, AxisSettings settings)
@@ -228,21 +227,24 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                     return false;
                 if (!settings.UpdateMotionProviderWithoutScript && !state.InsideScript)
                     return false;
+                if (settings.UpdateMotionProviderWithAxis != null && !AxisStates[settings.UpdateMotionProviderWithAxis].Dirty)
+                    return false;
 
-                var newValue = MotionProviderManager.Update(axis, settings.SelectedMotionProvider, (float)stopwatch.Elapsed.TotalSeconds);
-                if (newValue == null)
+                var lastValue = state.Value;
+                var providerResult = MotionProviderManager.Update(axis, settings.SelectedMotionProvider, (float)stopwatch.Elapsed.TotalSeconds);
+                if (providerResult is not float newValue)
                     return false;
 
                 if (IsPlaying && state.InsideScript)
-                    newValue = MathUtils.Lerp(state.Value, newValue.Value, MathUtils.Clamp01(settings.MotionProviderBlend / 100));
+                    newValue = MathUtils.Lerp(state.Value, newValue, MathUtils.Clamp01(settings.MotionProviderBlend / 100));
 
-                state.Value = newValue.Value;
-                return true;
+                state.Value = newValue;
+                return MathF.Abs(lastValue - newValue) > 0.000001f;
             }
 
             bool UpdateAutoHome(DeviceAxis axis, AxisState state, AxisSettings settings)
             {
-                if (state.Dirty)
+                if (state.Dirty || (state.InsideScript && IsPlaying))
                 {
                     autoHomeTimes[axis] = 0;
                     return false;
@@ -266,8 +268,19 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                 if (t < 0 || t > 1)
                     return false;
 
-                state.Value = MathUtils.Lerp(state.Value, axis.DefaultValue, MathF.Pow(2, 10 * (t - 1)));
-                return state.Value != lastValue;
+                var newValue = MathUtils.Lerp(state.Value, axis.DefaultValue, MathF.Pow(2, 10 * (t - 1)));
+                state.Value = newValue;
+                return MathF.Abs(lastValue - newValue) > 0.000001f;
+            }
+
+            bool UpdateSync(DeviceAxis axis, AxisState state, float lastValue)
+            {
+                if (state.SyncTime >= SyncSettings.Duration)
+                    return false;
+
+                var newValue = MathUtils.Lerp(!float.IsFinite(lastValue) ? axis.DefaultValue : lastValue, state.Value, GetSyncProgress(state.SyncTime, SyncSettings.Duration));
+                state.Value = newValue;
+                return MathF.Abs(lastValue - newValue) > 0.000001f;
             }
         }
 
@@ -805,7 +818,7 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
 
         var startPosition = AxisKeyframes.Select(x => x.Value)
                                          .Where(ks => ks != null)
-                                         .Select(ks => ks.TryGet(ks.SkipGap(startIndex: 0), out var k) ? k.Position : default(float?))
+                                         .Select(ks => ks.TryGet(ks.SkipGap(index: 0), out var k) ? k.Position : default(float?))
                                          .FirstOrDefault();
         if (startPosition == null)
             return;
@@ -1416,6 +1429,7 @@ public class AxisSettings : PropertyChangedBase
     [JsonProperty] public float MotionProviderBlend { get; set; } = 100;
     [JsonProperty] public bool UpdateMotionProviderWhenPaused { get; set; } = false;
     [JsonProperty] public bool UpdateMotionProviderWithoutScript { get; set; } = false;
+    [JsonProperty] public DeviceAxis UpdateMotionProviderWithAxis { get; set; } = null;
     [JsonProperty] public string SelectedMotionProvider { get; set; } = null;
 }
 

@@ -68,7 +68,7 @@
         <material:Card material:ShadowAssist.ShadowDepth="Depth1">
             <Expander>
                 <Expander.Header>
-                    <TextBlock Text="Advanced" 
+                    <TextBlock Text="Advanced setttings" 
                                VerticalAlignment="Center"
                                Margin="12 0 0 0"
                                FontSize="14"
