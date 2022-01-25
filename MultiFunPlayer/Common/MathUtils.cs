@@ -18,6 +18,14 @@ public static class MathUtils
     public static float MapUnclamped(float x, float from0, float to0, float from1, float to1) => LerpUnclamped(from1, to1, UnLerpUnclamped(from0, to0, x));
 
     [MethodImpl(MethodImplOptions.AggressiveOptimization)]
+    public static float Interpolate(float x0, float y0, float x, InterpolationType type)
+        => type switch
+        {
+            InterpolationType.Step => Interpolation.Step(x0, y0, x),
+            _ => throw new NotSupportedException()
+        };
+
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     public static float Interpolate(float x0, float y0, float x1, float y1, float x, InterpolationType type)
         => type switch
         {
@@ -39,7 +47,8 @@ public enum InterpolationType
 {
     Linear,
     Pchip,
-    Makima
+    Makima,
+    Step
 }
 
 public static class Interpolation
@@ -138,6 +147,19 @@ public static class Interpolation
         var t = (x - x0) / (x1 - x0);
         return MathUtils.Lerp(y0, y1, t);
     }
+
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
+    public static float Step(float x0, float y0, float x) => y0;
+
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
+    public static int RequiredPointCount(InterpolationType interpolationType) => interpolationType switch
+    {
+        InterpolationType.Pchip => 4,
+        InterpolationType.Makima => 4,
+        InterpolationType.Linear => 2,
+        InterpolationType.Step => 1,
+        _ => throw new NotSupportedException()
+    };
 }
 
 public class OpenSimplex

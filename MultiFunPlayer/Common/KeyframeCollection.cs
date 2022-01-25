@@ -23,14 +23,11 @@ public class KeyframeCollection : List<Keyframe>
 
     public float Interpolate(int index, float position, InterpolationType interpolationType)
     {
-        if (IsRawCollection || index == 0 || index + 2 == Count || interpolationType == InterpolationType.Linear)
-        {
-            var p0 = this[index];
-            var p1 = this[index + 1];
+        var pointCount = Interpolation.RequiredPointCount(interpolationType);
+        if (pointCount == 4 && (IsRawCollection || index == 0 || index + 2 == Count))
+            pointCount = 2;
 
-            return MathUtils.Interpolate(p0.Position, p0.Value, p1.Position, p1.Value, position, InterpolationType.Linear);
-        }
-        else
+        if (pointCount == 4)
         {
             var p0 = this[index - 1];
             var p1 = this[index + 0];
@@ -39,6 +36,19 @@ public class KeyframeCollection : List<Keyframe>
 
             return MathUtils.Interpolate(p0.Position, p0.Value, p1.Position, p1.Value, p2.Position, p2.Value, p3.Position, p3.Value,
                                          position, interpolationType);
+        }
+        else if (pointCount == 2)
+        {
+            var p0 = this[index + 0];
+            var p1 = this[index + 1];
+
+            return MathUtils.Interpolate(p0.Position, p0.Value, p1.Position, p1.Value, position, interpolationType);
+        }
+        else
+        {
+            var p0 = this[index];
+
+            return MathUtils.Interpolate(p0.Position, p0.Value, position, interpolationType);
         }
     }
 
