@@ -474,105 +474,6 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
     #endregion
 
     #region Common
-    private void SearchForValidIndex(DeviceAxis axis, AxisState state)
-    {
-        if (!AxisKeyframes.TryGetValue(axis, out var keyframes) || keyframes == null || keyframes.Count == 0)
-            return;
-
-        Logger.Debug("Searching for valid index [Axis: {0}]", axis);
-        lock (state)
-            state.Index = keyframes.BinarySearch(GetAxisPosition(axis));
-    }
-
-    private List<DeviceAxis> UpdateLinkScript(params DeviceAxis[] axes) => UpdateLinkScript(axes?.AsEnumerable());
-    private List<DeviceAxis> UpdateLinkScript(IEnumerable<DeviceAxis> axes = null)
-    {
-        axes ??= DeviceAxis.All;
-
-        Logger.Debug("Trying to link axes [Axes: {list}]", axes);
-
-        var updated = new List<DeviceAxis>();
-        foreach (var axis in axes)
-        {
-            var model = AxisModels[axis];
-            if (model.Settings.LinkAxis == null)
-            {
-                if (model.Settings.LinkAxisHasPriority)
-                {
-                    ResetScript(axis);
-                    updated.Add(axis);
-                }
-
-                continue;
-            }
-
-            if (model.Script != null)
-            {
-                if (model.Settings.LinkAxisHasPriority && model.Script.Origin == ScriptFileOrigin.User)
-                    continue;
-
-                if (!model.Settings.LinkAxisHasPriority && model.Script.Origin != ScriptFileOrigin.Link)
-                    continue;
-            }
-
-            Logger.Debug("Linked {0} to {1}", axis.Name, model.Settings.LinkAxis.Name);
-
-            SetScript(axis, LinkedScriptFile.LinkTo(AxisModels[model.Settings.LinkAxis].Script));
-            updated.Add(axis);
-        }
-
-        return updated;
-    }
-
-    private void ResetScript(params DeviceAxis[] axes) => ResetScript(axes?.AsEnumerable());
-    private void ResetScript(IEnumerable<DeviceAxis> axes = null)
-    {
-        axes ??= DeviceAxis.All;
-
-        Logger.Debug("Resetting axes [Axes: {list}]", axes);
-        foreach (var axis in axes)
-        {
-            Logger.Debug("Reset {0} script", axis);
-
-            if (AxisModels[axis].Script != null)
-                ResetSync(true, axis);
-
-            SetScript(axis, null);
-        }
-    }
-
-    private void SetScript(DeviceAxis axis, IScriptFile script)
-    {
-        var model = AxisModels[axis];
-        var state = AxisStates[axis];
-        lock (state)
-        {
-            state.Invalidate();
-            model.Script = script;
-        }
-    }
-
-    private void ReloadScript(params DeviceAxis[] axes) => ReloadScript(axes?.AsEnumerable());
-    private void ReloadScript(IEnumerable<DeviceAxis> axes = null)
-    {
-        axes ??= DeviceAxis.All;
-        ResetSync(true, axes);
-
-        Logger.Debug("Reloading axes [Axes: {list}]", axes);
-        foreach (var (enabled, items) in axes.GroupBy(a => AxisModels[a].Settings.LinkAxisHasPriority))
-        {
-            var groupAxes = items.ToArray();
-            if (enabled)
-            {
-                UpdateLinkScript(groupAxes);
-            }
-            else
-            {
-                var updated = TryMatchFiles(true, groupAxes);
-                UpdateLinkScript(groupAxes.Except(updated));
-            }
-        }
-    }
 
     private void InvalidateState(params DeviceAxis[] axes) => InvalidateState(axes?.AsEnumerable());
     private void InvalidateState(IEnumerable<DeviceAxis> axes = null)
@@ -588,6 +489,62 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         }
     }
 
+    private float GetAxisPosition(DeviceAxis axis) => CurrentPosition - GlobalOffset - AxisSettings[axis].Offset;
+    public float GetValue(DeviceAxis axis) => MathUtils.Clamp01(AxisStates[axis].Value);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private float GetSyncProgress(float time, float duration) => MathF.Pow(2, 10 * (time / duration - 1));
+
+    private void ResetSync(bool isSyncing = true, params DeviceAxis[] axes) => ResetSync(isSyncing, axes?.AsEnumerable());
+    private void ResetSync(bool isSyncing = true, IEnumerable<DeviceAxis> axes = null)
+    {
+        axes ??= DeviceAxis.All;
+
+        Logger.Debug("Resetting sync [Axes: {list}]", axes);
+
+        foreach (var axis in axes)
+        {
+            var state = AxisStates[axis];
+            lock (state)
+            {
+                state.SyncTime = isSyncing ? 0 : SyncSettings.Duration;
+            }
+        }
+
+        NotifyOfPropertyChange(nameof(IsSyncing));
+        NotifyOfPropertyChange(nameof(SyncProgress));
+    }
+    #endregion
+
+    #region UI Common
+    [SuppressPropertyChangedWarnings]
+    public void OnOffsetSliderValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (sender is not FrameworkElement element)
+            return;
+
+        if (element.DataContext is KeyValuePair<DeviceAxis, AxisModel> pair)
+        {
+            var (axis, _) = pair;
+            ResetSync(true, axis);
+        }
+        else
+        {
+            ResetSync();
+        }
+
+        foreach (var axis in DeviceAxis.All)
+            SearchForValidIndex(axis, AxisStates[axis]);
+    }
+
+    public void OnSliderDoubleClick(object sender, MouseButtonEventArgs e)
+    {
+        if (sender is Slider slider)
+            slider.Value = 0;
+    }
+    #endregion
+
+    #region Script
     private List<DeviceAxis> TryMatchFiles(bool overwrite, params DeviceAxis[] axes) => TryMatchFiles(overwrite, axes?.AsEnumerable());
     private List<DeviceAxis> TryMatchFiles(bool overwrite, IEnumerable<DeviceAxis> axes = null)
     {
@@ -693,60 +650,136 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         return updated;
     }
 
-    private float GetAxisPosition(DeviceAxis axis) => CurrentPosition - GlobalOffset - AxisSettings[axis].Offset;
-    public float GetValue(DeviceAxis axis) => MathUtils.Clamp01(AxisStates[axis].Value);
+    private void SearchForValidIndex(DeviceAxis axis, AxisState state)
+    {
+        if (!AxisKeyframes.TryGetValue(axis, out var keyframes) || keyframes == null || keyframes.Count == 0)
+            return;
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private float GetSyncProgress(float time, float duration) => MathF.Pow(2, 10 * (time / duration - 1));
-
-    private void ResetSync(bool isSyncing = true, params DeviceAxis[] axes) => ResetSync(isSyncing, axes?.AsEnumerable());
-    private void ResetSync(bool isSyncing = true, IEnumerable<DeviceAxis> axes = null)
+        Logger.Debug("Searching for valid index [Axis: {0}]", axis);
+        lock (state)
+            state.Index = keyframes.BinarySearch(GetAxisPosition(axis));
+    }
+    private List<DeviceAxis> UpdateLinkScript(params DeviceAxis[] axes) => UpdateLinkScript(axes?.AsEnumerable());
+    private List<DeviceAxis> UpdateLinkScript(IEnumerable<DeviceAxis> axes = null)
     {
         axes ??= DeviceAxis.All;
 
-        Logger.Debug("Resetting sync [Axes: {list}]", axes);
+        Logger.Debug("Trying to link axes [Axes: {list}]", axes);
 
+        var updated = new List<DeviceAxis>();
         foreach (var axis in axes)
         {
-            var state = AxisStates[axis];
-            lock (state)
+            var model = AxisModels[axis];
+            if (model.Settings.LinkAxis == null)
             {
-                state.SyncTime = isSyncing ? 0 : SyncSettings.Duration;
+                if (model.Settings.LinkAxisHasPriority)
+                {
+                    ResetScript(axis);
+                    updated.Add(axis);
+                }
+
+                continue;
+            }
+
+            if (model.Script != null)
+            {
+                if (model.Settings.LinkAxisHasPriority && model.Script.Origin == ScriptFileOrigin.User)
+                    continue;
+
+                if (!model.Settings.LinkAxisHasPriority && model.Script.Origin != ScriptFileOrigin.Link)
+                    continue;
+            }
+
+            Logger.Debug("Linked {0} to {1}", axis.Name, model.Settings.LinkAxis.Name);
+
+            SetScript(axis, LinkedScriptFile.LinkTo(AxisModels[model.Settings.LinkAxis].Script));
+            updated.Add(axis);
+        }
+
+        return updated;
+    }
+
+    private void ResetScript(params DeviceAxis[] axes) => ResetScript(axes?.AsEnumerable());
+    private void ResetScript(IEnumerable<DeviceAxis> axes = null)
+    {
+        axes ??= DeviceAxis.All;
+
+        Logger.Debug("Resetting axes [Axes: {list}]", axes);
+        foreach (var axis in axes)
+        {
+            Logger.Debug("Reset {0} script", axis);
+
+            if (AxisModels[axis].Script != null)
+                ResetSync(true, axis);
+
+            SetScript(axis, null);
+        }
+    }
+
+    private void SetScript(DeviceAxis axis, IScriptFile script)
+    {
+        var model = AxisModels[axis];
+        var state = AxisStates[axis];
+        lock (state)
+        {
+            state.Invalidate();
+            model.Script = script;
+        }
+    }
+
+    private void ReloadScript(params DeviceAxis[] axes) => ReloadScript(axes?.AsEnumerable());
+    private void ReloadScript(IEnumerable<DeviceAxis> axes = null)
+    {
+        axes ??= DeviceAxis.All;
+        ResetSync(true, axes);
+
+        Logger.Debug("Reloading axes [Axes: {list}]", axes);
+        foreach (var (enabled, items) in axes.GroupBy(a => AxisModels[a].Settings.LinkAxisHasPriority))
+        {
+            var groupAxes = items.ToArray();
+            if (enabled)
+            {
+                UpdateLinkScript(groupAxes);
+            }
+            else
+            {
+                var updated = TryMatchFiles(true, groupAxes);
+                UpdateLinkScript(groupAxes.Except(updated));
             }
         }
-
-        NotifyOfPropertyChange(nameof(IsSyncing));
-        NotifyOfPropertyChange(nameof(SyncProgress));
     }
-    #endregion
 
-    #region UI Common
-    [SuppressPropertyChangedWarnings]
-    public void OnOffsetSliderValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    private void SkipGap(float minimumSkip = 0, params DeviceAxis[] axes) => SkipGap(axes?.AsEnumerable(), minimumSkip);
+    private void SkipGap(IEnumerable<DeviceAxis> axes = null, float minimumSkip = 0)
     {
-        if (sender is not FrameworkElement element)
+        float? GetSkipPosition(DeviceAxis axis)
+        {
+            var keyframes = AxisKeyframes[axis];
+            if (keyframes == null)
+                return null;
+
+            var state = AxisStates[axis];
+            var startIndex = state.InsideScript ? state.Index : 0;
+            var skipIndex = keyframes.SkipGap(startIndex);
+            if (skipIndex == startIndex && state.InsideScript)
+                return null;
+
+            if (!keyframes.ValidateIndex(skipIndex))
+                return null;
+
+            return keyframes[skipIndex].Position;
+        }
+
+        axes ??= DeviceAxis.All;
+
+        var maybeSkipPosition = AxisKeyframes.Keys.Select(a => GetSkipPosition(a)).MinBy(x => x.GetValueOrDefault(float.PositiveInfinity));
+        var currentPosition = CurrentPosition;
+        if (maybeSkipPosition is not float skipPosition || currentPosition >= skipPosition || (skipPosition - currentPosition) <= minimumSkip)
             return;
 
-        if (element.DataContext is KeyValuePair<DeviceAxis, AxisModel> pair)
-        {
-            var (axis, _) = pair;
-            ResetSync(true, axis);
-        }
-        else
-        {
-            ResetSync();
-        }
-
-        foreach (var axis in DeviceAxis.All)
-            SearchForValidIndex(axis, AxisStates[axis]);
+        SeekVideoToTime(skipPosition);
     }
-
-    public void OnSliderDoubleClick(object sender, MouseButtonEventArgs e)
-    {
-        if (sender is Slider slider)
-            slider.Value = 0;
-    }
-    #endregion
+    #endregion 
 
     #region Video
     public void OnOpenVideoLocation()
@@ -1154,6 +1187,13 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         s.RegisterAction("Video::AutoSkipToScriptStartOffset::Set",
             b => b.WithSetting<float>(p => p.WithLabel("Script start auto-skip offset").WithStringFormat("{}{0}s"))
                   .WithCallback((_, offset) => AutoSkipToScriptStartOffset = offset));
+        #endregion
+
+        #region Script::SkipGap
+        s.RegisterAction("Script::SkipGap",
+            b => b.WithSetting<DeviceAxis>(p => p.WithLabel("Target").WithItemsSource(DeviceAxis.All).WithDescription("Target axis script to check for gaps\nEmpty to check all scripts"))
+                  .WithSetting<float>(p => p.WithLabel("Minimum skip").WithDefaultValue(2).WithStringFormat("{}{0}s"))
+                  .WithCallback((_, axis, minimumSkip) => SkipGap(minimumSkip, axis)));
         #endregion
 
         #region Axis::Value
