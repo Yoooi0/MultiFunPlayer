@@ -40,7 +40,7 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
     public float CurrentPosition { get; set; }
     public float PlaybackSpeed { get; set; }
     public float VideoDuration { get; set; }
-    public float GlobalOffset { get; set; }
+    [JsonProperty] public float GlobalOffset { get; set; }
 
     public ObservableConcurrentDictionary<DeviceAxis, AxisModel> AxisModels { get; set; }
     public ObservableConcurrentDictionaryView<DeviceAxis, AxisModel, AxisState> AxisStates { get; }
@@ -465,6 +465,7 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
             if (settings.TryGetValue<bool>(nameof(AxisContentVisible), out var axisContentVisible)) AxisContentVisible = axisContentVisible;
             if (settings.TryGetValue<int>(nameof(HeatmapBucketCount), out var heatmapBucketCount)) HeatmapBucketCount = heatmapBucketCount;
             if (settings.TryGetValue<bool>(nameof(HeatmapShowStrokeLength), out var heatmapShowStrokeLength)) HeatmapShowStrokeLength = heatmapShowStrokeLength;
+            if (settings.TryGetValue<float>(nameof(GlobalOffset), out var globalOffset)) GlobalOffset = globalOffset;
 
             if (settings.TryGetValue(nameof(SyncSettings), out var syncSettingsToken)) syncSettingsToken.Populate(SyncSettings);
         }
