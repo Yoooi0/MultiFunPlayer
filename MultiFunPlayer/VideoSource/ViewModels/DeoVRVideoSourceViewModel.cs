@@ -13,6 +13,7 @@ using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Channels;
 
 namespace MultiFunPlayer.VideoSource.ViewModels;
@@ -53,7 +54,7 @@ public class DeoVRVideoSourceViewModel : AbstractVideoSource, IHandle<VideoPlayP
                 throw new Exception("Endpoint cannot be null.");
 
             if (string.Equals(Endpoint.Address.ToString(), "localhost") || string.Equals(Endpoint.Address.ToString(), "127.0.0.1"))
-                if (Process.GetProcessesByName("DeoVR").Length == 0)
+                if (!Process.GetProcesses().Any(p => Regex.IsMatch(p.ProcessName, "(?i)(?>deovr|slr)")))
                     throw new Exception($"Could not find a running {Name} process.");
 
             using var client = new TcpClient();
@@ -226,7 +227,7 @@ public class DeoVRVideoSourceViewModel : AbstractVideoSource, IHandle<VideoPlayP
                 return await ValueTask.FromResult(false);
 
             if (string.Equals(Endpoint.Address.ToString(), "localhost") || string.Equals(Endpoint.Address.ToString(), "127.0.0.1"))
-                if (Process.GetProcessesByName("DeoVR").Length == 0)
+                if (!Process.GetProcesses().Any(p => Regex.IsMatch(p.ProcessName, "(?i)(?>deovr|slr)")))
                     return await ValueTask.FromResult(false);
 
             using var client = new TcpClient();

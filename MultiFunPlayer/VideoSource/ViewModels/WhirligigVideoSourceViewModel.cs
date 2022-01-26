@@ -12,6 +12,7 @@ using System.Globalization;
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
+using System.Text.RegularExpressions;
 
 namespace MultiFunPlayer.VideoSource.ViewModels;
 
@@ -43,7 +44,7 @@ public class WhirligigVideoSourceViewModel : AbstractVideoSource
             Logger.Info("Connecting to {0} at \"{1}\"", Name, Endpoint);
 
             if (string.Equals(Endpoint.Address.ToString(), "localhost") || string.Equals(Endpoint.Address.ToString(), "127.0.0.1"))
-                if (Process.GetProcessesByName("Whirligig").Length == 0)
+                if (!Process.GetProcesses().Any(p => Regex.IsMatch(p.ProcessName, "(?i)whirligig")))
                     throw new Exception($"Could not find a running {Name} process.");
 
             using var client = new TcpClient();
@@ -124,7 +125,7 @@ public class WhirligigVideoSourceViewModel : AbstractVideoSource
                 return await ValueTask.FromResult(false);
 
             if (string.Equals(Endpoint.Address.ToString(), "localhost") || string.Equals(Endpoint.Address.ToString(), "127.0.0.1"))
-                if (Process.GetProcessesByName("Whirligig").Length == 0)
+                if (!Process.GetProcesses().Any(p => Regex.IsMatch(p.ProcessName, "(?i)whirligig")))
                     return await ValueTask.FromResult(false);
 
             using var client = new TcpClient();
