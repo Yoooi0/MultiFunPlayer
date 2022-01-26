@@ -211,12 +211,17 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                     return false;
                 }
 
-                var newValue = keyframes.Interpolate(state.Index, axisPosition, settings.InterpolationType);
-                if (settings.Inverted)
-                    newValue = 1 - newValue;
+                try {
+                    var newValue = keyframes.Interpolate(state.Index, axisPosition, settings.InterpolationType);
+                    if (settings.Inverted)
+                        newValue = 1 - newValue;
 
-                state.Value = newValue;
-                return MathF.Abs(lastValue - newValue) > 0.000001f;
+                    state.Value = newValue;
+                    return MathF.Abs(lastValue - newValue) > 0.000001f;
+                } catch (NotSupportedException ex) {
+                    Logger.Warn("Unsupported Method" + ex.Message);
+                    return false;
+                }
             }
 
             bool UpdateMotionProvider(DeviceAxis axis, AxisState state, AxisSettings settings)

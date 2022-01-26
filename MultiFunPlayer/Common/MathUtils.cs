@@ -22,7 +22,7 @@ public static class MathUtils
         => type switch
         {
             InterpolationType.Step => Interpolation.Step(x0, y0, x),
-            _ => throw new NotSupportedException()
+            _ => throw new NotSupportedException("type " + type)
         };
 
     [MethodImpl(MethodImplOptions.AggressiveOptimization)]
@@ -30,7 +30,8 @@ public static class MathUtils
         => type switch
         {
             InterpolationType.Linear => Interpolation.Linear(x0, y0, x1, y1, x),
-            _ => throw new NotSupportedException()
+            InterpolationType.Pchip => Interpolation.Pchip(x0, y0, x1, y1, 0f, 0f, 0f, 0f, x),
+            _ => throw new NotSupportedException("type " + type)
         };
 
     [MethodImpl(MethodImplOptions.AggressiveOptimization)]
@@ -39,7 +40,7 @@ public static class MathUtils
         {
             InterpolationType.Pchip => Interpolation.Pchip(x0, y0, x1, y1, x2, y2, x3, y3, x),
             InterpolationType.Makima => Interpolation.Makima(x0, y0, x1, y1, x2, y2, x3, y3, x),
-            _ => throw new NotSupportedException()
+            _ => throw new NotSupportedException("type " + type)
         };
 }
 
