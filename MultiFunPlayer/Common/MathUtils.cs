@@ -1,4 +1,5 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 
 namespace MultiFunPlayer.Common;
 
@@ -149,6 +150,7 @@ public static class Interpolation
     }
 
     [MethodImpl(MethodImplOptions.AggressiveOptimization)]
+    [SuppressMessage("Style", "IDE0060:Remove unused parameter")]
     public static float Step(float x0, float y0, float x) => y0;
 
     [MethodImpl(MethodImplOptions.AggressiveOptimization)]
