@@ -40,7 +40,6 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
     public float CurrentPosition { get; set; }
     public float PlaybackSpeed { get; set; }
     public float VideoDuration { get; set; }
-    public float GlobalOffset { get; set; }
 
     public ObservableConcurrentDictionary<DeviceAxis, AxisModel> AxisModels { get; set; }
     public ObservableConcurrentDictionaryView<DeviceAxis, AxisModel, AxisState> AxisStates { get; }
@@ -51,6 +50,7 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
 
     public MediaResourceInfo VideoFile { get; set; }
 
+    [JsonProperty] public float GlobalOffset { get; set; }
     [JsonProperty] public bool ValuesContentVisible { get; set; }
     [JsonProperty] public bool VideoContentVisible { get; set; } = true;
     [JsonProperty] public bool AxisContentVisible { get; set; } = false;
@@ -460,6 +460,7 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                     ScriptLibraries.Add(library);
             }
 
+            if (settings.TryGetValue<float>(nameof(GlobalOffset), out var globalOffset)) GlobalOffset = globalOffset;
             if (settings.TryGetValue<bool>(nameof(ValuesContentVisible), out var valuesContentVisible)) ValuesContentVisible = valuesContentVisible;
             if (settings.TryGetValue<bool>(nameof(VideoContentVisible), out var videoContentVisible)) VideoContentVisible = videoContentVisible;
             if (settings.TryGetValue<bool>(nameof(AxisContentVisible), out var axisContentVisible)) AxisContentVisible = axisContentVisible;
