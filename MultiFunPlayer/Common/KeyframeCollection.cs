@@ -25,7 +25,10 @@ public class KeyframeCollection : List<Keyframe>
     {
         var pointCount = Interpolation.RequiredPointCount(interpolationType);
         if (pointCount == 4 && (IsRawCollection || index == 0 || index + 2 == Count))
+        {
             pointCount = 2;
+            interpolationType = InterpolationType.Linear;
+        }
 
         if (pointCount == 4)
         {
