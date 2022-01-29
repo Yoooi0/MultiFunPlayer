@@ -31,7 +31,8 @@ public abstract class AbstractOutputTarget : Screen, IHandle<AppSettingsMessage>
     public virtual int MaximumUpdateInterval { get; } = 33;
     public int AverageUpdateRate { get; private set; }
     public int UpdateRateJitter { get; private set; }
-    public virtual DoubleCollection UpdateIntervalTicks { 
+    public virtual DoubleCollection UpdateIntervalTicks
+    { 
         get
         {
             var ticks = new DoubleCollection();

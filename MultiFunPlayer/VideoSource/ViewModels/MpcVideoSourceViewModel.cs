@@ -10,6 +10,7 @@ using System.ComponentModel;
 using System.IO;
 using System.Net;
 using System.Net.Http;
+using System.Runtime.ExceptionServices;
 using System.Text.RegularExpressions;
 using System.Threading.Channels;
 
@@ -68,7 +69,6 @@ public class MpcVideoSourceViewModel : AbstractVideoSource, IHandle<VideoPlayPau
                 throw task.Exception;
         }
         catch (OperationCanceledException) { }
-        catch (IOException e) { Logger.Debug(e, $"{Name} failed with exception"); }
         catch (Exception e)
         {
             Logger.Error(e, $"{Name} failed with exception");
@@ -186,7 +186,6 @@ public class MpcVideoSourceViewModel : AbstractVideoSource, IHandle<VideoPlayPau
         }
     }
 
-
     public override async ValueTask<bool> CanConnectAsync(CancellationToken token)
     {
         try
@@ -220,14 +219,16 @@ public class MpcVideoSourceViewModel : AbstractVideoSource, IHandle<VideoPlayPau
         }
         catch (Exception e)
         {
-            if (e is not OperationCanceledException operationCanceledException)
-                throw;
+            if (e is OperationCanceledException operationCanceledException)
+            {
+                var innerException = operationCanceledException.InnerException;
+                if (innerException is TimeoutException)
+                    ExceptionDispatchInfo.Capture(innerException).Throw();
 
-            var innerException = operationCanceledException.InnerException;
-            if (innerException != null && innerException is TimeoutException)
-                throw new TimeoutException("The operation has timed out.");
+                ExceptionDispatchInfo.Capture(operationCanceledException).Throw();
+            }
 
-            throw operationCanceledException;
+            throw;
         }
     }
 
