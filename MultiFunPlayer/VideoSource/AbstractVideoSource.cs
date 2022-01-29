@@ -16,7 +16,7 @@ public abstract class AbstractVideoSource : Screen, IVideoSource, IHandle<AppSet
     private Task _task;
 
     [SuppressPropertyChangedWarnings] public abstract ConnectionStatus Status { get; protected set; }
-    public bool AutoConnectEnabled { get; set; } = true;
+    public bool AutoConnectEnabled { get; set; } = false;
 
     protected AbstractVideoSource(IShortcutManager shortcutManager, IEventAggregator eventAggregator)
     {
