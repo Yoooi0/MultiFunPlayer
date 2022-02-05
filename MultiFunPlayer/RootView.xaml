@@ -20,8 +20,6 @@
         SizeToContent="Height"
         Width="600"
         FadeContentIfInactive="False"
-        Loaded="{s:Action OnLoaded}"
-        Closing="{s:Action OnClosing}"
         MouseDown="{s:Action OnMouseDown}">
     <materialExtensions:MaterialWindow.TitleTemplate>
         <DataTemplate>

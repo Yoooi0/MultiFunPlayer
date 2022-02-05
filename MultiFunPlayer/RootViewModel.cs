@@ -1,7 +1,7 @@
 using MultiFunPlayer.Common.Messages;
-using MultiFunPlayer.Settings;
 using MultiFunPlayer.UI;
 using MultiFunPlayer.UI.Controls.ViewModels;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NLog;
 using Stylet;
@@ -11,11 +11,9 @@ using System.Windows.Input;
 
 namespace MultiFunPlayer;
 
-public class RootViewModel : Conductor<IScreen>.Collection.AllActive
+public class RootViewModel : Conductor<IScreen>.Collection.AllActive, IHandle<AppSettingsMessage>
 {
     protected Logger Logger = LogManager.GetCurrentClassLogger();
-
-    private readonly IEventAggregator _eventAggregator;
 
     [Inject] public ScriptViewModel Script { get; set; }
     [Inject] public VideoSourceViewModel VideoSource { get; set; }
@@ -23,9 +21,11 @@ public class RootViewModel : Conductor<IScreen>.Collection.AllActive
     [Inject] public ShortcutViewModel Shortcut { get; set; }
     [Inject] public ApplicationViewModel Application { get; set; }
 
+    public bool DisablePopup { get; set; }
+
     public RootViewModel(IEventAggregator eventAggregator)
     {
-        _eventAggregator = eventAggregator;
+        eventAggregator.Subscribe(this);
     }
 
     protected override void OnActivate()
@@ -36,38 +36,11 @@ public class RootViewModel : Conductor<IScreen>.Collection.AllActive
 
         ActivateAndSetParent(Items);
         base.OnActivate();
-
-        var settings = SettingsHelper.ReadOrEmpty(SettingsType.Application);
-        _eventAggregator.Publish(new AppSettingsMessage(settings, AppSettingsMessageType.Loading));
     }
 
     public void OnInformationClick() => _ = DialogHelper.ShowOnUIThreadAsync(new InformationMessageDialogViewModel(showCheckbox: false), "RootDialog");
     public void OnShortcutClick() => _ = DialogHelper.ShowOnUIThreadAsync(Shortcut, "RootDialog");
     public void OnSettingsClick() => _ = DialogHelper.ShowOnUIThreadAsync(Application, "RootDialog");
-
-    public void OnLoaded(object sender, EventArgs e)
-    {
-        Execute.PostToUIThread(async () =>
-        {
-            var settings = SettingsHelper.ReadOrEmpty(SettingsType.Application);
-            if (!settings.TryGetValue("DisablePopup", out var disablePopupToken) || !disablePopupToken.Value<bool>())
-            {
-                var result = await DialogHelper.ShowAsync(new InformationMessageDialogViewModel(showCheckbox: true), "RootDialog").ConfigureAwait(true);
-                if (result is not bool disablePopup || !disablePopup)
-                    return;
-
-                settings["DisablePopup"] = true;
-                SettingsHelper.Write(SettingsType.Application, settings);
-            }
-        });
-    }
-
-    public void OnClosing(object sender, EventArgs e)
-    {
-        var settings = SettingsHelper.ReadOrEmpty(SettingsType.Application);
-        _eventAggregator.Publish(new AppSettingsMessage(settings, AppSettingsMessageType.Saving));
-        SettingsHelper.Write(SettingsType.Application, settings);
-    }
 
     public void OnMouseDown(object sender, MouseButtonEventArgs e)
     {
@@ -78,5 +51,29 @@ public class RootViewModel : Conductor<IScreen>.Collection.AllActive
             return;
 
         window.DragMove();
+    }
+
+    public void Handle(AppSettingsMessage message)
+    {
+        var settings = message.Settings;
+        if (message.Type == AppSettingsMessageType.Loading)
+        {
+            DisablePopup = settings.TryGetValue(nameof(DisablePopup), out var disablePopupToken) && disablePopupToken.Value<bool>();
+            if (!DisablePopup)
+            {
+                Execute.PostToUIThread(async () =>
+                {
+                    var result = await DialogHelper.ShowAsync(new InformationMessageDialogViewModel(showCheckbox: true), "RootDialog").ConfigureAwait(true);
+                    if (result is not bool disablePopup)
+                        return;
+
+                    DisablePopup = disablePopup;
+                });
+            }
+        }
+        else if(message.Type == AppSettingsMessageType.Saving)
+        {
+            settings[nameof(DisablePopup)] = DisablePopup;
+        }
     }
 }

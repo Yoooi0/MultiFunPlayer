@@ -1,5 +1,6 @@
 using Microsoft.Win32;
 using MultiFunPlayer.Common;
+using MultiFunPlayer.Common.Messages;
 using MultiFunPlayer.Input;
 using MultiFunPlayer.Input.RawInput;
 using MultiFunPlayer.Input.XInput;
@@ -53,9 +54,14 @@ public class Bootstrapper : Bootstrapper<RootViewModel>
 
         _ = Container.Get<DialogHelper>();
 
-        SetupDevice();
         SetupJson();
-        SetupLoging();
+        var settings = SettingsHelper.ReadOrEmpty(SettingsType.Application);
+
+        var dirty = SetupDevice(settings);
+        dirty |= SetupLoging(settings);
+        
+        if(dirty)
+            SettingsHelper.Write(SettingsType.Application, settings);
 
         logger.Info("Set working directory to \"{0}\"", workingDirectory);
         AppDomain.CurrentDomain.UnhandledException += (s, e) =>
@@ -99,29 +105,23 @@ public class Bootstrapper : Bootstrapper<RootViewModel>
     {
         base.OnLaunch();
 
+        var settings = SettingsHelper.ReadOrEmpty(SettingsType.Application);
+        var eventAggregator = Container.Get<IEventAggregator>();
+        eventAggregator.Publish(new AppSettingsMessage(settings, AppSettingsMessageType.Loading));
+
         var source = PresentationSource.FromVisual(GetActiveWindow()) as HwndSource;
         var rawInput = Container.GetAll<IInputProcessor>().OfType<RawInputProcessor>().FirstOrDefault();
         rawInput?.RegisterWindow(source);
     }
 
-    private void SetupDevice()
+    protected override void OnExit(ExitEventArgs e)
     {
+        base.OnExit(e);
+
         var settings = SettingsHelper.ReadOrEmpty(SettingsType.Application);
-        var devices = SettingsHelper.Read(SettingsType.Devices);
-
-        var serializer = JsonSerializer.Create(new JsonSerializerSettings()
-        {
-            ContractResolver = new DefaultContractResolver()
-        });
-
-        if (!settings.TryGetValue<string>("SelectedDevice", serializer, out var selectedDevice) || selectedDevice == null)
-        {
-            selectedDevice = devices.Properties().First().Name;
-            settings["SelectedDevice"] = selectedDevice;
-            SettingsHelper.Write(SettingsType.Application, settings);
-        }
-
-        DeviceAxis.LoadSettings(devices[selectedDevice] as JObject, serializer);
+        var eventAggregator = Container.Get<IEventAggregator>();
+        eventAggregator.Publish(new AppSettingsMessage(settings, AppSettingsMessageType.Saving));
+        SettingsHelper.Write(SettingsType.Application, settings);
     }
 
     private void SetupJson()
@@ -153,11 +153,34 @@ public class Bootstrapper : Bootstrapper<RootViewModel>
         };
     }
 
-    private static void SetupLoging()
+    private bool SetupDevice(JObject settings)
     {
-        var settings = SettingsHelper.ReadOrEmpty(SettingsType.Application);
+        var devices = SettingsHelper.Read(SettingsType.Devices);
+        var serializer = JsonSerializer.Create(new JsonSerializerSettings()
+        {
+            ContractResolver = new DefaultContractResolver()
+        });
+
+        var dirty = false;
+        if (!settings.TryGetValue<string>("SelectedDevice", serializer, out var selectedDevice) || selectedDevice == null)
+        {
+            selectedDevice = devices.Properties().First().Name;
+            settings["SelectedDevice"] = selectedDevice;
+            dirty = true;
+        }
+
+        DeviceAxis.LoadSettings(devices[selectedDevice] as JObject, serializer);
+        return dirty;
+    }
+
+    private static bool SetupLoging(JObject settings)
+    {
+        var dirty = false;
         if (!settings.ContainsKey("LogLevel"))
+        {
             settings["LogLevel"] = JToken.FromObject(LogLevel.Info);
+            dirty = true;
+        }
 
         if (!settings.ContainsKey("LogBlacklist"))
         {
@@ -167,13 +190,11 @@ public class Bootstrapper : Bootstrapper<RootViewModel>
                 [$"{typeof(XInputProcessor).Namespace}.*"] = LogLevel.Trace,
                 [$"{typeof(ShortcutViewModel).FullName}"] = LogLevel.Trace
             });
+            dirty = true;
         }
-
-        SettingsHelper.Write(SettingsType.Application, settings);
 
         var config = new LoggingConfiguration();
         const string layout = "${longdate}|${level:uppercase=true}|${logger}|${message}${onexception:|${exception:format=ToString}}";
-
         if (settings.TryGetValue<Dictionary<string, LogLevel>>("LogBlacklist", out var blacklist))
         {
             var blackhole = new NullTarget();
@@ -210,5 +231,6 @@ public class Bootstrapper : Bootstrapper<RootViewModel>
         }
 
         LogManager.Configuration = config;
+        return dirty;
     }
 }
