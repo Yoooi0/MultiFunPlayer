@@ -33,6 +33,7 @@ public class Bootstrapper : Bootstrapper<RootViewModel>
 {
     protected override void ConfigureIoC(IStyletIoCBuilder builder)
     {
+        builder.Bind<IConfigMigration>().ToAllImplementations().InSingletonScope();
         builder.Bind<ScriptViewModel>().And<IDeviceAxisValueProvider>().To<ScriptViewModel>().InSingletonScope();
         builder.Bind<IMediaResourceFactory>().To<MediaResourceFactory>().InSingletonScope();
 
@@ -59,8 +60,9 @@ public class Bootstrapper : Bootstrapper<RootViewModel>
 
         var dirty = SetupDevice(settings);
         dirty |= SetupLoging(settings);
-        
-        if(dirty)
+        dirty |= MigrateSettings(settings);
+
+        if (dirty)
             SettingsHelper.Write(SettingsType.Application, settings);
 
         logger.Info("Set working directory to \"{0}\"", workingDirectory);
@@ -151,6 +153,21 @@ public class Bootstrapper : Bootstrapper<RootViewModel>
 
             return settings;
         };
+    }
+
+    private bool MigrateSettings(JObject settings)
+    {
+        var logger = LogManager.GetLogger(nameof(MultiFunPlayer));
+        var dirty = false;
+
+        var settingsVersion = settings.TryGetValue<Version>("Version", out var version) ? version : new Version();
+        foreach(var migration in Container.GetAll<IConfigMigration>().Where(m => m.CanMigrateTo(settingsVersion)).OrderBy(m => m.TargetVersion))
+        {
+            logger.Info("Migrating settings to {0}", migration.TargetVersion);
+            dirty |= migration.Migrate(settings);
+        }
+
+        return dirty;
     }
 
     private bool SetupDevice(JObject settings)
