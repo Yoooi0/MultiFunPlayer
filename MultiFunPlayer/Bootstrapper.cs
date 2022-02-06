@@ -160,7 +160,7 @@ public class Bootstrapper : Bootstrapper<RootViewModel>
         var logger = LogManager.GetLogger(nameof(MultiFunPlayer));
         var dirty = false;
 
-        var settingsVersion = settings.TryGetValue<Version>("Version", out var version) ? version : new Version();
+        var settingsVersion = settings.TryGetValue<Version>("ConfigVersion", out var version) ? version : new Version();
         foreach(var migration in Container.GetAll<IConfigMigration>().Where(m => m.CanMigrateTo(settingsVersion)).OrderBy(m => m.TargetVersion))
         {
             logger.Info("Migrating settings to {0}", migration.TargetVersion);
