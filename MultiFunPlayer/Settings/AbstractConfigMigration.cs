@@ -1,18 +1,16 @@
 ﻿using Newtonsoft.Json.Linq;
+using NLog;
 
 namespace MultiFunPlayer.Settings;
 
 public abstract class AbstractConfigMigration : IConfigMigration
 {
-    public abstract Version TargetVersion { get; }
+    protected Logger Logger = LogManager.GetCurrentClassLogger();
 
-    public bool CanMigrateTo(Version version) => version < TargetVersion;
-    protected abstract void OnMigrate(JObject settings);
+    public abstract int TargetVersion { get; }
 
-    public bool Migrate(JObject settings)
+    public virtual void Migrate(JObject settings)
     {
-        OnMigrate(settings);
         settings["ConfigVersion"] = JToken.FromObject(TargetVersion);
-        return true;
     }
 }

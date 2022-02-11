@@ -160,11 +160,16 @@ public class Bootstrapper : Bootstrapper<RootViewModel>
         var logger = LogManager.GetLogger(nameof(MultiFunPlayer));
         var dirty = false;
 
-        var settingsVersion = settings.TryGetValue<Version>("ConfigVersion", out var version) ? version : new Version();
-        foreach(var migration in Container.GetAll<IConfigMigration>().Where(m => m.CanMigrateTo(settingsVersion)).OrderBy(m => m.TargetVersion))
+        var settingsVersion = settings.TryGetValue<int>("ConfigVersion", out var version) ? version : -1;
+        var pendingMigrations = Container.GetAll<IConfigMigration>()
+                                         .Where(m => m.TargetVersion > settingsVersion)
+                                         .OrderBy(m => m.TargetVersion);
+
+        foreach (var migration in pendingMigrations)
         {
-            logger.Info("Migrating settings to {0}", migration.TargetVersion);
-            dirty |= migration.Migrate(settings);
+            logger.Info("Migrating settings to version {0}", migration.TargetVersion);
+            migration.Migrate(settings);
+            dirty = true;
         }
 
         return dirty;
