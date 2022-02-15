@@ -7,6 +7,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:converters="clr-namespace:MultiFunPlayer.UI.Converters"
+             xmlns:ui="clr-namespace:MultiFunPlayer.UI"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
     <UserControl.Resources>
@@ -95,8 +96,31 @@
                               material:TextFieldAssist.HasClearButton="True"
                               Margin="0 -12 20 0"
                               Width="150"
-                              ItemsSource="{Binding ComPorts}"
-                              SelectedItem="{Binding SelectedComPort}"/>
+                              ItemsSource="{Binding SerialPorts}"
+                              SelectedItem="{Binding SelectedSerialPort}"
+                              SelectedValue="{Binding SelectedSerialPortDeviceId}"
+                              SelectedValuePath="DeviceID">
+                        <ComboBox.ItemTemplateSelector>
+                            <ui:ComboBoxTemplateSelector>
+                                <ui:ComboBoxTemplateSelector.DropdownItemsTemplate>
+                                    <DataTemplate>
+                                        <StackPanel>
+                                            <TextBlock FontWeight="Bold" Text="{Binding Name}"/>
+                                            <TextBlock Typography.Capitals="AllSmallCaps" FontSize="10" Text="{Binding Manufacturer}"/>
+                                            <TextBlock Typography.Capitals="AllSmallCaps" FontSize="10"  Text="{Binding DeviceID}"/>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ui:ComboBoxTemplateSelector.DropdownItemsTemplate>
+                                <ui:ComboBoxTemplateSelector.SelectedItemTemplate>
+                                    <DataTemplate>
+                                        <StackPanel>
+                                            <TextBlock Text="{Binding PortName}"/>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ui:ComboBoxTemplateSelector.SelectedItemTemplate>
+                            </ui:ComboBoxTemplateSelector>
+                        </ComboBox.ItemTemplateSelector>
+                    </ComboBox>
 
                     <Button DockPanel.Dock="Left"
                             Style="{StaticResource MaterialDesignFloatingActionMiniLightButton}"

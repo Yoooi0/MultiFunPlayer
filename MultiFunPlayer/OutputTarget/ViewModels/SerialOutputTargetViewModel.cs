@@ -1,3 +1,4 @@
+using Microsoft.Win32;
 using MultiFunPlayer.Common;
 using MultiFunPlayer.Common.Messages;
 using MultiFunPlayer.Input;
@@ -5,28 +6,37 @@ using MultiFunPlayer.UI;
 using MultiFunPlayer.UI.Controls.ViewModels;
 using Newtonsoft.Json.Linq;
 using NLog;
+using PropertyChanged;
 using Stylet;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Ports;
+using System.Management;
+using System.Text.RegularExpressions;
 
 namespace MultiFunPlayer.OutputTarget.ViewModels;
 
 [DisplayName("Serial")]
 public class SerialOutputTargetViewModel : ThreadAbstractOutputTarget
 {
+    private CancellationTokenSource _cancellationSource;
+
     protected Logger Logger = LogManager.GetCurrentClassLogger();
 
     public override ConnectionStatus Status { get; protected set; }
 
-    public ObservableConcurrentCollection<string> ComPorts { get; set; }
-    public string SelectedComPort { get; set; }
+    public ObservableConcurrentCollection<SerialPortInfo> SerialPorts { get; set; }
+    public SerialPortInfo SelectedSerialPort { get; set; }
+
+    [DoNotNotify]
+    public string SelectedSerialPortDeviceId { get; set; }
 
     public SerialOutputTargetViewModel(IShortcutManager shortcutManager, IEventAggregator eventAggregator, IDeviceAxisValueProvider valueProvider)
         : base(shortcutManager, eventAggregator, valueProvider)
     {
-        ComPorts = new ObservableConcurrentCollection<string>(SerialPort.GetPortNames());
+        SerialPorts = new ObservableConcurrentCollection<SerialPortInfo>();
+        _cancellationSource = new CancellationTokenSource();
     }
 
     public bool CanChangePort => !IsRefreshBusy && !IsConnectBusy && !IsConnected;
@@ -34,29 +44,56 @@ public class SerialOutputTargetViewModel : ThreadAbstractOutputTarget
     public bool CanRefreshPorts => !IsRefreshBusy && !IsConnectBusy && !IsConnected;
     public async Task RefreshPorts()
     {
-        IsRefreshBusy = true;
-        await Task.Delay(750).ConfigureAwait(true);
+        var token = _cancellationSource.Token;
 
-        var lastSelected = SelectedComPort;
-        ComPorts.Clear();
+        IsRefreshBusy = true;
+        await Task.Delay(750, token).ConfigureAwait(true);
+
+        var lastSelectedDeviceId = SelectedSerialPortDeviceId;
+        SerialPorts.Clear();
         try
         {
-            ComPorts.AddRange(SerialPort.GetPortNames());
+            var scope = new ManagementScope("\\\\.\\ROOT\\cimv2");
+            var observer = new ManagementOperationObserver();
+            using var searcher = new ManagementObjectSearcher(scope, new SelectQuery("Win32_PnPEntity"));
+
+            observer.ObjectReady += (_, e) =>
+            {
+                var portInfo = SerialPortInfo.FromManagementObject(e.NewObject as ManagementObject);
+                if (portInfo == null)
+                    return;
+
+                SerialPorts.Add(portInfo);
+            };
+
+            var taskCompletion = new TaskCompletionSource();
+            observer.Completed += (_, _) => taskCompletion.TrySetResult();
+
+            searcher.Get(observer);
+            using (token.Register(() => taskCompletion.TrySetCanceled()))
+                await taskCompletion.Task.WaitAsync(token).ConfigureAwait(true);
         }
         catch { }
 
-        SelectedComPort = lastSelected;
-        await Task.Delay(250).ConfigureAwait(true);
+        SelectSerialPortByDeviceId(lastSelectedDeviceId);
+        await Task.Delay(250, token).ConfigureAwait(true);
         IsRefreshBusy = false;
+    }
+
+    private void SelectSerialPortByDeviceId(string deviceId)
+    {
+        SelectedSerialPort = SerialPorts.FirstOrDefault(p => string.Equals(p.DeviceID, deviceId, StringComparison.Ordinal));
+        if(SelectedSerialPort == null)
+            SelectedSerialPortDeviceId = deviceId;
     }
 
     public bool IsConnected => Status == ConnectionStatus.Connected;
     public bool IsConnectBusy => Status == ConnectionStatus.Connecting || Status == ConnectionStatus.Disconnecting;
-    public bool CanToggleConnect => !IsConnectBusy && SelectedComPort != null;
+    public bool CanToggleConnect => !IsConnectBusy && SelectedSerialPort != null;
 
     public override async Task ConnectAsync()
     {
-        if (!ComPorts.Contains(SelectedComPort))
+        if (SelectedSerialPort == null)
             await RefreshPorts();
 
         await base.ConnectAsync();
@@ -68,9 +105,9 @@ public class SerialOutputTargetViewModel : ThreadAbstractOutputTarget
 
         try
         {
-            Logger.Info("Connecting to {0} at \"{1}\"", Name, SelectedComPort);
+            Logger.Info("Connecting to {0} at \"{1}\"", Name, SelectedSerialPortDeviceId);
 
-            serialPort = new SerialPort(SelectedComPort, 115200)
+            serialPort = new SerialPort(SelectedSerialPort.PortName, 115200)
             {
                 ReadTimeout = 1000,
                 WriteTimeout = 1000,
@@ -112,13 +149,13 @@ public class SerialOutputTargetViewModel : ThreadAbstractOutputTarget
                 UpdateValues();
 
                 if (serialPort?.IsOpen == true && serialPort?.BytesToRead > 0)
-                    Logger.Debug("Received \"{0}\" from \"{1}\"", serialPort.ReadExisting(), SelectedComPort);
+                    Logger.Debug("Received \"{0}\" from \"{1}\"", serialPort.ReadExisting(), SelectedSerialPortDeviceId);
 
                 var dirtyValues = Values.Where(x => DeviceAxis.IsDirty(x.Value, lastSentValues[x.Key]));
                 var commands = DeviceAxis.ToString(dirtyValues, (float) stopwatch.Elapsed.TotalMilliseconds);
                 if (serialPort?.IsOpen == true && !string.IsNullOrWhiteSpace(commands))
                 {
-                    Logger.Trace("Sending \"{0}\" to \"{1}\"", commands.Trim(), SelectedComPort);
+                    Logger.Trace("Sending \"{0}\" to \"{1}\"", commands.Trim(), SelectedSerialPortDeviceId);
                     serialPort?.Write(commands);
                 }
 
@@ -147,12 +184,12 @@ public class SerialOutputTargetViewModel : ThreadAbstractOutputTarget
 
         if (type == AppSettingsMessageType.Saving)
         {
-            settings[nameof(SelectedComPort)] = new JValue(SelectedComPort);
+            settings[nameof(SelectedSerialPort)] = new JValue(SelectedSerialPort?.DeviceID);
         }
         else if (type == AppSettingsMessageType.Loading)
         {
-            if (settings.TryGetValue<string>(nameof(SelectedComPort), out var selectedComPort))
-                SelectedComPort = selectedComPort;
+            if (settings.TryGetValue<string>(nameof(SelectedSerialPort), out var selectedSerialPort))
+                SelectSerialPortByDeviceId(selectedSerialPort);
         }
     }
 
@@ -161,7 +198,7 @@ public class SerialOutputTargetViewModel : ThreadAbstractOutputTarget
         base.RegisterShortcuts(s);
 
         #region ComPort
-        s.RegisterAction($"{Name}::ComPort::Set", b => b.WithSetting<string>(s => s.WithLabel("Com port")).WithCallback((_, comPort) => SelectedComPort = comPort));
+        s.RegisterAction($"{Name}::SerialPort::Set", b => b.WithSetting<string>(s => s.WithLabel("Device ID")).WithCallback((_, deviceId) => SelectSerialPortByDeviceId(deviceId)));
         #endregion
     }
 
@@ -170,10 +207,10 @@ public class SerialOutputTargetViewModel : ThreadAbstractOutputTarget
         try
         {
             await RefreshPorts();
-            if (!ComPorts.Contains(SelectedComPort))
+            if (SelectedSerialPort == null)
                 return await ValueTask.FromResult(false);
 
-            using var serialPort = new SerialPort(SelectedComPort, 115200)
+            using var serialPort = new SerialPort(SelectedSerialPort.PortName, 115200)
             {
                 ReadTimeout = 1000,
                 WriteTimeout = 1000,
@@ -191,5 +228,58 @@ public class SerialOutputTargetViewModel : ThreadAbstractOutputTarget
         {
             return await ValueTask.FromResult(false);
         }
+    }
+
+    protected override void Dispose(bool disposing)
+    {
+        _cancellationSource?.Cancel();
+        _cancellationSource?.Dispose();
+        _cancellationSource = null;
+
+        base.Dispose(disposing);
+    }
+
+    public class SerialPortInfo
+    {
+        private SerialPortInfo() { }
+
+        public static SerialPortInfo FromManagementObject(ManagementObject o)
+        {
+            try
+            {
+                var name = o.GetPropertyValue(nameof(Name)) as string;
+                if (string.IsNullOrEmpty(name) || !Regex.IsMatch(name, @"\(COM\d+\)"))
+                    return null;
+
+                var deviceId = o.GetPropertyValue(nameof(DeviceID)) as string;
+                var portName = Registry.GetValue($@"HKEY_LOCAL_MACHINE\System\CurrentControlSet\Enum\{deviceId}\Device Parameters", "PortName", "").ToString();
+
+                return new SerialPortInfo()
+                {
+                    Caption = o.GetPropertyValue(nameof(Caption)) as string,
+                    ClassGuid = o.GetPropertyValue(nameof(ClassGuid)) as string,
+                    Description = o.GetPropertyValue(nameof(Description)) as string,
+                    Manufacturer = o.GetPropertyValue(nameof(Manufacturer)) as string,
+                    PNPClass = o.GetPropertyValue(nameof(PNPClass)) as string,
+                    PNPDeviceID = o.GetPropertyValue(nameof(PNPDeviceID)) as string,
+                    Name = name,
+                    DeviceID = deviceId,
+                    PortName = portName
+                };
+            }
+            catch { }
+
+            return null;
+        }
+
+        public string Caption { get; private set; }
+        public string ClassGuid { get; private set; }
+        public string Description { get; private set; }
+        public string DeviceID { get; private set; }
+        public string Manufacturer { get; private set; }
+        public string Name { get; private set; }
+        public string PNPClass { get; private set; }
+        public string PNPDeviceID { get; private set; }
+        public string PortName { get; private set; }
     }
 }
