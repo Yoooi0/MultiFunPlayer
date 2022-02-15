@@ -141,6 +141,28 @@ public partial class KeyframesHeatmapGradient : UserControl, INotifyPropertyChan
         @this.PropertyChanged?.Invoke(@this, new PropertyChangedEventArgs(nameof(BucketCount)));
     }
 
+    [DoNotNotify]
+    public bool InvertY
+    {
+        get => (bool)GetValue(InvertYProperty);
+        set => SetValue(InvertYProperty, value);
+    }
+
+    public static readonly DependencyProperty InvertYProperty =
+       DependencyProperty.Register(nameof(InvertY), typeof(bool),
+           typeof(KeyframesHeatmapGradient), new FrameworkPropertyMetadata(false,
+               new PropertyChangedCallback(OnInvertYChanged)));
+
+    [SuppressPropertyChangedWarnings]
+    private static void OnInvertYChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        if (d is not KeyframesHeatmapGradient @this)
+            return;
+
+        @this.Refresh();
+        @this.PropertyChanged?.Invoke(@this, new PropertyChangedEventArgs(nameof(InvertY)));
+    }
+
     public KeyframesHeatmapGradient()
     {
         _buckets = new HeatmapBucket[MaxBucketCount];
@@ -240,7 +262,7 @@ public partial class KeyframesHeatmapGradient : UserControl, INotifyPropertyChan
             => Points.Add(new Point(float.IsFinite(x) ? x : 0, float.IsFinite(y) ? y : 0));
 
         void AddPointForBucket(int index, float value)
-            => AddPoint(index * bucketSize / Duration * (float)ActualWidth, MathUtils.Clamp01(value) * (float)ActualHeight);
+            => AddPoint(index * bucketSize / Duration * (float)ActualWidth, MathUtils.Clamp01(!InvertY ? 1 - value : value) * (float)ActualHeight);
 
         if (!ShowStrokeLength || !DeviceAxis.TryParse("L0", out var axis) || !Keyframes.TryGetValue(axis, out var keyframes) || keyframes == null || keyframes.Count < 2)
         {
