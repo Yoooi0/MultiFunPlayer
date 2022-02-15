@@ -45,8 +45,8 @@ public partial class KeyframesHeatmapGradient : UserControl, INotifyPropertyChan
 
         if (e.OldValue is INotifyCollectionChanged oldKeyframes)
             oldKeyframes.CollectionChanged -= @this.OnKeyframesCollectionChanged;
-        if (e.NewValue is INotifyCollectionChanged newKeframes)
-            newKeframes.CollectionChanged += @this.OnKeyframesCollectionChanged;
+        if (e.NewValue is INotifyCollectionChanged newKeyframes)
+            newKeyframes.CollectionChanged += @this.OnKeyframesCollectionChanged;
 
         @this.Refresh();
     }

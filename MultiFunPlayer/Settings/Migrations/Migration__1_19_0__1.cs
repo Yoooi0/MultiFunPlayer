@@ -114,5 +114,4 @@ public class Migration__1_19_0__1 : AbstractConfigMigration
             }
         }
     }
-
 }
