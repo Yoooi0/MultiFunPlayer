@@ -72,7 +72,7 @@ public class MpcVideoSourceViewModel : AbstractVideoSource, IHandle<VideoPlayPau
         catch (Exception e)
         {
             Logger.Error(e, $"{Name} failed with exception");
-            _ = Execute.OnUIThreadAsync(() => DialogHelper.ShowOnUIThreadAsync(new ErrorMessageDialogViewModel($"{Name} failed with exception:\n\n{e}"), "RootDialog"));
+            _ = DialogHelper.ShowErrorAsync(e, $"{Name} failed with exception", "RootDialog");
         }
 
         _eventAggregator.Publish(new VideoFileChangedMessage(null));

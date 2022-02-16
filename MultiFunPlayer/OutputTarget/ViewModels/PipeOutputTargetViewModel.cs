@@ -49,7 +49,7 @@ public class PipeOutputTargetViewModel : ThreadAbstractOutputTarget
             if (client?.IsConnected == true)
                 client.Close();
 
-            _ = Execute.OnUIThreadAsync(() => _ = DialogHelper.ShowOnUIThreadAsync(new ErrorMessageDialogViewModel($"Error when opening pipe:\n\n{e}"), "RootDialog"));
+            _ = DialogHelper.ShowErrorAsync(e, $"Error when opening pipe", "RootDialog");
             return;
         }
 
@@ -78,7 +78,7 @@ public class PipeOutputTargetViewModel : ThreadAbstractOutputTarget
         catch (Exception e)
         {
             Logger.Error(e, $"{Name} failed with exception");
-            _ = Execute.OnUIThreadAsync(() => _ = DialogHelper.ShowOnUIThreadAsync(new ErrorMessageDialogViewModel($"{Name} failed with exception:\n\n{e}"), "RootDialog"));
+            _ = DialogHelper.ShowErrorAsync(e, $"{Name} failed with exception", "RootDialog");
         }
 
         if (client?.IsConnected == true)

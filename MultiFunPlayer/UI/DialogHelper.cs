@@ -1,4 +1,5 @@
 ﻿using MaterialDesignThemes.Wpf;
+using MultiFunPlayer.UI.Controls.ViewModels;
 using Stylet;
 using System.Windows;
 
@@ -15,8 +16,14 @@ public class DialogHelper
         ViewManager = viewManager;
     }
 
+    public static Task ShowErrorAsync(string message, string dialogName)
+        => ShowOnUIThreadAsync(new ErrorMessageDialogViewModel(message), dialogName);
+
+    public static Task ShowErrorAsync(Exception exception, string message, string dialogName)
+        => ShowOnUIThreadAsync(new ErrorMessageDialogViewModel(exception, message), dialogName);
+
     public static Task ShowOnUIThreadAsync(object model, string dialogName)
-        => _ = Execute.OnUIThreadAsync(async () => await ShowAsync(model, dialogName));
+        => Execute.OnUIThreadAsync(async () => await ShowAsync(model, dialogName));
 
     public static async Task<object> ShowAsync(object model, string dialogName)
     {

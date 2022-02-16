@@ -62,7 +62,7 @@ public class NetworkOutputTargetViewModel : ThreadAbstractOutputTarget
         catch (Exception e)
         {
             Logger.Warn(e, "Error when connecting to server");
-            _ = Execute.OnUIThreadAsync(() => _ = DialogHelper.ShowOnUIThreadAsync(new ErrorMessageDialogViewModel($"Error when connecting to server:\n\n{e}"), "RootDialog"));
+            _ = DialogHelper.ShowErrorAsync(e, $"Error when connecting to server", "RootDialog");
             return;
         }
 
@@ -90,7 +90,7 @@ public class NetworkOutputTargetViewModel : ThreadAbstractOutputTarget
         catch (Exception e)
         {
             Logger.Error(e, $"{Name} failed with exception");
-            _ = Execute.OnUIThreadAsync(() => _ = DialogHelper.ShowOnUIThreadAsync(new ErrorMessageDialogViewModel($"{Name} failed with exception:\n\n{e}"), "RootDialog"));
+            _ = DialogHelper.ShowErrorAsync(e, $"{Name} failed with exception", "RootDialog");
         }
     }
 
@@ -107,7 +107,7 @@ public class NetworkOutputTargetViewModel : ThreadAbstractOutputTarget
         catch (Exception e)
         {
             Logger.Warn(e, "Error when connecting to server");
-            _ = Execute.OnUIThreadAsync(() => _ = DialogHelper.ShowOnUIThreadAsync(new ErrorMessageDialogViewModel($"Error when connecting to server:\n\n{e}"), "RootDialog"));
+            _ = DialogHelper.ShowErrorAsync(e, $"Error when connecting to server", "RootDialog");
             return;
         }
 
@@ -137,7 +137,7 @@ public class NetworkOutputTargetViewModel : ThreadAbstractOutputTarget
         catch (Exception e)
         {
             Logger.Error(e, $"{Name} failed with exception");
-            _ = Execute.OnUIThreadAsync(() => _ = DialogHelper.ShowOnUIThreadAsync(new ErrorMessageDialogViewModel($"{Name} failed with exception:\n\n{e}"), "RootDialog"));
+            _ = DialogHelper.ShowErrorAsync(e, $"{Name} failed with exception", "RootDialog");
         }
     }
 

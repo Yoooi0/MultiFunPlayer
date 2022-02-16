@@ -171,7 +171,7 @@ public class ButtplugOutputTargetViewModel : AsyncAbstractOutputTarget
             if (client.Connected)
                 await client.DisconnectAsync();
 
-            _ = Execute.OnUIThreadAsync(() => _ = DialogHelper.ShowOnUIThreadAsync(new ErrorMessageDialogViewModel($"Error when connecting to server:\n\n{e}"), "RootDialog"));
+            _ = DialogHelper.ShowErrorAsync(e, $"Error when connecting to server", "RootDialog");
             return;
         }
 
@@ -238,7 +238,7 @@ public class ButtplugOutputTargetViewModel : AsyncAbstractOutputTarget
         catch (Exception e)
         {
             Logger.Error(e, $"{Name} failed with exception");
-            _ = Execute.OnUIThreadAsync(() => _ = DialogHelper.ShowOnUIThreadAsync(new ErrorMessageDialogViewModel($"{Name} failed with exception:\n\n{e}"), "RootDialog"));
+            _ = DialogHelper.ShowErrorAsync(e, $"{Name} failed with exception", "RootDialog");
         }
 
         if (client.Connected)

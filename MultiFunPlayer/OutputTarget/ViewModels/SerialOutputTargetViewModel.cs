@@ -128,7 +128,7 @@ public class SerialOutputTargetViewModel : ThreadAbstractOutputTarget
 
             _ = Execute.OnUIThreadAsync(async () =>
             {
-                _ = DialogHelper.ShowOnUIThreadAsync(new ErrorMessageDialogViewModel($"Error when opening serial port:\n\n{e}"), "RootDialog");
+                _ = DialogHelper.ShowErrorAsync(e, $"Error when opening serial port", "RootDialog");
                 await RefreshPorts().ConfigureAwait(true);
             });
 
@@ -168,7 +168,7 @@ public class SerialOutputTargetViewModel : ThreadAbstractOutputTarget
             Logger.Error(e, $"{Name} failed with exception");
             _ = Execute.OnUIThreadAsync(async () =>
             {
-                _ = DialogHelper.ShowOnUIThreadAsync(new ErrorMessageDialogViewModel($"{Name} failed with exception:\n\n{e}"), "RootDialog");
+                _ = DialogHelper.ShowErrorAsync(e, $"{Name} failed with exception", "RootDialog");
                 await RefreshPorts().ConfigureAwait(true);
             });
         }
