@@ -141,44 +141,46 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                     state.Dirty = false;
 
                     var lastValue = state.Value;
+                    var newValue = float.NaN;
                     if (!settings.Bypass)
                     {
-                        state.Dirty |= UpdateScript(axis, state, settings);
-                        state.Dirty |= UpdateMotionProvider(axis, state, settings);
+                        state.Dirty |= UpdateScript(axis, state, settings, lastValue, ref newValue);
+                        state.Dirty |= UpdateMotionProvider(axis, state, settings, lastValue, ref newValue);
                     }
 
-                    state.Dirty |= UpdateSync(axis, state, lastValue);
-                    state.Dirty |= UpdateAutoHome(axis, state, settings);
-                    state.Dirty |= UpdateSmartLimit(axis, state, settings);
+                    state.Dirty |= UpdateSync(axis, state, lastValue, ref newValue);
+                    state.Dirty |= UpdateAutoHome(axis, state, settings, lastValue, ref newValue);
+                    state.Dirty |= UpdateSmartLimit(axis, state, settings, lastValue, ref newValue);
+
+                    if (!float.IsFinite(lastValue) && float.IsFinite(newValue))
+                        state.Dirty = true;
+
+                    if(state.Dirty)
+                        state.Value = newValue;
+
                     dirty |= state.Dirty;
                 }
             }
 
             return dirty;
 
-            bool UpdateSmartLimit(DeviceAxis axis, AxisState state, AxisSettings settings)
+            bool UpdateSmartLimit(DeviceAxis axis, AxisState state, AxisSettings settings, float lastValue, ref float newValue)
             {
                 if (!settings.SmartLimitEnabled)
                     return false;
-
-                if (!DeviceAxis.TryParse("L0", out var strokeAxis))
+                if (!float.IsFinite(newValue))
+                    return false;
+                if (!DeviceAxis.TryParse("L0", out var strokeAxis) || axis == strokeAxis)
                     return false;
 
                 var limitState = AxisStates[strokeAxis];
-                if (!limitState.InsideScript)
-                    return false;
-
-                var lastValue = state.Value;
-                var value = state.Value;
                 var limitValue = limitState.Value;
-
                 var factor = MathUtils.Map(limitValue, 0.25f, 0.9f, 1f, 0f);
-                var newValue = MathUtils.Lerp(axis.DefaultValue, state.Value, factor);
-                state.Value = newValue;
+                newValue = MathUtils.Lerp(newValue, axis.DefaultValue, factor);
                 return MathF.Abs(lastValue - newValue) > 0.000001f;
             }
 
-            bool UpdateScript(DeviceAxis axis, AxisState state, AxisSettings settings)
+            bool UpdateScript(DeviceAxis axis, AxisState state, AxisSettings settings, float lastValue, ref float newValue)
             {
                 if (!IsPlaying)
                     return false;
@@ -186,7 +188,6 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                 if (state.AfterScript)
                     return false;
 
-                var lastValue = state.Value;
                 if (!AxisKeyframes.TryGetValue(axis, out var keyframes) || keyframes == null || keyframes.Count == 0)
                     return false;
 
@@ -212,15 +213,14 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                     return false;
                 }
 
-                var newValue = keyframes.Interpolate(state.Index, axisPosition, settings.InterpolationType);
+                newValue = keyframes.Interpolate(state.Index, axisPosition, settings.InterpolationType);
                 if (settings.Inverted)
                     newValue = 1 - newValue;
 
-                state.Value = newValue;
                 return MathF.Abs(lastValue - newValue) > 0.000001f;
             }
 
-            bool UpdateMotionProvider(DeviceAxis axis, AxisState state, AxisSettings settings)
+            bool UpdateMotionProvider(DeviceAxis axis, AxisState state, AxisSettings settings, float lastValue, ref float newValue)
             {
                 if (settings.SelectedMotionProvider == null)
                     return false;
@@ -231,19 +231,19 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                 if (settings.UpdateMotionProviderWithAxis != null && !AxisStates[settings.UpdateMotionProviderWithAxis].Dirty)
                     return false;
 
-                var lastValue = state.Value;
                 var providerResult = MotionProviderManager.Update(axis, settings.SelectedMotionProvider, (float)stopwatch.Elapsed.TotalSeconds);
-                if (providerResult is not float newValue)
+                if (providerResult is not float providerValue)
                     return false;
 
                 if (IsPlaying && state.InsideScript)
-                    newValue = MathUtils.Lerp(state.Value, newValue, MathUtils.Clamp01(settings.MotionProviderBlend / 100));
+                    newValue = MathUtils.Lerp(newValue, providerValue, MathUtils.Clamp01(settings.MotionProviderBlend / 100));
+                else
+                    newValue = providerValue;
 
-                state.Value = newValue;
                 return MathF.Abs(lastValue - newValue) > 0.000001f;
             }
 
-            bool UpdateAutoHome(DeviceAxis axis, AxisState state, AxisSettings settings)
+            bool UpdateAutoHome(DeviceAxis axis, AxisState state, AxisSettings settings, float lastValue, ref float newValue)
             {
                 if (state.Dirty || (state.InsideScript && IsPlaying))
                 {
@@ -257,11 +257,10 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                 if (!settings.AutoHomeEnabled)
                     return false;
 
-                var lastValue = state.Value;
                 if (settings.AutoHomeDuration < 0.0001f)
                 {
-                    state.Value = axis.DefaultValue;
-                    return state.Value != lastValue;
+                    newValue = axis.DefaultValue;
+                    return newValue != lastValue;
                 }
 
                 autoHomeTimes[axis] += (float)stopwatch.Elapsed.TotalSeconds;
@@ -269,18 +268,18 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                 if (t < 0 || t > 1)
                     return false;
 
-                var newValue = MathUtils.Lerp(state.Value, axis.DefaultValue, MathF.Pow(2, 10 * (t - 1)));
-                state.Value = newValue;
+                newValue = MathUtils.Lerp(state.Value, axis.DefaultValue, MathF.Pow(2, 10 * (t - 1)));
                 return MathF.Abs(lastValue - newValue) > 0.000001f;
             }
 
-            bool UpdateSync(DeviceAxis axis, AxisState state, float lastValue)
+            bool UpdateSync(DeviceAxis axis, AxisState state, float lastValue, ref float newValue)
             {
+                if (!float.IsFinite(newValue))
+                    return false;
                 if (state.SyncTime >= SyncSettings.Duration)
                     return false;
 
-                var newValue = MathUtils.Lerp(!float.IsFinite(lastValue) ? axis.DefaultValue : lastValue, state.Value, GetSyncProgress(state.SyncTime, SyncSettings.Duration));
-                state.Value = newValue;
+                newValue = MathUtils.Lerp(!float.IsFinite(lastValue) ? axis.DefaultValue : lastValue, newValue, GetSyncProgress(state.SyncTime, SyncSettings.Duration));
                 return MathF.Abs(lastValue - newValue) > 0.000001f;
             }
         }
