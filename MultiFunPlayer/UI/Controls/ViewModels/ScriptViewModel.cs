@@ -399,6 +399,24 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         var newPosition = (float)(message.Position?.TotalSeconds ?? float.NaN);
         Logger.Trace("Received VideoPositionMessage [Position: {0}]", message.Position?.ToString());
 
+        if (!float.IsFinite(newPosition))
+        {
+            CurrentPosition = float.NaN;
+            return;
+        }
+
+        if (!float.IsFinite(CurrentPosition))
+        {
+            ResetSync();
+            _playbackSpeedCorrection = 1;
+            CurrentPosition = newPosition;
+
+            foreach (var axis in DeviceAxis.All)
+                SearchForValidIndex(axis, AxisStates[axis]);
+
+            return;
+        }
+
         var error = float.IsFinite(CurrentPosition) ? newPosition - CurrentPosition : 0;
         var wasSeek = MathF.Abs(error) > 1.0f;
         if (wasSeek)
@@ -408,15 +426,12 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                 ResetSync();
 
             _playbackSpeedCorrection = 1;
+            CurrentPosition = newPosition;
         }
         else
         {
             _playbackSpeedCorrection = MathUtils.Clamp(_playbackSpeedCorrection + error * 0.1f, 0.9f, 1.1f);
         }
-
-        CurrentPosition = newPosition;
-        if (!float.IsFinite(CurrentPosition))
-            return;
 
         foreach (var axis in DeviceAxis.All)
         {
@@ -662,6 +677,7 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         lock (state)
             state.Index = keyframes.BinarySearch(GetAxisPosition(axis));
     }
+
     private List<DeviceAxis> UpdateLinkScript(params DeviceAxis[] axes) => UpdateLinkScript(axes?.AsEnumerable());
     private List<DeviceAxis> UpdateLinkScript(IEnumerable<DeviceAxis> axes = null)
     {
