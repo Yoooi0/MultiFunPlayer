@@ -17,31 +17,6 @@ public static class MathUtils
     public static float UnLerpUnclamped(float from, float to, float t) => (t - from) / (to - from);
     public static float Map(float x, float from0, float to0, float from1, float to1) => Lerp(from1, to1, UnLerp(from0, to0, x));
     public static float MapUnclamped(float x, float from0, float to0, float from1, float to1) => LerpUnclamped(from1, to1, UnLerpUnclamped(from0, to0, x));
-
-    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
-    public static float Interpolate(float x0, float y0, float x, InterpolationType type)
-        => type switch
-        {
-            InterpolationType.Step => Interpolation.Step(x0, y0, x),
-            _ => throw new NotSupportedException()
-        };
-
-    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
-    public static float Interpolate(float x0, float y0, float x1, float y1, float x, InterpolationType type)
-        => type switch
-        {
-            InterpolationType.Linear => Interpolation.Linear(x0, y0, x1, y1, x),
-            _ => throw new NotSupportedException()
-        };
-
-    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
-    public static float Interpolate(float x0, float y0, float x1, float y1, float x2, float y2, float x3, float y3, float x, InterpolationType type)
-        => type switch
-        {
-            InterpolationType.Pchip => Interpolation.Pchip(x0, y0, x1, y1, x2, y2, x3, y3, x),
-            InterpolationType.Makima => Interpolation.Makima(x0, y0, x1, y1, x2, y2, x3, y3, x),
-            _ => throw new NotSupportedException()
-        };
 }
 
 public enum InterpolationType
@@ -114,32 +89,32 @@ public static class Interpolation
     }
 
     [MethodImpl(MethodImplOptions.AggressiveOptimization)]
-    private static void MakimaSlopes(float x0, float y0, float x1, float y1, float x2, float y2, float x3, float y3, out float s1, out float s2)
+    private static void MakimaSlopes(float x0, float y0, float x1, float y1, float x2, float y2, float x3, float y3, float x4, float y4, float x5, float y5, out float s1, out float s2)
     {
+        var m4 = (y5 - y4) / (x5 - x4);
+        var m3 = (y4 - y3) / (x4 - x3);
         var m2 = (y3 - y2) / (x3 - x2);
         var m1 = (y2 - y1) / (x2 - x1);
         var m0 = (y1 - y0) / (x1 - x0);
 
-        var w11 = Math.Abs(m2 - m1) + Math.Abs(m2 + m1) / 2;
-        var w12 = Math.Abs(m1 - m0) + Math.Abs(3 * m0 - m1) / 2;
-
-        s1 = (w11 * m0 + w12 * m1) / (w11 + w12);
-        if (!double.IsFinite(s1))
+        var w11 = Math.Abs(m3 - m2) + Math.Abs(m3 + m2) / 2;
+        var w12 = Math.Abs(m1 - m0) + Math.Abs(m1 + m0) / 2;
+        s1 = (w11 * m1 + w12 * m2) / (w11 + w12);
+        if (!float.IsFinite(s1))
             s1 = 0;
 
-        var w21 = Math.Abs(m2 - m1) + Math.Abs(3 * m2 - m1) / 2;
-        var w22 = Math.Abs(m1 - m0) + Math.Abs(m1 + m0) / 2;
-
-        s2 = (w21 * m1 + w22 * m2) / (w21 + w22);
-        if (!double.IsFinite(s2))
+        var w21 = Math.Abs(m4 - m3) + Math.Abs(m4 + m3) / 2;
+        var w22 = Math.Abs(m2 - m1) + Math.Abs(m2 + m1) / 2;
+        s2 = (w21 * m2 + w22 * m3) / (w21 + w22);
+        if (!float.IsFinite(s2))
             s2 = 0;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveOptimization)]
-    public static float Makima(float x0, float y0, float x1, float y1, float x2, float y2, float x3, float y3, float x)
+    public static float Makima(float x0, float y0, float x1, float y1, float x2, float y2, float x3, float y3, float x4, float y4, float x5, float y5, float x)
     {
-        MakimaSlopes(x0, y0, x1, y1, x2, y2, x3, y3, out var s1, out var s2);
-        return CubicHermite(x1, y1, x2, y2, s1, s2, x);
+        MakimaSlopes(x0, y0, x1, y1, x2, y2, x3, y3, x4, y4, x5, y5, out var s1, out var s2);
+        return CubicHermite(x2, y2, x3, y3, s1, s2, x);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveOptimization)]
@@ -152,16 +127,6 @@ public static class Interpolation
     [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     [SuppressMessage("Style", "IDE0060:Remove unused parameter")]
     public static float Step(float x0, float y0, float x) => y0;
-
-    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
-    public static int RequiredPointCount(InterpolationType interpolationType) => interpolationType switch
-    {
-        InterpolationType.Pchip => 4,
-        InterpolationType.Makima => 4,
-        InterpolationType.Linear => 2,
-        InterpolationType.Step => 1,
-        _ => throw new NotSupportedException()
-    };
 }
 
 public class OpenSimplex

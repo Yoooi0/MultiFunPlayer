@@ -1,4 +1,4 @@
-﻿namespace MultiFunPlayer.Common;
+namespace MultiFunPlayer.Common;
 
 public class KeyframeCollection : List<Keyframe>
 {
@@ -23,35 +23,49 @@ public class KeyframeCollection : List<Keyframe>
 
     public float Interpolate(int index, float position, InterpolationType interpolationType)
     {
-        var pointCount = Interpolation.RequiredPointCount(interpolationType);
-        if (pointCount == 4 && (IsRawCollection || index == 0 || index + 2 == Count))
-        {
-            pointCount = 2;
+        static float Distance(Keyframe p0, Keyframe p1)
+            => MathF.Sqrt((p1.Position - p0.Position) * (p1.Position - p0.Position) + (p1.Value - p0.Value) * (p1.Value - p0.Value));
+
+        Keyframe TakeOrExtrapolateRight(int index, Keyframe prev0, Keyframe prev1)
+            => index < Count ? this[index] : new Keyframe(prev1.Position + Distance(prev0, prev1) * 2, prev1.Value);
+
+        Keyframe TakeOrExtrapolateLeft(int index, Keyframe next1, Keyframe next0)
+            => index >= 0 ? this[index] : new Keyframe(next1.Position - Distance(next1, next0) * 2, next1.Value);
+
+        if (IsRawCollection)
             interpolationType = InterpolationType.Linear;
-        }
 
-        if (pointCount == 4)
+        var p0 = this[index + 0];
+        var p1 = this[index + 1];
+
+        switch (interpolationType)
         {
-            var p0 = this[index - 1];
-            var p1 = this[index + 0];
-            var p2 = this[index + 1];
-            var p3 = this[index + 2];
+            case InterpolationType.Linear:
+                return Interpolation.Linear(p0.Position, p0.Value, p1.Position, p1.Value, position);
 
-            return MathUtils.Interpolate(p0.Position, p0.Value, p1.Position, p1.Value, p2.Position, p2.Value, p3.Position, p3.Value,
-                                         position, interpolationType);
-        }
-        else if (pointCount == 2)
-        {
-            var p0 = this[index + 0];
-            var p1 = this[index + 1];
+            case InterpolationType.Pchip:
+                {
+                    var pm1 = TakeOrExtrapolateLeft(index - 1, p1, p0);
+                    var pp1 = TakeOrExtrapolateRight(index + 2, p0, p1);
 
-            return MathUtils.Interpolate(p0.Position, p0.Value, p1.Position, p1.Value, position, interpolationType);
-        }
-        else
-        {
-            var p0 = this[index];
+                    return Interpolation.Pchip(pm1.Position, pm1.Value, p0.Position, p0.Value, p1.Position, p1.Value, pp1.Position, pp1.Value, position);
+                }
 
-            return MathUtils.Interpolate(p0.Position, p0.Value, position, interpolationType);
+            case InterpolationType.Makima:
+                {
+                    var pm1 = TakeOrExtrapolateLeft(index - 1, p1, p0);
+                    var pm2 = TakeOrExtrapolateLeft(index - 2, pm1, p1);
+                    var pp1 = TakeOrExtrapolateRight(index + 2, p0, p1);
+                    var pp2 = TakeOrExtrapolateRight(index + 3, p1, pp1);
+
+                    return Interpolation.Makima(pm2.Position, pm2.Value, pm1.Position, pm1.Value, p0.Position, p0.Value, p1.Position, p1.Value, pp1.Position, pp1.Value, pp2.Position, pp2.Value, position);
+                }
+
+            case InterpolationType.Step:
+                return Interpolation.Step(p0.Position, p0.Value, position);
+
+            default:
+                throw new NotSupportedException();
         }
     }
 
