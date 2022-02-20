@@ -45,8 +45,7 @@
                           Margin="0 0 10 0"/>
             </DockPanel>
         
-            <DockPanel Margin="0 0 10 0" 
-                       LastChildFill="True"
+            <DockPanel LastChildFill="True"
                        DockPanel.Dock="Top">
                 <TextBlock Text="Device type:" 
                            DockPanel.Dock="Left"
@@ -81,6 +80,19 @@
                           Margin="0 0 10 0"
                           ItemsSource="{Binding DeviceTypes}" 
                           SelectedItem="{Binding SelectedDevice}"/>
+            </DockPanel>
+
+            <DockPanel LastChildFill="False"
+                       DockPanel.Dock="Top">
+                <TextBlock Text="Log level:" 
+                           DockPanel.Dock="Left"
+                           Margin="0 0 10 0" 
+                           VerticalAlignment="Center"/>
+
+                <ComboBox ItemsSource="{Binding LogLevels}"
+                          SelectedItem="{Binding SelectedLogLevel}"
+                          DockPanel.Dock="Left"
+                          Width="100"/>
             </DockPanel>
         </DockPanel>
     </Grid>
