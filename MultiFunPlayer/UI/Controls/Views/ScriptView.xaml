@@ -20,6 +20,7 @@
         <converters:MultiObjectToArrayConverter x:Key="MultiObjectToArrayConverter"/>
         <converters:MultiBooleanToBooleanAndConverter x:Key="MultiBooleanToBooleanAndConverter"/>
         <converters:MotionProviderSelectorConverter x:Key="MotionProviderSelectorConverter"/>
+        <converters:InvertValueConverter x:Key="InvertValueConverter"/>
         <material:NullableToVisibilityConverter x:Key="NullableToVisibilityConverter"/>
     </UserControl.Resources>
     <StackPanel Margin="0 0 0 20">
@@ -901,26 +902,77 @@
 
                                                                     <StackPanel Margin="10">
                                                                         <DockPanel DockPanel.Dock="Top"
-                                                                                   Margin="0 0 0 10">
-                                                                            <TextBlock Text="Script blending:" 
-                                                                                       DockPanel.Dock="Left"
-                                                                                       Margin="0 0 10 0"
-                                                                                       VerticalAlignment="Center"/>
+                                                                                   Margin="0 0 0 20">
 
-                                                                            <TextBlock Text="{Binding Value.Settings.MotionProviderBlend, StringFormat={}{0:0}%}" 
-                                                                                       VerticalAlignment="Center"
-                                                                                       DockPanel.Dock="Right" 
-                                                                                       Width="40"
-                                                                                       TextAlignment="Right"/>
+                                                                            <StackPanel DockPanel.Dock="Top"
+                                                                                        Orientation="Horizontal">
+                                                                                <TextBlock Text="Blend values" 
+                                                                                           Margin="0 0 5 0"
+                                                                                           VerticalAlignment="Center"
+                                                                                           FontSize="12"
+                                                                                           FontWeight="Bold"
+                                                                                           Typography.Capitals="AllSmallCaps"/>
 
-                                                                            <Slider DockPanel.Dock="Left"
-                                                                                    Value="{Binding Value.Settings.MotionProviderBlend}"    
+                                                                                <material:ColorZone DockPanel.Dock="Left"
+                                                                                                    VerticalAlignment="Center"
+                                                                                                    CornerRadius="7"
+                                                                                                    Mode="PrimaryLight"
+                                                                                                    Width="14"
+                                                                                                    Height="14"
+                                                                                                    ToolTipService.InitialShowDelay="0"
+                                                                                                    ToolTipService.ShowDuration="99999"
+                                                                                                    ToolTipService.Placement="Top">
+                                                                                    <material:ColorZone.ToolTip>
+                                                                                        <TextBlock>
+                                                                                            When a script is loaded for this axis<LineBreak/>
+                                                                                            and motion provider is running<LineBreak/>
+                                                                                            the output value will be a blend of those two<LineBreak/>
+                                                                                            based on the slider below
+                                                                                        </TextBlock>
+                                                                                    </material:ColorZone.ToolTip>
+                                                                                    <material:PackIcon Kind="Help"
+                                                                                                       Width="10"
+                                                                                                       Height="10"
+                                                                                                       HorizontalAlignment="Center"
+                                                                                                       VerticalAlignment="Center"/>
+                                                                                </material:ColorZone>
+                                                                            </StackPanel>
+                                                                            
+                                                                            <Slider DockPanel.Dock="Top"
+                                                                                    Value="{Binding Value.Settings.MotionProviderBlend}"
                                                                                     Minimum="0" 
                                                                                     Maximum="100"
                                                                                     TickFrequency="1"
-                                                                                    VerticalAlignment="Center"
                                                                                     IsSnapToTickEnabled="True"
                                                                                     material:SliderAssist.OnlyShowFocusVisualWhileDragging="True"/>
+
+                                                                            <DockPanel DockPanel.Dock="Top"
+                                                                                       LastChildFill="False">
+                                                                                <StackPanel Orientation="Horizontal"
+                                                                                            DockPanel.Dock="Left">
+                                                                                    <TextBlock Text="Script:"
+                                                                                               VerticalAlignment="Center"
+                                                                                               TextAlignment="Center"
+                                                                                               Margin="0 0 5 0"/>
+
+                                                                                    <TextBlock Text="{Binding Value.Settings.MotionProviderBlend, Converter={StaticResource InvertValueConverter}, ConverterParameter=100, StringFormat={}{0:0}%}" 
+                                                                                               VerticalAlignment="Center"
+                                                                                               TextAlignment="Center"/>
+                                                                                </StackPanel>
+
+                                                                                <StackPanel Orientation="Horizontal"
+                                                                                            DockPanel.Dock="Right"
+                                                                                            Width="90">
+                                                                                    <TextBlock Text="Provider:"
+                                                                                               VerticalAlignment="Center"
+                                                                                               TextAlignment="Center"
+                                                                                               Margin="0 0 5 0"/>
+
+                                                                                    <TextBlock Text="{Binding Value.Settings.MotionProviderBlend, StringFormat={}{0:0}%}" 
+                                                                                               VerticalAlignment="Center"
+                                                                                               TextAlignment="Center"/>
+                                                                                </StackPanel>
+                                                                            </DockPanel>
                                                                         </DockPanel>
                                                                         
                                                                         <TextBlock Text="Update when..." 
