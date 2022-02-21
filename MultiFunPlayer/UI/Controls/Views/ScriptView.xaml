@@ -1071,9 +1071,10 @@
                                                                                VerticalAlignment="Center"/>
                                                     </Border>
                                                 </material:PopupBox.ToggleContent>
-                                                <Grid Width="150" Margin="10">
+                                                <Grid Margin="10">
                                                     <StackPanel>
-                                                        <DockPanel>
+                                                        <DockPanel LastChildFill="True"
+                                                                   Margin="0 0 0 20">
                                                             <TextBlock Text="Type:" 
                                                                            DockPanel.Dock="Left"
                                                                            Width="30"
@@ -1081,11 +1082,12 @@
                                                                            VerticalAlignment="Center"/>
 
                                                             <ComboBox DockPanel.Dock="Left"
-                                                                          Margin="0 0 10 0" 
-                                                                          Width="100" 
-                                                                          ItemsSource="{Binding Source={ui:EnumBindingSource {x:Type common:InterpolationType}}}" 
-                                                                          SelectedItem="{Binding Value.Settings.InterpolationType}"/>
+                                                                      ItemsSource="{Binding Source={ui:EnumBindingSource {x:Type common:InterpolationType}}}" 
+                                                                      SelectedItem="{Binding Value.Settings.InterpolationType}"/>
                                                         </DockPanel>
+
+                                                        <controls:InterpolationPreview InterpolationType="{Binding Value.Settings.InterpolationType}" 
+                                                                                       Width="160" Height="80"/>
                                                     </StackPanel>
                                                 </Grid>
                                             </material:PopupBox>
