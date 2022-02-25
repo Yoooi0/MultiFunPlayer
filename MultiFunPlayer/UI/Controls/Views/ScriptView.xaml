@@ -1117,8 +1117,11 @@
                                                 </material:PopupBox.ToggleContent>
                                                 <Grid Margin="10">
                                                     <StackPanel>
-                                                        <DockPanel LastChildFill="True"
-                                                                   Margin="0 0 0 20">
+                                                        <controls:InterpolationPreview InterpolationType="{Binding Value.Settings.InterpolationType}" 
+                                                                                       Width="160" Height="80"
+                                                                                       Margin="0 0 0 20"/>
+
+                                                        <DockPanel LastChildFill="True">
                                                             <TextBlock Text="Type:" 
                                                                            DockPanel.Dock="Left"
                                                                            Width="30"
@@ -1129,9 +1132,6 @@
                                                                       ItemsSource="{Binding Source={ui:EnumBindingSource {x:Type common:InterpolationType}}}" 
                                                                       SelectedItem="{Binding Value.Settings.InterpolationType}"/>
                                                         </DockPanel>
-
-                                                        <controls:InterpolationPreview InterpolationType="{Binding Value.Settings.InterpolationType}" 
-                                                                                       Width="160" Height="80"/>
                                                     </StackPanel>
                                                 </Grid>
                                             </material:PopupBox>
