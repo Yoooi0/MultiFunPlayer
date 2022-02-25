@@ -258,10 +258,9 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                 if (providerResult is not float providerValue)
                     return false;
 
-                if (IsPlaying && state.InsideScript)
-                    newValue = MathUtils.Lerp(newValue, providerValue, MathUtils.Clamp01(settings.MotionProviderBlend / 100));
-                else
-                    newValue = providerValue;
+                newValue = IsPlaying && state.InsideScript
+                    ? MathUtils.Lerp(newValue, providerValue, MathUtils.Clamp01(settings.MotionProviderBlend / 100))
+                    : providerValue;
 
                 return MathF.Abs(lastValue - newValue) > 0.000001f;
             }

@@ -91,6 +91,7 @@ public partial class InterpolationPreview : UserControl, INotifyPropertyChanged
                 if (_keyframes.Count != PointCount - 1)
                     AddKeyframe(_keyframes.Count / (PointCount - 1f), y);
         }
+
         AddKeyframe(1, 0.5f);
     }
 
