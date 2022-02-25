@@ -418,6 +418,27 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
 
     public void Handle(VideoPositionMessage message)
     {
+        void UpdateCurrentPosition(float newPosition)
+        {
+            _playbackSpeedCorrection = 1;
+
+            foreach (var axis in DeviceAxis.All)
+                Monitor.Enter(AxisStates[axis]);
+
+            try
+            {
+                foreach (var axis in DeviceAxis.All)
+                    SearchForValidIndex(axis, AxisStates[axis], newPosition);
+
+                CurrentPosition = newPosition;
+            }
+            finally
+            {
+                foreach (var axis in DeviceAxis.All)
+                    Monitor.Exit(AxisStates[axis]);
+            }
+        }
+
         var newPosition = (float)(message.Position?.TotalSeconds ?? float.NaN);
         Logger.Trace("Received VideoPositionMessage [Position: {0}]", message.Position?.ToString());
 
@@ -430,12 +451,7 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         if (!float.IsFinite(CurrentPosition))
         {
             ResetSync();
-            _playbackSpeedCorrection = 1;
-            CurrentPosition = newPosition;
-
-            foreach (var axis in DeviceAxis.All)
-                SearchForValidIndex(axis, AxisStates[axis]);
-
+            UpdateCurrentPosition(newPosition);
             return;
         }
 
@@ -447,8 +463,7 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
             if (SyncSettings.SyncOnSeek)
                 ResetSync();
 
-            _playbackSpeedCorrection = 1;
-            CurrentPosition = newPosition;
+            UpdateCurrentPosition(newPosition);
         }
         else
         {
@@ -458,8 +473,8 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         foreach (var axis in DeviceAxis.All)
         {
             var state = AxisStates[axis];
-            if (wasSeek || state.Invalid)
-                SearchForValidIndex(axis, state);
+            if (state.Invalid)
+                SearchForValidIndex(axis, state, newPosition);
         }
     }
 
@@ -529,7 +544,8 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         }
     }
 
-    private float GetAxisPosition(DeviceAxis axis) => CurrentPosition - GlobalOffset - AxisSettings[axis].Offset;
+    private float GetAxisPosition(DeviceAxis axis) => GetAxisPosition(axis, CurrentPosition);
+    private float GetAxisPosition(DeviceAxis axis, float position) => position - GlobalOffset - AxisSettings[axis].Offset;
     public float GetValue(DeviceAxis axis) => MathUtils.Clamp01(AxisStates[axis].Value);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -690,14 +706,15 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         return updated;
     }
 
-    private void SearchForValidIndex(DeviceAxis axis, AxisState state)
+    private void SearchForValidIndex(DeviceAxis axis, AxisState state) => SearchForValidIndex(axis, state, CurrentPosition);
+    private void SearchForValidIndex(DeviceAxis axis, AxisState state, float position)
     {
         if (!AxisKeyframes.TryGetValue(axis, out var keyframes) || keyframes == null || keyframes.Count == 0)
             return;
 
         Logger.Debug("Searching for valid index [Axis: {0}]", axis);
         lock (state)
-            state.Index = keyframes.BinarySearch(GetAxisPosition(axis));
+            state.Index = keyframes.BinarySearch(GetAxisPosition(axis, position));
     }
 
     private List<DeviceAxis> UpdateLinkScript(params DeviceAxis[] axes) => UpdateLinkScript(axes?.AsEnumerable());
