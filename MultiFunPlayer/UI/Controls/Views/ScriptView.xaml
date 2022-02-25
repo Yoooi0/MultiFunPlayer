@@ -1,6 +1,7 @@
 <UserControl x:Class="MultiFunPlayer.UI.Controls.Views.ScriptView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:material="http://materialdesigninxaml.net/winfx/xaml/themes"
+             xmlns:metro="http://metro.mahapps.com/winfx/xaml/controls"
              xmlns:s="https://github.com/canton7/Stylet"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
@@ -1055,6 +1056,49 @@
                                                     <material:PackIcon Kind="ChartSnakeyVariant"/>
                                                 </material:ToggleButtonAssist.OnContent>
                                             </ToggleButton>
+
+                                            <material:PopupBox DockPanel.Dock="Left"
+                                                                   StaysOpen="True" 
+                                                                   Style="{StaticResource MaterialDesignToolBarPopupBox}"
+                                                                   ToolTipService.InitialShowDelay="0"
+                                                                   ToolTipService.Placement="Top"
+                                                                   ToolTip="Speed limit">
+                                                <material:PopupBox.ToggleContent>
+                                                    <Border Width="35" Height="35">
+                                                        <material:PackIcon Kind="CarSpeedLimiter" 
+                                                                           Width="21" 
+                                                                           Height="21" 
+                                                                           HorizontalAlignment="Center" 
+                                                                           VerticalAlignment="Center"/>
+                                                    </Border>
+                                                </material:PopupBox.ToggleContent>
+                                                <Grid Margin="10">
+                                                    <StackPanel Width="200">
+                                                        <StackPanel Margin="0 0 0 10" Orientation="Horizontal">
+                                                            <TextBlock Text="Enabled:" 
+                                                                           Width="50"
+                                                                           Margin="0 0 10 0"
+                                                                           VerticalAlignment="Center"/>
+
+                                                            <CheckBox IsChecked="{Binding Value.Settings.SpeedLimitEnabled}"
+                                                                          Style="{StaticResource MaterialDesignSwitchToggleButton}"/>
+                                                        </StackPanel>
+
+                                                        <DockPanel LastChildFill="True">
+                                                            <TextBlock Text="Limit: " 
+                                                                       VerticalAlignment="Center"
+                                                                       Margin="0 0 10 0"
+                                                                       DockPanel.Dock="Left" />
+
+                                                            <metro:NumericUpDown Value="{Binding Value.Settings.MaximumSecondsPerStroke}"
+                                                                                 Minimum="0.001"
+                                                                                 Maximum="2"
+                                                                                 Interval="0.001"
+                                                                                 StringFormat="{}{0:F3}s/stroke"/>
+                                                        </DockPanel>
+                                                    </StackPanel>
+                                                </Grid>
+                                            </material:PopupBox>
 
                                             <material:PopupBox DockPanel.Dock="Left"
                                                                    StaysOpen="True" 

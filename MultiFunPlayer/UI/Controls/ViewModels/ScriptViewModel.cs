@@ -152,6 +152,7 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                     state.Dirty |= UpdateAutoHome(axis, state, settings, lastValue, ref newValue);
                     state.Dirty |= UpdateSmartLimit(axis, state, settings, lastValue, ref newValue);
 
+                    SpeedLimit(axis, settings, lastValue, ref newValue);
                     if (!float.IsFinite(lastValue) && float.IsFinite(newValue))
                         state.Dirty = true;
 
@@ -163,6 +164,28 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
             }
 
             return dirty;
+
+            void SpeedLimit(DeviceAxis axis, AxisSettings settings, float lastValue, ref float newValue)
+            {
+                if (!settings.SpeedLimitEnabled)
+                    return;
+
+                var step = newValue - lastValue;
+                if (!float.IsFinite(step))
+                    return;
+                if (MathF.Abs(step) < 0.000001f)
+                    return;
+
+                var dt = (float)stopwatch.Elapsed.TotalSeconds;
+                var speed = step / dt;
+                var maxSpeed = 1 / settings.MaximumSecondsPerStroke;
+                if (MathF.Abs(speed / maxSpeed) < 1)
+                    return;
+                if (!float.IsFinite(maxSpeed))
+                    return;
+
+                newValue = lastValue + maxSpeed * dt * MathF.Sign(speed);
+            }
 
             bool UpdateSmartLimit(DeviceAxis axis, AxisState state, AxisSettings settings, float lastValue, ref float newValue)
             {
@@ -1313,6 +1336,29 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                   }));
         #endregion
 
+        #region Axis::SpeedLimitEnabled
+        s.RegisterAction("Axis::SpeedLimitEnabled::Set",
+            b => b.WithSetting<DeviceAxis>(p => p.WithLabel("Target axis").WithItemsSource(DeviceAxis.All))
+                  .WithSetting<bool>(p => p.WithLabel("Auto home enabled"))
+                  .WithCallback((_, axis, enabled) => UpdateSettings(axis, s => s.SpeedLimitEnabled = enabled)));
+
+        s.RegisterAction("Axis::SpeedLimitEnabled::Toggle",
+            b => b.WithSetting<DeviceAxis>(p => p.WithLabel("Target axis").WithItemsSource(DeviceAxis.All))
+                  .WithCallback((_, axis) => UpdateSettings(axis, s => s.SpeedLimitEnabled = !s.SpeedLimitEnabled)));
+        #endregion
+
+        #region Axis::SpeedLimitSecondsPerStroke
+        s.RegisterAction("Axis::SpeedLimitSecondsPerStroke::Offset",
+            b => b.WithSetting<DeviceAxis>(p => p.WithLabel("Target axis").WithItemsSource(DeviceAxis.All))
+                  .WithSetting<float>(p => p.WithLabel("Value offset").WithStringFormat("{}{0:F3}s/stroke"))
+                  .WithCallback((_, axis, offset) => UpdateSettings(axis, s => s.MaximumSecondsPerStroke = MathUtils.Clamp(s.MaximumSecondsPerStroke + offset, 0.001f, 2f))));
+
+        s.RegisterAction("Axis::SpeedLimitSecondsPerStroke::Set",
+            b => b.WithSetting<DeviceAxis>(p => p.WithLabel("Target axis").WithItemsSource(DeviceAxis.All))
+                  .WithSetting<float>(p => p.WithLabel("Value").WithStringFormat("{}{0:F3}s/stroke"))
+                  .WithCallback((_, axis, value) => UpdateSettings(axis, s => s.MaximumSecondsPerStroke = MathUtils.Clamp(value, 0.001f, 2f))));
+        #endregion
+
         #region Axis::AutoHomeEnabled
         s.RegisterAction("Axis::AutoHomeEnabled::Set",
             b => b.WithSetting<DeviceAxis>(p => p.WithLabel("Target axis").WithItemsSource(DeviceAxis.All))
@@ -1489,6 +1535,8 @@ public class AxisSettings : PropertyChangedBase
     [JsonProperty] public bool UpdateMotionProviderWithoutScript { get; set; } = false;
     [JsonProperty] public DeviceAxis UpdateMotionProviderWithAxis { get; set; } = null;
     [JsonProperty] public string SelectedMotionProvider { get; set; } = null;
+    [JsonProperty] public bool SpeedLimitEnabled { get; set; } = false;
+    [JsonProperty] public float MaximumSecondsPerStroke { get; set; } = 0.1f;
 }
 
 [JsonObject(MemberSerialization.OptIn)]
