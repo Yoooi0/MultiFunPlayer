@@ -533,6 +533,8 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
     private void InvalidateState(IEnumerable<DeviceAxis> axes = null)
     {
         axes ??= DeviceAxis.All;
+        if (!axes.Any())
+            return;
 
         Logger.Debug("Invalidating axes [Axes: {list}]", axes);
         foreach (var axis in axes)
@@ -553,7 +555,9 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
     private void ResetSync(bool isSyncing = true, params DeviceAxis[] axes) => ResetSync(isSyncing, axes?.AsEnumerable());
     private void ResetSync(bool isSyncing = true, IEnumerable<DeviceAxis> axes = null)
     {
-        axes ??= DeviceAxis.All;
+        axes ??= DeviceAxis.All; 
+        if (!axes.Any())
+            return;
 
         Logger.Debug("Resetting sync [Axes: {list}]", axes);
 
@@ -605,12 +609,11 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
     {
         axes ??= DeviceAxis.All;
 
-        Logger.Debug("Maching files to axes [Axes: {list}]", axes);
-
         var updated = new List<DeviceAxis>();
-        if (VideoFile == null)
+        if (!axes.Any() || VideoFile == null)
             return updated;
 
+        Logger.Debug("Maching files to axes [Axes: {list}]", axes);
         bool TryMatchFile(string fileName, Func<IScriptFile> generator)
         {
             var videoWithoutExtension = Path.GetFileNameWithoutExtension(VideoFile.Name);
@@ -721,9 +724,11 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
     {
         axes ??= DeviceAxis.All;
 
-        Logger.Debug("Trying to link axes [Axes: {list}]", axes);
-
         var updated = new List<DeviceAxis>();
+        if (!axes.Any())
+            return updated;
+
+        Logger.Debug("Trying to link axes [Axes: {list}]", axes);
         foreach (var axis in axes)
         {
             var model = AxisModels[axis];
@@ -760,6 +765,8 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
     private void ResetScript(IEnumerable<DeviceAxis> axes = null)
     {
         axes ??= DeviceAxis.All;
+        if (!axes.Any())
+            return;
 
         Logger.Debug("Resetting axes [Axes: {list}]", axes);
         foreach (var axis in axes)
@@ -788,6 +795,9 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
     private void ReloadScript(IEnumerable<DeviceAxis> axes = null)
     {
         axes ??= DeviceAxis.All;
+        if (!axes.Any())
+            return;
+
         ResetSync(true, axes);
 
         Logger.Debug("Reloading axes [Axes: {list}]", axes);
@@ -828,6 +838,8 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         }
 
         axes ??= DeviceAxis.All;
+        if (!axes.Any())
+            return;
 
         var maybeSkipPosition = AxisKeyframes.Keys.Select(a => GetSkipPosition(a)).MinBy(x => x.GetValueOrDefault(float.PositiveInfinity));
         var currentPosition = CurrentPosition;
