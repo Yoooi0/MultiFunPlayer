@@ -719,14 +719,21 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
             state.Index = keyframes.BinarySearch(GetAxisPosition(axis, position));
     }
 
-    private List<DeviceAxis> UpdateLinkScript(params DeviceAxis[] axes) => UpdateLinkScript(axes?.AsEnumerable());
-    private List<DeviceAxis> UpdateLinkScript(IEnumerable<DeviceAxis> axes = null)
+    private void UpdateLinkedScriptsTo(DeviceAxis axis) => UpdateLinkScript(DeviceAxis.All.Where(a => a != axis && AxisSettings[a].LinkAxis == axis));
+    private void UpdateLinkedScriptsTo(params DeviceAxis[] axes) => UpdateLinkedScriptsTo(axes?.AsEnumerable());
+    private void UpdateLinkedScriptsTo(IEnumerable<DeviceAxis> axes)
     {
         axes ??= DeviceAxis.All;
+        foreach (var axis in axes)
+            UpdateLinkedScriptsTo(axis);
+    }
 
-        var updated = new List<DeviceAxis>();
+    private void UpdateLinkScriptFor(params DeviceAxis[] axes) => UpdateLinkScript(axes?.AsEnumerable());
+    private void UpdateLinkScript(IEnumerable<DeviceAxis> axes = null)
+    {
+        axes ??= DeviceAxis.All;
         if (!axes.Any())
-            return updated;
+            return;
 
         Logger.Debug("Trying to link axes [Axes: {list}]", axes);
         foreach (var axis in axes)
@@ -735,10 +742,7 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
             if (model.Settings.LinkAxis == null)
             {
                 if (model.Settings.LinkAxisHasPriority)
-                {
                     ResetScript(axis);
-                    updated.Add(axis);
-                }
 
                 continue;
             }
@@ -755,10 +759,7 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
             Logger.Debug("Linked {0} to {1}", axis.Name, model.Settings.LinkAxis.Name);
 
             SetScript(axis, LinkedScriptFile.LinkTo(AxisModels[model.Settings.LinkAxis].Script));
-            updated.Add(axis);
         }
-
-        return updated;
     }
 
     private void ResetScript(params DeviceAxis[] axes) => ResetScript(axes?.AsEnumerable());
@@ -789,6 +790,9 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
             state.Invalidate();
             model.Script = script;
         }
+
+        Logger.Info("Set {0} script to \"{1}\"", axis, script?.Name);
+        UpdateLinkedScriptsTo(axis);
     }
 
     private void ReloadScript(params DeviceAxis[] axes) => ReloadScript(axes?.AsEnumerable());
@@ -806,12 +810,12 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
             var groupAxes = items.ToArray();
             if (enabled)
             {
-                UpdateLinkScript(groupAxes);
+                UpdateLinkScriptFor(groupAxes);
             }
             else
             {
                 var updated = TryMatchFiles(true, groupAxes);
-                UpdateLinkScript(groupAxes.Except(updated));
+                UpdateLinkedScriptsTo(updated);
             }
         }
     }
