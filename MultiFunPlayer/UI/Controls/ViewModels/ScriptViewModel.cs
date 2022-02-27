@@ -1062,11 +1062,28 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
     [SuppressPropertyChangedWarnings]
     public void OnSelectedLinkAxisChanged(object sender, SelectionChangedEventArgs e)
     {
+        bool IsCircularLink(DeviceAxis from, DeviceAxis to)
+        {
+            var current = from;
+            while(current != null)
+            {
+                if (current == to)
+                {
+                    Logger.Info("Found circular link [From: {0}, To: {1}]", from, to);
+                    return true;
+                }
+
+                current = AxisSettings[current].LinkAxis;
+            }
+
+            return false;
+        }
+
         if (sender is not FrameworkElement element || element.DataContext is not KeyValuePair<DeviceAxis, AxisModel> pair)
             return;
 
         var (axis, model) = pair;
-        if (e.AddedItems.TryGet<DeviceAxis>(0, out var added) && added == axis)
+        if (e.AddedItems.TryGet<DeviceAxis>(0, out var added) && IsCircularLink(added, axis))
             model.Settings.LinkAxis = e.RemovedItems.TryGet<DeviceAxis>(0, out var removed) ? removed : null;
 
         ReloadScript(axis);
