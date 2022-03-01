@@ -40,10 +40,14 @@
     </PackageReference>
     <PackageReference Include="RawInput.Sharp" Version="0.0.4" />
     <PackageReference Include="Stylet" Version="1.*" />
-    <PackageReference Include="System.IO.Ports" Version="6.0.0" />
+    <PackageReference Include="System.IO.Ports" Version="6.*" />
     <PackageReference Include="Microsoft-WindowsAPICodePack-Shell" Version="1.1.4" />
-    <PackageReference Include="System.Management" Version="6.0.0" />
+    <PackageReference Include="System.Management" Version="6.*" />
     <PackageReference Include="Vortice.XInput" Version="1.9.80" />
+  </ItemGroup>
+	
+  <ItemGroup>
+    <FrameworkReference Update="Microsoft.WindowsDesktop.App;Microsoft.WindowsDesktop.App.WPF;Microsoft.WindowsDesktop.App.WindowsForms" TargetingPackVersion="6.0.0" />
   </ItemGroup>
 
   <ItemGroup>
