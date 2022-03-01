@@ -8,12 +8,12 @@
 
 # About
 
-MultiFunPlayer is a simple app to synchronize your devices (e.g. [OSR](https://www.patreon.com/tempestvr) or [buttplug.io](https://buttplug.io) supported devices) with any video using funscripts. Supported video players are [DeoVR](https://deovr.com/), [MPV](https://mpv.io/), [HereSphere](https://store.steampowered.com/app/1234730/HereSphere/) and [Whirligig](http://whirligig.xyz/).
+MultiFunPlayer is a simple app to synchronize your devices (e.g. [OSR](https://www.patreon.com/tempestvr) or [buttplug.io](https://buttplug.io) supported devices) with any video using funscripts. Supported video players are [DeoVR](https://deovr.com/), [MPV](https://mpv.io/), [MPC-HC/BE](https://github.com/clsid2/mpc-hc), [HereSphere](https://store.steampowered.com/app/1234730/HereSphere/) and [Whirligig](http://whirligig.xyz/).
 The player's main feature is the ability to play multiple funscripts at the same time, allowing for greater movement fidelity.
 
 # Features
 
-* Supports [DeoVR](https://deovr.com/), [MPV](https://mpv.io/), [HereSphere](https://store.steampowered.com/app/1234730/HereSphere/) and [Whirligig](http://whirligig.xyz/) video players
+* Supports [DeoVR](https://deovr.com/), [MPV](https://mpv.io/), [MPC-HC/BE](https://github.com/clsid2/mpc-hc), [HereSphere](https://store.steampowered.com/app/1234730/HereSphere/) and [Whirligig](http://whirligig.xyz/) video players
 * Supports [buttplug.io](https://buttplug.io), network TCP/UDP, namedpipes and serial output
 * Supports TCode v0.2 and TCode v0.3 devices
 * Auto detection and connection to any supported video player and output
@@ -21,6 +21,7 @@ The player's main feature is the ability to play multiple funscripts at the same
 * Seek and play/pause video from MultiFunPlayer
 * Supports multiple concurrent outputs
 * Real time script smoothing using pchip or makima interpolation
+* Per axis speed limit
 * Auto-home feature which when video is paused moves axis to its default value after some delay
 * Supports local, DLNA, web and unc video paths
 * Soft start sync feature to prevent unwanted motion
