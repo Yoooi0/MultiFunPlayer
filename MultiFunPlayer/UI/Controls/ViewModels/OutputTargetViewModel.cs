@@ -8,23 +8,68 @@ namespace MultiFunPlayer.UI.Controls.ViewModels;
 
 public class OutputTargetViewModel : Conductor<IOutputTarget>.Collection.OneActive, IHandle<AppSettingsMessage>, IDisposable
 {
+    private readonly IShortcutManager _shortcutManager;
+    private readonly IOutputTargetFactory _outputTargetFactory;
     private Task _task;
     private CancellationTokenSource _cancellationSource;
+
+    public List<Type> AvailableOutputTargetTypes { get; }
+
     private Dictionary<IOutputTarget, SemaphoreSlim> _semaphores;
 
     public bool ContentVisible { get; set; }
     public int ScanDelay { get; set; } = 2500;
     public int ScanInterval { get; set; } = 5000;
 
-    public OutputTargetViewModel(IShortcutManager shortcutManager, IEventAggregator eventAggregator, IEnumerable<IOutputTarget> targets)
+    public OutputTargetViewModel(IShortcutManager shortcutManager, IEventAggregator eventAggregator, IOutputTargetFactory outputTargetFactory, IEnumerable<IOutputTarget> targets)
     {
+        _shortcutManager = shortcutManager;
+        _outputTargetFactory = outputTargetFactory;
         eventAggregator.Subscribe(this);
-        Items.AddRange(targets);
 
-        _semaphores = targets.ToDictionary(t => t, _ => new SemaphoreSlim(1, 1));
+        _semaphores = new Dictionary<IOutputTarget, SemaphoreSlim>();
         _cancellationSource = new CancellationTokenSource();
 
-        RegisterShortcuts(shortcutManager);
+        AvailableOutputTargetTypes = ReflectionUtils.FindImplementations<IOutputTarget>().ToList();
+
+        foreach (var target in targets)
+            AddItem(target);
+    }
+
+    public void AddItem(Type type) => AddItem(_outputTargetFactory.CreateOutputTarget(type, 0));
+    private void AddItem(IOutputTarget target)
+    {
+        Items.Add(target);
+        _semaphores.Add(target, new SemaphoreSlim(1, 1));
+
+        RegisterActions(_shortcutManager, target);
+    }
+
+    public async void RemoveItem(IOutputTarget target)
+    {
+        var index = Items.IndexOf(target);
+
+        Items.Remove(target);
+        var semaphore = _semaphores[target];
+        _semaphores.Remove(target);
+
+        var token = _cancellationSource.Token;
+        await semaphore.WaitAsync(token);
+
+        await target.WaitForIdle(token); 
+        if (target.Status == ConnectionStatus.Connected)
+        {
+            await target.DisconnectAsync();
+            await target.WaitForDisconnect(token);
+        }
+
+        UnregisterActions(_shortcutManager, target);
+
+        semaphore.Release();
+        semaphore.Dispose();
+        target.Dispose();
+
+        ActiveItem = Items.Count > 0 ? Items[MathUtils.Clamp(index, 0, Items.Count - 1)] : null;
     }
 
     protected override void OnViewLoaded()
@@ -122,39 +167,46 @@ public class OutputTargetViewModel : Conductor<IOutputTarget>.Collection.OneActi
         catch (OperationCanceledException) { }
     }
 
-    private void RegisterShortcuts(IShortcutManager s)
+    private void RegisterActions(IShortcutManager s, IOutputTarget target)
     {
         var token = _cancellationSource.Token;
-        foreach (var target in Items)
+        target.RegisterActions(s);
+
+        #region Connection
+        s.RegisterAction($"{target.Name}::Connection::Toggle", b => b.WithCallback(async (_) => await ToggleConnectAsync(target)));
+        s.RegisterAction($"{target.Name}::Connection::Connect", b => b.WithCallback(async (_) =>
         {
-            #region Connection
-            s.RegisterAction($"{target.Name}::Connection::Toggle", b => b.WithCallback(async (_) => await ToggleConnectAsync(target)));
-            s.RegisterAction($"{target.Name}::Connection::Connect", b => b.WithCallback(async (_) =>
+            await _semaphores[target].WaitAsync(token);
+
+            if (target.Status == ConnectionStatus.Disconnected)
             {
-                await _semaphores[target].WaitAsync(token);
+                await target.ConnectAsync();
+                await target.WaitForIdle(token);
+            }
 
-                if (target.Status == ConnectionStatus.Disconnected)
-                {
-                    await target.ConnectAsync();
-                    await target.WaitForIdle(token);
-                }
+            _semaphores[target].Release();
+        }));
+        s.RegisterAction($"{target.Name}::Connection::Disconnect", b => b.WithCallback(async (_) =>
+        {
+            await _semaphores[target].WaitAsync(token);
 
-                _semaphores[target].Release();
-            }));
-            s.RegisterAction($"{target.Name}::Connection::Disconnect", b => b.WithCallback(async (_) =>
+            if (target.Status == ConnectionStatus.Connected)
             {
-                await _semaphores[target].WaitAsync(token);
+                await target.DisconnectAsync();
+                await target.WaitForDisconnect(token);
+            }
 
-                if (target.Status == ConnectionStatus.Connected)
-                {
-                    await target.DisconnectAsync();
-                    await target.WaitForDisconnect(token);
-                }
+            _semaphores[target].Release();
+        }));
+        #endregion
+    }
 
-                _semaphores[target].Release();
-            }));
-            #endregion
-        }
+    private void UnregisterActions(IShortcutManager s, IOutputTarget target)
+    {
+        target.UnregisterActions(s);
+        s.UnregisterAction($"{target.Name}::Connection::Toggle");
+        s.UnregisterAction($"{target.Name}::Connection::Connect");
+        s.UnregisterAction($"{target.Name}::Connection::Disconnect");
     }
 
     protected async virtual void Dispose(bool disposing)

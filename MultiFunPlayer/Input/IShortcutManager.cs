@@ -27,6 +27,7 @@ public interface IShortcutManager : IDisposable
 
     void RegisterAction(string name, Func<INoSettingsShortcutActionBuilder, IShortcutActionBuilder> configure) => RegisterAction(name, configure, ShortcutActionDescriptorFlags.AcceptsSimpleGesture);
     void RegisterAction(string name, Func<INoSettingsShortcutActionBuilder, IShortcutActionBuilder> configure, ShortcutActionDescriptorFlags flags);
+    void UnregisterAction(string name) => UnregisterAction(new ShortcutActionDescriptor(name, ShortcutActionDescriptorFlags.All));
     void UnregisterAction(IShortcutActionDescriptor actionDescriptor);
 
     void RegisterGesture(IInputGestureDescriptor gestureDescriptor);

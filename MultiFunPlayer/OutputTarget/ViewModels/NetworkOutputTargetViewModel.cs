@@ -31,8 +31,8 @@ public class NetworkOutputTargetViewModel : ThreadAbstractOutputTarget
     public IPEndPoint Endpoint { get; set; } = new IPEndPoint(IPAddress.Loopback, 8080);
     public ProtocolType Protocol { get; set; } = ProtocolType.Tcp;
 
-    public NetworkOutputTargetViewModel(IShortcutManager shortcutManager, IEventAggregator eventAggregator, IDeviceAxisValueProvider valueProvider)
-        : base(shortcutManager, eventAggregator, valueProvider) { }
+    public NetworkOutputTargetViewModel(IEventAggregator eventAggregator, IDeviceAxisValueProvider valueProvider)
+        : base(eventAggregator, valueProvider) { }
 
     public bool IsConnected => Status == ConnectionStatus.Connected;
     public bool IsConnectBusy => Status == ConnectionStatus.Connecting || Status == ConnectionStatus.Disconnecting;
@@ -162,9 +162,9 @@ public class NetworkOutputTargetViewModel : ThreadAbstractOutputTarget
         }
     }
 
-    protected override void RegisterShortcuts(IShortcutManager s)
+    public override void RegisterActions(IShortcutManager s)
     {
-        base.RegisterShortcuts(s);
+        base.RegisterActions(s);
 
         #region Endpoint
         s.RegisterAction($"{Name}::Endpoint::Set", b => b.WithSetting<string>(s => s.WithLabel("Endpoint").WithDescription("ip:port")).WithCallback((_, endpointString) =>
@@ -181,6 +181,13 @@ public class NetworkOutputTargetViewModel : ThreadAbstractOutputTarget
                 Protocol = protocol.Value;
         }));
         #endregion
+    }
+
+    public override void UnregisterActions(IShortcutManager s)
+    {
+        base.UnregisterActions(s);
+        s.UnregisterAction($"{Name}::Endpoint::Set");
+        s.UnregisterAction($"{Name}::Protocol::Set");
     }
 
     public override async ValueTask<bool> CanConnectAsync(CancellationToken token)

@@ -69,8 +69,8 @@ public class ButtplugOutputTargetViewModel : AsyncAbstractOutputTarget
 
     public ObservableConcurrentCollection<ButtplugClientDeviceSettings> DeviceSettings { get; protected set; }
 
-    public ButtplugOutputTargetViewModel(IShortcutManager shortcutManager, IEventAggregator eventAggregator, IDeviceAxisValueProvider valueProvider)
-        : base(shortcutManager, eventAggregator, valueProvider)
+    public ButtplugOutputTargetViewModel(IEventAggregator eventAggregator, IDeviceAxisValueProvider valueProvider)
+        : base(eventAggregator, valueProvider)
     {
         AvailableDevices = new ObservableConcurrentCollection<ButtplugClientDevice>();
         DeviceSettings = new ObservableConcurrentCollection<ButtplugClientDeviceSettings>();
@@ -373,9 +373,9 @@ public class ButtplugOutputTargetViewModel : AsyncAbstractOutputTarget
         }
     }
 
-    protected override void RegisterShortcuts(IShortcutManager s)
+    public override void RegisterActions(IShortcutManager s)
     {
-        base.RegisterShortcuts(s);
+        base.RegisterActions(s);
 
         #region Endpoint
         s.RegisterAction($"{Name}::Endpoint::Set", b => b.WithSetting<string>(s => s.WithLabel("Endpoint").WithDescription("ip:port")).WithCallback((_, endpointString) =>
@@ -384,6 +384,12 @@ public class ButtplugOutputTargetViewModel : AsyncAbstractOutputTarget
                 Endpoint = endpoint;
         }));
         #endregion
+    }
+
+    public override void UnregisterActions(IShortcutManager s)
+    {
+        base.UnregisterActions(s);
+        s.UnregisterAction($"{Name}::Endpoint::Set");
     }
 
     public override async ValueTask<bool> CanConnectAsync(CancellationToken token)

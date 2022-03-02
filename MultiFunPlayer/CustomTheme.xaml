@@ -462,7 +462,7 @@
                             <Border.RenderTransform>
                                 <ScaleTransform x:Name="ScaleTransform" ScaleX="0" ScaleY="1" />
                             </Border.RenderTransform>
-                            <Rectangle x:Name="PART_BackgroundSelection" Fill="{TemplateBinding Background}" Opacity="0.12"/>
+                            <Rectangle x:Name="PART_BackgroundSelection" Fill="{TemplateBinding Background}" Opacity="0.12" IsHitTestVisible="False"/>
                         </Border>
                     </Grid>
                     <ControlTemplate.Triggers>

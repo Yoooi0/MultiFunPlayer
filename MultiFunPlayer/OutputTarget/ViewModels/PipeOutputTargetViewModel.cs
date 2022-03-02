@@ -23,8 +23,8 @@ public class PipeOutputTargetViewModel : ThreadAbstractOutputTarget
 
     public string PipeName { get; set; } = "mfp-pipe";
 
-    public PipeOutputTargetViewModel(IShortcutManager shortcutManager, IEventAggregator eventAggregator, IDeviceAxisValueProvider valueProvider)
-        : base(shortcutManager, eventAggregator, valueProvider) { }
+    public PipeOutputTargetViewModel(IEventAggregator eventAggregator, IDeviceAxisValueProvider valueProvider)
+        : base(eventAggregator, valueProvider) { }
 
     public bool IsConnected => Status == ConnectionStatus.Connected;
     public bool IsConnectBusy => Status == ConnectionStatus.Connecting || Status == ConnectionStatus.Disconnecting;
@@ -101,13 +101,19 @@ public class PipeOutputTargetViewModel : ThreadAbstractOutputTarget
         }
     }
 
-    protected override void RegisterShortcuts(IShortcutManager s)
+    public override void RegisterActions(IShortcutManager s)
     {
-        base.RegisterShortcuts(s);
+        base.RegisterActions(s);
 
         #region PipeName
         s.RegisterAction($"{Name}::PipeName::Set", b => b.WithSetting<string>(s => s.WithLabel("Pipe name")).WithCallback((_, pipeName) => PipeName = pipeName));
         #endregion
+    }
+
+    public override void UnregisterActions(IShortcutManager s)
+    {
+        base.UnregisterActions(s);
+        s.UnregisterAction($"{Name}::PipeName::Set");
     }
 
     public override async ValueTask<bool> CanConnectAsync(CancellationToken token)

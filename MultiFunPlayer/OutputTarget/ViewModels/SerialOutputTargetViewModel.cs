@@ -32,8 +32,8 @@ public class SerialOutputTargetViewModel : ThreadAbstractOutputTarget
     [DoNotNotify]
     public string SelectedSerialPortDeviceId { get; set; }
 
-    public SerialOutputTargetViewModel(IShortcutManager shortcutManager, IEventAggregator eventAggregator, IDeviceAxisValueProvider valueProvider)
-        : base(shortcutManager, eventAggregator, valueProvider)
+    public SerialOutputTargetViewModel(IEventAggregator eventAggregator, IDeviceAxisValueProvider valueProvider)
+        : base(eventAggregator, valueProvider)
     {
         SerialPorts = new ObservableConcurrentCollection<SerialPortInfo>();
         _cancellationSource = new CancellationTokenSource();
@@ -193,13 +193,19 @@ public class SerialOutputTargetViewModel : ThreadAbstractOutputTarget
         }
     }
 
-    protected override void RegisterShortcuts(IShortcutManager s)
+    public override void RegisterActions(IShortcutManager s)
     {
-        base.RegisterShortcuts(s);
+        base.RegisterActions(s);
 
         #region ComPort
         s.RegisterAction($"{Name}::SerialPort::Set", b => b.WithSetting<string>(s => s.WithLabel("Device ID")).WithCallback((_, deviceId) => SelectSerialPortByDeviceId(deviceId)));
         #endregion
+    }
+
+    public override void UnregisterActions(IShortcutManager s)
+    {
+        base.UnregisterActions(s);
+        s.UnregisterAction($"{Name}::SerialPort::Set");
     }
 
     public override async ValueTask<bool> CanConnectAsync(CancellationToken token)

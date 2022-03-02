@@ -46,7 +46,7 @@ public abstract class AbstractOutputTarget : Screen, IHandle<AppSettingsMessage>
     protected Dictionary<DeviceAxis, float> Values { get; }
     protected IEventAggregator EventAggregator { get; }
 
-    protected AbstractOutputTarget(IShortcutManager shortcutManager, IEventAggregator eventAggregator, IDeviceAxisValueProvider valueProvider)
+    protected AbstractOutputTarget(IEventAggregator eventAggregator, IDeviceAxisValueProvider valueProvider)
     {
         _statusEvent = new AsyncManualResetEvent();
         _valueProvider = valueProvider;
@@ -63,8 +63,6 @@ public abstract class AbstractOutputTarget : Screen, IHandle<AppSettingsMessage>
             if (string.Equals(e.PropertyName, "Status", StringComparison.OrdinalIgnoreCase))
                 _statusEvent.Reset();
         };
-
-        RegisterShortcuts(shortcutManager);
     }
 
     public abstract Task ConnectAsync();
@@ -159,14 +157,12 @@ public abstract class AbstractOutputTarget : Screen, IHandle<AppSettingsMessage>
         }
     }
 
-    protected virtual void RegisterShortcuts(IShortcutManager s)
+    public virtual void RegisterActions(IShortcutManager s)
     {
         void UpdateSettings(DeviceAxis axis, Action<DeviceAxisSettings> callback)
         {
-            if (axis == null)
-                return;
-
-            callback(AxisSettings[axis]);
+            if (axis != null)
+                callback(AxisSettings[axis]);
         }
 
         static void SetMinimum(DeviceAxisSettings settings, float value, float minimumLimit) => settings.Minimum = MathUtils.Clamp(value, minimumLimit, settings.Maximum - 1);
@@ -306,6 +302,25 @@ public abstract class AbstractOutputTarget : Screen, IHandle<AppSettingsMessage>
         #endregion
     }
 
+    public virtual void UnregisterActions(IShortcutManager s)
+    {
+        s.UnregisterAction($"{Name}::UpdateRate::Set");
+        s.UnregisterAction($"{Name}::AutoConnectEnabled::Set");
+        s.UnregisterAction($"{Name}::AutoConnectEnabled::Toggle");
+        s.UnregisterAction($"{Name}::Axis::Range::Minimum::Offset");
+        s.UnregisterAction($"{Name}::Axis::Range::Minimum::Set");
+        s.UnregisterAction($"{Name}::Axis::Range::Minimum::Drive");
+        s.UnregisterAction($"{Name}::Axis::Range::Maximum::Offset");
+        s.UnregisterAction($"{Name}::Axis::Range::Maximum::Set");
+        s.UnregisterAction($"{Name}::Axis::Range::Maximum::Drive");
+        s.UnregisterAction($"{Name}::Axis::Range::Middle::Offset");
+        s.UnregisterAction($"{Name}::Axis::Range::Middle::Set");
+        s.UnregisterAction($"{Name}::Axis::Range::Middle::Drive");
+        s.UnregisterAction($"{Name}::Axis::Range::Size::Offset");
+        s.UnregisterAction($"{Name}::Axis::Range::Size::Set");
+        s.UnregisterAction($"{Name}::Axis::Range::Size::Drive");
+    }
+
     protected virtual void Dispose(bool disposing) { }
 
     public void Dispose()
@@ -322,8 +337,8 @@ public abstract class ThreadAbstractOutputTarget : AbstractOutputTarget
 
     public bool UsePreciseSleep { get; set; }
 
-    protected ThreadAbstractOutputTarget(IShortcutManager shortcutManager, IEventAggregator eventAggregator, IDeviceAxisValueProvider valueProvider)
-        : base(shortcutManager, eventAggregator, valueProvider) { }
+    protected ThreadAbstractOutputTarget(IEventAggregator eventAggregator, IDeviceAxisValueProvider valueProvider)
+        : base(eventAggregator, valueProvider) { }
 
     protected abstract void Run(CancellationToken token);
 
@@ -421,8 +436,8 @@ public abstract class AsyncAbstractOutputTarget : AbstractOutputTarget
     private CancellationTokenSource _cancellationSource;
     private Task _task;
 
-    protected AsyncAbstractOutputTarget(IShortcutManager shortcutManager, IEventAggregator eventAggregator, IDeviceAxisValueProvider valueProvider)
-        : base(shortcutManager, eventAggregator, valueProvider) { }
+    protected AsyncAbstractOutputTarget(IEventAggregator eventAggregator, IDeviceAxisValueProvider valueProvider)
+        : base(eventAggregator, valueProvider) { }
 
     protected abstract Task RunAsync(CancellationToken token);
 
