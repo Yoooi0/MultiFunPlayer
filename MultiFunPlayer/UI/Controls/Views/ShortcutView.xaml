@@ -504,7 +504,7 @@
                                  behaviours:InputAssist.UpdateSourceOnEnter="TextBox.Text"/>
 
                         <ItemsControl DockPanel.Dock="Top"
-                                      ItemsSource="{Binding AvailableActionDescriptors}"
+                                      ItemsSource="{Binding AvailableActionsView}"
                                       Margin="5 5 0 0"
                                       VirtualizingStackPanel.IsVirtualizing="True"
                                       VirtualizingStackPanel.VirtualizationMode="Recycling"

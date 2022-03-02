@@ -25,9 +25,9 @@ public class ShortcutViewModel : Screen, IHandle<AppSettingsMessage>, IDisposabl
     private CancellationTokenSource _captureGestureCancellationSource;
 
     public string ActionsFilter { get; set; }
-    public ObservableConcurrentCollection<IShortcutActionDescriptor> ActionDescriptors { get; }
-    public ICollectionView AvailableActionDescriptors { get; }
-    public IReadOnlyDictionary<IInputGestureDescriptor, ObservableConcurrentCollection<IShortcutAction>> Bindings => _manager.Bindings;
+    public ICollectionView AvailableActionsView { get; }
+    public ObservableConcurrentCollection<IShortcutActionDescriptor> AvailableActions => _manager.AvailableActions;
+    public ObservableConcurrentDictionary<IInputGestureDescriptor, ObservableConcurrentCollection<IShortcutAction>> Bindings => _manager.Bindings;
 
     public bool IsCapturingGesture { get; private set; }
     public IInputGestureDescriptor CapturedGesture { get; set; }
@@ -41,13 +41,13 @@ public class ShortcutViewModel : Screen, IHandle<AppSettingsMessage>, IDisposabl
 
     public ShortcutViewModel(IShortcutManager manager, IEventAggregator eventAggregator)
     {
+        _manager = manager;
+        Logger.Debug($"Initialized with {manager.AvailableActions.Count} available actions");
+
         eventAggregator.Subscribe(this);
 
-        Logger.Debug($"Found {manager.Actions.Count} available actions");
-
-        ActionDescriptors = new ObservableConcurrentCollection<IShortcutActionDescriptor>(manager.Actions);
-        AvailableActionDescriptors = CollectionViewSource.GetDefaultView(ActionDescriptors);
-        AvailableActionDescriptors.Filter = o =>
+        AvailableActionsView = CollectionViewSource.GetDefaultView(AvailableActions);
+        AvailableActionsView.Filter = o =>
         {
             if (o is not IShortcutActionDescriptor actionDescriptor)
                 return false;
@@ -70,9 +70,7 @@ public class ShortcutViewModel : Screen, IHandle<AppSettingsMessage>, IDisposabl
             return true;
         };
 
-        _manager = manager;
         _manager.OnGesture += HandleGesture;
-
         _captureGestureChannel = Channel.CreateBounded<IInputGesture>(new BoundedChannelOptions(1)
         {
             FullMode = BoundedChannelFullMode.DropOldest,
@@ -83,7 +81,7 @@ public class ShortcutViewModel : Screen, IHandle<AppSettingsMessage>, IDisposabl
         PropertyChanged += (s, e) =>
         {
             if (e.PropertyName == nameof(ActionsFilter) || e.PropertyName == nameof(SelectedBinding))
-                AvailableActionDescriptors.Refresh();
+                AvailableActionsView.Refresh();
         };
     }
 
@@ -279,7 +277,7 @@ public class ShortcutViewModel : Screen, IHandle<AppSettingsMessage>, IDisposabl
 
                     foreach (var action in binding.Actions)
                     {
-                        var actionDescriptor = ActionDescriptors.FirstOrDefault(d => string.Equals(d.Name, action.Descriptor, StringComparison.OrdinalIgnoreCase));
+                        var actionDescriptor = AvailableActions.FirstOrDefault(d => string.Equals(d.Name, action.Descriptor, StringComparison.OrdinalIgnoreCase));
                         if (actionDescriptor == null)
                             Logger.Warn($"Action \"{action.Descriptor}\" not found!");
                         else
