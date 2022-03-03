@@ -41,15 +41,17 @@
 
                             <TextBlock Visibility="{Binding IsSelected, Converter={StaticResource BooleanToVisibilityConverter}, RelativeSource={RelativeSource AncestorType={x:Type TabItem}}}"
                                        Text="{Binding InstanceIndex}"
-                                       FontSize="9"
+                                       FontSize="10"
+                                       FontFamily="Consolas"
                                        Padding="0"
+                                       Foreground="{StaticResource IdealForegroundDisabledBrush}"
                                        HorizontalAlignment="Left"
                                        VerticalAlignment="Top"
                                        Margin="3 -3 0 0"/>
 
                             <StackPanel Orientation="Vertical" 
                                         Margin="10 0 10 0" 
-                                        Width="75">
+                                        Width="80">
                                 <TextBlock Text="{Binding Name}" 
                                            HorizontalAlignment="Center"/>
                                 <TextBlock Text="{Binding Status}" 
