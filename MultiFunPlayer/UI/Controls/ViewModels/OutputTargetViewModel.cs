@@ -21,7 +21,7 @@ public class OutputTargetViewModel : Conductor<IOutputTarget>.Collection.OneActi
     public int ScanDelay { get; set; } = 2500;
     public int ScanInterval { get; set; } = 5000;
 
-    public OutputTargetViewModel(IShortcutManager shortcutManager, IEventAggregator eventAggregator, IOutputTargetFactory outputTargetFactory, IEnumerable<IOutputTarget> targets)
+    public OutputTargetViewModel(IShortcutManager shortcutManager, IEventAggregator eventAggregator, IOutputTargetFactory outputTargetFactory)
     {
         _shortcutManager = shortcutManager;
         _outputTargetFactory = outputTargetFactory;
@@ -31,16 +31,26 @@ public class OutputTargetViewModel : Conductor<IOutputTarget>.Collection.OneActi
         _cancellationSource = new CancellationTokenSource();
 
         AvailableOutputTargetTypes = ReflectionUtils.FindImplementations<IOutputTarget>().ToList();
-
-        foreach (var target in targets)
-            AddItem(target);
     }
 
-    public void AddItem(Type type) => AddItem(_outputTargetFactory.CreateOutputTarget(type, 0));
+    public void AddItem(Type type)
+    {
+        var index = GetFirstFreeIndex(type);
+        if (index < 0)
+            return;
+
+        var instance = _outputTargetFactory.CreateOutputTarget(type, index);
+        if (instance == null)
+            return;
+
+        AddItem(instance);
+    }
+
     private void AddItem(IOutputTarget target)
     {
         Items.Add(target);
         _semaphores.Add(target, new SemaphoreSlim(1, 1));
+        ActiveItem = target;
 
         RegisterActions(_shortcutManager, target);
     }
@@ -70,6 +80,17 @@ public class OutputTargetViewModel : Conductor<IOutputTarget>.Collection.OneActi
         target.Dispose();
 
         ActiveItem = Items.Count > 0 ? Items[MathUtils.Clamp(index, 0, Items.Count - 1)] : null;
+    }
+
+    public int GetFirstFreeIndex(Type type)
+    {
+        var used = Items.Where(x => x.GetType() == type)
+                        .Select(x => x.InstanceIndex)
+                        .ToList();
+
+        for(var i = 0;; i++)
+            if(!used.Contains(i))
+                return i;
     }
 
     protected override void OnViewLoaded()
@@ -114,7 +135,7 @@ public class OutputTargetViewModel : Conductor<IOutputTarget>.Collection.OneActi
                 ScanInterval = scanInterval;
 
             if (settings.TryGetValue<string>(nameof(ActiveItem), out var selectedItem))
-                ChangeActiveItem(Items.FirstOrDefault(x => string.Equals(x.Name, selectedItem)) ?? Items[0], closePrevious: false);
+                ChangeActiveItem(Items.FirstOrDefault(x => string.Equals(x.Name, selectedItem)) ?? Items.FirstOrDefault(), closePrevious: false);
         }
     }
 
@@ -173,8 +194,8 @@ public class OutputTargetViewModel : Conductor<IOutputTarget>.Collection.OneActi
         target.RegisterActions(s);
 
         #region Connection
-        s.RegisterAction($"{target.Name}::Connection::Toggle", b => b.WithCallback(async (_) => await ToggleConnectAsync(target)));
-        s.RegisterAction($"{target.Name}::Connection::Connect", b => b.WithCallback(async (_) =>
+        s.RegisterAction($"{target.Identifier}::Connection::Toggle", b => b.WithCallback(async (_) => await ToggleConnectAsync(target)));
+        s.RegisterAction($"{target.Identifier}::Connection::Connect", b => b.WithCallback(async (_) =>
         {
             await _semaphores[target].WaitAsync(token);
 
@@ -186,7 +207,7 @@ public class OutputTargetViewModel : Conductor<IOutputTarget>.Collection.OneActi
 
             _semaphores[target].Release();
         }));
-        s.RegisterAction($"{target.Name}::Connection::Disconnect", b => b.WithCallback(async (_) =>
+        s.RegisterAction($"{target.Identifier}::Connection::Disconnect", b => b.WithCallback(async (_) =>
         {
             await _semaphores[target].WaitAsync(token);
 
@@ -204,9 +225,9 @@ public class OutputTargetViewModel : Conductor<IOutputTarget>.Collection.OneActi
     private void UnregisterActions(IShortcutManager s, IOutputTarget target)
     {
         target.UnregisterActions(s);
-        s.UnregisterAction($"{target.Name}::Connection::Toggle");
-        s.UnregisterAction($"{target.Name}::Connection::Connect");
-        s.UnregisterAction($"{target.Name}::Connection::Disconnect");
+        s.UnregisterAction($"{target.Identifier}::Connection::Toggle");
+        s.UnregisterAction($"{target.Identifier}::Connection::Connect");
+        s.UnregisterAction($"{target.Identifier}::Connection::Disconnect");
     }
 
     protected async virtual void Dispose(bool disposing)

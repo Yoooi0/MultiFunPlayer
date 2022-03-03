@@ -31,8 +31,8 @@ public class NetworkOutputTargetViewModel : ThreadAbstractOutputTarget
     public IPEndPoint Endpoint { get; set; } = new IPEndPoint(IPAddress.Loopback, 8080);
     public ProtocolType Protocol { get; set; } = ProtocolType.Tcp;
 
-    public NetworkOutputTargetViewModel(IEventAggregator eventAggregator, IDeviceAxisValueProvider valueProvider)
-        : base(eventAggregator, valueProvider) { }
+    public NetworkOutputTargetViewModel(int instanceIndex, IEventAggregator eventAggregator, IDeviceAxisValueProvider valueProvider)
+        : base(instanceIndex, eventAggregator, valueProvider) { }
 
     public bool IsConnected => Status == ConnectionStatus.Connected;
     public bool IsConnectBusy => Status == ConnectionStatus.Connecting || Status == ConnectionStatus.Disconnecting;
@@ -55,7 +55,7 @@ public class NetworkOutputTargetViewModel : ThreadAbstractOutputTarget
 
         try
         {
-            Logger.Info("Connecting to {0} at \"{1}\"", Name, $"tcp://{Endpoint}");
+            Logger.Info("Connecting to {0} at \"{1}\"", Identifier, $"tcp://{Endpoint}");
             client.Connect(Endpoint);
             Status = ConnectionStatus.Connected;
         }
@@ -89,8 +89,8 @@ public class NetworkOutputTargetViewModel : ThreadAbstractOutputTarget
         }
         catch (Exception e)
         {
-            Logger.Error(e, $"{Name} failed with exception");
-            _ = DialogHelper.ShowErrorAsync(e, $"{Name} failed with exception", "RootDialog");
+            Logger.Error(e, $"{Identifier} failed with exception");
+            _ = DialogHelper.ShowErrorAsync(e, $"{Identifier} failed with exception", "RootDialog");
         }
     }
 
@@ -100,7 +100,7 @@ public class NetworkOutputTargetViewModel : ThreadAbstractOutputTarget
 
         try
         {
-            Logger.Info("Connecting to {0} at \"{1}\"", Name, $"udp://{Endpoint}");
+            Logger.Info("Connecting to {0} at \"{1}\"", Identifier, $"udp://{Endpoint}");
             client.Connect(Endpoint);
             Status = ConnectionStatus.Connected;
         }
@@ -136,12 +136,12 @@ public class NetworkOutputTargetViewModel : ThreadAbstractOutputTarget
         }
         catch (Exception e)
         {
-            Logger.Error(e, $"{Name} failed with exception");
-            _ = DialogHelper.ShowErrorAsync(e, $"{Name} failed with exception", "RootDialog");
+            Logger.Error(e, $"{Identifier} failed with exception");
+            _ = DialogHelper.ShowErrorAsync(e, $"{Identifier} failed with exception", "RootDialog");
         }
     }
 
-    protected override void HandleSettings(JObject settings, AppSettingsMessageType type)
+    public override void HandleSettings(JObject settings, AppSettingsMessageType type)
     {
         base.HandleSettings(settings, type);
 
@@ -167,7 +167,7 @@ public class NetworkOutputTargetViewModel : ThreadAbstractOutputTarget
         base.RegisterActions(s);
 
         #region Endpoint
-        s.RegisterAction($"{Name}::Endpoint::Set", b => b.WithSetting<string>(s => s.WithLabel("Endpoint").WithDescription("ip:port")).WithCallback((_, endpointString) =>
+        s.RegisterAction($"{Identifier}::Endpoint::Set", b => b.WithSetting<string>(s => s.WithLabel("Endpoint").WithDescription("ip:port")).WithCallback((_, endpointString) =>
         {
             if (IPEndPoint.TryParse(endpointString, out var endpoint))
                 Endpoint = endpoint;
@@ -175,7 +175,7 @@ public class NetworkOutputTargetViewModel : ThreadAbstractOutputTarget
         #endregion
 
         #region Protocol
-        s.RegisterAction($"{Name}::Protocol::Set", b => b.WithSetting<ProtocolType?>(s => s.WithLabel("Protocol").WithItemsSource(EnumUtils.GetValues<ProtocolType?>())).WithCallback((_, protocol) =>
+        s.RegisterAction($"{Identifier}::Protocol::Set", b => b.WithSetting<ProtocolType?>(s => s.WithLabel("Protocol").WithItemsSource(EnumUtils.GetValues<ProtocolType?>())).WithCallback((_, protocol) =>
         {
             if (protocol.HasValue)
                 Protocol = protocol.Value;
@@ -186,8 +186,8 @@ public class NetworkOutputTargetViewModel : ThreadAbstractOutputTarget
     public override void UnregisterActions(IShortcutManager s)
     {
         base.UnregisterActions(s);
-        s.UnregisterAction($"{Name}::Endpoint::Set");
-        s.UnregisterAction($"{Name}::Protocol::Set");
+        s.UnregisterAction($"{Identifier}::Endpoint::Set");
+        s.UnregisterAction($"{Identifier}::Protocol::Set");
     }
 
     public override async ValueTask<bool> CanConnectAsync(CancellationToken token)

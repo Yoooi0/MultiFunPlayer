@@ -32,8 +32,8 @@ public class SerialOutputTargetViewModel : ThreadAbstractOutputTarget
     [DoNotNotify]
     public string SelectedSerialPortDeviceId { get; set; }
 
-    public SerialOutputTargetViewModel(IEventAggregator eventAggregator, IDeviceAxisValueProvider valueProvider)
-        : base(eventAggregator, valueProvider)
+    public SerialOutputTargetViewModel(int instanceIndex, IEventAggregator eventAggregator, IDeviceAxisValueProvider valueProvider)
+        : base(instanceIndex, eventAggregator, valueProvider)
     {
         SerialPorts = new ObservableConcurrentCollection<SerialPortInfo>();
         _cancellationSource = new CancellationTokenSource();
@@ -105,7 +105,7 @@ public class SerialOutputTargetViewModel : ThreadAbstractOutputTarget
 
         try
         {
-            Logger.Info("Connecting to {0} at \"{1}\"", Name, SelectedSerialPortDeviceId);
+            Logger.Info("Connecting to {0} at \"{1}\"", Identifier, SelectedSerialPortDeviceId);
 
             serialPort = new SerialPort(SelectedSerialPort.PortName, 115200)
             {
@@ -165,20 +165,20 @@ public class SerialOutputTargetViewModel : ThreadAbstractOutputTarget
         }
         catch (Exception e) when (e is TimeoutException || e is IOException)
         {
-            Logger.Error(e, $"{Name} failed with exception");
+            Logger.Error(e, $"{Identifier} failed with exception");
             _ = Execute.OnUIThreadAsync(async () =>
             {
-                _ = DialogHelper.ShowErrorAsync(e, $"{Name} failed with exception", "RootDialog");
+                _ = DialogHelper.ShowErrorAsync(e, $"{Identifier} failed with exception", "RootDialog");
                 await RefreshPorts().ConfigureAwait(true);
             });
         }
-        catch (Exception e) { Logger.Debug(e, $"{Name} failed with exception"); }
+        catch (Exception e) { Logger.Debug(e, $"{Identifier} failed with exception"); }
 
         try { serialPort?.Close(); }
         catch (IOException) { }
     }
 
-    protected override void HandleSettings(JObject settings, AppSettingsMessageType type)
+    public override void HandleSettings(JObject settings, AppSettingsMessageType type)
     {
         base.HandleSettings(settings, type);
 
@@ -198,14 +198,14 @@ public class SerialOutputTargetViewModel : ThreadAbstractOutputTarget
         base.RegisterActions(s);
 
         #region ComPort
-        s.RegisterAction($"{Name}::SerialPort::Set", b => b.WithSetting<string>(s => s.WithLabel("Device ID")).WithCallback((_, deviceId) => SelectSerialPortByDeviceId(deviceId)));
+        s.RegisterAction($"{Identifier}::SerialPort::Set", b => b.WithSetting<string>(s => s.WithLabel("Device ID")).WithCallback((_, deviceId) => SelectSerialPortByDeviceId(deviceId)));
         #endregion
     }
 
     public override void UnregisterActions(IShortcutManager s)
     {
         base.UnregisterActions(s);
-        s.UnregisterAction($"{Name}::SerialPort::Set");
+        s.UnregisterAction($"{Identifier}::SerialPort::Set");
     }
 
     public override async ValueTask<bool> CanConnectAsync(CancellationToken token)

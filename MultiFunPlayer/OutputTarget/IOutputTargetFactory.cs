@@ -1,4 +1,5 @@
 ﻿using MultiFunPlayer.OutputTarget;
+using MultiFunPlayer.OutputTarget.ViewModels;
 using Stylet;
 
 namespace MultiFunPlayer.UI.Controls.ViewModels;
@@ -20,5 +21,18 @@ public class OutputTargetFactory : IOutputTargetFactory
     }
 
     public IOutputTarget CreateOutputTarget(Type type, int index)
-        => (IOutputTarget)Activator.CreateInstance(type, new object[] { _eventAggregator, _valueProvider });
+    {
+        if (index > MaxInstanceIndex(type))
+            return null;
+
+        return (IOutputTarget)Activator.CreateInstance(type, new object[] { index, _eventAggregator, _valueProvider });
+    }
+
+    private int MaxInstanceIndex(Type type)
+    {
+        if (type == typeof(ButtplugOutputTargetViewModel))
+            return 0;
+
+        return 9;
+    }
 }

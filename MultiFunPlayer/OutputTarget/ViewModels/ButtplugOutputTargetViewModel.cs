@@ -69,8 +69,8 @@ public class ButtplugOutputTargetViewModel : AsyncAbstractOutputTarget
 
     public ObservableConcurrentCollection<ButtplugClientDeviceSettings> DeviceSettings { get; protected set; }
 
-    public ButtplugOutputTargetViewModel(IEventAggregator eventAggregator, IDeviceAxisValueProvider valueProvider)
-        : base(eventAggregator, valueProvider)
+    public ButtplugOutputTargetViewModel(int instanceIndex, IEventAggregator eventAggregator, IDeviceAxisValueProvider valueProvider)
+        : base(instanceIndex, eventAggregator, valueProvider)
     {
         AvailableDevices = new ObservableConcurrentCollection<ButtplugClientDevice>();
         DeviceSettings = new ObservableConcurrentCollection<ButtplugClientDeviceSettings>();
@@ -166,7 +166,7 @@ public class ButtplugOutputTargetViewModel : AsyncAbstractOutputTarget
 
         try
         {
-            Logger.Info("Connecting to {0} at \"{1}\"", Name, $"ws://{Endpoint}");
+            Logger.Info("Connecting to {0} at \"{1}\"", Identifier, $"ws://{Endpoint}");
             await client.ConnectAsync(new ButtplugWebsocketConnectorOptions(new Uri($"ws://{Endpoint}"))).WithCancellation(token);
             Status = ConnectionStatus.Connected;
         }
@@ -242,8 +242,8 @@ public class ButtplugOutputTargetViewModel : AsyncAbstractOutputTarget
         catch (OperationCanceledException) { }
         catch (Exception e)
         {
-            Logger.Error(e, $"{Name} failed with exception");
-            _ = DialogHelper.ShowErrorAsync(e, $"{Name} failed with exception", "RootDialog");
+            Logger.Error(e, $"{Identifier} failed with exception");
+            _ = DialogHelper.ShowErrorAsync(e, $"{Identifier} failed with exception", "RootDialog");
         }
 
         if (client.Connected)
@@ -353,7 +353,7 @@ public class ButtplugOutputTargetViewModel : AsyncAbstractOutputTarget
         CleanupSemaphores();
     }
 
-    protected override void HandleSettings(JObject settings, AppSettingsMessageType type)
+    public override void HandleSettings(JObject settings, AppSettingsMessageType type)
     {
         base.HandleSettings(settings, type);
 
@@ -383,7 +383,7 @@ public class ButtplugOutputTargetViewModel : AsyncAbstractOutputTarget
         base.RegisterActions(s);
 
         #region Endpoint
-        s.RegisterAction($"{Name}::Endpoint::Set", b => b.WithSetting<string>(s => s.WithLabel("Endpoint").WithDescription("ip:port")).WithCallback((_, endpointString) =>
+        s.RegisterAction($"{Identifier}::Endpoint::Set", b => b.WithSetting<string>(s => s.WithLabel("Endpoint").WithDescription("ip:port")).WithCallback((_, endpointString) =>
         {
             if (IPEndPoint.TryParse(endpointString, out var endpoint))
                 Endpoint = endpoint;
@@ -394,7 +394,7 @@ public class ButtplugOutputTargetViewModel : AsyncAbstractOutputTarget
     public override void UnregisterActions(IShortcutManager s)
     {
         base.UnregisterActions(s);
-        s.UnregisterAction($"{Name}::Endpoint::Set");
+        s.UnregisterAction($"{Identifier}::Endpoint::Set");
     }
 
     public override async ValueTask<bool> CanConnectAsync(CancellationToken token)

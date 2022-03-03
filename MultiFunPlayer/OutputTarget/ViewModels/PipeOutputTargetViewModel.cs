@@ -23,8 +23,8 @@ public class PipeOutputTargetViewModel : ThreadAbstractOutputTarget
 
     public string PipeName { get; set; } = "mfp-pipe";
 
-    public PipeOutputTargetViewModel(IEventAggregator eventAggregator, IDeviceAxisValueProvider valueProvider)
-        : base(eventAggregator, valueProvider) { }
+    public PipeOutputTargetViewModel(int instanceIndex, IEventAggregator eventAggregator, IDeviceAxisValueProvider valueProvider)
+        : base(instanceIndex, eventAggregator, valueProvider) { }
 
     public bool IsConnected => Status == ConnectionStatus.Connected;
     public bool IsConnectBusy => Status == ConnectionStatus.Connecting || Status == ConnectionStatus.Disconnecting;
@@ -36,7 +36,7 @@ public class PipeOutputTargetViewModel : ThreadAbstractOutputTarget
 
         try
         {
-            Logger.Info("Connecting to {0} at \"{1}\"", Name, PipeName);
+            Logger.Info("Connecting to {0} at \"{1}\"", Identifier, PipeName);
 
             client = new NamedPipeClientStream(".", PipeName, PipeDirection.Out);
             client.Connect(2500);
@@ -77,15 +77,15 @@ public class PipeOutputTargetViewModel : ThreadAbstractOutputTarget
         }
         catch (Exception e)
         {
-            Logger.Error(e, $"{Name} failed with exception");
-            _ = DialogHelper.ShowErrorAsync(e, $"{Name} failed with exception", "RootDialog");
+            Logger.Error(e, $"{Identifier} failed with exception");
+            _ = DialogHelper.ShowErrorAsync(e, $"{Identifier} failed with exception", "RootDialog");
         }
 
         if (client?.IsConnected == true)
             client.Close();
     }
 
-    protected override void HandleSettings(JObject settings, AppSettingsMessageType type)
+    public override void HandleSettings(JObject settings, AppSettingsMessageType type)
     {
         base.HandleSettings(settings, type);
 
@@ -106,14 +106,14 @@ public class PipeOutputTargetViewModel : ThreadAbstractOutputTarget
         base.RegisterActions(s);
 
         #region PipeName
-        s.RegisterAction($"{Name}::PipeName::Set", b => b.WithSetting<string>(s => s.WithLabel("Pipe name")).WithCallback((_, pipeName) => PipeName = pipeName));
+        s.RegisterAction($"{Identifier}::PipeName::Set", b => b.WithSetting<string>(s => s.WithLabel("Pipe name")).WithCallback((_, pipeName) => PipeName = pipeName));
         #endregion
     }
 
     public override void UnregisterActions(IShortcutManager s)
     {
         base.UnregisterActions(s);
-        s.UnregisterAction($"{Name}::PipeName::Set");
+        s.UnregisterAction($"{Identifier}::PipeName::Set");
     }
 
     public override async ValueTask<bool> CanConnectAsync(CancellationToken token)

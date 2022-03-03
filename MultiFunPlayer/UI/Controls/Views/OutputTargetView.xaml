@@ -32,12 +32,20 @@
                                     Padding="0"
                                     HorizontalAlignment="Right"
                                     VerticalAlignment="Top"
-                                    Margin="0 -3 0 2"
+                                    Margin="0 -3 0 3"
                                     Command="{s:Action RemoveItem}"
                                     CommandParameter="{Binding}"
                                     s:View.ActionTarget="{Binding DataContext, Source={StaticResource ViewModelProxy}}">
                                 <material:PackIcon Kind="Close" Height="12" Width="12"/>
                             </Button>
+
+                            <TextBlock Visibility="{Binding IsSelected, Converter={StaticResource BooleanToVisibilityConverter}, RelativeSource={RelativeSource AncestorType={x:Type TabItem}}}"
+                                       Text="{Binding InstanceIndex}"
+                                       FontSize="9"
+                                       Padding="0"
+                                       HorizontalAlignment="Left"
+                                       VerticalAlignment="Top"
+                                       Margin="3 -3 0 0"/>
 
                             <StackPanel Orientation="Vertical" 
                                         Margin="10 0 10 0" 
