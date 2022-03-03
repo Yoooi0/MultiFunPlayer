@@ -108,7 +108,12 @@ public class ButtplugOutputTargetViewModel : AsyncAbstractOutputTarget
             Logger.Log(level, message);
         };
 
-        ButtplugFFILog.SetLogOptions(logLevel, false);
+        try
+        {
+            //TODO: catch until https://github.com/buttplugio/buttplug-rs-ffi/issues/23 is resolved
+            ButtplugFFILog.SetLogOptions(logLevel, false);
+        }
+        catch { }
     }
 
     public bool IsScanBusy { get; set; }
