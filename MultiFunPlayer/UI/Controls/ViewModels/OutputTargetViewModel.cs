@@ -3,12 +3,15 @@ using MultiFunPlayer.Common.Messages;
 using MultiFunPlayer.Input;
 using MultiFunPlayer.OutputTarget;
 using Newtonsoft.Json.Linq;
+using NLog;
 using Stylet;
 
 namespace MultiFunPlayer.UI.Controls.ViewModels;
 
 public class OutputTargetViewModel : Conductor<IOutputTarget>.Collection.OneActive, IHandle<AppSettingsMessage>, IDisposable
 {
+    protected Logger Logger = LogManager.GetCurrentClassLogger();
+
     private readonly IShortcutManager _shortcutManager;
     private readonly IOutputTargetFactory _outputTargetFactory;
     private Task _task;
@@ -45,6 +48,7 @@ public class OutputTargetViewModel : Conductor<IOutputTarget>.Collection.OneActi
             if (!usedIndices.Contains(index))
                 break;
 
+        Logger.Trace("Adding new output [Index: {0}, Type: {1}]", index, type);
         var instance = _outputTargetFactory.CreateOutputTarget(type, index);
         if (instance == null)
             return;
@@ -58,11 +62,14 @@ public class OutputTargetViewModel : Conductor<IOutputTarget>.Collection.OneActi
         _semaphores.Add(target, new SemaphoreSlim(1, 1));
         ActiveItem = target;
 
+        Logger.Debug("Added new output \"{0}\"", target.Identifier);
         RegisterActions(_shortcutManager, target);
     }
 
     public async void RemoveItem(IOutputTarget target)
     {
+        Logger.Debug("Removing output \"{0}\"", target.Identifier);
+
         var index = Items.IndexOf(target);
 
         Items.Remove(target);
@@ -119,11 +126,7 @@ public class OutputTargetViewModel : Conductor<IOutputTarget>.Collection.OneActi
 
             settings[nameof(Items)] = JArray.FromObject(Items.Select(x =>
             {
-                var o = new JObject()
-                {
-                    ["$index"] = x.InstanceIndex
-                };
-
+                var o = new JObject() { ["$index"] = x.InstanceIndex };
                 o.AddTypeProperty(x.GetType());
                 x.HandleSettings(o, message.Action);
                 return o;
@@ -154,7 +157,10 @@ public class OutputTargetViewModel : Conductor<IOutputTarget>.Collection.OneActi
                                            .ToList();
 
                     if (usedIndices.Contains(index))
+                    {
+                        Logger.Warn("Index {0} is already used for type {1}", index, type);
                         continue;
+                    }
 
                     var instance = _outputTargetFactory.CreateOutputTarget(type, index);
                     if (instance == null)
