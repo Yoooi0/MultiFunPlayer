@@ -1,11 +1,13 @@
 ﻿using MultiFunPlayer.Common;
 using MultiFunPlayer.OutputTarget.ViewModels;
 using Newtonsoft.Json.Linq;
+using NLog;
 
 namespace MultiFunPlayer.Settings.Migrations;
 
 public class Migration__1_20_0__1 : AbstractConfigMigration
 {
+    private readonly Logger Logger = LogManager.GetCurrentClassLogger();
     public override int TargetVersion => 3;
 
     public override void Migrate(JObject settings)
