@@ -2,6 +2,8 @@ using MultiFunPlayer.Common;
 using MultiFunPlayer.Common.Messages;
 using MultiFunPlayer.Input;
 using MultiFunPlayer.OutputTarget;
+using MultiFunPlayer.Settings;
+using Newtonsoft.Json.Linq;
 using Stylet;
 
 namespace MultiFunPlayer.UI.Controls.ViewModels;
@@ -35,9 +37,14 @@ public class OutputTargetViewModel : Conductor<IOutputTarget>.Collection.OneActi
 
     public void AddItem(Type type)
     {
-        var index = GetFirstFreeIndex(type);
-        if (index < 0)
-            return;
+        var usedIndices = Items.Where(x => x.GetType() == type)
+                               .Select(x => x.InstanceIndex)
+                               .ToList();
+
+        var index = 0;
+        for (; ; index++)
+            if (!usedIndices.Contains(index))
+                break;
 
         var instance = _outputTargetFactory.CreateOutputTarget(type, index);
         if (instance == null)
@@ -82,17 +89,6 @@ public class OutputTargetViewModel : Conductor<IOutputTarget>.Collection.OneActi
         ActiveItem = Items.Count > 0 ? Items[MathUtils.Clamp(index, 0, Items.Count - 1)] : null;
     }
 
-    public int GetFirstFreeIndex(Type type)
-    {
-        var used = Items.Where(x => x.GetType() == type)
-                        .Select(x => x.InstanceIndex)
-                        .ToList();
-
-        for(var i = 0;; i++)
-            if(!used.Contains(i))
-                return i;
-    }
-
     protected override void OnViewLoaded()
     {
         base.OnViewLoaded();
@@ -120,7 +116,19 @@ public class OutputTargetViewModel : Conductor<IOutputTarget>.Collection.OneActi
             settings[nameof(ScanInterval)] = ScanInterval;
 
             if (ActiveItem != null)
-                settings[nameof(ActiveItem)] = ActiveItem.Name;
+                settings[nameof(ActiveItem)] = ActiveItem.Identifier;
+
+            settings[nameof(Items)] = JArray.FromObject(Items.Select(x =>
+            {
+                var o = new JObject()
+                {
+                    ["$index"] = x.InstanceIndex
+                };
+
+                o.AddTypeProperty(x.GetType());
+                x.HandleSettings(o, message.Action);
+                return o;
+            }));
         }
         else if (message.Action == SettingsAction.Loading)
         {
@@ -134,8 +142,32 @@ public class OutputTargetViewModel : Conductor<IOutputTarget>.Collection.OneActi
             if (settings.TryGetValue<int>(nameof(ScanInterval), out var scanInterval))
                 ScanInterval = scanInterval;
 
+            if (settings.TryGetValue(nameof(Items), out var itemsToken) && itemsToken is JArray items)
+            {
+                foreach(var item in items.OfType<JObject>())
+                {
+                    var type = item.GetTypeProperty();
+                    var index = item["$index"].ToObject<int>();
+                    item.Remove("$type");
+
+                    var usedIndices = Items.Where(x => x.GetType() == type)
+                                           .Select(x => x.InstanceIndex)
+                                           .ToList();
+
+                    if (usedIndices.Contains(index))
+                        continue;
+
+                    var instance = _outputTargetFactory.CreateOutputTarget(type, index);
+                    if (instance == null)
+                        continue;
+
+                    instance.HandleSettings(item, message.Action);
+                    AddItem(instance);
+                }
+            }
+
             if (settings.TryGetValue<string>(nameof(ActiveItem), out var selectedItem))
-                ChangeActiveItem(Items.FirstOrDefault(x => string.Equals(x.Name, selectedItem)) ?? Items.FirstOrDefault(), closePrevious: false);
+                ChangeActiveItem(Items.FirstOrDefault(x => string.Equals(x.Identifier, selectedItem)) ?? Items.FirstOrDefault(), closePrevious: false);
         }
     }
 

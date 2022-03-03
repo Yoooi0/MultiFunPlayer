@@ -91,6 +91,15 @@ public static class JsonExtensions
         using var reader = token.CreateReader();
         serializer.Populate(reader, target);
     }
+
+    public static void AddTypeProperty(this JObject o, Type type)
+        => o.Add("$type", ReflectionUtils.RemoveAssemblyDetails(type.AssemblyQualifiedName));
+
+    public static Type GetTypeProperty(this JObject o)
+    {
+        var (_, valueTypeName) = ReflectionUtils.SplitFullyQualifiedTypeName(o["$type"].ToString());
+        return Type.GetType(valueTypeName);
+    }
 }
 
 public static class TaskExtensions
