@@ -30,7 +30,7 @@ jobs:
     - name: Install Dependencies
       run: dotnet restore
     - name: Build
-      run: dotnet publish --configuration Release /p:AssemblyVersion=${{ steps.gitversion.outputs.assemblySemVer }} /p:FileVersion=${{ steps.gitversion.outputs.assemblySemFileVer }} /p:InformationalVersion=${{ steps.gitversion.outputs.informationalVersion }}
+      run: dotnet publish --configuration Release /p:AssemblyVersion=${{ steps.gitversion.outputs.assemblySemVer }} /p:FileVersion=${{ steps.gitversion.outputs.assemblySemFileVer }} /p:InformationalVersion=${{ steps.gitversion.outputs.fullSemVer }}.${{ steps.gitversion.outputs.shortSha }}
     - name: Pack
       run: 7z a MultiFunPlayer-${{ steps.gitversion.outputs.semVer }}.zip .\MultiFunPlayer\bin\Release\win-x64\publish\*
     - name: Create Release
@@ -42,4 +42,3 @@ jobs:
         fail_on_unmatched_files: true
         name: MultiFunPlayer v${{ steps.gitversion.outputs.semVer }}
         files: MultiFunPlayer-${{ steps.gitversion.outputs.semVer }}.zip
-        
