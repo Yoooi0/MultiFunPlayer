@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace MultiFunPlayer.Settings.Migrations;
 
-internal class Migration__1_19_0__2 : AbstractConfigMigration
+public class Migration__1_19_0__2 : AbstractConfigMigration
 {
     public override int TargetVersion => 2;
 
