@@ -479,11 +479,11 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
 
     public void Handle(AppSettingsMessage message)
     {
-        if (message.Type == AppSettingsMessageType.Saving)
+        if (message.Action == SettingsAction.Saving)
         {
             message.Settings["Script"] = JObject.FromObject(this);
         }
-        else if (message.Type == AppSettingsMessageType.Loading)
+        else if (message.Action == SettingsAction.Loading)
         {
             if (!message.Settings.TryGetObject(out var settings, "Script"))
                 return;

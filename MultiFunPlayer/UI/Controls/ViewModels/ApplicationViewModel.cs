@@ -46,7 +46,7 @@ public class ApplicationViewModel : Screen, IHandle<AppSettingsMessage>
 
     public void Handle(AppSettingsMessage message)
     {
-        if (message.Type == AppSettingsMessageType.Saving)
+        if (message.Action == SettingsAction.Saving)
         {
             message.Settings[nameof(SelectedDevice)] = JToken.FromObject(SelectedDevice);
             message.Settings[nameof(AlwaysOnTop)] = JToken.FromObject(AlwaysOnTop);
@@ -54,7 +54,7 @@ public class ApplicationViewModel : Screen, IHandle<AppSettingsMessage>
             if(SelectedLogLevel != null)
                 message.Settings["LogLevel"] = JToken.FromObject(SelectedLogLevel);
         }
-        else if (message.Type == AppSettingsMessageType.Loading)
+        else if (message.Action == SettingsAction.Loading)
         {
             if (message.Settings.TryGetValue<string>(nameof(SelectedDevice), out var selectedDevice))
                 SelectedDevice = selectedDevice;

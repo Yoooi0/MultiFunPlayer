@@ -109,7 +109,7 @@ public class Bootstrapper : Bootstrapper<RootViewModel>
 
         var settings = SettingsHelper.ReadOrEmpty(SettingsType.Application);
         var eventAggregator = Container.Get<IEventAggregator>();
-        eventAggregator.Publish(new AppSettingsMessage(settings, AppSettingsMessageType.Loading));
+        eventAggregator.Publish(new AppSettingsMessage(settings, SettingsAction.Loading));
 
         var source = PresentationSource.FromVisual(GetActiveWindow()) as HwndSource;
         var rawInput = Container.GetAll<IInputProcessor>().OfType<RawInputProcessor>().FirstOrDefault();
@@ -122,7 +122,7 @@ public class Bootstrapper : Bootstrapper<RootViewModel>
 
         var settings = SettingsHelper.ReadOrEmpty(SettingsType.Application);
         var eventAggregator = Container.Get<IEventAggregator>();
-        eventAggregator.Publish(new AppSettingsMessage(settings, AppSettingsMessageType.Saving));
+        eventAggregator.Publish(new AppSettingsMessage(settings, SettingsAction.Saving));
         SettingsHelper.Write(SettingsType.Application, settings);
     }
 

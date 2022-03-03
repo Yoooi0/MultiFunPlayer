@@ -126,15 +126,15 @@ public abstract class AbstractOutputTarget : Screen, IOutputTarget
         }
     }
 
-    public virtual void HandleSettings(JObject settings, AppSettingsMessageType type)
+    public virtual void HandleSettings(JObject settings, SettingsAction action)
     {
-        if (type == AppSettingsMessageType.Saving)
+        if (action == SettingsAction.Saving)
         {
             settings[nameof(UpdateInterval)] = new JValue(UpdateInterval);
             settings[nameof(AxisSettings)] = JObject.FromObject(AxisSettings);
             settings[nameof(AutoConnectEnabled)] = new JValue(AutoConnectEnabled);
         }
-        else if (type == AppSettingsMessageType.Loading)
+        else if (action == SettingsAction.Loading)
         {
             if (settings.TryGetValue<int>(nameof(UpdateInterval), out var updateInterval))
                 UpdateInterval = updateInterval;
@@ -370,15 +370,15 @@ public abstract class ThreadAbstractOutputTarget : AbstractOutputTarget
         Status = ConnectionStatus.Disconnected;
     }
 
-    public override void HandleSettings(JObject settings, AppSettingsMessageType type)
+    public override void HandleSettings(JObject settings, SettingsAction action)
     {
-        base.HandleSettings(settings, type);
+        base.HandleSettings(settings, action);
 
-        if (type == AppSettingsMessageType.Saving)
+        if (action == SettingsAction.Saving)
         {
             settings[nameof(UsePreciseSleep)] = JValue.FromObject(UsePreciseSleep);
         }
-        else if (type == AppSettingsMessageType.Loading)
+        else if (action == SettingsAction.Loading)
         {
             if (settings.TryGetValue<bool>(nameof(UsePreciseSleep), out var usePreciseSleep))
                 UsePreciseSleep = usePreciseSleep;

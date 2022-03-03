@@ -237,7 +237,7 @@ public class ShortcutViewModel : Screen, IHandle<AppSettingsMessage>, IDisposabl
 
     public void Handle(AppSettingsMessage message)
     {
-        if (message.Type == AppSettingsMessageType.Saving)
+        if (message.Action == SettingsAction.Saving)
         {
             message.Settings["Shortcuts"] = JObject.FromObject(this);
 
@@ -246,7 +246,7 @@ public class ShortcutViewModel : Screen, IHandle<AppSettingsMessage>, IDisposabl
 
             settings[nameof(Bindings)] = JArray.FromObject(Bindings.Select(x => BindingSettingsModel.FromBinding(x)));
         }
-        else if (message.Type == AppSettingsMessageType.Loading)
+        else if (message.Action == SettingsAction.Loading)
         {
             if (!message.Settings.TryGetObject(out var settings, "Shortcuts"))
                 return;

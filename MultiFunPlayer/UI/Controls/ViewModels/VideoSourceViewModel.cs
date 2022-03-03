@@ -46,7 +46,7 @@ public class VideoSourceViewModel : Conductor<IVideoSource>.Collection.OneActive
 
     public void Handle(AppSettingsMessage message)
     {
-        if (message.Type == AppSettingsMessageType.Saving)
+        if (message.Action == SettingsAction.Saving)
         {
             if (!message.Settings.EnsureContainsObjects("VideoSource")
              || !message.Settings.TryGetObject(out var settings, "VideoSource"))
@@ -59,7 +59,7 @@ public class VideoSourceViewModel : Conductor<IVideoSource>.Collection.OneActive
             if (ActiveItem != null)
                 settings[nameof(ActiveItem)] = ActiveItem.Name;
         }
-        else if (message.Type == AppSettingsMessageType.Loading)
+        else if (message.Action == SettingsAction.Loading)
         {
             if (!message.Settings.TryGetObject(out var settings, "VideoSource"))
                 return;

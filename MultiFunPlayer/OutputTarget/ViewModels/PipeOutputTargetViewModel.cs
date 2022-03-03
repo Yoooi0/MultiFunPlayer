@@ -85,16 +85,16 @@ public class PipeOutputTargetViewModel : ThreadAbstractOutputTarget
             client.Close();
     }
 
-    public override void HandleSettings(JObject settings, AppSettingsMessageType type)
+    public override void HandleSettings(JObject settings, SettingsAction action)
     {
-        base.HandleSettings(settings, type);
+        base.HandleSettings(settings, action);
 
-        if (type == AppSettingsMessageType.Saving)
+        if (action == SettingsAction.Saving)
         {
             if (PipeName != null)
                 settings[nameof(PipeName)] = new JValue(PipeName);
         }
-        else if (type == AppSettingsMessageType.Loading)
+        else if (action == SettingsAction.Loading)
         {
             if (settings.TryGetValue<string>(nameof(PipeName), out var pipeName))
                 PipeName = pipeName;

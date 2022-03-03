@@ -109,7 +109,7 @@ public class OutputTargetViewModel : Conductor<IOutputTarget>.Collection.OneActi
 
     public void Handle(AppSettingsMessage message)
     {
-        if (message.Type == AppSettingsMessageType.Saving)
+        if (message.Action == SettingsAction.Saving)
         {
             if (!message.Settings.EnsureContainsObjects("OutputTarget")
              || !message.Settings.TryGetObject(out var settings, "OutputTarget"))
@@ -122,7 +122,7 @@ public class OutputTargetViewModel : Conductor<IOutputTarget>.Collection.OneActi
             if (ActiveItem != null)
                 settings[nameof(ActiveItem)] = ActiveItem.Name;
         }
-        else if (message.Type == AppSettingsMessageType.Loading)
+        else if (message.Action == SettingsAction.Loading)
         {
             if (!message.Settings.TryGetObject(out var settings, "OutputTarget"))
                 return;

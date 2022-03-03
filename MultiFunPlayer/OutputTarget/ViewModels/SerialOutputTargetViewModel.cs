@@ -178,15 +178,15 @@ public class SerialOutputTargetViewModel : ThreadAbstractOutputTarget
         catch (IOException) { }
     }
 
-    public override void HandleSettings(JObject settings, AppSettingsMessageType type)
+    public override void HandleSettings(JObject settings, SettingsAction action)
     {
-        base.HandleSettings(settings, type);
+        base.HandleSettings(settings, action);
 
-        if (type == AppSettingsMessageType.Saving)
+        if (action == SettingsAction.Saving)
         {
             settings[nameof(SelectedSerialPort)] = new JValue(SelectedSerialPort?.DeviceID);
         }
-        else if (type == AppSettingsMessageType.Loading)
+        else if (action == SettingsAction.Loading)
         {
             if (settings.TryGetValue<string>(nameof(SelectedSerialPort), out var selectedSerialPort))
                 SelectSerialPortByDeviceId(selectedSerialPort);

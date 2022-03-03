@@ -141,18 +141,18 @@ public class NetworkOutputTargetViewModel : ThreadAbstractOutputTarget
         }
     }
 
-    public override void HandleSettings(JObject settings, AppSettingsMessageType type)
+    public override void HandleSettings(JObject settings, SettingsAction action)
     {
-        base.HandleSettings(settings, type);
+        base.HandleSettings(settings, action);
 
-        if (type == AppSettingsMessageType.Saving)
+        if (action == SettingsAction.Saving)
         {
             if (Endpoint != null)
                 settings[nameof(Endpoint)] = new JValue(Endpoint.ToString());
 
             settings[nameof(Protocol)] = new JValue(Protocol.ToString());
         }
-        else if (type == AppSettingsMessageType.Loading)
+        else if (action == SettingsAction.Loading)
         {
             if (settings.TryGetValue<IPEndPoint>(nameof(Endpoint), out var endpoint))
                 Endpoint = endpoint;

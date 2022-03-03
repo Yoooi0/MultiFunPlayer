@@ -94,10 +94,10 @@ public abstract class AbstractVideoSource : Screen, IVideoSource, IHandle<AppSet
             await _statusEvent.WaitAsync(token);
     }
 
-    protected abstract void HandleSettings(JObject settings, AppSettingsMessageType type);
+    protected abstract void HandleSettings(JObject settings, SettingsAction action);
     public void Handle(AppSettingsMessage message)
     {
-        if (message.Type == AppSettingsMessageType.Saving)
+        if (message.Action == SettingsAction.Saving)
         {
             if (!message.Settings.EnsureContainsObjects("VideoSource", Name)
              || !message.Settings.TryGetObject(out var settings, "VideoSource", Name))
@@ -105,9 +105,9 @@ public abstract class AbstractVideoSource : Screen, IVideoSource, IHandle<AppSet
 
             settings[nameof(AutoConnectEnabled)] = new JValue(AutoConnectEnabled);
 
-            HandleSettings(settings, message.Type);
+            HandleSettings(settings, message.Action);
         }
-        else if (message.Type == AppSettingsMessageType.Loading)
+        else if (message.Action == SettingsAction.Loading)
         {
             if (!message.Settings.TryGetObject(out var settings, "VideoSource", Name))
                 return;
@@ -115,7 +115,7 @@ public abstract class AbstractVideoSource : Screen, IVideoSource, IHandle<AppSet
             if (settings.TryGetValue<bool>(nameof(AutoConnectEnabled), out var autoConnectEnabled))
                 AutoConnectEnabled = autoConnectEnabled;
 
-            HandleSettings(settings, message.Type);
+            HandleSettings(settings, message.Action);
         }
     }
 

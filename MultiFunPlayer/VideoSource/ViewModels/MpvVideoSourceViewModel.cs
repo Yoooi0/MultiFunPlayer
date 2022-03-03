@@ -196,9 +196,9 @@ public class MpvVideoSourceViewModel : AbstractVideoSource, IHandle<VideoPlayPau
         catch (OperationCanceledException) { }
     }
 
-    protected override void HandleSettings(JObject settings, AppSettingsMessageType type)
+    protected override void HandleSettings(JObject settings, SettingsAction action)
     {
-        if (type == AppSettingsMessageType.Saving)
+        if (action == SettingsAction.Saving)
         {
             if (Executable != null)
                 settings[nameof(Executable)] = JToken.FromObject(Executable);
@@ -207,7 +207,7 @@ public class MpvVideoSourceViewModel : AbstractVideoSource, IHandle<VideoPlayPau
 
             settings[nameof(AutoStartEnabled)] = new JValue(AutoStartEnabled);
         }
-        else if (type == AppSettingsMessageType.Loading)
+        else if (action == SettingsAction.Loading)
         {
             if (settings.TryGetValue<FileInfo>(nameof(Executable), out var executable))
                 Executable = executable;
