@@ -2,12 +2,10 @@
 using MultiFunPlayer.Common.Messages;
 using MultiFunPlayer.Input;
 using MultiFunPlayer.UI;
-using MultiFunPlayer.UI.Controls.ViewModels;
 using Newtonsoft.Json.Linq;
 using NLog;
 using Stylet;
 using System.ComponentModel;
-using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Runtime.ExceptionServices;

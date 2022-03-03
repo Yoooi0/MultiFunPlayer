@@ -3,11 +3,6 @@ using MultiFunPlayer.Input.RawInput;
 using MultiFunPlayer.Input.XInput;
 using MultiFunPlayer.UI.Controls.ViewModels;
 using Newtonsoft.Json.Linq;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace MultiFunPlayer.Settings.Migrations;
 

@@ -1,7 +1,6 @@
 ﻿using MultiFunPlayer.Common;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using System.Text;
 
 namespace MultiFunPlayer.Settings.Converters;
 

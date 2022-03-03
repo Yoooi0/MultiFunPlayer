@@ -2,7 +2,6 @@ using MultiFunPlayer.Common;
 using MultiFunPlayer.Common.Messages;
 using MultiFunPlayer.Input;
 using MultiFunPlayer.OutputTarget;
-using MultiFunPlayer.Settings;
 using Newtonsoft.Json.Linq;
 using Stylet;
 
