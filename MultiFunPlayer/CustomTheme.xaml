@@ -385,10 +385,14 @@
 
                             <ContentPresenter ContentTemplate="{TemplateBinding AdditionalPanelContent}"
                                               DockPanel.Dock="Right"/>
-                            
-                            <TabPanel IsItemsHost="True"
-                                      DockPanel.Dock="Left">
-                            </TabPanel>
+
+                            <ScrollViewer x:Name="PART_ScrollViewer"
+                                          HorizontalScrollBarVisibility="Hidden" 
+                                          VerticalScrollBarVisibility="Hidden">
+                                <TabPanel x:Name="PART_TabPanel"
+                                          IsItemsHost="True"
+                                          DockPanel.Dock="Left"/>
+                            </ScrollViewer>
                         </DockPanel>
 
                         <Grid x:Name="PART_ItemsHolder"
