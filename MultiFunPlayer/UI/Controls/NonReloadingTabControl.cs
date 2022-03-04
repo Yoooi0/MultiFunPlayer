@@ -34,7 +34,7 @@ public class NonReloadingTabControl : TabControl
             foreach (var item in Items)
                 _ = CreateChildContentPresenter(item);
 
-            var selectedCp = FindChildContentPresenter(SelectedItem);
+            var selectedCp = CreateChildContentPresenter(SelectedItem);
             if (selectedCp != null)
                 selectedCp.Loaded += (_, _) => UpdateSelectedItem();
         };
@@ -77,6 +77,21 @@ public class NonReloadingTabControl : TabControl
                 break;
 
             case NotifyCollectionChangedAction.Add:
+                if (!IsLoaded)
+                    break;
+
+                if (e.NewItems != null)
+                {
+                    foreach (var item in e.NewItems)
+                    {
+                        var cp = CreateChildContentPresenter(item);
+                        cp.UpdateLayout();
+                    }
+                }
+
+                UpdateSelectedItem();
+                break;
+
             case NotifyCollectionChangedAction.Remove:
                 if (e.OldItems != null)
                 {
@@ -129,9 +144,9 @@ public class NonReloadingTabControl : TabControl
         cp = new ContentPresenter
         {
             Content = (tabItem != null) ? tabItem.Content : item,
-            ContentTemplate = SelectedContentTemplate,
-            ContentTemplateSelector = SelectedContentTemplateSelector,
-            ContentStringFormat = SelectedContentStringFormat,
+            ContentTemplate = ContentTemplate,
+            ContentTemplateSelector = ContentTemplateSelector,
+            ContentStringFormat = ContentStringFormat,
             Visibility = Visibility.Hidden,
             Tag = tabItem ?? ItemContainerGenerator.ContainerFromItem(item)
         };

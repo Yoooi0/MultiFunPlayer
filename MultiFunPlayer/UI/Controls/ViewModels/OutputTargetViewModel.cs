@@ -60,7 +60,6 @@ public class OutputTargetViewModel : Conductor<IOutputTarget>.Collection.OneActi
     {
         Items.Add(target);
         _semaphores.Add(target, new SemaphoreSlim(1, 1));
-        ActiveItem = target;
 
         Logger.Debug("Added new output \"{0}\"", target.Identifier);
         RegisterActions(_shortcutManager, target);
