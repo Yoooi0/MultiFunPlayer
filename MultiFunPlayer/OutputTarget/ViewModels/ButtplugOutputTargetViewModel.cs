@@ -3,7 +3,6 @@ using MultiFunPlayer.Common;
 using MultiFunPlayer.Common.Messages;
 using MultiFunPlayer.Input;
 using MultiFunPlayer.UI;
-using MultiFunPlayer.UI.Controls.ViewModels;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NLog;
@@ -69,8 +68,8 @@ public class ButtplugOutputTargetViewModel : AsyncAbstractOutputTarget
 
     public ObservableConcurrentCollection<ButtplugClientDeviceSettings> DeviceSettings { get; protected set; }
 
-    public ButtplugOutputTargetViewModel(IShortcutManager shortcutManager, IEventAggregator eventAggregator, IDeviceAxisValueProvider valueProvider)
-        : base(shortcutManager, eventAggregator, valueProvider)
+    public ButtplugOutputTargetViewModel(int instanceIndex, IEventAggregator eventAggregator, IDeviceAxisValueProvider valueProvider)
+        : base(instanceIndex, eventAggregator, valueProvider)
     {
         AvailableDevices = new ObservableConcurrentCollection<ButtplugClientDevice>();
         DeviceSettings = new ObservableConcurrentCollection<ButtplugClientDeviceSettings>();
@@ -108,7 +107,12 @@ public class ButtplugOutputTargetViewModel : AsyncAbstractOutputTarget
             Logger.Log(level, message);
         };
 
-        ButtplugFFILog.SetLogOptions(logLevel, false);
+        try
+        {
+            //TODO: catch until https://github.com/buttplugio/buttplug-rs-ffi/issues/23 is resolved
+            ButtplugFFILog.SetLogOptions(logLevel, false);
+        }
+        catch { }
     }
 
     public bool IsScanBusy { get; set; }
@@ -161,7 +165,7 @@ public class ButtplugOutputTargetViewModel : AsyncAbstractOutputTarget
 
         try
         {
-            Logger.Info("Connecting to {0} at \"{1}\"", Name, $"ws://{Endpoint}");
+            Logger.Info("Connecting to {0} at \"{1}\"", Identifier, $"ws://{Endpoint}");
             await client.ConnectAsync(new ButtplugWebsocketConnectorOptions(new Uri($"ws://{Endpoint}"))).WithCancellation(token);
             Status = ConnectionStatus.Connected;
         }
@@ -237,8 +241,8 @@ public class ButtplugOutputTargetViewModel : AsyncAbstractOutputTarget
         catch (OperationCanceledException) { }
         catch (Exception e)
         {
-            Logger.Error(e, $"{Name} failed with exception");
-            _ = DialogHelper.ShowErrorAsync(e, $"{Name} failed with exception", "RootDialog");
+            Logger.Error(e, $"{Identifier} failed with exception");
+            _ = DialogHelper.ShowErrorAsync(e, $"{Identifier} failed with exception", "RootDialog");
         }
 
         if (client.Connected)
@@ -348,11 +352,11 @@ public class ButtplugOutputTargetViewModel : AsyncAbstractOutputTarget
         CleanupSemaphores();
     }
 
-    protected override void HandleSettings(JObject settings, AppSettingsMessageType type)
+    public override void HandleSettings(JObject settings, SettingsAction action)
     {
-        base.HandleSettings(settings, type);
+        base.HandleSettings(settings, action);
 
-        if (type == AppSettingsMessageType.Saving)
+        if (action == SettingsAction.Saving)
         {
             if (Endpoint != null)
                 settings[nameof(Endpoint)] = new JValue(Endpoint.ToString());
@@ -360,7 +364,7 @@ public class ButtplugOutputTargetViewModel : AsyncAbstractOutputTarget
             if (DeviceSettings != null)
                 settings[nameof(DeviceSettings)] = JArray.FromObject(DeviceSettings);
         }
-        else if (type == AppSettingsMessageType.Loading)
+        else if (action == SettingsAction.Loading)
         {
             if (settings.TryGetValue<IPEndPoint>(nameof(Endpoint), out var endpoint))
                 Endpoint = endpoint;
@@ -373,17 +377,23 @@ public class ButtplugOutputTargetViewModel : AsyncAbstractOutputTarget
         }
     }
 
-    protected override void RegisterShortcuts(IShortcutManager s)
+    public override void RegisterActions(IShortcutManager s)
     {
-        base.RegisterShortcuts(s);
+        base.RegisterActions(s);
 
         #region Endpoint
-        s.RegisterAction($"{Name}::Endpoint::Set", b => b.WithSetting<string>(s => s.WithLabel("Endpoint").WithDescription("ip:port")).WithCallback((_, endpointString) =>
+        s.RegisterAction($"{Identifier}::Endpoint::Set", b => b.WithSetting<string>(s => s.WithLabel("Endpoint").WithDescription("ip:port")).WithCallback((_, endpointString) =>
         {
             if (IPEndPoint.TryParse(endpointString, out var endpoint))
                 Endpoint = endpoint;
         }));
         #endregion
+    }
+
+    public override void UnregisterActions(IShortcutManager s)
+    {
+        base.UnregisterActions(s);
+        s.UnregisterAction($"{Identifier}::Endpoint::Set");
     }
 
     public override async ValueTask<bool> CanConnectAsync(CancellationToken token)

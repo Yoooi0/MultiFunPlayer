@@ -2,7 +2,6 @@ using MultiFunPlayer.Common;
 using MultiFunPlayer.Common.Messages;
 using MultiFunPlayer.Input;
 using MultiFunPlayer.UI;
-using MultiFunPlayer.UI.Controls.ViewModels;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NLog;
@@ -205,14 +204,14 @@ public class DeoVRVideoSourceViewModel : AbstractVideoSource, IHandle<VideoPlayP
         catch (OperationCanceledException) { }
     }
 
-    protected override void HandleSettings(JObject settings, AppSettingsMessageType type)
+    protected override void HandleSettings(JObject settings, SettingsAction action)
     {
-        if (type == AppSettingsMessageType.Saving)
+        if (action == SettingsAction.Saving)
         {
             if (Endpoint != null)
                 settings[nameof(Endpoint)] = new JValue(Endpoint.ToString());
         }
-        else if (type == AppSettingsMessageType.Loading)
+        else if (action == SettingsAction.Loading)
         {
             if (settings.TryGetValue<IPEndPoint>(nameof(Endpoint), out var endpoint))
                 Endpoint = endpoint;

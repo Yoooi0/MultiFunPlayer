@@ -2,7 +2,7 @@
 
 namespace MultiFunPlayer.Common.Messages;
 
-public enum AppSettingsMessageType
+public enum SettingsAction
 {
     Saving,
     Loading
@@ -10,12 +10,12 @@ public enum AppSettingsMessageType
 
 public class AppSettingsMessage
 {
-    public AppSettingsMessageType Type { get; }
+    public SettingsAction Action { get; }
     public JObject Settings { get; }
 
-    public AppSettingsMessage(JObject settings, AppSettingsMessageType type)
+    public AppSettingsMessage(JObject settings, SettingsAction action)
     {
         Settings = settings;
-        Type = type;
+        Action = action;
     }
 }

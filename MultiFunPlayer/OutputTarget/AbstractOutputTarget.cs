@@ -11,7 +11,7 @@ using System.Windows.Media;
 
 namespace MultiFunPlayer.OutputTarget;
 
-public abstract class AbstractOutputTarget : Screen, IHandle<AppSettingsMessage>, IOutputTarget
+public abstract class AbstractOutputTarget : Screen, IOutputTarget
 {
     private readonly IDeviceAxisValueProvider _valueProvider;
     private readonly AsyncManualResetEvent _statusEvent;
@@ -20,6 +20,8 @@ public abstract class AbstractOutputTarget : Screen, IHandle<AppSettingsMessage>
     private int _statsJitter = int.MinValue;
 
     public string Name => GetType().GetCustomAttribute<DisplayNameAttribute>(inherit: false).DisplayName;
+    public string Identifier => $"{Name}/{InstanceIndex}";
+    public int InstanceIndex { get; }
 
     [SuppressPropertyChangedWarnings] public abstract ConnectionStatus Status { get; protected set; }
     public bool ContentVisible { get; set; } = false;
@@ -46,14 +48,13 @@ public abstract class AbstractOutputTarget : Screen, IHandle<AppSettingsMessage>
     protected Dictionary<DeviceAxis, float> Values { get; }
     protected IEventAggregator EventAggregator { get; }
 
-    protected AbstractOutputTarget(IShortcutManager shortcutManager, IEventAggregator eventAggregator, IDeviceAxisValueProvider valueProvider)
+    protected AbstractOutputTarget(int instanceIndex, IEventAggregator eventAggregator, IDeviceAxisValueProvider valueProvider)
     {
-        _statusEvent = new AsyncManualResetEvent();
+        InstanceIndex = instanceIndex;
+        EventAggregator = eventAggregator;
         _valueProvider = valueProvider;
 
-        EventAggregator = eventAggregator;
-        EventAggregator.Subscribe(this);
-
+        _statusEvent = new AsyncManualResetEvent();
         Values = DeviceAxis.All.ToDictionary(a => a, a => a.DefaultValue);
         AxisSettings = new ObservableConcurrentDictionary<DeviceAxis, DeviceAxisSettings>(DeviceAxis.All.ToDictionary(a => a, _ => new DeviceAxisSettings()));
         UpdateInterval = 10;
@@ -63,8 +64,6 @@ public abstract class AbstractOutputTarget : Screen, IHandle<AppSettingsMessage>
             if (string.Equals(e.PropertyName, "Status", StringComparison.OrdinalIgnoreCase))
                 _statusEvent.Reset();
         };
-
-        RegisterShortcuts(shortcutManager);
     }
 
     public abstract Task ConnectAsync();
@@ -127,26 +126,16 @@ public abstract class AbstractOutputTarget : Screen, IHandle<AppSettingsMessage>
         }
     }
 
-    protected abstract void HandleSettings(JObject settings, AppSettingsMessageType type);
-    public void Handle(AppSettingsMessage message)
+    public virtual void HandleSettings(JObject settings, SettingsAction action)
     {
-        if (message.Type == AppSettingsMessageType.Saving)
+        if (action == SettingsAction.Saving)
         {
-            if (!message.Settings.EnsureContainsObjects("OutputTarget", Name)
-             || !message.Settings.TryGetObject(out var settings, "OutputTarget", Name))
-                return;
-
             settings[nameof(UpdateInterval)] = new JValue(UpdateInterval);
             settings[nameof(AxisSettings)] = JObject.FromObject(AxisSettings);
             settings[nameof(AutoConnectEnabled)] = new JValue(AutoConnectEnabled);
-
-            HandleSettings(settings, message.Type);
         }
-        else if (message.Type == AppSettingsMessageType.Loading)
+        else if (action == SettingsAction.Loading)
         {
-            if (!message.Settings.TryGetObject(out var settings, "OutputTarget", Name))
-                return;
-
             if (settings.TryGetValue<int>(nameof(UpdateInterval), out var updateInterval))
                 UpdateInterval = updateInterval;
             if (settings.TryGetValue<Dictionary<DeviceAxis, DeviceAxisSettings>>(nameof(AxisSettings), out var axisSettingsMap))
@@ -154,19 +143,15 @@ public abstract class AbstractOutputTarget : Screen, IHandle<AppSettingsMessage>
                     AxisSettings[axis] = axisSettings;
             if (settings.TryGetValue<bool>(nameof(AutoConnectEnabled), out var autoConnectEnabled))
                 AutoConnectEnabled = autoConnectEnabled;
-
-            HandleSettings(settings, message.Type);
         }
     }
 
-    protected virtual void RegisterShortcuts(IShortcutManager s)
+    public virtual void RegisterActions(IShortcutManager s)
     {
         void UpdateSettings(DeviceAxis axis, Action<DeviceAxisSettings> callback)
         {
-            if (axis == null)
-                return;
-
-            callback(AxisSettings[axis]);
+            if (axis != null)
+                callback(AxisSettings[axis]);
         }
 
         static void SetMinimum(DeviceAxisSettings settings, float value, float minimumLimit) => settings.Minimum = MathUtils.Clamp(value, minimumLimit, settings.Maximum - 1);
@@ -200,7 +185,7 @@ public abstract class AbstractOutputTarget : Screen, IHandle<AppSettingsMessage>
         }
 
         #region UpdateRate
-        s.RegisterAction($"{Name}::UpdateRate::Set", b => b.WithSetting<int>(s => s.WithLabel("Update rate").WithDescription("Will be set to closest\npossible value.").WithStringFormat("{}{0} Hz"))
+        s.RegisterAction($"{Identifier}::UpdateRate::Set", b => b.WithSetting<int>(s => s.WithLabel("Update rate").WithDescription("Will be set to closest\npossible value.").WithStringFormat("{}{0} Hz"))
                                                            .WithCallback((_, updateRate) =>
                                                            {
                                                                var interval = 1000f / updateRate;
@@ -209,23 +194,23 @@ public abstract class AbstractOutputTarget : Screen, IHandle<AppSettingsMessage>
         #endregion
 
         #region AutoConnectEnabled
-        s.RegisterAction($"{Name}::AutoConnectEnabled::Set", b => b.WithSetting<bool>(s => s.WithLabel("Enable auto connect")).WithCallback((_, enabled) => AutoConnectEnabled = enabled));
-        s.RegisterAction($"{Name}::AutoConnectEnabled::Toggle", b => b.WithCallback(_ => AutoConnectEnabled = !AutoConnectEnabled));
+        s.RegisterAction($"{Identifier}::AutoConnectEnabled::Set", b => b.WithSetting<bool>(s => s.WithLabel("Enable auto connect")).WithCallback((_, enabled) => AutoConnectEnabled = enabled));
+        s.RegisterAction($"{Identifier}::AutoConnectEnabled::Toggle", b => b.WithCallback(_ => AutoConnectEnabled = !AutoConnectEnabled));
         #endregion
 
         #region Axis::Range::Minimum
-        s.RegisterAction($"{Name}::Axis::Range::Minimum::Offset", 
+        s.RegisterAction($"{Identifier}::Axis::Range::Minimum::Offset", 
             b => b.WithSetting<DeviceAxis>(s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All))
                   .WithSetting<int>(s => s.WithLabel("Value offset").WithStringFormat("{}{0}%"))
                   .WithSetting<float>(s => s.WithDefaultValue(0).WithLabel("Value limit").WithStringFormat("{}{0}%"))
                   .WithCallback((_, axis, offset, limit) => UpdateSettings(axis, s => SetMinimum(s, s.Minimum + offset, limit))));
 
-        s.RegisterAction($"{Name}::Axis::Range::Minimum::Set",
+        s.RegisterAction($"{Identifier}::Axis::Range::Minimum::Set",
             b => b.WithSetting<DeviceAxis>(s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All))
                   .WithSetting<int>(s => s.WithLabel("Value").WithStringFormat("{}{0}%"))
                   .WithCallback((_, axis, value) => UpdateSettings(axis, s => SetMinimum(s, value, 0))));
 
-        s.RegisterAction($"{Name}::Axis::Range::Minimum::Drive",
+        s.RegisterAction($"{Identifier}::Axis::Range::Minimum::Drive",
             b => b.WithSetting<DeviceAxis>(s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All))
                   .WithSetting<float>(s => s.WithDefaultValue(0).WithLabel("Value limit").WithStringFormat("{}{0}%"))
                   .WithCallback((gesture, axis, limit) =>
@@ -236,18 +221,18 @@ public abstract class AbstractOutputTarget : Screen, IHandle<AppSettingsMessage>
         #endregion
 
         #region Axis::Range::Maximum
-        s.RegisterAction($"{Name}::Axis::Range::Maximum::Offset",
+        s.RegisterAction($"{Identifier}::Axis::Range::Maximum::Offset",
             b => b.WithSetting<DeviceAxis>(s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All))
                   .WithSetting<int>(s => s.WithLabel("Value offset").WithStringFormat("{}{0}%"))
                   .WithSetting<float>(s => s.WithDefaultValue(100).WithLabel("Value limit").WithStringFormat("{}{0}%"))
                   .WithCallback((_, axis, offset, limit) => UpdateSettings(axis, s => SetMaximum(s, s.Maximum + offset, limit))));
 
-        s.RegisterAction($"{Name}::Axis::Range::Maximum::Set",
+        s.RegisterAction($"{Identifier}::Axis::Range::Maximum::Set",
             b => b.WithSetting<DeviceAxis>(s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All))
                   .WithSetting<int>(s => s.WithLabel("Value").WithStringFormat("{}{0}%"))
                   .WithCallback((_, axis, value) => UpdateSettings(axis, s => SetMaximum(s, value, 100))));
 
-        s.RegisterAction($"{Name}::Axis::Range::Maximum::Drive",
+        s.RegisterAction($"{Identifier}::Axis::Range::Maximum::Drive",
             b => b.WithSetting<DeviceAxis>(s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All))
                   .WithSetting<float>(s => s.WithDefaultValue(100).WithLabel("Value limit").WithStringFormat("{}{0}%"))
                   .WithCallback((gesture, axis, limit) =>
@@ -258,19 +243,19 @@ public abstract class AbstractOutputTarget : Screen, IHandle<AppSettingsMessage>
         #endregion
 
         #region Axis::Range::Middle
-        s.RegisterAction($"{Name}::Axis::Range::Middle::Offset",
+        s.RegisterAction($"{Identifier}::Axis::Range::Middle::Offset",
             b => b.WithSetting<DeviceAxis>(s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All))
                   .WithSetting<int>(s => s.WithLabel("Value offset").WithStringFormat("{}{0}%"))
                   .WithSetting<float>(s => s.WithDefaultValue(0).WithLabel("Minimum limit").WithStringFormat("{}{0}%"))
                   .WithSetting<float>(s => s.WithDefaultValue(100).WithLabel("Maximium limit").WithStringFormat("{}{0}%"))
                   .WithCallback((_, axis, offset, minimumLimit, maximumLimit) => UpdateSettings(axis, s => OffsetMiddle(s, offset, minimumLimit, maximumLimit))));
 
-        s.RegisterAction($"{Name}::Axis::Range::Middle::Set",
+        s.RegisterAction($"{Identifier}::Axis::Range::Middle::Set",
             b => b.WithSetting<DeviceAxis>(s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All))
                   .WithSetting<int>(s => s.WithLabel("Value").WithStringFormat("{}{0}%"))
                   .WithCallback((_, axis, value) => UpdateSettings(axis, s => OffsetMiddle(s, value - (s.Maximum - s.Minimum) / 2, 0, 100))));
 
-        s.RegisterAction($"{Name}::Axis::Range::Middle::Drive",
+        s.RegisterAction($"{Identifier}::Axis::Range::Middle::Drive",
             b => b.WithSetting<DeviceAxis>(s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All))
                   .WithSetting<float>(s => s.WithDefaultValue(0).WithLabel("Minimum limit").WithStringFormat("{}{0}%"))
                   .WithSetting<float>(s => s.WithDefaultValue(100).WithLabel("Maximium limit").WithStringFormat("{}{0}%"))
@@ -282,19 +267,19 @@ public abstract class AbstractOutputTarget : Screen, IHandle<AppSettingsMessage>
         #endregion
 
         #region Axis::Range::Size
-        s.RegisterAction($"{Name}::Axis::Range::Size::Offset",
+        s.RegisterAction($"{Identifier}::Axis::Range::Size::Offset",
             b => b.WithSetting<DeviceAxis>(s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All))
                   .WithSetting<int>(s => s.WithLabel("Value offset").WithStringFormat("{}{0}%"))
                   .WithSetting<float>(s => s.WithDefaultValue(0).WithLabel("Minimum limit").WithStringFormat("{}{0}%"))
                   .WithSetting<float>(s => s.WithDefaultValue(100).WithLabel("Maximium limit").WithStringFormat("{}{0}%"))
                   .WithCallback((_, axis, offset, minimumLimit, maximumLimit) => UpdateSettings(axis, s => OffsetSize(s, offset, minimumLimit, maximumLimit))));
 
-        s.RegisterAction($"{Name}::Axis::Range::Size::Set",
+        s.RegisterAction($"{Identifier}::Axis::Range::Size::Set",
             b => b.WithSetting<DeviceAxis>(s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All))
                   .WithSetting<int>(s => s.WithLabel("Value").WithStringFormat("{}{0}%"))
                   .WithCallback((_, axis, value) => UpdateSettings(axis, s => OffsetSize(s, value - (s.Maximum - s.Minimum), 0, 100))));
 
-        s.RegisterAction($"{Name}::Axis::Range::Size::Drive",
+        s.RegisterAction($"{Identifier}::Axis::Range::Size::Drive",
             b => b.WithSetting<DeviceAxis>(s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All))
                   .WithSetting<float>(s => s.WithDefaultValue(0).WithLabel("Minimum limit").WithStringFormat("{}{0}%"))
                   .WithSetting<float>(s => s.WithDefaultValue(100).WithLabel("Maximium limit").WithStringFormat("{}{0}%"))
@@ -304,6 +289,25 @@ public abstract class AbstractOutputTarget : Screen, IHandle<AppSettingsMessage>
                             UpdateSettings(axis, s => OffsetSize(s, axisGesture.Delta * 100, minimumLimit, maximumLimit));
                     }), ShortcutActionDescriptorFlags.AcceptsAxisGesture);
         #endregion
+    }
+
+    public virtual void UnregisterActions(IShortcutManager s)
+    {
+        s.UnregisterAction($"{Identifier}::UpdateRate::Set");
+        s.UnregisterAction($"{Identifier}::AutoConnectEnabled::Set");
+        s.UnregisterAction($"{Identifier}::AutoConnectEnabled::Toggle");
+        s.UnregisterAction($"{Identifier}::Axis::Range::Minimum::Offset");
+        s.UnregisterAction($"{Identifier}::Axis::Range::Minimum::Set");
+        s.UnregisterAction($"{Identifier}::Axis::Range::Minimum::Drive");
+        s.UnregisterAction($"{Identifier}::Axis::Range::Maximum::Offset");
+        s.UnregisterAction($"{Identifier}::Axis::Range::Maximum::Set");
+        s.UnregisterAction($"{Identifier}::Axis::Range::Maximum::Drive");
+        s.UnregisterAction($"{Identifier}::Axis::Range::Middle::Offset");
+        s.UnregisterAction($"{Identifier}::Axis::Range::Middle::Set");
+        s.UnregisterAction($"{Identifier}::Axis::Range::Middle::Drive");
+        s.UnregisterAction($"{Identifier}::Axis::Range::Size::Offset");
+        s.UnregisterAction($"{Identifier}::Axis::Range::Size::Set");
+        s.UnregisterAction($"{Identifier}::Axis::Range::Size::Drive");
     }
 
     protected virtual void Dispose(bool disposing) { }
@@ -322,8 +326,8 @@ public abstract class ThreadAbstractOutputTarget : AbstractOutputTarget
 
     public bool UsePreciseSleep { get; set; }
 
-    protected ThreadAbstractOutputTarget(IShortcutManager shortcutManager, IEventAggregator eventAggregator, IDeviceAxisValueProvider valueProvider)
-        : base(shortcutManager, eventAggregator, valueProvider) { }
+    protected ThreadAbstractOutputTarget(int instanceIndex, IEventAggregator eventAggregator, IDeviceAxisValueProvider valueProvider)
+        : base(instanceIndex, eventAggregator, valueProvider) { }
 
     protected abstract void Run(CancellationToken token);
 
@@ -366,13 +370,15 @@ public abstract class ThreadAbstractOutputTarget : AbstractOutputTarget
         Status = ConnectionStatus.Disconnected;
     }
 
-    protected override void HandleSettings(JObject settings, AppSettingsMessageType type)
+    public override void HandleSettings(JObject settings, SettingsAction action)
     {
-        if (type == AppSettingsMessageType.Saving)
+        base.HandleSettings(settings, action);
+
+        if (action == SettingsAction.Saving)
         {
             settings[nameof(UsePreciseSleep)] = JValue.FromObject(UsePreciseSleep);
         }
-        else if (type == AppSettingsMessageType.Loading)
+        else if (action == SettingsAction.Loading)
         {
             if (settings.TryGetValue<bool>(nameof(UsePreciseSleep), out var usePreciseSleep))
                 UsePreciseSleep = usePreciseSleep;
@@ -421,8 +427,8 @@ public abstract class AsyncAbstractOutputTarget : AbstractOutputTarget
     private CancellationTokenSource _cancellationSource;
     private Task _task;
 
-    protected AsyncAbstractOutputTarget(IShortcutManager shortcutManager, IEventAggregator eventAggregator, IDeviceAxisValueProvider valueProvider)
-        : base(shortcutManager, eventAggregator, valueProvider) { }
+    protected AsyncAbstractOutputTarget(int instanceIndex, IEventAggregator eventAggregator, IDeviceAxisValueProvider valueProvider)
+        : base(instanceIndex, eventAggregator, valueProvider) { }
 
     protected abstract Task RunAsync(CancellationToken token);
 
@@ -463,8 +469,6 @@ public abstract class AsyncAbstractOutputTarget : AbstractOutputTarget
 
         Status = ConnectionStatus.Disconnected;
     }
-
-    protected override void HandleSettings(JObject settings, AppSettingsMessageType type) { }
 
     protected async Task Sleep(Stopwatch stopwatch, CancellationToken token)
     {

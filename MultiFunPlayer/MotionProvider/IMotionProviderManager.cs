@@ -91,11 +91,11 @@ public class MotionProviderManager : IMotionProviderManager, IHandle<AppSettings
 
     public void Handle(AppSettingsMessage message)
     {
-        if (message.Type == AppSettingsMessageType.Saving)
+        if (message.Action == SettingsAction.Saving)
         {
             message.Settings["MotionProvider"] = JObject.FromObject(_motionProviders.ToDictionary(x => x.Key, x => x.Value.Values.Select(p => new TypedValue(p)).ToList()));
         }
-        else if (message.Type == AppSettingsMessageType.Loading)
+        else if (message.Action == SettingsAction.Loading)
         {
             if (message.Settings.TryGetValue<Dictionary<DeviceAxis, List<TypedValue>>>("MotionProvider", out var motionProviderMap))
             {

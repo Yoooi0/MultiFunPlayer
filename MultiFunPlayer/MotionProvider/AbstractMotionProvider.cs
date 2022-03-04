@@ -1,5 +1,4 @@
 ﻿using Newtonsoft.Json;
-using PropertyChanged;
 using Stylet;
 using System.ComponentModel;
 using System.Reflection;

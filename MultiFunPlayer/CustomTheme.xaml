@@ -385,10 +385,14 @@
 
                             <ContentPresenter ContentTemplate="{TemplateBinding AdditionalPanelContent}"
                                               DockPanel.Dock="Right"/>
-                            
-                            <TabPanel IsItemsHost="True"
-                                      DockPanel.Dock="Left">
-                            </TabPanel>
+
+                            <ScrollViewer x:Name="PART_ScrollViewer"
+                                          HorizontalScrollBarVisibility="Hidden" 
+                                          VerticalScrollBarVisibility="Hidden">
+                                <TabPanel x:Name="PART_TabPanel"
+                                          IsItemsHost="True"
+                                          DockPanel.Dock="Left"/>
+                            </ScrollViewer>
                         </DockPanel>
 
                         <Grid x:Name="PART_ItemsHolder"
@@ -462,7 +466,7 @@
                             <Border.RenderTransform>
                                 <ScaleTransform x:Name="ScaleTransform" ScaleX="0" ScaleY="1" />
                             </Border.RenderTransform>
-                            <Rectangle x:Name="PART_BackgroundSelection" Fill="{TemplateBinding Background}" Opacity="0.12"/>
+                            <Rectangle x:Name="PART_BackgroundSelection" Fill="{TemplateBinding Background}" Opacity="0.12" IsHitTestVisible="False"/>
                         </Border>
                     </Grid>
                     <ControlTemplate.Triggers>
@@ -597,6 +601,13 @@
                                                     <CubicEase EasingMode="EaseInOut"/>
                                                 </DoubleAnimation.EasingFunction>
                                             </DoubleAnimation>
+
+                                            <ObjectAnimationUsingKeyFrames Storyboard.TargetName="ContentSite" 
+                                                                           Storyboard.TargetProperty="(UIElement.Visibility)"
+                                                                           Duration="{StaticResource ExpandDuration}">
+                                                <DiscreteObjectKeyFrame KeyTime="0" Value="{x:Static Visibility.Visible}"/>
+                                                <DiscreteObjectKeyFrame KeyTime="{StaticResource ExpandKeyTime}" Value="{x:Static Visibility.Visible}"/>
+                                            </ObjectAnimationUsingKeyFrames>
                                         </Storyboard>
                                     </VisualTransition>
 
@@ -614,6 +625,13 @@
                                                     <CubicEase EasingMode="EaseInOut"/>
                                                 </DoubleAnimation.EasingFunction>
                                             </DoubleAnimation>
+
+                                            <ObjectAnimationUsingKeyFrames Storyboard.TargetName="ContentSite" 
+                                                                           Storyboard.TargetProperty="(UIElement.Visibility)"
+                                                                           Duration="{StaticResource CollapseDuration}">
+                                                <DiscreteObjectKeyFrame KeyTime="0" Value="{x:Static Visibility.Visible}"/>
+                                                <DiscreteObjectKeyFrame KeyTime="{StaticResource CollapseKeyTime}" Value="{x:Static Visibility.Collapsed}"/>
+                                            </ObjectAnimationUsingKeyFrames>
                                         </Storyboard>
                                     </VisualTransition>
                                 </VisualStateGroup.Transitions>
@@ -628,6 +646,12 @@
                                                          Storyboard.TargetProperty="(ScaleTransform.ScaleY)" 
                                                          To="1" 
                                                          Duration="0" />
+
+                                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="ContentSite" 
+                                                                       Storyboard.TargetProperty="(UIElement.Visibility)"
+                                                                       Duration="0">
+                                            <DiscreteObjectKeyFrame KeyTime="0" Value="{x:Static Visibility.Visible}"/>
+                                        </ObjectAnimationUsingKeyFrames>
                                     </Storyboard>
                                 </VisualState>
 
@@ -641,6 +665,12 @@
                                                          Storyboard.TargetProperty="(ScaleTransform.ScaleY)"
                                                          To="0"
                                                          Duration="0" />
+
+                                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="ContentSite" 
+                                                                       Storyboard.TargetProperty="(UIElement.Visibility)"
+                                                                       Duration="0">
+                                            <DiscreteObjectKeyFrame KeyTime="0" Value="{x:Static Visibility.Collapsed}"/>
+                                        </ObjectAnimationUsingKeyFrames>
                                     </Storyboard>
                                 </VisualState>
 
@@ -736,7 +766,8 @@
                             </DockPanel>
 
 
-                            <Border Name="ContentSite">
+                            <Border Name="ContentSite"
+                                    Visibility="Collapsed">
                                 <Border.LayoutTransform>
                                     <TransformGroup>
                                         <ScaleTransform x:Name="ContentSiteScaleTransform" />

@@ -2,13 +2,19 @@
 using System.Windows;
 using System.Windows.Automation.Peers;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
+using System.Windows.Input;
 
 namespace MultiFunPlayer.UI.Controls;
 
 [TemplatePart(Name = "PART_ItemsHolder", Type = typeof(Panel))]
+[TemplatePart(Name = "PART_ScrollViewer", Type = typeof(ScrollViewer))]
+[TemplatePart(Name = "PART_TabPanel", Type = typeof(TabPanel))]
 public class NonReloadingTabControl : TabControl
 {
     private Panel _itemsHolderPanel;
+    private ScrollViewer _scrollViewer;
+    private TabPanel _tabPanel;
 
     public static readonly DependencyProperty AdditionalPanelContentProperty = 
         DependencyProperty.Register("AdditionalPanelContent", 
@@ -28,7 +34,7 @@ public class NonReloadingTabControl : TabControl
             foreach (var item in Items)
                 _ = CreateChildContentPresenter(item);
 
-            var selectedCp = FindChildContentPresenter(SelectedItem);
+            var selectedCp = CreateChildContentPresenter(SelectedItem);
             if (selectedCp != null)
                 selectedCp.Loaded += (_, _) => UpdateSelectedItem();
         };
@@ -38,7 +44,23 @@ public class NonReloadingTabControl : TabControl
     {
         base.OnApplyTemplate();
         _itemsHolderPanel = GetTemplateChild("PART_ItemsHolder") as Panel;
+        _scrollViewer = GetTemplateChild("PART_ScrollViewer") as ScrollViewer;
+        _tabPanel = GetTemplateChild("PART_TabPanel") as TabPanel;
+
+        _tabPanel.PreviewMouseWheel -= OnTabPanelMouseWheel;
+        _tabPanel.PreviewMouseWheel += OnTabPanelMouseWheel;
+
         UpdateSelectedItem();
+    }
+
+    private void OnTabPanelMouseWheel(object sender, MouseWheelEventArgs e)
+    {
+        if (e.Delta < 0)
+            _scrollViewer.LineLeft();
+        else if (e.Delta > 0)
+            _scrollViewer.LineRight();
+
+        e.Handled = true;
     }
 
     protected override void OnItemsChanged(NotifyCollectionChangedEventArgs e)
@@ -55,6 +77,21 @@ public class NonReloadingTabControl : TabControl
                 break;
 
             case NotifyCollectionChangedAction.Add:
+                if (!IsLoaded)
+                    break;
+
+                if (e.NewItems != null)
+                {
+                    foreach (var item in e.NewItems)
+                    {
+                        var cp = CreateChildContentPresenter(item);
+                        cp.UpdateLayout();
+                    }
+                }
+
+                UpdateSelectedItem();
+                break;
+
             case NotifyCollectionChangedAction.Remove:
                 if (e.OldItems != null)
                 {
@@ -107,9 +144,9 @@ public class NonReloadingTabControl : TabControl
         cp = new ContentPresenter
         {
             Content = (tabItem != null) ? tabItem.Content : item,
-            ContentTemplate = SelectedContentTemplate,
-            ContentTemplateSelector = SelectedContentTemplateSelector,
-            ContentStringFormat = SelectedContentStringFormat,
+            ContentTemplate = ContentTemplate,
+            ContentTemplateSelector = ContentTemplateSelector,
+            ContentStringFormat = ContentStringFormat,
             Visibility = Visibility.Hidden,
             Tag = tabItem ?? ItemContainerGenerator.ContainerFromItem(item)
         };

@@ -21,6 +21,7 @@ using NLog.Config;
 using NLog.Targets;
 using Stylet;
 using StyletIoC;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Text.RegularExpressions;
@@ -38,7 +39,7 @@ public class Bootstrapper : Bootstrapper<RootViewModel>
         builder.Bind<IMediaResourceFactory>().To<MediaResourceFactory>().InSingletonScope();
 
         builder.Bind<IVideoSource>().ToAllImplementations().InSingletonScope();
-        builder.Bind<IOutputTarget>().ToAllImplementations().InSingletonScope();
+        builder.Bind<IOutputTargetFactory>().To<OutputTargetFactory>().InSingletonScope();
         builder.Bind<IMotionProvider>().ToAllImplementations();
         builder.Bind<IShortcutManager>().To<ShortcutManager>().InSingletonScope();
         builder.Bind<IMotionProviderManager>().To<MotionProviderManager>().InSingletonScope();
@@ -106,23 +107,23 @@ public class Bootstrapper : Bootstrapper<RootViewModel>
     protected override void OnLaunch()
     {
         base.OnLaunch();
+        var window = GetActiveWindow();
+        window.Closing += OnWindowClosing; 
 
         var settings = SettingsHelper.ReadOrEmpty(SettingsType.Application);
         var eventAggregator = Container.Get<IEventAggregator>();
-        eventAggregator.Publish(new AppSettingsMessage(settings, AppSettingsMessageType.Loading));
+        eventAggregator.Publish(new AppSettingsMessage(settings, SettingsAction.Loading));
 
         var source = PresentationSource.FromVisual(GetActiveWindow()) as HwndSource;
         var rawInput = Container.GetAll<IInputProcessor>().OfType<RawInputProcessor>().FirstOrDefault();
         rawInput?.RegisterWindow(source);
     }
 
-    protected override void OnExit(ExitEventArgs e)
+    private void OnWindowClosing(object sender, CancelEventArgs e)
     {
-        base.OnExit(e);
-
         var settings = SettingsHelper.ReadOrEmpty(SettingsType.Application);
         var eventAggregator = Container.Get<IEventAggregator>();
-        eventAggregator.Publish(new AppSettingsMessage(settings, AppSettingsMessageType.Saving));
+        eventAggregator.Publish(new AppSettingsMessage(settings, SettingsAction.Saving));
         SettingsHelper.Write(SettingsType.Application, settings);
     }
 

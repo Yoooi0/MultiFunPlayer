@@ -1,7 +1,6 @@
 using MultiFunPlayer.Common.Messages;
 using MultiFunPlayer.UI;
 using MultiFunPlayer.UI.Controls.ViewModels;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NLog;
 using Stylet;
@@ -56,7 +55,7 @@ public class RootViewModel : Conductor<IScreen>.Collection.AllActive, IHandle<Ap
     public void Handle(AppSettingsMessage message)
     {
         var settings = message.Settings;
-        if (message.Type == AppSettingsMessageType.Loading)
+        if (message.Action == SettingsAction.Loading)
         {
             DisablePopup = settings.TryGetValue(nameof(DisablePopup), out var disablePopupToken) && disablePopupToken.Value<bool>();
             if (!DisablePopup)
@@ -71,7 +70,7 @@ public class RootViewModel : Conductor<IScreen>.Collection.AllActive, IHandle<Ap
                 });
             }
         }
-        else if(message.Type == AppSettingsMessageType.Saving)
+        else if(message.Action == SettingsAction.Saving)
         {
             settings[nameof(DisablePopup)] = DisablePopup;
         }

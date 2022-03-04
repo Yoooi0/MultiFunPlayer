@@ -3,16 +3,13 @@ using MultiFunPlayer.Input.RawInput;
 using MultiFunPlayer.Input.XInput;
 using MultiFunPlayer.UI.Controls.ViewModels;
 using Newtonsoft.Json.Linq;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using NLog;
 
 namespace MultiFunPlayer.Settings.Migrations;
 
-internal class Migration__1_19_0__2 : AbstractConfigMigration
+public class Migration__1_19_0__2 : AbstractConfigMigration
 {
+    private readonly Logger Logger = LogManager.GetCurrentClassLogger();
     public override int TargetVersion => 2;
 
     public override void Migrate(JObject settings)

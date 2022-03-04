@@ -2,29 +2,96 @@ using MultiFunPlayer.Common;
 using MultiFunPlayer.Common.Messages;
 using MultiFunPlayer.Input;
 using MultiFunPlayer.OutputTarget;
+using Newtonsoft.Json.Linq;
+using NLog;
 using Stylet;
 
 namespace MultiFunPlayer.UI.Controls.ViewModels;
 
 public class OutputTargetViewModel : Conductor<IOutputTarget>.Collection.OneActive, IHandle<AppSettingsMessage>, IDisposable
 {
+    protected Logger Logger = LogManager.GetCurrentClassLogger();
+
+    private readonly IShortcutManager _shortcutManager;
+    private readonly IOutputTargetFactory _outputTargetFactory;
     private Task _task;
     private CancellationTokenSource _cancellationSource;
+
+    public List<Type> AvailableOutputTargetTypes { get; }
+
     private Dictionary<IOutputTarget, SemaphoreSlim> _semaphores;
 
     public bool ContentVisible { get; set; }
     public int ScanDelay { get; set; } = 2500;
     public int ScanInterval { get; set; } = 5000;
 
-    public OutputTargetViewModel(IShortcutManager shortcutManager, IEventAggregator eventAggregator, IEnumerable<IOutputTarget> targets)
+    public OutputTargetViewModel(IShortcutManager shortcutManager, IEventAggregator eventAggregator, IOutputTargetFactory outputTargetFactory)
     {
+        _shortcutManager = shortcutManager;
+        _outputTargetFactory = outputTargetFactory;
         eventAggregator.Subscribe(this);
-        Items.AddRange(targets);
 
-        _semaphores = targets.ToDictionary(t => t, _ => new SemaphoreSlim(1, 1));
+        _semaphores = new Dictionary<IOutputTarget, SemaphoreSlim>();
         _cancellationSource = new CancellationTokenSource();
 
-        RegisterShortcuts(shortcutManager);
+        AvailableOutputTargetTypes = ReflectionUtils.FindImplementations<IOutputTarget>().ToList();
+    }
+
+    public void AddItem(Type type)
+    {
+        var usedIndices = Items.Where(x => x.GetType() == type)
+                               .Select(x => x.InstanceIndex)
+                               .ToList();
+
+        var index = 0;
+        for (; ; index++)
+            if (!usedIndices.Contains(index))
+                break;
+
+        Logger.Trace("Adding new output [Index: {0}, Type: {1}]", index, type);
+        var instance = _outputTargetFactory.CreateOutputTarget(type, index);
+        if (instance == null)
+            return;
+
+        AddItem(instance);
+    }
+
+    private void AddItem(IOutputTarget target)
+    {
+        Items.Add(target);
+        _semaphores.Add(target, new SemaphoreSlim(1, 1));
+
+        Logger.Debug("Added new output \"{0}\"", target.Identifier);
+        RegisterActions(_shortcutManager, target);
+    }
+
+    public async void RemoveItem(IOutputTarget target)
+    {
+        Logger.Debug("Removing output \"{0}\"", target.Identifier);
+
+        var index = Items.IndexOf(target);
+
+        Items.Remove(target);
+        var semaphore = _semaphores[target];
+        _semaphores.Remove(target);
+
+        var token = _cancellationSource.Token;
+        await semaphore.WaitAsync(token);
+
+        await target.WaitForIdle(token); 
+        if (target.Status == ConnectionStatus.Connected)
+        {
+            await target.DisconnectAsync();
+            await target.WaitForDisconnect(token);
+        }
+
+        UnregisterActions(_shortcutManager, target);
+
+        semaphore.Release();
+        semaphore.Dispose();
+        target.Dispose();
+
+        ActiveItem = Items.Count > 0 ? Items[MathUtils.Clamp(index, 0, Items.Count - 1)] : null;
     }
 
     protected override void OnViewLoaded()
@@ -43,7 +110,7 @@ public class OutputTargetViewModel : Conductor<IOutputTarget>.Collection.OneActi
 
     public void Handle(AppSettingsMessage message)
     {
-        if (message.Type == AppSettingsMessageType.Saving)
+        if (message.Action == SettingsAction.Saving)
         {
             if (!message.Settings.EnsureContainsObjects("OutputTarget")
              || !message.Settings.TryGetObject(out var settings, "OutputTarget"))
@@ -54,9 +121,17 @@ public class OutputTargetViewModel : Conductor<IOutputTarget>.Collection.OneActi
             settings[nameof(ScanInterval)] = ScanInterval;
 
             if (ActiveItem != null)
-                settings[nameof(ActiveItem)] = ActiveItem.Name;
+                settings[nameof(ActiveItem)] = ActiveItem.Identifier;
+
+            settings[nameof(Items)] = JArray.FromObject(Items.Select(x =>
+            {
+                var o = new JObject() { ["$index"] = x.InstanceIndex };
+                o.AddTypeProperty(x.GetType());
+                x.HandleSettings(o, message.Action);
+                return o;
+            }));
         }
-        else if (message.Type == AppSettingsMessageType.Loading)
+        else if (message.Action == SettingsAction.Loading)
         {
             if (!message.Settings.TryGetObject(out var settings, "OutputTarget"))
                 return;
@@ -68,8 +143,35 @@ public class OutputTargetViewModel : Conductor<IOutputTarget>.Collection.OneActi
             if (settings.TryGetValue<int>(nameof(ScanInterval), out var scanInterval))
                 ScanInterval = scanInterval;
 
+            if (settings.TryGetValue(nameof(Items), out var itemsToken) && itemsToken is JArray items)
+            {
+                foreach(var item in items.OfType<JObject>())
+                {
+                    var type = item.GetTypeProperty();
+                    var index = item["$index"].ToObject<int>();
+                    item.Remove("$type");
+
+                    var usedIndices = Items.Where(x => x.GetType() == type)
+                                           .Select(x => x.InstanceIndex)
+                                           .ToList();
+
+                    if (usedIndices.Contains(index))
+                    {
+                        Logger.Warn("Index {0} is already used for type {1}", index, type);
+                        continue;
+                    }
+
+                    var instance = _outputTargetFactory.CreateOutputTarget(type, index);
+                    if (instance == null)
+                        continue;
+
+                    instance.HandleSettings(item, message.Action);
+                    AddItem(instance);
+                }
+            }
+
             if (settings.TryGetValue<string>(nameof(ActiveItem), out var selectedItem))
-                ChangeActiveItem(Items.FirstOrDefault(x => string.Equals(x.Name, selectedItem)) ?? Items[0], closePrevious: false);
+                ChangeActiveItem(Items.FirstOrDefault(x => string.Equals(x.Identifier, selectedItem)) ?? Items.FirstOrDefault(), closePrevious: false);
         }
     }
 
@@ -122,39 +224,46 @@ public class OutputTargetViewModel : Conductor<IOutputTarget>.Collection.OneActi
         catch (OperationCanceledException) { }
     }
 
-    private void RegisterShortcuts(IShortcutManager s)
+    private void RegisterActions(IShortcutManager s, IOutputTarget target)
     {
         var token = _cancellationSource.Token;
-        foreach (var target in Items)
+        target.RegisterActions(s);
+
+        #region Connection
+        s.RegisterAction($"{target.Identifier}::Connection::Toggle", b => b.WithCallback(async (_) => await ToggleConnectAsync(target)));
+        s.RegisterAction($"{target.Identifier}::Connection::Connect", b => b.WithCallback(async (_) =>
         {
-            #region Connection
-            s.RegisterAction($"{target.Name}::Connection::Toggle", b => b.WithCallback(async (_) => await ToggleConnectAsync(target)));
-            s.RegisterAction($"{target.Name}::Connection::Connect", b => b.WithCallback(async (_) =>
+            await _semaphores[target].WaitAsync(token);
+
+            if (target.Status == ConnectionStatus.Disconnected)
             {
-                await _semaphores[target].WaitAsync(token);
+                await target.ConnectAsync();
+                await target.WaitForIdle(token);
+            }
 
-                if (target.Status == ConnectionStatus.Disconnected)
-                {
-                    await target.ConnectAsync();
-                    await target.WaitForIdle(token);
-                }
+            _semaphores[target].Release();
+        }));
+        s.RegisterAction($"{target.Identifier}::Connection::Disconnect", b => b.WithCallback(async (_) =>
+        {
+            await _semaphores[target].WaitAsync(token);
 
-                _semaphores[target].Release();
-            }));
-            s.RegisterAction($"{target.Name}::Connection::Disconnect", b => b.WithCallback(async (_) =>
+            if (target.Status == ConnectionStatus.Connected)
             {
-                await _semaphores[target].WaitAsync(token);
+                await target.DisconnectAsync();
+                await target.WaitForDisconnect(token);
+            }
 
-                if (target.Status == ConnectionStatus.Connected)
-                {
-                    await target.DisconnectAsync();
-                    await target.WaitForDisconnect(token);
-                }
+            _semaphores[target].Release();
+        }));
+        #endregion
+    }
 
-                _semaphores[target].Release();
-            }));
-            #endregion
-        }
+    private void UnregisterActions(IShortcutManager s, IOutputTarget target)
+    {
+        target.UnregisterActions(s);
+        s.UnregisterAction($"{target.Identifier}::Connection::Toggle");
+        s.UnregisterAction($"{target.Identifier}::Connection::Connect");
+        s.UnregisterAction($"{target.Identifier}::Connection::Disconnect");
     }
 
     protected async virtual void Dispose(bool disposing)
