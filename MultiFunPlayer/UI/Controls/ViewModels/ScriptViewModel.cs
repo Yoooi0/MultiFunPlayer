@@ -1388,7 +1388,7 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         #region Axis::SpeedLimitEnabled
         s.RegisterAction("Axis::SpeedLimitEnabled::Set",
             b => b.WithSetting<DeviceAxis>(p => p.WithLabel("Target axis").WithItemsSource(DeviceAxis.All))
-                  .WithSetting<bool>(p => p.WithLabel("Auto home enabled"))
+                  .WithSetting<bool>(p => p.WithLabel("Speed limit enabled"))
                   .WithCallback((_, axis, enabled) => UpdateSettings(axis, s => s.SpeedLimitEnabled = enabled)));
 
         s.RegisterAction("Axis::SpeedLimitEnabled::Toggle",
