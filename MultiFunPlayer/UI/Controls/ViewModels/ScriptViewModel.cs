@@ -781,8 +781,6 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         Logger.Debug("Resetting axes [Axes: {list}]", axes);
         foreach (var axis in axes)
         {
-            Logger.Debug("Reset {0} script", axis);
-
             if (AxisModels[axis].Script != null)
                 ResetSync(true, axis);
 
@@ -800,7 +798,9 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
             model.Script = script;
         }
 
-        Logger.Info("Set {0} script to \"{1}\"", axis, script?.Name);
+        if(script != null)
+            Logger.Info("Set {0} script to \"{1}\" from \"{2}\"", axis, script.Name, script.Source);
+
         UpdateLinkedScriptsTo(axis);
     }
 
