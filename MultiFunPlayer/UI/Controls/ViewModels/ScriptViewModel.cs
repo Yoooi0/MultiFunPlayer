@@ -26,7 +26,8 @@ namespace MultiFunPlayer.UI.Controls.ViewModels;
 
 [JsonObject(MemberSerialization = MemberSerialization.OptIn)]
 public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
-    IHandle<VideoPositionMessage>, IHandle<VideoPlayingMessage>, IHandle<VideoFileChangedMessage>, IHandle<VideoDurationMessage>, IHandle<VideoSpeedMessage>, IHandle<AppSettingsMessage>, IHandle<SyncRequestMessage>
+    IHandle<VideoPositionMessage>, IHandle<VideoPlayingMessage>, IHandle<VideoFileChangedMessage>, IHandle<VideoDurationMessage>, 
+    IHandle<VideoSpeedMessage>, IHandle<AppSettingsMessage>, IHandle<SyncRequestMessage>, IHandle<ScriptLoadMessage>
 {
     protected Logger Logger = LogManager.GetCurrentClassLogger();
 
@@ -525,6 +526,14 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
     }
 
     public void Handle(SyncRequestMessage message) => ResetSync(true, message.Axes);
+
+    public void Handle(ScriptLoadMessage message)
+    {
+        ResetSync(true, message.Scripts.Keys);
+
+        foreach (var (axis, script) in message.Scripts)
+            SetScript(axis, script);
+    }
     #endregion
 
     #region Common
@@ -989,7 +998,12 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         if (model.Script == null)
             return;
 
-        Process.Start("explorer.exe", model.Script.Source.DirectoryName);
+        var source = model.Script.Source;
+        var path = Path.GetDirectoryName(source);
+        if (!Directory.Exists(path))
+            return;
+
+        Process.Start("explorer.exe", path);
     }
 
     public void OnAxisLoad(DeviceAxis axis)
@@ -1044,8 +1058,11 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
 
         try
         {
-            var sourceFile = AxisModels[axis].Script.Source;
-            File.Move(sourceFile.FullName, Path.Join(directory.FullName, sourceFile.Name));
+            var source = AxisModels[axis].Script.Source;
+            if (!File.Exists(source))
+                return false;
+
+            File.Move(source, Path.Join(directory.FullName, Path.GetFileName(source)));
         }
         catch { return false; }
 

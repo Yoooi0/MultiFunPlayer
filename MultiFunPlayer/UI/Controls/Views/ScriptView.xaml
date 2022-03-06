@@ -1290,7 +1290,7 @@
 
                                         <TextBox Text="{Binding Value.Script.Name, Mode=OneWay}"
                                                  Style="{StaticResource MaterialDesignFloatingHintTextBox}"
-                                                 material:HintAssist.Hint="{Binding Value.Script.Source.DirectoryName}"
+                                                 material:HintAssist.Hint="{Binding Value.Script.Source}"
                                                  Drop="{s:Action OnAxisDrop}"
                                                  PreviewDragEnter="{s:Action OnPreviewDragOver}"
                                                  PreviewDragOver="{s:Action OnPreviewDragOver}"

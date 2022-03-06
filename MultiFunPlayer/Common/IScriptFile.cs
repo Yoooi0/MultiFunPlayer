@@ -9,7 +9,8 @@ public enum ScriptFileOrigin
 {
     Automatic,
     User,
-    Link
+    Link,
+    External
 }
 
 public enum ScriptDataType
@@ -20,7 +21,7 @@ public enum ScriptDataType
 public interface IScriptFile
 {
     string Name { get; }
-    public FileInfo Source { get; }
+    string Source { get; }
     ScriptFileOrigin Origin { get; }
     KeyframeCollection Keyframes { get; }
 }
@@ -28,11 +29,11 @@ public interface IScriptFile
 public class ScriptFile : IScriptFile
 {
     public string Name { get; }
-    public FileInfo Source { get; }
+    public string Source { get; }
     public ScriptFileOrigin Origin { get; }
     public KeyframeCollection Keyframes { get; }
 
-    protected ScriptFile(string name, FileInfo source, byte[] data, ScriptDataType type, ScriptFileOrigin origin)
+    protected ScriptFile(string name, string source, ReadOnlySpan<byte> data, ScriptDataType type, ScriptFileOrigin origin)
     {
         Name = name;
         Source = source;
@@ -40,17 +41,19 @@ public class ScriptFile : IScriptFile
         Keyframes = type.Parse(data);
     }
 
+    public static IScriptFile FromBytes(string name, string source, ReadOnlySpan<byte> bytes, ScriptFileOrigin origin)
+        => new ScriptFile(name, source, bytes, ScriptDataType.Funscript, origin);
+
+    public static IScriptFile FromPath(string path, bool userLoaded = false) => FromFileInfo(new FileInfo(path), userLoaded);
     public static IScriptFile FromFileInfo(FileInfo file, bool userLoaded = false)
     {
-        var path = file.FullName;
         if (!file.Exists)
             return null;
 
+        var path = file.FullName;
         var origin = userLoaded ? ScriptFileOrigin.User : ScriptFileOrigin.Automatic;
-        return new ScriptFile(Path.GetFileName(path), file, File.ReadAllBytes(path), ScriptDataType.Funscript, origin);
+        return FromBytes(Path.GetFileName(path), Path.GetDirectoryName(path), File.ReadAllBytes(path), origin);
     }
-
-    public static IScriptFile FromPath(string path, bool userLoaded = false) => FromFileInfo(new FileInfo(path), userLoaded);
 
     public static IScriptFile FromZipArchiveEntry(string archivePath, ZipArchiveEntry entry, bool userLoaded = false)
     {
@@ -59,7 +62,7 @@ public class ScriptFile : IScriptFile
         stream.CopyTo(memory);
 
         var origin = userLoaded ? ScriptFileOrigin.User : ScriptFileOrigin.Automatic;
-        return new ScriptFile(entry.Name, new FileInfo(archivePath), memory.ToArray(), ScriptDataType.Funscript, origin);
+        return FromBytes(entry.Name, archivePath, memory.ToArray(), origin);
     }
 }
 
@@ -68,7 +71,7 @@ public class LinkedScriptFile : IScriptFile
     private readonly IScriptFile _linked;
 
     public string Name => _linked.Name;
-    public FileInfo Source => _linked.Source;
+    public string Source => _linked.Source;
     public ScriptFileOrigin Origin => ScriptFileOrigin.Link;
     public KeyframeCollection Keyframes => _linked.Keyframes;
 
@@ -82,8 +85,11 @@ public class LinkedScriptFile : IScriptFile
 
 public static class ScriptDataTypeExtensions
 {
-    public static KeyframeCollection Parse(this ScriptDataType type, byte[] data)
+    public static KeyframeCollection Parse(this ScriptDataType type, ReadOnlySpan<byte> data)
     {
+        if (data == null)
+            return null;
+
         try
         {
             return type switch
