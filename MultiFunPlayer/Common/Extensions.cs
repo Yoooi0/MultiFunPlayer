@@ -138,6 +138,32 @@ public static class TaskExtensions
             return Task.FromCanceled<TResult>(cancellationToken);
         return DoWaitAsync(task, cancellationToken);
     }
+
+    public static Task WithCancellation(this Task task, int millisecondsDelay)
+    {
+        static async Task DoWaitAsync(Task task, int millisecondsDelay)
+        {
+            var tcs = new TaskCompletionSource();
+            using var cancellationSource = new CancellationTokenSource(millisecondsDelay);
+            using var registration = cancellationSource.Token.Register(() => tcs.TrySetCanceled(), useSynchronizationContext: false);
+            await await Task.WhenAny(task, tcs.Task);
+        }
+
+        return DoWaitAsync(task, millisecondsDelay);
+    }
+
+    public static Task<TResult> WithCancellation<TResult>(this Task<TResult> task, int millisecondsDelay)
+    {
+        static async Task<T> DoWaitAsync<T>(Task<T> task, int millisecondsDelay)
+        {
+            var tcs = new TaskCompletionSource<T>();
+            using var cancellationSource = new CancellationTokenSource(millisecondsDelay);
+            using var registration = cancellationSource.Token.Register(() => tcs.TrySetCanceled(), useSynchronizationContext: false);
+            return await await Task.WhenAny(task, tcs.Task);
+        }
+
+        return DoWaitAsync(task, millisecondsDelay);
+    }
 }
 
 public static class IOExtensions
