@@ -67,7 +67,7 @@ public class NetworkOutputTargetViewModel : ThreadAbstractOutputTarget
             EventAggregator.Publish(new SyncRequestMessage());
 
             var stopwatch = Stopwatch.StartNew();
-            using var stream = new StreamWriter(client.GetStream(), Encoding.ASCII);
+            using var stream = new StreamWriter(client.GetStream(), Encoding.UTF8);
             while (!token.IsCancellationRequested && client?.Connected == true)
             {
                 stopwatch.Restart();
@@ -125,7 +125,7 @@ public class NetworkOutputTargetViewModel : ThreadAbstractOutputTarget
                 {
                     Logger.Trace("Sending \"{0}\" to \"{1}\"", commands.Trim(), $"udp://{Endpoint}");
 
-                    var encoded = Encoding.ASCII.GetBytes(commands, buffer);
+                    var encoded = Encoding.UTF8.GetBytes(commands, buffer);
                     client.Send(buffer, encoded);
                 }
             }

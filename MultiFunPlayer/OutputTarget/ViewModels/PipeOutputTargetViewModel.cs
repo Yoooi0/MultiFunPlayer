@@ -1,4 +1,4 @@
-﻿using MultiFunPlayer.Common;
+using MultiFunPlayer.Common;
 using MultiFunPlayer.Common.Messages;
 using MultiFunPlayer.Input;
 using MultiFunPlayer.UI;
@@ -69,7 +69,7 @@ public class PipeOutputTargetViewModel : ThreadAbstractOutputTarget
                 if (client?.IsConnected == true && !string.IsNullOrWhiteSpace(commands))
                 {
                     Logger.Trace("Sending \"{0}\" to \"{1}\"", commands.Trim(), PipeName);
-                    var encoded = Encoding.ASCII.GetBytes(commands, buffer);
+                    var encoded = Encoding.UTF8.GetBytes(commands, buffer);
                     client?.Write(buffer, 0, encoded);
                 }
             }
