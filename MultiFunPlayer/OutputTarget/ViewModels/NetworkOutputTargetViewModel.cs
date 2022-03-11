@@ -68,7 +68,7 @@ public class NetworkOutputTargetViewModel : ThreadAbstractOutputTarget
 
             var stopwatch = Stopwatch.StartNew();
             using var stream = new StreamWriter(client.GetStream(), Encoding.UTF8);
-            while (!token.IsCancellationRequested && client?.Connected == true)
+            while (!token.IsCancellationRequested && client.Connected)
             {
                 stopwatch.Restart();
                 Sleep(stopwatch);

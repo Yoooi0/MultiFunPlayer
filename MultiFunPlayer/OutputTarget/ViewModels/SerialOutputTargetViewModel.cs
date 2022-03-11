@@ -140,22 +140,22 @@ public class SerialOutputTargetViewModel : ThreadAbstractOutputTarget
 
             var stopwatch = Stopwatch.StartNew();
             var lastSentValues = DeviceAxis.All.ToDictionary(a => a, _ => float.NaN);
-            while (!token.IsCancellationRequested && serialPort?.IsOpen == true)
+            while (!token.IsCancellationRequested && serialPort.IsOpen)
             {
                 stopwatch.Restart();
                 Sleep(stopwatch);
 
                 UpdateValues();
 
-                if (serialPort?.IsOpen == true && serialPort?.BytesToRead > 0)
+                if (serialPort.IsOpen && serialPort.BytesToRead > 0)
                     Logger.Debug("Received \"{0}\" from \"{1}\"", serialPort.ReadExisting(), SelectedSerialPortDeviceId);
 
                 var dirtyValues = Values.Where(x => DeviceAxis.IsDirty(x.Value, lastSentValues[x.Key]));
                 var commands = DeviceAxis.ToString(dirtyValues, (float) stopwatch.Elapsed.TotalMilliseconds);
-                if (serialPort?.IsOpen == true && !string.IsNullOrWhiteSpace(commands))
+                if (serialPort.IsOpen == true && !string.IsNullOrWhiteSpace(commands))
                 {
                     Logger.Trace("Sending \"{0}\" to \"{1}\"", commands.Trim(), SelectedSerialPortDeviceId);
-                    serialPort?.Write(commands);
+                    serialPort.Write(commands);
                 }
 
                 foreach (var (axis, value) in dirtyValues)
@@ -174,7 +174,7 @@ public class SerialOutputTargetViewModel : ThreadAbstractOutputTarget
         catch (Exception e) { Logger.Debug(e, $"{Identifier} failed with exception"); }
 
         try { serialPort?.Close(); }
-        catch (IOException) { }
+        catch { }
     }
 
     public override void HandleSettings(JObject settings, SettingsAction action)

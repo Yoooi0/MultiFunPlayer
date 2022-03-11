@@ -66,11 +66,11 @@ public class PipeOutputTargetViewModel : ThreadAbstractOutputTarget
                 UpdateValues();
 
                 var commands = DeviceAxis.ToString(Values, (float) stopwatch.Elapsed.TotalMilliseconds);
-                if (client?.IsConnected == true && !string.IsNullOrWhiteSpace(commands))
+                if (client.IsConnected && !string.IsNullOrWhiteSpace(commands))
                 {
                     Logger.Trace("Sending \"{0}\" to \"{1}\"", commands.Trim(), PipeName);
                     var encoded = Encoding.UTF8.GetBytes(commands, buffer);
-                    client?.Write(buffer, 0, encoded);
+                    client.Write(buffer, 0, encoded);
                 }
             }
         }
@@ -80,8 +80,11 @@ public class PipeOutputTargetViewModel : ThreadAbstractOutputTarget
             _ = DialogHelper.ShowErrorAsync(e, $"{Identifier} failed with exception", "RootDialog");
         }
 
-        if (client?.IsConnected == true)
-            client.Close();
+        try
+        {
+            if (client?.IsConnected == true)
+                client.Close();
+        } catch { }
     }
 
     public override void HandleSettings(JObject settings, SettingsAction action)

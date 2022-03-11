@@ -245,8 +245,11 @@ public class ButtplugOutputTargetViewModel : AsyncAbstractOutputTarget
             _ = DialogHelper.ShowErrorAsync(e, $"{Identifier} failed with exception", "RootDialog");
         }
 
-        if (client.Connected)
-            await client.DisconnectAsync();
+        try
+        {
+            if (client?.Connected == true)
+                await client.DisconnectAsync();
+        } catch { }
 
         IsScanBusy = false;
         AvailableDevices.Clear();

@@ -71,7 +71,7 @@ public class WebSocketOutputTargetViewModel : AsyncAbstractOutputTarget
         try
         {
             var stopwatch = Stopwatch.StartNew();
-            while (!token.IsCancellationRequested)
+            while (!token.IsCancellationRequested && client.State == WebSocketState.Open)
             {
                 stopwatch.Restart();
                 await Sleep(stopwatch, token);
@@ -79,7 +79,7 @@ public class WebSocketOutputTargetViewModel : AsyncAbstractOutputTarget
                 UpdateValues();
 
                 var commands = DeviceAxis.ToString(Values, (float)stopwatch.Elapsed.TotalMilliseconds);
-                if (!string.IsNullOrWhiteSpace(commands))
+                if (client.State == WebSocketState.Open && !string.IsNullOrWhiteSpace(commands))
                 {
                     Logger.Trace("Sending \"{0}\" to \"{1}\"", commands.Trim(), Uri.ToString());
                     await client.SendAsync(Encoding.UTF8.GetBytes(commands), WebSocketMessageType.Text, true, token);
