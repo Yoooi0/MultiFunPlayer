@@ -388,10 +388,12 @@
 
                             <ScrollViewer x:Name="PART_ScrollViewer"
                                           HorizontalScrollBarVisibility="Hidden" 
-                                          VerticalScrollBarVisibility="Hidden">
+                                          VerticalScrollBarVisibility="Hidden"
+                                          HorizontalAlignment="Left">
                                 <TabPanel x:Name="PART_TabPanel"
                                           IsItemsHost="True"
-                                          DockPanel.Dock="Left"/>
+                                          DockPanel.Dock="Left"
+                                          HorizontalAlignment="Left"/>
                             </ScrollViewer>
                         </DockPanel>
 
