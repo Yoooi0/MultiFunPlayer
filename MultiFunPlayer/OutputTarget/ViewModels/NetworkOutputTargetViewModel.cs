@@ -1,4 +1,4 @@
-﻿using MultiFunPlayer.Common;
+using MultiFunPlayer.Common;
 using MultiFunPlayer.Common.Messages;
 using MultiFunPlayer.Input;
 using MultiFunPlayer.UI;
@@ -39,9 +39,6 @@ public class NetworkOutputTargetViewModel : ThreadAbstractOutputTarget
 
     protected override void Run(CancellationToken token)
     {
-        if (Endpoint == null)
-            return;
-
         if (Protocol == ProtocolType.Tcp)
             RunTcp(token);
         else if (Protocol == ProtocolType.Udp)
