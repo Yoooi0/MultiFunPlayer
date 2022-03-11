@@ -146,7 +146,9 @@ public static class TaskExtensions
             var tcs = new TaskCompletionSource();
             using var cancellationSource = new CancellationTokenSource(millisecondsDelay);
             using var registration = cancellationSource.Token.Register(() => tcs.TrySetCanceled(), useSynchronizationContext: false);
-            await await Task.WhenAny(task, tcs.Task);
+
+            try { await await Task.WhenAny(task, tcs.Task); }
+            catch (OperationCanceledException) when (tcs.Task.IsCanceled) { throw new TimeoutException(); }
         }
 
         return DoWaitAsync(task, millisecondsDelay);
@@ -159,7 +161,9 @@ public static class TaskExtensions
             var tcs = new TaskCompletionSource<T>();
             using var cancellationSource = new CancellationTokenSource(millisecondsDelay);
             using var registration = cancellationSource.Token.Register(() => tcs.TrySetCanceled(), useSynchronizationContext: false);
-            return await await Task.WhenAny(task, tcs.Task);
+
+            try { return await await Task.WhenAny(task, tcs.Task); }
+            catch (OperationCanceledException) when (tcs.Task.IsCanceled) { throw new TimeoutException(); }
         }
 
         return DoWaitAsync(task, millisecondsDelay);
