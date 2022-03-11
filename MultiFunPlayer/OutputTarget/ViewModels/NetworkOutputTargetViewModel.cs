@@ -75,6 +75,12 @@ public class NetworkOutputTargetViewModel : ThreadAbstractOutputTarget
 
                 UpdateValues();
 
+                if (client.Connected && client.Available > 0)
+                {
+                    var message = Encoding.UTF8.GetString(client.GetStream().ReadBytes(client.Available));
+                    Logger.Debug("Received \"{0}\" from \"{1}\"", message, $"tcp://{Endpoint}");
+                }
+
                 var commands = DeviceAxis.ToString(Values, (float) stopwatch.Elapsed.TotalMilliseconds);
                 if (client.Connected && !string.IsNullOrWhiteSpace(commands))
                 {
@@ -97,6 +103,10 @@ public class NetworkOutputTargetViewModel : ThreadAbstractOutputTarget
         try
         {
             Logger.Info("Connecting to {0} at \"{1}\"", Identifier, $"udp://{Endpoint}");
+
+            const int SIO_UDP_CONNRESET = -1744830452;
+            client.Client.IOControl((IOControlCode)SIO_UDP_CONNRESET, new byte[] { 0, 0, 0, 0 }, null);
+
             client.Connect(Endpoint);
             Status = ConnectionStatus.Connected;
         }
@@ -119,6 +129,13 @@ public class NetworkOutputTargetViewModel : ThreadAbstractOutputTarget
                 Sleep(stopwatch);
 
                 UpdateValues();
+
+                if (client.Available > 0)
+                {
+                    var endpoint = new IPEndPoint(Endpoint.Address, Endpoint.Port);
+                    var message = Encoding.UTF8.GetString(client.Receive(ref endpoint));
+                    Logger.Debug("Received \"{0}\" from \"{1}\"", message, $"udp://{endpoint}");
+                }
 
                 var commands = DeviceAxis.ToString(Values, (float) stopwatch.Elapsed.TotalMilliseconds);
                 if (!string.IsNullOrWhiteSpace(commands))

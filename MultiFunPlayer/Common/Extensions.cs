@@ -265,6 +265,23 @@ public static class StreamExtensions
         memory.Seek(0, SeekOrigin.Begin);
         return memory.ToArray();
     }
+
+    public static byte[] ReadBytes(this NetworkStream stream, int count)
+    {
+        using var memory = new MemoryStream();
+
+        while (memory.Position < count)
+        {
+            var read = stream.Read(_readBuffer, 0, Math.Min(_readBuffer.Length, count));
+            if (read == 0)
+                break;
+
+            memory.Write(_readBuffer, 0, read);
+        }
+
+        memory.Seek(0, SeekOrigin.Begin);
+        return memory.ToArray();
+    }
 }
 
 public static class DeconstructExtensions
