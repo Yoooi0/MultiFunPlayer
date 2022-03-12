@@ -25,6 +25,9 @@ public class WebSocketOutputTargetViewModel : AsyncAbstractOutputTarget
     public WebSocketOutputTargetViewModel(int instanceIndex, IEventAggregator eventAggregator, IDeviceAxisValueProvider valueProvider)
         : base(instanceIndex, eventAggregator, valueProvider) { }
 
+    public override int MinimumUpdateInterval => 16;
+    public override int MaximumUpdateInterval => 200;
+
     public bool IsConnected => Status == ConnectionStatus.Connected;
     public bool IsConnectBusy => Status == ConnectionStatus.Connecting || Status == ConnectionStatus.Disconnecting;
     public bool CanToggleConnect => !IsConnectBusy;
