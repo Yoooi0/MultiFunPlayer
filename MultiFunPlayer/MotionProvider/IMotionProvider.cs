@@ -10,6 +10,4 @@ public interface IMotionProvider
     float Maximum { get; set; }
 
     void Update(float deltaTime);
-
-    event EventHandler SyncRequest;
 }

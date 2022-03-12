@@ -1,5 +1,6 @@
 ﻿using MultiFunPlayer.Common;
 using Newtonsoft.Json;
+using Stylet;
 using System.ComponentModel;
 
 namespace MultiFunPlayer.MotionProvider.ViewModels;
@@ -15,7 +16,8 @@ public class RandomMotionProviderViewModel : AbstractMotionProvider
     [JsonProperty] public float Persistence { get; set; } = 1;
     [JsonProperty] public float Lacunarity { get; set; } = 1;
 
-    public RandomMotionProviderViewModel()
+    public RandomMotionProviderViewModel(DeviceAxis target, IEventAggregator eventAggregator)
+        : base(target, eventAggregator)
     {
         _noise = new OpenSimplex(Random.Shared.NextInt64());
     }

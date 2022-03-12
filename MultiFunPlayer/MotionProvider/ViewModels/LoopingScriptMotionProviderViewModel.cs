@@ -1,6 +1,7 @@
 ﻿using Microsoft.WindowsAPICodePack.Dialogs;
 using MultiFunPlayer.Common;
 using Newtonsoft.Json;
+using Stylet;
 using System.ComponentModel;
 using System.IO;
 
@@ -20,6 +21,9 @@ public class LoopingScriptMotionProviderViewModel : AbstractMotionProvider
 
     [JsonProperty] public FileInfo SourceFile { get; set; } = null;
     [JsonProperty] public InterpolationType InterpolationType { get; set; } = InterpolationType.Pchip;
+
+    public LoopingScriptMotionProviderViewModel(DeviceAxis target, IEventAggregator eventAggregator)
+        : base(target, eventAggregator) { }
 
     public void OnSourceFileChanged()
     {

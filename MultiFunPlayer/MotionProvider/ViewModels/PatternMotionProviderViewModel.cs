@@ -1,5 +1,6 @@
 ﻿using MultiFunPlayer.Common;
 using Newtonsoft.Json;
+using Stylet;
 using System.ComponentModel;
 
 namespace MultiFunPlayer.MotionProvider.ViewModels;
@@ -19,6 +20,9 @@ public enum PatternType
 public class PatternMotionProviderViewModel : AbstractMotionProvider
 {
     private float _time;
+
+    public PatternMotionProviderViewModel(DeviceAxis target, IEventAggregator eventAggregator)
+        : base(target, eventAggregator) { }
 
     [JsonProperty] public PatternType Pattern { get; set; } = PatternType.Triangle;
 
