@@ -1598,7 +1598,7 @@ public class AxisSettings : PropertyChangedBase
     [JsonProperty] public bool Bypass { get; set; } = false;
     [JsonProperty] public float MotionProviderBlend { get; set; } = 100;
     [JsonProperty] public bool UpdateMotionProviderWhenPaused { get; set; } = false;
-    [JsonProperty] public bool UpdateMotionProviderWithoutScript { get; set; } = false;
+    [JsonProperty] public bool UpdateMotionProviderWithoutScript { get; set; } = true;
     [JsonProperty] public DeviceAxis UpdateMotionProviderWithAxis { get; set; } = null;
     [JsonProperty] public string SelectedMotionProvider { get; set; } = null;
     [JsonProperty] public bool SpeedLimitEnabled { get; set; } = false;
