@@ -319,7 +319,7 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                 Execute.OnUIThread(() =>
                 {
                     foreach (var axis in DeviceAxis.All)
-                        AxisStates[axis].Notify();
+                        AxisStates[axis].NotifyValueChanged();
                 });
             }
         }
@@ -1577,7 +1577,7 @@ public class AxisState : INotifyPropertyChanged
 
     public void Invalidate(bool end = false) => Index = end ? int.MaxValue : int.MinValue;
 
-    public void Notify()
+    public void NotifyValueChanged()
     {
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(InsideScript)));
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Value)));
