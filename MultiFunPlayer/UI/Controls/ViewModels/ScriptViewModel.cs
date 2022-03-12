@@ -728,7 +728,7 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
             state.Index = keyframes.BinarySearch(GetAxisPosition(axis, position));
     }
 
-    private void UpdateLinkedScriptsTo(DeviceAxis axis) => UpdateLinkScript(DeviceAxis.All.Where(a => a != axis && AxisSettings[a].LinkAxis == axis));
+    private void UpdateLinkedScriptsTo(DeviceAxis axis) => UpdateLinkScriptFor(DeviceAxis.All.Where(a => a != axis && AxisSettings[a].LinkAxis == axis));
     private void UpdateLinkedScriptsTo(params DeviceAxis[] axes) => UpdateLinkedScriptsTo(axes?.AsEnumerable());
     private void UpdateLinkedScriptsTo(IEnumerable<DeviceAxis> axes)
     {
@@ -737,8 +737,8 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
             UpdateLinkedScriptsTo(axis);
     }
 
-    private void UpdateLinkScriptFor(params DeviceAxis[] axes) => UpdateLinkScript(axes?.AsEnumerable());
-    private void UpdateLinkScript(IEnumerable<DeviceAxis> axes = null)
+    private void UpdateLinkScriptFor(params DeviceAxis[] axes) => UpdateLinkScriptFor(axes?.AsEnumerable());
+    private void UpdateLinkScriptFor(IEnumerable<DeviceAxis> axes = null)
     {
         axes ??= DeviceAxis.All;
         if (!axes.Any())
@@ -814,7 +814,7 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         ResetSync(true, axes);
 
         Logger.Debug("Reloading axes [Axes: {list}]", axes);
-        foreach (var (enabled, items) in axes.GroupBy(a => AxisModels[a].Settings.LinkAxisHasPriority))
+        foreach (var (enabled, items) in axes.GroupBy(a => AxisSettings[a].LinkAxisHasPriority))
         {
             var groupAxes = items.ToArray();
             if (enabled)
@@ -823,8 +823,9 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
             }
             else
             {
-                var updated = TryMatchFiles(true, groupAxes);
+                var updated = TryMatchFiles(true, groupAxes).Where(a => AxisModels[a].Script != null);
                 UpdateLinkedScriptsTo(updated);
+                UpdateLinkScriptFor(groupAxes.Except(updated));
             }
         }
     }
