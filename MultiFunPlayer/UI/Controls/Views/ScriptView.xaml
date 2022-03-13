@@ -46,11 +46,11 @@
                                                    VerticalAlignment="Center">
                                     <material:PackIcon.Style>
                                         <Style TargetType="material:PackIcon">
-                                            <Setter Property="Foreground" Value="Red"/>
+                                            <Setter Property="Foreground" Value="{StaticResource MaterialDesignErrorBrush}"/>
                                             <Setter Property="Kind" Value="Pause"/>
                                             <Style.Triggers>
                                                 <DataTrigger Binding="{Binding IsPlaying}" Value="True">
-                                                    <Setter Property="Foreground" Value="Green"/>
+                                                    <Setter Property="Foreground" Value="{StaticResource MaterialDesignSuccessBrush}"/>
                                                     <Setter Property="Kind" Value="Play"/>
                                                 </DataTrigger>
                                             </Style.Triggers>
@@ -87,7 +87,7 @@
                                                         <Setter Property="Foreground" Value="{StaticResource PrimaryHueLightBrush}"/>
                                                         <Style.Triggers>
                                                             <DataTrigger Binding="{Binding IsSyncing}" Value="True">
-                                                                <Setter Property="Foreground" Value="Red"/>
+                                                                <Setter Property="Foreground" Value="{StaticResource MaterialDesignErrorBrush}"/>
                                                             </DataTrigger>
                                                         </Style.Triggers>
                                                     </Style>
@@ -104,7 +104,7 @@
                                                         <Setter Property="Foreground" Value="{StaticResource PrimaryHueLightBrush}"/>
                                                         <Style.Triggers>
                                                             <DataTrigger Binding="{Binding IsSyncing}" Value="True">
-                                                                <Setter Property="Foreground" Value="Red"/>
+                                                                <Setter Property="Foreground" Value="{StaticResource MaterialDesignErrorBrush}"/>
                                                             </DataTrigger>
                                                         </Style.Triggers>
                                                     </Style>
@@ -256,8 +256,8 @@
                                                                             ToolTip="Remove"
                                                                             ToolTipService.InitialShowDelay="0"
                                                                             ToolTipService.Placement="Top"
-                                                                            material:RippleAssist.Feedback="Red"
-                                                                            Foreground="Red"
+                                                                            material:RippleAssist.Feedback="{StaticResource MaterialDesignErrorBrush}"
+                                                                            Foreground="{StaticResource MaterialDesignErrorBrush}"
                                                                             Height="24" 
                                                                             Width="24" 
                                                                             Padding="0"
@@ -389,8 +389,8 @@
                                                                                 ToolTip="Remove"
                                                                                 ToolTipService.InitialShowDelay="0"
                                                                                 ToolTipService.Placement="Top"
-                                                                                material:RippleAssist.Feedback="Red"
-                                                                                Foreground="Red"
+                                                                                material:RippleAssist.Feedback="{StaticResource MaterialDesignErrorBrush}"
+                                                                                Foreground="{StaticResource MaterialDesignErrorBrush}"
                                                                                 Height="24" 
                                                                                 Width="24" 
                                                                                 Padding="0"
@@ -776,7 +776,7 @@
 
                                                 <material:PackIcon Kind="FlipVertical" Opacity=".56" Width="20" Height="20"/>
                                                 <material:ToggleButtonAssist.OnContent>
-                                                    <material:PackIcon Kind="FlipVertical" Width="20" Height="20" Foreground="Green"/>
+                                                    <material:PackIcon Kind="FlipVertical" Width="20" Height="20" Foreground="{StaticResource MaterialDesignSuccessBrush}"/>
                                                 </material:ToggleButtonAssist.OnContent>
                                             </ToggleButton>
 
@@ -788,7 +788,7 @@
 
                                                 <material:PackIcon Kind="MotionPauseOutline" Opacity=".56" Width="21" Height="21"/>
                                                 <material:ToggleButtonAssist.OnContent>
-                                                    <material:PackIcon Kind="MotionPauseOutline" Width="21" Height="21" Foreground="Red"/>
+                                                    <material:PackIcon Kind="MotionPauseOutline" Width="21" Height="21" Foreground="{StaticResource MaterialDesignErrorBrush}"/>
                                                 </material:ToggleButtonAssist.OnContent>
                                             </ToggleButton>
 
@@ -809,7 +809,7 @@
                                                                 <Style TargetType="{x:Type material:PackIcon}">
                                                                     <Style.Triggers>
                                                                         <DataTrigger Binding="{Binding Value.Settings.LinkAxis, Converter={StaticResource notNullBooleanConverter}}" Value="True">
-                                                                            <Setter Property="Foreground" Value="Green"/>
+                                                                            <Setter Property="Foreground" Value="{StaticResource MaterialDesignSuccessBrush}"/>
                                                                         </DataTrigger>
                                                                     </Style.Triggers>
                                                                 </Style>
@@ -884,7 +884,7 @@
                                                                 <Style TargetType="{x:Type material:PackIcon}">
                                                                     <Style.Triggers>
                                                                         <DataTrigger Binding="{Binding Value.Settings.SelectedMotionProvider, Converter={StaticResource notNullBooleanConverter}}" Value="True">
-                                                                            <Setter Property="Foreground" Value="Green"/>
+                                                                            <Setter Property="Foreground" Value="{StaticResource MaterialDesignSuccessBrush}"/>
                                                                         </DataTrigger>
                                                                     </Style.Triggers>
                                                                 </Style>
@@ -1073,7 +1073,7 @@
 
                                                 <material:PackIcon Kind="ChartSnakeyVariant" Opacity=".56"/>
                                                 <material:ToggleButtonAssist.OnContent>
-                                                    <material:PackIcon Kind="ChartSnakeyVariant" Foreground="Green"/>
+                                                    <material:PackIcon Kind="ChartSnakeyVariant" Foreground="{StaticResource MaterialDesignSuccessBrush}"/>
                                                 </material:ToggleButtonAssist.OnContent>
                                             </ToggleButton>
 
@@ -1094,7 +1094,7 @@
                                                                 <Style TargetType="{x:Type material:PackIcon}">
                                                                     <Style.Triggers>
                                                                         <DataTrigger Binding="{Binding Value.Settings.SpeedLimitEnabled}" Value="True">
-                                                                            <Setter Property="Foreground" Value="Green"/>
+                                                                            <Setter Property="Foreground" Value="{StaticResource MaterialDesignSuccessBrush}"/>
                                                                         </DataTrigger>
                                                                     </Style.Triggers>
                                                                 </Style>
@@ -1183,7 +1183,7 @@
                                                                 <Style TargetType="{x:Type material:PackIcon}">
                                                                     <Style.Triggers>
                                                                         <DataTrigger Binding="{Binding Value.Settings.AutoHomeEnabled}" Value="True">
-                                                                            <Setter Property="Foreground" Value="Green"/>
+                                                                            <Setter Property="Foreground" Value="{StaticResource MaterialDesignSuccessBrush}"/>
                                                                         </DataTrigger>
                                                                     </Style.Triggers>
                                                                 </Style>
@@ -1281,7 +1281,7 @@
                                                     <Setter Property="Foreground" Value="{StaticResource PrimaryHueLightBrush}"/>
                                                     <Style.Triggers>
                                                         <DataTrigger Binding="{Binding Value.Script.Keyframes.IsRawCollection}" Value="True">
-                                                            <Setter Property="Foreground" Value="Red"/>
+                                                            <Setter Property="Foreground" Value="{StaticResource MaterialDesignErrorBrush}"/>
                                                         </DataTrigger>
                                                     </Style.Triggers>
                                                 </Style>

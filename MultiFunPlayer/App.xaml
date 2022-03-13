@@ -2,9 +2,10 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:s="https://github.com/canton7/Stylet"
+             xmlns:po="http://schemas.microsoft.com/winfx/2006/xaml/presentation/options"
              xmlns:local="clr-namespace:MultiFunPlayer">
     <Application.Resources>
-        <ResourceDictionary>
+        <ResourceDictionary>            
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Controls.xaml" />
                 <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Fonts.xaml" />
@@ -28,6 +29,10 @@
                     </s:ApplicationLoader.Bootstrapper>
                 </s:ApplicationLoader>
             </ResourceDictionary.MergedDictionaries>
+            <Color x:Key="MaterialDesignErrorColor">#F00018</Color>
+            <SolidColorBrush x:Key="MaterialDesignErrorBrush" Color="{StaticResource MaterialDesignErrorColor}" po:Freeze="True" />
+            <Color x:Key="MaterialDesignSuccessColor">#008C1A</Color>
+            <SolidColorBrush x:Key="MaterialDesignSuccessBrush" Color="{StaticResource MaterialDesignSuccessColor}" po:Freeze="True" />
 
             <SolidColorBrush x:Key="HighlightBrush" Color="{DynamicResource Primary700}"/>
             <SolidColorBrush x:Key="AccentBaseColorBrush" Color="{DynamicResource Primary600}" />

@@ -1,5 +1,6 @@
 ﻿using MultiFunPlayer.Common;
 using System.Globalization;
+using System.Windows;
 using System.Windows.Data;
 using System.Windows.Media;
 
@@ -10,8 +11,8 @@ public class ConnectionStatusToBrushConverter : IValueConverter
     public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         => value switch
         {
-            ConnectionStatus.Connected => new SolidColorBrush(Color.FromRgb(0x00, 0x80, 0x00)),
-            ConnectionStatus.Disconnected => new SolidColorBrush(Color.FromRgb(0xf5, 0x3e, 0x2e)),
+            ConnectionStatus.Connected => (SolidColorBrush) Application.Current.Resources["MaterialDesignSuccessBrush"],
+            ConnectionStatus.Disconnected => (SolidColorBrush) Application.Current.Resources["MaterialDesignErrorBrush"],
             ConnectionStatus.Connecting or ConnectionStatus.Disconnecting => new SolidColorBrush(Color.FromRgb(0xb3, 0x9c, 0x09)),
             _ => null
         };
