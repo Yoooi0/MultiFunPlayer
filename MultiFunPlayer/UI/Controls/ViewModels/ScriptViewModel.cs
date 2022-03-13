@@ -112,7 +112,6 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         var stopwatch = new Stopwatch();
         const float uiUpdateInterval = 1f / 60f;
         var uiUpdateTime = 0f;
-        var autoHomeTimes = DeviceAxis.All.ToDictionary(a => a, _ => 0f);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         float ElapsedSeconds() => stopwatch.ElapsedTicks / (float)Stopwatch.Frequency;
@@ -272,7 +271,7 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
             {
                 if (state.Dirty || (state.InsideScript && IsPlaying))
                 {
-                    autoHomeTimes[axis] = 0;
+                    state.AutoHomeTime = 0;
                     return false;
                 }
 
@@ -288,8 +287,8 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                     return newValue != lastValue;
                 }
 
-                autoHomeTimes[axis] += ElapsedSeconds();
-                var t = (autoHomeTimes[axis] - settings.AutoHomeDelay) / settings.AutoHomeDuration;
+                state.AutoHomeTime += ElapsedSeconds();
+                var t = (state.AutoHomeTime - settings.AutoHomeDelay) / settings.AutoHomeDuration;
                 if (t < 0 || t > 1)
                     return false;
 
@@ -1569,6 +1568,7 @@ public class AxisState : INotifyPropertyChanged
     public float Value { get; set; } = float.NaN;
     public bool Dirty { get; set; } = true;
     public float SyncTime { get; set; } = 0;
+    public float AutoHomeTime { get; set; } = 0;
 
     public bool Invalid => Index == int.MinValue;
     public bool BeforeScript => Index == -1;
