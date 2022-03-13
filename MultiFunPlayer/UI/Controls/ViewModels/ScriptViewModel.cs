@@ -1568,6 +1568,26 @@ public class AxisModel : PropertyChangedBase
     public AxisState State { get; } = new AxisState();
     public AxisSettings Settings { get; } = new AxisSettings();
     public IScriptFile Script { get; set; } = null;
+
+    public AxisModel()
+    {
+        Settings.PropertyChanged += OnSettingsPropertyChanged;
+    }
+
+    [SuppressPropertyChangedWarnings]
+    private void OnSettingsPropertyChanged(object sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(AxisSettings.SelectedMotionProvider)
+         || e.PropertyName == nameof(AxisSettings.MotionProviderBlend))
+            NotifyOfPropertyChange(nameof(MotionProviderOverridesScript));
+
+        if (e.PropertyName == nameof(AxisSettings.LinkAxis)
+         || e.PropertyName == nameof(AxisSettings.LinkAxisHasPriority))
+            NotifyOfPropertyChange(nameof(LinkOverridesScript));
+    }
+
+    public bool MotionProviderOverridesScript => Script != null && Settings.SelectedMotionProvider != null && Settings.MotionProviderBlend > 50;
+    public bool LinkOverridesScript => Script != null && Script.Origin == ScriptFileOrigin.Link && Settings.LinkAxis != null && Settings.LinkAxisHasPriority;
 }
 
 [DoNotNotify]
@@ -1575,15 +1595,17 @@ public class AxisState : INotifyPropertyChanged
 {
     public int Index { get; set; } = int.MinValue;
     public float Value { get; set; } = float.NaN;
-    public float SyncTime { get; set; } = 0;
-    public float AutoHomeTime { get; set; } = 0;
-    public bool IsDirty { get; set; } = true;
-    public bool IsSpeedLimited { get; set; } = false;
 
     public bool Invalid => Index == int.MinValue;
     public bool BeforeScript => Index == -1;
     public bool AfterScript => Index == int.MaxValue;
     public bool InsideScript => Index >= 0 && Index != int.MaxValue;
+
+    public float SyncTime { get; set; } = 0;
+    public float AutoHomeTime { get; set; } = 0;
+
+    public bool IsDirty { get; set; } = true;
+    public bool IsSpeedLimited { get; set; } = false;
 
     public event PropertyChangedEventHandler PropertyChanged;
 
