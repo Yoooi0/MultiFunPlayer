@@ -140,53 +140,62 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
 
                 lock (state)
                 {
-                    state.Dirty = false;
+                    state.IsDirty = false;
 
                     var lastValue = state.Value;
                     var newValue = float.NaN;
                     if (!settings.Bypass)
                     {
-                        state.Dirty |= UpdateScript(axis, state, settings, lastValue, ref newValue);
-                        state.Dirty |= UpdateMotionProvider(axis, state, settings, lastValue, ref newValue);
+                        state.IsDirty |= UpdateScript(axis, state, settings, lastValue, ref newValue);
+                        state.IsDirty |= UpdateMotionProvider(axis, state, settings, lastValue, ref newValue);
                     }
 
-                    state.Dirty |= UpdateSync(axis, state, lastValue, ref newValue);
-                    state.Dirty |= UpdateAutoHome(axis, state, settings, lastValue, ref newValue);
-                    state.Dirty |= UpdateSmartLimit(axis, state, settings, lastValue, ref newValue);
+                    state.IsDirty |= UpdateSync(axis, state, lastValue, ref newValue);
+                    state.IsDirty |= UpdateAutoHome(axis, state, settings, lastValue, ref newValue);
+                    state.IsDirty |= UpdateSmartLimit(axis, state, settings, lastValue, ref newValue);
 
-                    SpeedLimit(axis, settings, lastValue, ref newValue);
+                    SpeedLimit(axis, state, settings, lastValue, ref newValue);
                     if (!float.IsFinite(lastValue) && float.IsFinite(newValue))
-                        state.Dirty = true;
+                        state.IsDirty = true;
 
-                    if(state.Dirty)
+                    if(state.IsDirty)
                         state.Value = newValue;
 
-                    dirty |= state.Dirty;
+                    dirty |= state.IsDirty;
                 }
             }
 
             return dirty;
 
-            void SpeedLimit(DeviceAxis axis, AxisSettings settings, float lastValue, ref float newValue)
+            void SpeedLimit(DeviceAxis axis, AxisState state, AxisSettings settings, float lastValue, ref float newValue)
             {
-                if (!settings.SpeedLimitEnabled)
-                    return;
+                static bool SpeedLimitImpl(DeviceAxis axis, AxisSettings settings, float deltaTime, float lastValue, ref float newValue)
+                {
+                    if (!settings.SpeedLimitEnabled)
+                        return false;
 
-                var step = newValue - lastValue;
-                if (!float.IsFinite(step))
-                    return;
-                if (MathF.Abs(step) < 0.000001f)
-                    return;
+                    var step = newValue - lastValue;
+                    if (!float.IsFinite(step))
+                        return false;
+                    if (MathF.Abs(step) < 0.000001f)
+                        return false;
+
+                    var speed = step / deltaTime;
+                    var maxSpeed = 1 / settings.MaximumSecondsPerStroke;
+                    if (MathF.Abs(speed / maxSpeed) < 1)
+                        return false;
+                    if (!float.IsFinite(maxSpeed))
+                        return false;
+
+                    newValue = lastValue + maxSpeed * deltaTime * MathF.Sign(speed);
+                    return true;
+                }
 
                 var deltaTime = ElapsedSeconds();
-                var speed = step / deltaTime;
-                var maxSpeed = 1 / settings.MaximumSecondsPerStroke;
-                if (MathF.Abs(speed / maxSpeed) < 1)
-                    return;
-                if (!float.IsFinite(maxSpeed))
-                    return;
-
-                newValue = lastValue + maxSpeed * deltaTime * MathF.Sign(speed);
+                var lastIsSpeedLimited = state.IsSpeedLimited;
+                state.IsSpeedLimited = SpeedLimitImpl(axis, settings, deltaTime, lastValue, ref newValue);
+                if (lastIsSpeedLimited != state.IsSpeedLimited)
+                    state.NotifyIsSpeedLimitedChanged();
             }
 
             bool UpdateSmartLimit(DeviceAxis axis, AxisState state, AxisSettings settings, float lastValue, ref float newValue)
@@ -253,7 +262,7 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                     return false;
                 if (!settings.UpdateMotionProviderWithoutScript && !state.InsideScript)
                     return false;
-                if (settings.UpdateMotionProviderWithAxis != null && !AxisStates[settings.UpdateMotionProviderWithAxis].Dirty)
+                if (settings.UpdateMotionProviderWithAxis != null && !AxisStates[settings.UpdateMotionProviderWithAxis].IsDirty)
                     return false;
 
                 var providerResult = MotionProviderManager.Update(axis, settings.SelectedMotionProvider, ElapsedSeconds());
@@ -269,7 +278,7 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
 
             bool UpdateAutoHome(DeviceAxis axis, AxisState state, AxisSettings settings, float lastValue, ref float newValue)
             {
-                if (state.Dirty || (state.InsideScript && IsPlaying))
+                if (state.IsDirty || (state.InsideScript && IsPlaying))
                 {
                     state.AutoHomeTime = 0;
                     return false;
@@ -1049,7 +1058,7 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                 state.Value = value;
             }
 
-            state.Dirty = state.Value != lastValue;
+            state.IsDirty = state.Value != lastValue;
         }
     }
 
@@ -1566,9 +1575,10 @@ public class AxisState : INotifyPropertyChanged
 {
     public int Index { get; set; } = int.MinValue;
     public float Value { get; set; } = float.NaN;
-    public bool Dirty { get; set; } = true;
     public float SyncTime { get; set; } = 0;
     public float AutoHomeTime { get; set; } = 0;
+    public bool IsDirty { get; set; } = true;
+    public bool IsSpeedLimited { get; set; } = false;
 
     public bool Invalid => Index == int.MinValue;
     public bool BeforeScript => Index == -1;
@@ -1579,6 +1589,7 @@ public class AxisState : INotifyPropertyChanged
 
     public void Invalidate(bool end = false) => Index = end ? int.MaxValue : int.MinValue;
 
+    public void NotifyIsSpeedLimitedChanged() => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsSpeedLimited)));
     public void NotifyValueChanged()
     {
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(InsideScript)));
