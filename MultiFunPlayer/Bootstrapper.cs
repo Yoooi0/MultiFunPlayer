@@ -66,6 +66,7 @@ public class Bootstrapper : Bootstrapper<RootViewModel>
         if (dirty)
             SettingsHelper.Write(SettingsType.Application, settings);
 
+        logger.Debug("Timer settings [IsHighResolution: {0}, Frequency: {1}]", Stopwatch.IsHighResolution, Stopwatch.Frequency);
         logger.Info("Set working directory to \"{0}\"", workingDirectory);
         AppDomain.CurrentDomain.UnhandledException += (s, e) =>
         {

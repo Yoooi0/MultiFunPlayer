@@ -109,7 +109,7 @@ public abstract class AbstractOutputTarget : Screen, IOutputTarget
 
     protected void UpdateStats(Stopwatch stopwatch)
     {
-        var elapsed = (float)stopwatch.Elapsed.TotalSeconds;
+        var elapsed = stopwatch.ElapsedTicks / (float)Stopwatch.Frequency;
         _statsTime += elapsed;
         _statsCount++;
 

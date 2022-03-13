@@ -65,7 +65,7 @@ public class PipeOutputTargetViewModel : ThreadAbstractOutputTarget
 
                 UpdateValues();
 
-                var commands = DeviceAxis.ToString(Values, (float) stopwatch.Elapsed.TotalMilliseconds);
+                var commands = DeviceAxis.ToString(Values, stopwatch.ElapsedTicks / (float)Stopwatch.Frequency);
                 if (client.IsConnected && !string.IsNullOrWhiteSpace(commands))
                 {
                     Logger.Trace("Sending \"{0}\" to \"{1}\"", commands.Trim(), PipeName);

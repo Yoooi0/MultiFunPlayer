@@ -81,7 +81,7 @@ public class WebSocketOutputTargetViewModel : AsyncAbstractOutputTarget
 
                 UpdateValues();
 
-                var commands = DeviceAxis.ToString(Values, (float)stopwatch.Elapsed.TotalMilliseconds);
+                var commands = DeviceAxis.ToString(Values, stopwatch.ElapsedTicks / Stopwatch.Frequency);
                 if (client.State == WebSocketState.Open && !string.IsNullOrWhiteSpace(commands))
                 {
                     Logger.Trace("Sending \"{0}\" to \"{1}\"", commands.Trim(), Uri.ToString());
