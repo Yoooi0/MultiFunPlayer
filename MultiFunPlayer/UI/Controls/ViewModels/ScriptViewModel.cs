@@ -1169,6 +1169,9 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
             return;
 
         _ = await DialogHost.Show(modifier, "MediaPathModifierDialog").ConfigureAwait(true);
+
+        if (VideoFile != null)
+            Handle(new VideoFileChangedMessage(VideoFile.OriginalPath));
     }
 
     public void OnVideoPathModifierAdd(object sender, RoutedEventArgs e)
@@ -1179,6 +1182,9 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         var (_, type) = pair;
         var modifier = (IMediaPathModifier)Activator.CreateInstance(type);
         VideoPathModifiers.Add(modifier);
+
+        if(VideoFile != null)
+            Handle(new VideoFileChangedMessage(VideoFile.OriginalPath));
     }
 
     public void OnVideoPathModifierRemove(object sender, RoutedEventArgs e)
@@ -1187,6 +1193,9 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
             return;
 
         VideoPathModifiers.Remove(modifier);
+
+        if (VideoFile != null)
+            Handle(new VideoFileChangedMessage(VideoFile.OriginalPath));
     }
 
     public void OnMapCurrentVideoPathToFile(object sender, RoutedEventArgs e)
