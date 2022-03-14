@@ -101,7 +101,13 @@ public class DeoVRVideoSourceViewModel : AbstractVideoSource, IHandle<VideoPlayP
 
                 var length = BitConverter.ToInt32(lengthBuffer, 0);
                 if (length <= 0)
+                {
+                    Logger.Trace("Received \"\" from \"{0}\"", Name);
+                    _eventAggregator.Publish(new VideoFileChangedMessage(null));
+                    _eventAggregator.Publish(new VideoPlayingMessage(isPlaying: false));
+                    playerState = new PlayerState();
                     continue;
+                }
 
                 var dataBuffer = await stream.ReadBytesAsync(length, token);
                 try
