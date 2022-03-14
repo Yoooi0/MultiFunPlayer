@@ -12,16 +12,19 @@ public class FindReplaceMediaPathModifierViewModel : AbstractMediaPathModifier
     [DependsOn(nameof(Find))]
     public override string Description => Find?.Length > 50 ? $"{Find[..50]}..." : Find;
 
-    [JsonProperty] public string Find { get; set; }
-    [JsonProperty] public string Replace { get; set; }
+    [JsonProperty] public string Find { get; set; } = string.Empty;
+    [JsonProperty] public string Replace { get; set; } = string.Empty;
     [JsonProperty] public bool MatchCase { get; set; } = true;
-    [JsonProperty] public bool UseRegularExpressions { get; set; }
+    [JsonProperty] public bool UseRegularExpressions { get; set; } = false;
 
     public override bool Process(ref string path)
     {
-        try
+        if (UseRegularExpressions)
         {
-            if (UseRegularExpressions)
+            if (path == null || Find == null || Replace == null)
+                return false;
+
+            try
             {
                 var replaced = Regex.Replace(path, Find, Replace, MatchCase ? RegexOptions.None : RegexOptions.IgnoreCase);
                 if (ReferenceEquals(replaced, path))
@@ -29,19 +32,23 @@ public class FindReplaceMediaPathModifierViewModel : AbstractMediaPathModifier
 
                 path = replaced;
             }
-            else
+            catch
             {
-                var replaced = path.Replace(Find, Replace, MatchCase ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase);
-                if (string.Equals(replaced, path, StringComparison.Ordinal))
-                    return false;
-
-                path = replaced;
+                return false;
             }
-
-            return true;
         }
-        catch { }
+        else
+        {
+            if (path == null || string.IsNullOrEmpty(Find))
+                return false;
 
-        return false;
+            var replaced = path.Replace(Find, Replace, MatchCase ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase);
+            if (string.Equals(replaced, path, StringComparison.Ordinal))
+                return false;
+
+            path = replaced;
+        }
+
+        return true;
     }
 }
