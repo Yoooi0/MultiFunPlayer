@@ -383,11 +383,6 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
             CurrentPosition = float.NaN;
             PlaybackSpeed = 1;
         }
-        else
-        {
-            if (AutoSkipToScriptStartEnabled)
-                ScheduleAutoSkipToScriptStart();
-        }
 
         InvalidateState(null);
     }
@@ -415,6 +410,7 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         Logger.Info("Received VideoDurationMessage [Duration: {0}]", message.Duration?.ToString());
 
         VideoDuration = newDuration;
+        ScheduleAutoSkipToScriptStart();
     }
 
     public void Handle(VideoSpeedMessage message)
@@ -928,13 +924,17 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         _eventAggregator.Publish(new VideoSeekMessage(TimeSpan.FromSeconds(MathUtils.Clamp(time, 0, VideoDuration))));
     }
 
+    private Task _autoSkipToScriptStartTask = Task.CompletedTask;
     private void ScheduleAutoSkipToScriptStart()
     {
         if (!AutoSkipToScriptStartEnabled)
             return;
 
-        Task.Delay(1000, _cancellationSource.Token)
-            .ContinueWith(_ => SeekVideoToScriptStart(AutoSkipToScriptStartOffset, onlyWhenBefore: true));
+        if (!_autoSkipToScriptStartTask.IsCompleted)
+            return;
+
+        _autoSkipToScriptStartTask = Task.Delay(1000, _cancellationSource.Token)
+                                         .ContinueWith(_ => SeekVideoToScriptStart(AutoSkipToScriptStartOffset, onlyWhenBefore: true));
     }
 
     private void SeekVideoToScriptStart(float offset, bool onlyWhenBefore)
@@ -949,7 +949,7 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         if (startPosition == null)
             return;
 
-        var targetVideoTime = MathF.Max(0, startPosition.Value - offset);
+        var targetVideoTime = MathF.Max(MathF.Min(startPosition.Value, VideoDuration) - offset, 0);
         if (onlyWhenBefore && targetVideoTime <= CurrentPosition)
             return;
 
