@@ -58,8 +58,8 @@ public class WebSocketOutputTargetViewModel : AsyncAbstractOutputTarget
             var task = await Task.WhenAny(WriteAsync(client, cancellationSource.Token), ReadAsync(client, cancellationSource.Token));
             cancellationSource.Cancel();
 
-            if (task.Exception != null)
-                throw task.Exception;
+            if (task.Exception?.TryUnwrapAggregateException(out var e) == true)
+                e.Throw();
         }
         catch (OperationCanceledException) { }
         catch (Exception e)

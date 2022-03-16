@@ -6,6 +6,7 @@ using System.Linq.Expressions;
 using System.Net.Http;
 using System.Net.Sockets;
 using System.Runtime.CompilerServices;
+using System.Runtime.ExceptionServices;
 
 namespace MultiFunPlayer.Common;
 
@@ -303,5 +304,21 @@ public static class WebExtensions
         var stream = await response.Content.ReadAsStreamAsync();
         using var fileStream = File.Create(fileName);
         stream.CopyTo(fileStream);
+    }
+}
+
+public static class ExceptionExtensions
+{
+    public static void Throw(this Exception e) => ExceptionDispatchInfo.Capture(e).Throw();
+    public static bool TryUnwrap(this AggregateException e, out Exception result)
+    {
+        result = e.InnerExceptions.Count == 1 ? e.InnerExceptions[0] : null;
+        return result != null;
+    }
+
+    public static bool TryUnwrapAggregateException(this Exception e, out Exception result)
+    {
+        result = e is AggregateException ae && ae.InnerExceptions.Count == 1 ? ae.InnerExceptions[0] : null;
+        return result != null;
     }
 }

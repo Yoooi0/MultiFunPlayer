@@ -1,4 +1,4 @@
-﻿using MultiFunPlayer.Common;
+using MultiFunPlayer.Common;
 using MultiFunPlayer.Common.Messages;
 using MultiFunPlayer.Input;
 using MultiFunPlayer.UI;
@@ -63,8 +63,8 @@ public class MpcVideoSourceViewModel : AbstractVideoSource, IHandle<VideoPlayPau
             var task = await Task.WhenAny(ReadAsync(client, cancellationSource.Token), WriteAsync(client, cancellationSource.Token));
             cancellationSource.Cancel();
 
-            if (task.Exception != null)
-                throw task.Exception;
+            if (task.Exception?.TryUnwrapAggregateException(out var e) == true)
+                e.Throw();
         }
         catch (OperationCanceledException) { }
         catch (Exception e)
@@ -221,9 +221,9 @@ public class MpcVideoSourceViewModel : AbstractVideoSource, IHandle<VideoPlayPau
             {
                 var innerException = operationCanceledException.InnerException;
                 if (innerException is TimeoutException)
-                    ExceptionDispatchInfo.Capture(innerException).Throw();
+                    innerException.Throw();
 
-                ExceptionDispatchInfo.Capture(operationCanceledException).Throw();
+                operationCanceledException.Throw();
             }
 
             throw;
