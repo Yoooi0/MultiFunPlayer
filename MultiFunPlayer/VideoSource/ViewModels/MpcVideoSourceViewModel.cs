@@ -50,7 +50,7 @@ public class MpcVideoSourceViewModel : AbstractVideoSource, IHandle<VideoPlayPau
                 throw new Exception("Endpoint cannot be null.");
 
             using var client = WebUtils.CreateClient();
-            client.Timeout = TimeSpan.FromMilliseconds(100);
+            client.Timeout = TimeSpan.FromMilliseconds(1000);
 
             var uri = new Uri($"http://{Endpoint.Address}:{Endpoint.Port}");
             var response = await UnwrapTimeout(() => client.GetAsync(uri, token));
@@ -67,6 +67,7 @@ public class MpcVideoSourceViewModel : AbstractVideoSource, IHandle<VideoPlayPau
                 e.Throw();
         }
         catch (OperationCanceledException) { }
+        catch (TimeoutException e) { Logger.Debug(e, $"{Name} failed with exception"); }
         catch (Exception e)
         {
             Logger.Error(e, $"{Name} failed with exception");
