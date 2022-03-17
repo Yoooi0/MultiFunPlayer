@@ -92,7 +92,7 @@ public class DeoVRVideoSourceViewModel : AbstractVideoSource, IHandle<VideoPlayP
     {
         try
         {
-            var playerState = new PlayerState();
+            var playerState = default(PlayerState);
             while (!token.IsCancellationRequested && client.Connected)
             {
                 var lengthBuffer = await stream.ReadBytesAsync(4, token);
@@ -103,11 +103,18 @@ public class DeoVRVideoSourceViewModel : AbstractVideoSource, IHandle<VideoPlayP
                 if (length <= 0)
                 {
                     Logger.Trace("Received \"\" from \"{0}\"", Name);
-                    _eventAggregator.Publish(new VideoFileChangedMessage(null));
-                    _eventAggregator.Publish(new VideoPlayingMessage(isPlaying: false));
-                    playerState = new PlayerState();
+
+                    if (playerState != null)
+                    {
+                        _eventAggregator.Publish(new VideoFileChangedMessage(null));
+                        _eventAggregator.Publish(new VideoPlayingMessage(isPlaying: false));
+                        playerState = null;
+                    }
+
                     continue;
                 }
+
+                playerState ??= new PlayerState();
 
                 var dataBuffer = await stream.ReadBytesAsync(length, token);
                 try
