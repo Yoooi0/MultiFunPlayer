@@ -151,7 +151,7 @@ public class SerialOutputTargetViewModel : ThreadAbstractOutputTarget
                     Logger.Debug("Received \"{0}\" from \"{1}\"", serialPort.ReadExisting(), SelectedSerialPortDeviceId);
 
                 var dirtyValues = Values.Where(x => DeviceAxis.IsDirty(x.Value, lastSentValues[x.Key]));
-                var commands = DeviceAxis.ToString(dirtyValues, stopwatch.ElapsedTicks / (float)Stopwatch.Frequency);
+                var commands = DeviceAxis.ToString(dirtyValues, 1000 * stopwatch.ElapsedTicks / (float)Stopwatch.Frequency);
                 if (serialPort.IsOpen == true && !string.IsNullOrWhiteSpace(commands))
                 {
                     Logger.Trace("Sending \"{0}\" to \"{1}\"", commands.Trim(), SelectedSerialPortDeviceId);

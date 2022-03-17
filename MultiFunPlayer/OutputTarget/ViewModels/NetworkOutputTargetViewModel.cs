@@ -81,7 +81,7 @@ public class NetworkOutputTargetViewModel : ThreadAbstractOutputTarget
                     Logger.Debug("Received \"{0}\" from \"{1}\"", message, $"tcp://{Endpoint}");
                 }
 
-                var commands = DeviceAxis.ToString(Values, stopwatch.ElapsedTicks / (float)Stopwatch.Frequency);
+                var commands = DeviceAxis.ToString(Values, 1000 * stopwatch.ElapsedTicks / (float)Stopwatch.Frequency);
                 if (client.Connected && !string.IsNullOrWhiteSpace(commands))
                 {
                     Logger.Trace("Sending \"{0}\" to \"{1}\"", commands.Trim(), $"tcp://{Endpoint}");
@@ -137,7 +137,7 @@ public class NetworkOutputTargetViewModel : ThreadAbstractOutputTarget
                     Logger.Debug("Received \"{0}\" from \"{1}\"", message, $"udp://{endpoint}");
                 }
 
-                var commands = DeviceAxis.ToString(Values, stopwatch.ElapsedTicks / (float)Stopwatch.Frequency);
+                var commands = DeviceAxis.ToString(Values, 1000 * stopwatch.ElapsedTicks / (float)Stopwatch.Frequency);
                 if (!string.IsNullOrWhiteSpace(commands))
                 {
                     Logger.Trace("Sending \"{0}\" to \"{1}\"", commands.Trim(), $"udp://{Endpoint}");
