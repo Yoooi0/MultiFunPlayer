@@ -18,6 +18,13 @@
   <ItemGroup>
     <None Include="..\.editorconfig" Link=".editorconfig" />
   </ItemGroup>
+	
+  <ItemGroup>
+	<!--https://github.com/dotnet/core/issues/7176-->
+	<FrameworkReference
+	    Update="Microsoft.WindowsDesktop.App;Microsoft.WindowsDesktop.App.WPF;Microsoft.WindowsDesktop.App.WindowsForms"
+		TargetingPackVersion="6.0.0" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Buttplug" Version="2.*" />
