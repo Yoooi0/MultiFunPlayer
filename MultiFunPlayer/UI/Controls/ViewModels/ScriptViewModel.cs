@@ -535,6 +535,10 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
 
     public void Handle(ScriptLoadMessage message)
     {
+        if (message.Scripts == null)
+            return;
+
+        Logger.Info("Received ScriptLoadMessage [Axes: {list}]", message.Scripts.Keys);
         ResetSync(true, message.Scripts.Keys);
 
         foreach (var (axis, script) in message.Scripts)
