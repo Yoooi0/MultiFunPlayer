@@ -290,7 +290,7 @@
                                                                     <material:PackIcon Kind="PowerPlugOff" Width="12" Height="12"/>
                                                                 </Setter.Value>
                                                             </Setter>
-                                                            
+
                                                             <Style.Triggers>
                                                                 <DataTrigger Value="True">
                                                                     <DataTrigger.Binding>
