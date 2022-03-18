@@ -135,9 +135,6 @@ public class ButtplugOutputTargetViewModel : AsyncAbstractOutputTarget
         {
             Logger.Info($"Device removed: \"{device.Name}\"");
 
-            foreach (var settings in DeviceSettings.Where(s => GetDeviceFromSettings(s) == device))
-                settings.IsConnected = false;
-
             AvailableDevices.Remove(device);
             if (device == SelectedDevice)
                 SelectedDevice = null;
@@ -148,9 +145,6 @@ public class ButtplugOutputTargetViewModel : AsyncAbstractOutputTarget
             Logger.Info($"Device added: \"{device.Name}\"");
 
             AvailableDevices.Add(device);
-
-            foreach (var settings in DeviceSettings.Where(s => GetDeviceFromSettings(s) == device))
-                settings.IsConnected = true;
         }
 
         using var client = new ButtplugClient(nameof(MultiFunPlayer));
@@ -450,5 +444,4 @@ public class ButtplugClientDeviceSettings : PropertyChangedBase
     [JsonProperty] public DeviceAxis SourceAxis { get; set; }
     [JsonProperty] public ServerMessage.Types.MessageAttributeType MessageType { get; set; }
     [JsonProperty] public uint FeatureIndex { get; set; }
-    public bool IsConnected { get; set; }
 }
