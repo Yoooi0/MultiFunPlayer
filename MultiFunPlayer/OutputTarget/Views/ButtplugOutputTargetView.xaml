@@ -282,7 +282,7 @@
                                                         <Style TargetType="{x:Type material:Badged}">
                                                             <Setter Property="BadgeBackground">
                                                                 <Setter.Value>
-                                                                    <SolidColorBrush Color="{StaticResource MaterialDesignErrorBrush}" Opacity="0.7"/>
+                                                                    <SolidColorBrush Color="{StaticResource MaterialDesignErrorColor}" Opacity="0.7"/>
                                                                 </Setter.Value>
                                                             </Setter>
                                                             <Setter Property="Badge">
@@ -295,7 +295,7 @@
                                                                 <DataTrigger Binding="{Binding IsConnected}" Value="True">
                                                                     <Setter Property="BadgeBackground">
                                                                         <Setter.Value>
-                                                                            <SolidColorBrush Color="{StaticResource MaterialDesignSuccessBrush}" Opacity="0.5"/>
+                                                                            <SolidColorBrush Color="{StaticResource MaterialDesignSuccessColor}" Opacity="0.5"/>
                                                                         </Setter.Value>
                                                                     </Setter>
                                                                     <Setter Property="Badge">
