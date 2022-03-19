@@ -17,7 +17,7 @@ public class LoopingScriptMotionProviderViewModel : AbstractMotionProvider
     private float _scriptEnd;
     private int _scriptIndex;
 
-    public IScriptFile Script { get; private set; }
+    public IScriptResource Script { get; private set; }
 
     [JsonProperty] public FileInfo SourceFile { get; set; } = null;
     [JsonProperty] public InterpolationType InterpolationType { get; set; } = InterpolationType.Pchip;
@@ -27,7 +27,7 @@ public class LoopingScriptMotionProviderViewModel : AbstractMotionProvider
 
     public void OnSourceFileChanged()
     {
-        Script = ScriptFile.FromFileInfo(SourceFile, true);
+        Script = ScriptResource.FromFileInfo(SourceFile, true);
         _scriptIndex = 0;
         _scriptStart = Script?.Keyframes?.First().Position ?? float.NaN;
         _scriptEnd = Script?.Keyframes?.Last().Position ?? float.NaN;

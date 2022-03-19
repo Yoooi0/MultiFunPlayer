@@ -5,7 +5,7 @@ using System.Text;
 
 namespace MultiFunPlayer.Common;
 
-public enum ScriptFileOrigin
+public enum ScriptResourceOrigin
 {
     Automatic,
     User,
@@ -18,22 +18,22 @@ public enum ScriptDataType
     Funscript
 }
 
-public interface IScriptFile
+public interface IScriptResource
 {
     string Name { get; }
     string Source { get; }
-    ScriptFileOrigin Origin { get; }
+    ScriptResourceOrigin Origin { get; }
     KeyframeCollection Keyframes { get; }
 }
 
-public class ScriptFile : IScriptFile
+public class ScriptResource : IScriptResource
 {
     public string Name { get; }
     public string Source { get; }
-    public ScriptFileOrigin Origin { get; }
+    public ScriptResourceOrigin Origin { get; }
     public KeyframeCollection Keyframes { get; }
 
-    protected ScriptFile(string name, string source, ReadOnlySpan<byte> data, ScriptDataType type, ScriptFileOrigin origin)
+    protected ScriptResource(string name, string source, ReadOnlySpan<byte> data, ScriptDataType type, ScriptResourceOrigin origin)
     {
         Name = name;
         Source = source;
@@ -41,46 +41,46 @@ public class ScriptFile : IScriptFile
         Keyframes = type.Parse(data);
     }
 
-    public static IScriptFile FromBytes(string name, string source, ReadOnlySpan<byte> bytes, ScriptFileOrigin origin)
-        => new ScriptFile(name, source, bytes, ScriptDataType.Funscript, origin);
+    public static IScriptResource FromBytes(string name, string source, ReadOnlySpan<byte> bytes, ScriptResourceOrigin origin)
+        => new ScriptResource(name, source, bytes, ScriptDataType.Funscript, origin);
 
-    public static IScriptFile FromPath(string path, bool userLoaded = false) => FromFileInfo(new FileInfo(path), userLoaded);
-    public static IScriptFile FromFileInfo(FileInfo file, bool userLoaded = false)
+    public static IScriptResource FromPath(string path, bool userLoaded = false) => FromFileInfo(new FileInfo(path), userLoaded);
+    public static IScriptResource FromFileInfo(FileInfo file, bool userLoaded = false)
     {
         if (!file.Exists)
             return null;
 
         var path = file.FullName;
-        var origin = userLoaded ? ScriptFileOrigin.User : ScriptFileOrigin.Automatic;
+        var origin = userLoaded ? ScriptResourceOrigin.User : ScriptResourceOrigin.Automatic;
         return FromBytes(Path.GetFileName(path), Path.GetDirectoryName(path), File.ReadAllBytes(path), origin);
     }
 
-    public static IScriptFile FromZipArchiveEntry(string archivePath, ZipArchiveEntry entry, bool userLoaded = false)
+    public static IScriptResource FromZipArchiveEntry(string archivePath, ZipArchiveEntry entry, bool userLoaded = false)
     {
         using var stream = entry.Open();
         using var memory = new MemoryStream();
         stream.CopyTo(memory);
 
-        var origin = userLoaded ? ScriptFileOrigin.User : ScriptFileOrigin.Automatic;
+        var origin = userLoaded ? ScriptResourceOrigin.User : ScriptResourceOrigin.Automatic;
         return FromBytes(entry.Name, archivePath, memory.ToArray(), origin);
     }
+
+    public static LinkedScriptResource LinkTo(IScriptResource other) => other != null ? new LinkedScriptResource(other) : null;
 }
 
-public class LinkedScriptFile : IScriptFile
+public class LinkedScriptResource : IScriptResource
 {
-    private readonly IScriptFile _linked;
+    private readonly IScriptResource _linked;
 
     public string Name => _linked.Name;
     public string Source => _linked.Source;
-    public ScriptFileOrigin Origin => ScriptFileOrigin.Link;
+    public ScriptResourceOrigin Origin => ScriptResourceOrigin.Link;
     public KeyframeCollection Keyframes => _linked.Keyframes;
 
-    protected LinkedScriptFile(IScriptFile linked)
+    public LinkedScriptResource(IScriptResource linked)
     {
         _linked = linked;
     }
-
-    public static IScriptFile LinkTo(IScriptFile other) => other != null ? new LinkedScriptFile(other) : null;
 }
 
 public static class ScriptDataTypeExtensions

@@ -633,7 +633,7 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
             return updated;
 
         Logger.Debug("Maching files to axes [Axes: {list}]", axes);
-        bool TryMatchFile(string fileName, Func<IScriptFile> generator)
+        bool TryMatchFile(string fileName, Func<IScriptResource> generator)
         {
             var videoWithoutExtension = Path.GetFileNameWithoutExtension(VideoFile.Name);
             var funscriptWithoutExtension = Path.GetFileNameWithoutExtension(fileName);
@@ -683,7 +683,7 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                 Logger.Info("Matching zip file \"{0}\"", path);
                 using var zip = ZipFile.OpenRead(path);
                 foreach (var entry in zip.Entries.Where(e => string.Equals(Path.GetExtension(e.FullName), ".funscript", StringComparison.OrdinalIgnoreCase)))
-                    TryMatchFile(entry.Name, () => ScriptFile.FromZipArchiveEntry(path, entry));
+                    TryMatchFile(entry.Name, () => ScriptResource.FromZipArchiveEntry(path, entry));
 
                 return true;
             }
@@ -699,7 +699,7 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                 TryMatchArchive(zipFile.FullName);
 
             foreach (var funscriptFile in library.EnumerateFiles($"{videoWithoutExtension}*.funscript"))
-                TryMatchFile(funscriptFile.Name, () => ScriptFile.FromFileInfo(funscriptFile));
+                TryMatchFile(funscriptFile.Name, () => ScriptResource.FromFileInfo(funscriptFile));
         }
 
         if (Directory.Exists(VideoFile.Source))
@@ -709,14 +709,14 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
             TryMatchArchive(Path.Join(sourceDirectory.FullName, $"{videoWithoutExtension}.zip"));
 
             foreach (var funscriptFile in sourceDirectory.EnumerateFiles($"{videoWithoutExtension}*.funscript"))
-                TryMatchFile(funscriptFile.Name, () => ScriptFile.FromFileInfo(funscriptFile));
+                TryMatchFile(funscriptFile.Name, () => ScriptResource.FromFileInfo(funscriptFile));
         }
 
         foreach (var axis in axes.Except(updated))
         {
             if (overwrite && AxisModels[axis].Script != null)
             {
-                if (AxisModels[axis].Script.Origin != ScriptFileOrigin.User)
+                if (AxisModels[axis].Script.Origin != ScriptResourceOrigin.User)
                 {
                     ResetScript(axis);
                     updated.Add(axis);
@@ -768,16 +768,16 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
 
             if (model.Script != null)
             {
-                if (model.Settings.LinkAxisHasPriority && model.Script.Origin == ScriptFileOrigin.User)
+                if (model.Settings.LinkAxisHasPriority && model.Script.Origin == ScriptResourceOrigin.User)
                     continue;
 
-                if (!model.Settings.LinkAxisHasPriority && model.Script.Origin != ScriptFileOrigin.Link)
+                if (!model.Settings.LinkAxisHasPriority && model.Script.Origin != ScriptResourceOrigin.Link)
                     continue;
             }
 
             Logger.Debug("Linked {0} to {1}", axis.Name, model.Settings.LinkAxis.Name);
 
-            SetScript(axis, LinkedScriptFile.LinkTo(AxisModels[model.Settings.LinkAxis].Script));
+            SetScript(axis, ScriptResource.LinkTo(AxisModels[model.Settings.LinkAxis].Script));
         }
     }
 
@@ -798,7 +798,7 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         }
     }
 
-    private void SetScript(DeviceAxis axis, IScriptFile script)
+    private void SetScript(DeviceAxis axis, IScriptResource script)
     {
         var model = AxisModels[axis];
         var state = AxisStates[axis];
@@ -997,7 +997,7 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                 return;
 
             ResetSync(true, axis);
-            SetScript(axis, ScriptFile.FromPath(path, userLoaded: true));
+            SetScript(axis, ScriptResource.FromPath(path, userLoaded: true));
         }
     }
 
@@ -1034,7 +1034,7 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
             return;
 
         ResetSync(true, axis);
-        SetScript(axis, ScriptFile.FromFileInfo(new FileInfo(dialog.FileName), userLoaded: true));
+        SetScript(axis, ScriptResource.FromFileInfo(new FileInfo(dialog.FileName), userLoaded: true));
     }
 
     public void OnAxisClear(DeviceAxis axis) => ResetScript(axis);
@@ -1580,7 +1580,7 @@ public class AxisModel : PropertyChangedBase
 {
     public AxisState State { get; } = new AxisState();
     public AxisSettings Settings { get; } = new AxisSettings();
-    public IScriptFile Script { get; set; } = null;
+    public IScriptResource Script { get; set; } = null;
 
     public AxisModel()
     {
@@ -1600,7 +1600,7 @@ public class AxisModel : PropertyChangedBase
     }
 
     public bool MotionProviderOverridesScript => Script != null && Settings.SelectedMotionProvider != null && Settings.MotionProviderBlend > 50;
-    public bool LinkOverridesScript => Script != null && Script.Origin == ScriptFileOrigin.Link && Settings.LinkAxis != null && Settings.LinkAxisHasPriority;
+    public bool LinkOverridesScript => Script != null && Script.Origin == ScriptResourceOrigin.Link && Settings.LinkAxis != null && Settings.LinkAxisHasPriority;
 }
 
 [DoNotNotify]
