@@ -259,8 +259,9 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                     return false;
                 if (!settings.UpdateMotionProviderWithoutScript && !state.InsideScript)
                     return false;
-                if (settings.UpdateMotionProviderWithAxis != null && !AxisStates[settings.UpdateMotionProviderWithAxis].IsDirty)
-                    return false;
+                if (settings.UpdateMotionProviderWithAxis != null)
+                    if(!AxisStates[settings.UpdateMotionProviderWithAxis].IsDirty || AxisStates[settings.UpdateMotionProviderWithAxis].IsAutoHoming)
+                        return false;
 
                 var providerResult = MotionProviderManager.Update(axis, settings.SelectedMotionProvider, ElapsedSeconds());
                 if (providerResult is not float providerValue)
@@ -275,31 +276,36 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
 
             bool UpdateAutoHome(DeviceAxis axis, AxisState state, AxisSettings settings, float lastValue, ref float newValue)
             {
-                if (state.IsDirty || (state.InsideScript && IsPlaying))
+                bool UpdateAutoHomeImpl(ref float newValue)
                 {
-                    state.AutoHomeTime = 0;
-                    return false;
+                    if (state.IsDirty || (state.InsideScript && IsPlaying))
+                    {
+                        state.AutoHomeTime = 0;
+                        return false;
+                    }
+
+                    if (!float.IsFinite(state.Value))
+                        return false;
+
+                    if (!settings.AutoHomeEnabled)
+                        return false;
+
+                    if (settings.AutoHomeDuration < 0.0001f)
+                    {
+                        newValue = axis.DefaultValue;
+                        return newValue != lastValue;
+                    }
+
+                    state.AutoHomeTime += ElapsedSeconds();
+                    var t = (state.AutoHomeTime - settings.AutoHomeDelay) / settings.AutoHomeDuration;
+                    if (t < 0 || t > 1)
+                        return false;
+
+                    newValue = MathUtils.Clamp01(MathUtils.Lerp(state.Value, axis.DefaultValue, MathF.Pow(2, 10 * (t - 1))));
+                    return MathF.Abs(lastValue - newValue) > 0.000001f;
                 }
 
-                if (!float.IsFinite(state.Value))
-                    return false;
-
-                if (!settings.AutoHomeEnabled)
-                    return false;
-
-                if (settings.AutoHomeDuration < 0.0001f)
-                {
-                    newValue = axis.DefaultValue;
-                    return newValue != lastValue;
-                }
-
-                state.AutoHomeTime += ElapsedSeconds();
-                var t = (state.AutoHomeTime - settings.AutoHomeDelay) / settings.AutoHomeDuration;
-                if (t < 0 || t > 1)
-                    return false;
-
-                newValue = MathUtils.Clamp01(MathUtils.Lerp(state.Value, axis.DefaultValue, MathF.Pow(2, 10 * (t - 1))));
-                return MathF.Abs(lastValue - newValue) > 0.000001f;
+                return state.IsAutoHoming = UpdateAutoHomeImpl(ref newValue);
             }
 
             bool UpdateSync(DeviceAxis axis, AxisState state, float lastValue, ref float newValue)
@@ -1614,6 +1620,7 @@ public class AxisState : INotifyPropertyChanged
     [DoNotNotify] public float AutoHomeTime { get; set; } = 0;
 
     [DoNotNotify] public bool IsDirty { get; set; } = true;
+    [DoNotNotify] public bool IsAutoHoming { get; set; } = false;
 
     public bool IsSpeedLimited { get; set; } = false;
 
