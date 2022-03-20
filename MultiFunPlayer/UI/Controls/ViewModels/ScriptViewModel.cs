@@ -187,7 +187,7 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                     if (!float.IsFinite(maxSpeed))
                         return false;
 
-                    newValue = lastValue + maxSpeed * deltaTime * MathF.Sign(speed);
+                    newValue = MathUtils.Clamp01(lastValue + maxSpeed * deltaTime * MathF.Sign(speed));
                     return true;
                 }
 
@@ -210,7 +210,7 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                 var limitState = AxisStates[strokeAxis];
                 var limitValue = limitState.Value;
                 var factor = MathUtils.Map(limitValue, 0.25f, 0.9f, 1f, 0f);
-                newValue = MathUtils.Lerp(newValue, axis.DefaultValue, factor);
+                newValue = MathUtils.Clamp01(MathUtils.Lerp(newValue, axis.DefaultValue, factor));
                 return MathF.Abs(lastValue - newValue) > 0.000001f;
             }
 
@@ -247,7 +247,7 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                     return false;
                 }
 
-                newValue = keyframes.Interpolate(state.Index, axisPosition, settings.InterpolationType);
+                newValue = MathUtils.Clamp01(keyframes.Interpolate(state.Index, axisPosition, settings.InterpolationType));
                 if (settings.Inverted)
                     newValue = 1 - newValue;
 
@@ -269,9 +269,9 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                 if (providerResult is not float providerValue)
                     return false;
 
-                newValue = IsPlaying && state.InsideScript
+                newValue = MathUtils.Clamp01(IsPlaying && state.InsideScript
                     ? MathUtils.Lerp(newValue, providerValue, MathUtils.Clamp01(settings.MotionProviderBlend / 100))
-                    : providerValue;
+                    : providerValue);
 
                 return MathF.Abs(lastValue - newValue) > 0.000001f;
             }
@@ -301,7 +301,7 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                 if (t < 0 || t > 1)
                     return false;
 
-                newValue = MathUtils.Lerp(state.Value, axis.DefaultValue, MathF.Pow(2, 10 * (t - 1)));
+                newValue = MathUtils.Clamp01(MathUtils.Lerp(state.Value, axis.DefaultValue, MathF.Pow(2, 10 * (t - 1))));
                 return MathF.Abs(lastValue - newValue) > 0.000001f;
             }
 
@@ -312,7 +312,7 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                 if (state.SyncTime >= SyncSettings.Duration)
                     return false;
 
-                newValue = MathUtils.Lerp(!float.IsFinite(lastValue) ? axis.DefaultValue : lastValue, newValue, GetSyncProgress(state.SyncTime, SyncSettings.Duration));
+                newValue = MathUtils.Clamp01(MathUtils.Lerp(!float.IsFinite(lastValue) ? axis.DefaultValue : lastValue, newValue, GetSyncProgress(state.SyncTime, SyncSettings.Duration)));
                 return MathF.Abs(lastValue - newValue) > 0.000001f;
             }
         }
