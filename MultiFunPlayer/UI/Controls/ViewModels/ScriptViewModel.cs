@@ -169,7 +169,7 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
 
             void SpeedLimit(DeviceAxis axis, AxisState state, AxisSettings settings, float lastValue, ref float newValue)
             {
-                static bool SpeedLimitImpl(DeviceAxis axis, AxisSettings settings, float deltaTime, float lastValue, ref float newValue)
+                bool SpeedLimitImpl(ref float newValue)
                 {
                     if (!settings.SpeedLimitEnabled)
                         return false;
@@ -180,6 +180,7 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                     if (MathF.Abs(step) < 0.000001f)
                         return false;
 
+                    var deltaTime = ElapsedSeconds();
                     var speed = step / deltaTime;
                     var maxSpeed = 1 / settings.MaximumSecondsPerStroke;
                     if (MathF.Abs(speed / maxSpeed) < 1)
@@ -191,11 +192,7 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                     return true;
                 }
 
-                var deltaTime = ElapsedSeconds();
-                var lastIsSpeedLimited = state.IsSpeedLimited;
-                state.IsSpeedLimited = SpeedLimitImpl(axis, settings, deltaTime, lastValue, ref newValue);
-                if (lastIsSpeedLimited != state.IsSpeedLimited)
-                    state.NotifyIsSpeedLimitedChanged();
+                state.IsSpeedLimited = SpeedLimitImpl(ref newValue);
             }
 
             bool UpdateSmartLimit(DeviceAxis axis, AxisState state, AxisSettings settings, float lastValue, ref float newValue)
@@ -1603,28 +1600,27 @@ public class AxisModel : PropertyChangedBase
     public bool LinkOverridesScript => Script != null && Script.Origin == ScriptResourceOrigin.Link && Settings.LinkAxis != null && Settings.LinkAxisHasPriority;
 }
 
-[DoNotNotify]
 public class AxisState : INotifyPropertyChanged
 {
-    public int Index { get; set; } = int.MinValue;
-    public float Value { get; set; } = float.NaN;
+    [DoNotNotify] public int Index { get; set; } = int.MinValue;
+    [DoNotNotify] public float Value { get; set; } = float.NaN;
 
-    public bool Invalid => Index == int.MinValue;
-    public bool BeforeScript => Index == -1;
-    public bool AfterScript => Index == int.MaxValue;
-    public bool InsideScript => Index >= 0 && Index != int.MaxValue;
+    [DoNotNotify] public bool Invalid => Index == int.MinValue;
+    [DoNotNotify] public bool BeforeScript => Index == -1;
+    [DoNotNotify] public bool AfterScript => Index == int.MaxValue;
+    [DoNotNotify] public bool InsideScript => Index >= 0 && Index != int.MaxValue;
 
-    public float SyncTime { get; set; } = 0;
-    public float AutoHomeTime { get; set; } = 0;
+    [DoNotNotify] public float SyncTime { get; set; } = 0;
+    [DoNotNotify] public float AutoHomeTime { get; set; } = 0;
 
-    public bool IsDirty { get; set; } = true;
+    [DoNotNotify] public bool IsDirty { get; set; } = true;
+
     public bool IsSpeedLimited { get; set; } = false;
 
     public event PropertyChangedEventHandler PropertyChanged;
 
     public void Invalidate(bool end = false) => Index = end ? int.MaxValue : int.MinValue;
 
-    public void NotifyIsSpeedLimitedChanged() => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsSpeedLimited)));
     public void NotifyValueChanged()
     {
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(InsideScript)));
