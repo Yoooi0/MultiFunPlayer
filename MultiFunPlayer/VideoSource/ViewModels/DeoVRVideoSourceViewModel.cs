@@ -73,8 +73,7 @@ public class DeoVRVideoSourceViewModel : AbstractVideoSource, IHandle<VideoPlayP
             var task = await Task.WhenAny(ReadAsync(client, stream, cancellationSource.Token), WriteAsync(client, stream, cancellationSource.Token));
             cancellationSource.Cancel();
 
-            if (task.Exception?.TryUnwrapAggregateException(out var e) == true)
-                e.Throw();
+            task.ThrowIfFaulted();
         }
         catch (OperationCanceledException) { }
         catch (IOException e) { Logger.Debug(e, $"{Name} failed with exception"); }

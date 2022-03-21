@@ -169,6 +169,18 @@ public static class TaskExtensions
 
         return DoWaitAsync(task, millisecondsDelay);
     }
+
+    public static void ThrowIfFaulted(this Task task)
+    {
+        var e = task.Exception;
+        if (e == null)
+            return;
+
+        if (e.InnerExceptions.Count == 1)
+            e.InnerExceptions[0].Throw();
+        else
+            e.Throw();
+    }
 }
 
 public static class IOExtensions
@@ -310,15 +322,4 @@ public static class WebExtensions
 public static class ExceptionExtensions
 {
     public static void Throw(this Exception e) => ExceptionDispatchInfo.Capture(e).Throw();
-    public static bool TryUnwrap(this AggregateException e, out Exception result)
-    {
-        result = e.InnerExceptions.Count == 1 ? e.InnerExceptions[0] : null;
-        return result != null;
-    }
-
-    public static bool TryUnwrapAggregateException(this Exception e, out Exception result)
-    {
-        result = e is AggregateException ae && ae.InnerExceptions.Count == 1 ? ae.InnerExceptions[0] : null;
-        return result != null;
-    }
 }

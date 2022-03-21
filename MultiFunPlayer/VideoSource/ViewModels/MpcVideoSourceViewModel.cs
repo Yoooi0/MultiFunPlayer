@@ -63,8 +63,7 @@ public class MpcVideoSourceViewModel : AbstractVideoSource, IHandle<VideoPlayPau
             var task = await Task.WhenAny(ReadAsync(client, cancellationSource.Token), WriteAsync(client, cancellationSource.Token));
             cancellationSource.Cancel();
 
-            if (task.Exception?.TryUnwrapAggregateException(out var e) == true)
-                e.Throw();
+            task.ThrowIfFaulted();
         }
         catch (OperationCanceledException) { }
         catch (TimeoutException e) { Logger.Debug(e, $"{Name} failed with exception"); }
