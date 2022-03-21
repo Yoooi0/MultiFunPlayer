@@ -1,6 +1,4 @@
-﻿using MultiFunPlayer.Common;
-
-namespace MultiFunPlayer.OutputTarget;
+﻿namespace MultiFunPlayer.Common;
 
 public interface IDeviceAxisValueProvider
 {

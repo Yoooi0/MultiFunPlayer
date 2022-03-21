@@ -5,7 +5,6 @@ using MultiFunPlayer.Input;
 using MultiFunPlayer.Input.RawInput;
 using MultiFunPlayer.Input.XInput;
 using MultiFunPlayer.MotionProvider;
-using MultiFunPlayer.OutputTarget;
 using MultiFunPlayer.Settings;
 using MultiFunPlayer.Settings.Converters;
 using MultiFunPlayer.UI;

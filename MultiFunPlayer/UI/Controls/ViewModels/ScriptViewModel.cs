@@ -12,7 +12,6 @@ using MultiFunPlayer.Common.Messages;
 using Newtonsoft.Json;
 using Microsoft.WindowsAPICodePack.Dialogs;
 using System.ComponentModel;
-using MultiFunPlayer.OutputTarget;
 using NLog;
 using System.Runtime.CompilerServices;
 using MultiFunPlayer.Input;
@@ -253,18 +252,27 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
 
             bool UpdateMotionProvider(DeviceAxis axis, AxisState state, AxisSettings settings, float lastValue, ref float newValue)
             {
+                bool ShouldUpdateMotionProvider()
+                {
+                    if (!settings.UpdateMotionProviderWhenPaused && !IsPlaying)
+                        return false;
+                    if (!settings.UpdateMotionProviderWithoutScript && !state.InsideScript)
+                        return false;
+                    if (settings.UpdateMotionProviderWithAxis != null)
+                        if (!AxisStates[settings.UpdateMotionProviderWithAxis].IsDirty || AxisStates[settings.UpdateMotionProviderWithAxis].IsAutoHoming)
+                            return false;
+
+                    return true;
+                }
+
                 if (settings.SelectedMotionProvider == null)
                     return false;
-                if (!settings.UpdateMotionProviderWhenPaused && !IsPlaying)
-                    return false;
-                if (!settings.UpdateMotionProviderWithoutScript && !state.InsideScript)
-                    return false;
-                if (settings.UpdateMotionProviderWithAxis != null)
-                    if(!AxisStates[settings.UpdateMotionProviderWithAxis].IsDirty || AxisStates[settings.UpdateMotionProviderWithAxis].IsAutoHoming)
-                        return false;
 
-                var providerResult = MotionProviderManager.Update(axis, settings.SelectedMotionProvider, ElapsedSeconds());
-                if (providerResult is not float providerValue)
+                if(ShouldUpdateMotionProvider())
+                    MotionProviderManager.Update(axis, settings.SelectedMotionProvider, ElapsedSeconds());
+
+                var providerValue = MotionProviderManager.GetValue(axis);
+                if (!float.IsFinite(providerValue))
                     return false;
 
                 newValue = MathUtils.Clamp01(IsPlaying && state.InsideScript

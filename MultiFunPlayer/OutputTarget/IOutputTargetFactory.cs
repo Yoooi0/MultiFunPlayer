@@ -1,4 +1,5 @@
-﻿using MultiFunPlayer.OutputTarget;
+﻿using MultiFunPlayer.Common;
+using MultiFunPlayer.OutputTarget;
 using MultiFunPlayer.OutputTarget.ViewModels;
 using Stylet;
 

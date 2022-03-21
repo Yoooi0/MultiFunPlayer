@@ -10,12 +10,12 @@ using System.Reflection;
 
 namespace MultiFunPlayer.MotionProvider;
 
-public interface IMotionProviderManager
+public interface IMotionProviderManager : IDeviceAxisValueProvider
 {
     IEnumerable<string> MotionProviderNames { get; }
 
     IMotionProvider GetMotionProvider(DeviceAxis axis, string motionProviderName);
-    float? Update(DeviceAxis axis, string motionProviderName, float deltaTime);
+    void Update(DeviceAxis axis, string motionProviderName, float deltaTime);
     void RegisterShortcuts(IShortcutManager shortcutManager);
 }
 
@@ -26,6 +26,7 @@ public class MotionProviderManager : IMotionProviderManager, IHandle<AppSettings
     private readonly IEventAggregator _eventAggregator;
     private readonly HashSet<string> _motionProviderNames;
     private readonly Dictionary<DeviceAxis, Dictionary<string, IMotionProvider>> _motionProviders;
+    private readonly Dictionary<DeviceAxis, float> _values;
 
     public IEnumerable<string> MotionProviderNames => _motionProviderNames;
 
@@ -41,6 +42,7 @@ public class MotionProviderManager : IMotionProviderManager, IHandle<AppSettings
                                                        a => motionProviderFactory.CreateMotionProviderCollection(a)
                                                                                  .ToDictionary(p => p.GetType().GetCustomAttribute<DisplayNameAttribute>(inherit: false).DisplayName, 
                                                                                                p => p));
+        _values = DeviceAxis.All.ToDictionary(a => a, a => float.NaN);
     }
 
     public IMotionProvider GetMotionProvider(DeviceAxis axis, string motionProviderName)
@@ -55,12 +57,17 @@ public class MotionProviderManager : IMotionProviderManager, IHandle<AppSettings
         return motionProvider;
     }
 
-    public float? Update(DeviceAxis axis, string motionProviderName, float deltaTime)
+    public void Update(DeviceAxis axis, string motionProviderName, float deltaTime)
     {
         var motionProvider = GetMotionProvider(axis, motionProviderName);
-        motionProvider?.Update(deltaTime);
-        return motionProvider?.Value;
+        if (motionProvider == null)
+            return;
+
+        motionProvider.Update(deltaTime);
+        _values[axis] = motionProvider.Value;
     }
+
+    public float GetValue(DeviceAxis axis) => _values[axis];
 
     public void Handle(AppSettingsMessage message)
     {
