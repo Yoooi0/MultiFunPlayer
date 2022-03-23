@@ -385,8 +385,8 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         if (SyncSettings.SyncOnVideoFileChanged)
             ResetSync(isSyncing: VideoFile != null);
 
-        ResetScript(null);
-        ReloadScript(null);
+        ResetAxes(null);
+        ReloadAxes(null);
 
         if (VideoFile == null)
         {
@@ -636,8 +636,7 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
     #endregion
 
     #region Script
-    private List<DeviceAxis> TryMatchFiles(bool overwrite, params DeviceAxis[] axes) => TryMatchFiles(overwrite, axes?.AsEnumerable());
-    private List<DeviceAxis> TryMatchFiles(bool overwrite, IEnumerable<DeviceAxis> axes = null)
+    private List<DeviceAxis> SearchForScripts(IEnumerable<DeviceAxis> axes = null)
     {
         axes ??= DeviceAxis.All;
 
@@ -657,14 +656,10 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                 {
                     if (string.Equals(funscriptWithoutExtension, videoWithoutExtension, StringComparison.OrdinalIgnoreCase))
                     {
-                        if (AxisModels[strokeAxis].Script == null || overwrite)
-                        {
-                            SetScript(strokeAxis, generator());
-                            updated.Add(strokeAxis);
+                        SetScript(strokeAxis, generator());
+                        updated.Add(strokeAxis);
 
-                            Logger.Debug("Matched {0} script to \"{1}\"", strokeAxis.Name, fileName);
-                        }
-
+                        Logger.Debug("Matched {0} script to \"{1}\"", strokeAxis.Name, fileName);
                         return true;
                     }
                 }
@@ -674,14 +669,10 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
             {
                 if (axis.FunscriptNames.Any(n => funscriptWithoutExtension.EndsWith(n, StringComparison.OrdinalIgnoreCase)))
                 {
-                    if (AxisModels[axis].Script == null || overwrite)
-                    {
-                        SetScript(axis, generator());
-                        updated.Add(axis);
+                    SetScript(axis, generator());
+                    updated.Add(axis);
 
-                        Logger.Debug("Matched {0} script to \"{1}\"", axis, fileName);
-                    }
-
+                    Logger.Debug("Matched {0} script to \"{1}\"", axis, fileName);
                     return true;
                 }
             }
@@ -725,18 +716,6 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                 TryMatchFile(funscriptFile.Name, () => ScriptResource.FromFileInfo(funscriptFile));
         }
 
-        foreach (var axis in axes.Except(updated))
-        {
-            if (overwrite && AxisModels[axis].Script != null)
-            {
-                if (AxisModels[axis].Script.Origin != ScriptResourceOrigin.User)
-                {
-                    ResetScript(axis);
-                    updated.Add(axis);
-                }
-            }
-        }
-
         return updated;
     }
 
@@ -774,7 +753,7 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
             if (model.Settings.LinkAxis == null)
             {
                 if (model.Settings.LinkAxisHasPriority)
-                    ResetScript(axis);
+                    ResetAxes(axis);
 
                 continue;
             }
@@ -794,8 +773,8 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         }
     }
 
-    private void ResetScript(params DeviceAxis[] axes) => ResetScript(axes?.AsEnumerable());
-    private void ResetScript(IEnumerable<DeviceAxis> axes = null)
+    private void ResetAxes(params DeviceAxis[] axes) => ResetAxes(axes?.AsEnumerable());
+    private void ResetAxes(IEnumerable<DeviceAxis> axes = null)
     {
         axes ??= DeviceAxis.All;
         if (!axes.Any())
@@ -827,8 +806,8 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         UpdateLinkedScriptsTo(axis);
     }
 
-    private void ReloadScript(params DeviceAxis[] axes) => ReloadScript(axes?.AsEnumerable());
-    private void ReloadScript(IEnumerable<DeviceAxis> axes = null)
+    private void ReloadAxes(params DeviceAxis[] axes) => ReloadAxes(axes?.AsEnumerable());
+    private void ReloadAxes(IEnumerable<DeviceAxis> axes = null)
     {
         axes ??= DeviceAxis.All;
         if (!axes.Any())
@@ -837,20 +816,11 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         ResetSync(true, axes);
 
         Logger.Debug("Reloading axes [Axes: {list}]", axes);
-        foreach (var (enabled, items) in axes.GroupBy(a => AxisSettings[a].LinkAxisHasPriority))
-        {
-            var groupAxes = items.ToArray();
-            if (enabled)
-            {
-                UpdateLinkScriptFor(groupAxes);
-            }
-            else
-            {
-                var updated = TryMatchFiles(true, groupAxes).Where(a => AxisModels[a].Script != null);
-                UpdateLinkedScriptsTo(updated);
-                UpdateLinkScriptFor(groupAxes.Except(updated));
-            }
-        }
+        var axesWithLinkPriority = axes.Where(a => AxisSettings[a].LinkAxisHasPriority);
+        var axesWithoutLinkPriority = axes.Where(a => !AxisSettings[a].LinkAxisHasPriority);
+
+        var updated = SearchForScripts(axesWithoutLinkPriority);
+        UpdateLinkScriptFor(axesWithLinkPriority);
     }
 
     private void SkipGap(float minimumSkip = 0, params DeviceAxis[] axes) => SkipGap(axes?.AsEnumerable(), minimumSkip);
@@ -1050,8 +1020,8 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         SetScript(axis, ScriptResource.FromFileInfo(new FileInfo(dialog.FileName), userLoaded: true));
     }
 
-    public void OnAxisClear(DeviceAxis axis) => ResetScript(axis);
-    public void OnAxisReload(DeviceAxis axis) => ReloadScript(axis);
+    public void OnAxisClear(DeviceAxis axis) => ResetAxes(axis);
+    public void OnAxisReload(DeviceAxis axis) => ReloadAxes(axis);
 
     public void SetAxisValue(DeviceAxis axis, float value, bool offset = false)
     {
@@ -1100,14 +1070,14 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
     public void OnAxisMoveToVideo(DeviceAxis axis)
     {
         if (VideoFile != null && MoveScript(axis, new DirectoryInfo(VideoFile.Source)))
-            ReloadScript(axis);
+            ReloadAxes(axis);
     }
 
     public RelayCommand<DeviceAxis, ScriptLibrary> OnAxisMoveToLibraryCommand => new(OnAxisMoveToLibrary);
     public void OnAxisMoveToLibrary(DeviceAxis axis, ScriptLibrary library)
     {
         if (MoveScript(axis, library?.Directory.AsRefreshed()))
-            ReloadScript(axis);
+            ReloadAxes(axis);
     }
 
     [SuppressPropertyChangedWarnings]
@@ -1117,7 +1087,7 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
             return;
 
         var (axis, _) = pair;
-        ReloadScript(axis);
+        ReloadAxes(axis);
     }
 
     [SuppressPropertyChangedWarnings]
@@ -1147,7 +1117,7 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         if (e.AddedItems.TryGet<DeviceAxis>(0, out var added) && IsCircularLink(added, axis))
             model.Settings.LinkAxis = e.RemovedItems.TryGet<DeviceAxis>(0, out var removed) ? removed : null;
 
-        ReloadScript(axis);
+        ReloadAxes(axis);
     }
 
     [SuppressPropertyChangedWarnings]
@@ -1253,7 +1223,7 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
 
         var directory = new DirectoryInfo(dialog.FileName);
         ScriptLibraries.Add(new ScriptLibrary(directory));
-        ReloadScript(null);
+        ReloadAxes(null);
     }
 
     public void OnLibraryDelete(object sender, RoutedEventArgs e)
@@ -1262,7 +1232,7 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
             return;
 
         ScriptLibraries.Remove(library);
-        ReloadScript(null);
+        ReloadAxes(null);
     }
 
     public void OnLibraryOpenFolder(object sender, RoutedEventArgs e)
@@ -1435,7 +1405,7 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                           return;
 
                       AxisSettings[source].LinkAxis = target;
-                      ReloadScript(source);
+                      ReloadAxes(source);
                   }));
         #endregion
 
