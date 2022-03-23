@@ -1121,6 +1121,19 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
     }
 
     [SuppressPropertyChangedWarnings]
+    public void OnUpdateMotionProviderWithAxisChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (sender is not FrameworkElement element || element.DataContext is not KeyValuePair<DeviceAxis, AxisModel> pair)
+            return;
+
+        var (axis, model) = pair;
+        if (e.AddedItems.TryGet<DeviceAxis>(0, out var added) && axis == added)
+            model.Settings.UpdateMotionProviderWithAxis = e.RemovedItems.TryGet<DeviceAxis>(0, out var removed) ? removed : null;
+
+        ResetSync(true, axis);
+    }
+
+    [SuppressPropertyChangedWarnings]
     public void OnPreviewSelectedMotionProviderChanged(SelectionChangedEventArgs e)
     {
         if (e.Source is not FrameworkElement element || element.DataContext is not KeyValuePair<DeviceAxis, AxisModel> pair)
