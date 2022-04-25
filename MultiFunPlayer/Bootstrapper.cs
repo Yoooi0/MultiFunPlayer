@@ -84,24 +84,29 @@ public class Bootstrapper : Bootstrapper<RootViewModel>
                                               ?.GetSubKeyNames()
                                               ?.Where(s => Regex.IsMatch(s, @"VC,redist\.x64,amd64,14\.\d+,bundle"))
                                               .Any() ?? false;
+        if (vcInstalled)
+            return;
 
-        if (!vcInstalled)
+        var vcDllPresent = Directory.EnumerateFiles(Path.GetDirectoryName(Environment.ProcessPath), "*.dll", SearchOption.AllDirectories)
+                                    .Select(f => Path.GetFileName(f))
+                                    .Any(f => f.StartsWith("vcruntime140", StringComparison.OrdinalIgnoreCase));
+        if (vcDllPresent)
+            return;
+
+        var result = MessageBox.Show("To run this application, you must install Visual C++ 2019 x64 redistributable.\nWould you like to download it now?",
+                                     $"{nameof(MultiFunPlayer)}.exe",
+                                     MessageBoxButton.YesNo, MessageBoxImage.Error);
+
+        if (result == MessageBoxResult.Yes)
         {
-            var result = MessageBox.Show("To run this application, you must install Visual C++ 2019 x64 redistributable.\nWould you like to download it now?",
-                                         $"{nameof(MultiFunPlayer)}.exe",
-                                         MessageBoxButton.YesNo, MessageBoxImage.Error);
-
-            if (result == MessageBoxResult.Yes)
+            Process.Start(new ProcessStartInfo
             {
-                Process.Start(new ProcessStartInfo
-                {
-                    FileName = "https://docs.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist",
-                    UseShellExecute = true
-                });
-            }
-
-            Environment.Exit(1157 /* ERROR_DLL_NOT_FOUND */);
+                FileName = "https://docs.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist",
+                UseShellExecute = true
+            });
         }
+
+        Environment.Exit(1157 /* ERROR_DLL_NOT_FOUND */);
     }
 
     protected override void OnLaunch()
