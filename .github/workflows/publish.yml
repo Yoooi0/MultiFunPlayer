@@ -19,7 +19,9 @@ jobs:
     - name: Setup Dotnet
       uses: actions/setup-dotnet@v2
       with:
-        dotnet-version: '6.0.101'
+        dotnet-version: |
+          '6.0.101'
+          '3.0.103'
     - name: Determine Dotnet Version
       id: dotnet-version
       run: echo "::set-output name=version::$(dotnet --version)"
@@ -38,10 +40,6 @@ jobs:
       run: dotnet publish --self-contained true --configuration Release --output .\MultiFunPlayer\bin\Release\win-x64\publish\self-contained /p:AssemblyVersion=${{ steps.gitversion.outputs.assemblySemVer }} /p:FileVersion=${{ steps.gitversion.outputs.assemblySemFileVer }} /p:InformationalVersion=${{ steps.gitversion.outputs.fullSemVer }}.${{ steps.gitversion.outputs.shortSha }}
     - name: Setup NetBeauty
       run: dotnet tool install --global nulastudio.nbeauty --version 2.0.0-beta.3
-    - name: Setup Dotnet Core
-      uses: actions/setup-dotnet@v2
-      with:
-        dotnet-version: '3.0.103'
     - name: Run NetBeauty
       run: nbeauty2 .\MultiFunPlayer\bin\Release\win-x64\publish\self-contained\ Bin
     - name: Pack Framework Dependent
