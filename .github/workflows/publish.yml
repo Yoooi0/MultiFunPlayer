@@ -45,7 +45,7 @@ jobs:
     - name: Unpack NetBeauty
       run: 7z e win-x64.zip
     - name: Run NetBeauty
-      run: nbeauty2 .\MultiFunPlayer\bin\Release\win-x64\publish\self-contained\ Bin
+      run: .\nbeauty2.exe .\MultiFunPlayer\bin\Release\win-x64\publish\self-contained\ Bin
     - name: Pack Framework Dependent
       run: 7z a MultiFunPlayer-${{ steps.gitversion.outputs.semVer }}.zip .\MultiFunPlayer\bin\Release\win-x64\publish\framework-dependent\*
     - name: Pack Self Contained
