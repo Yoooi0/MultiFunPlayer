@@ -9,7 +9,7 @@ permissions:
   contents: write
 
 jobs:
-  build:
+  publish:
     runs-on: windows-latest
     steps:
     - name: Checkout
@@ -20,19 +20,30 @@ jobs:
       uses: actions/setup-dotnet@v2
       with:
         dotnet-version: '6.0.101'
+    - name: Determine Dotnet Version
+      id: dotnet-version
+      run: echo "::set-output name=version::$(dotnet --version)"
     - name: Setup GitVersion
       uses: gittools/actions/gitversion/setup@v0.9.11
       with:
         versionSpec: '5.x'
-    - name: Determine Version
+    - name: Run GitVersion
       id:   gitversion
       uses: gittools/actions/gitversion/execute@v0.9.11
     - name: Install Dependencies
       run: dotnet restore
-    - name: Build
-      run: dotnet publish --configuration Release /p:AssemblyVersion=${{ steps.gitversion.outputs.assemblySemVer }} /p:FileVersion=${{ steps.gitversion.outputs.assemblySemFileVer }} /p:InformationalVersion=${{ steps.gitversion.outputs.fullSemVer }}.${{ steps.gitversion.outputs.shortSha }}
-    - name: Pack
-      run: 7z a MultiFunPlayer-${{ steps.gitversion.outputs.semVer }}.zip .\MultiFunPlayer\bin\Release\win-x64\publish\*
+    - name: Build Framework Dependent
+      run: dotnet publish --self-contained false --configuration Release --output .\MultiFunPlayer\bin\Release\win-x64\publish\framework-dependent /p:AssemblyVersion=${{ steps.gitversion.outputs.assemblySemVer }} /p:FileVersion=${{ steps.gitversion.outputs.assemblySemFileVer }} /p:InformationalVersion=${{ steps.gitversion.outputs.fullSemVer }}.${{ steps.gitversion.outputs.shortSha }}
+    - name: Build Self Contained
+      run: dotnet publish --self-contained true --configuration Release --output .\MultiFunPlayer\bin\Release\win-x64\publish\self-contained /p:AssemblyVersion=${{ steps.gitversion.outputs.assemblySemVer }} /p:FileVersion=${{ steps.gitversion.outputs.assemblySemFileVer }} /p:InformationalVersion=${{ steps.gitversion.outputs.fullSemVer }}.${{ steps.gitversion.outputs.shortSha }}
+    - name: Setup NetBeauty
+      run: dotnet tool install --global nulastudio.nbeauty
+    - name: Run NetBeauty
+      run: nbeauty2 .\MultiFunPlayer\bin\Release\win-x64\publish\self-contained\ Bin
+    - name: Pack Framework Dependent
+      run: 7z a MultiFunPlayer-${{ steps.gitversion.outputs.semVer }}.zip .\MultiFunPlayer\bin\Release\win-x64\publish\framework-dependent\*
+    - name: Pack Self Contained
+      run: 7z a MultiFunPlayer-${{ steps.gitversion.outputs.semVer }}-SelfContained.${{ steps.dotnet-version.outputs.version }}.zip .\MultiFunPlayer\bin\Release\win-x64\publish\self-contained\*
     - name: Create Release
       id: create-release
       uses: softprops/action-gh-release@v1
@@ -41,4 +52,6 @@ jobs:
         prerelease: false
         fail_on_unmatched_files: true
         name: MultiFunPlayer v${{ steps.gitversion.outputs.semVer }}
-        files: MultiFunPlayer-${{ steps.gitversion.outputs.semVer }}.zip
+        files: |
+          MultiFunPlayer-${{ steps.gitversion.outputs.semVer }}.zip
+          MultiFunPlayer-${{ steps.gitversion.outputs.semVer }}-SelfContained.${{ steps.dotnet-version.outputs.version }}.zip
