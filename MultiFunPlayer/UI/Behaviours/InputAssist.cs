@@ -11,13 +11,11 @@ public static class InputAssist
             typeof(DependencyProperty), typeof(InputAssist),
                 new PropertyMetadata(null, OnUpdateSourceOnEnterPropertyChanged));
 
-    public static void SetUpdateSourceOnEnter(DependencyObject dp, DependencyProperty value)
-    {
-        dp.SetValue(UpdateSourceOnEnterProperty, value);
-    }
-
     public static DependencyProperty GetUpdateSourceOnEnter(DependencyObject dp)
         => (DependencyProperty)dp.GetValue(UpdateSourceOnEnterProperty);
+
+    public static void SetUpdateSourceOnEnter(DependencyObject dp, DependencyProperty value)
+        => dp.SetValue(UpdateSourceOnEnterProperty, value);
 
     private static void OnUpdateSourceOnEnterPropertyChanged(DependencyObject dp, DependencyPropertyChangedEventArgs e)
     {

@@ -532,7 +532,7 @@
 
                 <StackPanel Margin="20 15 20 15">
                     <DockPanel LastChildFill="True" Margin="0 0 0 10">
-                        <TextBlock Text="Video:"
+                        <TextBlock Text="File:"
                                    DockPanel.Dock="Left"
                                    Margin="0 0 10 0"
                                    VerticalAlignment="Center"/>
@@ -546,7 +546,7 @@
                                  VerticalAlignment="Center"/>
                     </DockPanel>
                     <DockPanel LastChildFill="True" Margin="0 0 0 10">
-                        <TextBlock Text="Global Offset:" DockPanel.Dock="Left" Margin="0 0 10 0" VerticalAlignment="Center"/>
+                        <TextBlock Text="Offset:" DockPanel.Dock="Left" Margin="0 0 10 0" VerticalAlignment="Center"/>
                         <TextBlock Text="{Binding GlobalOffset, StringFormat={}{0:0.00}s}" 
                                    VerticalAlignment="Center"
                                    DockPanel.Dock="Right" 
