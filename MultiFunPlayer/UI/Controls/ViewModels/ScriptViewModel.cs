@@ -628,12 +628,6 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         foreach (var axis in DeviceAxis.All)
             SearchForValidIndex(axis, AxisStates[axis]);
     }
-
-    public void OnSliderDoubleClick(object sender, MouseButtonEventArgs e)
-    {
-        if (sender is Slider slider)
-            slider.Value = 0;
-    }
     #endregion
 
     #region Script

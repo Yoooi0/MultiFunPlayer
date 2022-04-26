@@ -559,8 +559,8 @@
                                 Maximum="5"
                                 TickFrequency="0.01"
                                 IsSnapToTickEnabled="True"
-                                MouseDoubleClick="{s:Action OnSliderDoubleClick}"
                                 ValueChanged="{s:Action OnOffsetSliderValueChanged}"
+                                behaviours:SliderAssist.DefaultValueOnDoubleClick="0"
                                 material:SliderAssist.OnlyShowFocusVisualWhileDragging="True"/>
                     </DockPanel>
                     <controls:KeyframesHeatmapGradient Height="35" 
@@ -1279,7 +1279,7 @@
                                                                         TickFrequency="1"
                                                                         VerticalAlignment="Center"
                                                                         IsSnapToTickEnabled="True"
-                                                                        MouseDoubleClick="{s:Action OnSliderDoubleClick}"
+                                                                        behaviours:SliderAssist.DefaultValueOnDoubleClick="0"
                                                                         material:SliderAssist.OnlyShowFocusVisualWhileDragging="True"/>
                                                         </DockPanel>
 
@@ -1303,7 +1303,7 @@
                                                                         TickFrequency="0.25"
                                                                         VerticalAlignment="Center"
                                                                         IsSnapToTickEnabled="True"
-                                                                        MouseDoubleClick="{s:Action OnSliderDoubleClick}"
+                                                                        behaviours:SliderAssist.DefaultValueOnDoubleClick="0"
                                                                         material:SliderAssist.OnlyShowFocusVisualWhileDragging="True"/>
                                                         </DockPanel>
                                                     </StackPanel>
@@ -1371,8 +1371,8 @@
                                                 Maximum="5"
                                                 TickFrequency="0.01"
                                                 IsSnapToTickEnabled="True"
-                                                MouseDoubleClick="{s:Action OnSliderDoubleClick}"
                                                 ValueChanged="{s:Action OnOffsetSliderValueChanged}"
+                                                behaviours:SliderAssist.DefaultValueOnDoubleClick="0"
                                                 material:SliderAssist.OnlyShowFocusVisualWhileDragging="True"/>
                                     </DockPanel>
                                     <DockPanel LastChildFill="True" Margin="0 0 0 -5">
@@ -1389,8 +1389,8 @@
                                                 Maximum="500"
                                                 TickFrequency="1"
                                                 IsSnapToTickEnabled="True"
-                                                MouseDoubleClick="{s:Action OnSliderDoubleClick}"
                                                 ValueChanged="{s:Action OnScriptScaleSliderValueChanged}"
+                                                behaviours:SliderAssist.DefaultValueOnDoubleClick="100"
                                                 material:SliderAssist.OnlyShowFocusVisualWhileDragging="True"/>
                                     </DockPanel>
                                 </StackPanel>
