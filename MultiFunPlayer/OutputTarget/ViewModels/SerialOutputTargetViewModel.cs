@@ -34,6 +34,8 @@ public class SerialOutputTargetViewModel : ThreadAbstractOutputTarget
     {
         SerialPorts = new ObservableConcurrentCollection<SerialPortInfo>();
         _cancellationSource = new CancellationTokenSource();
+
+        _ = RefreshPorts();
     }
 
     public bool CanChangePort => !IsRefreshBusy && !IsConnectBusy && !IsConnected;
