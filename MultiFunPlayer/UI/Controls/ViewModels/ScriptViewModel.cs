@@ -243,10 +243,11 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                     return false;
                 }
 
-                newValue = MathUtils.Clamp01(keyframes.Interpolate(state.Index, axisPosition, settings.InterpolationType));
+                var scriptValue = MathUtils.Clamp01(keyframes.Interpolate(state.Index, axisPosition, settings.InterpolationType));
                 if (settings.Inverted)
-                    newValue = 1 - newValue;
+                    scriptValue = 1 - scriptValue;
 
+                newValue = MathUtils.Clamp01(axis.DefaultValue + (scriptValue - axis.DefaultValue) * settings.Scale / 100.0f);
                 return MathF.Abs(lastValue - newValue) > 0.000001f;
             }
 
@@ -1142,6 +1143,16 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         var (axis, _) = pair;
         ResetSync(true, axis);
     }
+
+    [SuppressPropertyChangedWarnings]
+    public void OnScriptScaleSliderValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (sender is not FrameworkElement element || element.DataContext is not KeyValuePair<DeviceAxis, AxisModel> pair)
+            return;
+
+        var (axis, _) = pair;
+        ResetSync(true, axis);
+    }
     #endregion
 
     #region SyncSettings
@@ -1640,6 +1651,7 @@ public class AxisSettings : PropertyChangedBase
     [JsonProperty] public float AutoHomeDuration { get; set; } = 3;
     [JsonProperty] public bool Inverted { get; set; } = false;
     [JsonProperty] public float Offset { get; set; } = 0;
+    [JsonProperty] public float Scale { get; set; } = 100;
     [JsonProperty] public bool Bypass { get; set; } = false;
     [JsonProperty] public float MotionProviderBlend { get; set; } = 100;
     [JsonProperty] public bool UpdateMotionProviderWhenPaused { get; set; } = false;
