@@ -69,6 +69,9 @@ public abstract class AbstractOutputTarget : Screen, IOutputTarget
     public abstract Task ConnectAsync();
     public abstract Task DisconnectAsync();
 
+    protected abstract Task<bool> OnConnectingAsync();
+    protected abstract Task OnDisconnectingAsync();
+
     public async virtual ValueTask<bool> CanConnectAsync(CancellationToken token) => await ValueTask.FromResult(false);
     public async virtual ValueTask<bool> CanConnectAsyncWithStatus(CancellationToken token)
     {
@@ -337,6 +340,12 @@ public abstract class ThreadAbstractOutputTarget : AbstractOutputTarget
             return;
 
         Status = ConnectionStatus.Connecting;
+        if(!await OnConnectingAsync())
+            _ = Execute.OnUIThreadAsync(async () => await DisconnectAsync().ConfigureAwait(true));
+    }
+
+    protected override async Task<bool> OnConnectingAsync()
+    {
         _cancellationSource = new CancellationTokenSource();
         _thread = new Thread(() =>
         {
@@ -348,7 +357,7 @@ public abstract class ThreadAbstractOutputTarget : AbstractOutputTarget
         };
         _thread.Start();
 
-        await Task.CompletedTask;
+        return await Task.FromResult(true);
     }
 
     public override async Task DisconnectAsync()
@@ -357,7 +366,12 @@ public abstract class ThreadAbstractOutputTarget : AbstractOutputTarget
             return;
 
         Status = ConnectionStatus.Disconnecting;
+        await OnDisconnectingAsync().ConfigureAwait(true);
+        Status = ConnectionStatus.Disconnected;
+    }
 
+    protected override async Task OnDisconnectingAsync()
+    {
         _cancellationSource?.Cancel();
         _thread?.Join();
 
@@ -366,8 +380,6 @@ public abstract class ThreadAbstractOutputTarget : AbstractOutputTarget
 
         _cancellationSource = null;
         _thread = null;
-
-        Status = ConnectionStatus.Disconnected;
     }
 
     public override void HandleSettings(JObject settings, SettingsAction action)
@@ -438,6 +450,12 @@ public abstract class AsyncAbstractOutputTarget : AbstractOutputTarget
             return;
 
         Status = ConnectionStatus.Connecting;
+        if (!await OnConnectingAsync())
+            _ = Execute.OnUIThreadAsync(async () => await DisconnectAsync().ConfigureAwait(true));
+    }
+
+    protected override async Task<bool> OnConnectingAsync()
+    {
         _cancellationSource = new CancellationTokenSource();
         _task = Task.Factory.StartNew(() => RunAsync(_cancellationSource.Token),
             _cancellationSource.Token,
@@ -446,7 +464,7 @@ public abstract class AsyncAbstractOutputTarget : AbstractOutputTarget
             .Unwrap();
         _ = _task.ContinueWith(_ => Execute.OnUIThreadAsync(async () => await DisconnectAsync().ConfigureAwait(true))).Unwrap();
 
-        await Task.CompletedTask;
+        return await Task.FromResult(true);
     }
 
     public override async Task DisconnectAsync()
@@ -455,7 +473,12 @@ public abstract class AsyncAbstractOutputTarget : AbstractOutputTarget
             return;
 
         Status = ConnectionStatus.Disconnecting;
+        await OnDisconnectingAsync().ConfigureAwait(true);
+        Status = ConnectionStatus.Disconnected;
+    }
 
+    protected override async Task OnDisconnectingAsync()
+    {
         _cancellationSource?.Cancel();
 
         if (_task != null)
@@ -466,8 +489,6 @@ public abstract class AsyncAbstractOutputTarget : AbstractOutputTarget
 
         _cancellationSource = null;
         _task = null;
-
-        Status = ConnectionStatus.Disconnected;
     }
 
     protected async Task Sleep(Stopwatch stopwatch, CancellationToken token)

@@ -27,8 +27,6 @@ public class SerialOutputTargetViewModel : ThreadAbstractOutputTarget
 
     public ObservableConcurrentCollection<SerialPortInfo> SerialPorts { get; set; }
     public SerialPortInfo SelectedSerialPort { get; set; }
-
-    [DoNotNotify]
     public string SelectedSerialPortDeviceId { get; set; }
 
     public SerialOutputTargetViewModel(int instanceIndex, IEventAggregator eventAggregator, IDeviceAxisValueProvider valueProvider)
@@ -88,14 +86,16 @@ public class SerialOutputTargetViewModel : ThreadAbstractOutputTarget
 
     public bool IsConnected => Status == ConnectionStatus.Connected;
     public bool IsConnectBusy => Status == ConnectionStatus.Connecting || Status == ConnectionStatus.Disconnecting;
-    public bool CanToggleConnect => !IsConnectBusy && SelectedSerialPort != null;
+    public bool CanToggleConnect => !IsConnectBusy && !IsRefreshBusy && SelectedSerialPortDeviceId != null;
 
-    public override async Task ConnectAsync()
+    protected override async Task<bool> OnConnectingAsync()
     {
+        if (SelectedSerialPortDeviceId == null)
+            return false;
         if (SelectedSerialPort == null)
             await RefreshPorts();
 
-        await base.ConnectAsync();
+        return SelectedSerialPort != null ? await base.OnConnectingAsync() : false;
     }
 
     protected override void Run(CancellationToken token)
