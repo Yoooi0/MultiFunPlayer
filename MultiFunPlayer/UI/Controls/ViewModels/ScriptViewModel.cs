@@ -610,7 +610,7 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
 
     #region UI Common
     [SuppressPropertyChangedWarnings]
-    public void OnOffsetSliderValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    public void OnOffsetValueChanged(object sender, EventArgs e)
     {
         if (sender is not FrameworkElement element)
             return;
@@ -1286,9 +1286,9 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
 
         #region Video::ScriptOffset
         s.RegisterAction("Video::ScriptOffset::Offset", b => b.WithSetting<float>(p => p.WithLabel("Value offset").WithStringFormat("{}{0}s"))
-                                                              .WithCallback((_, offset) => GlobalOffset = MathUtils.Clamp(GlobalOffset + offset, -5, 5)));
+                                                              .WithCallback((_, offset) => GlobalOffset += offset));
         s.RegisterAction("Video::ScriptOffset::Set", b => b.WithSetting<float>(p => p.WithLabel("Value").WithStringFormat("{}{0}s"))
-                                                           .WithCallback((_, value) => GlobalOffset = MathUtils.Clamp(value, -5, 5)));
+                                                           .WithCallback((_, value) => GlobalOffset = value));
         #endregion
 
         #region Video::Position
@@ -1489,12 +1489,12 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         s.RegisterAction("Axis::ScriptOffset::Offset",
             b => b.WithSetting<DeviceAxis>(p => p.WithLabel("Target axis").WithItemsSource(DeviceAxis.All))
                   .WithSetting<float>(p => p.WithLabel("Value offset").WithStringFormat("{}{0}s"))
-                  .WithCallback((_, axis, offset) => UpdateSettings(axis, s => s.Offset = MathUtils.Clamp(s.Offset + offset, -5, 5))));
+                  .WithCallback((_, axis, offset) => UpdateSettings(axis, s => s.Offset += offset)));
 
         s.RegisterAction("Axis::ScriptOffset::Set",
             b => b.WithSetting<DeviceAxis>(p => p.WithLabel("Target axis").WithItemsSource(DeviceAxis.All))
                   .WithSetting<float>(p => p.WithLabel("Value").WithStringFormat("{}{0}s"))
-                  .WithCallback((_, axis, value) => UpdateSettings(axis, s => s.Offset = MathUtils.Clamp(value, -5, 5))));
+                  .WithCallback((_, axis, value) => UpdateSettings(axis, s => s.Offset = value)));
         #endregion
 
         #region Axis::MotionProvider
