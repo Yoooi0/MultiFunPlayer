@@ -1497,6 +1497,18 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                   .WithCallback((_, axis, value) => UpdateSettings(axis, s => s.Offset = value)));
         #endregion
 
+        #region Axis::ScriptScale
+        s.RegisterAction("Axis::ScriptScale::Offset",
+            b => b.WithSetting<DeviceAxis>(p => p.WithLabel("Target axis").WithItemsSource(DeviceAxis.All))
+                  .WithSetting<float>(p => p.WithLabel("Value offset").WithStringFormat("{}{0}%"))
+                  .WithCallback((_, axis, offset) => UpdateSettings(axis, s => s.Scale = MathUtils.Clamp(s.Scale + offset, 1, 400))));
+
+        s.RegisterAction("Axis::ScriptScale::Set",
+            b => b.WithSetting<DeviceAxis>(p => p.WithLabel("Target axis").WithItemsSource(DeviceAxis.All))
+                  .WithSetting<float>(p => p.WithLabel("Value").WithStringFormat("{}{0}%"))
+                  .WithCallback((_, axis, value) => UpdateSettings(axis, s => s.Scale = MathUtils.Clamp(value, 1, 400))));
+        #endregion
+
         #region Axis::MotionProvider
         var motionProviderNames = MotionProviderManager.MotionProviderNames;
         s.RegisterAction("Axis::MotionProvider::Set",
