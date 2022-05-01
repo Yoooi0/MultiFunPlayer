@@ -1582,26 +1582,6 @@ public class AxisModel : PropertyChangedBase
     public AxisState State { get; } = new AxisState();
     public AxisSettings Settings { get; } = new AxisSettings();
     public IScriptResource Script { get; set; } = null;
-
-    public AxisModel()
-    {
-        Settings.PropertyChanged += OnSettingsPropertyChanged;
-    }
-
-    [SuppressPropertyChangedWarnings]
-    private void OnSettingsPropertyChanged(object sender, PropertyChangedEventArgs e)
-    {
-        if (e.PropertyName == nameof(AxisSettings.SelectedMotionProvider)
-         || e.PropertyName == nameof(AxisSettings.MotionProviderBlend))
-            NotifyOfPropertyChange(nameof(MotionProviderOverridesScript));
-
-        if (e.PropertyName == nameof(AxisSettings.LinkAxis)
-         || e.PropertyName == nameof(AxisSettings.LinkAxisHasPriority))
-            NotifyOfPropertyChange(nameof(LinkOverridesScript));
-    }
-
-    public bool MotionProviderOverridesScript => Script != null && Settings.SelectedMotionProvider != null && Settings.MotionProviderBlend > 50;
-    public bool LinkOverridesScript => Script != null && Script.Origin == ScriptResourceOrigin.Link && Settings.LinkAxis != null && Settings.LinkAxisHasPriority;
 }
 
 public class AxisState : INotifyPropertyChanged
