@@ -557,17 +557,17 @@
                                              ValueChanged="{s:Action OnOffsetValueChanged}"
                                              Width="100"/>
                     </DockPanel>
-                    <controls:KeyframesHeatmapGradient Height="35" 
-                                                       Cursor="Hand"
-                                                       MouseUp="{s:Action OnKeyframesHeatmapMouseUp}"
-                                                       Keyframes="{Binding AxisKeyframes, Mode=OneWay}"
-                                                       Duration="{Binding VideoDuration, Mode=OneWay}"
-                                                       Position="{Binding CurrentPosition, Mode=OneWay}"
-                                                       BucketCount="{Binding HeatmapBucketCount}"
-                                                       InvertY="{Binding HeatmapInvertY}"
-                                                       ShowStrokeLength="{Binding HeatmapShowStrokeLength}"
-                                                       Panel.ZIndex="-1">
-                        <controls:KeyframesHeatmapGradient.ContextMenu>
+                    <controls:KeyframesHeatmap Height="35" 
+                                               Cursor="Hand"
+                                               MouseUp="{s:Action OnKeyframesHeatmapMouseUp}"
+                                               Keyframes="{Binding AxisKeyframes, Mode=OneWay}"
+                                               Duration="{Binding VideoDuration, Mode=OneWay}"
+                                               Position="{Binding CurrentPosition, Mode=OneWay}"
+                                               BucketCount="{Binding HeatmapBucketCount}"
+                                               InvertY="{Binding HeatmapInvertY}"
+                                               ShowStrokeLength="{Binding HeatmapShowStrokeLength}"
+                                               Panel.ZIndex="-1">
+                        <controls:KeyframesHeatmap.ContextMenu>
                             <ContextMenu>
                                 <MenuItem Header="Show stroke length" 
                                           IsCheckable="True"
@@ -586,7 +586,7 @@
                                     <MenuItem.HeaderTemplate>
                                         <DataTemplate>
                                             <Slider Minimum="100"
-                                                    Maximum="{Binding Source={x:Static controls:KeyframesHeatmapGradient.MaxBucketCount}}"
+                                                    Maximum="{Binding Source={x:Static controls:KeyframesHeatmap.MaxBucketCount}}"
                                                     Value="{Binding PlacementTarget.DataContext.HeatmapBucketCount, RelativeSource={RelativeSource FindAncestor, AncestorType=ContextMenu}}"
                                                     material:SliderAssist.OnlyShowFocusVisualWhileDragging="True"/>
                                         </DataTemplate>
@@ -594,8 +594,8 @@
                                 </MenuItem>
                                 <Separator/>
                             </ContextMenu>
-                        </controls:KeyframesHeatmapGradient.ContextMenu>
-                    </controls:KeyframesHeatmapGradient>
+                        </controls:KeyframesHeatmap.ContextMenu>
+                    </controls:KeyframesHeatmap>
                 </StackPanel>
             </Expander>
         </material:Card>

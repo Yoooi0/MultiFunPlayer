@@ -10,9 +10,9 @@ using System.Windows.Media;
 namespace MultiFunPlayer.UI.Controls;
 
 /// <summary>
-/// Interaction logic for KeyframesHeatmapGradient.xaml
+/// Interaction logic for KeyframesHeatmap.xaml
 /// </summary>
-public partial class KeyframesHeatmapGradient : UserControl, INotifyPropertyChanged
+public partial class KeyframesHeatmap : UserControl, INotifyPropertyChanged
 {
     public static int MaxBucketCount => 500;
 
@@ -34,13 +34,13 @@ public partial class KeyframesHeatmapGradient : UserControl, INotifyPropertyChan
 
     public static readonly DependencyProperty KeyframesProperty =
         DependencyProperty.Register(nameof(Keyframes), typeof(IReadOnlyDictionary<DeviceAxis, KeyframeCollection>),
-            typeof(KeyframesHeatmapGradient), new FrameworkPropertyMetadata(null,
+            typeof(KeyframesHeatmap), new FrameworkPropertyMetadata(null,
                 new PropertyChangedCallback(OnKeyframesChanged)));
 
     [SuppressPropertyChangedWarnings]
     private static void OnKeyframesChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
-        if (d is not KeyframesHeatmapGradient @this)
+        if (d is not KeyframesHeatmap @this)
             return;
 
         if (e.OldValue is INotifyCollectionChanged oldKeyframes)
@@ -63,13 +63,13 @@ public partial class KeyframesHeatmapGradient : UserControl, INotifyPropertyChan
 
     public static readonly DependencyProperty DurationProperty =
         DependencyProperty.Register(nameof(Duration), typeof(float),
-            typeof(KeyframesHeatmapGradient), new FrameworkPropertyMetadata(float.NaN,
+            typeof(KeyframesHeatmap), new FrameworkPropertyMetadata(float.NaN,
                 new PropertyChangedCallback(OnDurationChanged)));
 
     [SuppressPropertyChangedWarnings]
     private static void OnDurationChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
-        if (d is not KeyframesHeatmapGradient @this)
+        if (d is not KeyframesHeatmap @this)
             return;
 
         @this.Refresh();
@@ -85,13 +85,13 @@ public partial class KeyframesHeatmapGradient : UserControl, INotifyPropertyChan
 
     public static readonly DependencyProperty PositionProperty =
         DependencyProperty.Register(nameof(Position), typeof(float),
-            typeof(KeyframesHeatmapGradient), new FrameworkPropertyMetadata(float.NaN,
+            typeof(KeyframesHeatmap), new FrameworkPropertyMetadata(float.NaN,
                 new PropertyChangedCallback(OnPositionChanged)));
 
     [SuppressPropertyChangedWarnings]
     private static void OnPositionChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
-        if (d is not KeyframesHeatmapGradient @this)
+        if (d is not KeyframesHeatmap @this)
             return;
 
         @this.PropertyChanged?.Invoke(@this, new PropertyChangedEventArgs(nameof(ScrubberPosition)));
@@ -106,13 +106,13 @@ public partial class KeyframesHeatmapGradient : UserControl, INotifyPropertyChan
 
     public static readonly DependencyProperty ShowStrokeLengthProperty =
         DependencyProperty.Register(nameof(ShowStrokeLength), typeof(bool),
-            typeof(KeyframesHeatmapGradient), new FrameworkPropertyMetadata(false,
+            typeof(KeyframesHeatmap), new FrameworkPropertyMetadata(false,
                 new PropertyChangedCallback(OnShowStrokeLengthChanged)));
 
     [SuppressPropertyChangedWarnings]
     private static void OnShowStrokeLengthChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
-        if (d is not KeyframesHeatmapGradient @this)
+        if (d is not KeyframesHeatmap @this)
             return;
 
         @this.Refresh();
@@ -128,13 +128,13 @@ public partial class KeyframesHeatmapGradient : UserControl, INotifyPropertyChan
 
     public static readonly DependencyProperty BucketCountProperty =
        DependencyProperty.Register(nameof(BucketCount), typeof(int),
-           typeof(KeyframesHeatmapGradient), new FrameworkPropertyMetadata(333,
+           typeof(KeyframesHeatmap), new FrameworkPropertyMetadata(333,
                new PropertyChangedCallback(OnBucketCountChanged)));
 
     [SuppressPropertyChangedWarnings]
     private static void OnBucketCountChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
-        if (d is not KeyframesHeatmapGradient @this)
+        if (d is not KeyframesHeatmap @this)
             return;
 
         @this.Refresh();
@@ -150,20 +150,20 @@ public partial class KeyframesHeatmapGradient : UserControl, INotifyPropertyChan
 
     public static readonly DependencyProperty InvertYProperty =
        DependencyProperty.Register(nameof(InvertY), typeof(bool),
-           typeof(KeyframesHeatmapGradient), new FrameworkPropertyMetadata(false,
+           typeof(KeyframesHeatmap), new FrameworkPropertyMetadata(false,
                new PropertyChangedCallback(OnInvertYChanged)));
 
     [SuppressPropertyChangedWarnings]
     private static void OnInvertYChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
-        if (d is not KeyframesHeatmapGradient @this)
+        if (d is not KeyframesHeatmap @this)
             return;
 
         @this.Refresh();
         @this.PropertyChanged?.Invoke(@this, new PropertyChangedEventArgs(nameof(InvertY)));
     }
 
-    public KeyframesHeatmapGradient()
+    public KeyframesHeatmap()
     {
         _buckets = new HeatmapBucket[MaxBucketCount];
         _colors = new Color[]
