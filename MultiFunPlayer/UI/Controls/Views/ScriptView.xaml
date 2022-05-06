@@ -27,7 +27,7 @@
     </UserControl.Resources>
     <StackPanel Margin="0 0 0 20">
         <material:Card material:ShadowAssist.ShadowDepth="Depth1"
-                      Margin="0 0 0 20">
+                      Margin="0 0 0 10">
             <Expander material:ExpanderAssist.HorizontalHeaderPadding="0 0 6 0"
                       Style="{StaticResource MaterialDesignToolBarExpander}"
                       Background="{StaticResource MaterialDesignToolBarBackground}"
@@ -546,7 +546,7 @@
                                  Margin="5 -10 0 0"
                                  VerticalAlignment="Center"/>
                     </DockPanel>
-                    <DockPanel LastChildFill="False" Margin="0 0 0 10">
+                    <DockPanel LastChildFill="False">
                         <TextBlock Text="Offset:" DockPanel.Dock="Left" Margin="0 0 10 0" VerticalAlignment="Center"/>
 
                         <metro:NumericUpDown Value="{Binding GlobalOffset}"
@@ -557,51 +557,52 @@
                                              ValueChanged="{s:Action OnOffsetValueChanged}"
                                              Width="100"/>
                     </DockPanel>
-                    <controls:KeyframesHeatmap Height="35" 
-                                               Cursor="Hand"
-                                               MouseUp="{s:Action OnKeyframesHeatmapMouseUp}"
-                                               Keyframes="{Binding AxisKeyframes, Mode=OneWay}"
-                                               Duration="{Binding VideoDuration, Mode=OneWay}"
-                                               Position="{Binding CurrentPosition, Mode=OneWay}"
-                                               BucketCount="{Binding HeatmapBucketCount}"
-                                               InvertY="{Binding HeatmapInvertY}"
-                                               ShowStrokeLength="{Binding HeatmapShowStrokeLength}"
-                                               Panel.ZIndex="-1">
-                        <controls:KeyframesHeatmap.ContextMenu>
-                            <ContextMenu>
-                                <MenuItem Header="Show stroke length" 
-                                          IsCheckable="True"
-                                          IsChecked="{Binding HeatmapShowStrokeLength}"/>
-                                <MenuItem Header="Invert Y" 
-                                          IsCheckable="True"
-                                          IsChecked="{Binding HeatmapInvertY}"/>
-                                <Separator/>
-                                <MenuItem Header="Quality" IsEnabled="False"/>
-                                <MenuItem material:RippleAssist.IsDisabled="True">
-                                    <MenuItem.Icon>
-                                        <TextBlock Text="{Binding HeatmapBucketCount}"
-                                                   FontSize="10"
-                                                   Padding="0"/>
-                                    </MenuItem.Icon>
-                                    <MenuItem.HeaderTemplate>
-                                        <DataTemplate>
-                                            <Slider Minimum="100"
-                                                    Maximum="{Binding Source={x:Static controls:KeyframesHeatmap.MaxBucketCount}}"
-                                                    Value="{Binding PlacementTarget.DataContext.HeatmapBucketCount, RelativeSource={RelativeSource FindAncestor, AncestorType=ContextMenu}}"
-                                                    material:SliderAssist.OnlyShowFocusVisualWhileDragging="True"/>
-                                        </DataTemplate>
-                                    </MenuItem.HeaderTemplate>
-                                </MenuItem>
-                                <Separator/>
-                            </ContextMenu>
-                        </controls:KeyframesHeatmap.ContextMenu>
-                    </controls:KeyframesHeatmap>
                 </StackPanel>
             </Expander>
         </material:Card>
 
+        <controls:KeyframesHeatmap Height="35"
+                                   Margin="0 0 0 20"
+                                   Cursor="Hand"
+                                   MouseUp="{s:Action OnKeyframesHeatmapMouseUp}"
+                                   Keyframes="{Binding AxisKeyframes, Mode=OneWay}"
+                                   Duration="{Binding VideoDuration, Mode=OneWay}"
+                                   Position="{Binding CurrentPosition, Mode=OneWay}"
+                                   BucketCount="{Binding HeatmapBucketCount}"
+                                   InvertY="{Binding HeatmapInvertY}"
+                                   ShowStrokeLength="{Binding HeatmapShowStrokeLength}"
+                                   Panel.ZIndex="-1">
+            <controls:KeyframesHeatmap.ContextMenu>
+                <ContextMenu>
+                    <MenuItem Header="Show stroke length" 
+                                          IsCheckable="True"
+                                          IsChecked="{Binding HeatmapShowStrokeLength}"/>
+                    <MenuItem Header="Invert Y" 
+                                          IsCheckable="True"
+                                          IsChecked="{Binding HeatmapInvertY}"/>
+                    <Separator/>
+                    <MenuItem Header="Quality" IsEnabled="False"/>
+                    <MenuItem material:RippleAssist.IsDisabled="True">
+                        <MenuItem.Icon>
+                            <TextBlock Text="{Binding HeatmapBucketCount}"
+                                                   FontSize="10"
+                                                   Padding="0"/>
+                        </MenuItem.Icon>
+                        <MenuItem.HeaderTemplate>
+                            <DataTemplate>
+                                <Slider Minimum="100"
+                                                    Maximum="{Binding Source={x:Static controls:KeyframesHeatmap.MaxBucketCount}}"
+                                                    Value="{Binding PlacementTarget.DataContext.HeatmapBucketCount, RelativeSource={RelativeSource FindAncestor, AncestorType=ContextMenu}}"
+                                                    material:SliderAssist.OnlyShowFocusVisualWhileDragging="True"/>
+                            </DataTemplate>
+                        </MenuItem.HeaderTemplate>
+                    </MenuItem>
+                    <Separator/>
+                </ContextMenu>
+            </controls:KeyframesHeatmap.ContextMenu>
+        </controls:KeyframesHeatmap>
 
-        <material:Card material:ShadowAssist.ShadowDepth="Depth1" Margin="0 0 0 20">
+        <material:Card material:ShadowAssist.ShadowDepth="Depth1" Margin="0 0 0 10">
             <controls:NonReloadingTabControl ItemsSource="{Binding AxisModels}">
                 <TabControl.ItemTemplate>
                     <DataTemplate>
@@ -1317,7 +1318,7 @@
                                     </DockPanel>
                                 </Expander.Header>
 
-                                <StackPanel Margin="20 15 20 20">
+                                <StackPanel Margin="20 15 20 15">
                                     <DockPanel LastChildFill="True" 
                                                Margin="0 0 0 10">
                                         <TextBlock Text="File:" 
