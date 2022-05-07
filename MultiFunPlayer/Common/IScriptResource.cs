@@ -13,11 +13,6 @@ public enum ScriptResourceOrigin
     External
 }
 
-public enum ScriptDataType
-{
-    Funscript
-}
-
 public interface IScriptResource
 {
     string Name { get; }
@@ -33,16 +28,13 @@ public class ScriptResource : IScriptResource
     public ScriptResourceOrigin Origin { get; }
     public KeyframeCollection Keyframes { get; }
 
-    protected ScriptResource(string name, string source, ReadOnlySpan<byte> data, ScriptDataType type, ScriptResourceOrigin origin)
+    protected ScriptResource(string name, string source, KeyframeCollection keyframes, ScriptResourceOrigin origin)
     {
         Name = name;
         Source = source;
         Origin = origin;
-        Keyframes = type.Parse(data);
+        Keyframes = keyframes;
     }
-
-    public static IScriptResource FromBytes(string name, string source, ReadOnlySpan<byte> bytes, ScriptResourceOrigin origin)
-        => new ScriptResource(name, source, bytes, ScriptDataType.Funscript, origin);
 
     public static IScriptResource FromPath(string path, bool userLoaded = false) => FromFileInfo(new FileInfo(path), userLoaded);
     public static IScriptResource FromFileInfo(FileInfo file, bool userLoaded = false)
@@ -52,17 +44,17 @@ public class ScriptResource : IScriptResource
 
         var path = file.FullName;
         var origin = userLoaded ? ScriptResourceOrigin.User : ScriptResourceOrigin.Automatic;
-        return FromBytes(Path.GetFileName(path), Path.GetDirectoryName(path), File.ReadAllBytes(path), origin);
+        var keyframes = ScriptReader.Read(ScriptType.Funscript, File.ReadAllBytes(path));
+        return new ScriptResource(Path.GetFileName(path), Path.GetDirectoryName(path), keyframes, origin);
     }
 
     public static IScriptResource FromZipArchiveEntry(string archivePath, ZipArchiveEntry entry, bool userLoaded = false)
     {
         using var stream = entry.Open();
-        using var memory = new MemoryStream();
-        stream.CopyTo(memory);
 
         var origin = userLoaded ? ScriptResourceOrigin.User : ScriptResourceOrigin.Automatic;
-        return FromBytes(entry.Name, archivePath, memory.ToArray(), origin);
+        var keyframes = ScriptReader.Read(ScriptType.Funscript, stream);
+        return new ScriptResource(entry.Name, archivePath, keyframes, origin);
     }
 
     public static LinkedScriptResource LinkTo(IScriptResource other) => other != null ? new LinkedScriptResource(other) : null;
@@ -85,7 +77,7 @@ public class LinkedScriptResource : IScriptResource
 
 public static class ScriptDataTypeExtensions
 {
-    public static KeyframeCollection Parse(this ScriptDataType type, ReadOnlySpan<byte> data)
+    public static KeyframeCollection Parse(this ScriptType type, ReadOnlySpan<byte> data)
     {
         if (data == null)
             return null;
@@ -94,7 +86,7 @@ public static class ScriptDataTypeExtensions
         {
             return type switch
             {
-                ScriptDataType.Funscript => ParseFunscript(Encoding.UTF8.GetString(data)),
+                ScriptType.Funscript => ParseFunscript(Encoding.UTF8.GetString(data)),
                 _ => throw new NotSupportedException(),
             };
         }
