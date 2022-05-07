@@ -21,9 +21,7 @@
 	
   <ItemGroup>
 	<!--https://github.com/dotnet/core/issues/7176-->
-	<FrameworkReference
-	    Update="Microsoft.WindowsDesktop.App;Microsoft.WindowsDesktop.App.WPF;Microsoft.WindowsDesktop.App.WindowsForms"
-		TargetingPackVersion="6.0.0" />
+	<FrameworkReference Update="Microsoft.WindowsDesktop.App;Microsoft.WindowsDesktop.App.WPF;Microsoft.WindowsDesktop.App.WindowsForms" TargetingPackVersion="6.0.0" />
   </ItemGroup>
 
   <ItemGroup>
@@ -61,5 +59,12 @@
     <None Update="MultiFunPlayer.device.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Page Update="OutputTarget\Views\FileOutputTargetView.xaml">
+      <XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
+      <SubType>Designer</SubType>
+    </Page>
   </ItemGroup>
 </Project>

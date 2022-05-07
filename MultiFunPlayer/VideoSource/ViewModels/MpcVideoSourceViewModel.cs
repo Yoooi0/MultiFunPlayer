@@ -8,7 +8,6 @@ using Stylet;
 using System.ComponentModel;
 using System.Net;
 using System.Net.Http;
-using System.Runtime.ExceptionServices;
 using System.Text.RegularExpressions;
 using System.Threading.Channels;
 
