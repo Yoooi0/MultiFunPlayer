@@ -6,24 +6,23 @@ using System.ComponentModel;
 namespace MultiFunPlayer.Common;
 
 [DoNotNotify]
-public class ObservableConcurrentCollection<T> : IList<T>, INotifyCollectionChanged, INotifyPropertyChanged
+public class ObservableConcurrentCollection<T> : IList<T>, IList, INotifyCollectionChanged, INotifyPropertyChanged
 {
     private readonly SynchronizationContext _context;
     private readonly List<T> _items;
-    private readonly object _syncRoot;
+
+    public object SyncRoot { get; } = new object();
 
     public ObservableConcurrentCollection()
     {
         _context = AsyncOperationManager.SynchronizationContext;
         _items = new List<T>();
-        _syncRoot = new object();
     }
 
     public ObservableConcurrentCollection(IEnumerable<T> elements)
     {
         _context = AsyncOperationManager.SynchronizationContext;
         _items = new List<T>(elements);
-        _syncRoot = new object();
     }
 
     public event NotifyCollectionChangedEventHandler CollectionChanged;
@@ -42,40 +41,40 @@ public class ObservableConcurrentCollection<T> : IList<T>, INotifyCollectionChan
 
     public int Count
     {
-        get { lock (_syncRoot) { return _items.Count; } }
+        get { lock (SyncRoot) { return _items.Count; } }
     }
 
     public T this[int index]
     {
         get
         {
-            lock (_syncRoot) { return _items[index]; }
+            lock (SyncRoot) { return _items[index]; }
         }
         set
         {
-            lock (_syncRoot) { TrySetItemInternal(index, value); }
+            lock (SyncRoot) { TrySetItemInternal(index, value); }
         }
     }
 
-    public void Add(T item) { lock (_syncRoot) { AddItemInternal(item); } }
+    public void Add(T item) { lock (SyncRoot) { AddItemInternal(item); } }
     public void AddRange(IEnumerable<T> items)
     {
-        lock (_syncRoot)
+        lock (SyncRoot)
         {
             foreach (var item in items)
                 AddItemInternal(item);
         }
     }
 
-    public void Clear() { lock (_syncRoot) { ClearItems(); } }
-    public void CopyTo(T[] array, int index) { lock (_syncRoot) { _items.CopyTo(array, index); } }
-    public bool Contains(T item) { lock (_syncRoot) { return _items.Contains(item); } }
-    public int IndexOf(T item) { lock (_syncRoot) { return _items.IndexOf(item); } }
+    public void Clear() { lock (SyncRoot) { ClearItems(); } }
+    public void CopyTo(T[] array, int index) { lock (SyncRoot) { _items.CopyTo(array, index); } }
+    public bool Contains(T item) { lock (SyncRoot) { return _items.Contains(item); } }
+    public int IndexOf(T item) { lock (SyncRoot) { return _items.IndexOf(item); } }
 
     IEnumerator IEnumerable.GetEnumerator() => ((IList<T>)this).GetEnumerator();
     public IEnumerator<T> GetEnumerator() 
     {
-        lock (_syncRoot) 
+        lock (SyncRoot) 
         { 
             foreach (var item in _items)
                 yield return item;
@@ -85,7 +84,7 @@ public class ObservableConcurrentCollection<T> : IList<T>, INotifyCollectionChan
     public void Insert(int index, T item) => _ = TryInsert(index, item);
     public bool TryInsert(int index, T item)
     {
-        lock (_syncRoot)
+        lock (SyncRoot)
         {
             return TryInsertInternal(index, item);
         }
@@ -97,7 +96,7 @@ public class ObservableConcurrentCollection<T> : IList<T>, INotifyCollectionChan
         if (oldIndex == newIndex)
             return false;
 
-        lock (_syncRoot)
+        lock (SyncRoot)
         {
             if (oldIndex < 0 || oldIndex >= _items.Count)
                 return false;
@@ -116,7 +115,7 @@ public class ObservableConcurrentCollection<T> : IList<T>, INotifyCollectionChan
 
     public bool Remove(T item)
     {
-        lock (_syncRoot)
+        lock (SyncRoot)
         {
             return TryRemoveItemInternal(_items.IndexOf(item));
         }
@@ -125,7 +124,7 @@ public class ObservableConcurrentCollection<T> : IList<T>, INotifyCollectionChan
     public void RemoveAt(int index) => _ = TryRemoveAt(index);
     public bool TryRemoveAt(int index)
     {
-        lock (_syncRoot)
+        lock (SyncRoot)
         {
             return TryRemoveItemInternal(index);
         }
@@ -173,5 +172,33 @@ public class ObservableConcurrentCollection<T> : IList<T>, INotifyCollectionChan
         return true;
     }
 
+    public int Add(object value)
+    {
+        lock (SyncRoot)
+        { 
+            AddItemInternal((T)value);
+            return _items.Count - 1;
+        }
+    }
+
+    public bool Contains(object value) => Contains((T)value);
+    public int IndexOf(object value) => IndexOf((T)value);
+    public void Insert(int index, object value) => Insert(index, (T)value);
+    public void Remove(object value) => Remove((T)value);
+
+    void ICollection.CopyTo(Array array, int index)
+    {
+        lock (SyncRoot)
+        {
+            Array.Copy(_items.ToArray(), 0, array, index, Count);
+        }
+    }
+
     bool ICollection<T>.IsReadOnly => false;
+
+    public bool IsFixedSize => false;
+    public bool IsReadOnly => false;
+    public bool IsSynchronized => true;
+
+    object IList.this[int index] { get => this[index]; set => this[index] = (T)value; }
 }
