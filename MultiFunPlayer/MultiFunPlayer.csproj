@@ -20,11 +20,6 @@
   </ItemGroup>
 	
   <ItemGroup>
-	<!--https://github.com/dotnet/core/issues/7176-->
-	<FrameworkReference Update="Microsoft.WindowsDesktop.App;Microsoft.WindowsDesktop.App.WPF;Microsoft.WindowsDesktop.App.WindowsForms" TargetingPackVersion="6.0.0" />
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="Buttplug" Version="2.*" />
     <PackageReference Include="ConfigureAwait.Fody" Version="3.*">
       <PrivateAssets>all</PrivateAssets>
@@ -51,10 +46,6 @@
     <PackageReference Include="Vortice.XInput" Version="1.9.80" />
   </ItemGroup>
 	
-  <ItemGroup>
-    <FrameworkReference Update="Microsoft.WindowsDesktop.App;Microsoft.WindowsDesktop.App.WPF;Microsoft.WindowsDesktop.App.WindowsForms" TargetingPackVersion="6.0.0" />
-  </ItemGroup>
-
   <ItemGroup>
     <None Update="MultiFunPlayer.device.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
