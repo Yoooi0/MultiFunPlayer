@@ -1,9 +1,8 @@
 ﻿using MultiFunPlayer.Common;
-using MultiFunPlayer.OutputTarget;
 using MultiFunPlayer.OutputTarget.ViewModels;
 using Stylet;
 
-namespace MultiFunPlayer.UI.Controls.ViewModels;
+namespace MultiFunPlayer.OutputTarget;
 
 public interface IOutputTargetFactory
 {

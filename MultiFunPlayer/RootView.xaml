@@ -76,7 +76,7 @@
     </materialExtensions:MaterialWindow.TitleTemplate>
     <material:DialogHost Identifier="RootDialog" DialogTheme="Inherit" UseLayoutRounding="True">
         <StackPanel Orientation="Vertical" Margin="10">
-            <ContentControl s:View.Model="{Binding VideoSource}"/>
+            <ContentControl s:View.Model="{Binding MediaSource}"/>
             <ContentControl s:View.Model="{Binding Script}"/>
             <ContentControl s:View.Model="{Binding OutputTarget}"/>
         </StackPanel>

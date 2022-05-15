@@ -31,7 +31,7 @@
             <Expander material:ExpanderAssist.HorizontalHeaderPadding="0 0 6 0"
                       Style="{StaticResource MaterialDesignToolBarExpander}"
                       Background="{StaticResource MaterialDesignToolBarBackground}"
-                      IsExpanded="{Binding VideoContentVisible}">
+                      IsExpanded="{Binding MediaContentVisible}">
                 <Expander.Header>
                     <DockPanel LastChildFill="True" 
                                Height="35">
@@ -150,13 +150,13 @@
                                             </material:ColorZone>
                                         </DockPanel>
                                         <DockPanel LastChildFill="False" Margin="0 0 0 10">
-                                            <TextBlock Text="Video file changed:" Width="120"/>
-                                            <ToggleButton IsChecked="{Binding SyncSettings.SyncOnVideoFileChanged}"/>
+                                            <TextBlock Text="Media resource changed:" Width="120"/>
+                                            <ToggleButton IsChecked="{Binding SyncSettings.SyncOnMediaResourceChanged}"/>
                                         </DockPanel>
 
                                         <DockPanel LastChildFill="False" Margin="0 0 0 10">
-                                            <TextBlock Text="Video play/pause:" Width="120"/>
-                                            <ToggleButton IsChecked="{Binding SyncSettings.SyncOnVideoPlayPause}"/>
+                                            <TextBlock Text="Media play/pause:" Width="120"/>
+                                            <ToggleButton IsChecked="{Binding SyncSettings.SyncOnMediaPlayPause}"/>
                                         </DockPanel>
 
                                         <DockPanel LastChildFill="False" Margin="0 0 0 10">
@@ -182,10 +182,10 @@
                         </StackPanel>
                         <StackPanel DockPanel.Dock="Left" 
                                 Orientation="Horizontal">
-                            <Button Click="{s:Action OnOpenVideoLocation}" 
+                            <Button Click="{s:Action OnOpenMediaLocation}" 
                                     Style="{StaticResource MaterialDesignToolBarButton}"
-                                    IsEnabled="{Binding VideoFile, Converter={StaticResource notNullBooleanConverter}}"
-                                    ToolTip="Open video location" 
+                                    IsEnabled="{Binding MediaResource, Converter={StaticResource notNullBooleanConverter}}"
+                                    ToolTip="Open media location" 
                                     ToolTipService.InitialShowDelay="0" 
                                     ToolTipService.Placement="Top" 
                                     Padding="8">
@@ -299,7 +299,7 @@
                             </Button>
 
                             <Button Style="{StaticResource MaterialDesignToolBarButton}"
-                                    ToolTip="Video path modifiers" 
+                                    ToolTip="Media path modifiers" 
                                     ToolTipService.InitialShowDelay="0" 
                                     ToolTipService.Placement="Top" 
                                     Padding="8"
@@ -308,7 +308,7 @@
                                     <material:DialogHost Identifier="MediaPathModifierDialog">
                                         <Grid Margin="20" Width="500" MaxHeight="400"
                                               s:View.ActionTarget="{Binding}">
-                                            <TextBlock Text="Video path modifiers" 
+                                            <TextBlock Text="Media path modifiers" 
                                                        HorizontalAlignment="Left"
                                                        VerticalAlignment="Top"
                                                        Margin="0 -12 -15 0"
@@ -348,7 +348,7 @@
                                                     </material:PopupBox.ToggleContent>
 
                                                     <material:Card>
-                                                        <ItemsControl ItemsSource="{Binding VideoPathModifierTypes}"
+                                                        <ItemsControl ItemsSource="{Binding MediaPathModifierTypes}"
                                                                   Margin="10">
                                                             <ItemsControl.ItemsPanel>
                                                                 <ItemsPanelTemplate>
@@ -359,7 +359,7 @@
                                                             <ItemsControl.ItemTemplate>
                                                                 <DataTemplate>
                                                                     <Button Style="{StaticResource MaterialDesignRaisedLightButton}"
-                                                                        Click="{s:Action OnVideoPathModifierAdd}"
+                                                                        Click="{s:Action OnMediaPathModifierAdd}"
                                                                         Content="{Binding Key}"
                                                                         Margin="5"
                                                                         Padding="10 0 10 0"
@@ -372,7 +372,7 @@
 
                                                 <material:Card material:ShadowAssist.ShadowDepth="Depth1" Margin="0 0 0 10">
                                                     <ItemsControl DockPanel.Dock="Bottom"
-                                                              ItemsSource="{Binding VideoPathModifiers}">
+                                                              ItemsSource="{Binding MediaPathModifiers}">
                                                         <ItemsControl.Template>
                                                             <ControlTemplate>
                                                                 <ScrollViewer VerticalScrollBarVisibility="Visible" 
@@ -395,13 +395,13 @@
                                                                                 Height="24" 
                                                                                 Width="24" 
                                                                                 Padding="0"
-                                                                                Click="{s:Action OnVideoPathModifierRemove}" >
+                                                                                Click="{s:Action OnMediaPathModifierRemove}" >
                                                                             <material:PackIcon Kind="Delete"/>
                                                                         </Button>
 
                                                                         <Button DockPanel.Dock="Right"   
                                                                         Style="{StaticResource MaterialDesignFlatButton}"
-                                                                        Click="{s:Action OnVideoPathModifierConfigure}"
+                                                                        Click="{s:Action OnMediaPathModifierConfigure}"
                                                                         ToolTip="Configure"
                                                                         ToolTipService.InitialShowDelay="0"
                                                                         ToolTipService.Placement="Top"
@@ -458,8 +458,8 @@
                             </Button>
 
                             <Button Style="{StaticResource MaterialDesignToolBarButton}"
-                                Click="{s:Action OnMapCurrentVideoPathToFile}"
-                                ToolTip="Map video path to file" 
+                                Click="{s:Action OnMapCurrentMediaPathToFile}"
+                                ToolTip="Map media path to file" 
                                 ToolTipService.InitialShowDelay="0" 
                                 ToolTipService.Placement="Top" 
                                 Padding="8">
@@ -467,8 +467,8 @@
                                 <Button.IsEnabled>
                                     <MultiBinding Converter="{StaticResource MultiBooleanToBooleanAndConverter}">
                                         <MultiBinding.Bindings>
-                                            <Binding Path="VideoFile" Converter="{StaticResource notNullBooleanConverter}"/>
-                                            <Binding Path="VideoFile.IsUrl"/>
+                                            <Binding Path="MediaResource" Converter="{StaticResource notNullBooleanConverter}"/>
+                                            <Binding Path="MediaResource.IsUrl"/>
                                         </MultiBinding.Bindings>
                                     </MultiBinding>
                                 </Button.IsEnabled>
@@ -539,9 +539,9 @@
                                    VerticalAlignment="Center"/>
 
                         <TextBox IsReadOnly="True"
-                                 Text="{Binding VideoFile.Name, Mode=OneWay}"
+                                 Text="{Binding MediaResource.Name, Mode=OneWay}"
                                  Style="{StaticResource MaterialDesignFloatingHintTextBox}"
-                                 material:HintAssist.Hint="{Binding VideoFile.Source}"
+                                 material:HintAssist.Hint="{Binding MediaResource.Source}"
                                  DockPanel.Dock="Left"
                                  Margin="5 -10 0 0"
                                  VerticalAlignment="Center"/>
@@ -566,7 +566,7 @@
                                    Cursor="Hand"
                                    MouseUp="{s:Action OnKeyframesHeatmapMouseUp}"
                                    Keyframes="{Binding AxisKeyframes, Mode=OneWay}"
-                                   Duration="{Binding VideoDuration, Mode=OneWay}"
+                                   Duration="{Binding MediaDuration, Mode=OneWay}"
                                    Position="{Binding CurrentPosition, Mode=OneWay}"
                                    BucketCount="{Binding HeatmapBucketCount}"
                                    InvertY="{Binding HeatmapInvertY}"
@@ -736,7 +736,7 @@
                                                     </MenuItem>
                                                     <MenuItem Command="{s:Action OnAxisLoad}"
                                                               CommandParameter="{Binding Key}"
-                                                              IsEnabled="{Binding DataContext.VideoFile, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}, Converter={StaticResource InvertedNullableToBooleanConverter}}"
+                                                              IsEnabled="{Binding DataContext.MediaResource, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}, Converter={StaticResource InvertedNullableToBooleanConverter}}"
                                                               Padding="8">
                                                         <MenuItem.Header>
                                                             <DockPanel LastChildFill="True">
@@ -764,7 +764,7 @@
                                                     </MenuItem>
                                                     <MenuItem Command="{s:Action OnAxisReload}"
                                                               CommandParameter="{Binding Key}"
-                                                              IsEnabled="{Binding DataContext.VideoFile, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}, Converter={StaticResource InvertedNullableToBooleanConverter}}"
+                                                              IsEnabled="{Binding DataContext.MediaResource, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}, Converter={StaticResource InvertedNullableToBooleanConverter}}"
                                                               Padding="8">
                                                         <MenuItem.Header>
                                                             <DockPanel LastChildFill="True">
@@ -790,10 +790,10 @@
                                                             </DockPanel>
                                                         </MenuItem.Header>
 
-                                                        <MenuItem Header="_Video location" 
-                                                                  Command="{s:Action OnAxisMoveToVideo}"
+                                                        <MenuItem Header="_Media location" 
+                                                                  Command="{s:Action OnAxisMoveToMedia}"
                                                                   CommandParameter="{Binding Key}"
-                                                                  IsEnabled="{Binding DataContext.VideoFile, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}, Converter={StaticResource InvertedNullableToBooleanConverter}}"/>
+                                                                  IsEnabled="{Binding DataContext.MediaResource, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}, Converter={StaticResource InvertedNullableToBooleanConverter}}"/>
 
                                                         <MenuItem Header="_Library location" 
                                                                   ItemsSource="{Binding DataContext.ScriptLibraries, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}">
@@ -1064,7 +1064,7 @@
                                                                                    Typography.Capitals="AllSmallCaps"/>
                                                                         
                                                                         <DockPanel LastChildFill="False">
-                                                                            <TextBlock Text="Video is paused" 
+                                                                            <TextBlock Text="Media is paused" 
                                                                                        DockPanel.Dock="Left"
                                                                                        VerticalAlignment="Center"/>
 

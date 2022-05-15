@@ -1,0 +1,93 @@
+﻿<UserControl x:Class="MultiFunPlayer.MediaSource.Views.HereSphereMediaSourceView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:material="http://materialdesigninxaml.net/winfx/xaml/themes"
+             xmlns:s="https://github.com/canton7/Stylet"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:converters="clr-namespace:MultiFunPlayer.UI.Converters"
+             mc:Ignorable="d" 
+             d:DesignHeight="450" d:DesignWidth="800">
+    <UserControl.Resources>
+        <converters:IPEndPointToStringConverter x:Key="IPEndPointToStringConverter"/>
+    </UserControl.Resources>
+    <Expander material:ExpanderAssist.HorizontalHeaderPadding="0 0 6 0"
+              Style="{StaticResource MaterialDesignToolBarExpander}"
+              Background="{StaticResource MaterialDesignToolBarBackground}"
+              IsExpanded="{Binding DataContext.ContentVisible, RelativeSource={RelativeSource FindAncestor, AncestorLevel=2, AncestorType={x:Type UserControl}}}">
+        <Expander.Header>
+            <StackPanel Orientation="Horizontal"
+                        Height="35">
+                <Button DockPanel.Dock="Left"
+                        Command="{s:Action ToggleConnectAsync}"
+                        CommandParameter="{Binding}"
+                        s:View.ActionTarget="{Binding DataContext.Parent, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}"
+                        IsEnabled="{Binding CanToggleConnect}"                                           
+                        ToolTipService.InitialShowDelay="0"
+                        ToolTipService.Placement="Top"
+                        material:ButtonProgressAssist.IsIndicatorVisible="{Binding IsConnectBusy}"
+                        material:ButtonProgressAssist.Value="-1"
+                        material:ButtonProgressAssist.IsIndeterminate="True">
+                    <Button.Style>
+                        <Style TargetType="{x:Type ButtonBase}" BasedOn="{StaticResource MaterialDesignProgressToolBarButton}">
+                            <Setter Property="ToolTip" Value="Connect" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsConnected}" Value="True">
+                                    <Setter Property="ToolTip" Value="Disconnect" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                    <material:PackIcon Width="19" Height="19">
+                        <material:PackIcon.Style>
+                            <Style TargetType="material:PackIcon" BasedOn="{StaticResource {x:Type material:PackIcon}}">
+                                <Setter Property="Kind" Value="Play" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsConnected}" Value="True">
+                                        <Setter Property="Kind" Value="Stop" />
+                                        <DataTrigger.EnterActions>
+                                            <BeginStoryboard>
+                                                <Storyboard>
+                                                    <DoubleAnimation Storyboard.TargetProperty="Opacity" From="0" To="1" Duration="0:0:0.8" />
+                                                </Storyboard>
+                                            </BeginStoryboard>
+                                        </DataTrigger.EnterActions>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </material:PackIcon.Style>
+                    </material:PackIcon>
+                </Button>
+
+                <ToggleButton DockPanel.Dock="Left"
+                              IsChecked="{Binding AutoConnectEnabled}"           
+                              Style="{StaticResource MaterialDesignToolBarToggleButton}"
+                              ToolTipService.InitialShowDelay="0"
+                              ToolTipService.Placement="Top"
+                              ToolTip="Auto-connect">
+                    <material:PackIcon Kind="MotionPlayOutline" Opacity=".56" Width="20" Height="20"/>
+                    <material:ToggleButtonAssist.OnContent>
+                        <material:PackIcon Kind="MotionPlayOutline" Width="20" Height="20"/>
+                    </material:ToggleButtonAssist.OnContent>
+                </ToggleButton>
+            </StackPanel>
+        </Expander.Header>
+
+        <StackPanel Margin="20">
+            <DockPanel LastChildFill="True">
+                <TextBlock Text="Endpoint:"
+                           DockPanel.Dock="Left"
+                           Margin="0 0 10 0"
+                           VerticalAlignment="Center"/>
+
+                <TextBox Text="{Binding Endpoint, Converter={StaticResource IPEndPointToStringConverter}}"
+                         material:HintAssist.Hint="address:port"
+                         Style="{StaticResource MaterialDesignFloatingHintTextBox}"
+                         DockPanel.Dock="Left"
+                         Width="150"
+                         Margin="0 -12 20 0"
+                         HorizontalAlignment="Left"/>
+            </DockPanel>
+        </StackPanel>
+    </Expander>
+</UserControl>

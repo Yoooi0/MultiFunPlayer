@@ -4,13 +4,14 @@ using MultiFunPlayer.Common.Messages;
 using MultiFunPlayer.Input;
 using MultiFunPlayer.Input.RawInput;
 using MultiFunPlayer.Input.XInput;
+using MultiFunPlayer.MediaSource;
+using MultiFunPlayer.MediaSource.MediaResource;
 using MultiFunPlayer.MotionProvider;
+using MultiFunPlayer.OutputTarget;
 using MultiFunPlayer.Settings;
 using MultiFunPlayer.Settings.Converters;
 using MultiFunPlayer.UI;
 using MultiFunPlayer.UI.Controls.ViewModels;
-using MultiFunPlayer.VideoSource;
-using MultiFunPlayer.VideoSource.MediaResource;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;
@@ -37,7 +38,7 @@ public class Bootstrapper : Bootstrapper<RootViewModel>
         builder.Bind<ScriptViewModel>().And<IDeviceAxisValueProvider>().To<ScriptViewModel>().InSingletonScope();
         builder.Bind<IMediaResourceFactory>().To<MediaResourceFactory>().InSingletonScope();
 
-        builder.Bind<IVideoSource>().ToAllImplementations().InSingletonScope();
+        builder.Bind<IMediaSource>().ToAllImplementations().InSingletonScope();
         builder.Bind<IOutputTargetFactory>().To<OutputTargetFactory>().InSingletonScope();
         builder.Bind<IShortcutManager>().To<ShortcutManager>().InSingletonScope();
         builder.Bind<IMotionProviderFactory>().To<MotionProviderFactory>().InSingletonScope();

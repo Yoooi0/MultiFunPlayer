@@ -104,6 +104,20 @@ public static class JsonExtensions
         var (_, valueTypeName) = ReflectionUtils.SplitFullyQualifiedTypeName(o["$type"].ToString());
         return Type.GetType(valueTypeName);
     }
+
+    public static bool RenameProperty(this JObject o, string oldName, string newName)
+    {
+        if (string.Equals(oldName, newName))
+            return true;
+
+        if (!o.ContainsKey(oldName))
+            return false;
+
+        var p = o.Property(oldName);
+        p.Replace(new JProperty(newName, p.Value));
+
+        return true;
+    }
 }
 
 public static class TaskExtensions

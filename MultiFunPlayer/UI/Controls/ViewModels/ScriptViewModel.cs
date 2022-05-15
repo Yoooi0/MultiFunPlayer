@@ -16,17 +16,18 @@ using NLog;
 using System.Runtime.CompilerServices;
 using MultiFunPlayer.Input;
 using MultiFunPlayer.MotionProvider;
-using MultiFunPlayer.VideoSource.MediaResource;
 using MaterialDesignThemes.Wpf;
 using System.Reflection;
-using MultiFunPlayer.VideoSource.MediaResource.Modifier.ViewModels;
+using MultiFunPlayer.MediaSource.MediaResource;
+using MultiFunPlayer.MediaSource.MediaResource.Modifier;
+using MultiFunPlayer.MediaSource.MediaResource.Modifier.ViewModels;
 
 namespace MultiFunPlayer.UI.Controls.ViewModels;
 
 [JsonObject(MemberSerialization = MemberSerialization.OptIn)]
 public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
-    IHandle<VideoPositionMessage>, IHandle<VideoPlayingMessage>, IHandle<VideoFileChangedMessage>, IHandle<VideoDurationMessage>, 
-    IHandle<VideoSpeedMessage>, IHandle<AppSettingsMessage>, IHandle<SyncRequestMessage>, IHandle<ScriptLoadMessage>
+    IHandle<MediaPositionChangedMessage>, IHandle<MediaPlayingChangedMessage>, IHandle<MediaPathChangedMessage>, IHandle<MediaDurationChangedMessage>, 
+    IHandle<MediaSpeedChangedMessage>, IHandle<AppSettingsMessage>, IHandle<SyncRequestMessage>, IHandle<ScriptLoadMessage>
 {
     protected Logger Logger = LogManager.GetCurrentClassLogger();
 
@@ -39,23 +40,23 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
     public bool IsPlaying { get; set; }
     public float CurrentPosition { get; set; }
     public float PlaybackSpeed { get; set; }
-    public float VideoDuration { get; set; }
+    public float MediaDuration { get; set; }
 
     public ObservableConcurrentDictionary<DeviceAxis, AxisModel> AxisModels { get; set; }
     public ObservableConcurrentDictionaryView<DeviceAxis, AxisModel, AxisState> AxisStates { get; }
     public ObservableConcurrentDictionaryView<DeviceAxis, AxisModel, KeyframeCollection> AxisKeyframes { get; }
 
-    public Dictionary<string, Type> VideoPathModifierTypes { get; }
+    public Dictionary<string, Type> MediaPathModifierTypes { get; }
     public IMotionProviderManager MotionProviderManager { get; }
 
-    public MediaResourceInfo VideoFile { get; set; }
+    public MediaResourceInfo MediaResource { get; set; }
 
     [JsonProperty] public float GlobalOffset { get; set; }
     [JsonProperty] public bool ValuesContentVisible { get; set; }
-    [JsonProperty] public bool VideoContentVisible { get; set; } = true;
+    [JsonProperty] public bool MediaContentVisible { get; set; } = true;
     [JsonProperty] public bool AxisContentVisible { get; set; } = false;
     [JsonProperty] public ObservableConcurrentDictionaryView<DeviceAxis, AxisModel, AxisSettings> AxisSettings { get; }
-    [JsonProperty(ItemTypeNameHandling = TypeNameHandling.Objects)] public ObservableConcurrentCollection<IMediaPathModifier> VideoPathModifiers => _mediaResourceFactory.PathModifiers;
+    [JsonProperty(ItemTypeNameHandling = TypeNameHandling.Objects)] public ObservableConcurrentCollection<IMediaPathModifier> MediaPathModifiers => _mediaResourceFactory.PathModifiers;
     [JsonProperty] public ObservableConcurrentCollection<ScriptLibrary> ScriptLibraries { get; }
     [JsonProperty] public SyncSettings SyncSettings { get; set; }
     [JsonProperty] public bool HeatmapShowStrokeLength { get; set; }
@@ -76,15 +77,15 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         _mediaResourceFactory = mediaResourceFactory;
 
         AxisModels = new ObservableConcurrentDictionary<DeviceAxis, AxisModel>(DeviceAxis.All.ToDictionary(a => a, _ => new AxisModel()));
-        VideoPathModifierTypes = ReflectionUtils.FindImplementations<IMediaPathModifier>()
+        MediaPathModifierTypes = ReflectionUtils.FindImplementations<IMediaPathModifier>()
                                                 .ToDictionary(t => t.GetCustomAttribute<DisplayNameAttribute>(inherit: false).DisplayName, t => t);
 
         ScriptLibraries = new ObservableConcurrentCollection<ScriptLibrary>();
         SyncSettings = new SyncSettings();
 
-        VideoFile = null;
+        MediaResource = null;
 
-        VideoDuration = float.NaN;
+        MediaDuration = float.NaN;
         CurrentPosition = float.NaN;
         PlaybackSpeed = 1;
         _playbackSpeedCorrection = 1;
@@ -370,28 +371,28 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
     }
 
     #region Events
-    public void Handle(VideoFileChangedMessage message)
+    public void Handle(MediaPathChangedMessage message)
     {
         var resource = _mediaResourceFactory.CreateFromPath(message.Path);
-        if (VideoFile == null && resource == null)
+        if (MediaResource == null && resource == null)
             return;
-        if (VideoFile != null && resource != null)
-            if (string.Equals(VideoFile.Name, resource.Name, StringComparison.OrdinalIgnoreCase)
-             && string.Equals(VideoFile.Source, resource.Source, StringComparison.OrdinalIgnoreCase))
+        if (MediaResource != null && resource != null)
+            if (string.Equals(MediaResource.Name, resource.Name, StringComparison.OrdinalIgnoreCase)
+             && string.Equals(MediaResource.Source, resource.Source, StringComparison.OrdinalIgnoreCase))
                 return;
 
-        Logger.Info("Received VideoFileChangedMessage [Source: \"{0}\" Name: \"{1}\"]", resource?.Source, resource?.Name);
+        Logger.Info("Received {0} [Source: \"{1}\" Name: \"{2}\"]", nameof(MediaPathChangedMessage), resource?.Source, resource?.Name);
 
-        VideoFile = resource;
-        if (SyncSettings.SyncOnVideoFileChanged)
-            ResetSync(isSyncing: VideoFile != null);
+        MediaResource = resource;
+        if (SyncSettings.SyncOnMediaResourceChanged)
+            ResetSync(isSyncing: MediaResource != null);
 
         ResetAxes(null);
         ReloadAxes(null);
 
-        if (VideoFile == null)
+        if (MediaResource == null)
         {
-            VideoDuration = float.NaN;
+            MediaDuration = float.NaN;
             CurrentPosition = float.NaN;
             PlaybackSpeed = 1;
         }
@@ -399,42 +400,42 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         InvalidateState(null);
     }
 
-    public void Handle(VideoPlayingMessage message)
+    public void Handle(MediaPlayingChangedMessage message)
     {
         if (IsPlaying == message.IsPlaying)
             return;
 
-        Logger.Info("Received VideoPlayingMessage [IsPlaying: {0}]", message.IsPlaying);
+        Logger.Info("Received {0} [IsPlaying: {1}]", nameof(MediaPlayingChangedMessage), message.IsPlaying);
 
         if (IsPlaying != message.IsPlaying)
-            if (SyncSettings.SyncOnVideoPlayPause)
+            if (SyncSettings.SyncOnMediaPlayPause)
                 ResetSync();
 
         IsPlaying = message.IsPlaying;
     }
 
-    public void Handle(VideoDurationMessage message)
+    public void Handle(MediaDurationChangedMessage message)
     {
         var newDuration = (float)(message.Duration?.TotalSeconds ?? float.NaN);
-        if (VideoDuration == newDuration)
+        if (MediaDuration == newDuration)
             return;
 
-        Logger.Info("Received VideoDurationMessage [Duration: {0}]", message.Duration?.ToString());
+        Logger.Info("Received {0} [Duration: {1}]", nameof(MediaDurationChangedMessage), message.Duration?.ToString());
 
-        VideoDuration = newDuration;
+        MediaDuration = newDuration;
         ScheduleAutoSkipToScriptStart();
     }
 
-    public void Handle(VideoSpeedMessage message)
+    public void Handle(MediaSpeedChangedMessage message)
     {
         if (PlaybackSpeed == message.Speed)
             return;
 
-        Logger.Info("Received VideoSpeedMessage [Speed: {0}]", message.Speed);
+        Logger.Info("Received {0} [Speed: {1}]", nameof(MediaSpeedChangedMessage), message.Speed);
         PlaybackSpeed = message.Speed;
     }
 
-    public void Handle(VideoPositionMessage message)
+    public void Handle(MediaPositionChangedMessage message)
     {
         void UpdateCurrentPosition(float newPosition)
         {
@@ -458,7 +459,7 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         }
 
         var newPosition = (float)(message.Position?.TotalSeconds ?? float.NaN);
-        Logger.Trace("Received VideoPositionMessage [Position: {0}]", message.Position?.ToString());
+        Logger.Trace("Received {0} [Position: {1}]", nameof(MediaPositionChangedMessage), message.Position?.ToString());
 
         if (!float.IsFinite(newPosition))
         {
@@ -518,11 +519,11 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                 }
             }
 
-            if (settings.TryGetValue<List<IMediaPathModifier>>(nameof(VideoPathModifiers), new JsonSerializerSettings() { TypeNameHandling = TypeNameHandling.Objects }, out var videoPathModifiers))
+            if (settings.TryGetValue<List<IMediaPathModifier>>(nameof(MediaPathModifiers), new JsonSerializerSettings() { TypeNameHandling = TypeNameHandling.Objects }, out var mediaPathModifiers))
             {
-                VideoPathModifiers.Clear();
-                foreach (var modifier in videoPathModifiers)
-                    VideoPathModifiers.Add(modifier);
+                MediaPathModifiers.Clear();
+                foreach (var modifier in mediaPathModifiers)
+                    MediaPathModifiers.Add(modifier);
             }
 
             if (settings.TryGetValue<List<ScriptLibrary>>(nameof(ScriptLibraries), out var scriptDirectories))
@@ -533,7 +534,7 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
 
             if (settings.TryGetValue<float>(nameof(GlobalOffset), out var globalOffset)) GlobalOffset = globalOffset;
             if (settings.TryGetValue<bool>(nameof(ValuesContentVisible), out var valuesContentVisible)) ValuesContentVisible = valuesContentVisible;
-            if (settings.TryGetValue<bool>(nameof(VideoContentVisible), out var videoContentVisible)) VideoContentVisible = videoContentVisible;
+            if (settings.TryGetValue<bool>(nameof(MediaContentVisible), out var mediaContentVisible)) MediaContentVisible = mediaContentVisible;
             if (settings.TryGetValue<bool>(nameof(AxisContentVisible), out var axisContentVisible)) AxisContentVisible = axisContentVisible;
             if (settings.TryGetValue<int>(nameof(HeatmapBucketCount), out var heatmapBucketCount)) HeatmapBucketCount = heatmapBucketCount;
             if (settings.TryGetValue<bool>(nameof(HeatmapInvertY), out var heatmapInvertY)) HeatmapInvertY = heatmapInvertY;
@@ -636,20 +637,20 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         axes ??= DeviceAxis.All;
 
         var updated = new List<DeviceAxis>();
-        if (!axes.Any() || VideoFile == null)
+        if (!axes.Any() || MediaResource == null)
             return updated;
 
         Logger.Debug("Maching files to axes [Axes: {list}]", axes);
         bool TryMatchFile(string fileName, Func<IScriptResource> generator)
         {
-            var videoWithoutExtension = Path.GetFileNameWithoutExtension(VideoFile.Name);
+            var mediaWithoutExtension = Path.GetFileNameWithoutExtension(MediaResource.Name);
             var funscriptWithoutExtension = Path.GetFileNameWithoutExtension(fileName);
 
             if (DeviceAxis.TryParse("L0", out var strokeAxis))
             {
                 if (axes.Contains(strokeAxis))
                 {
-                    if (string.Equals(funscriptWithoutExtension, videoWithoutExtension, StringComparison.OrdinalIgnoreCase))
+                    if (string.Equals(funscriptWithoutExtension, mediaWithoutExtension, StringComparison.OrdinalIgnoreCase))
                     {
                         SetScript(strokeAxis, generator());
                         updated.Add(strokeAxis);
@@ -690,24 +691,24 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
             return false;
         }
 
-        var videoWithoutExtension = Path.GetFileNameWithoutExtension(VideoFile.Name);
+        var mediaWithoutExtension = Path.GetFileNameWithoutExtension(MediaResource.Name);
         foreach (var library in ScriptLibraries)
         {
             Logger.Info("Searching library \"{0}\"", library.Directory);
-            foreach (var zipFile in library.EnumerateFiles($"{videoWithoutExtension}.zip"))
+            foreach (var zipFile in library.EnumerateFiles($"{mediaWithoutExtension}.zip"))
                 TryMatchArchive(zipFile.FullName);
 
-            foreach (var funscriptFile in library.EnumerateFiles($"{videoWithoutExtension}*.funscript"))
+            foreach (var funscriptFile in library.EnumerateFiles($"{mediaWithoutExtension}*.funscript"))
                 TryMatchFile(funscriptFile.Name, () => ScriptResource.FromFileInfo(funscriptFile));
         }
 
-        if (Directory.Exists(VideoFile.Source))
+        if (Directory.Exists(MediaResource.Source))
         {
-            Logger.Info("Searching video location \"{0}\"", VideoFile.Source);
-            var sourceDirectory = new DirectoryInfo(VideoFile.Source);
-            TryMatchArchive(Path.Join(sourceDirectory.FullName, $"{videoWithoutExtension}.zip"));
+            Logger.Info("Searching media location \"{0}\"", MediaResource.Source);
+            var sourceDirectory = new DirectoryInfo(MediaResource.Source);
+            TryMatchArchive(Path.Join(sourceDirectory.FullName, $"{mediaWithoutExtension}.zip"));
 
-            foreach (var funscriptFile in sourceDirectory.EnumerateFiles($"{videoWithoutExtension}*.funscript"))
+            foreach (var funscriptFile in sourceDirectory.EnumerateFiles($"{mediaWithoutExtension}*.funscript"))
                 TryMatchFile(funscriptFile.Name, () => ScriptResource.FromFileInfo(funscriptFile));
         }
 
@@ -848,18 +849,18 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         if (maybeSkipPosition is not float skipPosition || currentPosition >= skipPosition || (skipPosition - currentPosition) <= minimumSkip)
             return;
 
-        SeekVideoToTime(skipPosition);
+        SeekMediaToTime(skipPosition);
     }
     #endregion 
 
-    #region Video
-    public void OnOpenVideoLocation()
+    #region Media
+    public void OnOpenMediaLocation()
     {
-        if (VideoFile == null)
+        if (MediaResource == null)
             return;
 
-        var fullPath = VideoFile.IsModified ? VideoFile.ModifiedPath : VideoFile.OriginalPath;
-        if (VideoFile.IsUrl)
+        var fullPath = MediaResource.IsModified ? MediaResource.ModifiedPath : MediaResource.OriginalPath;
+        if (MediaResource.IsUrl)
         {
             Process.Start(new ProcessStartInfo
             {
@@ -877,7 +878,7 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
 
     public void OnPlayPauseClick()
     {
-        _eventAggregator.Publish(new VideoPlayPauseMessage(!IsPlaying));
+        _eventAggregator.Publish(new MediaPlayPauseMessage(!IsPlaying));
     }
 
     public void OnKeyframesHeatmapMouseUp(object sender, MouseButtonEventArgs e)
@@ -887,23 +888,23 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         if (e.ChangedButton != MouseButton.Left)
             return;
 
-        SeekVideoToPercent((float)e.GetPosition(element).X / (float)element.ActualWidth);
+        SeekMediaToPercent((float)e.GetPosition(element).X / (float)element.ActualWidth);
     }
 
-    private void SeekVideoToPercent(float percent)
+    private void SeekMediaToPercent(float percent)
     {
-        if (!float.IsFinite(VideoDuration) || !float.IsFinite(percent))
+        if (!float.IsFinite(MediaDuration) || !float.IsFinite(percent))
             return;
 
-        _eventAggregator.Publish(new VideoSeekMessage(TimeSpan.FromSeconds(VideoDuration * MathUtils.Clamp01(percent))));
+        _eventAggregator.Publish(new MediaSeekMessage(TimeSpan.FromSeconds(MediaDuration * MathUtils.Clamp01(percent))));
     }
 
-    private void SeekVideoToTime(float time)
+    private void SeekMediaToTime(float time)
     {
-        if (!float.IsFinite(VideoDuration) || !float.IsFinite(time))
+        if (!float.IsFinite(MediaDuration) || !float.IsFinite(time))
             return;
 
-        _eventAggregator.Publish(new VideoSeekMessage(TimeSpan.FromSeconds(MathUtils.Clamp(time, 0, VideoDuration))));
+        _eventAggregator.Publish(new MediaSeekMessage(TimeSpan.FromSeconds(MathUtils.Clamp(time, 0, MediaDuration))));
     }
 
     private Task _autoSkipToScriptStartTask = Task.CompletedTask;
@@ -916,12 +917,12 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
             return;
 
         _autoSkipToScriptStartTask = Task.Delay(1000, _cancellationSource.Token)
-                                         .ContinueWith(_ => SeekVideoToScriptStart(AutoSkipToScriptStartOffset, onlyWhenBefore: true));
+                                         .ContinueWith(_ => SeekMediaToScriptStart(AutoSkipToScriptStartOffset, onlyWhenBefore: true));
     }
 
-    private void SeekVideoToScriptStart(float offset, bool onlyWhenBefore)
+    private void SeekMediaToScriptStart(float offset, bool onlyWhenBefore)
     {
-        if (!float.IsFinite(VideoDuration) || !float.IsFinite(offset))
+        if (!float.IsFinite(MediaDuration) || !float.IsFinite(offset))
             return;
 
         var startPosition = AxisKeyframes.Select(x => x.Value)
@@ -931,12 +932,12 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         if (startPosition == null)
             return;
 
-        var targetVideoTime = MathF.Max(MathF.Min(startPosition.Value, VideoDuration) - offset, 0);
-        if (onlyWhenBefore && targetVideoTime <= CurrentPosition)
+        var targetMediaTime = MathF.Max(MathF.Min(startPosition.Value, MediaDuration) - offset, 0);
+        if (onlyWhenBefore && targetMediaTime <= CurrentPosition)
             return;
 
-        Logger.Info("Skipping to script start at {0}s", targetVideoTime);
-        SeekVideoToTime(targetVideoTime);
+        Logger.Info("Skipping to script start at {0}s", targetMediaTime);
+        SeekMediaToTime(targetMediaTime);
     }
     #endregion
 
@@ -1003,7 +1004,7 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
     {
         var dialog = new CommonOpenFileDialog()
         {
-            InitialDirectory = Directory.Exists(VideoFile?.Source) ? VideoFile.Source : string.Empty,
+            InitialDirectory = Directory.Exists(MediaResource?.Source) ? MediaResource.Source : string.Empty,
             EnsureFileExists = true
         };
         dialog.Filters.Add(new CommonFileDialogFilter("Funscript files", "*.funscript"));
@@ -1062,9 +1063,9 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         return true;
     }
 
-    public void OnAxisMoveToVideo(DeviceAxis axis)
+    public void OnAxisMoveToMedia(DeviceAxis axis)
     {
-        if (VideoFile != null && MoveScript(axis, new DirectoryInfo(VideoFile.Source)))
+        if (MediaResource != null && MoveScript(axis, new DirectoryInfo(MediaResource.Source)))
             ReloadAxes(axis);
     }
 
@@ -1168,44 +1169,44 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
     #endregion 
 
     #region MediaResource
-    public async void OnVideoPathModifierConfigure(object sender, RoutedEventArgs e)
+    public async void OnMediaPathModifierConfigure(object sender, RoutedEventArgs e)
     {
         if (sender is not FrameworkElement element || element.DataContext is not IMediaPathModifier modifier)
             return;
 
         _ = await DialogHost.Show(modifier, "MediaPathModifierDialog").ConfigureAwait(true);
 
-        if (VideoFile != null)
-            Handle(new VideoFileChangedMessage(VideoFile.OriginalPath));
+        if (MediaResource != null)
+            Handle(new MediaPathChangedMessage(MediaResource.OriginalPath));
     }
 
-    public void OnVideoPathModifierAdd(object sender, RoutedEventArgs e)
+    public void OnMediaPathModifierAdd(object sender, RoutedEventArgs e)
     {
         if (sender is not FrameworkElement element || element.DataContext is not KeyValuePair<string, Type> pair)
             return;
 
         var (_, type) = pair;
         var modifier = (IMediaPathModifier)Activator.CreateInstance(type);
-        VideoPathModifiers.Add(modifier);
+        MediaPathModifiers.Add(modifier);
 
-        if(VideoFile != null)
-            Handle(new VideoFileChangedMessage(VideoFile.OriginalPath));
+        if(MediaResource != null)
+            Handle(new MediaPathChangedMessage(MediaResource.OriginalPath));
     }
 
-    public void OnVideoPathModifierRemove(object sender, RoutedEventArgs e)
+    public void OnMediaPathModifierRemove(object sender, RoutedEventArgs e)
     {
         if (sender is not FrameworkElement element || element.DataContext is not IMediaPathModifier modifier)
             return;
 
-        VideoPathModifiers.Remove(modifier);
+        MediaPathModifiers.Remove(modifier);
 
-        if (VideoFile != null)
-            Handle(new VideoFileChangedMessage(VideoFile.OriginalPath));
+        if (MediaResource != null)
+            Handle(new MediaPathChangedMessage(MediaResource.OriginalPath));
     }
 
-    public void OnMapCurrentVideoPathToFile(object sender, RoutedEventArgs e)
+    public void OnMapCurrentMediaPathToFile(object sender, RoutedEventArgs e)
     {
-        if (VideoFile == null || !VideoFile.IsUrl)
+        if (MediaResource == null || !MediaResource.IsUrl)
             return;
 
         var dialog = new CommonOpenFileDialog()
@@ -1217,13 +1218,13 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         if (dialog.ShowDialog() != CommonFileDialogResult.Ok)
             return;
 
-        VideoPathModifiers.Add(new FindReplaceMediaPathModifierViewModel()
+        MediaPathModifiers.Add(new FindReplaceMediaPathModifierViewModel()
         {
-            Find = VideoFile.OriginalPath,
+            Find = MediaResource.OriginalPath,
             Replace = dialog.FileName
         });
 
-        Handle(new VideoFileChangedMessage(VideoFile.OriginalPath));
+        Handle(new MediaPathChangedMessage(MediaResource.OriginalPath));
     }
     #endregion
 
@@ -1271,8 +1272,8 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                 callback(AxisSettings[axis]);
         }
 
-        #region Video::PlayPause
-        s.RegisterAction("Video::PlayPause::Set", 
+        #region Media::PlayPause
+        s.RegisterAction("Media::PlayPause::Set", 
             b => b.WithSetting<bool>(p => p.WithLabel("Play"))
                   .WithSetting<DeviceAxis>(p => p.WithLabel("Axis").WithItemsSource(DeviceAxis.All))
                   .WithCallback((_, play, axis) =>
@@ -1281,42 +1282,42 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                       else if (!play && IsPlaying) OnPlayPauseClick();
                   }));
 
-        s.RegisterAction("Video::PlayPause::Toggle", b => b.WithCallback(_ => OnPlayPauseClick()));
+        s.RegisterAction("Media::PlayPause::Toggle", b => b.WithCallback(_ => OnPlayPauseClick()));
         #endregion
 
-        #region Video::ScriptOffset
-        s.RegisterAction("Video::ScriptOffset::Offset", b => b.WithSetting<float>(p => p.WithLabel("Value offset").WithStringFormat("{}{0}s"))
+        #region Media::ScriptOffset
+        s.RegisterAction("Media::ScriptOffset::Offset", b => b.WithSetting<float>(p => p.WithLabel("Value offset").WithStringFormat("{}{0}s"))
                                                               .WithCallback((_, offset) => GlobalOffset += offset));
-        s.RegisterAction("Video::ScriptOffset::Set", b => b.WithSetting<float>(p => p.WithLabel("Value").WithStringFormat("{}{0}s"))
+        s.RegisterAction("Media::ScriptOffset::Set", b => b.WithSetting<float>(p => p.WithLabel("Value").WithStringFormat("{}{0}s"))
                                                            .WithCallback((_, value) => GlobalOffset = value));
         #endregion
 
-        #region Video::Position
-        s.RegisterAction("Video::Position::Time::Offset", b => b.WithSetting<float>(p => p.WithLabel("Value offset").WithStringFormat("{}{0}s"))
-                                                                .WithCallback((_, offset) => SeekVideoToTime(CurrentPosition + offset)));
-        s.RegisterAction("Video::Position::Time::Set", b => b.WithSetting<float>(p => p.WithLabel("Value").WithStringFormat("{}{0}s"))
-                                                             .WithCallback((_, value) => SeekVideoToTime(value)));
+        #region Media::Position
+        s.RegisterAction("Media::Position::Time::Offset", b => b.WithSetting<float>(p => p.WithLabel("Value offset").WithStringFormat("{}{0}s"))
+                                                                .WithCallback((_, offset) => SeekMediaToTime(CurrentPosition + offset)));
+        s.RegisterAction("Media::Position::Time::Set", b => b.WithSetting<float>(p => p.WithLabel("Value").WithStringFormat("{}{0}s"))
+                                                             .WithCallback((_, value) => SeekMediaToTime(value)));
 
-        s.RegisterAction("Video::Position::Percent::Offset", b => b.WithSetting<float>(p => p.WithLabel("Value offset").WithStringFormat("{}{0}%"))
-                                                                   .WithCallback((_, offset) => SeekVideoToPercent(CurrentPosition / VideoDuration + offset / 100)));
-        s.RegisterAction("Video::Position::Percent::Set", b => b.WithSetting<float>(p => p.WithLabel("Value").WithStringFormat("{}{0}%"))
-                                                                .WithCallback((_, value) => SeekVideoToPercent(value / 100)));
+        s.RegisterAction("Media::Position::Percent::Offset", b => b.WithSetting<float>(p => p.WithLabel("Value offset").WithStringFormat("{}{0}%"))
+                                                                   .WithCallback((_, offset) => SeekMediaToPercent(CurrentPosition / MediaDuration + offset / 100)));
+        s.RegisterAction("Media::Position::Percent::Set", b => b.WithSetting<float>(p => p.WithLabel("Value").WithStringFormat("{}{0}%"))
+                                                                .WithCallback((_, value) => SeekMediaToPercent(value / 100)));
 
-        s.RegisterAction("Video::Position::SkipToScriptStart", b => b.WithSetting<float>(p => p.WithLabel("Offset").WithStringFormat("{}{0}s"))
-                                                                     .WithCallback((_, offset) => SeekVideoToScriptStart(offset, onlyWhenBefore: false)));
+        s.RegisterAction("Media::Position::SkipToScriptStart", b => b.WithSetting<float>(p => p.WithLabel("Offset").WithStringFormat("{}{0}s"))
+                                                                     .WithCallback((_, offset) => SeekMediaToScriptStart(offset, onlyWhenBefore: false)));
         #endregion
 
-        #region Video::AutoSkipToScriptStartEnabled
-        s.RegisterAction("Video::AutoSkipToScriptStartEnabled::Set",
+        #region Media::AutoSkipToScriptStartEnabled
+        s.RegisterAction("Media::AutoSkipToScriptStartEnabled::Set",
             b => b.WithSetting<bool>(p => p.WithLabel("Auto-skip to script start enabled"))
                   .WithCallback((_, enabled) => AutoSkipToScriptStartEnabled = enabled));
 
-        s.RegisterAction("Video::AutoSkipToScriptStartEnabled::Toggle",
+        s.RegisterAction("Media::AutoSkipToScriptStartEnabled::Toggle",
             b => b.WithCallback(_ => AutoSkipToScriptStartEnabled = !AutoSkipToScriptStartEnabled));
         #endregion
 
-        #region Video::AutoSkipToScriptStartOffset
-        s.RegisterAction("Video::AutoSkipToScriptStartOffset::Set",
+        #region Media::AutoSkipToScriptStartOffset
+        s.RegisterAction("Media::AutoSkipToScriptStartOffset::Set",
             b => b.WithSetting<float>(p => p.WithLabel("Script start auto-skip offset").WithStringFormat("{}{0}s"))
                   .WithCallback((_, offset) => AutoSkipToScriptStartOffset = offset));
         #endregion
@@ -1652,8 +1653,8 @@ public class AxisSettings : PropertyChangedBase
 public class SyncSettings : PropertyChangedBase
 {
     [JsonProperty] public float Duration { get; set; } = 4;
-    [JsonProperty] public bool SyncOnVideoFileChanged { get; set; } = true;
-    [JsonProperty] public bool SyncOnVideoPlayPause { get; set; } = true;
+    [JsonProperty] public bool SyncOnMediaResourceChanged { get; set; } = true;
+    [JsonProperty] public bool SyncOnMediaPlayPause { get; set; } = true;
     [JsonProperty] public bool SyncOnSeek { get; set; } = true;
 }
 

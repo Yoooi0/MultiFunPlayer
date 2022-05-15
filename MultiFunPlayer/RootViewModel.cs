@@ -15,7 +15,7 @@ public class RootViewModel : Conductor<IScreen>.Collection.AllActive, IHandle<Ap
     protected Logger Logger = LogManager.GetCurrentClassLogger();
 
     [Inject] public ScriptViewModel Script { get; set; }
-    [Inject] public VideoSourceViewModel VideoSource { get; set; }
+    [Inject] public MediaSourceViewModel MediaSource { get; set; }
     [Inject] public OutputTargetViewModel OutputTarget { get; set; }
     [Inject] public ShortcutViewModel Shortcut { get; set; }
     [Inject] public ApplicationViewModel Application { get; set; }
@@ -30,7 +30,7 @@ public class RootViewModel : Conductor<IScreen>.Collection.AllActive, IHandle<Ap
     protected override void OnActivate()
     {
         Items.Add(Script);
-        Items.Add(VideoSource);
+        Items.Add(MediaSource);
         Items.Add(OutputTarget);
 
         ActivateAndSetParent(Items);
