@@ -82,7 +82,6 @@ public class Migration__1_21_0__1 : AbstractConfigMigration
         }
     }
 
-
     private void MigrateMediaActionDescriptors(JObject settings)
     {
         Logger.Info("Migrating Media Action Descriptors");
