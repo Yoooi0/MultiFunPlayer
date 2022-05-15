@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Specialized;
 using System.ComponentModel;
+using System.Windows.Data;
 
 namespace MultiFunPlayer.Common;
 
@@ -17,12 +18,14 @@ public class ObservableConcurrentCollection<T> : IList<T>, IList, INotifyCollect
     {
         _context = AsyncOperationManager.SynchronizationContext;
         _items = new List<T>();
+        BindingOperations.EnableCollectionSynchronization(this, SyncRoot);
     }
 
     public ObservableConcurrentCollection(IEnumerable<T> elements)
     {
         _context = AsyncOperationManager.SynchronizationContext;
         _items = new List<T>(elements);
+        BindingOperations.EnableCollectionSynchronization(this, SyncRoot);
     }
 
     public event NotifyCollectionChangedEventHandler CollectionChanged;
