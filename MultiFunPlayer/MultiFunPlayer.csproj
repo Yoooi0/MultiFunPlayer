@@ -43,7 +43,7 @@
     <PackageReference Include="System.IO.Ports" Version="6.*" />
     <PackageReference Include="Microsoft-WindowsAPICodePack-Shell" Version="1.1.4" />
     <PackageReference Include="System.Management" Version="6.*" />
-    <PackageReference Include="Vortice.XInput" Version="1.9.80" />
+    <PackageReference Include="Vortice.XInput" Version="2.1.2" />
   </ItemGroup>
 	
   <ItemGroup>
