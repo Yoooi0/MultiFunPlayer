@@ -213,14 +213,16 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
 
             bool UpdateScript(DeviceAxis axis, AxisState state, AxisSettings settings, float lastValue, ref float newValue)
             {
-                if (!IsPlaying)
+                bool NoUpdate()
+                {
+                    state.InsideGap = false;
                     return false;
+                }
 
-                if (state.AfterScript)
-                    return false;
-
-                if (!AxisKeyframes.TryGetValue(axis, out var keyframes) || keyframes == null || keyframes.Count == 0)
-                    return false;
+                if (!IsPlaying
+                 || state.AfterScript
+                 || !AxisKeyframes.TryGetValue(axis, out var keyframes) || keyframes == null || keyframes.Count == 0)
+                    return NoUpdate();
 
                 var axisPosition = GetAxisPosition(axis);
                 var beforeIndex = state.Index;
@@ -241,9 +243,10 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                         state.SyncTime = 0;
                     }
 
-                    return false;
+                    return NoUpdate();
                 }
 
+                state.InsideGap = keyframes.IsGap(state.Index);
                 var scriptValue = MathUtils.Clamp01(keyframes.Interpolate(state.Index, axisPosition, settings.InterpolationType));
                 if (settings.Inverted)
                     scriptValue = 1 - scriptValue;
@@ -1599,6 +1602,8 @@ public class AxisModel : PropertyChangedBase
 
 public class AxisState : INotifyPropertyChanged
 {
+    private bool _insideGap, _lastInsideGap;
+
     [DoNotNotify] public int Index { get; set; } = int.MinValue;
     [DoNotNotify] public float Value { get; set; } = float.NaN;
 
@@ -1606,6 +1611,15 @@ public class AxisState : INotifyPropertyChanged
     [DoNotNotify] public bool BeforeScript => Index == -1;
     [DoNotNotify] public bool AfterScript => Index == int.MaxValue;
     [DoNotNotify] public bool InsideScript => Index >= 0 && Index != int.MaxValue;
+
+    [DoNotNotify] public bool InsideGap
+    {
+        get => _insideGap;
+        set => UpdateLastAndCurrent(ref _lastInsideGap, ref _insideGap, ref value);
+    }
+
+    [DoNotNotify] public bool GapStarted => !_lastInsideGap && _insideGap;
+    [DoNotNotify] public bool GapEnded => _lastInsideGap && !_insideGap;
 
     [DoNotNotify] public float SyncTime { get; set; } = 0;
     [DoNotNotify] public float AutoHomeTime { get; set; } = 0;
@@ -1623,6 +1637,13 @@ public class AxisState : INotifyPropertyChanged
     {
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(InsideScript)));
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Value)));
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private void UpdateLastAndCurrent<T>(ref T last, ref T current, ref T newValue)
+    {
+        last = current;
+        current = newValue;
     }
 }
 

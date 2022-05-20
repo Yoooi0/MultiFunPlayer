@@ -71,22 +71,39 @@ public class KeyframeCollection : List<Keyframe>
 
     public int SkipGap(int index)
     {
-        if (!this.ValidateIndex(index))
+        if (!this.ValidateIndex(index) || !this.ValidateIndex(index + 1))
             return -1;
 
-        for(int i = index, j = index + 1; j < Count; i = j++)
-        {
-            var prev = this[i];
-            var next = this[j];
+        while (index + 1 < Count && IsGapInternal(index))
+            index++;
 
-            var adx = MathF.Abs(next.Position - prev.Position);
-            var ady = MathF.Abs(next.Value - prev.Value);
-            if (ady < 0.001f || adx < 0.001f)
-                continue;
+        return index;
+    }
 
-            return i;
-        }
+    public bool IsGap(int index)
+    {
+        if (!this.ValidateIndex(index) || !this.ValidateIndex(index + 1))
+            return false;
 
-        return -1;
+        return IsGapInternal(index);
+    }
+
+    public float SegmentDuration(int index)
+    {
+        if (!this.ValidateIndex(index) || !this.ValidateIndex(index + 1))
+            return -1;
+
+        return this[index + 1].Position - this[index].Position;
+    }
+
+    private bool IsGapInternal(int index)
+    {
+        var prev = this[index + 0];
+        var next = this[index + 1];
+
+        var adx = MathF.Abs(next.Position - prev.Position);
+        var ady = MathF.Abs(next.Value - prev.Value);
+
+        return ady < 0.001f || adx < 0.001f;
     }
 }
