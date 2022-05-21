@@ -18,6 +18,7 @@
         <converters:DeviceAxisFriendlyNameConverter x:Key="DeviceAxisFriendlyNameConverter"/>
         <converters:NullableToBooleanConverter x:Key="NullableToBooleanConverter"/>
         <converters:InvertedNullableToBooleanConverter x:Key="InvertedNullableToBooleanConverter"/>
+        <converters:InvertedBooleanToVisibilityConverter x:Key="InvertedBooleanToVisibilityConverter"/>
         <converters:MultiObjectToArrayConverter x:Key="MultiObjectToArrayConverter"/>
         <converters:MultiBooleanToBooleanAndConverter x:Key="MultiBooleanToBooleanAndConverter"/>
         <converters:MotionProviderSelectorConverter x:Key="MotionProviderSelectorConverter"/>
@@ -1056,45 +1057,81 @@
                                                                                 </StackPanel>
                                                                             </DockPanel>
                                                                         </DockPanel>
+
+
+                                                                        <DockPanel LastChildFill="False">
+                                                                            <TextBlock Text="{Binding Key, StringFormat={}Fill {0} script gaps}" 
+                                                                                       DockPanel.Dock="Left"
+                                                                                       VerticalAlignment="Center"/>
+
+                                                                            <ToggleButton Style="{StaticResource MaterialDesignSwitchToggleButton}"
+                                                                                          IsChecked="{Binding Value.Settings.MotionProviderFillGaps}"
+                                                                                          DockPanel.Dock="Right"/>
+                                                                        </DockPanel>
                                                                         
                                                                         <TextBlock Text="Update when..." 
+                                                                                   Margin="0 10 0 0"
                                                                                    VerticalAlignment="Center"
                                                                                    FontSize="12"
                                                                                    FontWeight="Bold"
                                                                                    Typography.Capitals="AllSmallCaps"/>
-                                                                        
-                                                                        <DockPanel LastChildFill="False">
-                                                                            <TextBlock Text="Media is paused" 
-                                                                                       DockPanel.Dock="Left"
-                                                                                       VerticalAlignment="Center"/>
 
-                                                                            <ToggleButton Style="{StaticResource MaterialDesignSwitchToggleButton}"
-                                                                                          IsChecked="{Binding Value.Settings.UpdateMotionProviderWhenPaused}"
-                                                                                          DockPanel.Dock="Right"/>
-                                                                        </DockPanel>
+                                                                        <StackPanel Visibility="{Binding Value.Settings.MotionProviderFillGaps, Converter={StaticResource InvertedBooleanToVisibilityConverter}}"
+                                                                                    Margin="0 5 0 0">
+                                                                            <DockPanel LastChildFill="False">
+                                                                                <TextBlock Text="Media is paused" 
+                                                                                           DockPanel.Dock="Left"
+                                                                                           VerticalAlignment="Center"/>
 
-                                                                        <DockPanel LastChildFill="False">
-                                                                            <TextBlock Text="{Binding Key, StringFormat={}{0} axis has no script}" 
-                                                                                       DockPanel.Dock="Left"
-                                                                                       VerticalAlignment="Center"/>
+                                                                                <ToggleButton Style="{StaticResource MaterialDesignSwitchToggleButton}"
+                                                                                              IsChecked="{Binding Value.Settings.UpdateMotionProviderWhenPaused}"
+                                                                                              DockPanel.Dock="Right"/>
+                                                                            </DockPanel>
 
-                                                                            <ToggleButton Style="{StaticResource MaterialDesignSwitchToggleButton}"
-                                                                                          IsChecked="{Binding Value.Settings.UpdateMotionProviderWithoutScript}"
-                                                                                          DockPanel.Dock="Right"/>
-                                                                        </DockPanel>
+                                                                            <DockPanel LastChildFill="False">
+                                                                                <TextBlock Text="{Binding Key, StringFormat={}{0} axis has no script}" 
+                                                                                           DockPanel.Dock="Left"
+                                                                                           VerticalAlignment="Center"/>
 
-                                                                        <DockPanel LastChildFill="False">
-                                                                            <ComboBox material:TextFieldAssist.HasClearButton="True"
-                                                                                      DockPanel.Dock="Left"
-                                                                                      Width="50" 
-                                                                                      ItemsSource="{Binding Source={x:Static common:DeviceAxis.All}}" 
-                                                                                      SelectedItem="{Binding Value.Settings.UpdateMotionProviderWithAxis}"
-                                                                                      SelectionChanged="{s:Action OnUpdateMotionProviderWithAxisChanged}"/>
-                                                                            
-                                                                            <TextBlock Text=" axis is moving" 
-                                                                                       DockPanel.Dock="Left"
-                                                                                       VerticalAlignment="Center"/>
-                                                                        </DockPanel>
+                                                                                <ToggleButton Style="{StaticResource MaterialDesignSwitchToggleButton}"
+                                                                                              IsChecked="{Binding Value.Settings.UpdateMotionProviderWithoutScript}"
+                                                                                              DockPanel.Dock="Right"/>
+                                                                            </DockPanel>
+
+                                                                            <DockPanel LastChildFill="False">
+                                                                                <ComboBox material:TextFieldAssist.HasClearButton="True"
+                                                                                          DockPanel.Dock="Left"
+                                                                                          Width="50" 
+                                                                                          ItemsSource="{Binding Source={x:Static common:DeviceAxis.All}}" 
+                                                                                          SelectedItem="{Binding Value.Settings.UpdateMotionProviderWithAxis}"
+                                                                                          SelectionChanged="{s:Action OnUpdateMotionProviderWithAxisChanged}"/>
+
+                                                                                <TextBlock Text="is moving" 
+                                                                                           Margin="5 0 0 0"
+                                                                                           DockPanel.Dock="Left"
+                                                                                           VerticalAlignment="Center"/>
+                                                                            </DockPanel>
+                                                                        </StackPanel>
+
+                                                                        <StackPanel Visibility="{Binding Value.Settings.MotionProviderFillGaps, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                                                            <DockPanel LastChildFill="False">
+                                                                                <TextBlock Text="{Binding Key, StringFormat={}{0} script has at least}" 
+                                                                                           DockPanel.Dock="Left"
+                                                                                           VerticalAlignment="Center"/>
+
+                                                                                <metro:NumericUpDown Value="{Binding Value.Settings.MotionProviderMinimumGapDuration}"
+                                                                                                     Minimum="0"
+                                                                                                     Interval="1"
+                                                                                                     StringFormat="{}{0:0}s"
+                                                                                                     MinWidth="30"
+                                                                                                     DockPanel.Dock="Left"/>
+
+                                                                                <TextBlock Text="gap"
+                                                                                           Margin="5 0 0 0"
+                                                                                           DockPanel.Dock="Left"
+                                                                                           VerticalAlignment="Center"/>
+                                                                            </DockPanel>
+                                                                        </StackPanel>
                                                                     </StackPanel>
                                                                 </Expander>
                                                             </material:Card>

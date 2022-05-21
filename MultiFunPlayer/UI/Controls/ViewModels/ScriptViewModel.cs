@@ -114,6 +114,7 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         public float LastValue => _state.Value;
         public float Value { get; set; } = float.NaN;
         public bool IsDirty { get; set; } = false;
+        public bool InsideGap { get; set; } = false;
 
         public AxisUpdateContext(AxisState state)
         {
@@ -125,6 +126,7 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
             if (!float.IsFinite(LastValue) && float.IsFinite(Value))
                 IsDirty = true;
 
+            _state.InsideGap = InsideGap;
             _state.IsDirty = IsDirty;
             if (IsDirty)
                 _state.Value = Value;
@@ -241,14 +243,14 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
 
             bool UpdateScript(DeviceAxis axis, AxisState state, AxisSettings settings, ref AxisUpdateContext context)
             {
-                bool NoUpdate()
+                static bool NoUpdate(ref AxisUpdateContext context)
                 {
-                    state.InsideGap = false;
+                    context.InsideGap = false;
                     return false;
                 }
 
                 if (!AxisKeyframes.TryGetValue(axis, out var keyframes) || keyframes == null || keyframes.Count == 0)
-                    return NoUpdate();
+                    return NoUpdate(ref context);
 
                 var axisPosition = GetAxisPosition(axis);
                 var shouldSearch = state.Invalid
@@ -262,7 +264,7 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                 }
 
                 if (!IsPlaying || state.AfterScript)
-                    return NoUpdate();
+                    return NoUpdate(ref context);
 
                 var beforeIndex = state.Index;
                 state.Index = keyframes.AdvanceIndex(state.Index, axisPosition);
@@ -270,7 +272,7 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                 if (beforeIndex == -1 && state.Index >= 0)
                 {
                     Logger.Debug("Resetting sync on script start [Axis: {0}]", axis);
-                    state.SyncTime = 0;
+                    ResetSyncNoLock(state);
                 }
 
                 if (!keyframes.ValidateIndex(state.Index) || !keyframes.ValidateIndex(state.Index + 1))
@@ -279,13 +281,13 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                     {
                         Logger.Debug("Resetting sync on script end [Axis: {0}]", axis);
                         state.Invalidate(end: true);
-                        state.SyncTime = 0;
+                        ResetSyncNoLock(state);
                     }
 
-                    return NoUpdate();
+                    return NoUpdate(ref context);
                 }
 
-                state.InsideGap = keyframes.IsGap(state.Index);
+                context.InsideGap = keyframes.IsGap(state.Index);
                 var scriptValue = MathUtils.Clamp01(keyframes.Interpolate(state.Index, axisPosition, settings.InterpolationType));
                 if (settings.Inverted)
                     scriptValue = 1 - scriptValue;
@@ -296,33 +298,71 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
 
             bool UpdateMotionProvider(DeviceAxis axis, AxisState state, AxisSettings settings, ref AxisUpdateContext context)
             {
-                bool ShouldUpdateMotionProvider()
-                {
-                    if (!settings.UpdateMotionProviderWhenPaused && !IsPlaying)
-                        return false;
-                    if (!settings.UpdateMotionProviderWithoutScript && !state.InsideScript)
-                        return false;
-                    if (settings.UpdateMotionProviderWithAxis != null)
-                        if (!AxisStates[settings.UpdateMotionProviderWithAxis].IsDirty || AxisStates[settings.UpdateMotionProviderWithAxis].IsAutoHoming)
-                            return false;
-
-                    return true;
-                }
-
                 if (settings.SelectedMotionProvider == null)
                     return false;
 
-                if (ShouldUpdateMotionProvider())
-                    MotionProviderManager.Update(axis, settings.SelectedMotionProvider, ElapsedSeconds());
+                var providerValue = float.NaN;
+                if (!settings.MotionProviderFillGaps)
+                {
+                    bool ShouldUpdateMotionProvider()
+                    {
+                        if (!settings.UpdateMotionProviderWhenPaused && !IsPlaying)
+                            return false;
+                        if (!settings.UpdateMotionProviderWithoutScript && !state.InsideScript)
+                            return false;
 
-                var providerValue = MotionProviderManager.GetValue(axis);
+                        if (settings.UpdateMotionProviderWithAxis != null)
+                        {
+                            var targetState = AxisStates[settings.UpdateMotionProviderWithAxis];
+                            if (!targetState.IsDirty || targetState.IsAutoHoming)
+                                return false;
+                        }
+
+                        return true;
+                    }
+
+                    if (ShouldUpdateMotionProvider())
+                        MotionProviderManager.Update(axis, settings.SelectedMotionProvider, ElapsedSeconds());
+
+                    providerValue = MotionProviderManager.GetValue(axis);
+                    if (!float.IsFinite(providerValue))
+                        return false;
+
+                    var blendT = IsPlaying && state.InsideScript ? MathUtils.Clamp01(settings.MotionProviderBlend / 100) : 1;
+                    var blendFrom = float.IsFinite(context.Value) ? context.Value : axis.DefaultValue;
+                    providerValue = MathUtils.Clamp01(MathUtils.Lerp(blendFrom, providerValue, blendT));
+                }
+                else
+                {
+                    bool CanMotionProviderFillGap(ref AxisUpdateContext context)
+                    {
+                        if (!IsPlaying || !state.InsideScript)
+                            return false;
+
+                        if (!AxisKeyframes.TryGetValue(axis, out var keyframes) || keyframes == null || keyframes.Count == 0)
+                            return false;
+
+                        var index = state.Index;
+
+                        var gapStarted = !state.InsideGap && context.InsideGap;
+                        var gapEnded = state.InsideGap && !context.InsideGap;
+                        if (gapStarted || gapEnded)
+                            ResetSyncNoLock(state);
+
+                        return context.InsideGap && keyframes.SegmentDuration(index) >= settings.MotionProviderMinimumGapDuration;
+                    }
+
+                    if (!CanMotionProviderFillGap(ref context))
+                        return false;
+
+                    MotionProviderManager.Update(axis, settings.SelectedMotionProvider, ElapsedSeconds());
+                    providerValue = MotionProviderManager.GetValue(axis);
+                }
+
                 if (!float.IsFinite(providerValue))
                     return false;
 
-                context.Value = MathUtils.Clamp01(IsPlaying && state.InsideScript
-                    ? MathUtils.Lerp(context.Value, providerValue, MathUtils.Clamp01(settings.MotionProviderBlend / 100))
-                    : providerValue);
-
+                context.Value = providerValue;
                 return MathF.Abs(context.LastValue - context.Value) > 0.000001f;
             }
 
@@ -614,7 +654,7 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
     public float GetValue(DeviceAxis axis) => MathUtils.Clamp01(AxisStates[axis].Value);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private float GetSyncProgress(float time, float duration) => MathF.Pow(2, 10 * (time / duration - 1));
+    private float GetSyncProgress(float time, float duration) => MathUtils.Clamp01(MathF.Pow(2, 10 * (time / duration - 1)));
 
     private void ResetSync(bool isSyncing = true, params DeviceAxis[] axes) => ResetSync(isSyncing, axes?.AsEnumerable());
     private void ResetSync(bool isSyncing = true, IEnumerable<DeviceAxis> axes = null)
@@ -629,14 +669,14 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         {
             var state = AxisStates[axis];
             lock (state)
-            {
-                state.SyncTime = isSyncing ? 0 : SyncSettings.Duration;
-            }
+                ResetSyncNoLock(state, isSyncing);
         }
 
         NotifyOfPropertyChange(nameof(IsSyncing));
         NotifyOfPropertyChange(nameof(SyncProgress));
     }
+
+    private void ResetSyncNoLock(AxisState state, bool isSyncing = true) => state.SyncTime = isSyncing ? 0 : SyncSettings.Duration;
     #endregion
 
     #region UI Common
@@ -1611,8 +1651,6 @@ public class AxisModel : PropertyChangedBase
 
 public class AxisState : INotifyPropertyChanged
 {
-    private bool _insideGap, _lastInsideGap;
-
     [DoNotNotify] public int Index { get; set; } = int.MinValue;
     [DoNotNotify] public float Value { get; set; } = float.NaN;
     [DoNotNotify] public float OverrideValue { get; set; } = float.NaN;
@@ -1622,14 +1660,7 @@ public class AxisState : INotifyPropertyChanged
     [DoNotNotify] public bool AfterScript => Index == int.MaxValue;
     [DoNotNotify] public bool InsideScript => Index >= 0 && Index != int.MaxValue;
 
-    [DoNotNotify] public bool InsideGap
-    {
-        get => _insideGap;
-        set => UpdateLastAndCurrent(ref _lastInsideGap, ref _insideGap, ref value);
-    }
-
-    [DoNotNotify] public bool GapStarted => !_lastInsideGap && _insideGap;
-    [DoNotNotify] public bool GapEnded => _lastInsideGap && !_insideGap;
+    [DoNotNotify] public bool InsideGap { get; set; } = false;
 
     [DoNotNotify] public float SyncTime { get; set; } = 0;
     [DoNotNotify] public float AutoHomeTime { get; set; } = 0;
@@ -1648,13 +1679,6 @@ public class AxisState : INotifyPropertyChanged
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(InsideScript)));
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Value)));
     }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void UpdateLastAndCurrent<T>(ref T last, ref T current, ref T newValue)
-    {
-        last = current;
-        current = newValue;
-    }
 }
 
 [JsonObject(MemberSerialization.OptIn)]
@@ -1672,6 +1696,8 @@ public class AxisSettings : PropertyChangedBase
     [JsonProperty] public float Scale { get; set; } = 100;
     [JsonProperty] public bool Bypass { get; set; } = false;
     [JsonProperty] public float MotionProviderBlend { get; set; } = 100;
+    [JsonProperty] public bool MotionProviderFillGaps { get; set; } = false;
+    [JsonProperty] public float MotionProviderMinimumGapDuration { get; set; } = 5;
     [JsonProperty] public bool UpdateMotionProviderWhenPaused { get; set; } = false;
     [JsonProperty] public bool UpdateMotionProviderWithoutScript { get; set; } = true;
     [JsonProperty] public DeviceAxis UpdateMotionProviderWithAxis { get; set; } = null;
