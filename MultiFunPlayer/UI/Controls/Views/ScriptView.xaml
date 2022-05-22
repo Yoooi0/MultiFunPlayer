@@ -116,9 +116,29 @@
                                     </Border>
                                 </material:PopupBox.ToggleContent>
 
-                                <Grid Width="300" Margin="10">
+                                <Grid Width="250" Margin="10">
                                     <StackPanel Orientation="Vertical">
-                                        <DockPanel LastChildFill="False">
+                                        <DockPanel LastChildFill="True">
+                                            <TextBlock DockPanel.Dock="Left" 
+                                                       Text="Duration:" 
+                                                       Margin="0 0 10 0"
+                                                       VerticalAlignment="Center"/>
+                                            <TextBlock DockPanel.Dock="Right" 
+                                                       Text="{Binding SyncSettings.Duration, StringFormat={}{0:F2}s}"
+                                                       Margin="10 0 0 0"
+                                                       VerticalAlignment="Center"/>
+                                            <Slider DockPanel.Dock="Right"
+                                                    Value="{Binding SyncSettings.Duration}"
+                                                    Minimum="0.5" 
+                                                    Maximum="8"
+                                                    TickFrequency="0.5"
+                                                    VerticalAlignment="Center"
+                                                    IsSnapToTickEnabled="True"
+                                                    material:SliderAssist.OnlyShowFocusVisualWhileDragging="True"/>
+                                        </DockPanel>
+                                        
+                                        <DockPanel LastChildFill="False"
+                                                   Margin="0 10 0 0">
                                             <TextBlock DockPanel.Dock="Left"
                                                        Text="Sync when:"
                                                        Typography.Capitals="AllSmallCaps"
@@ -150,31 +170,19 @@
                                                                    VerticalAlignment="Center"/>
                                             </material:ColorZone>
                                         </DockPanel>
-                                        <DockPanel LastChildFill="False" Margin="0 0 0 10">
-                                            <TextBlock Text="Media resource changed:" Width="120"/>
-                                            <ToggleButton IsChecked="{Binding SyncSettings.SyncOnMediaResourceChanged}"/>
+                                        <DockPanel LastChildFill="False" Margin="0 5 0 0">
+                                            <TextBlock DockPanel.Dock="Left" Text="Media resource changed:"/>
+                                            <ToggleButton DockPanel.Dock="Right" IsChecked="{Binding SyncSettings.SyncOnMediaResourceChanged}"/>
                                         </DockPanel>
 
-                                        <DockPanel LastChildFill="False" Margin="0 0 0 10">
-                                            <TextBlock Text="Media play/pause:" Width="120"/>
-                                            <ToggleButton IsChecked="{Binding SyncSettings.SyncOnMediaPlayPause}"/>
+                                        <DockPanel LastChildFill="False" Margin="0 5 0 0">
+                                            <TextBlock DockPanel.Dock="Left" Text="Media play/pause:"/>
+                                            <ToggleButton DockPanel.Dock="Right" IsChecked="{Binding SyncSettings.SyncOnMediaPlayPause}"/>
                                         </DockPanel>
 
-                                        <DockPanel LastChildFill="False" Margin="0 0 0 10">
-                                            <TextBlock Text="Seek:" Width="120"/>
-                                            <ToggleButton IsChecked="{Binding SyncSettings.SyncOnSeek}"/>
-                                        </DockPanel>
-                                        <DockPanel LastChildFill="True">
-                                            <TextBlock Text="Duration:" Width="120"/>
-                                            <Slider DockPanel.Dock="Right"
-                                                    Value="{Binding SyncSettings.Duration}"
-                                                    Style="{StaticResource MaterialDesignDiscreteSlider}"
-                                                    Minimum="2" 
-                                                    Maximum="8"
-                                                    TickFrequency="0.5"
-                                                    VerticalAlignment="Center"
-                                                    IsSnapToTickEnabled="True"
-                                                    material:SliderAssist.OnlyShowFocusVisualWhileDragging="True"/>
+                                        <DockPanel LastChildFill="False" Margin="0 5 0 0">
+                                            <TextBlock DockPanel.Dock="Left" Text="Seek:"/>
+                                            <ToggleButton DockPanel.Dock="Right" IsChecked="{Binding SyncSettings.SyncOnSeek}"/>
                                         </DockPanel>
                                     </StackPanel>
                                 </Grid>
