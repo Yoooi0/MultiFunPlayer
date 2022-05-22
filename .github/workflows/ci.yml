@@ -19,7 +19,7 @@ jobs:
     - name: Setup dotnet
       uses: actions/setup-dotnet@v2
       with:
-        dotnet-version: '6.0.101'
+        dotnet-version: '6.0.x'
     - name: Setup GitVersion
       uses: gittools/actions/gitversion/setup@v0.9.11
       with:
