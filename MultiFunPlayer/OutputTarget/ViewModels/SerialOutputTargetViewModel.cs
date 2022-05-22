@@ -47,8 +47,8 @@ public class SerialOutputTargetViewModel : ThreadAbstractOutputTarget
         IsRefreshBusy = true;
         await Task.Delay(750, token).ConfigureAwait(true);
 
-        var lastSelectedDeviceId = SelectedSerialPortDeviceId;
-        SerialPorts.Clear();
+        var serialPorts = new List<SerialPortInfo>();
+
         try
         {
             var scope = new ManagementScope("\\\\.\\ROOT\\cimv2");
@@ -61,7 +61,7 @@ public class SerialOutputTargetViewModel : ThreadAbstractOutputTarget
                 if (portInfo == null)
                     return;
 
-                SerialPorts.Add(portInfo);
+                serialPorts.Add(portInfo);
             };
 
             var taskCompletion = new TaskCompletionSource();
@@ -73,7 +73,15 @@ public class SerialOutputTargetViewModel : ThreadAbstractOutputTarget
         }
         catch { }
 
+        var lastSelectedDeviceId = SelectedSerialPortDeviceId;
+        foreach (var port in SerialPorts.Except(serialPorts))
+            SerialPorts.Remove(port);
+
+        foreach (var port in serialPorts.Except(SerialPorts))
+            SerialPorts.Add(port);
+        
         SelectSerialPortByDeviceId(lastSelectedDeviceId);
+
         await Task.Delay(250, token).ConfigureAwait(true);
         IsRefreshBusy = false;
     }
@@ -184,7 +192,7 @@ public class SerialOutputTargetViewModel : ThreadAbstractOutputTarget
 
         if (action == SettingsAction.Saving)
         {
-            settings[nameof(SelectedSerialPort)] = new JValue(SelectedSerialPort?.DeviceID);
+            settings[nameof(SelectedSerialPort)] = new JValue(SelectedSerialPortDeviceId);
         }
         else if (action == SettingsAction.Loading)
         {
@@ -249,6 +257,16 @@ public class SerialOutputTargetViewModel : ThreadAbstractOutputTarget
     {
         private SerialPortInfo() { }
 
+        public string Caption { get; private set; }
+        public string ClassGuid { get; private set; }
+        public string Description { get; private set; }
+        public string DeviceID { get; private set; }
+        public string Manufacturer { get; private set; }
+        public string Name { get; private set; }
+        public string PNPClass { get; private set; }
+        public string PNPDeviceID { get; private set; }
+        public string PortName { get; private set; }
+
         public static SerialPortInfo FromManagementObject(ManagementObject o)
         {
             try
@@ -278,14 +296,7 @@ public class SerialOutputTargetViewModel : ThreadAbstractOutputTarget
             return null;
         }
 
-        public string Caption { get; private set; }
-        public string ClassGuid { get; private set; }
-        public string Description { get; private set; }
-        public string DeviceID { get; private set; }
-        public string Manufacturer { get; private set; }
-        public string Name { get; private set; }
-        public string PNPClass { get; private set; }
-        public string PNPDeviceID { get; private set; }
-        public string PortName { get; private set; }
+        public override bool Equals(object o) => o is SerialPortInfo other && string.Equals(DeviceID, other.DeviceID, StringComparison.Ordinal);
+        public override int GetHashCode() => HashCode.Combine(DeviceID);
     }
 }
