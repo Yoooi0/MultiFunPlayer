@@ -104,7 +104,7 @@ public class SerialOutputTargetViewModel : ThreadAbstractOutputTarget
         if (SelectedSerialPort == null)
             await RefreshPorts();
 
-        return SelectedSerialPort != null ? await base.OnConnectingAsync() : false;
+        return SelectedSerialPort != null && await base.OnConnectingAsync();
     }
 
     protected override void Run(CancellationToken token)

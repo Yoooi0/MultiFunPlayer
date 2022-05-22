@@ -368,9 +368,9 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
 
             bool UpdateAutoHome(DeviceAxis axis, AxisState state, AxisSettings settings, ref AxisUpdateContext context)
             {
-                bool UpdateAutoHomeInternal(ref AxisUpdateContext updateState)
+                bool UpdateAutoHomeInternal(ref AxisUpdateContext context)
                 {
-                    if (updateState.IsDirty || (state.InsideScript && IsPlaying))
+                    if (context.IsDirty || (state.InsideScript && IsPlaying))
                     {
                         state.AutoHomeTime = 0;
                         return false;
@@ -384,8 +384,8 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
 
                     if (settings.AutoHomeDuration < 0.0001f)
                     {
-                        updateState.Value = axis.DefaultValue;
-                        return updateState.Value != updateState.LastValue;
+                        context.Value = axis.DefaultValue;
+                        return context.Value != context.LastValue;
                     }
 
                     state.AutoHomeTime += ElapsedSeconds();
@@ -393,8 +393,8 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                     if (t < 0 || t > 1)
                         return false;
 
-                    updateState.Value = MathUtils.Clamp01(MathUtils.Lerp(state.Value, axis.DefaultValue, MathF.Pow(2, 10 * (t - 1))));
-                    return MathF.Abs(updateState.LastValue - updateState.Value) > 0.000001f;
+                    context.Value = MathUtils.Clamp01(MathUtils.Lerp(state.Value, axis.DefaultValue, MathF.Pow(2, 10 * (t - 1))));
+                    return MathF.Abs(context.LastValue - context.Value) > 0.000001f;
                 }
 
                 return state.IsAutoHoming = UpdateAutoHomeInternal(ref context);
