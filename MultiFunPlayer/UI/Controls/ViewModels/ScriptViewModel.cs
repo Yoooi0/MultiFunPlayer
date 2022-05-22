@@ -147,7 +147,6 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         {
             var dirty = UpdateValues();
             UpdateUi();
-            UpdateSync();
 
             stopwatch.Restart();
             Thread.Sleep(IsPlaying || dirty ? 2 : 10);
@@ -402,13 +401,16 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
 
             bool UpdateSync(DeviceAxis axis, AxisState state, ref AxisUpdateContext context)
             {
-                if (!float.IsFinite(context.Value))
-                    return false;
                 if (state.SyncTime <= 0)
                     return false;
 
-                var from = !float.IsFinite(context.LastValue) ? axis.DefaultValue : context.LastValue;
                 var t = GetSyncProgress(state.SyncTime, SyncSettings.Duration);
+                state.SyncTime -= ElapsedSeconds();
+
+                if (!float.IsFinite(context.Value))
+                    return false;
+
+                var from = !float.IsFinite(context.LastValue) ? axis.DefaultValue : context.LastValue;
                 context.Value = MathUtils.Clamp01(MathUtils.Lerp(from, context.Value, t));
 
                 return MathF.Abs(context.LastValue - context.Value) > 0.000001f;
@@ -422,36 +424,15 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                 return;
 
             uiUpdateTime = 0;
-            if (ValuesContentVisible)
+            Execute.OnUIThread(() =>
             {
-                Execute.OnUIThread(() =>
-                {
+                if (ValuesContentVisible)
                     foreach (var axis in DeviceAxis.All)
                         AxisStates[axis].NotifyValueChanged();
-                });
-            }
-        }
 
-        void UpdateSync()
-        {
-            var dirty = false;
-            foreach (var (axis, state) in AxisStates)
-            {
-                lock (state)
-                {
-                    if (state.SyncTime <= 0)
-                        continue;
-
-                    state.SyncTime -= ElapsedSeconds();
-                    dirty = true;
-                }
-            }
-
-            if (dirty)
-            {
                 NotifyOfPropertyChange(nameof(IsSyncing));
                 NotifyOfPropertyChange(nameof(SyncProgress));
-            }
+            });
         }
     }
 
