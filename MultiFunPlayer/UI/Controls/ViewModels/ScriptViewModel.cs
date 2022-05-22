@@ -65,8 +65,8 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
     [JsonProperty] public bool AutoSkipToScriptStartEnabled { get; set; } = true;
     [JsonProperty] public float AutoSkipToScriptStartOffset { get; set; } = 5;
 
-    public bool IsSyncing => AxisStates.Values.Any(s => s.SyncTime < SyncSettings.Duration);
-    public float SyncProgress => !IsSyncing ? 100 : GetSyncProgress(AxisStates.Values.Min(s => s.SyncTime), SyncSettings.Duration) * 100;
+    public bool IsSyncing => AxisStates.Values.Any(s => s.SyncTime > 0);
+    public float SyncProgress => !IsSyncing ? 100 : GetSyncProgress(AxisStates.Values.Max(s => s.SyncTime), SyncSettings.Duration) * 100;
 
     public ScriptViewModel(IShortcutManager shortcutManager, IMotionProviderManager motionProviderManager, IMediaResourceFactory mediaResourceFactory, IEventAggregator eventAggregator)
     {
@@ -404,7 +404,7 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
             {
                 if (!float.IsFinite(context.Value))
                     return false;
-                if (state.SyncTime >= SyncSettings.Duration)
+                if (state.SyncTime <= 0)
                     return false;
 
                 var from = !float.IsFinite(context.LastValue) ? axis.DefaultValue : context.LastValue;
@@ -439,10 +439,10 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
             {
                 lock (state)
                 {
-                    if (state.SyncTime >= SyncSettings.Duration)
+                    if (state.SyncTime <= 0)
                         continue;
 
-                    state.SyncTime += ElapsedSeconds();
+                    state.SyncTime -= ElapsedSeconds();
                     dirty = true;
                 }
             }
@@ -654,7 +654,7 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
     public float GetValue(DeviceAxis axis) => MathUtils.Clamp01(AxisStates[axis].Value);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private float GetSyncProgress(float time, float duration) => MathUtils.Clamp01(MathF.Pow(2, 10 * (time / duration - 1)));
+    private float GetSyncProgress(float time, float duration) => MathUtils.Clamp01(MathF.Pow(2, -10 * MathUtils.Clamp01(time / duration)));
 
     private void ResetSync(bool isSyncing = true, params DeviceAxis[] axes) => ResetSync(isSyncing, axes?.AsEnumerable());
     private void ResetSync(bool isSyncing = true, IEnumerable<DeviceAxis> axes = null)
@@ -676,7 +676,7 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         NotifyOfPropertyChange(nameof(SyncProgress));
     }
 
-    private void ResetSyncNoLock(AxisState state, bool isSyncing = true) => state.SyncTime = isSyncing ? 0 : SyncSettings.Duration;
+    private void ResetSyncNoLock(AxisState state, bool isSyncing = true) => state.SyncTime = isSyncing ? SyncSettings.Duration : 0;
     #endregion
 
     #region UI Common
@@ -1201,24 +1201,6 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         ResetSync(true, axis);
     }
     #endregion
-
-    #region SyncSettings
-    [SuppressPropertyChangedWarnings]
-    public void OnSyncDurationSliderValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
-    {
-        if (e.NewValue <= e.OldValue)
-            return;
-
-        foreach(var (axis, state) in AxisStates)
-        {
-            lock (state)
-            {
-                if(state.SyncTime >= e.OldValue)
-                    state.SyncTime = (float)e.NewValue;
-            }
-        }
-    }
-    #endregion 
 
     #region MediaResource
     public async void OnMediaPathModifierConfigure(object sender, RoutedEventArgs e)
