@@ -47,6 +47,8 @@ public class FileOutputTargetViewModel : ThreadAbstractOutputTarget
         try
         {
             Logger.Info("Connecting to {0}", Identifier);
+            if (EnabledAxes.Count == 0)
+                throw new Exception("Must enable at least one axis");
 
             if (OutputDirectory == null || !OutputDirectory.AsRefreshed().Exists)
                 throw new DirectoryNotFoundException("Output directory does not exist");
@@ -119,8 +121,12 @@ public class FileOutputTargetViewModel : ThreadAbstractOutputTarget
                 OutputDirectory = outputDirectory;
             if (settings.TryGetValue<ScriptType>(nameof(ScriptType), out var scriptType))
                 ScriptType = scriptType;
+
             if (settings.TryGetValue<List<DeviceAxis>>(nameof(EnabledAxes), out var enabledAxes))
-                EnabledAxes = new ObservableConcurrentCollection<DeviceAxis>(enabledAxes); //TODO: does not update ui
+            {
+                EnabledAxes.Clear();
+                EnabledAxes.AddRange(enabledAxes);
+            }
         }
     }
 
