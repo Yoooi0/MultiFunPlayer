@@ -86,6 +86,7 @@
                                VerticalAlignment="Center"/>
                     
                     <Button Style="{StaticResource MaterialDesignFloatingActionMiniLightButton}"
+                            Click="{s:Action OnSetOutputDirectory}"
                             DockPanel.Dock="Right"
                             ToolTip="Set output directory" 
                             ToolTipService.InitialShowDelay="0" 

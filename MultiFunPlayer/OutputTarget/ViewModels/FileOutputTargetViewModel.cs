@@ -1,3 +1,4 @@
+using Microsoft.WindowsAPICodePack.Dialogs;
 using MultiFunPlayer.Common;
 using MultiFunPlayer.Common.Messages;
 using MultiFunPlayer.Input;
@@ -48,7 +49,7 @@ public class FileOutputTargetViewModel : ThreadAbstractOutputTarget
         {
             Logger.Info("Connecting to {0}", Identifier);
             if (EnabledAxes.Count == 0)
-                throw new Exception("Must enable at least one axis");
+                throw new Exception("At least one axis must be enabled");
 
             if (OutputDirectory == null || !OutputDirectory.AsRefreshed().Exists)
                 throw new DirectoryNotFoundException("Output directory does not exist");
@@ -102,6 +103,19 @@ public class FileOutputTargetViewModel : ThreadAbstractOutputTarget
             try { writer.Dispose(); } 
             catch (Exception e) { Logger.Warn(e, "Error disposing writer"); }
         }
+    }
+
+    public void OnSetOutputDirectory()
+    {
+        var dialog = new CommonOpenFileDialog()
+        {
+            IsFolderPicker = true
+        };
+
+        if (dialog.ShowDialog() != CommonFileDialogResult.Ok)
+            return;
+
+        OutputDirectory = new DirectoryInfo(dialog.FileName);
     }
 
     public override void HandleSettings(JObject settings, SettingsAction action)
