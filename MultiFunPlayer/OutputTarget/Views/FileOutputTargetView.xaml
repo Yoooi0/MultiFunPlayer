@@ -195,27 +195,29 @@
                                DockPanel.Dock="Left"
                                Margin="0 0 10 0"
                                VerticalAlignment="Center"/>
-                    
-                    <ListBox ItemsSource="{Binding Source={x:Static common:DeviceAxis.All}}"
-                             ItemContainerStyle="{StaticResource MaterialDesignToolToggleListBoxItem}"
-                             behaviours:ListBoxAssist.CanHorizontalScroll="True"
-                             behaviours:ListBoxAssist.SelectedItems="{Binding EnabledAxes}"
-                             material:ListBoxAssist.IsToggle="True"
-                             material:ThemeAssist.Theme="Light"
-                             ScrollViewer.HorizontalScrollBarVisibility="Hidden"
-                             ScrollViewer.VerticalScrollBarVisibility="Hidden"
-                             SelectionMode="Extended"
-                             DockPanel.Dock="Left">
-                        <ListBox.ItemsPanel>
-                            <ItemsPanelTemplate>
-                                <StackPanel Orientation="Horizontal"/>
-                            </ItemsPanelTemplate>
-                        </ListBox.ItemsPanel>
-                    </ListBox>
+
+                    <material:ColorZone material:ShadowAssist.ShadowDepth="Depth1">
+                        <ListBox ItemsSource="{Binding Source={x:Static common:DeviceAxis.All}}"
+                                 ItemContainerStyle="{StaticResource MaterialDesignToolToggleListBoxItem}"
+                                 behaviours:ListBoxAssist.CanHorizontalScroll="True"
+                                 behaviours:ListBoxAssist.SelectedItems="{Binding EnabledAxes}"
+                                 material:ListBoxAssist.IsToggle="True"
+                                 material:ThemeAssist.Theme="Light"
+                                 ScrollViewer.HorizontalScrollBarVisibility="Hidden"
+                                 ScrollViewer.VerticalScrollBarVisibility="Hidden"
+                                 SelectionMode="Multiple"
+                                 DockPanel.Dock="Left">
+                            <ListBox.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <StackPanel Orientation="Horizontal"/>
+                                </ItemsPanelTemplate>
+                            </ListBox.ItemsPanel>
+                        </ListBox>
+                    </material:ColorZone>
                 </DockPanel>
             </StackPanel>
 
-            <TextBlock Text="Output Range:"
+            <TextBlock Text="Output Range"
                        Typography.Capitals="AllSmallCaps"
                        FontWeight="Bold"
                        VerticalAlignment="Center"
@@ -223,7 +225,7 @@
             <ItemsControl ItemsSource="{Binding AxisSettings}">
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>
-                        <UniformGrid Columns="3" Rows="3" IsItemsHost="True" Margin="0 0 -10 0"/>
+                        <UniformGrid Columns="3" Rows="3" IsItemsHost="True" Margin="0 0 -13 0"/>
                     </ItemsPanelTemplate>
                 </ItemsControl.ItemsPanel>
                 <ItemsControl.ItemTemplate>
@@ -231,7 +233,9 @@
                         <DockPanel LastChildFill="True">
                             <TextBlock DockPanel.Dock="Left" 
                                        VerticalAlignment="Center" 
-                                       Text="{Binding Key}"/>
+                                       Text="{Binding Key}"
+                                       Width="16"/>
+
                             <Canvas DockPanel.Dock="Right" 
                                     HorizontalAlignment="Stretch"
                                     Margin="0 0 20 0">
