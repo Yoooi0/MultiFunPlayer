@@ -135,27 +135,25 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
 
     private void UpdateThread(CancellationToken token)
     {
-        var stopwatch = new Stopwatch();
         const float uiUpdateInterval = 1f / 60f;
         var uiUpdateTime = 0f;
+        var deltaTime = 0f;
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        float ElapsedSeconds() => stopwatch.ElapsedTicks / (float)Stopwatch.Frequency;
-
-        stopwatch.Start();
         while (!token.IsCancellationRequested)
         {
+            var updateStartTicks = Stopwatch.GetTimestamp();
+
             var dirty = UpdateValues();
             UpdateUi();
 
-            stopwatch.Restart();
             Thread.Sleep(IsPlaying || dirty ? 2 : 10);
+            deltaTime = (Stopwatch.GetTimestamp() - updateStartTicks) / (float)Stopwatch.Frequency;
         }
 
         bool UpdateValues()
         {
             if (IsPlaying)
-                CurrentPosition += ElapsedSeconds() * PlaybackSpeed * _playbackSpeedCorrection;
+                CurrentPosition += deltaTime * PlaybackSpeed * _playbackSpeedCorrection;
 
             var dirty = false;
 
@@ -221,7 +219,7 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                     return true;
                 }
 
-                state.IsSpeedLimited = SpeedLimitInternal(settings, ElapsedSeconds(), ref context);
+                state.IsSpeedLimited = SpeedLimitInternal(settings, deltaTime, ref context);
             }
 
             bool UpdateSmartLimit(DeviceAxis axis, AxisState state, AxisSettings settings, ref AxisUpdateContext context)
@@ -321,7 +319,7 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                     }
 
                     if (ShouldUpdateMotionProvider())
-                        MotionProviderManager.Update(axis, settings.SelectedMotionProvider, ElapsedSeconds());
+                        MotionProviderManager.Update(axis, settings.SelectedMotionProvider, deltaTime);
 
                     providerValue = MotionProviderManager.GetValue(axis);
                     if (!float.IsFinite(providerValue))
@@ -354,7 +352,7 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                     if (!CanMotionProviderFillGap(ref context))
                         return false;
 
-                    MotionProviderManager.Update(axis, settings.SelectedMotionProvider, ElapsedSeconds());
+                    MotionProviderManager.Update(axis, settings.SelectedMotionProvider, deltaTime);
                     providerValue = MotionProviderManager.GetValue(axis);
                 }
 
@@ -387,7 +385,7 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                         return context.Value != context.LastValue;
                     }
 
-                    state.AutoHomeTime += ElapsedSeconds();
+                    state.AutoHomeTime += deltaTime;
                     var t = (state.AutoHomeTime - settings.AutoHomeDelay) / settings.AutoHomeDuration;
                     if (t < 0 || t > 1)
                         return false;
@@ -405,7 +403,7 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                     return false;
 
                 var t = GetSyncProgress(state.SyncTime, SyncSettings.Duration);
-                state.SyncTime -= ElapsedSeconds();
+                state.SyncTime -= deltaTime;
 
                 if (!float.IsFinite(context.Value))
                     return false;
@@ -419,7 +417,7 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
 
         void UpdateUi()
         {
-            uiUpdateTime += ElapsedSeconds();
+            uiUpdateTime += deltaTime;
             if (uiUpdateTime < uiUpdateInterval)
                 return;
 
