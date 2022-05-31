@@ -1,4 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 
 namespace MultiFunPlayer.Common;
@@ -122,6 +122,23 @@ public static class Interpolation
     {
         var t = (x - x0) / (x1 - x0);
         return MathUtils.Lerp(y0, y1, t);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
+    public static float Linear<T>(IList<T> points, Func<T, float> getX, Func<T, float> getY, float x)
+    {
+        if (x < getX(points[0]))
+            return getY(points[0]);
+
+        for (int i = 0, j = 1; j < points.Count; i = j++)
+        {
+            var x0 = getX(points[i]);
+            var x1 = getX(points[j]);
+            if (x >= x0 && x < x1)
+                return Linear(x0, getY(points[i]), x1, getY(points[j]), x);
+        }
+
+        return getY(points[^1]);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveOptimization)]

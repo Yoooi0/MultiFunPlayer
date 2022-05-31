@@ -224,17 +224,16 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
 
             bool UpdateSmartLimit(DeviceAxis axis, AxisState state, AxisSettings settings, ref AxisUpdateContext context)
             {
-                if (!settings.SmartLimitEnabled)
+                if (settings.SmartLimitInputAxis == null)
                     return false;
                 if (!float.IsFinite(context.Value))
                     return false;
-                if (!DeviceAxis.TryParse("L0", out var strokeAxis) || axis == strokeAxis)
+                if (settings.SmartLimitPoints == null || settings.SmartLimitPoints.Count == 0)
                     return false;
 
-                var limitState = AxisStates[strokeAxis];
-                var limitValue = limitState.Value;
-                var factor = MathUtils.Map(limitValue, 0.25f, 0.9f, 1f, 0f);
-                context.Value = MathUtils.Clamp01(MathUtils.Lerp(context.Value, axis.DefaultValue, factor));
+                var x = AxisStates[settings.SmartLimitInputAxis].Value * 100;
+                var factor = Interpolation.Linear(settings.SmartLimitPoints, p => (float)p.X, p => (float)p.Y, x) / 100;
+                context.Value = MathUtils.Clamp01(MathUtils.Lerp(axis.DefaultValue, context.Value, factor));
                 return MathF.Abs(context.LastValue - context.Value) > 0.000001f;
             }
 
@@ -988,7 +987,6 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
             case nameof(ViewModels.AxisSettings.UpdateMotionProviderWhenPaused):
             case nameof(ViewModels.AxisSettings.UpdateMotionProviderWithoutScript):
             case nameof(ViewModels.AxisSettings.Inverted):
-            case nameof(ViewModels.AxisSettings.SmartLimitEnabled):
             case nameof(ViewModels.AxisSettings.Bypass):
                 var (axis, _) = AxisSettings.FirstOrDefault(x => x.Value == settings);
                 if(axis != null)
@@ -1145,6 +1143,19 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
             model.Settings.LinkAxis = e.RemovedItems.TryGet<DeviceAxis>(0, out var removed) ? removed : null;
 
         ReloadAxes(axis);
+    }
+
+    [SuppressPropertyChangedWarnings]
+    public void OnSelectedSmartLimitInputAxisChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (sender is not FrameworkElement element || element.DataContext is not KeyValuePair<DeviceAxis, AxisModel> pair)
+            return;
+
+        var(axis, model) = pair;
+        if (e.AddedItems.TryGet<DeviceAxis>(0, out var added) && axis == added)
+            model.Settings.SmartLimitInputAxis = e.RemovedItems.TryGet<DeviceAxis>(0, out var removed) ? removed : null;
+
+        ResetSync(true, axis);
     }
 
     [SuppressPropertyChangedWarnings]
@@ -1416,15 +1427,18 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                   .WithCallback((_, axis) => UpdateSettings(axis, s => s.LinkAxisHasPriority = !s.LinkAxisHasPriority)));
         #endregion
 
-        #region Axis::SmartLimitEnabled
-        s.RegisterAction("Axis::SmartLimitEnabled::Set",
-            b => b.WithSetting<DeviceAxis>(p => p.WithLabel("Target axis").WithItemsSource(DeviceAxis.Parse("R1", "R2")))
-                  .WithSetting<bool>(p => p.WithLabel("Smart limit enabled"))
-                  .WithCallback((_, axis, enabled) => UpdateSettings(axis, s => s.SmartLimitEnabled = enabled)));
+        #region Axis::SmartLimitInputAxis
+        s.RegisterAction("Axis::SmartLimitInputAxis::Set",
+            b => b.WithSetting<DeviceAxis>(p => p.WithLabel("Target axis").WithItemsSource(DeviceAxis.All))
+                  .WithSetting<DeviceAxis>(p => p.WithLabel("Input axis").WithItemsSource(DeviceAxis.All))
+                  .WithCallback((_, source, input) =>
+                  {
+                      if (source == null || source == input)
+                          return;
 
-        s.RegisterAction("Axis::SmartLimitEnabled::Toggle",
-            b => b.WithSetting<DeviceAxis>(p => p.WithLabel("Target axis").WithItemsSource(DeviceAxis.Parse("R1", "R2")))
-                  .WithCallback((_, axis) => UpdateSettings(axis, s => s.SmartLimitEnabled = !s.SmartLimitEnabled)));
+                      ResetSync(true, source);
+                      AxisSettings[source].SmartLimitInputAxis = input;
+                  }));
         #endregion
 
         #region Axis::LinkAxis
@@ -1647,7 +1661,11 @@ public class AxisSettings : PropertyChangedBase
 {
     [JsonProperty] public bool LinkAxisHasPriority { get; set; } = false;
     [JsonProperty] public DeviceAxis LinkAxis { get; set; } = null;
-    [JsonProperty] public bool SmartLimitEnabled { get; set; } = false;
+    [JsonProperty] public DeviceAxis SmartLimitInputAxis { get; set; } = null;
+
+    [JsonProperty(ObjectCreationHandling = ObjectCreationHandling.Replace)]
+    public ObservableConcurrentCollection<Point> SmartLimitPoints { get; set; } = new ObservableConcurrentCollection<Point>();
+
     [JsonProperty] public InterpolationType InterpolationType { get; set; } = InterpolationType.Pchip;
     [JsonProperty] public bool AutoHomeEnabled { get; set; } = false;
     [JsonProperty] public float AutoHomeDelay { get; set; } = 5;
