@@ -1164,7 +1164,7 @@
                                                                Style="{StaticResource MaterialDesignToolBarPopupBox}"
                                                                ToolTipService.InitialShowDelay="0"
                                                                ToolTipService.Placement="Top"
-                                                               ToolTip="Speed limit">
+                                                               ToolTip="Smart limit">
                                                 <material:PopupBox.ToggleContent>
                                                     <Border Width="35" Height="35">
                                                         <material:PackIcon Kind="ChartSnakeyVariant" 

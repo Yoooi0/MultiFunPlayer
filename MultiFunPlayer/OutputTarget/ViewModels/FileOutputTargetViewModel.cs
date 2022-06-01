@@ -1,11 +1,9 @@
 using Microsoft.WindowsAPICodePack.Dialogs;
 using MultiFunPlayer.Common;
 using MultiFunPlayer.Common.Messages;
-using MultiFunPlayer.Input;
 using MultiFunPlayer.UI;
 using Newtonsoft.Json.Linq;
 using NLog;
-using PropertyChanged;
 using Stylet;
 using System.ComponentModel;
 using System.Diagnostics;

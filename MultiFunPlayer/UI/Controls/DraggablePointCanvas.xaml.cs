@@ -119,7 +119,7 @@ public partial class DraggablePointCanvas : Canvas, INotifyPropertyChanged
 
     private void OnMouseUp(object sender, MouseButtonEventArgs e)
     {
-        if (Mouse.Captured is not DraggablePoint point)
+        if (Mouse.Captured is not DraggablePoint)
             return;
 
         Mouse.Capture(null);
@@ -143,7 +143,7 @@ public partial class DraggablePointCanvas : Canvas, INotifyPropertyChanged
 
     private void OnElementMouseLeave(object sender, MouseEventArgs e)
     {
-        if (e.Source is not DraggablePoint point)
+        if (e.Source is not DraggablePoint)
             return;
 
         SynchronizePopup(null);

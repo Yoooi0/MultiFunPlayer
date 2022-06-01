@@ -78,15 +78,21 @@ public partial class SmartLimitPreview : UserControl, INotifyPropertyChanged
 
         if (Canvas.Points.Count > 0)
         {
-            var newPoints = new PointCollection();
-            newPoints.Add(new Point(0, Canvas.Points[0].Y));
+            var count = Canvas.Points.Count + 2;
+            if (LinePoints == null)
+                LinePoints = new PointCollection();
 
-            foreach (var point in Canvas.Points)
-                newPoints.Add(point);
+            while (LinePoints.Count > count)
+                LinePoints.RemoveAt(LinePoints.Count - 1);
+            while (LinePoints.Count < count)
+                LinePoints.Add(new Point());
 
-            newPoints.Add(new Point(100, Canvas.Points[^1].Y));
+            LinePoints[0] = new Point(0, Canvas.Points[0].Y);
+            for (int i = 0; i < Canvas.Points.Count; i++)
+                LinePoints[i + 1] = Canvas.Points[i];
+            LinePoints[^1] = new Point(100, Canvas.Points[^1].Y);
 
-            LinePoints = newPoints;
+            LinePoints = new PointCollection(LinePoints);
         }
     }
 
