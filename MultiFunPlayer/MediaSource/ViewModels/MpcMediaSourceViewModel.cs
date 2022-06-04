@@ -65,7 +65,6 @@ public class MpcMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlayPau
             task.ThrowIfFaulted();
         }
         catch (OperationCanceledException) { }
-        catch (TimeoutException e) { Logger.Debug(e, $"{Name} failed with exception"); }
         catch (Exception e)
         {
             Logger.Error(e, $"{Name} failed with exception");
