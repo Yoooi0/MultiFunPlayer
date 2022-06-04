@@ -44,7 +44,9 @@ public class ScriptResource : IScriptResource
 
         var path = file.FullName;
         var origin = userLoaded ? ScriptResourceOrigin.User : ScriptResourceOrigin.Automatic;
-        var keyframes = ScriptReader.Read(ScriptType.Funscript, File.ReadAllBytes(path));
+
+        using var stream = new FileStream(path, FileMode.Open, FileAccess.Read);
+        var keyframes = ScriptReader.Read(ScriptType.Funscript, stream);
         return new ScriptResource(Path.GetFileName(path), Path.GetDirectoryName(path), keyframes, origin);
     }
 

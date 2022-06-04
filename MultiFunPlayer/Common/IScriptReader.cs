@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json.Linq;
+﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System.IO;
 using System.Text;
 
@@ -11,14 +12,13 @@ public enum ScriptType
 
 public interface IScriptReader
 {
-    KeyframeCollection Read(byte[] bytes);
+    KeyframeCollection Read(Stream stream);
 
     KeyframeCollection Read(IEnumerable<byte> bytes) => Read(bytes.ToArray());
-    KeyframeCollection Read(Stream stream)
+    KeyframeCollection Read(byte[] bytes)
     {
-        using var memory = new MemoryStream();
-        stream.CopyTo(memory);
-        return Read(memory.ToArray());
+        using var stream = new MemoryStream(bytes);
+        return Read(stream);
     }
 }
 
@@ -38,38 +38,36 @@ public class FunscriptReader : IScriptReader
 {
     public static readonly FunscriptReader Default = new();
 
-    public KeyframeCollection Read(byte[] bytes)
+    public KeyframeCollection Read(Stream stream)
     {
-        static JArray GetArray(JObject document, string propertyName)
-        {
-            if (!document.TryGetValue(propertyName, out var property) || property is not JArray array || array.Count == 0)
-                return null;
-            return array;
-        }
+        using var streamReader = new StreamReader(stream, Encoding.UTF8);
+        using var jsonReader = new JsonTextReader(streamReader);
+        var serializer = JsonSerializer.CreateDefault();
 
-        var document = JObject.Parse(Encoding.UTF8.GetString(bytes));
-
-        var rawActions = GetArray(document, "rawActions");
-        var actions = GetArray(document, "actions");
-        if (rawActions == null && actions == null)
+        var script = serializer.Deserialize<Script>(jsonReader);
+        if (script.RawActions == null && script.Actions == null)
             return null;
 
-        var isRaw = rawActions?.Count > actions?.Count;
-        var keyframes = new KeyframeCollection()
+        var isRaw = script.RawActions?.Count > script.Actions?.Count;
+        var actions = isRaw ? script.RawActions : script.Actions;
+        var keyframes = new KeyframeCollection(actions.Count)
         {
             IsRawCollection = isRaw
         };
 
-        foreach (var child in isRaw ? rawActions : actions)
+        foreach(var action in actions)
         {
-            var position = child["at"].ToObject<long>() / 1000.0f;
+            var position = action.At / 1000;
             if (position < 0)
                 continue;
 
-            var value = child["pos"].ToObject<float>() / 100;
+            var value = action.Pos / 100;
             keyframes.Add(new Keyframe(position, value));
         }
 
         return keyframes;
     }
+
+    private record Script(List<Action> RawActions, List<Action> Actions);
+    private record Action(float At, float Pos);
 }

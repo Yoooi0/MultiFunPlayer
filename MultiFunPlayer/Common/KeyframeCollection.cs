@@ -4,6 +4,10 @@ public class KeyframeCollection : List<Keyframe>
 {
     public bool IsRawCollection { get; init; }
 
+    public KeyframeCollection() : base() { }
+    public KeyframeCollection(IEnumerable<Keyframe> collection) : base(collection) { }
+    public KeyframeCollection(int capacity) : base(capacity) { }
+
     public int BinarySearch(float position)
     {
         var bestIndex = BinarySearch(new Keyframe(position, float.NaN), KeyframePositionComparer.Default);
