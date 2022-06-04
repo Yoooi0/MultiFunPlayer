@@ -44,6 +44,18 @@
                           DockPanel.Dock="Left"
                           Margin="0 0 10 0"/>
             </DockPanel>
+            
+            <DockPanel LastChildFill="True"
+                       DockPanel.Dock="Top">
+                <TextBlock Text="Show error dialogs:" 
+                           DockPanel.Dock="Left"
+                           Margin="0 0 10 0" 
+                           VerticalAlignment="Center"/>
+
+                <CheckBox IsChecked="{Binding ShowErrorDialogs}"
+                          DockPanel.Dock="Left"
+                          Margin="0 0 10 0"/>
+            </DockPanel>
         
             <DockPanel LastChildFill="True"
                        DockPanel.Dock="Top">

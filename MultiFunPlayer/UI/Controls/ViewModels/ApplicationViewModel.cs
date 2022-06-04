@@ -13,10 +13,12 @@ public class ApplicationViewModel : Screen, IHandle<AppSettingsMessage>
     protected Logger Logger = LogManager.GetCurrentClassLogger();
 
     public ObservableConcurrentCollection<LogLevel> LogLevels { get; }
-    public LogLevel SelectedLogLevel { get; set; }
     public ObservableConcurrentCollection<string> DeviceTypes { get; }
-    public string SelectedDevice { get; set; }
-    public bool AlwaysOnTop { get; set; }
+
+    public LogLevel SelectedLogLevel { get; set; } = LogLevel.Info;
+    public string SelectedDevice { get; set; } = null;
+    public bool AlwaysOnTop { get; set; } = false;
+    public bool ShowErrorDialogs { get; set; } = true;
 
     public ApplicationViewModel(IEventAggregator eventAggregator)
     {
@@ -59,11 +61,14 @@ public class ApplicationViewModel : Screen, IHandle<AppSettingsMessage>
             if (message.Settings.TryGetValue<string>(nameof(SelectedDevice), out var selectedDevice))
                 SelectedDevice = selectedDevice;
 
+            if (message.Settings.TryGetValue<LogLevel>("LogLevel", out var logLevel))
+                SelectedLogLevel = logLevel;
+
             if (message.Settings.TryGetValue<bool>(nameof(AlwaysOnTop), out var alwaysOnTop))
                 AlwaysOnTop = alwaysOnTop;
 
-            if (message.Settings.TryGetValue<LogLevel>("LogLevel", out var logLevel))
-                SelectedLogLevel = logLevel;
+            if (message.Settings.TryGetValue<bool>(nameof(ShowErrorDialogs), out var showErrorDialogs))
+                ShowErrorDialogs = showErrorDialogs;
         }
     }
 }

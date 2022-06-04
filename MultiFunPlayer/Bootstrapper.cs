@@ -34,6 +34,8 @@ public class Bootstrapper : Bootstrapper<RootViewModel>
 {
     protected override void ConfigureIoC(IStyletIoCBuilder builder)
     {
+        builder.Bind<ApplicationViewModel>().ToSelf().InSingletonScope();
+
         builder.Bind<IConfigMigration>().ToAllImplementations().InSingletonScope();
         builder.Bind<ScriptViewModel>().And<IDeviceAxisValueProvider>().To<ScriptViewModel>().InSingletonScope();
         builder.Bind<IMediaResourceFactory>().To<MediaResourceFactory>().InSingletonScope();

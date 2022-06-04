@@ -8,19 +8,24 @@ namespace MultiFunPlayer.UI;
 public class DialogHelper
 {
     private static DialogHelper Instance { get; set; }
+    private ApplicationViewModel Application { get; }
     private IViewManager ViewManager { get; }
 
-    public DialogHelper(IViewManager viewManager)
+
+    public DialogHelper(ApplicationViewModel application, IViewManager viewManager)
     {
         Instance = this;
+        Application = application;
         ViewManager = viewManager;
     }
 
+    private static bool CanShowError => Instance?.Application?.ShowErrorDialogs ?? true;
+
     public static Task ShowErrorAsync(string message, string dialogName)
-        => ShowOnUIThreadAsync(new ErrorMessageDialogViewModel(message), dialogName);
+        => CanShowError ? ShowOnUIThreadAsync(new ErrorMessageDialogViewModel(message), dialogName) : Task.CompletedTask;
 
     public static Task ShowErrorAsync(Exception exception, string message, string dialogName)
-        => ShowOnUIThreadAsync(new ErrorMessageDialogViewModel(exception, message), dialogName);
+        => CanShowError ? ShowOnUIThreadAsync(new ErrorMessageDialogViewModel(exception, message), dialogName) : Task.CompletedTask;
 
     public static Task ShowOnUIThreadAsync(object model, string dialogName)
         => Execute.OnUIThreadAsync(async () => await ShowAsync(model, dialogName));
