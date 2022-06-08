@@ -41,9 +41,7 @@
                     IsEnabled="{Binding MediaDirectory, Converter={StaticResource notNullBooleanConverter}}"
                     Height="24"
                     Width="24"
-                    ToolTip="Rescan directory"
-                    ToolTipService.InitialShowDelay="0"
-                    ToolTipService.Placement="Top">
+                    ToolTip="Rescan directory">
                 <material:PackIcon Kind="Refresh"/>
             </Button>
             
@@ -53,9 +51,7 @@
                     Height="24"
                     Width="24"                  
                     Margin="0 0 10 0"         
-                    ToolTip="Select directory"
-                    ToolTipService.InitialShowDelay="0"
-                    ToolTipService.Placement="Top">
+                    ToolTip="Select directory">
                 <material:PackIcon Kind="FolderOpen"/>
             </Button>
 

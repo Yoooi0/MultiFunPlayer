@@ -2,6 +2,7 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:po="http://schemas.microsoft.com/winfx/2006/xaml/presentation/options"
                     xmlns:controls="clr-namespace:MultiFunPlayer.UI.Controls"
+                    xmlns:behaviours="clr-namespace:MultiFunPlayer.UI.Behaviours"
                     xmlns:material="http://materialdesigninxaml.net/winfx/xaml/themes"
                     xmlns:metro="http://metro.mahapps.com/winfx/xaml/controls">
     <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
@@ -740,8 +741,6 @@
                                                                                 </Setter.Value>
                                                                             </Setter>
                                                                             <Setter Property="ToolTip" Value="Open"/>
-                                                                            <Setter Property="ToolTipService.InitialShowDelay" Value="0"/>
-                                                                            <Setter Property="ToolTipService.Placement" Value="Top"/>
                                                                             <Style.Triggers>
                                                                                 <DataTrigger Binding="{Binding IsExpanded, RelativeSource={RelativeSource AncestorType=Expander, AncestorLevel=1}}" Value="True">
                                                                                     <Setter Property="ToolTip" Value="Close"/>
@@ -1259,4 +1258,25 @@
             </Trigger>
         </Style.Triggers>
     </Style>
+
+    <Style TargetType="{x:Type ToolTip}" x:Key="MaterialDesignCustomToolTip">
+        <Setter Property="Foreground" Value="{DynamicResource MaterialDesignPaper}" />
+        <Setter Property="Background" Value="{DynamicResource MaterialDesignToolTipBackground}" />
+        <Setter Property="Padding" Value="8" />
+        <Setter Property="behaviours:ToolTipAssist.ForceCloseOnMouseLeave" Value="True" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type ToolTip}">
+                    <Border Background="{TemplateBinding Background}" CornerRadius="2" Margin="{TemplateBinding Margin}">
+                        <ContentPresenter x:Name="ContentPresenter"  
+                                          Margin="{TemplateBinding Padding}"
+                                          Content="{TemplateBinding ContentControl.Content}" ContentTemplate="{TemplateBinding ContentControl.ContentTemplate}" ContentStringFormat="{TemplateBinding ContentControl.ContentStringFormat}">
+                        </ContentPresenter>
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style TargetType="{x:Type ToolTip}" BasedOn="{StaticResource MaterialDesignCustomToolTip}" />
 </ResourceDictionary>

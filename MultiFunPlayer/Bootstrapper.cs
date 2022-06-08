@@ -26,12 +26,21 @@ using System.Diagnostics;
 using System.IO;
 using System.Text.RegularExpressions;
 using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Interop;
 
 namespace MultiFunPlayer;
 
 public class Bootstrapper : Bootstrapper<RootViewModel>
 {
+    static Bootstrapper()
+    {
+        ToolTipService.ShowDurationProperty.OverrideMetadata(typeof(FrameworkElement), new FrameworkPropertyMetadata(int.MaxValue));
+        ToolTipService.InitialShowDelayProperty.OverrideMetadata(typeof(FrameworkElement), new FrameworkPropertyMetadata(0));
+        ToolTipService.PlacementProperty.OverrideMetadata(typeof(FrameworkElement), new FrameworkPropertyMetadata(PlacementMode.Top));
+    }
+
     protected override void ConfigureIoC(IStyletIoCBuilder builder)
     {
         builder.Bind<ApplicationViewModel>().ToSelf().InSingletonScope();

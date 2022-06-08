@@ -70,10 +70,7 @@
                                     Mode="Custom"
                                     Background="#ff0f0f"
                                     Width="14"
-                                    Height="14" 
-                                    ToolTipService.InitialShowDelay="0"
-                                    ToolTipService.ShowDuration="99999"
-                                    ToolTipService.Placement="Top">
+                                    Height="14">
                     <material:ColorZone.ToolTip>
                         <TextBlock>
                             Some settings might be lost or reset after change!<LineBreak/>

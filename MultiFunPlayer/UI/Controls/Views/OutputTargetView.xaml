@@ -72,9 +72,7 @@
                     <DataTemplate>
                         <DockPanel>
                             <material:PopupBox Style="{StaticResource MaterialDesignToolBarPopupBox}"
-                                               ToolTip="Add output" 
-                                               ToolTipService.InitialShowDelay="0" 
-                                               ToolTipService.Placement="Top"
+                                               ToolTip="Add output"
                                                PlacementMode="RightAndAlignMiddles">
                                 <material:PopupBox.ToggleContent>
                                     <Border Width="35">
@@ -116,9 +114,7 @@
                             </material:PopupBox>
 
                             <Button Style="{StaticResource MaterialDesignToolBarButton}"
-                                    ToolTip="Common settings" 
-                                    ToolTipService.InitialShowDelay="0" 
-                                    ToolTipService.Placement="Top" 
+                                    ToolTip="Common settings"
                                     Padding="8"
                                     Command="{x:Static material:DialogHost.OpenDialogCommand}">
                                 <Button.CommandParameter>
@@ -158,10 +154,7 @@
                                                                     Mode="Custom"
                                                                     Background="{StaticResource PrimaryHueLightBrush}"
                                                                     Width="14"
-                                                                    Height="14" 
-                                                                    ToolTipService.InitialShowDelay="0"
-                                                                    ToolTipService.ShowDuration="99999"
-                                                                    ToolTipService.Placement="Top">
+                                                                    Height="14">
                                                     <material:ColorZone.ToolTip>
                                                         <TextBlock> 
                                                             Initial scan delay after application start. <LineBreak/>

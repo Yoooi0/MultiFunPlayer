@@ -27,9 +27,7 @@
                         Command="{s:Action ToggleConnectAsync}"
                         CommandParameter="{Binding}"
                         s:View.ActionTarget="{Binding DataContext.Parent, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}"
-                        IsEnabled="{Binding CanToggleConnect}"                                          
-                        ToolTipService.InitialShowDelay="0"
-                        ToolTipService.Placement="Top"
+                        IsEnabled="{Binding CanToggleConnect}"
                         material:ButtonProgressAssist.IsIndicatorVisible="{Binding IsConnectBusy}"
                         material:ButtonProgressAssist.Value="-1"
                         material:ButtonProgressAssist.IsIndeterminate="True">
@@ -88,9 +86,7 @@
                     <Button Style="{StaticResource MaterialDesignFloatingActionMiniLightButton}"
                             Click="{s:Action OnSetOutputDirectory}"
                             DockPanel.Dock="Right"
-                            ToolTip="Set output directory" 
-                            ToolTipService.InitialShowDelay="0" 
-                            ToolTipService.Placement="Top" 
+                            ToolTip="Set output directory"
                             Width="24"
                             Height="24">
                         <material:PackIcon Kind="Folder"/>

@@ -24,9 +24,7 @@
                         Command="{s:Action ToggleConnectAsync}"
                         CommandParameter="{Binding}"
                         s:View.ActionTarget="{Binding DataContext.Parent, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}"
-                        IsEnabled="{Binding CanToggleConnect}"                                          
-                        ToolTipService.InitialShowDelay="0"
-                        ToolTipService.Placement="Top"
+                        IsEnabled="{Binding CanToggleConnect}"
                         material:ButtonProgressAssist.IsIndicatorVisible="{Binding IsConnectBusy}"
                         material:ButtonProgressAssist.Value="-1"
                         material:ButtonProgressAssist.IsIndeterminate="True">
@@ -64,8 +62,6 @@
                 <ToggleButton DockPanel.Dock="Left"
                               IsChecked="{Binding AutoConnectEnabled}"           
                               Style="{StaticResource MaterialDesignToolBarToggleButton}"
-                              ToolTipService.InitialShowDelay="0"
-                              ToolTipService.Placement="Top"
                               ToolTip="Auto-connect">
                     <material:PackIcon Kind="MotionPlayOutline" Opacity=".56" Width="20" Height="20"/>
                     <material:ToggleButtonAssist.OnContent>
@@ -136,8 +132,6 @@
                             Height="24"
                             Width="24"
                             ToolTip="Refresh" 
-                            ToolTipService.InitialShowDelay="0" 
-                            ToolTipService.Placement="Top" 
                             material:ButtonProgressAssist.IsIndicatorVisible="{Binding IsRefreshBusy}"
                             material:ButtonProgressAssist.Value="-1"
                             material:ButtonProgressAssist.IsIndeterminate="True">

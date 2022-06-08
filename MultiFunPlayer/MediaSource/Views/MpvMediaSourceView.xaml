@@ -18,9 +18,7 @@
                         Command="{s:Action ToggleConnectAsync}"
                         CommandParameter="{Binding}"
                         s:View.ActionTarget="{Binding DataContext.Parent, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}"
-                        IsEnabled="{Binding CanToggleConnect}"                                           
-                        ToolTipService.InitialShowDelay="0"
-                        ToolTipService.Placement="Top"
+                        IsEnabled="{Binding CanToggleConnect}"
                         material:ButtonProgressAssist.IsIndicatorVisible="{Binding IsConnectBusy}"
                         material:ButtonProgressAssist.Value="-1"
                         material:ButtonProgressAssist.IsIndeterminate="True">
@@ -58,8 +56,6 @@
                 <ToggleButton DockPanel.Dock="Left"
                               IsChecked="{Binding AutoConnectEnabled}"           
                               Style="{StaticResource MaterialDesignToolBarToggleButton}"
-                              ToolTipService.InitialShowDelay="0"
-                              ToolTipService.Placement="Top"
                               ToolTip="Auto-connect">
                     <material:PackIcon Kind="MotionPlayOutline" Opacity=".56" Width="20" Height="20"/>
                     <material:ToggleButtonAssist.OnContent>
@@ -70,8 +66,6 @@
                 <ToggleButton DockPanel.Dock="Left"
                               IsChecked="{Binding AutoStartEnabled}"           
                               Style="{StaticResource MaterialDesignToolBarToggleButton}"
-                              ToolTipService.InitialShowDelay="0"
-                              ToolTipService.Placement="Top"
                               ToolTip="Auto-start">
                     <material:PackIcon Kind="AutoStart" Opacity=".56" Width="20" Height="20"/>
                     <material:ToggleButtonAssist.OnContent>
@@ -91,9 +85,7 @@
 
                 <Button Style="{StaticResource MaterialDesignFloatingActionMiniLightButton}"
                         Click="{s:Action OnLoadExecutable}"
-                        ToolTip="Set path" 
-                        ToolTipService.InitialShowDelay="0" 
-                        ToolTipService.Placement="Top" 
+                        ToolTip="Set path"
                         DockPanel.Dock="Right"
                         Height="24"
                         Width="24">
@@ -101,9 +93,7 @@
                 </Button>
                 <Button Style="{StaticResource MaterialDesignFloatingActionMiniLightButton}"
                         Click="{s:Action OnClearExecutable}"
-                        ToolTip="Clear path" 
-                        ToolTipService.InitialShowDelay="0" 
-                        ToolTipService.Placement="Top" 
+                        ToolTip="Clear path"
                         DockPanel.Dock="Right"
                         Margin="0 0 5 0"
                         Height="24"
@@ -115,9 +105,7 @@
                         material:ButtonProgressAssist.IsIndicatorVisible="{Binding IsDownloading}"
                         material:ButtonProgressAssist.Value="-1"
                         material:ButtonProgressAssist.IsIndeterminate="True"
-                        ToolTip="Download MPV" 
-                        ToolTipService.InitialShowDelay="0" 
-                        ToolTipService.Placement="Top" 
+                        ToolTip="Download MPV"
                         DockPanel.Dock="Right"
                         Margin="0 0 5 0"
                         Height="24"

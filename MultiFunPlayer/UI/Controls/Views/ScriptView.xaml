@@ -40,8 +40,6 @@
                             <Button Style="{StaticResource MaterialDesignToolBarButton}"
                                     Click="{s:Action OnPlayPauseClick}"
                                     Padding="5"
-                                    ToolTipService.InitialShowDelay="0"
-                                    ToolTipService.Placement="Top"
                                     ToolTip="Play/Pause">
                                 <material:PackIcon Width="28" 
                                                    Height="28"
@@ -64,8 +62,6 @@
                             <material:PopupBox StaysOpen="True" 
                                                PlacementMode="BottomAndAlignRightEdges"
                                                Style="{StaticResource MaterialDesignToolBarPopupBox}"
-                                               ToolTipService.InitialShowDelay="0"
-                                               ToolTipService.Placement="Top"
                                                ToolTip="Sync settings">
                                 <material:PopupBox.ToggleContent>
                                     <Border Width="35" 
@@ -152,10 +148,7 @@
                                                                 Mode="Custom"
                                                                 Background="#ffcc00"
                                                                 Width="14"
-                                                                Height="14"
-                                                                ToolTipService.InitialShowDelay="0"
-                                                                ToolTipService.ShowDuration="99999"
-                                                                ToolTipService.Placement="Top">
+                                                                Height="14">
                                                 <material:ColorZone.ToolTip>
                                                     <TextBlock>
                                                         The sync feature is there to prevent<LineBreak/>sudden unwanted motion.<LineBreak/>
@@ -193,16 +186,12 @@
                             <Button Click="{s:Action OnOpenMediaLocation}" 
                                     Style="{StaticResource MaterialDesignToolBarButton}"
                                     IsEnabled="{Binding MediaResource, Converter={StaticResource notNullBooleanConverter}}"
-                                    ToolTip="Open media location" 
-                                    ToolTipService.InitialShowDelay="0" 
-                                    ToolTipService.Placement="Top" 
+                                    ToolTip="Open media location"
                                     Padding="8">
                                 <material:PackIcon Kind="FolderOpen" Height="19" Width="19"/>
                             </Button>
                             <Button Style="{StaticResource MaterialDesignToolBarButton}"
                                     ToolTip="Script libraries" 
-                                    ToolTipService.InitialShowDelay="0" 
-                                    ToolTipService.Placement="Top" 
                                     Padding="8"
                                     Command="{x:Static material:DialogHost.OpenDialogCommand}">
                                 <Button.CommandParameter>
@@ -263,8 +252,6 @@
                                                                     <Button DockPanel.Dock="Right"   
                                                                             Style="{StaticResource MaterialDesignFlatButton}"
                                                                             ToolTip="Remove"
-                                                                            ToolTipService.InitialShowDelay="0"
-                                                                            ToolTipService.Placement="Top"
                                                                             material:RippleAssist.Feedback="{StaticResource MaterialDesignErrorBrush}"
                                                                             Foreground="{StaticResource MaterialDesignErrorBrush}"
                                                                             Height="24" 
@@ -276,8 +263,6 @@
                                                                     <Button DockPanel.Dock="Right"   
                                                                             Style="{StaticResource MaterialDesignFlatButton}"
                                                                             ToolTip="Open location"
-                                                                            ToolTipService.InitialShowDelay="0"
-                                                                            ToolTipService.Placement="Top"
                                                                             Height="24" 
                                                                             Width="24" 
                                                                             Padding="0"
@@ -287,9 +272,7 @@
                                                                     <CheckBox IsChecked="{Binding Recursive}"
                                                                               DockPanel.Dock="Right"
                                                                               Width="24"
-                                                                              ToolTip="Recursive"
-                                                                              ToolTipService.InitialShowDelay="0"
-                                                                              ToolTipService.Placement="Top"/>
+                                                                              ToolTip="Recursive"/>
                                                                     <TextBlock Text="{Binding Directory.FullName}"
                                                                                VerticalAlignment="Center"
                                                                                FontSize="12"
@@ -307,9 +290,7 @@
                             </Button>
 
                             <Button Style="{StaticResource MaterialDesignToolBarButton}"
-                                    ToolTip="Media path modifiers" 
-                                    ToolTipService.InitialShowDelay="0" 
-                                    ToolTipService.Placement="Top" 
+                                    ToolTip="Media path modifiers"
                                     Padding="8"
                                     Command="{x:Static material:DialogHost.OpenDialogCommand}">
                                 <Button.CommandParameter>
@@ -396,8 +377,6 @@
                                                                         <Button DockPanel.Dock="Right"   
                                                                                 Style="{StaticResource MaterialDesignFlatButton}"
                                                                                 ToolTip="Remove"
-                                                                                ToolTipService.InitialShowDelay="0"
-                                                                                ToolTipService.Placement="Top"
                                                                                 material:RippleAssist.Feedback="{StaticResource MaterialDesignErrorBrush}"
                                                                                 Foreground="{StaticResource MaterialDesignErrorBrush}"
                                                                                 Height="24" 
@@ -411,8 +390,6 @@
                                                                         Style="{StaticResource MaterialDesignFlatButton}"
                                                                         Click="{s:Action OnMediaPathModifierConfigure}"
                                                                         ToolTip="Configure"
-                                                                        ToolTipService.InitialShowDelay="0"
-                                                                        ToolTipService.Placement="Top"
                                                                         Height="24" 
                                                                         Width="24" 
                                                                         Padding="0">
@@ -468,8 +445,6 @@
                             <Button Style="{StaticResource MaterialDesignToolBarButton}"
                                 Click="{s:Action OnMapCurrentMediaPathToFile}"
                                 ToolTip="Map media path to file" 
-                                ToolTipService.InitialShowDelay="0" 
-                                ToolTipService.Placement="Top" 
                                 Padding="8">
 
                                 <Button.IsEnabled>
@@ -486,8 +461,6 @@
                             <material:PopupBox DockPanel.Dock="Left"
                                                StaysOpen="True" 
                                                Style="{StaticResource MaterialDesignToolBarPopupBox}"
-                                               ToolTipService.InitialShowDelay="0"
-                                               ToolTipService.Placement="Top"
                                                ToolTip="Auto-skip">
                                 <material:PopupBox.ToggleContent>
                                     <Border Width="35" Height="35">
@@ -720,10 +693,7 @@
                                         </StackPanel>
                                         <StackPanel Orientation="Horizontal" DockPanel.Dock="Left">
                                             <Menu>
-                                                <MenuItem Style="{StaticResource MaterialDesignToolBarMenuItem}"
-                                                          ToolTipService.InitialShowDelay="0"
-                                                          ToolTipService.Placement="Top"
-                                                          ToolTip="Script">
+                                                <MenuItem Style="{StaticResource MaterialDesignToolBarMenuItem}" ToolTip="Script">
                                                     <MenuItem.Icon>
                                                         <material:PackIcon Kind="File" Width="19" Height="19"/>
                                                     </MenuItem.Icon>
@@ -836,8 +806,6 @@
 
                                             <ToggleButton IsChecked="{Binding Value.Settings.Inverted}"
                                                           Style="{StaticResource MaterialDesignToolBarToggleButton}"
-                                                          ToolTipService.InitialShowDelay="0"
-                                                          ToolTipService.Placement="Top"
                                                           ToolTip="Invert">
 
                                                 <material:PackIcon Kind="FlipVertical" Opacity=".56" Width="20" Height="20"/>
@@ -848,8 +816,6 @@
 
                                             <ToggleButton IsChecked="{Binding Value.Settings.Bypass}"
                                                           Style="{StaticResource MaterialDesignToolBarToggleButton}"
-                                                          ToolTipService.InitialShowDelay="0"
-                                                          ToolTipService.Placement="Top"
                                                           ToolTip="Bypass">
 
                                                 <material:PackIcon Kind="MotionPauseOutline" Opacity=".56" Width="21" Height="21"/>
@@ -861,8 +827,6 @@
                                             <material:PopupBox DockPanel.Dock="Left"
                                                                    StaysOpen="True" 
                                                                    Style="{StaticResource MaterialDesignToolBarPopupBox}"
-                                                                   ToolTipService.InitialShowDelay="0"
-                                                                   ToolTipService.Placement="Top"
                                                                    ToolTip="Link script">
                                                 <material:PopupBox.ToggleContent>
                                                     <Border Width="35" Height="35">
@@ -915,10 +879,7 @@
                                                                                 CornerRadius="7"
                                                                                 Mode="PrimaryLight"
                                                                                 Width="14"
-                                                                                Height="14"
-                                                                                ToolTipService.InitialShowDelay="0"
-                                                                                ToolTipService.ShowDuration="99999"
-                                                                                ToolTipService.Placement="Top">
+                                                                                Height="14">
                                                                 <material:ColorZone.ToolTip>
                                                                     <TextBlock>
                                                                             When enabled the link has priority<LineBreak/>
@@ -939,8 +900,6 @@
                                             <material:PopupBox DockPanel.Dock="Left"
                                                                StaysOpen="True" 
                                                                Style="{StaticResource MaterialDesignToolBarPopupBox}"
-                                                               ToolTipService.InitialShowDelay="0"
-                                                               ToolTipService.Placement="Top"
                                                                ToolTip="Motion">
                                                 <material:PopupBox.ToggleContent>
                                                     <Border Width="35" Height="35">
@@ -1008,10 +967,7 @@
                                                                                                     CornerRadius="7"
                                                                                                     Mode="PrimaryLight"
                                                                                                     Width="14"
-                                                                                                    Height="14"
-                                                                                                    ToolTipService.InitialShowDelay="0"
-                                                                                                    ToolTipService.ShowDuration="99999"
-                                                                                                    ToolTipService.Placement="Top">
+                                                                                                    Height="14">
                                                                                     <material:ColorZone.ToolTip>
                                                                                         <TextBlock>
                                                                                             When a script is loaded for this axis<LineBreak/>
@@ -1162,8 +1118,6 @@
                                                                StaysOpen="True" 
                                                                IsPopupOpen="False"
                                                                Style="{StaticResource MaterialDesignToolBarPopupBox}"
-                                                               ToolTipService.InitialShowDelay="0"
-                                                               ToolTipService.Placement="Top"
                                                                ToolTip="Smart limit">
                                                 <material:PopupBox.ToggleContent>
                                                     <Border Width="35" Height="35">
@@ -1229,8 +1183,6 @@
                                             <material:PopupBox DockPanel.Dock="Left"
                                                                    StaysOpen="True" 
                                                                    Style="{StaticResource MaterialDesignToolBarPopupBox}"
-                                                                   ToolTipService.InitialShowDelay="0"
-                                                                   ToolTipService.Placement="Top"
                                                                    ToolTip="Speed limit">
                                                 <material:PopupBox.ToggleContent>
                                                     <Border Width="35" Height="35">
@@ -1282,8 +1234,6 @@
                                             <material:PopupBox DockPanel.Dock="Left"
                                                                    StaysOpen="True" 
                                                                    Style="{StaticResource MaterialDesignToolBarPopupBox}"
-                                                                   ToolTipService.InitialShowDelay="0"
-                                                                   ToolTipService.Placement="Top"
                                                                    ToolTip="Interpolation">
                                                 <material:PopupBox.ToggleContent>
                                                     <Border Width="35" Height="35">
@@ -1318,8 +1268,6 @@
                                             <material:PopupBox DockPanel.Dock="Left"
                                                                    StaysOpen="True" 
                                                                    Style="{StaticResource MaterialDesignToolBarPopupBox}"
-                                                                   ToolTipService.InitialShowDelay="0"
-                                                                   ToolTipService.Placement="Top"
                                                                    ToolTip="Auto-home">
                                                 <material:PopupBox.ToggleContent>
                                                     <Border Width="35" Height="35">

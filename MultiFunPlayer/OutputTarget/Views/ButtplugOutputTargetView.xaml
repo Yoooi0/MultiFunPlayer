@@ -26,9 +26,7 @@
                         Command="{s:Action ToggleConnectAsync}"
                         CommandParameter="{Binding}"
                         s:View.ActionTarget="{Binding DataContext.Parent, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}"
-                        IsEnabled="{Binding CanToggleConnect}"                                           
-                        ToolTipService.InitialShowDelay="0"
-                        ToolTipService.Placement="Top"
+                        IsEnabled="{Binding CanToggleConnect}"
                         material:ButtonProgressAssist.IsIndicatorVisible="{Binding IsConnectBusy}"
                         material:ButtonProgressAssist.Value="-1"
                         material:ButtonProgressAssist.IsIndeterminate="True">
@@ -66,8 +64,6 @@
                 <ToggleButton DockPanel.Dock="Left"
                               IsChecked="{Binding AutoConnectEnabled}"           
                               Style="{StaticResource MaterialDesignToolBarToggleButton}"
-                              ToolTipService.InitialShowDelay="0"
-                              ToolTipService.Placement="Top"
                               ToolTip="Auto-connect">
                     <material:PackIcon Kind="MotionPlayOutline" Opacity=".56" Width="20" Height="20"/>
                     <material:ToggleButtonAssist.OnContent>
@@ -79,8 +75,6 @@
                         IsEnabled="{Binding CanScan}"
                         Style="{StaticResource MaterialDesignProgressToolBarButton}"
                         Click="{s:Action ToggleScan}"
-                        ToolTipService.InitialShowDelay="0"
-                        ToolTipService.Placement="Top"
                         ToolTip="Toggle Scan"
                         material:ButtonProgressAssist.IsIndicatorVisible="{Binding IsScanBusy}"
                         material:ButtonProgressAssist.Value="-1"
@@ -337,8 +331,6 @@
                                             <DataTemplate>
                                                 <Button Style="{StaticResource MaterialDesignFlatButton}"
                                                             ToolTip="Remove"
-                                                            ToolTipService.InitialShowDelay="0"
-                                                            ToolTipService.Placement="Top"
                                                             material:RippleAssist.Feedback="{StaticResource MaterialDesignErrorBrush}"
                                                             Foreground="{StaticResource MaterialDesignErrorBrush}"
                                                             Height="24" 
@@ -399,8 +391,6 @@
 
                             <Button Style="{StaticResource MaterialDesignFlatButton}"
                                     ToolTip="Add"
-                                    ToolTipService.InitialShowDelay="0"
-                                    ToolTipService.Placement="Top"
                                     material:RippleAssist.Feedback="{StaticResource MaterialDesignSuccessBrush}"
                                     Foreground="{StaticResource MaterialDesignSuccessBrush}"
                                     Height="24" 
