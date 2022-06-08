@@ -13,6 +13,8 @@ namespace MultiFunPlayer.UI.Controls;
 /// </summary>
 public partial class DraggablePointCanvas : Canvas, INotifyPropertyChanged
 {
+    private Vector _captureOffset;
+
     public string PopupText { get; set; }
 
     [DoNotNotify]
@@ -79,6 +81,7 @@ public partial class DraggablePointCanvas : Canvas, INotifyPropertyChanged
         {
             if (e.ClickCount == 1)
             {
+                _captureOffset = e.GetPosition(point) - point.Position;
                 Mouse.Capture(point, CaptureMode.Element);
                 SynchronizePopup(point.Position);
             }
@@ -122,6 +125,7 @@ public partial class DraggablePointCanvas : Canvas, INotifyPropertyChanged
         if (Mouse.Captured is not DraggablePoint)
             return;
 
+        _captureOffset = new Vector();
         Mouse.Capture(null);
         SynchronizePopup(null);
         SynchronizePointsFromElements();
@@ -132,7 +136,7 @@ public partial class DraggablePointCanvas : Canvas, INotifyPropertyChanged
         if (Mouse.Captured is not DraggablePoint point)
             return;
 
-        var position = e.GetPosition(this);
+        var position = e.GetPosition(this) - _captureOffset;
         position.X = MathUtils.Clamp((float)position.X, 0, (float)ActualWidth);
         position.Y = MathUtils.Clamp((float)position.Y, 0, (float)ActualHeight);
 
