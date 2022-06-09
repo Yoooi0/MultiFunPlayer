@@ -9,7 +9,7 @@ public class DisplayNameConverter : IValueConverter
 {
     public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
     {
-        if(value == null)   
+        if(value == null)
             return null;
         if(value is Type type)
             return type.GetCustomAttribute<DisplayNameAttribute>().DisplayName;

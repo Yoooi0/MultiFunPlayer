@@ -109,8 +109,8 @@ public partial class DraggablePointCanvas : Canvas, INotifyPropertyChanged
     private void AddElement(Point position)
     {
         var element = new DraggablePoint()
-        { 
-            Position = position, 
+        {
+            Position = position,
             ContentTemplate = ItemTemplate
         };
 

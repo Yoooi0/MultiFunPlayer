@@ -272,7 +272,7 @@
                                                                     <CheckBox IsChecked="{Binding Recursive}"
                                                                               DockPanel.Dock="Right"
                                                                               Width="24"
-                                                                              ToolTip="Recursive"/>
+                                                                              ToolTip="Recurse subdirectories"/>
                                                                     <TextBlock Text="{Binding Directory.FullName}"
                                                                                VerticalAlignment="Center"
                                                                                FontSize="12"

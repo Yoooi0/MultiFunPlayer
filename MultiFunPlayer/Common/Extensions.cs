@@ -270,6 +270,8 @@ public static class CollectionExtensions
         value = list[index];
         return true;
     }
+
+    public static IEnumerable<T> NotNull<T>(this IEnumerable<T> enumerable) where T : class => enumerable.Where(x => x != null);
 }
 
 public static class StreamExtensions

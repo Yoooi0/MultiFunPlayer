@@ -286,11 +286,11 @@ public partial class KeyframesHeatmap : UserControl, INotifyPropertyChanged
                 var currentDirection = MathF.Sign(keyframes[k].Value - keyframes[j].Value);
                 if (!direction.HasValue)
                     direction = currentDirection;
-            
+
                 if (direction.HasValue && direction != currentDirection)
                     break;
             }
-        
+
             var prev = keyframes[i];
             var next = keyframes[j];
 
@@ -322,13 +322,13 @@ public partial class KeyframesHeatmap : UserControl, INotifyPropertyChanged
 
             i = j;
         }
-        
+
         for (var i = 0; i < buckets.Length; i++)
             AddPointForBucket(i, buckets[i].Top.Count > 0 ? buckets[i].Top.Average : axis.DefaultValue);
-        
+
         for (var i = buckets.Length - 1; i >= 0; i--)
             AddPointForBucket(i, buckets[i].Bottom.Count > 0 ? buckets[i].Bottom.Average : axis.DefaultValue);
-        
+
         AddPointForBucket(0, buckets[0].Top.Count > 0 ? buckets[0].Top.Average : axis.DefaultValue);
     }
 

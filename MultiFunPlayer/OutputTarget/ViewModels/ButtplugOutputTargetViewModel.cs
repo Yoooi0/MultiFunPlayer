@@ -169,7 +169,7 @@ public class ButtplugOutputTargetViewModel : AsyncAbstractOutputTarget
             if (client.Connected)
                 await client.DisconnectAsync();
 
-            _ = DialogHelper.ShowErrorAsync(e, $"Error when connecting to server", "RootDialog");
+            _ = DialogHelper.ShowErrorAsync(e, "Error when connecting to server", "RootDialog");
             return;
         }
 
@@ -192,7 +192,7 @@ public class ButtplugOutputTargetViewModel : AsyncAbstractOutputTarget
                 var currentValue = Values[axis];
                 var lastValue = lastSentValues[axis];
 
-                if (!float.IsFinite(currentValue)) 
+                if (!float.IsFinite(currentValue))
                     return false;
 
                 var shouldUpdate = !float.IsFinite(lastValue)

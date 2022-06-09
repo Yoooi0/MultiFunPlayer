@@ -16,9 +16,9 @@ public class NonReloadingTabControl : TabControl
     private ScrollViewer _scrollViewer;
     private TabPanel _tabPanel;
 
-    public static readonly DependencyProperty AdditionalPanelContentProperty = 
-        DependencyProperty.Register("AdditionalPanelContent", 
-            typeof(DataTemplate), typeof(NonReloadingTabControl), 
+    public static readonly DependencyProperty AdditionalPanelContentProperty =
+        DependencyProperty.Register("AdditionalPanelContent",
+            typeof(DataTemplate), typeof(NonReloadingTabControl),
                 new FrameworkPropertyMetadata(null));
 
     public DataTemplate AdditionalPanelContent

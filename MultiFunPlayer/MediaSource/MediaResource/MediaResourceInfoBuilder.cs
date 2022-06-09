@@ -17,6 +17,7 @@ public class MediaResourceInfoBuilder : IMediaResourceInfoBuilder
     [Flags]
     private enum BuilderFlags
     {
+        None = 0,
         IsPath = 1 << 0,
         IsUrl = 1 << 1,
         IsLocal = 1 << 2,

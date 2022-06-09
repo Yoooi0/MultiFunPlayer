@@ -142,7 +142,6 @@ public static class Interpolation
     }
 
     [MethodImpl(MethodImplOptions.AggressiveOptimization)]
-    [SuppressMessage("Style", "IDE0060:Remove unused parameter")]
     public static float Step(float x0, float y0, float x) => y0;
 }
 
@@ -318,7 +317,7 @@ public class OpenSimplex
         {
             var ssv = (xsv + ysv) * -0.211324865405187;
 
-            this.xsv = xsv; 
+            this.xsv = xsv;
             this.ysv = ysv;
 
             dx = -xsv - ssv;
@@ -332,7 +331,7 @@ public class OpenSimplex
 
         public Gradient(double dx, double dy)
         {
-            this.dx = dx; 
+            this.dx = dx;
             this.dy = dy;
         }
     }

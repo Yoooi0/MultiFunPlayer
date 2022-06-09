@@ -49,7 +49,7 @@ public class FileOutputTargetViewModel : ThreadAbstractOutputTarget
             if (EnabledAxes.Count == 0)
                 throw new Exception("At least one axis must be enabled");
 
-            if (OutputDirectory == null || !OutputDirectory.AsRefreshed().Exists)
+            if (OutputDirectory?.AsRefreshed().Exists != true)
                 throw new DirectoryNotFoundException("Output directory does not exist");
 
             var baseFileName = $"MultiFunPlayer_{DateTime.Now:yyyyMMddTHHmmss}";
@@ -69,7 +69,7 @@ public class FileOutputTargetViewModel : ThreadAbstractOutputTarget
         catch (Exception e)
         {
             Logger.Warn(e, "Error when initializing writers");
-            _ = DialogHelper.ShowErrorAsync(e, $"Error when initializing writers", "RootDialog");
+            _ = DialogHelper.ShowErrorAsync(e, "Error when initializing writers", "RootDialog");
             return;
         }
 
@@ -98,7 +98,7 @@ public class FileOutputTargetViewModel : ThreadAbstractOutputTarget
 
         foreach (var (_, writer) in writers)
         {
-            try { writer.Dispose(); } 
+            try { writer.Dispose(); }
             catch (Exception e) { Logger.Warn(e, "Error disposing writer"); }
         }
     }

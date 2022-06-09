@@ -9,8 +9,8 @@ public class ButtplugClientDeviceConnectedConverter : IMultiValueConverter
 {
     public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
     {
-        if (values.Length != 2 
-         || values[0] is not ButtplugClientDeviceSettings settings 
+        if (values.Length != 2
+         || values[0] is not ButtplugClientDeviceSettings settings
          || values[1] is not IList<ButtplugClientDevice> availableDevices)
             return false;
 

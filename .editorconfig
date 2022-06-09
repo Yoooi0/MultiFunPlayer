@@ -1,4 +1,4 @@
-﻿[*.cs]
+[*.cs]
 
 # RCS1001: Add braces (when expression spans over multiple lines).
 dotnet_diagnostic.RCS1001.severity = none
@@ -11,3 +11,15 @@ dotnet_diagnostic.CA1822.severity = none
 
 # IDE0046: Convert to conditional expression
 dotnet_diagnostic.IDE0046.severity = none
+
+# RCS1123: Add parentheses when necessary.
+dotnet_diagnostic.RCS1123.severity = none
+
+# RCS1163: Unused parameter.
+dotnet_diagnostic.RCS1163.severity = silent
+
+# IDE0060: Remove unused parameter
+dotnet_diagnostic.IDE0060.severity = silent
+
+# RCS1202: Avoid NullReferenceException.
+dotnet_diagnostic.RCS1202.severity = silent

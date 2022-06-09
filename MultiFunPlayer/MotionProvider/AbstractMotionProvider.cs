@@ -31,13 +31,7 @@ public abstract class AbstractMotionProvider : Screen, IMotionProvider
             _eventAggregator.Publish(new SyncRequestMessage(_target));
     }
 
-    protected virtual bool ShouldRequestSyncOnPropertyChange(string propertyName)
-    {
-        if (propertyName == nameof(Value))
-            return false;
-
-        return true;
-    }
+    protected virtual bool ShouldRequestSyncOnPropertyChange(string propertyName) => propertyName != nameof(Value);
 
     public abstract void Update(float deltaTime);
 }

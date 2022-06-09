@@ -32,7 +32,7 @@ public static class ToolTipAssist
     {
         if (sender is not ToolTip toolTip)
             return;
-    
+
         if (toolTip.PlacementTarget == null)
             return;
 
@@ -45,7 +45,7 @@ public static class ToolTipAssist
             toolTip.Visibility = Visibility.Hidden;
             toolTip.IsOpen = false;
         }
-    
+
         placementTarget.MouseLeave -= OnPlacementTargetMouseLeave;
         placementTarget.MouseLeave += OnPlacementTargetMouseLeave;
     }

@@ -3,6 +3,7 @@
 [Flags]
 public enum ShortcutActionDescriptorFlags
 {
+    None = 0,
     AcceptsSimpleGesture = 1 << 1,
     AcceptsAxisGesture = 1 << 2,
     All = AcceptsSimpleGesture | AcceptsAxisGesture

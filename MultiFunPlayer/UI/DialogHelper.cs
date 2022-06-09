@@ -11,7 +11,6 @@ public class DialogHelper
     private ApplicationViewModel Application { get; }
     private IViewManager ViewManager { get; }
 
-
     public DialogHelper(ApplicationViewModel application, IViewManager viewManager)
     {
         Instance = this;

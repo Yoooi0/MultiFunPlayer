@@ -75,13 +75,13 @@ public class ObservableConcurrentCollection<T> : IList<T>, IList, INotifyCollect
     public int IndexOf(T item) { lock (SyncRoot) { return _items.IndexOf(item); } }
 
     IEnumerator IEnumerable.GetEnumerator() => ((IList<T>)this).GetEnumerator();
-    public IEnumerator<T> GetEnumerator() 
+    public IEnumerator<T> GetEnumerator()
     {
-        lock (SyncRoot) 
-        { 
+        lock (SyncRoot)
+        {
             foreach (var item in _items)
                 yield return item;
-        } 
+        }
     }
 
     public void Insert(int index, T item) => _ = TryInsert(index, item);
@@ -121,6 +121,15 @@ public class ObservableConcurrentCollection<T> : IList<T>, IList, INotifyCollect
         lock (SyncRoot)
         {
             return TryRemoveItemInternal(_items.IndexOf(item));
+        }
+    }
+
+    public void RemoveRange(IEnumerable<T> items)
+    {
+        lock (SyncRoot)
+        {
+            foreach (var item in items)
+                TryRemoveItemInternal(_items.IndexOf(item));
         }
     }
 
@@ -178,7 +187,7 @@ public class ObservableConcurrentCollection<T> : IList<T>, IList, INotifyCollect
     public int Add(object value)
     {
         lock (SyncRoot)
-        { 
+        {
             AddItemInternal((T)value);
             return _items.Count - 1;
         }

@@ -38,11 +38,11 @@ public class MotionProviderManager : IMotionProviderManager, IHandle<AppSettings
         var motionProviderTypes = ReflectionUtils.FindImplementations<IMotionProvider>();
         _motionProviderNames = motionProviderTypes.Select(t => t.GetCustomAttribute<DisplayNameAttribute>(inherit: false).DisplayName)
                                                   .ToHashSet();
-        _motionProviders = DeviceAxis.All.ToDictionary(a => a, 
+        _motionProviders = DeviceAxis.All.ToDictionary(a => a,
                                                        a => motionProviderFactory.CreateMotionProviderCollection(a)
-                                                                                 .ToDictionary(p => p.GetType().GetCustomAttribute<DisplayNameAttribute>(inherit: false).DisplayName, 
+                                                                                 .ToDictionary(p => p.GetType().GetCustomAttribute<DisplayNameAttribute>(inherit: false).DisplayName,
                                                                                                p => p));
-        _values = DeviceAxis.All.ToDictionary(a => a, a => float.NaN);
+        _values = DeviceAxis.All.ToDictionary(a => a, _ => float.NaN);
     }
 
     public IMotionProvider GetMotionProvider(DeviceAxis axis, string motionProviderName)
@@ -131,7 +131,7 @@ public class MotionProviderManager : IMotionProviderManager, IHandle<AppSettings
                 b => b.WithSetting<DeviceAxis>(p => p.WithLabel("Target axis").WithItemsSource(DeviceAxis.All))
                       .WithCallback((gesture, axis) =>
                       {
-                          if (gesture is not IAxisInputGesture axisGesture) 
+                          if (gesture is not IAxisInputGesture axisGesture)
                               return;
 
                           var motionProvider = GetMotionProvider(axis, name);

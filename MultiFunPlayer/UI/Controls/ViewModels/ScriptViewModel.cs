@@ -26,7 +26,7 @@ namespace MultiFunPlayer.UI.Controls.ViewModels;
 
 [JsonObject(MemberSerialization = MemberSerialization.OptIn)]
 public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
-    IHandle<MediaPositionChangedMessage>, IHandle<MediaPlayingChangedMessage>, IHandle<MediaPathChangedMessage>, IHandle<MediaDurationChangedMessage>, 
+    IHandle<MediaPositionChangedMessage>, IHandle<MediaPlayingChangedMessage>, IHandle<MediaPathChangedMessage>, IHandle<MediaDurationChangedMessage>,
     IHandle<MediaSpeedChangedMessage>, IHandle<AppSettingsMessage>, IHandle<SyncRequestMessage>, IHandle<ScriptLoadMessage>
 {
     protected Logger Logger = LogManager.GetCurrentClassLogger();
@@ -171,7 +171,7 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                 {
                     context.IsDirty |= UpdateScript(axis, state, settings, ref context);
                     context.IsDirty |= UpdateMotionProvider(axis, state, settings, ref context);
-                    
+
                     if(!context.IsDirty && float.IsFinite(state.OverrideValue))
                     {
                         context.IsDirty = MathF.Abs(context.LastValue - state.OverrideValue) > 0.000001f;
@@ -578,14 +578,13 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
             if (settings.TryGetValue<List<IMediaPathModifier>>(nameof(MediaPathModifiers), new JsonSerializerSettings() { TypeNameHandling = TypeNameHandling.Objects }, out var mediaPathModifiers))
             {
                 MediaPathModifiers.Clear();
-                foreach (var modifier in mediaPathModifiers)
-                    MediaPathModifiers.Add(modifier);
+                MediaPathModifiers.AddRange(mediaPathModifiers);
             }
 
             if (settings.TryGetValue<List<ScriptLibrary>>(nameof(ScriptLibraries), out var scriptDirectories))
             {
-                foreach (var library in scriptDirectories)
-                    ScriptLibraries.Add(library);
+                ScriptLibraries.Clear();
+                ScriptLibraries.AddRange(scriptDirectories);
             }
 
             if (settings.TryGetValue<float>(nameof(GlobalOffset), out var globalOffset)) GlobalOffset = globalOffset;
@@ -645,7 +644,7 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
     private void ResetSync(bool isSyncing = true, params DeviceAxis[] axes) => ResetSync(isSyncing, axes?.AsEnumerable());
     private void ResetSync(bool isSyncing = true, IEnumerable<DeviceAxis> axes = null)
     {
-        axes ??= DeviceAxis.All; 
+        axes ??= DeviceAxis.All;
         if (!axes.Any())
             return;
 
@@ -769,15 +768,6 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
     }
 
     private void UpdateLinkedScriptsTo(DeviceAxis axis) => UpdateLinkScriptFor(DeviceAxis.All.Where(a => a != axis && AxisSettings[a].LinkAxis == axis));
-    private void UpdateLinkedScriptsTo(params DeviceAxis[] axes) => UpdateLinkedScriptsTo(axes?.AsEnumerable());
-    private void UpdateLinkedScriptsTo(IEnumerable<DeviceAxis> axes)
-    {
-        axes ??= DeviceAxis.All;
-        foreach (var axis in axes)
-            UpdateLinkedScriptsTo(axis);
-    }
-
-    private void UpdateLinkScriptFor(params DeviceAxis[] axes) => UpdateLinkScriptFor(axes?.AsEnumerable());
     private void UpdateLinkScriptFor(IEnumerable<DeviceAxis> axes = null)
     {
         axes ??= DeviceAxis.All;
@@ -886,7 +876,7 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         if (!axes.Any())
             return;
 
-        var maybeSkipPosition = AxisKeyframes.Keys.Select(a => GetSkipPosition(a)).MinBy(x => x.GetValueOrDefault(float.PositiveInfinity));
+        var maybeSkipPosition = AxisKeyframes.Keys.Select(a => GetSkipPosition(a)).MinBy(x => x ?? float.PositiveInfinity);
         var currentPosition = CurrentPosition;
         if (maybeSkipPosition is not float skipPosition || currentPosition >= skipPosition || (skipPosition - currentPosition) <= minimumSkip)
             return;
@@ -968,7 +958,7 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
             return;
 
         var startPosition = AxisKeyframes.Select(x => x.Value)
-                                         .Where(ks => ks != null)
+                                         .NotNull()
                                          .Select(ks => ks.TryGet(ks.SkipGap(index: 0), out var k) ? k.Position : default(float?))
                                          .FirstOrDefault();
         if (startPosition == null)
@@ -1238,7 +1228,7 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
 
     public void OnMapCurrentMediaPathToFile(object sender, RoutedEventArgs e)
     {
-        if (MediaResource == null || !MediaResource.IsUrl)
+        if (MediaResource?.IsUrl != true)
             return;
 
         var dialog = new CommonOpenFileDialog()
@@ -1305,10 +1295,9 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         }
 
         #region Media::PlayPause
-        s.RegisterAction("Media::PlayPause::Set", 
+        s.RegisterAction("Media::PlayPause::Set",
             b => b.WithSetting<bool>(p => p.WithLabel("Play"))
-                  .WithSetting<DeviceAxis>(p => p.WithLabel("Axis").WithItemsSource(DeviceAxis.All))
-                  .WithCallback((_, play, axis) =>
+                  .WithCallback((_, play) =>
                   {
                       if (play && !IsPlaying) OnPlayPauseClick();
                       else if (!play && IsPlaying) OnPlayPauseClick();
@@ -1362,7 +1351,7 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         #endregion
 
         #region Axis::Value
-        s.RegisterAction("Axis::Value::Offset", 
+        s.RegisterAction("Axis::Value::Offset",
             b => b.WithSetting<DeviceAxis>(p => p.WithLabel("Target axis").WithItemsSource(DeviceAxis.All))
                   .WithSetting<float>(p => p.WithLabel("Value offset"))
                   .WithCallback((_, axis, offset) => SetAxisValue(axis, offset, offset: true)));
@@ -1372,11 +1361,11 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                   .WithSetting<float>(p => p.WithLabel("Value"))
                   .WithCallback((_, axis, value) => SetAxisValue(axis, value)));
 
-        s.RegisterAction("Axis::Value::Drive", 
+        s.RegisterAction("Axis::Value::Drive",
             b => b.WithSetting<DeviceAxis>(p => p.WithLabel("Target axis").WithItemsSource(DeviceAxis.All))
                   .WithCallback((gesture, axis) =>
                   {
-                      if (gesture is IAxisInputGesture axisGesture) 
+                      if (gesture is IAxisInputGesture axisGesture)
                           SetAxisValue(axis, axisGesture.Delta, offset: true);
                   }), ShortcutActionDescriptorFlags.AcceptsAxisGesture);
         #endregion
@@ -1550,7 +1539,7 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         s.RegisterAction("Axis::MotionProvider::Set",
             b => b.WithSetting<DeviceAxis>(p => p.WithLabel("Target axis").WithItemsSource(DeviceAxis.All))
                   .WithSetting<string>(p => p.WithLabel("Motion provider").WithItemsSource(motionProviderNames))
-                  .WithCallback((_, axis, motionProviderName) => 
+                  .WithCallback((_, axis, motionProviderName) =>
                         UpdateSettings(axis, s => s.SelectedMotionProvider = motionProviderNames.Contains(motionProviderName) ? motionProviderName : null)));
 
         MotionProviderManager.RegisterShortcuts(s);
@@ -1560,7 +1549,7 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         s.RegisterAction("Axis::MotionProviderBlend::Offset",
             b => b.WithSetting<DeviceAxis>(p => p.WithLabel("Target axis").WithItemsSource(DeviceAxis.All))
                   .WithSetting<float>(p => p.WithLabel("Value offset"))
-                  .WithCallback((_, axis, offset) => 
+                  .WithCallback((_, axis, offset) =>
                         UpdateSettings(axis, s => s.MotionProviderBlend = MathUtils.Clamp(s.MotionProviderBlend + offset, 0, 100))));
 
         s.RegisterAction("Axis::MotionProviderBlend::Set",
@@ -1617,12 +1606,6 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         Dispose(disposing: true);
         GC.SuppressFinalize(this);
     }
-}
-
-public enum AxisFilesChangeType
-{
-    Clear,
-    Update
 }
 
 public class AxisModel : PropertyChangedBase

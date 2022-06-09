@@ -34,7 +34,7 @@ public abstract class AbstractOutputTarget : Screen, IOutputTarget
     public int AverageUpdateRate { get; private set; }
     public int UpdateRateJitter { get; private set; }
     public virtual DoubleCollection UpdateIntervalTicks
-    { 
+    {
         get
         {
             var ticks = new DoubleCollection();
@@ -188,12 +188,13 @@ public abstract class AbstractOutputTarget : Screen, IOutputTarget
         }
 
         #region UpdateRate
-        s.RegisterAction($"{Identifier}::UpdateRate::Set", b => b.WithSetting<int>(s => s.WithLabel("Update rate").WithDescription("Will be set to closest\npossible value.").WithStringFormat("{}{0} Hz"))
-                                                           .WithCallback((_, updateRate) =>
-                                                           {
-                                                               var interval = 1000f / updateRate;
-                                                               UpdateInterval = (int) UpdateIntervalTicks.OrderBy(x => Math.Abs(interval - x)).First();
-                                                           }));
+        s.RegisterAction($"{Identifier}::UpdateRate::Set",
+            b => b.WithSetting<int>(s => s.WithLabel("Update rate").WithDescription("Will be set to closest\npossible value.").WithStringFormat("{}{0} Hz"))
+                  .WithCallback((_, updateRate) =>
+                  {
+                      var interval = 1000f / updateRate;
+                      UpdateInterval = (int) UpdateIntervalTicks.OrderBy(x => Math.Abs(interval - x)).First();
+                  }));
         #endregion
 
         #region AutoConnectEnabled
@@ -202,7 +203,7 @@ public abstract class AbstractOutputTarget : Screen, IOutputTarget
         #endregion
 
         #region Axis::Range::Minimum
-        s.RegisterAction($"{Identifier}::Axis::Range::Minimum::Offset", 
+        s.RegisterAction($"{Identifier}::Axis::Range::Minimum::Offset",
             b => b.WithSetting<DeviceAxis>(s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All))
                   .WithSetting<int>(s => s.WithLabel("Value offset").WithStringFormat("{}{0}%"))
                   .WithSetting<float>(s => s.WithDefaultValue(0).WithLabel("Value limit").WithStringFormat("{}{0}%"))

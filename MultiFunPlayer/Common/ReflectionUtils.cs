@@ -11,8 +11,7 @@ public static class ReflectionUtils
 
     public static IEnumerable<Type> FindImplementations<T>() => FindImplementations(typeof(T));
     public static IEnumerable<Type> FindImplementations(Type type)
-        => Assembly.GetTypes().Where(t => t.IsClass && !t.IsAbstract)
-                              .Where(t => IsAssignableFromOrSubclass(type, t));
+        => Assembly.GetTypes().Where(t => t.IsClass && !t.IsAbstract && IsAssignableFromOrSubclass(type, t));
 
     public static bool IsAssignableFromOrSubclass(Type baseType, Type otherType)
         => baseType.IsInterface

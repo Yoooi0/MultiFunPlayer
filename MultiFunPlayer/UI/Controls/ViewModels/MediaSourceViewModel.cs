@@ -176,7 +176,7 @@ public class MediaSourceViewModel : Conductor<IMediaSource>.Collection.OneActive
     {
         var token = _cancellationSource.Token;
         foreach (var source in Items)
-        {   
+        {
             s.RegisterAction($"{source.Name}::Connection::Toggle", b => b.WithCallback(async (_) => await ToggleConnectAsync(source)));
             s.RegisterAction($"{source.Name}::Connection::Connect", b => b.WithCallback(async (_) =>
             {

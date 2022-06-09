@@ -95,7 +95,7 @@ public class MpcMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlayPau
                 var message = await response.Content.ReadAsStringAsync(token);
 
                 Logger.Trace("Received \"{0}\" from \"{1}\"", message, Name);
-                var variables = variableRegex.Matches(message).OfType<Match>().ToDictionary(m => m.Groups[1].Value, m => m.Groups[2].Value);
+                var variables = variableRegex.Matches(message).NotNull().ToDictionary(m => m.Groups[1].Value, m => m.Groups[2].Value);
 
                 if (variables.TryGetValue("state", out var stateString) && int.TryParse(stateString, out var state) && state != playerState.State)
                 {

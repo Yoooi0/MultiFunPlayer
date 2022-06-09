@@ -44,7 +44,7 @@ public class Migration__1_20_0__2 : AbstractConfigMigration
                     continue;
 
                 var descriptor = action["Descriptor"].ToString();
-                var prefix = prefixes.FirstOrDefault(p => descriptor.StartsWith(p));
+                var prefix = prefixes.Find(p => descriptor.StartsWith(p));
                 if (prefix == null)
                     continue;
 

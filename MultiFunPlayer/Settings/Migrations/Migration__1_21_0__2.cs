@@ -52,8 +52,8 @@ public class Migration__1_21_0__2 : AbstractConfigMigration
         Logger.Info("Migrating Smart Limit Actions");
         foreach (var action in settings.SelectTokens("$.Shortcuts.Bindings[*].Actions[?(@.Descriptor =~ /Axis::SmartLimitEnabled::Set.*/i)]").OfType<JObject>())
         {
+            const string newDescriptor = "Axis::SmartLimitInputAxis::Set";
             var oldDescriptor = action["Descriptor"].ToString();
-            var newDescriptor = "Axis::SmartLimitInputAxis::Set";
 
             action["Descriptor"] = newDescriptor;
             Logger.Info("Migrated action descriptor from \"{0}\" to \"{1}\"", oldDescriptor, newDescriptor);
@@ -61,7 +61,7 @@ public class Migration__1_21_0__2 : AbstractConfigMigration
             if (action.ContainsKey("Settings"))
             {
                 var axisSettings = action["Settings"] as JArray;
-                var oldSetting = axisSettings.ElementAt(1) as JObject;
+                var oldSetting = axisSettings[1] as JObject;
                 var oldValue = oldSetting["Value"].ToObject<bool>();
                 var newValue = oldValue ? "L0" : null;
 

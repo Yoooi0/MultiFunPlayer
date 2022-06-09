@@ -48,7 +48,7 @@ public class PipeOutputTargetViewModel : ThreadAbstractOutputTarget
             if (client?.IsConnected == true)
                 client.Close();
 
-            _ = DialogHelper.ShowErrorAsync(e, $"Error when opening pipe", "RootDialog");
+            _ = DialogHelper.ShowErrorAsync(e, "Error when opening pipe", "RootDialog");
             return;
         }
 

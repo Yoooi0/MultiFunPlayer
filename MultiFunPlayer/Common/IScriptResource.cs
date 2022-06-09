@@ -81,7 +81,7 @@ public static class ScriptDataTypeExtensions
 {
     public static KeyframeCollection Parse(this ScriptType type, ReadOnlySpan<byte> data)
     {
-        if (data == null)
+        if (data.Length == 0)
             return null;
 
         try

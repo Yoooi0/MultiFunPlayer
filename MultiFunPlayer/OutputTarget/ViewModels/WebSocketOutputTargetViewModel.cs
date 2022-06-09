@@ -46,7 +46,7 @@ public class WebSocketOutputTargetViewModel : AsyncAbstractOutputTarget
         catch (Exception e)
         {
             Logger.Warn(e, "Error when connecting to websocket");
-            _ = DialogHelper.ShowErrorAsync(e, $"Error when connecting to websocket", "RootDialog");
+            _ = DialogHelper.ShowErrorAsync(e, "Error when connecting to websocket", "RootDialog");
             return;
         }
 

@@ -125,7 +125,7 @@ public class Bootstrapper : Bootstrapper<RootViewModel>
     {
         base.OnLaunch();
         var window = GetActiveWindow();
-        window.Closing += OnWindowClosing; 
+        window.Closing += OnWindowClosing;
 
         var settings = SettingsHelper.ReadOrEmpty(SettingsType.Application);
         var eventAggregator = Container.Get<IEventAggregator>();

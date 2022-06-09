@@ -79,7 +79,7 @@ public class OutputTargetViewModel : Conductor<IOutputTarget>.Collection.OneActi
         var token = _cancellationSource.Token;
         await semaphore.WaitAsync(token);
 
-        await target.WaitForIdle(token); 
+        await target.WaitForIdle(token);
         if (target.Status == ConnectionStatus.Connected)
         {
             await target.DisconnectAsync();

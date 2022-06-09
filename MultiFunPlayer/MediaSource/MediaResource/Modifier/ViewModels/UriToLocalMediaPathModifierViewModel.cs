@@ -75,7 +75,7 @@ public class UriToLocalMediaPathModifierViewModel : AbstractMediaPathModifier
             if (!_mediaSizeCache.TryGetValue(remoteLength, out var localMediaFile) || localMediaFile == null)
                 return false;
 
-            if (localMediaFile.AsRefreshed().Exists == false)
+            if (!localMediaFile.AsRefreshed().Exists)
             {
                 _mediaSizeCache.Remove(remoteLength);
                 return false;
@@ -114,7 +114,7 @@ public class UriToLocalMediaPathModifierViewModel : AbstractMediaPathModifier
         try
         {
             var hostEntry = Dns.GetHostEntry(uri.Host);
-            return new IPEndPoint(hostEntry.AddressList.First(), uri.Port);
+            return new IPEndPoint(hostEntry.AddressList[0], uri.Port);
         }
         catch { }
 

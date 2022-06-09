@@ -74,12 +74,9 @@ public class SerialOutputTargetViewModel : ThreadAbstractOutputTarget
         catch { }
 
         var lastSelectedDeviceId = SelectedSerialPortDeviceId;
-        foreach (var port in SerialPorts.Except(serialPorts))
-            SerialPorts.Remove(port);
+        SerialPorts.RemoveRange(SerialPorts.Except(serialPorts));
+        SerialPorts.AddRange(serialPorts.Except(SerialPorts));
 
-        foreach (var port in serialPorts.Except(SerialPorts))
-            SerialPorts.Add(port);
-        
         SelectSerialPortByDeviceId(lastSelectedDeviceId);
 
         await Task.Delay(250, token).ConfigureAwait(true);
@@ -136,7 +133,7 @@ public class SerialOutputTargetViewModel : ThreadAbstractOutputTarget
 
             _ = Execute.OnUIThreadAsync(async () =>
             {
-                _ = DialogHelper.ShowErrorAsync(e, $"Error when opening serial port", "RootDialog");
+                _ = DialogHelper.ShowErrorAsync(e, "Error when opening serial port", "RootDialog");
                 await RefreshPorts().ConfigureAwait(true);
             });
 
@@ -161,7 +158,7 @@ public class SerialOutputTargetViewModel : ThreadAbstractOutputTarget
 
                 var dirtyValues = Values.Where(x => DeviceAxis.IsDirty(x.Value, lastSentValues[x.Key]));
                 var commands = DeviceAxis.ToString(dirtyValues, 1000 * stopwatch.ElapsedTicks / (float)Stopwatch.Frequency);
-                if (serialPort.IsOpen == true && !string.IsNullOrWhiteSpace(commands))
+                if (serialPort.IsOpen && !string.IsNullOrWhiteSpace(commands))
                 {
                     Logger.Trace("Sending \"{0}\" to \"{1}\"", commands.Trim(), SelectedSerialPortDeviceId);
                     serialPort.Write(commands);
@@ -253,7 +250,7 @@ public class SerialOutputTargetViewModel : ThreadAbstractOutputTarget
         base.Dispose(disposing);
     }
 
-    public class SerialPortInfo
+    public sealed class SerialPortInfo
     {
         private SerialPortInfo() { }
 
