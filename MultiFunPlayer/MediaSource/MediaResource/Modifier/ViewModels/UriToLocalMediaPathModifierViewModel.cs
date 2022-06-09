@@ -37,7 +37,7 @@ public class UriToLocalMediaPathModifierViewModel : AbstractMediaPathModifier
         if (MediaDirectory == null)
             return;
 
-        foreach (var (length, files) in MediaDirectory.SafeEnumerateFiles("*", SearchOption.AllDirectories).GroupBy(f => f.Length))
+        foreach (var (length, files) in MediaDirectory.SafeEnumerateFiles("*.*", IOUtils.CreateEnumerationOptions(true)).GroupBy(f => f.Length))
             if (files.Count() == 1)
                 _mediaSizeCache[length] = files.First();
     }

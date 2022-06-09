@@ -1714,5 +1714,5 @@ public class ScriptLibrary : PropertyChangedBase
     [JsonProperty] public DirectoryInfo Directory { get; }
     [JsonProperty] public bool Recursive { get; set; }
 
-    public IEnumerable<FileInfo> EnumerateFiles(string searchPattern) => Directory.SafeEnumerateFiles(searchPattern, Recursive ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly);
+    public IEnumerable<FileInfo> EnumerateFiles(string searchPattern) => Directory.SafeEnumerateFiles(searchPattern, IOUtils.CreateEnumerationOptions(Recursive));
 }

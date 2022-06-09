@@ -217,17 +217,17 @@ public static class IOExtensions
         return Enumerable.Empty<T>();
     }
 
-    public static IEnumerable<DirectoryInfo> SafeEnumerateDirectories(this DirectoryInfo directory) => GuardEnumerate(directory, d => d.EnumerateDirectories());
-    public static IEnumerable<DirectoryInfo> SafeEnumerateDirectories(this DirectoryInfo directory, string searchPattern) => GuardEnumerate(directory, d => d.EnumerateDirectories(searchPattern));
-    public static IEnumerable<DirectoryInfo> SafeEnumerateDirectories(this DirectoryInfo directory, string searchPattern, SearchOption searchOption) => GuardEnumerate(directory, d => d.EnumerateDirectories(searchPattern, searchOption));
+    public static IEnumerable<DirectoryInfo> SafeEnumerateDirectories(this DirectoryInfo directory) => directory.SafeEnumerateDirectories("*");
+    public static IEnumerable<DirectoryInfo> SafeEnumerateDirectories(this DirectoryInfo directory, string searchPattern) => directory.SafeEnumerateDirectories(searchPattern, IOUtils.CreateEnumerationOptions());
+    public static IEnumerable<DirectoryInfo> SafeEnumerateDirectories(this DirectoryInfo directory, string searchPattern, EnumerationOptions enumerationOptions) => GuardEnumerate(directory, d => d.EnumerateDirectories(searchPattern, enumerationOptions));
 
-    public static IEnumerable<FileInfo> SafeEnumerateFiles(this DirectoryInfo directory) => GuardEnumerate(directory, d => d.EnumerateFiles());
-    public static IEnumerable<FileInfo> SafeEnumerateFiles(this DirectoryInfo directory, string searchPattern) => GuardEnumerate(directory, d => d.EnumerateFiles(searchPattern));
-    public static IEnumerable<FileInfo> SafeEnumerateFiles(this DirectoryInfo directory, string searchPattern, SearchOption searchOption) => GuardEnumerate(directory, d => d.EnumerateFiles(searchPattern, searchOption));
+    public static IEnumerable<FileInfo> SafeEnumerateFiles(this DirectoryInfo directory) => directory.SafeEnumerateFiles("*.*");
+    public static IEnumerable<FileInfo> SafeEnumerateFiles(this DirectoryInfo directory, string searchPattern) => directory.SafeEnumerateFiles(searchPattern, IOUtils.CreateEnumerationOptions());
+    public static IEnumerable<FileInfo> SafeEnumerateFiles(this DirectoryInfo directory, string searchPattern, EnumerationOptions enumerationOptions) => GuardEnumerate(directory, d => d.EnumerateFiles(searchPattern, enumerationOptions));
 
-    public static IEnumerable<FileSystemInfo> SafeEnumerateFileSystemInfos(this DirectoryInfo directory) => GuardEnumerate(directory, d => d.EnumerateFileSystemInfos());
-    public static IEnumerable<FileSystemInfo> SafeEnumerateFileSystemInfos(this DirectoryInfo directory, string searchPattern) => GuardEnumerate(directory, d => d.EnumerateFileSystemInfos(searchPattern));
-    public static IEnumerable<FileSystemInfo> SafeEnumerateFileSystemInfos(this DirectoryInfo directory, string searchPattern, SearchOption searchOption) => GuardEnumerate(directory, d => d.EnumerateFileSystemInfos(searchPattern, searchOption));
+    public static IEnumerable<FileSystemInfo> SafeEnumerateFileSystemInfos(this DirectoryInfo directory) => directory.SafeEnumerateFileSystemInfos("*.*");
+    public static IEnumerable<FileSystemInfo> SafeEnumerateFileSystemInfos(this DirectoryInfo directory, string searchPattern) => directory.SafeEnumerateFileSystemInfos(searchPattern, IOUtils.CreateEnumerationOptions());
+    public static IEnumerable<FileSystemInfo> SafeEnumerateFileSystemInfos(this DirectoryInfo directory, string searchPattern, EnumerationOptions enumerationOptions) => GuardEnumerate(directory, d => d.EnumerateFileSystemInfos(searchPattern, enumerationOptions));
 }
 
 public static class CollectionExtensions
