@@ -24,25 +24,29 @@ public static class ToolTipAssist
         if (dp is not ToolTip toolTip)
             return;
 
-        toolTip.Opened -= ToolTip_Opened;
-        toolTip.Opened += ToolTip_Opened;
+        toolTip.Opened -= OnToolTipOpened;
+        toolTip.Opened += OnToolTipOpened;
     }
 
-    private static void ToolTip_Opened(object sender, RoutedEventArgs e)
+    private static void OnToolTipOpened(object sender, RoutedEventArgs e)
     {
         if (sender is not ToolTip toolTip)
             return;
     
         if (toolTip.PlacementTarget == null)
             return;
-    
+
+        var placementTarget = toolTip.PlacementTarget;
         void OnPlacementTargetMouseLeave(object sender, MouseEventArgs e)
         {
+            if(placementTarget != null)
+                placementTarget.MouseLeave -= OnPlacementTargetMouseLeave;
+
             toolTip.Visibility = Visibility.Hidden;
             toolTip.IsOpen = false;
         }
     
-        toolTip.PlacementTarget.MouseLeave -= OnPlacementTargetMouseLeave;
-        toolTip.PlacementTarget.MouseLeave += OnPlacementTargetMouseLeave;
+        placementTarget.MouseLeave -= OnPlacementTargetMouseLeave;
+        placementTarget.MouseLeave += OnPlacementTargetMouseLeave;
     }
 }

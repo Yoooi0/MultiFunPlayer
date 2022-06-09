@@ -34,6 +34,11 @@
             <Color x:Key="MaterialDesignSuccessColor">#008C1A</Color>
             <SolidColorBrush x:Key="MaterialDesignSuccessBrush" Color="{StaticResource MaterialDesignSuccessColor}" po:Freeze="True" />
 
+            <Color x:Key="MaterialDesignLightErrorColor">#FF4F52</Color>
+            <SolidColorBrush x:Key="MaterialDesignLightErrorBrush" Color="{StaticResource MaterialDesignLightErrorColor}" po:Freeze="True" />
+            <Color x:Key="MaterialDesignLightSuccessColor">#6ECC52</Color>
+            <SolidColorBrush x:Key="MaterialDesignLightSuccessBrush" Color="{StaticResource MaterialDesignLightSuccessColor}" po:Freeze="True" />
+
             <SolidColorBrush x:Key="HighlightBrush" Color="{DynamicResource Primary700}"/>
             <SolidColorBrush x:Key="AccentBaseColorBrush" Color="{DynamicResource Primary600}" />
             <SolidColorBrush x:Key="AccentColorBrush" Color="{DynamicResource Primary500}"/>

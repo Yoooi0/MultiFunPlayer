@@ -612,62 +612,187 @@
                                 </TextBlock.Resources>
                             </TextBlock>
 
-                            <Grid Width="20"
+                            <Grid HorizontalAlignment="Stretch"
                                   VerticalAlignment="Bottom">
-                                <UniformGrid Columns="3">
-                                    <TextBlock HorizontalAlignment="Center" Text="L" FontSize="10" FontFamily="Consolas" FontWeight="Light">
-                                        <TextBlock.Resources>
-                                            <Style TargetType="{x:Type TextBlock}">
-                                                <Setter Property="Foreground" Value="#ddd"/>
-                                                <Style.Triggers>
-                                                    <DataTrigger Binding="{Binding Value.Settings.LinkAxis, Converter={StaticResource notNullBooleanConverter}}" Value="True">
-                                                        <Setter Property="Foreground" Value="{StaticResource MaterialDesignSuccessBrush}"/>
-                                                    </DataTrigger>
-                                                    <DataTrigger Binding="{Binding Value.Settings.LinkAxisHasPriority}" Value="True">
-                                                        <Setter Property="Foreground" Value="{StaticResource MaterialDesignErrorBrush}"/>
-                                                    </DataTrigger>
-                                                </Style.Triggers>
-                                            </Style>
-                                        </TextBlock.Resources>
-                                    </TextBlock>
-                                    <TextBlock HorizontalAlignment="Center" Text="M" FontSize="10" FontFamily="Consolas" FontWeight="Light">
-                                        <TextBlock.Resources>
-                                            <Style TargetType="{x:Type TextBlock}">
-                                                <Setter Property="Foreground" Value="#ddd"/>
-                                                <Style.Triggers>
-                                                    <DataTrigger Binding="{Binding Value.Settings.SelectedMotionProvider, Converter={StaticResource notNullBooleanConverter}}" Value="True">
-                                                        <Setter Property="Foreground" Value="{StaticResource MaterialDesignSuccessBrush}"/>
-                                                    </DataTrigger>
-                                                    <DataTrigger Value="True">
-                                                        <DataTrigger.Binding>
-                                                            <MultiBinding Converter="{StaticResource MotionProviderOverridesScriptConverter}">
-                                                                <Binding Path="Value.Script"/>
-                                                                <Binding Path="Value.Settings.SelectedMotionProvider"/>
-                                                                <Binding Path="Value.Settings.MotionProviderBlend"/>
-                                                            </MultiBinding>
-                                                        </DataTrigger.Binding>
-                                                        <Setter Property="Foreground" Value="{StaticResource MaterialDesignErrorBrush}"/>
-                                                    </DataTrigger>
-                                                </Style.Triggers>
-                                            </Style>
-                                        </TextBlock.Resources>
-                                    </TextBlock>
-                                    <TextBlock HorizontalAlignment="Center" Text="S" FontSize="10" FontFamily="Consolas" FontWeight="Light">
-                                        <TextBlock.Resources>
-                                            <Style TargetType="{x:Type TextBlock}">
-                                                <Setter Property="Foreground" Value="#ddd"/>
-                                                <Style.Triggers>
-                                                    <DataTrigger Binding="{Binding Value.Settings.SpeedLimitEnabled}" Value="True">
-                                                        <Setter Property="Foreground" Value="{StaticResource MaterialDesignSuccessBrush}"/>
-                                                    </DataTrigger>
-                                                    <DataTrigger Binding="{Binding Value.State.IsSpeedLimited}" Value="True">
-                                                        <Setter Property="Foreground" Value="{StaticResource MaterialDesignErrorBrush}"/>
-                                                    </DataTrigger>
-                                                </Style.Triggers>
-                                            </Style>
-                                        </TextBlock.Resources>
-                                    </TextBlock>
-                                </UniformGrid>
+                                <Border Margin="8 0 8 0" 
+                                        Padding="0 3 0 3" 
+                                        Background="Transparent"
+                                        ToolTipService.InitialShowDelay="750"
+                                        ToolTipService.Placement="Right"
+                                        ToolTipService.HorizontalOffset="8"
+                                        ToolTipService.VerticalOffset="-42">
+                                    <Border.ToolTip>
+                                        <StackPanel Typography.Capitals="AllSmallCaps">
+                                            <TextBlock FontSize="13">
+                                                <Run Text="Link axis:" FontWeight="Bold"/>
+                                                <Run>
+                                                    <Run.Resources>
+                                                        <Style TargetType="{x:Type Run}">
+                                                            <Setter Property="Text" Value="Disabled"/>
+                                                            <Setter Property="Foreground" Value="#ddd"/>
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding Value.Settings.LinkAxis, Converter={StaticResource notNullBooleanConverter}}" Value="True">
+                                                                    <Setter Property="Text" Value="Enabled"/>
+                                                                    <Setter Property="Foreground" Value="{StaticResource MaterialDesignLightSuccessBrush}"/>
+                                                                </DataTrigger>
+                                                                <DataTrigger Binding="{Binding Value.Settings.LinkAxisHasPriority}" Value="True">
+                                                                    <Setter Property="Text" Value="Override"/>
+                                                                    <Setter Property="Foreground" Value="{StaticResource MaterialDesignLightErrorBrush}"/>
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </Run.Resources>  
+                                                </Run>
+                                            </TextBlock>
+
+                                            <TextBlock FontSize="13" Margin="0 -5 0 0">
+                                                <Run Text="Motion provider:" FontWeight="Bold"/>
+                                                <Run>
+                                                    <Run.Resources>
+                                                        <Style TargetType="{x:Type Run}">
+                                                            <Setter Property="Text" Value="Disabled"/>
+                                                            <Setter Property="Foreground" Value="#ddd"/>
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding Value.Settings.SelectedMotionProvider, Converter={StaticResource notNullBooleanConverter}}" Value="True">
+                                                                    <Setter Property="Text" Value="Enabled"/>
+                                                                    <Setter Property="Foreground" Value="{StaticResource MaterialDesignLightSuccessBrush}"/>
+                                                                </DataTrigger>
+                                                                <DataTrigger Value="True">
+                                                                    <DataTrigger.Binding>
+                                                                        <MultiBinding Converter="{StaticResource MotionProviderOverridesScriptConverter}">
+                                                                            <Binding Path="Value.Script"/>
+                                                                            <Binding Path="Value.Settings.SelectedMotionProvider"/>
+                                                                            <Binding Path="Value.Settings.MotionProviderBlend"/>
+                                                                        </MultiBinding>
+                                                                    </DataTrigger.Binding>
+                                                                    <Setter Property="Text" Value="Override"/>
+                                                                    <Setter Property="Foreground" Value="{StaticResource MaterialDesignLightErrorBrush}"/>
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </Run.Resources>  
+                                                </Run>
+                                            </TextBlock>
+
+                                            <TextBlock FontSize="13" Margin="0 -5 0 0">
+                                                <Run Text="Speed limit:" FontWeight="Bold"/>
+                                                <Run>
+                                                    <Run.Resources>
+                                                        <Style TargetType="{x:Type Run}">
+                                                            <Setter Property="Text" Value="Disabled"/>
+                                                            <Setter Property="Foreground" Value="#ddd"/>
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding Value.Settings.SpeedLimitEnabled}" Value="True">
+                                                            <Setter Property="Text" Value="Enabled"/>
+                                                                    <Setter Property="Foreground" Value="{StaticResource MaterialDesignLightSuccessBrush}"/>
+                                                                </DataTrigger>
+                                                                <DataTrigger Binding="{Binding Value.State.IsSpeedLimited}" Value="True">
+                                                            <Setter Property="Text" Value="Active"/>
+                                                                    <Setter Property="Foreground" Value="{StaticResource MaterialDesignLightErrorBrush}"/>
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </Run.Resources>  
+                                                </Run>
+                                            </TextBlock>
+
+                                            <TextBlock FontSize="13" Margin="0 -5 0 0">
+                                                <Run Text="Smart limit:" FontWeight="Bold"/>
+                                                <Run>
+                                                    <Run.Resources>
+                                                        <Style TargetType="{x:Type Run}">
+                                                            <Setter Property="Text" Value="Disabled"/>
+                                                            <Setter Property="Foreground" Value="#ddd"/>
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding Value.Settings.SmartLimitInputAxis, Converter={StaticResource notNullBooleanConverter}}" Value="True">
+                                                                    <Setter Property="Text" Value="Enabled"/>
+                                                                    <Setter Property="Foreground" Value="{StaticResource MaterialDesignLightSuccessBrush}"/>
+                                                                </DataTrigger>
+                                                                <DataTrigger Binding="{Binding Value.State.IsSmartLimited}" Value="True">
+                                                                    <Setter Property="Text" Value="Active"/>
+                                                                    <Setter Property="Foreground" Value="{StaticResource MaterialDesignLightErrorBrush}"/>
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </Run.Resources>  
+                                                </Run>
+                                            </TextBlock>
+                                        </StackPanel>
+                                    </Border.ToolTip>
+
+                                    <UniformGrid Columns="4">
+                                        <material:PackIcon HorizontalAlignment="Center" VerticalAlignment="Center" Kind="Circle" Width="6" Height="6">
+                                            <material:PackIcon.Resources>
+                                                <Style TargetType="material:PackIcon">
+                                                    <Setter Property="Foreground" Value="#ddd"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding Value.Settings.LinkAxis, Converter={StaticResource notNullBooleanConverter}}" Value="True">
+                                                            <Setter Property="Foreground" Value="{StaticResource MaterialDesignSuccessBrush}"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding Value.Settings.LinkAxisHasPriority}" Value="True">
+                                                            <Setter Property="Foreground" Value="{StaticResource MaterialDesignErrorBrush}"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </material:PackIcon.Resources>
+                                        </material:PackIcon>
+
+                                        <material:PackIcon HorizontalAlignment="Center" VerticalAlignment="Center" Kind="Circle" Width="6" Height="6">
+                                            <material:PackIcon.Resources>
+                                                <Style TargetType="material:PackIcon">
+                                                    <Setter Property="Foreground" Value="#ddd"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding Value.Settings.SelectedMotionProvider, Converter={StaticResource notNullBooleanConverter}}" Value="True">
+                                                            <Setter Property="Foreground" Value="{StaticResource MaterialDesignSuccessBrush}"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger Value="True">
+                                                            <DataTrigger.Binding>
+                                                                <MultiBinding Converter="{StaticResource MotionProviderOverridesScriptConverter}">
+                                                                    <Binding Path="Value.Script"/>
+                                                                    <Binding Path="Value.Settings.SelectedMotionProvider"/>
+                                                                    <Binding Path="Value.Settings.MotionProviderBlend"/>
+                                                                </MultiBinding>
+                                                            </DataTrigger.Binding>
+                                                            <Setter Property="Foreground" Value="{StaticResource MaterialDesignErrorBrush}"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </material:PackIcon.Resources>
+                                        </material:PackIcon>
+
+                                        <material:PackIcon HorizontalAlignment="Center" VerticalAlignment="Center" Kind="Circle" Width="6" Height="6">
+                                            <material:PackIcon.Resources>
+                                                <Style TargetType="material:PackIcon">
+                                                    <Setter Property="Foreground" Value="#ddd"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding Value.Settings.SpeedLimitEnabled}" Value="True">
+                                                            <Setter Property="Foreground" Value="{StaticResource MaterialDesignSuccessBrush}"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding Value.State.IsSpeedLimited}" Value="True">
+                                                            <Setter Property="Foreground" Value="{StaticResource MaterialDesignErrorBrush}"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </material:PackIcon.Resources>
+                                        </material:PackIcon>
+
+                                        <material:PackIcon HorizontalAlignment="Center" VerticalAlignment="Center" Kind="Circle" Width="6" Height="6">
+                                            <material:PackIcon.Resources>
+                                                <Style TargetType="material:PackIcon">
+                                                    <Setter Property="Foreground" Value="#ddd"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding Value.Settings.SmartLimitInputAxis, Converter={StaticResource notNullBooleanConverter}}" Value="True">
+                                                            <Setter Property="Foreground" Value="{StaticResource MaterialDesignSuccessBrush}"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding Value.State.IsSmartLimited}" Value="True">
+                                                            <Setter Property="Foreground" Value="{StaticResource MaterialDesignErrorBrush}"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </material:PackIcon.Resources>
+                                        </material:PackIcon>
+                                    </UniformGrid>
+                                </Border>
                             </Grid>
                         </Grid>
                     </DataTemplate>

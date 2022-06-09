@@ -224,15 +224,23 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
 
             bool UpdateSmartLimit(DeviceAxis axis, AxisState state, AxisSettings settings, ref AxisUpdateContext context)
             {
+                bool NoUpdate()
+                {
+                    state.IsSmartLimited = false;
+                    return false;
+                }
+
                 if (settings.SmartLimitInputAxis == null)
-                    return false;
+                    return NoUpdate();
                 if (!float.IsFinite(context.Value))
-                    return false;
+                    return NoUpdate();
                 if (settings.SmartLimitPoints == null || settings.SmartLimitPoints.Count == 0)
-                    return false;
+                    return NoUpdate();
 
                 var x = AxisStates[settings.SmartLimitInputAxis].Value * 100;
                 var factor = Interpolation.Linear(settings.SmartLimitPoints, p => (float)p.X, p => (float)p.Y, x) / 100;
+                state.IsSmartLimited = factor < 1;
+
                 context.Value = MathUtils.Clamp01(MathUtils.Lerp(axis.DefaultValue, context.Value, factor));
                 return MathF.Abs(context.LastValue - context.Value) > 0.000001f;
             }
@@ -1644,6 +1652,7 @@ public class AxisState : INotifyPropertyChanged
     [DoNotNotify] public bool IsAutoHoming { get; set; } = false;
 
     public bool IsSpeedLimited { get; set; } = false;
+    public bool IsSmartLimited { get; set; } = false;
 
     public event PropertyChangedEventHandler PropertyChanged;
 
