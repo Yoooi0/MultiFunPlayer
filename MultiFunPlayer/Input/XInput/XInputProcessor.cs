@@ -1,4 +1,5 @@
-﻿using MultiFunPlayer.Common;
+using MultiFunPlayer.Common;
+using Newtonsoft.Json;
 using NLog;
 using Vortice.XInput;
 
@@ -32,6 +33,15 @@ public class XInputProcessor : IInputProcessor
         const int sleepMs = (int)(1000 / 30f);
 
         Vortice.XInput.XInput.SetReporting(true);
+
+        for (var i = 0; i < _states.Length; i++)
+        {
+            if (!Vortice.XInput.XInput.GetCapabilities(i, DeviceQueryType.Any, out var capabilities))
+                continue;
+
+            Logger.Debug("User: {0}, Capabilities: {1}", i, JsonConvert.SerializeObject(capabilities, Formatting.None));
+        }
+
         while (!token.IsCancellationRequested)
         {
             for (var i = 0; i < _states.Length; i++)
@@ -39,8 +49,8 @@ public class XInputProcessor : IInputProcessor
                 if (!Vortice.XInput.XInput.GetState(i, out var state))
                     continue;
 
-                Logger.Trace("{0}, PacketNumber: {1}", state.Gamepad, state.PacketNumber);
-                if (Vortice.XInput.XInput.GetKeystroke(i, out var keystroke))
+                Logger.Trace("User: {0}, {1}, PacketNumber: {2}", i, state.Gamepad, state.PacketNumber);
+                while (Vortice.XInput.XInput.GetKeystroke(i, out var keystroke))
                     ParseKeystrokeGestures(i, keystroke);
 
                 var lastState = _states[i];
@@ -60,11 +70,9 @@ public class XInputProcessor : IInputProcessor
         if (keystroke.Flags == KeyStrokeFlags.KeyDown)
             return;
 
-        foreach (var button in EnumUtils.GetValues<GamepadVirtualKey>())
-        {
-            if ((keystroke.VirtualKey & button) != 0)
-                HandleGesture(GamepadButtonGesture.Create(userIndex, button));
-        }
+        Logger.Trace("User: {0}, Keystroke: {1}, Flags: {2}", userIndex, keystroke.VirtualKey, keystroke.Flags);
+        if (keystroke.Flags == KeyStrokeFlags.KeyUp)
+            HandleGesture(GamepadButtonGesture.Create(userIndex, keystroke.VirtualKey));
     }
 
     private void ParseStateGestures(int userIndex, ref Gamepad last, ref Gamepad current)
