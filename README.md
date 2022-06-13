@@ -11,23 +11,27 @@
 MultiFunPlayer is a simple app to synchronize your devices (e.g. [OSR](https://www.patreon.com/tempestvr) or [buttplug.io](https://buttplug.io) supported devices) with any video using funscripts. Supported video players are [DeoVR](https://deovr.com/), [MPV](https://mpv.io/), [MPC-HC/BE](https://github.com/clsid2/mpc-hc), [HereSphere](https://store.steampowered.com/app/1234730/HereSphere/) and [Whirligig](http://whirligig.xyz/).
 The player's main feature is the ability to play multiple funscripts at the same time, allowing for greater movement fidelity.
 
-# Features
+# Patreon only features
+
+* Support for DeoVR SLR Interactive script streaming (requires SLR subscription)
+
+# Main features
 
 * Supports [DeoVR](https://deovr.com/), [MPV](https://mpv.io/), [MPC-HC/BE](https://github.com/clsid2/mpc-hc), [HereSphere](https://store.steampowered.com/app/1234730/HereSphere/) and [Whirligig](http://whirligig.xyz/) video players
-* Supports [buttplug.io](https://buttplug.io), network TCP/UDP, namedpipes and serial output
+* Supports [buttplug.io](https://buttplug.io), network TCP/UDP, websockets, namedpipes and serial outputs
+* Supports multiple outputs of the same type working concurrently
 * Supports TCode v0.2 and TCode v0.3 devices
 * Auto detection and connection to any supported video player and output
 * Bind keyboard/mouse/gamepad input to almost any customizable action (150+ available actions)
 * Seek and play/pause video from MultiFunPlayer
 * Supports multiple concurrent outputs
 * Real time script smoothing using pchip or makima interpolation
-* Per axis speed limit
-* Auto-home feature which when video is paused moves axis to its default value after some delay
+* Per axis speed limit, auto-home
 * Supports local, DLNA, web and unc video paths
 * Soft start sync feature to prevent unwanted motion
 * Script libraries to organize funscripts in different folders and load funscripts not located next to the video file
 * Ability to link unscripted axes to scripted axes
-* Ability to generate motion for unscripted axes with motion providers
+* Ability to generate additional motion using random, script or pattern motion providers
 * Smart limit on R1 (roll) and R2 (pitch) axes to limit values based on L0 (stroke) height
 * Multi funscript heatmap with stroke length visualization
 * True portable app, no files are created/edited outside of the executable folder
@@ -37,7 +41,7 @@ The player's main feature is the ability to play multiple funscripts at the same
 To synchronize with videos, start your desired video player and wait for automatic connection or click on the connect button to connect manually *(NOTE: DeoVR, Whirligig and HereSphere require you to enable remote support in their settings)*. Once connected, the funscripts can be loaded in several ways:
 
 * Manually, by dragging a funscript file from windows explorer and dropping it on the desired axis `File` text box.
-* Manually, by using the `Load script` button in the axis settings toolbar.
+* Manually, by using the `Script->Load` menu in the axis settings toolbar.
 * Automatically, based on the currently played video file name if the funscripts are named correctly:
 
 
@@ -84,5 +88,5 @@ To synchronize with videos, start your desired video player and wait for automat
 
 # Prerequisites
 
-* [.NET 6.0 x64 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/thank-you/runtime-desktop-6.0.0-windows-x64-installer)
+* [.NET 6.0 x64 Desktop Runtime](https://dotnet.microsoft.com/en-us/download/dotnet/6.0/runtime)
 * [Visual C++ 2019 x64 Redistributable](https://aka.ms/vs/17/release/vc_redist.x64.exe)
