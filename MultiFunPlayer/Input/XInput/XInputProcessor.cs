@@ -67,9 +67,6 @@ public class XInputProcessor : IInputProcessor
 
     private void ParseKeystrokeGestures(int userIndex, Keystroke keystroke)
     {
-        if (keystroke.Flags == KeyStrokeFlags.KeyDown)
-            return;
-
         Logger.Trace("User: {0}, Keystroke: {1}, Flags: {2}", userIndex, keystroke.VirtualKey, keystroke.Flags);
         if (keystroke.Flags == KeyStrokeFlags.KeyUp)
             HandleGesture(GamepadButtonGesture.Create(userIndex, keystroke.VirtualKey));
