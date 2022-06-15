@@ -553,13 +553,14 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         }
         else
         {
-            MediaPositionSync.Update(CurrentPosition, newPosition, PlaybackSpeed);
+            MediaPositionSync.Update(CurrentPosition, newPosition);
         }
     }
 
     private static class MediaPositionSync
     {
-        private static readonly object _lockObject = new object();
+        private static readonly object _lockObject = new();
+        private static readonly List<(float Actual, float Desired)> _list = new();
 
         private static float _desiredSpeed;
         private static float _desiredCorrection;
@@ -567,7 +568,6 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         private static float _interpolatedDesired;
 
         private static State _state;
-        private static List<(float Timestamp, float Position)> _list;
         private static bool _listFilled;
         private static int _lastItemIndex;
         private static int _statePreference;
@@ -579,8 +579,6 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
 
         public static void Reset()
         {
-            _list ??= new List<(float Timestamp, float Position)>();
-
             _list.Clear();
             _listFilled = false;
             _lastItemIndex = 0;
@@ -607,23 +605,23 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
             }
         }
 
-        public static void Update(float currentPosition, float desiredPosition, float playbackSpeed)
+        public static void Update(float currentPosition, float desiredPosition)
         {
             lock (_lockObject)
             {
-                PushPosition(desiredPosition);
-                UpdateSpeed(playbackSpeed);
+                PushPosition(currentPosition, desiredPosition);
+                UpdateSpeed();
 
                 var error = currentPosition - desiredPosition;
                 UpdateState(error);
             }
         }
 
-        private static void PushPosition(float position)
+        private static void PushPosition(float currentPosition, float desiredPosition)
         {
             if (_list.Count != 0)
             {
-                var timeSinceLast = Stopwatch.GetTimestamp() / (float)Stopwatch.Frequency - _list[_lastItemIndex].Timestamp;
+                var timeSinceLast = currentPosition - _list[_lastItemIndex].Actual;
                 if (timeSinceLast < 0.5f)
                     return;
             }
@@ -631,37 +629,37 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
             if (_listFilled)
             {
                 _lastItemIndex = (_lastItemIndex + 1) % _list.Count;
-                _list[_lastItemIndex] = (Stopwatch.GetTimestamp() / (float)Stopwatch.Frequency, position);
+                _list[_lastItemIndex] = (currentPosition, desiredPosition);
             }
             else
             {
                 _lastItemIndex = _list.Count;
-                _list.Add((Stopwatch.GetTimestamp() / (float)Stopwatch.Frequency, position));
-                _listFilled = (_list[^1].Timestamp - _list[0].Timestamp) > 10f;
+                _list.Add((currentPosition, desiredPosition));
+                _listFilled = (_list[^1].Actual - _list[0].Actual) > 10f;
             }
 
-            _interpolatedDesired = position;
+            _interpolatedDesired = desiredPosition;
         }
 
-        private static void UpdateSpeed(float playbackSpeed)
+        private static void UpdateSpeed()
         {
             _desiredSpeed =
                 _list.Count >= 2 ?
                     !_listFilled
-                    ? EnumerateSpeeds(0, _lastItemIndex, playbackSpeed)
+                    ? EnumerateSpeeds(0, _lastItemIndex)
                         .DefaultIfEmpty(1).Average()
-                    : EnumerateSpeeds((_lastItemIndex + 1) % _list.Count, _list.Count - 1, playbackSpeed)
-                        .Concat(EnumerateSpeeds(0, _lastItemIndex, playbackSpeed))
+                    : EnumerateSpeeds((_lastItemIndex + 1) % _list.Count, _list.Count - 1)
+                        .Concat(EnumerateSpeeds(0, _lastItemIndex))
                         .DefaultIfEmpty(1).Average()
                 : 1;
 
-            static IEnumerable<float> EnumerateSpeeds(int from, int to, float playbackSpeed)
+            static IEnumerable<float> EnumerateSpeeds(int from, int to)
             {
                 for (int i = from, j = from + 1; j <= to; i = j++)
                 {
-                    var (ti, pi) = _list[i];
-                    var (tj, pj) = _list[j];
-                    var speed = (pj - pi) / (playbackSpeed * (tj - ti));
+                    var (ai, di) = _list[i];
+                    var (aj, dj) = _list[j];
+                    var speed = (dj - di) / (aj - ai);
                     if (!float.IsFinite(speed))
                         continue;
 
