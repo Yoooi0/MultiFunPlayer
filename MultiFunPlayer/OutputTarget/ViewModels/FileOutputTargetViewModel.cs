@@ -55,13 +55,13 @@ public class FileOutputTargetViewModel : ThreadAbstractOutputTarget
             var baseFileName = $"MultiFunPlayer_{DateTime.Now:yyyyMMddTHHmmss}";
             foreach (var axis in EnabledAxes)
             {
-                var outputFileName = ScriptType switch
+                writers[axis] = ScriptType switch
                 {
-                    ScriptType.Funscript => $"{baseFileName}.{axis.Name}.funscript",
+                    ScriptType.Funscript => new FunscriptWriter(Path.Join(OutputDirectory.FullName, $"{baseFileName}.{axis.Name}.funscript")),
+                    ScriptType.Csv => new CsvWriter(Path.Join(OutputDirectory.FullName, $"{baseFileName}.{axis.Name}.csv")),
                     _ => throw new NotSupportedException()
-                };
 
-                writers[axis] = new FunscriptWriter(Path.Join(OutputDirectory.FullName, outputFileName));
+                };
             }
 
             Status = ConnectionStatus.Connected;

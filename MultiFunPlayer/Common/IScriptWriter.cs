@@ -58,3 +58,33 @@ public class FunscriptWriter : IScriptWriter
         GC.SuppressFinalize(this);
     }
 }
+
+public class CsvWriter : IScriptWriter
+{
+    private readonly Stream _stream;
+
+    public CsvWriter(string outputPath)
+    {
+        ArgumentNullException.ThrowIfNull(outputPath, nameof(outputPath));
+
+        _stream = new FileStream(outputPath, FileMode.CreateNew);
+        Write("position;value\n");
+    }
+
+    public void Write(float position, float value)
+        => Write($"{position.ToString(CultureInfo.InvariantCulture)};{value.ToString(CultureInfo.InvariantCulture)}\n");
+
+    private void Write(string s) => _stream.Write(Encoding.UTF8.GetBytes(s));
+
+    protected virtual void Dispose(bool disposing)
+    {
+        _stream.Flush();
+        _stream.Dispose();
+    }
+
+    public void Dispose()
+    {
+        Dispose(disposing: true);
+        GC.SuppressFinalize(this);
+    }
+}
