@@ -35,7 +35,6 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
     private readonly IMediaResourceFactory _mediaResourceFactory;
     private Thread _updateThread;
     private CancellationTokenSource _cancellationSource;
-    private float _playbackSpeedCorrection;
 
     public bool IsPlaying { get; set; }
     public float CurrentPosition { get; set; }
@@ -88,7 +87,6 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         MediaDuration = float.NaN;
         CurrentPosition = float.NaN;
         PlaybackSpeed = 1;
-        _playbackSpeedCorrection = 1;
 
         IsPlaying = false;
 
@@ -153,7 +151,10 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         bool UpdateValues()
         {
             if (IsPlaying)
-                CurrentPosition += deltaTime * PlaybackSpeed * _playbackSpeedCorrection;
+            {
+                MediaPositionSync.FixedUpdate(CurrentPosition, deltaTime * PlaybackSpeed);
+                CurrentPosition += deltaTime * PlaybackSpeed * MediaPositionSync.PlaybackSpeed;
+            }
 
             var dirty = false;
 
@@ -478,9 +479,11 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
 
         Logger.Info("Received {0} [IsPlaying: {1}]", nameof(MediaPlayingChangedMessage), message.IsPlaying);
 
-        if (IsPlaying != message.IsPlaying)
-            if (SyncSettings.SyncOnMediaPlayPause)
-                ResetSync();
+        if (SyncSettings.SyncOnMediaPlayPause)
+            ResetSync();
+
+        if (!IsPlaying && message.IsPlaying)
+            MediaPositionSync.Reset();
 
         IsPlaying = message.IsPlaying;
     }
@@ -504,17 +507,18 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
 
         Logger.Info("Received {0} [Speed: {1}]", nameof(MediaSpeedChangedMessage), message.Speed);
         PlaybackSpeed = message.Speed;
+
+        MediaPositionSync.Reset();
     }
 
     public void Handle(MediaPositionChangedMessage message)
     {
         void UpdateCurrentPosition(float newPosition)
         {
-            _playbackSpeedCorrection = 1;
-
             foreach (var axis in DeviceAxis.All)
                 Monitor.Enter(AxisStates[axis]);
 
+            MediaPositionSync.Reset();
             CurrentPosition = newPosition;
 
             foreach (var axis in DeviceAxis.All)
@@ -549,7 +553,158 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         }
         else
         {
-            _playbackSpeedCorrection = MathUtils.Clamp(_playbackSpeedCorrection + error * 0.1f, 0.9f, 1.1f);
+            MediaPositionSync.Update(CurrentPosition, newPosition, PlaybackSpeed);
+        }
+    }
+
+    private static class MediaPositionSync
+    {
+        private static readonly object _lockObject = new object();
+
+        private static float _desiredSpeed;
+        private static float _desiredCorrection;
+        private static float _currentCorrection;
+        private static float _interpolatedDesired;
+
+        private static State _state;
+        private static List<(float Timestamp, float Position)> _list;
+        private static bool _listFilled;
+        private static int _lastItemIndex;
+        private static int _statePreference;
+
+        public static float PlaybackSpeed => CorrectedDesiredSpeed * _currentCorrection;
+        public static float CorrectedDesiredSpeed => _desiredSpeed + _statePreference * 0.0005f;
+
+        static MediaPositionSync() => Reset();
+
+        public static void Reset()
+        {
+            _list ??= new List<(float Timestamp, float Position)>();
+
+            _list.Clear();
+            _listFilled = false;
+            _lastItemIndex = 0;
+
+            _desiredSpeed = 1;
+            _desiredCorrection = 1;
+            _currentCorrection = 1;
+
+            _state = State.Idle;
+            _statePreference = 0;
+        }
+
+        public static void FixedUpdate(float currentPosition, float deltaTime)
+        {
+            lock (_lockObject)
+            {
+                _currentCorrection = MathUtils.Lerp(_currentCorrection, _desiredCorrection, 0.008f);
+
+                var interpolatedCurrent = currentPosition + deltaTime * CorrectedDesiredSpeed * _currentCorrection;
+                _interpolatedDesired += deltaTime * _desiredSpeed;
+
+                var error = interpolatedCurrent - _interpolatedDesired;
+                UpdateState(error);
+            }
+        }
+
+        public static void Update(float currentPosition, float desiredPosition, float playbackSpeed)
+        {
+            lock (_lockObject)
+            {
+                PushPosition(desiredPosition);
+                UpdateSpeed(playbackSpeed);
+
+                var error = currentPosition - desiredPosition;
+                UpdateState(error);
+            }
+        }
+
+        private static void PushPosition(float position)
+        {
+            if (_list.Count != 0)
+            {
+                var timeSinceLast = Stopwatch.GetTimestamp() / (float)Stopwatch.Frequency - _list[_lastItemIndex].Timestamp;
+                if (timeSinceLast < 0.5f)
+                    return;
+            }
+
+            if (_listFilled)
+            {
+                _lastItemIndex = (_lastItemIndex + 1) % _list.Count;
+                _list[_lastItemIndex] = (Stopwatch.GetTimestamp() / (float)Stopwatch.Frequency, position);
+            }
+            else
+            {
+                _lastItemIndex = _list.Count;
+                _list.Add((Stopwatch.GetTimestamp() / (float)Stopwatch.Frequency, position));
+                _listFilled = (_list[^1].Timestamp - _list[0].Timestamp) > 10f;
+            }
+
+            _interpolatedDesired = position;
+        }
+
+        private static void UpdateSpeed(float playbackSpeed)
+        {
+            _desiredSpeed =
+                _list.Count >= 2 ?
+                    !_listFilled
+                    ? EnumerateSpeeds(0, _lastItemIndex, playbackSpeed)
+                        .DefaultIfEmpty(1).Average()
+                    : EnumerateSpeeds((_lastItemIndex + 1) % _list.Count, _list.Count - 1, playbackSpeed)
+                        .Concat(EnumerateSpeeds(0, _lastItemIndex, playbackSpeed))
+                        .DefaultIfEmpty(1).Average()
+                : 1;
+
+            static IEnumerable<float> EnumerateSpeeds(int from, int to, float playbackSpeed)
+            {
+                for (int i = from, j = from + 1; j <= to; i = j++)
+                {
+                    var (ti, pi) = _list[i];
+                    var (tj, pj) = _list[j];
+                    var speed = (pj - pi) / (playbackSpeed * (tj - ti));
+                    if (!float.IsFinite(speed))
+                        continue;
+
+                    yield return speed;
+                }
+            }
+        }
+
+        private static void UpdateState(float error)
+            => UpdateState((error, _state) switch
+            {
+                var (e, s) when e > 0 && s == State.Behind => State.Idle,
+                var (e, s) when e < 0 && s == State.Ahead => State.Idle,
+                var (e, s) when e > 0 && e > 0.020f && s == State.Idle => State.Ahead,
+                var (e, s) when e < 0 && e < -0.020f && s == State.Idle => State.Behind,
+                var (e, s) when MathF.Abs(e) < 0.005f && s != State.Idle => State.Idle,
+                var (_, s) => s
+            });
+
+        private static void UpdateState(State newState)
+        {
+            if (newState == State.Behind && _state == State.Idle)
+                _statePreference++;
+            else if (newState == State.Ahead && _state == State.Idle)
+                _statePreference--;
+
+            _statePreference = MathUtils.Clamp(_statePreference, -30, 30);
+
+            _state = newState;
+            _desiredCorrection = _state switch
+            {
+                State.Idle => 1f,
+                State.Ahead => 0.95f,
+                State.Behind => 1.05f,
+                _ => throw new NotSupportedException(),
+            };
+        }
+
+        private enum State
+        {
+            Idle,
+            Ahead,
+            Behind
         }
     }
 
