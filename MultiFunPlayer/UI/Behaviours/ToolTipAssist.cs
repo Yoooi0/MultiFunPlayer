@@ -39,7 +39,7 @@ public static class ToolTipAssist
         var placementTarget = toolTip.PlacementTarget;
         void OnPlacementTargetMouseLeave(object sender, MouseEventArgs e)
         {
-            if(placementTarget != null)
+            if (placementTarget != null)
                 placementTarget.MouseLeave -= OnPlacementTargetMouseLeave;
 
             toolTip.Visibility = Visibility.Hidden;

@@ -8,6 +8,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 
 namespace MultiFunPlayer.UI.Controls;
+
 /// <summary>
 /// Interaction logic for InterpolationPreview.xaml
 /// </summary>
@@ -87,7 +88,7 @@ public partial class InterpolationPreview : UserControl, INotifyPropertyChanged
             if (y == _keyframes.Last().Value)
                 continue;
 
-            for(var i = 0; i < 2; i++)
+            for (var i = 0; i < 2; i++)
                 if (_keyframes.Count != PointCount - 1)
                     AddKeyframe(_keyframes.Count / (PointCount - 1f), y);
         }

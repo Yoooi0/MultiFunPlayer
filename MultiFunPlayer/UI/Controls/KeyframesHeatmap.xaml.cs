@@ -296,19 +296,19 @@ public partial class KeyframesHeatmap : UserControl, INotifyPropertyChanged
 
             var startBucket = (int)MathF.Floor(prev.Position / bucketSize);
             var endBucket = (int)MathF.Floor(next.Position / bucketSize);
-            for(var index = startBucket; index < buckets.Length && index <= endBucket; index++)
+            for (var index = startBucket; index < buckets.Length && index <= endBucket; index++)
             {
                 var positionFrom = MathF.Max(index * bucketSize, prev.Position);
                 var positionTo = MathF.Min((index + 1) * bucketSize, next.Position);
                 var valueFrom = MathUtils.Map(positionFrom, prev.Position, next.Position, prev.Value, next.Value);
                 var valueTo = MathUtils.Map(positionTo, prev.Position, next.Position, prev.Value, next.Value);
 
-                if(direction > 0)
+                if (direction > 0)
                 {
                     buckets[index].Bottom.Add(valueFrom);
                     buckets[index].Top.Add(valueTo);
                 }
-                else if(direction < 0)
+                else if (direction < 0)
                 {
                     buckets[index].Top.Add(valueFrom);
                     buckets[index].Bottom.Add(valueTo);

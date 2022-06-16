@@ -282,7 +282,7 @@ public static class StreamExtensions
     {
         using var memory = new MemoryStream();
 
-        while(memory.Position < count)
+        while (memory.Position < count)
         {
             var read = await stream.ReadAsync(_readBuffer.AsMemory(0, Math.Min(_readBuffer.Length, count)), token);
             if (read == 0)

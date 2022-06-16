@@ -9,7 +9,7 @@ public class MotionProviderSelectorConverter : IMultiValueConverter
 {
     public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
     {
-        if(values.Length != 3
+        if (values.Length != 3
         || values[0] is not IMotionProviderManager manager
         || values[1] is not DeviceAxis axis
         || values[2] is not string motionProviderName)

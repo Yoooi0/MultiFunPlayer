@@ -11,8 +11,8 @@ public class ConnectionStatusToBrushConverter : IValueConverter
     public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         => value switch
         {
-            ConnectionStatus.Connected => (SolidColorBrush) Application.Current.Resources["MaterialDesignSuccessBrush"],
-            ConnectionStatus.Disconnected => (SolidColorBrush) Application.Current.Resources["MaterialDesignErrorBrush"],
+            ConnectionStatus.Connected => (SolidColorBrush)Application.Current.Resources["MaterialDesignSuccessBrush"],
+            ConnectionStatus.Disconnected => (SolidColorBrush)Application.Current.Resources["MaterialDesignErrorBrush"],
             ConnectionStatus.Connecting or ConnectionStatus.Disconnecting => new SolidColorBrush(Color.FromRgb(0xb3, 0x9c, 0x09)),
             _ => null
         };

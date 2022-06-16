@@ -12,8 +12,6 @@ namespace MultiFunPlayer;
 
 public class RootViewModel : Conductor<IScreen>.Collection.AllActive, IHandle<AppSettingsMessage>
 {
-    protected Logger Logger = LogManager.GetCurrentClassLogger();
-
     [Inject] public ScriptViewModel Script { get; set; }
     [Inject] public MediaSourceViewModel MediaSource { get; set; }
     [Inject] public OutputTargetViewModel OutputTarget { get; set; }
@@ -70,7 +68,7 @@ public class RootViewModel : Conductor<IScreen>.Collection.AllActive, IHandle<Ap
                 });
             }
         }
-        else if(message.Action == SettingsAction.Saving)
+        else if (message.Action == SettingsAction.Saving)
         {
             settings[nameof(DisablePopup)] = DisablePopup;
         }

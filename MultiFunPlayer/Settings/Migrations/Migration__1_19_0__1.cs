@@ -9,7 +9,7 @@ namespace MultiFunPlayer.Settings.Migrations;
 
 public class Migration__1_19_0__1 : AbstractConfigMigration
 {
-    private readonly Logger Logger = LogManager.GetCurrentClassLogger();
+    private Logger Logger { get; } = LogManager.GetCurrentClassLogger();
     public override int TargetVersion => 1;
 
     public override void Migrate(JObject settings)
@@ -56,7 +56,7 @@ public class Migration__1_19_0__1 : AbstractConfigMigration
     private void MigrateSerialOutputTargetSelectedComPort(JObject settings)
     {
         Logger.Info("Migrating SerialOutputTarget SelectedComPort");
-        if(settings.TryGetValue<string>("SelectedComPort", out var selectedComPort))
+        if (settings.TryGetValue<string>("SelectedComPort", out var selectedComPort))
         {
             var deviceId = GetComPortDeviceId(selectedComPort);
             if (deviceId != null)
@@ -85,7 +85,7 @@ public class Migration__1_19_0__1 : AbstractConfigMigration
             if (!binding.TryGetValue("Actions", out var actionsToken))
                 continue;
 
-            foreach(var action in actionsToken.OfType<JObject>())
+            foreach (var action in actionsToken.OfType<JObject>())
             {
                 if (!action.ContainsKey("Descriptor") || !string.Equals(action["Descriptor"].ToString(), "Serial::ComPort::Set"))
                     continue;

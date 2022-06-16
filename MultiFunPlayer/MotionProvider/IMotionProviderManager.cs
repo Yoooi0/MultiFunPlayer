@@ -21,7 +21,7 @@ public interface IMotionProviderManager : IDeviceAxisValueProvider
 
 public class MotionProviderManager : IMotionProviderManager, IHandle<AppSettingsMessage>
 {
-    protected Logger Logger = LogManager.GetCurrentClassLogger();
+    private Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
     private readonly IEventAggregator _eventAggregator;
     private readonly HashSet<string> _motionProviderNames;
@@ -100,7 +100,7 @@ public class MotionProviderManager : IMotionProviderManager, IHandle<AppSettings
 
     public void RegisterShortcuts(IShortcutManager s)
     {
-        foreach(var name in MotionProviderNames)
+        foreach (var name in MotionProviderNames)
         {
             #region MotionProvider::Speed
             s.RegisterAction($"MotionProvider::{name}::Speed::Offset",

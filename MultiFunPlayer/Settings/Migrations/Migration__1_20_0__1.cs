@@ -7,7 +7,7 @@ namespace MultiFunPlayer.Settings.Migrations;
 
 public class Migration__1_20_0__1 : AbstractConfigMigration
 {
-    private readonly Logger Logger = LogManager.GetCurrentClassLogger();
+    private Logger Logger { get; } = LogManager.GetCurrentClassLogger();
     public override int TargetVersion => 3;
 
     public override void Migrate(JObject settings)
@@ -34,7 +34,7 @@ public class Migration__1_20_0__1 : AbstractConfigMigration
         };
 
         var items = new List<JObject>();
-        foreach(var (name, type) in nameToTypeMap)
+        foreach (var (name, type) in nameToTypeMap)
         {
             if (!settings.ContainsKey(name))
                 continue;

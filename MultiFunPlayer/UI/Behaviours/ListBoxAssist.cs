@@ -80,7 +80,7 @@ public static class ListBoxAssist
                     foreach (var item in e.NewItems)
                         selectedItems.Add(item);
             }
-            else if(e.Action == NotifyCollectionChangedAction.Reset)
+            else if (e.Action == NotifyCollectionChangedAction.Reset)
             {
                 selectedItems.Clear();
 

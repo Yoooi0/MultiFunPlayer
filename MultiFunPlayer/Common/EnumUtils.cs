@@ -9,12 +9,12 @@ public static class EnumUtils
         if (!type.IsEnum)
             throw new ArgumentException($"Generic agrgument \"{nameof(T)}\" must be an enum type.");
 
-        if(nullableType == null)
-            return (T[]) Enum.GetValues(type);
+        if (nullableType == null)
+            return (T[])Enum.GetValues(type);
 
         var result = new List<T>();
-        foreach(var value in Enum.GetValues(type))
-            result.Add((T) value);
+        foreach (var value in Enum.GetValues(type))
+            result.Add((T)value);
 
         return result.ToArray();
     }

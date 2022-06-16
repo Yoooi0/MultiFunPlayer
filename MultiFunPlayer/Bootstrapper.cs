@@ -213,7 +213,7 @@ public class Bootstrapper : Bootstrapper<RootViewModel>
         return dirty;
     }
 
-    private static bool SetupLoging(JObject settings)
+    private bool SetupLoging(JObject settings)
     {
         var dirty = false;
         if (!settings.ContainsKey("LogLevel"))

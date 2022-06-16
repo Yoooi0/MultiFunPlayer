@@ -16,7 +16,7 @@ namespace MultiFunPlayer.MediaSource.ViewModels;
 [DisplayName("MPC-HC")]
 public class MpcMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlayPauseMessage>, IHandle<MediaSeekMessage>
 {
-    protected Logger Logger = LogManager.GetCurrentClassLogger();
+    private Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
     private readonly IEventAggregator _eventAggregator;
     private readonly Channel<object> _writeMessageChannel;
@@ -56,7 +56,7 @@ public class MpcMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlayPau
             response.EnsureSuccessStatusCode();
 
             Status = ConnectionStatus.Connected;
-            while (_writeMessageChannel.Reader.TryRead(out _)) ;
+            while (_writeMessageChannel.Reader.TryRead(out _));
 
             using var cancellationSource = CancellationTokenSource.CreateLinkedTokenSource(token);
             var task = await Task.WhenAny(ReadAsync(client, cancellationSource.Token), WriteAsync(client, cancellationSource.Token));

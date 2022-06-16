@@ -36,7 +36,7 @@ public interface IFourSettingsShortcutActionBuilder<T0, T1, T2, T3> : IShortcutA
 
 public class ShortcutBuilder : INoSettingsShortcutActionBuilder
 {
-    public readonly IShortcutActionDescriptor _descriptor;
+    private readonly IShortcutActionDescriptor _descriptor;
     private Action<IInputGesture> _callback;
 
     public ShortcutBuilder(IShortcutActionDescriptor descriptor)
@@ -62,8 +62,8 @@ public class ShortcutBuilder : INoSettingsShortcutActionBuilder
 
 public class ShortcutBuilder<T0> : IOneSettingShortcutActionBuilder<T0>
 {
-    public readonly IShortcutActionDescriptor _descriptor;
-    public readonly IShortcutSettingBuilder<T0> _setting0;
+    private readonly IShortcutActionDescriptor _descriptor;
+    private readonly IShortcutSettingBuilder<T0> _setting0;
     private Action<IInputGesture, T0> _callback;
 
     public ShortcutBuilder(IShortcutActionDescriptor descriptor, IShortcutSettingBuilder<T0> setting0)
@@ -90,9 +90,9 @@ public class ShortcutBuilder<T0> : IOneSettingShortcutActionBuilder<T0>
 
 public class ShortcutBuilder<T0, T1> : ITwoSettingsShortcutActionBuilder<T0, T1>
 {
-    public readonly IShortcutActionDescriptor _descriptor;
-    public readonly IShortcutSettingBuilder<T0> _setting0;
-    public readonly IShortcutSettingBuilder<T1> _setting1;
+    private readonly IShortcutActionDescriptor _descriptor;
+    private readonly IShortcutSettingBuilder<T0> _setting0;
+    private readonly IShortcutSettingBuilder<T1> _setting1;
     private Action<IInputGesture, T0, T1> _callback;
 
     public ShortcutBuilder(IShortcutActionDescriptor descriptor, IShortcutSettingBuilder<T0> setting0, IShortcutSettingBuilder<T1> setting1)
@@ -120,10 +120,10 @@ public class ShortcutBuilder<T0, T1> : ITwoSettingsShortcutActionBuilder<T0, T1>
 
 public class ShortcutBuilder<T0, T1, T2> : IThreeSettingsShortcutActionBuilder<T0, T1, T2>
 {
-    public readonly IShortcutActionDescriptor _descriptor;
-    public readonly IShortcutSettingBuilder<T0> _setting0;
-    public readonly IShortcutSettingBuilder<T1> _setting1;
-    public readonly IShortcutSettingBuilder<T2> _setting2;
+    private readonly IShortcutActionDescriptor _descriptor;
+    private readonly IShortcutSettingBuilder<T0> _setting0;
+    private readonly IShortcutSettingBuilder<T1> _setting1;
+    private readonly IShortcutSettingBuilder<T2> _setting2;
     private Action<IInputGesture, T0, T1, T2> _callback;
 
     public ShortcutBuilder(IShortcutActionDescriptor descriptor, IShortcutSettingBuilder<T0> setting0, IShortcutSettingBuilder<T1> setting1, IShortcutSettingBuilder<T2> setting2)
@@ -152,11 +152,11 @@ public class ShortcutBuilder<T0, T1, T2> : IThreeSettingsShortcutActionBuilder<T
 
 public class ShortcutBuilder<T0, T1, T2, T3> : IFourSettingsShortcutActionBuilder<T0, T1, T2, T3>
 {
-    public readonly IShortcutActionDescriptor _descriptor;
-    public readonly IShortcutSettingBuilder<T0> _setting0;
-    public readonly IShortcutSettingBuilder<T1> _setting1;
-    public readonly IShortcutSettingBuilder<T2> _setting2;
-    public readonly IShortcutSettingBuilder<T3> _setting3;
+    private readonly IShortcutActionDescriptor _descriptor;
+    private readonly IShortcutSettingBuilder<T0> _setting0;
+    private readonly IShortcutSettingBuilder<T1> _setting1;
+    private readonly IShortcutSettingBuilder<T2> _setting2;
+    private readonly IShortcutSettingBuilder<T3> _setting3;
     private Action<IInputGesture, T0, T1, T2, T3> _callback;
 
     public ShortcutBuilder(IShortcutActionDescriptor descriptor, IShortcutSettingBuilder<T0> setting0, IShortcutSettingBuilder<T1> setting1, IShortcutSettingBuilder<T2> setting2, IShortcutSettingBuilder<T3> setting3)

@@ -19,7 +19,7 @@ public class MotionProviderFactory : IMotionProviderFactory
     }
 
     public IMotionProvider CreateMotionProvider(Type type, DeviceAxis target)
-        => (IMotionProvider) Activator.CreateInstance(type, new object[] { target, _eventAggregator });
+        => (IMotionProvider)Activator.CreateInstance(type, new object[] { target, _eventAggregator });
 
     public IEnumerable<IMotionProvider> CreateMotionProviderCollection(DeviceAxis target)
         => ReflectionUtils.FindImplementations<IMotionProvider>().Select(t => CreateMotionProvider(t, target));

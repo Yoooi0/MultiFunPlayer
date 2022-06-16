@@ -16,7 +16,7 @@ namespace MultiFunPlayer.OutputTarget.ViewModels;
 [DisplayName("Pipe")]
 public class PipeOutputTargetViewModel : ThreadAbstractOutputTarget
 {
-    protected Logger Logger = LogManager.GetCurrentClassLogger();
+    private Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
     public override ConnectionStatus Status { get; protected set; }
 

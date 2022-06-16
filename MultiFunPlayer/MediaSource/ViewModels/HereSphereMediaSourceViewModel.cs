@@ -20,7 +20,7 @@ namespace MultiFunPlayer.MediaSource.ViewModels;
 [DisplayName("HereSphere")]
 public class HereSphereMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlayPauseMessage>, IHandle<MediaSeekMessage>
 {
-    protected Logger Logger = LogManager.GetCurrentClassLogger();
+    private Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
     private readonly IEventAggregator _eventAggregator;
     private readonly Channel<object> _writeMessageChannel;
@@ -67,7 +67,7 @@ public class HereSphereMediaSourceViewModel : AbstractMediaSource, IHandle<Media
             using var stream = client.GetStream();
 
             Status = ConnectionStatus.Connected;
-            while (_writeMessageChannel.Reader.TryRead(out _)) ;
+            while (_writeMessageChannel.Reader.TryRead(out _));
 
             using var cancellationSource = CancellationTokenSource.CreateLinkedTokenSource(token);
             var task = await Task.WhenAny(ReadAsync(client, stream, cancellationSource.Token), WriteAsync(client, stream, cancellationSource.Token));

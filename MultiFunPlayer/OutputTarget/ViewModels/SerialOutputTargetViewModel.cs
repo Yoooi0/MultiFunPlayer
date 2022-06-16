@@ -20,7 +20,7 @@ public class SerialOutputTargetViewModel : ThreadAbstractOutputTarget
 {
     private CancellationTokenSource _cancellationSource;
 
-    protected Logger Logger = LogManager.GetCurrentClassLogger();
+    private Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
     public override ConnectionStatus Status { get; protected set; }
 
@@ -86,7 +86,7 @@ public class SerialOutputTargetViewModel : ThreadAbstractOutputTarget
     private void SelectSerialPortByDeviceId(string deviceId)
     {
         SelectedSerialPort = SerialPorts.FirstOrDefault(p => string.Equals(p.DeviceID, deviceId, StringComparison.Ordinal));
-        if(SelectedSerialPort == null)
+        if (SelectedSerialPort == null)
             SelectedSerialPortDeviceId = deviceId;
     }
 

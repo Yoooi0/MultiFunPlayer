@@ -150,8 +150,8 @@ public class OpenSimplex
     private const int PSIZE = 2048;
     private const int PMASK = PSIZE - 1;
 
-    private readonly static LatticePoint[] LatticeLookup = new LatticePoint[8 * 4];
-    private readonly static Gradient[] GradLookup = new Gradient[PSIZE];
+    private static readonly LatticePoint[] LatticeLookup = new LatticePoint[8 * 4];
+    private static readonly Gradient[] GradLookup = new Gradient[PSIZE];
 
     private readonly short[] _perm;
     private readonly Gradient[] _grad;

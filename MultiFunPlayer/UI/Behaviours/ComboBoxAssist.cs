@@ -15,7 +15,7 @@ public static class ComboBoxAssist
             typeof(ICommand), typeof(ComboBoxAssist),
                 new PropertyMetadata(null, OnPreviewSelectionChangedChanged));
 
-    public static ICommand GetPreviewSelectionChanged (DependencyObject dp)
+    public static ICommand GetPreviewSelectionChanged(DependencyObject dp)
         => (ICommand)dp.GetValue(PreviewSelectionChangedProperty);
 
     public static void SetPreviewSelectionChanged(DependencyObject dp, ICommand value)

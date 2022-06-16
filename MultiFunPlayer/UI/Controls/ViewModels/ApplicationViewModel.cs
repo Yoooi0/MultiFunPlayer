@@ -10,7 +10,7 @@ namespace MultiFunPlayer.UI.Controls.ViewModels;
 
 public class ApplicationViewModel : Screen, IHandle<AppSettingsMessage>
 {
-    protected Logger Logger = LogManager.GetCurrentClassLogger();
+    private Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
     public ObservableConcurrentCollection<LogLevel> LogLevels { get; }
     public ObservableConcurrentCollection<string> DeviceTypes { get; }
@@ -53,7 +53,7 @@ public class ApplicationViewModel : Screen, IHandle<AppSettingsMessage>
             message.Settings[nameof(SelectedDevice)] = JToken.FromObject(SelectedDevice);
             message.Settings[nameof(AlwaysOnTop)] = JToken.FromObject(AlwaysOnTop);
 
-            if(SelectedLogLevel != null)
+            if (SelectedLogLevel != null)
                 message.Settings["LogLevel"] = JToken.FromObject(SelectedLogLevel);
         }
         else if (message.Action == SettingsAction.Loading)

@@ -14,7 +14,7 @@ namespace MultiFunPlayer.OutputTarget.ViewModels;
 [DisplayName("File")]
 public class FileOutputTargetViewModel : ThreadAbstractOutputTarget
 {
-    protected Logger Logger = LogManager.GetCurrentClassLogger();
+    private Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
     public override ConnectionStatus Status { get; protected set; }
 
@@ -60,7 +60,6 @@ public class FileOutputTargetViewModel : ThreadAbstractOutputTarget
                     ScriptType.Funscript => new FunscriptWriter(Path.Join(OutputDirectory.FullName, $"{baseFileName}.{axis.Name}.funscript")),
                     ScriptType.Csv => new CsvWriter(Path.Join(OutputDirectory.FullName, $"{baseFileName}.{axis.Name}.csv")),
                     _ => throw new NotSupportedException()
-
                 };
             }
 
@@ -86,7 +85,7 @@ public class FileOutputTargetViewModel : ThreadAbstractOutputTarget
                 UpdateValues();
 
                 currentTime += stopwatch.ElapsedTicks / (float)Stopwatch.Frequency;
-                foreach(var axis in EnabledAxes)
+                foreach (var axis in EnabledAxes)
                     writers[axis].Write(currentTime, Values[axis]);
             }
         }
@@ -122,7 +121,7 @@ public class FileOutputTargetViewModel : ThreadAbstractOutputTarget
 
         if (action == SettingsAction.Saving)
         {
-            if(OutputDirectory != null)
+            if (OutputDirectory != null)
                 settings[nameof(OutputDirectory)] = JValue.FromObject(OutputDirectory);
             settings[nameof(ScriptType)] = new JValue(ScriptType);
             settings[nameof(EnabledAxes)] = JArray.FromObject(EnabledAxes);

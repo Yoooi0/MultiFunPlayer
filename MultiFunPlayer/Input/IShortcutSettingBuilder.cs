@@ -15,9 +15,9 @@ public interface IShortcutSettingBuilder<T>
 public class ShortcutSettingBuilder<T> : IShortcutSettingBuilder<T>
 {
     private T _defaultValue;
-    public string _description;
-    public string _label;
-    public ObservableConcurrentCollection<T> _itemsSource;
+    private string _description;
+    private string _label;
+    private ObservableConcurrentCollection<T> _itemsSource;
     private string _stringFormat;
 
     public IShortcutSetting<T> Build()

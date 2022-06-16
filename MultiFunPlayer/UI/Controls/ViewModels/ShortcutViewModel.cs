@@ -214,7 +214,7 @@ public class ShortcutViewModel : Screen, IHandle<AppSettingsMessage>, IDisposabl
         var tryCount = 0;
         var gesture = default(IInputGesture);
 
-        while (_captureGestureChannel.Reader.TryRead(out var _)) ;
+        while (_captureGestureChannel.Reader.TryRead(out var _));
 
         IsCapturingGesture = true;
 

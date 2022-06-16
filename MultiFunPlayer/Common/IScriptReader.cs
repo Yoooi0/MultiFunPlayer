@@ -1,5 +1,4 @@
 ﻿using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using System.Globalization;
 using System.IO;
 using System.Text;
@@ -58,7 +57,7 @@ public class FunscriptReader : IScriptReader
             IsRawCollection = isRaw
         };
 
-        foreach(var action in actions)
+        foreach (var action in actions)
         {
             var position = action.At / 1000;
             if (position < 0)

@@ -58,7 +58,7 @@ public partial class DraggablePointCanvas : Canvas, INotifyPropertyChanged
         if (d is not DraggablePointCanvas @this)
             return;
 
-        if(e.OldValue is INotifyCollectionChanged oldCollection)
+        if (e.OldValue is INotifyCollectionChanged oldCollection)
             oldCollection.CollectionChanged -= @this.OnPointsCollectionChanged;
         if (e.NewValue is INotifyCollectionChanged newCollection)
             newCollection.CollectionChanged += @this.OnPointsCollectionChanged;
@@ -188,14 +188,14 @@ public partial class DraggablePointCanvas : Canvas, INotifyPropertyChanged
                 Points.Add(new Point());
         }
 
-        var orderedPoints = Children.OfType<DraggablePoint>().OrderBy(p => p.Position.X) .ToList();
+        var orderedPoints = Children.OfType<DraggablePoint>().OrderBy(p => p.Position.X).ToList();
 
         Children.Clear();
         for (var i = 0; i < orderedPoints.Count; i++)
         {
             Children.Insert(i, orderedPoints[i]);
 
-            if(Points != null)
+            if (Points != null)
                 Points[i] = orderedPoints[i].Position;
         }
     }

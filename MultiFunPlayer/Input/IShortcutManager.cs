@@ -73,7 +73,7 @@ public class ShortcutManager : IShortcutManager
         AvailableActions.Remove(actionDescriptor);
         _actionBuilders.Remove(actionDescriptor);
 
-        foreach(var (gesture, assignedActions) in Bindings)
+        foreach (var (gesture, assignedActions) in Bindings)
             foreach (var action in assignedActions.Where(a => actionDescriptor.Equals(a.Descriptor)).ToList())
                 assignedActions.Remove(action);
     }

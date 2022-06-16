@@ -34,7 +34,7 @@ public class Migration__1_21_0__1 : AbstractConfigMigration
         Logger.Info("Migrating UriToLocalMediaPathModifierViewModel Settings");
 
         foreach (var modifier in settings.SelectTokens("$.Script.VideoPathModifiers[?(@.$type =~ /.*UriToLocalMediaPathModifierViewModel.*/i)]").OfType<JObject>())
-            if(modifier.RenameProperty("VideoDirectory", "MediaDirectory"))
+            if (modifier.RenameProperty("VideoDirectory", "MediaDirectory"))
                 Logger.Info("Migrated from \"VideoDirectory\" to \"MediaDirectory\"");
     }
 
@@ -50,7 +50,7 @@ public class Migration__1_21_0__1 : AbstractConfigMigration
     {
         Logger.Info("Migrating Script Settings");
 
-        if(settings.RenameProperty("VideoPathModifiers", "MediaPathModifiers"))
+        if (settings.RenameProperty("VideoPathModifiers", "MediaPathModifiers"))
             Logger.Info("Migrated from \"VideoPathModifiers\" to \"MediaPathModifiers\"");
 
         if (settings.RenameProperty("VideoContentVisible", "MediaContentVisible"))

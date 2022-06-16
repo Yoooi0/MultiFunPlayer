@@ -19,7 +19,7 @@ namespace MultiFunPlayer.MediaSource.ViewModels;
 [DisplayName("MPV")]
 public class MpvMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlayPauseMessage>, IHandle<MediaSeekMessage>
 {
-    protected Logger Logger = LogManager.GetCurrentClassLogger();
+    private Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
     private readonly string _pipeName = "multifunplayer-mpv";
     private readonly IEventAggregator _eventAggregator;
@@ -90,7 +90,7 @@ public class MpvMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlayPau
                 await writer.WriteLineAsync("{ \"command\": [\"observe_property_string\", 5, \"speed\"] }");
 
                 Status = ConnectionStatus.Connected;
-                while (_writeMessageChannel.Reader.TryRead(out _)) ;
+                while (_writeMessageChannel.Reader.TryRead(out _));
 
                 using var cancellationSource = CancellationTokenSource.CreateLinkedTokenSource(token);
                 var task = await Task.WhenAny(ReadAsync(client, reader, cancellationSource.Token), WriteAsync(client, writer, cancellationSource.Token));

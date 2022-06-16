@@ -193,7 +193,7 @@ public abstract class AbstractOutputTarget : Screen, IOutputTarget
                   .WithCallback((_, updateRate) =>
                   {
                       var interval = 1000f / updateRate;
-                      UpdateInterval = (int) UpdateIntervalTicks.OrderBy(x => Math.Abs(interval - x)).First();
+                      UpdateInterval = (int)UpdateIntervalTicks.OrderBy(x => Math.Abs(interval - x)).First();
                   }));
         #endregion
 
@@ -341,7 +341,7 @@ public abstract class ThreadAbstractOutputTarget : AbstractOutputTarget
             return;
 
         Status = ConnectionStatus.Connecting;
-        if(!await OnConnectingAsync())
+        if (!await OnConnectingAsync())
             _ = Execute.OnUIThreadAsync(async () => await DisconnectAsync().ConfigureAwait(true));
     }
 

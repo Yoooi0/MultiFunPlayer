@@ -9,7 +9,7 @@ namespace MultiFunPlayer.Settings.Migrations;
 
 public class Migration__1_19_0__2 : AbstractConfigMigration
 {
-    private readonly Logger Logger = LogManager.GetCurrentClassLogger();
+    private Logger Logger { get; } = LogManager.GetCurrentClassLogger();
     public override int TargetVersion => 2;
 
     public override void Migrate(JObject settings)
@@ -32,7 +32,7 @@ public class Migration__1_19_0__2 : AbstractConfigMigration
             ["MultiFunPlayer.ViewModels.ShortcutViewModel"] = $"{typeof(ShortcutViewModel).FullName}"
         };
 
-        foreach(var (from, to) in filterMap)
+        foreach (var (from, to) in filterMap)
         {
             if (!settings.ContainsKey(from))
                 continue;

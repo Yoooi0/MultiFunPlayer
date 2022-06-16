@@ -10,7 +10,7 @@ namespace MultiFunPlayer.UI.Controls.ViewModels;
 
 public class OutputTargetViewModel : Conductor<IOutputTarget>.Collection.OneActive, IHandle<AppSettingsMessage>, IDisposable
 {
-    protected Logger Logger = LogManager.GetCurrentClassLogger();
+    private Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
     private readonly IShortcutManager _shortcutManager;
     private readonly IOutputTargetFactory _outputTargetFactory;
@@ -146,7 +146,7 @@ public class OutputTargetViewModel : Conductor<IOutputTarget>.Collection.OneActi
 
             if (settings.TryGetValue(nameof(Items), out var itemsToken) && itemsToken is JArray items)
             {
-                foreach(var item in items.OfType<JObject>())
+                foreach (var item in items.OfType<JObject>())
                 {
                     var type = item.GetTypeProperty();
                     var index = item["$index"].ToObject<int>();

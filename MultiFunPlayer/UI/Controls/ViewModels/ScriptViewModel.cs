@@ -29,7 +29,7 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
     IHandle<MediaPositionChangedMessage>, IHandle<MediaPlayingChangedMessage>, IHandle<MediaPathChangedMessage>, IHandle<MediaDurationChangedMessage>,
     IHandle<MediaSpeedChangedMessage>, IHandle<AppSettingsMessage>, IHandle<SyncRequestMessage>, IHandle<ScriptLoadMessage>
 {
-    protected Logger Logger = LogManager.GetCurrentClassLogger();
+    private Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
     private readonly IEventAggregator _eventAggregator;
     private readonly IMediaResourceFactory _mediaResourceFactory;
@@ -173,7 +173,7 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                     context.IsDirty |= UpdateScript(axis, state, settings, ref context);
                     context.IsDirty |= UpdateMotionProvider(axis, state, settings, ref context);
 
-                    if(!context.IsDirty && float.IsFinite(state.OverrideValue))
+                    if (!context.IsDirty && float.IsFinite(state.OverrideValue))
                     {
                         context.IsDirty = MathF.Abs(context.LastValue - state.OverrideValue) > 0.000001f;
                         context.Value = state.OverrideValue;
@@ -981,7 +981,7 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
             model.Script = script;
         }
 
-        if(script != null)
+        if (script != null)
             Logger.Info("Set {0} script to \"{1}\" from \"{2}\"", axis, script.Name, script.Source);
 
         UpdateLinkedScriptsTo(axis);
@@ -1036,7 +1036,7 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
 
         SeekMediaToTime(skipPosition);
     }
-    #endregion 
+    #endregion
 
     #region Media
     public void OnOpenMediaLocation()
@@ -1140,7 +1140,7 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
             case nameof(ViewModels.AxisSettings.Inverted):
             case nameof(ViewModels.AxisSettings.Bypass):
                 var (axis, _) = AxisSettings.FirstOrDefault(x => x.Value == settings);
-                if(axis != null)
+                if (axis != null)
                     ResetSync(true, axis);
                 break;
         }
@@ -1272,7 +1272,7 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         bool IsCircularLink(DeviceAxis from, DeviceAxis to)
         {
             var current = from;
-            while(current != null)
+            while (current != null)
             {
                 if (current == to)
                 {
@@ -1302,7 +1302,7 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         if (sender is not FrameworkElement element || element.DataContext is not KeyValuePair<DeviceAxis, AxisModel> pair)
             return;
 
-        var(axis, model) = pair;
+        var (axis, model) = pair;
         if (e.AddedItems.TryGet<DeviceAxis>(0, out var added) && axis == added)
             model.Settings.SmartLimitInputAxis = e.RemovedItems.TryGet<DeviceAxis>(0, out var removed) ? removed : null;
 
@@ -1364,7 +1364,7 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         var modifier = (IMediaPathModifier)Activator.CreateInstance(type);
         MediaPathModifiers.Add(modifier);
 
-        if(MediaResource != null)
+        if (MediaResource != null)
             Handle(new MediaPathChangedMessage(MediaResource.OriginalPath));
     }
 

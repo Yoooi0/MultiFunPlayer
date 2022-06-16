@@ -19,7 +19,7 @@ namespace MultiFunPlayer.OutputTarget.ViewModels;
 [DisplayName("Buttplug.io")]
 public class ButtplugOutputTargetViewModel : AsyncAbstractOutputTarget
 {
-    protected Logger Logger = LogManager.GetCurrentClassLogger();
+    private Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
     private readonly List<ServerMessage.Types.MessageAttributeType> _supportedMessages = new()
     {
@@ -199,7 +199,7 @@ public class ButtplugOutputTargetViewModel : AsyncAbstractOutputTarget
                                 || (currentValue == 0 && lastValue != 0)
                                 || MathF.Abs(lastValue - currentValue) >= 0.005f;
 
-                if(shouldUpdate)
+                if (shouldUpdate)
                     lastSentValues[axis] = currentValue;
 
                 return shouldUpdate;
@@ -269,7 +269,7 @@ public class ButtplugOutputTargetViewModel : AsyncAbstractOutputTarget
             {
                 var deviceIndex = indexGroup.Key;
                 var device = GetDeviceByNameAndIndex(deviceName, deviceIndex);
-                if(device == null)
+                if (device == null)
                     return Enumerable.Empty<Task>();
 
                 return indexGroup.GroupBy(m => m.MessageType).Select(typeGroup =>

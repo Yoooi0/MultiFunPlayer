@@ -16,7 +16,7 @@ namespace MultiFunPlayer.OutputTarget.ViewModels;
 [DisplayName("WebSocket")]
 public class WebSocketOutputTargetViewModel : AsyncAbstractOutputTarget
 {
-    protected Logger Logger = LogManager.GetCurrentClassLogger();
+    private Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
     public override ConnectionStatus Status { get; protected set; }
 
@@ -106,7 +106,7 @@ public class WebSocketOutputTargetViewModel : AsyncAbstractOutputTarget
                 {
                     result = await client.ReceiveAsync(readBuffer, token);
                     memory.Write(readBuffer, 0, result.Count);
-                } while(!token.IsCancellationRequested && !result.EndOfMessage);
+                } while (!token.IsCancellationRequested && !result.EndOfMessage);
 
                 var message = Encoding.UTF8.GetString(memory.GetBuffer());
                 Logger.Trace("Received \"{0}\" from \"{1}\"", message, Name);
