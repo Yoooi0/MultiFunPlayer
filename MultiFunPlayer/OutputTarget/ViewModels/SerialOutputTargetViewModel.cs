@@ -271,6 +271,12 @@ public class SerialOutputTargetViewModel : ThreadAbstractOutputTarget
 
         public static SerialPortInfo FromManagementObject(ManagementObject o)
         {
+            T GetPropertyValueOrDefault<T>(string propertyName, T defaultValue = default)
+            {
+                try { return (T)o.GetPropertyValue(propertyName); }
+                catch { return defaultValue; }
+            }
+
             try
             {
                 var name = o.GetPropertyValue(nameof(Name)) as string;
@@ -282,12 +288,12 @@ public class SerialOutputTargetViewModel : ThreadAbstractOutputTarget
 
                 return new SerialPortInfo()
                 {
-                    Caption = o.GetPropertyValue(nameof(Caption)) as string,
-                    ClassGuid = o.GetPropertyValue(nameof(ClassGuid)) as string,
-                    Description = o.GetPropertyValue(nameof(Description)) as string,
-                    Manufacturer = o.GetPropertyValue(nameof(Manufacturer)) as string,
-                    PNPClass = o.GetPropertyValue(nameof(PNPClass)) as string,
-                    PNPDeviceID = o.GetPropertyValue(nameof(PNPDeviceID)) as string,
+                    Caption = GetPropertyValueOrDefault<string>(nameof(Caption)),
+                    ClassGuid = GetPropertyValueOrDefault<string>(nameof(ClassGuid)),
+                    Description = GetPropertyValueOrDefault<string>(nameof(Description)),
+                    Manufacturer = GetPropertyValueOrDefault<string>(nameof(Manufacturer)),
+                    PNPClass = GetPropertyValueOrDefault<string>(nameof(PNPClass)),
+                    PNPDeviceID = GetPropertyValueOrDefault<string>(nameof(PNPDeviceID)),
                     Name = name,
                     DeviceID = deviceId,
                     PortName = portName
@@ -295,7 +301,7 @@ public class SerialOutputTargetViewModel : ThreadAbstractOutputTarget
             }
             catch (Exception e)
             {
-                Logger.Warn(e, "Failed to create SerialPortInfo");
+                Logger.Warn(e, "Failed to create SerialPortInfo [{0}]", o?.ToString());
             }
 
             return null;
