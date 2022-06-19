@@ -23,7 +23,7 @@ public enum ProtocolType
 [DisplayName("Network")]
 public class NetworkOutputTargetViewModel : ThreadAbstractOutputTarget
 {
-    private Logger Logger { get; } = LogManager.GetCurrentClassLogger();
+    private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
     public override ConnectionStatus Status { get; protected set; }
 

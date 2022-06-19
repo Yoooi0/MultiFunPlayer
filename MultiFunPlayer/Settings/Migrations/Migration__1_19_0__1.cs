@@ -9,7 +9,7 @@ namespace MultiFunPlayer.Settings.Migrations;
 
 public class Migration__1_19_0__1 : AbstractConfigMigration
 {
-    private Logger Logger { get; } = LogManager.GetCurrentClassLogger();
+    private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
     public override int TargetVersion => 1;
 
     public override void Migrate(JObject settings)

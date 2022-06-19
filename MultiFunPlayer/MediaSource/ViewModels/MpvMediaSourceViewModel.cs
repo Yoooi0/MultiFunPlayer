@@ -19,7 +19,7 @@ namespace MultiFunPlayer.MediaSource.ViewModels;
 [DisplayName("MPV")]
 public class MpvMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlayPauseMessage>, IHandle<MediaSeekMessage>
 {
-    private Logger Logger { get; } = LogManager.GetCurrentClassLogger();
+    private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
     private readonly string _pipeName = "multifunplayer-mpv";
     private readonly IEventAggregator _eventAggregator;

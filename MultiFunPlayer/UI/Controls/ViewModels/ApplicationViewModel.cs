@@ -10,7 +10,7 @@ namespace MultiFunPlayer.UI.Controls.ViewModels;
 
 public class ApplicationViewModel : Screen, IHandle<AppSettingsMessage>
 {
-    private Logger Logger { get; } = LogManager.GetCurrentClassLogger();
+    private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
     public ObservableConcurrentCollection<LogLevel> LogLevels { get; }
     public ObservableConcurrentCollection<string> DeviceTypes { get; }

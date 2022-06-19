@@ -20,7 +20,7 @@ public class SerialOutputTargetViewModel : ThreadAbstractOutputTarget
 {
     private CancellationTokenSource _cancellationSource;
 
-    private Logger Logger { get; } = LogManager.GetCurrentClassLogger();
+    private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
     public override ConnectionStatus Status { get; protected set; }
 

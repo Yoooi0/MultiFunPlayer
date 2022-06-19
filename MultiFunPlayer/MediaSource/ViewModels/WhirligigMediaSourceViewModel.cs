@@ -18,7 +18,7 @@ namespace MultiFunPlayer.MediaSource.ViewModels;
 [DisplayName("Whirligig")]
 public class WhirligigMediaSourceViewModel : AbstractMediaSource
 {
-    private Logger Logger { get; } = LogManager.GetCurrentClassLogger();
+    private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
     private readonly IEventAggregator _eventAggregator;
 

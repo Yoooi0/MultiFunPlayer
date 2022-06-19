@@ -14,7 +14,7 @@ namespace MultiFunPlayer.OutputTarget.ViewModels;
 [DisplayName("File")]
 public class FileOutputTargetViewModel : ThreadAbstractOutputTarget
 {
-    private Logger Logger { get; } = LogManager.GetCurrentClassLogger();
+    private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
     public override ConnectionStatus Status { get; protected set; }
 

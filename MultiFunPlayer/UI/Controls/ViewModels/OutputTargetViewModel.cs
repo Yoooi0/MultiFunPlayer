@@ -10,7 +10,7 @@ namespace MultiFunPlayer.UI.Controls.ViewModels;
 
 public class OutputTargetViewModel : Conductor<IOutputTarget>.Collection.OneActive, IHandle<AppSettingsMessage>, IDisposable
 {
-    private Logger Logger { get; } = LogManager.GetCurrentClassLogger();
+    private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
     private readonly IShortcutManager _shortcutManager;
     private readonly IOutputTargetFactory _outputTargetFactory;

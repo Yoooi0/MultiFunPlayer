@@ -19,7 +19,7 @@ namespace MultiFunPlayer.OutputTarget.ViewModels;
 [DisplayName("Buttplug.io")]
 public class ButtplugOutputTargetViewModel : AsyncAbstractOutputTarget
 {
-    private Logger Logger { get; } = LogManager.GetCurrentClassLogger();
+    private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
     private readonly List<ServerMessage.Types.MessageAttributeType> _supportedMessages = new()
     {

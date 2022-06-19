@@ -21,7 +21,7 @@ public interface IMotionProviderManager : IDeviceAxisValueProvider
 
 public class MotionProviderManager : IMotionProviderManager, IHandle<AppSettingsMessage>
 {
-    private Logger Logger { get; } = LogManager.GetCurrentClassLogger();
+    private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
     private readonly IEventAggregator _eventAggregator;
     private readonly HashSet<string> _motionProviderNames;

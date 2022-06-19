@@ -29,7 +29,7 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
     IHandle<MediaPositionChangedMessage>, IHandle<MediaPlayingChangedMessage>, IHandle<MediaPathChangedMessage>, IHandle<MediaDurationChangedMessage>,
     IHandle<MediaSpeedChangedMessage>, IHandle<AppSettingsMessage>, IHandle<SyncRequestMessage>, IHandle<ScriptLoadMessage>
 {
-    private Logger Logger { get; } = LogManager.GetCurrentClassLogger();
+    private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
     private readonly IEventAggregator _eventAggregator;
     private readonly IMediaResourceFactory _mediaResourceFactory;

@@ -16,7 +16,7 @@ namespace MultiFunPlayer.MediaSource.ViewModels;
 [DisplayName("MPC-HC")]
 public class MpcMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlayPauseMessage>, IHandle<MediaSeekMessage>
 {
-    private Logger Logger { get; } = LogManager.GetCurrentClassLogger();
+    private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
     private readonly IEventAggregator _eventAggregator;
     private readonly Channel<object> _writeMessageChannel;
