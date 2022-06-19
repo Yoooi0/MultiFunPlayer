@@ -71,7 +71,10 @@ public class SerialOutputTargetViewModel : ThreadAbstractOutputTarget
             using (token.Register(() => taskCompletion.TrySetCanceled()))
                 await taskCompletion.Task.WaitAsync(token).ConfigureAwait(true);
         }
-        catch { }
+        catch (Exception e)
+        {
+            Logger.Warn(e, $"{Identifier} port refresh failed with exception");
+        }
 
         var lastSelectedDeviceId = SelectedSerialPortDeviceId;
         SerialPorts.RemoveRange(SerialPorts.Except(serialPorts));
@@ -252,6 +255,8 @@ public class SerialOutputTargetViewModel : ThreadAbstractOutputTarget
 
     public sealed class SerialPortInfo
     {
+        private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
+
         private SerialPortInfo() { }
 
         public string Caption { get; private set; }
@@ -288,7 +293,10 @@ public class SerialOutputTargetViewModel : ThreadAbstractOutputTarget
                     PortName = portName
                 };
             }
-            catch { }
+            catch (Exception e)
+            {
+                Logger.Warn(e, "Failed to create SerialPortInfo");
+            }
 
             return null;
         }
