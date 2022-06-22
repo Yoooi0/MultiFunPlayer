@@ -548,7 +548,7 @@
                                    MouseUp="{s:Action OnKeyframesHeatmapMouseUp}"
                                    Keyframes="{Binding AxisKeyframes, Mode=OneWay}"
                                    Duration="{Binding MediaDuration, Mode=OneWay}"
-                                   Position="{Binding CurrentPosition, Mode=OneWay}"
+                                   Position="{Binding MediaPosition, Mode=OneWay}"
                                    BucketCount="{Binding HeatmapBucketCount}"
                                    InvertY="{Binding HeatmapInvertY}"
                                    ShowStrokeLength="{Binding HeatmapShowStrokeLength}"

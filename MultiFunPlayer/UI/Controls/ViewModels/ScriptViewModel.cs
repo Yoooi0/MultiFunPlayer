@@ -35,11 +35,12 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
     private readonly IMediaResourceFactory _mediaResourceFactory;
     private Thread _updateThread;
     private CancellationTokenSource _cancellationSource;
+    private float _internalMediaPosition;
 
-    public bool IsPlaying { get; set; }
-    public float CurrentPosition { get; set; }
-    public float PlaybackSpeed { get; set; }
-    public float MediaDuration { get; set; }
+    public bool IsPlaying { get; private set; }
+    public float PlaybackSpeed { get; private set; }
+    public float MediaDuration { get; private set; }
+    public float MediaPosition { get; private set; }
 
     public ObservableConcurrentDictionary<DeviceAxis, AxisModel> AxisModels { get; set; }
     public ObservableConcurrentDictionaryView<DeviceAxis, AxisModel, AxisState> AxisStates { get; }
@@ -82,11 +83,7 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         ScriptLibraries = new ObservableConcurrentCollection<ScriptLibrary>();
         SyncSettings = new SyncSettings();
 
-        MediaResource = null;
-
-        MediaDuration = float.NaN;
-        CurrentPosition = float.NaN;
-        PlaybackSpeed = 1;
+        InvalidateMediaState();
 
         IsPlaying = false;
 
@@ -152,8 +149,10 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         {
             if (IsPlaying)
             {
-                MediaPositionSync.FixedUpdate(CurrentPosition, deltaTime * PlaybackSpeed);
-                CurrentPosition += deltaTime * PlaybackSpeed * MediaPositionSync.PlaybackSpeed;
+                _internalMediaPosition += deltaTime * PlaybackSpeed;
+
+                var error = _internalMediaPosition - MediaPosition;
+                MediaPosition += MathUtils.Clamp(error, deltaTime * PlaybackSpeed * 0.9f, deltaTime * PlaybackSpeed * 1.1f);
             }
 
             var dirty = false;
@@ -463,13 +462,9 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         ReloadAxes(null);
 
         if (MediaResource == null)
-        {
-            MediaDuration = float.NaN;
-            CurrentPosition = float.NaN;
-            PlaybackSpeed = 1;
-        }
+            InvalidateMediaState();
 
-        InvalidateState(null);
+        InvalidateAxisState(null);
     }
 
     public void Handle(MediaPlayingChangedMessage message)
@@ -481,9 +476,6 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
 
         if (SyncSettings.SyncOnMediaPlayPause)
             ResetSync();
-
-        if (!IsPlaying && message.IsPlaying)
-            MediaPositionSync.Reset();
 
         IsPlaying = message.IsPlaying;
     }
@@ -507,8 +499,6 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
 
         Logger.Info("Received {0} [Speed: {1}]", nameof(MediaSpeedChangedMessage), message.Speed);
         PlaybackSpeed = message.Speed;
-
-        MediaPositionSync.Reset();
     }
 
     public void Handle(MediaPositionChangedMessage message)
@@ -518,8 +508,7 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
             foreach (var axis in DeviceAxis.All)
                 Monitor.Enter(AxisStates[axis]);
 
-            MediaPositionSync.Reset();
-            CurrentPosition = newPosition;
+            SetMediaPosition(newPosition);
 
             foreach (var axis in DeviceAxis.All)
                 Monitor.Exit(AxisStates[axis]);
@@ -530,18 +519,18 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
 
         if (!float.IsFinite(newPosition))
         {
-            CurrentPosition = float.NaN;
+            SetMediaPosition(float.NaN);
             return;
         }
 
-        if (!float.IsFinite(CurrentPosition))
+        if (!float.IsFinite(MediaPosition))
         {
             ResetSync();
             UpdateCurrentPosition(newPosition);
             return;
         }
 
-        var error = float.IsFinite(CurrentPosition) ? newPosition - CurrentPosition : 0;
+        var error = float.IsFinite(_internalMediaPosition) ? newPosition - _internalMediaPosition : 0;
         var wasSeek = MathF.Abs(error) > 1.0f;
         if (wasSeek)
         {
@@ -553,156 +542,7 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         }
         else
         {
-            MediaPositionSync.Update(CurrentPosition, newPosition);
-        }
-    }
-
-    private static class MediaPositionSync
-    {
-        private static readonly object _lockObject = new();
-        private static readonly List<(float Actual, float Desired)> _list = new();
-
-        private static float _desiredSpeed;
-        private static float _desiredCorrection;
-        private static float _currentCorrection;
-        private static float _interpolatedDesired;
-
-        private static State _state;
-        private static bool _listFilled;
-        private static int _lastItemIndex;
-        private static int _statePreference;
-
-        public static float PlaybackSpeed => CorrectedDesiredSpeed * _currentCorrection;
-        public static float CorrectedDesiredSpeed => _desiredSpeed + _statePreference * 0.0005f;
-
-        static MediaPositionSync() => Reset();
-
-        public static void Reset()
-        {
-            _list.Clear();
-            _listFilled = false;
-            _lastItemIndex = 0;
-
-            _desiredSpeed = 1;
-            _desiredCorrection = 1;
-            _currentCorrection = 1;
-
-            _state = State.Idle;
-            _statePreference = 0;
-        }
-
-        public static void FixedUpdate(float currentPosition, float deltaTime)
-        {
-            lock (_lockObject)
-            {
-                _currentCorrection = MathUtils.Lerp(_currentCorrection, _desiredCorrection, 0.008f);
-
-                var interpolatedCurrent = currentPosition + deltaTime * CorrectedDesiredSpeed * _currentCorrection;
-                _interpolatedDesired += deltaTime * _desiredSpeed;
-
-                var error = interpolatedCurrent - _interpolatedDesired;
-                UpdateState(error);
-            }
-        }
-
-        public static void Update(float currentPosition, float desiredPosition)
-        {
-            lock (_lockObject)
-            {
-                PushPosition(currentPosition, desiredPosition);
-                UpdateSpeed();
-
-                var error = currentPosition - desiredPosition;
-                UpdateState(error);
-            }
-        }
-
-        private static void PushPosition(float currentPosition, float desiredPosition)
-        {
-            if (_list.Count != 0)
-            {
-                var timeSinceLast = currentPosition - _list[_lastItemIndex].Actual;
-                if (timeSinceLast < 0.5f)
-                    return;
-            }
-
-            if (_listFilled)
-            {
-                _lastItemIndex = (_lastItemIndex + 1) % _list.Count;
-                _list[_lastItemIndex] = (currentPosition, desiredPosition);
-            }
-            else
-            {
-                _lastItemIndex = _list.Count;
-                _list.Add((currentPosition, desiredPosition));
-                _listFilled = (_list[^1].Actual - _list[0].Actual) > 10f;
-            }
-
-            _interpolatedDesired = desiredPosition;
-        }
-
-        private static void UpdateSpeed()
-        {
-            _desiredSpeed =
-                _list.Count >= 2 ?
-                    !_listFilled
-                    ? EnumerateSpeeds(0, _lastItemIndex)
-                        .DefaultIfEmpty(1).Average()
-                    : EnumerateSpeeds((_lastItemIndex + 1) % _list.Count, _list.Count - 1)
-                        .Concat(EnumerateSpeeds(0, _lastItemIndex))
-                        .DefaultIfEmpty(1).Average()
-                : 1;
-
-            static IEnumerable<float> EnumerateSpeeds(int from, int to)
-            {
-                for (int i = from, j = from + 1; j <= to; i = j++)
-                {
-                    var (ai, di) = _list[i];
-                    var (aj, dj) = _list[j];
-                    var speed = (dj - di) / (aj - ai);
-                    if (!float.IsFinite(speed))
-                        continue;
-
-                    yield return speed;
-                }
-            }
-        }
-
-        private static void UpdateState(float error)
-            => UpdateState((error, _state) switch
-            {
-                var (e, s) when e > 0 && s == State.Behind => State.Idle,
-                var (e, s) when e < 0 && s == State.Ahead => State.Idle,
-                var (e, s) when e > 0 && e > 0.020f && s == State.Idle => State.Ahead,
-                var (e, s) when e < 0 && e < -0.020f && s == State.Idle => State.Behind,
-                var (e, s) when MathF.Abs(e) < 0.005f && s != State.Idle => State.Idle,
-                var (_, s) => s
-            });
-
-        private static void UpdateState(State newState)
-        {
-            if (newState == State.Behind && _state == State.Idle)
-                _statePreference++;
-            else if (newState == State.Ahead && _state == State.Idle)
-                _statePreference--;
-
-            _statePreference = MathUtils.Clamp(_statePreference, -30, 30);
-
-            _state = newState;
-            _desiredCorrection = _state switch
-            {
-                State.Idle => 1f,
-                State.Ahead => 0.95f,
-                State.Behind => 1.05f,
-                _ => throw new NotSupportedException(),
-            };
-        }
-
-        private enum State
-        {
-            Idle,
-            Ahead,
-            Behind
+            _internalMediaPosition += 0.33f * (newPosition - _internalMediaPosition);
         }
     }
 
@@ -771,8 +611,8 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
 
     #region Common
 
-    private void InvalidateState(params DeviceAxis[] axes) => InvalidateState(axes?.AsEnumerable());
-    private void InvalidateState(IEnumerable<DeviceAxis> axes = null)
+    private void InvalidateAxisState(params DeviceAxis[] axes) => InvalidateAxisState(axes?.AsEnumerable());
+    private void InvalidateAxisState(IEnumerable<DeviceAxis> axes = null)
     {
         axes ??= DeviceAxis.All;
         if (!axes.Any())
@@ -787,7 +627,7 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         }
     }
 
-    private float GetAxisPosition(DeviceAxis axis) => GetAxisPosition(axis, CurrentPosition);
+    private float GetAxisPosition(DeviceAxis axis) => GetAxisPosition(axis, MediaPosition);
     private float GetAxisPosition(DeviceAxis axis, float position) => position - GlobalOffset - AxisSettings[axis].Offset;
     public float GetValue(DeviceAxis axis) => MathUtils.Clamp01(AxisStates[axis].Value);
 
@@ -1030,7 +870,7 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
             return;
 
         var maybeSkipPosition = AxisKeyframes.Keys.Select(a => GetSkipPosition(a)).MinBy(x => x ?? float.PositiveInfinity);
-        var currentPosition = CurrentPosition;
+        var currentPosition = MediaPosition;
         if (maybeSkipPosition is not float skipPosition || currentPosition >= skipPosition || (skipPosition - currentPosition) <= minimumSkip)
             return;
 
@@ -1076,6 +916,20 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         SeekMediaToPercent((float)e.GetPosition(element).X / (float)element.ActualWidth);
     }
 
+    private void InvalidateMediaState()
+    {
+        MediaResource = null;
+        MediaDuration = float.NaN;
+        PlaybackSpeed = 1;
+        SetMediaPosition(float.NaN);
+    }
+
+    private void SetMediaPosition(float position)
+    {
+        MediaPosition = position;
+        _internalMediaPosition = position;
+    }
+
     private void SeekMediaToPercent(float percent)
     {
         if (!float.IsFinite(MediaDuration) || !float.IsFinite(percent))
@@ -1118,7 +972,7 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
             return;
 
         var targetMediaTime = MathF.Max(MathF.Min(startPosition.Value, MediaDuration) - offset, 0);
-        if (onlyWhenBefore && targetMediaTime <= CurrentPosition)
+        if (onlyWhenBefore && targetMediaTime <= MediaPosition)
             return;
 
         Logger.Info("Skipping to script start at {0}s", targetMediaTime);
@@ -1468,12 +1322,12 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
 
         #region Media::Position
         s.RegisterAction("Media::Position::Time::Offset", b => b.WithSetting<float>(p => p.WithLabel("Value offset").WithStringFormat("{}{0}s"))
-                                                                .WithCallback((_, offset) => SeekMediaToTime(CurrentPosition + offset)));
+                                                                .WithCallback((_, offset) => SeekMediaToTime(MediaPosition + offset)));
         s.RegisterAction("Media::Position::Time::Set", b => b.WithSetting<float>(p => p.WithLabel("Value").WithStringFormat("{}{0}s"))
                                                              .WithCallback((_, value) => SeekMediaToTime(value)));
 
         s.RegisterAction("Media::Position::Percent::Offset", b => b.WithSetting<float>(p => p.WithLabel("Value offset").WithStringFormat("{}{0}%"))
-                                                                   .WithCallback((_, offset) => SeekMediaToPercent(CurrentPosition / MediaDuration + offset / 100)));
+                                                                   .WithCallback((_, offset) => SeekMediaToPercent(MediaPosition / MediaDuration + offset / 100)));
         s.RegisterAction("Media::Position::Percent::Set", b => b.WithSetting<float>(p => p.WithLabel("Value").WithStringFormat("{}{0}%"))
                                                                 .WithCallback((_, value) => SeekMediaToPercent(value / 100)));
 
