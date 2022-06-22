@@ -40,6 +40,8 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
     public bool IsPlaying { get; private set; }
     public float PlaybackSpeed { get; private set; }
     public float MediaDuration { get; private set; }
+
+    [DoNotNotify]
     public float MediaPosition { get; private set; }
 
     public ObservableConcurrentDictionary<DeviceAxis, AxisModel> AxisModels { get; set; }
@@ -437,6 +439,7 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
 
                 NotifyOfPropertyChange(nameof(IsSyncing));
                 NotifyOfPropertyChange(nameof(SyncProgress));
+                NotifyOfPropertyChange(nameof(MediaPosition));
             });
         }
     }
