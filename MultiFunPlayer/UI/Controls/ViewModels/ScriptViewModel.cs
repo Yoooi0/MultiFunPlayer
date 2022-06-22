@@ -266,7 +266,7 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                 if (shouldSearch)
                 {
                     Logger.Debug("Searching for valid index [Axis: {0}]", axis);
-                    state.Index = keyframes.BinarySearch(GetAxisPosition(axis, axisPosition));
+                    state.Index = keyframes.BinarySearch(axisPosition);
                 }
 
                 if (!IsPlaying || state.AfterScript)
@@ -630,8 +630,7 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         }
     }
 
-    private float GetAxisPosition(DeviceAxis axis) => GetAxisPosition(axis, MediaPosition);
-    private float GetAxisPosition(DeviceAxis axis, float position) => position - GlobalOffset - AxisSettings[axis].Offset;
+    private float GetAxisPosition(DeviceAxis axis) => MediaPosition - GlobalOffset - AxisSettings[axis].Offset;
     public float GetValue(DeviceAxis axis) => MathUtils.Clamp01(AxisStates[axis].Value);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
