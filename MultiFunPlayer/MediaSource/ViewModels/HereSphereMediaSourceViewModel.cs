@@ -146,7 +146,7 @@ public class HereSphereMediaSourceViewModel : AbstractMediaSource, IHandle<Media
                         playerState.Duration = duration;
                     }
 
-                    if (document.TryGetValue("currentTime", out var timeToken) && timeToken.TryToObject<float>(out var position) && position >= 0 && position != playerState.Position)
+                    if (document.TryGetValue("currentTime", out var timeToken) && timeToken.TryToObject<double>(out var position) && position >= 0 && position != playerState.Position)
                     {
                         _eventAggregator.Publish(new MediaPositionChangedMessage(TimeSpan.FromSeconds(position)));
                         playerState.Position = position;
@@ -287,7 +287,7 @@ public class HereSphereMediaSourceViewModel : AbstractMediaSource, IHandle<Media
     private class PlayerState
     {
         [JsonProperty("path")] public string Path { get; set; }
-        [JsonProperty("currentTime")] public float? Position { get; set; }
+        [JsonProperty("currentTime")] public double? Position { get; set; }
         [JsonProperty("playbackSpeed")] public float? Speed { get; set; }
         [JsonProperty("playerState")] public int? State { get; set; }
         [JsonProperty("duration")] public float? Duration { get; set; }

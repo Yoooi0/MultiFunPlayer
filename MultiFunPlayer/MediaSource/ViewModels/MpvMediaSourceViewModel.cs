@@ -150,7 +150,7 @@ public class MpvMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlayPau
                                         _eventAggregator.Publish(new MediaDurationChangedMessage(TimeSpan.FromSeconds(duration)));
                                     break;
                                 case "time-pos":
-                                    if (dataToken.TryToObject<float>(out var position) && position >= 0)
+                                    if (dataToken.TryToObject<double>(out var position) && position >= 0)
                                         _eventAggregator.Publish(new MediaPositionChangedMessage(TimeSpan.FromSeconds(position)));
                                     break;
                                 case "speed":

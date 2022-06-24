@@ -35,14 +35,14 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
     private readonly IMediaResourceFactory _mediaResourceFactory;
     private Thread _updateThread;
     private CancellationTokenSource _cancellationSource;
-    private float _internalMediaPosition;
+    private double _internalMediaPosition;
 
     public bool IsPlaying { get; private set; }
     public float PlaybackSpeed { get; private set; }
     public float MediaDuration { get; private set; }
 
     [DoNotNotify]
-    public float MediaPosition { get; private set; }
+    public double MediaPosition { get; private set; }
 
     public ObservableConcurrentDictionary<DeviceAxis, AxisModel> AxisModels { get; set; }
     public ObservableConcurrentDictionaryView<DeviceAxis, AxisModel, AxisState> AxisStates { get; }
@@ -506,35 +506,35 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
 
     public void Handle(MediaPositionChangedMessage message)
     {
-        void UpdateCurrentPosition(float newPosition)
+        void UpdateCurrentPosition(double newPosition)
         {
             foreach (var axis in DeviceAxis.All)
                 Monitor.Enter(AxisStates[axis]);
 
-            SetMediaPosition(newPosition);
+            SetMediaPositionInternal(newPosition);
 
             foreach (var axis in DeviceAxis.All)
                 Monitor.Exit(AxisStates[axis]);
         }
 
-        var newPosition = (float)(message.Position?.TotalSeconds ?? float.NaN);
+        var newPosition = message.Position?.TotalSeconds ?? double.NaN;
         Logger.Trace("Received {0} [Position: {1}]", nameof(MediaPositionChangedMessage), message.Position?.ToString());
 
-        if (!float.IsFinite(newPosition))
+        if (!double.IsFinite(newPosition))
         {
-            SetMediaPosition(float.NaN);
+            SetMediaPositionInternal(double.NaN);
             return;
         }
 
-        if (!float.IsFinite(MediaPosition))
+        if (!double.IsFinite(MediaPosition))
         {
             ResetSync();
             UpdateCurrentPosition(newPosition);
             return;
         }
 
-        var error = float.IsFinite(_internalMediaPosition) ? newPosition - _internalMediaPosition : 0;
-        var wasSeek = MathF.Abs(error) > 1.0f;
+        var error = double.IsFinite(_internalMediaPosition) ? newPosition - _internalMediaPosition : 0;
+        var wasSeek = Math.Abs(error) > 1.0;
         if (wasSeek)
         {
             Logger.Debug("Detected seek: {0}", error);
@@ -630,7 +630,7 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         }
     }
 
-    private float GetAxisPosition(DeviceAxis axis) => MediaPosition - GlobalOffset - AxisSettings[axis].Offset;
+    private float GetAxisPosition(DeviceAxis axis) => (float)(MediaPosition - GlobalOffset - AxisSettings[axis].Offset);
     public float GetValue(DeviceAxis axis) => MathUtils.Clamp01(AxisStates[axis].Value);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -923,10 +923,10 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         MediaResource = null;
         MediaDuration = float.NaN;
         PlaybackSpeed = 1;
-        SetMediaPosition(float.NaN);
+        SetMediaPositionInternal(float.NaN);
     }
 
-    private void SetMediaPosition(float position)
+    private void SetMediaPositionInternal(double position)
     {
         MediaPosition = position;
         _internalMediaPosition = position;
@@ -1324,12 +1324,12 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
 
         #region Media::Position
         s.RegisterAction("Media::Position::Time::Offset", b => b.WithSetting<float>(p => p.WithLabel("Value offset").WithStringFormat("{}{0}s"))
-                                                                .WithCallback((_, offset) => SeekMediaToTime(MediaPosition + offset)));
+                                                                .WithCallback((_, offset) => SeekMediaToTime((float)(MediaPosition + offset))));
         s.RegisterAction("Media::Position::Time::Set", b => b.WithSetting<float>(p => p.WithLabel("Value").WithStringFormat("{}{0}s"))
                                                              .WithCallback((_, value) => SeekMediaToTime(value)));
 
         s.RegisterAction("Media::Position::Percent::Offset", b => b.WithSetting<float>(p => p.WithLabel("Value offset").WithStringFormat("{}{0}%"))
-                                                                   .WithCallback((_, offset) => SeekMediaToPercent(MediaPosition / MediaDuration + offset / 100)));
+                                                                   .WithCallback((_, offset) => SeekMediaToPercent((float)(MediaPosition / MediaDuration + offset / 100))));
         s.RegisterAction("Media::Position::Percent::Set", b => b.WithSetting<float>(p => p.WithLabel("Value").WithStringFormat("{}{0}%"))
                                                                 .WithCallback((_, value) => SeekMediaToPercent(value / 100)));
 

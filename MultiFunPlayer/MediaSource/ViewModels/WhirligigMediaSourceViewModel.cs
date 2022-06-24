@@ -85,7 +85,7 @@ public class WhirligigMediaSourceViewModel : AbstractMediaSource
                     var parts = message.Split(' ', 2);
                     _eventAggregator.Publish(new MediaPlayingChangedMessage(isPlaying: true));
 
-                    if (parts.Length == 2 && float.TryParse(parts[1].Replace(',', '.'), NumberStyles.Any, NumberFormatInfo.InvariantInfo, out var position) && position >= 0)
+                    if (parts.Length == 2 && double.TryParse(parts[1].Replace(',', '.'), NumberStyles.Any, NumberFormatInfo.InvariantInfo, out var position) && position >= 0)
                         _eventAggregator.Publish(new MediaPositionChangedMessage(TimeSpan.FromSeconds(position)));
                 }
             }
