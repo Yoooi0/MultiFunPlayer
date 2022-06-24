@@ -26,13 +26,14 @@ The player's main feature is the ability to play multiple funscripts at the same
 * Seek and play/pause video from MultiFunPlayer
 * Supports multiple concurrent outputs
 * Real time script smoothing using pchip or makima interpolation
-* Per axis speed limit, auto-home
+* Per axis speed limit
+* Auto-home when axis is idle for specified time
+* Smart limit to limit output range based on position of other axis with editable curve
 * Supports local, DLNA, web and unc video paths
 * Soft start sync feature to prevent unwanted motion
 * Script libraries to organize funscripts in different folders and load funscripts not located next to the video file
 * Ability to link unscripted axes to scripted axes
-* Ability to generate additional motion using random, script or pattern motion providers
-* Smart limit on R1 (roll) and R2 (pitch) axes to limit values based on L0 (stroke) height
+* Ability to generate additional motion or fill script gaps using random, script or pattern motion providers
 * Multi funscript heatmap with stroke length visualization
 * True portable app, no files are created/edited outside of the executable folder
 
