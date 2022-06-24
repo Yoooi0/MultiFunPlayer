@@ -1264,7 +1264,7 @@
                                                     </Border>
                                                 </material:PopupBox.ToggleContent>
                                                 
-                                                <Grid Margin="10">
+                                                <Grid Margin="10" Width="170">
                                                     <StackPanel>
                                                         <DockPanel LastChildFill="True">
                                                             <TextBlock Text="Input axis:" 
@@ -1281,26 +1281,92 @@
                                                                       SelectionChanged="{s:Action OnSelectedSmartLimitInputAxisChanged}"/>
                                                         </DockPanel>
 
-                                                        <controls:SmartLimitPreview Points="{Binding Value.Settings.SmartLimitPoints}">
+                                                        <controls:SmartLimitPreview Points="{Binding Value.Settings.SmartLimitPoints}"
+                                                                                    x:Name="SmartLimitPreview"
+                                                                                    Margin="0 0 0 20"
+                                                                                    HorizontalAlignment="Center">
                                                             <controls:SmartLimitPreview.Triggers>
                                                                 <EventTrigger RoutedEvent="Loaded">
                                                                     <BeginStoryboard>
                                                                         <Storyboard RepeatBehavior="Forever">
                                                                             <SingleAnimation Storyboard.TargetProperty="Input"
                                                                                              From="0"
-                                                                                             To="100"
+                                                                                             To="0"
                                                                                              BeginTime="0:0:0"
-                                                                                             Duration="0:0:2"/>
+                                                                                             Duration="0:0:0.500"/>
+                                                                            <SingleAnimation Storyboard.TargetProperty="Input"
+                                                                                             From="0"
+                                                                                             To="100"
+                                                                                             BeginTime="0:0:0.500"
+                                                                                             Duration="0:0:3"/>
+                                                                            <SingleAnimation Storyboard.TargetProperty="Input"
+                                                                                             From="100"
+                                                                                             To="100"
+                                                                                             BeginTime="0:0:3.500"
+                                                                                             Duration="0:0:0.500"/>
                                                                             <SingleAnimation Storyboard.TargetProperty="Input"
                                                                                              From="100"
                                                                                              To="0"
-                                                                                             BeginTime="0:0:2"
-                                                                                             Duration="0:0:2"/>
+                                                                                             BeginTime="0:0:4"
+                                                                                             Duration="0:0:3"/>
                                                                         </Storyboard>
                                                                     </BeginStoryboard>
                                                                 </EventTrigger>
                                                             </controls:SmartLimitPreview.Triggers>
                                                         </controls:SmartLimitPreview>
+                                                        
+                                                        <TextBlock Text="when..." 
+                                                                   Margin="0 10 0 0"
+                                                                   VerticalAlignment="Center"
+                                                                   FontSize="12"
+                                                                   FontWeight="Bold"
+                                                                   Typography.Capitals="AllSmallCaps"/>
+                                                        
+                                                        <DockPanel>
+                                                            <TextBlock Text="{Binding Value.Settings.SmartLimitInputAxis}" 
+                                                                       DockPanel.Dock="Left"
+                                                                       Margin="0 0 5 0" 
+                                                                       VerticalAlignment="Center"/>
+                                                            
+                                                            <TextBlock Text="axis value is at:" 
+                                                                       DockPanel.Dock="Left"
+                                                                       Margin="0 0 5 0" 
+                                                                       VerticalAlignment="Center"/>
+                                                            
+                                                            <TextBlock Text="{Binding Input, StringFormat={}{0:F0}%, ElementName=SmartLimitPreview}"/>
+                                                        </DockPanel>
+
+                                                        <TextBlock Text="then..." 
+                                                                   Margin="0 10 0 0"
+                                                                   VerticalAlignment="Center"
+                                                                   FontSize="12"
+                                                                   FontWeight="Bold"
+                                                                   Typography.Capitals="AllSmallCaps"/>
+
+                                                        <DockPanel>
+                                                            <TextBlock Text="Limit" 
+                                                                       DockPanel.Dock="Left"
+                                                                       Margin="0 0 5 0" 
+                                                                       VerticalAlignment="Center"/>
+                                                            
+                                                            <TextBlock Text="{Binding Key}" 
+                                                                       DockPanel.Dock="Left"
+                                                                       Margin="0 0 5 0" 
+                                                                       VerticalAlignment="Center"/>
+
+                                                            <TextBlock Text="axis range to:" 
+                                                                       DockPanel.Dock="Left"
+                                                                       Margin="0 0 5 0" 
+                                                                       VerticalAlignment="Center"/>
+                                                            
+                                                            <TextBlock Text="{Binding Output, StringFormat={}{0:F0}%, ElementName=SmartLimitPreview}"/>
+                                                        </DockPanel>
+
+                                                        <DockPanel>
+                                                            <TextBlock Text="from its home position" 
+                                                                       DockPanel.Dock="Left"
+                                                                       VerticalAlignment="Center"/>
+                                                        </DockPanel>
                                                     </StackPanel>
                                                 </Grid>
                                             </material:PopupBox>
