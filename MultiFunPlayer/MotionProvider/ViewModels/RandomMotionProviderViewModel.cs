@@ -10,11 +10,11 @@ namespace MultiFunPlayer.MotionProvider.ViewModels;
 public class RandomMotionProviderViewModel : AbstractMotionProvider
 {
     private readonly OpenSimplex _noise;
-    private float _time;
+    private double _time;
 
     [JsonProperty] public int Octaves { get; set; } = 1;
-    [JsonProperty] public float Persistence { get; set; } = 1;
-    [JsonProperty] public float Lacunarity { get; set; } = 1;
+    [JsonProperty] public double Persistence { get; set; } = 1;
+    [JsonProperty] public double Lacunarity { get; set; } = 1;
 
     public RandomMotionProviderViewModel(DeviceAxis target, IEventAggregator eventAggregator)
         : base(target, eventAggregator)
@@ -22,9 +22,9 @@ public class RandomMotionProviderViewModel : AbstractMotionProvider
         _noise = new OpenSimplex(Random.Shared.NextInt64());
     }
 
-    public override void Update(float deltaTime)
+    public override void Update(double deltaTime)
     {
-        var noise = (float)_noise.Calculate2D(_time, _time, Octaves, Persistence, Lacunarity);
+        var noise = _noise.Calculate2D(_time, _time, Octaves, Persistence, Lacunarity);
         Value = MathUtils.Map(noise, -1, 1, Minimum / 100, Maximum / 100);
         _time += Speed * deltaTime;
     }

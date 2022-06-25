@@ -15,7 +15,7 @@ public interface IMotionProviderManager : IDeviceAxisValueProvider
     IEnumerable<string> MotionProviderNames { get; }
 
     IMotionProvider GetMotionProvider(DeviceAxis axis, string motionProviderName);
-    void Update(DeviceAxis axis, string motionProviderName, float deltaTime);
+    void Update(DeviceAxis axis, string motionProviderName, double deltaTime);
     void RegisterShortcuts(IShortcutManager shortcutManager);
 }
 
@@ -26,7 +26,7 @@ public class MotionProviderManager : IMotionProviderManager, IHandle<AppSettings
     private readonly IEventAggregator _eventAggregator;
     private readonly HashSet<string> _motionProviderNames;
     private readonly Dictionary<DeviceAxis, Dictionary<string, IMotionProvider>> _motionProviders;
-    private readonly Dictionary<DeviceAxis, float> _values;
+    private readonly Dictionary<DeviceAxis, double> _values;
 
     public IEnumerable<string> MotionProviderNames => _motionProviderNames;
 
@@ -42,7 +42,7 @@ public class MotionProviderManager : IMotionProviderManager, IHandle<AppSettings
                                                        a => motionProviderFactory.CreateMotionProviderCollection(a)
                                                                                  .ToDictionary(p => p.GetType().GetCustomAttribute<DisplayNameAttribute>(inherit: false).DisplayName,
                                                                                                p => p));
-        _values = DeviceAxis.All.ToDictionary(a => a, _ => float.NaN);
+        _values = DeviceAxis.All.ToDictionary(a => a, _ => double.NaN);
     }
 
     public IMotionProvider GetMotionProvider(DeviceAxis axis, string motionProviderName)
@@ -57,7 +57,7 @@ public class MotionProviderManager : IMotionProviderManager, IHandle<AppSettings
         return motionProvider;
     }
 
-    public void Update(DeviceAxis axis, string motionProviderName, float deltaTime)
+    public void Update(DeviceAxis axis, string motionProviderName, double deltaTime)
     {
         var motionProvider = GetMotionProvider(axis, motionProviderName);
         if (motionProvider == null)
@@ -67,7 +67,7 @@ public class MotionProviderManager : IMotionProviderManager, IHandle<AppSettings
         _values[axis] = motionProvider.Value;
     }
 
-    public float GetValue(DeviceAxis axis) => _values[axis];
+    public double GetValue(DeviceAxis axis) => _values[axis];
 
     public void Handle(AppSettingsMessage message)
     {
@@ -112,7 +112,7 @@ public class MotionProviderManager : IMotionProviderManager, IHandle<AppSettings
                       if (motionProvider == null)
                           return;
 
-                      motionProvider.Speed = MathF.Max(0.01f, motionProvider.Speed + offset / 100);
+                      motionProvider.Speed = Math.Max(0.01, motionProvider.Speed + offset / 100);
                   }));
 
             s.RegisterAction($"MotionProvider::{name}::Speed::Set",
@@ -124,7 +124,7 @@ public class MotionProviderManager : IMotionProviderManager, IHandle<AppSettings
                           if (motionProvider == null)
                               return;
 
-                          motionProvider.Speed = MathF.Max(0.01f, value / 100);
+                          motionProvider.Speed = Math.Max(0.01, value / 100);
                       }));
 
             s.RegisterAction($"MotionProvider::{name}::Speed::Drive",
@@ -138,7 +138,7 @@ public class MotionProviderManager : IMotionProviderManager, IHandle<AppSettings
                           if (motionProvider == null)
                               return;
 
-                          motionProvider.Speed = MathF.Max(0.01f, motionProvider.Speed + axisGesture.Delta);
+                          motionProvider.Speed = Math.Max(0.01, motionProvider.Speed + axisGesture.Delta);
                       }), ShortcutActionDescriptorFlags.AcceptsAxisGesture);
             #endregion
 

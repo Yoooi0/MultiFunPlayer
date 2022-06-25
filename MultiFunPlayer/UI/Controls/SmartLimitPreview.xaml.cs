@@ -29,27 +29,27 @@ public partial class SmartLimitPreview : UserControl, INotifyPropertyChanged
                     new PropertyChangedCallback(OnPointsPropertyChanged)));
 
     [DoNotNotify]
-    public float Input
+    public double Input
     {
-        get => (float)GetValue(InputProperty);
+        get => (double)GetValue(InputProperty);
         set => SetValue(InputProperty, value);
     }
 
     public static readonly DependencyProperty InputProperty =
-        DependencyProperty.Register(nameof(Input), typeof(float),
-            typeof(SmartLimitPreview), new FrameworkPropertyMetadata(50f,
+        DependencyProperty.Register(nameof(Input), typeof(double),
+            typeof(SmartLimitPreview), new FrameworkPropertyMetadata(50d,
                 new PropertyChangedCallback(OnInputPropertyChanged)));
 
     [DoNotNotify]
-    public float Output
+    public double Output
     {
-        get => (float)GetValue(OutputProperty);
+        get => (double)GetValue(OutputProperty);
         private set => SetValue(OutputProperty, value);
     }
 
     public static readonly DependencyProperty OutputProperty =
-        DependencyProperty.Register(nameof(Output), typeof(float),
-            typeof(SmartLimitPreview), new FrameworkPropertyMetadata(float.NaN));
+        DependencyProperty.Register(nameof(Output), typeof(double),
+            typeof(SmartLimitPreview), new FrameworkPropertyMetadata(double.NaN));
 
     [SuppressPropertyChangedWarnings]
     private static void OnPointsPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
@@ -113,7 +113,7 @@ public partial class SmartLimitPreview : UserControl, INotifyPropertyChanged
             return;
 
         var x = MathUtils.Clamp(Input, 0, 100);
-        var y = Interpolation.Linear(LinePoints, p => (float)p.X, p => (float)p.Y, x);
+        var y = Interpolation.Linear(LinePoints, p => p.X, p => p.Y, x);
 
         Output = y;
         (Scrubber.Data as EllipseGeometry).Center = new Point(x, y);

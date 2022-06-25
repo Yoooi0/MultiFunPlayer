@@ -22,12 +22,12 @@ public class GamepadAxisGesture : IAxisInputGesture
     public int UserIndex => _descriptor.UserIndex;
     public GamepadAxis Axis => _descriptor.Axis;
 
-    public float Value { get; }
-    public float Delta { get; }
+    public double Value { get; }
+    public double Delta { get; }
 
     public IInputGestureDescriptor Descriptor => _descriptor;
 
-    public GamepadAxisGesture(GamepadAxisGestureDescriptor descriptor, float value, float delta)
+    public GamepadAxisGesture(GamepadAxisGestureDescriptor descriptor, double value, double delta)
     {
         _descriptor = descriptor;
 
@@ -37,5 +37,5 @@ public class GamepadAxisGesture : IAxisInputGesture
 
     public override string ToString() => $"[Gamepad Axis: {UserIndex}/{Axis}, Value: {Value}, Delta: {Delta}]";
 
-    public static GamepadAxisGesture Create(int userIndex, GamepadAxis axis, float value, float delta) => new(new(userIndex, axis), value, delta);
+    public static GamepadAxisGesture Create(int userIndex, GamepadAxis axis, double value, double delta) => new(new(userIndex, axis), value, delta);
 }

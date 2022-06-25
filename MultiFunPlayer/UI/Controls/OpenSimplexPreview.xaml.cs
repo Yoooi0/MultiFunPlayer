@@ -19,15 +19,15 @@ public partial class OpenSimplexPreview : UserControl, INotifyPropertyChanged
     public PointCollection Points { get; set; }
 
     [DoNotNotify]
-    public float Length
+    public double Length
     {
-        get => (float)GetValue(LengthProperty);
+        get => (double)GetValue(LengthProperty);
         set => SetValue(LengthProperty, value);
     }
 
     public static readonly DependencyProperty LengthProperty =
-        DependencyProperty.Register(nameof(Length), typeof(float),
-            typeof(OpenSimplexPreview), new FrameworkPropertyMetadata(1f,
+        DependencyProperty.Register(nameof(Length), typeof(double),
+            typeof(OpenSimplexPreview), new FrameworkPropertyMetadata(1d,
                 new PropertyChangedCallback(OnPropertyChanged)));
 
     [DoNotNotify]
@@ -55,27 +55,27 @@ public partial class OpenSimplexPreview : UserControl, INotifyPropertyChanged
                 new PropertyChangedCallback(OnPropertyChanged)));
 
     [DoNotNotify]
-    public float Persistence
+    public double Persistence
     {
-        get => (float)GetValue(PersistenceProperty);
+        get => (double)GetValue(PersistenceProperty);
         set => SetValue(PersistenceProperty, value);
     }
 
     public static readonly DependencyProperty PersistenceProperty =
-        DependencyProperty.Register(nameof(Persistence), typeof(float),
-            typeof(OpenSimplexPreview), new FrameworkPropertyMetadata(1f,
+        DependencyProperty.Register(nameof(Persistence), typeof(double),
+            typeof(OpenSimplexPreview), new FrameworkPropertyMetadata(1d,
                 new PropertyChangedCallback(OnPropertyChanged)));
 
     [DoNotNotify]
-    public float Lacunarity
+    public double Lacunarity
     {
-        get => (float)GetValue(LacunarityProperty);
+        get => (double)GetValue(LacunarityProperty);
         set => SetValue(LacunarityProperty, value);
     }
 
     public static readonly DependencyProperty LacunarityProperty =
-        DependencyProperty.Register(nameof(Lacunarity), typeof(float),
-            typeof(OpenSimplexPreview), new FrameworkPropertyMetadata(1f,
+        DependencyProperty.Register(nameof(Lacunarity), typeof(double),
+            typeof(OpenSimplexPreview), new FrameworkPropertyMetadata(1d,
                 new PropertyChangedCallback(OnPropertyChanged)));
 
     [SuppressPropertyChangedWarnings]
@@ -96,14 +96,14 @@ public partial class OpenSimplexPreview : UserControl, INotifyPropertyChanged
 
     private void Refresh()
     {
-        void AddPoint(float x, float y)
+        void AddPoint(double x, double y)
             => Points.Add(new Point(x / Length * ActualWidth, (y + 1) / 2 * ActualHeight));
 
         Points = new PointCollection();
 
         var step = Length / PointCount;
-        for (var x = 0f; x < Length; x += step)
-            AddPoint(x, (float)_noise.Calculate2D(x, _seed, Octaves, Persistence, Lacunarity));
+        for (var x = 0d; x < Length; x += step)
+            AddPoint(x, _noise.Calculate2D(x, _seed, Octaves, Persistence, Lacunarity));
     }
 
     public event PropertyChangedEventHandler PropertyChanged;
@@ -111,7 +111,7 @@ public partial class OpenSimplexPreview : UserControl, INotifyPropertyChanged
     private void OnPreviewMouseDown(object sender, MouseButtonEventArgs e)
     {
         e.Handled = true;
-        _seed = (float)Random.Shared.Next(short.MinValue, short.MaxValue);
+        _seed = Random.Shared.Next(short.MinValue, short.MaxValue);
         Refresh();
     }
 

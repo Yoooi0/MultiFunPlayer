@@ -75,7 +75,7 @@ public class FileOutputTargetViewModel : ThreadAbstractOutputTarget
         try
         {
             var stopwatch = Stopwatch.StartNew();
-            var currentTime = 0f;
+            var currentTime = 0d;
 
             while (!token.IsCancellationRequested)
             {
@@ -84,7 +84,7 @@ public class FileOutputTargetViewModel : ThreadAbstractOutputTarget
 
                 UpdateValues();
 
-                currentTime += stopwatch.ElapsedTicks / (float)Stopwatch.Frequency;
+                currentTime += stopwatch.ElapsedTicks / (double)Stopwatch.Frequency;
                 foreach (var axis in EnabledAxes)
                     writers[axis].Write(currentTime, Values[axis]);
             }

@@ -11,7 +11,7 @@ public class MotionProviderOverridesScriptConverter : IMultiValueConverter
         if (values.Length != 3
         || values[0] is not IScriptResource script
         || values[1] is not string selectedMotionProvider
-        || values[2] is not float motionProviderBlend)
+        || values[2] is not double motionProviderBlend)
             return null;
 
         return script != null && selectedMotionProvider != null && motionProviderBlend > 50;

@@ -100,7 +100,7 @@ public class ShortcutViewModel : Screen, IHandle<AppSettingsMessage>, IDisposabl
             case MouseButtonGesture when !IsMouseButtonGestureEnabled:
             case GamepadAxisGesture when !IsGamepadAxisGestureEnabled:
             case GamepadButtonGesture when !IsGamepadButtonGestureEnabled:
-            case IAxisInputGesture axisGesture when MathF.Abs(axisGesture.Delta) < 0.01f:
+            case IAxisInputGesture axisGesture when Math.Abs(axisGesture.Delta) < 0.01:
                 return;
         }
 

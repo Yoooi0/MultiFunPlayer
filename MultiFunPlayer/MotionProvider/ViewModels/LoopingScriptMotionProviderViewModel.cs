@@ -11,10 +11,10 @@ namespace MultiFunPlayer.MotionProvider.ViewModels;
 [JsonObject(MemberSerialization = MemberSerialization.OptIn)]
 public class LoopingScriptMotionProviderViewModel : AbstractMotionProvider
 {
-    private float _time;
+    private double _time;
 
-    private float _scriptStart;
-    private float _scriptEnd;
+    private double _scriptStart;
+    private double _scriptEnd;
     private int _scriptIndex;
 
     public IScriptResource Script { get; private set; }
@@ -29,12 +29,12 @@ public class LoopingScriptMotionProviderViewModel : AbstractMotionProvider
     {
         Script = ScriptResource.FromFileInfo(SourceFile, true);
         _scriptIndex = 0;
-        _scriptStart = Script?.Keyframes?.First().Position ?? float.NaN;
-        _scriptEnd = Script?.Keyframes?.Last().Position ?? float.NaN;
+        _scriptStart = Script?.Keyframes?.First().Position ?? double.NaN;
+        _scriptEnd = Script?.Keyframes?.Last().Position ?? double.NaN;
         _time = 0;
     }
 
-    public override void Update(float deltaTime)
+    public override void Update(double deltaTime)
     {
         if (Script == null)
             return;

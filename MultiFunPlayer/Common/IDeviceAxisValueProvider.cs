@@ -2,5 +2,5 @@
 
 public interface IDeviceAxisValueProvider
 {
-    public float GetValue(DeviceAxis axis);
+    public double GetValue(DeviceAxis axis);
 }

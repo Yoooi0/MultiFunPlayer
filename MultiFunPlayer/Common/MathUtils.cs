@@ -6,16 +6,15 @@ namespace MultiFunPlayer.Common;
 public static class MathUtils
 {
     public static double Clamp(double x, double from, double to) => from <= to ? Math.Max(Math.Min(x, to), from) : Math.Min(Math.Max(x, to), from);
-    public static float Clamp(float x, float from, float to) => from <= to ? MathF.Max(MathF.Min(x, to), from) : MathF.Min(MathF.Max(x, to), from);
-    public static int Clamp(int x, int from, int to) => from <= to ? Math.Max(Math.Min(x, to), from) : Math.Min(Math.Max(x, to), from);
+    public static double Clamp01(double x) => Clamp(x, 0, 1);
+    public static double Lerp(double from, double to, double t) => Clamp(LerpUnclamped(from, to, t), from, to);
+    public static double LerpUnclamped(double from, double to, double t) => from * (1 - t) + to * t;
+    public static double UnLerp(double from, double to, double t) => Clamp01(UnLerpUnclamped(from, to, t));
+    public static double UnLerpUnclamped(double from, double to, double t) => (t - from) / (to - from);
+    public static double Map(double x, double from0, double to0, double from1, double to1) => Lerp(from1, to1, UnLerp(from0, to0, x));
+    public static double MapUnclamped(double x, double from0, double to0, double from1, double to1) => LerpUnclamped(from1, to1, UnLerpUnclamped(from0, to0, x));
 
-    public static float Clamp01(float x) => Clamp(x, 0, 1);
-    public static float Lerp(float from, float to, float t) => Clamp(LerpUnclamped(from, to, t), from, to);
-    public static float LerpUnclamped(float from, float to, float t) => from * (1 - t) + to * t;
-    public static float UnLerp(float from, float to, float t) => Clamp01(UnLerpUnclamped(from, to, t));
-    public static float UnLerpUnclamped(float from, float to, float t) => (t - from) / (to - from);
-    public static float Map(float x, float from0, float to0, float from1, float to1) => Lerp(from1, to1, UnLerp(from0, to0, x));
-    public static float MapUnclamped(float x, float from0, float to0, float from1, float to1) => LerpUnclamped(from1, to1, UnLerpUnclamped(from0, to0, x));
+    public static int Clamp(int x, int from, int to) => from <= to ? Math.Max(Math.Min(x, to), from) : Math.Min(Math.Max(x, to), from);
 }
 
 public enum InterpolationType
@@ -29,7 +28,7 @@ public enum InterpolationType
 public static class Interpolation
 {
     [MethodImpl(MethodImplOptions.AggressiveOptimization)]
-    public static float CubicHermite(float x0, float y0, float x1, float y1, float s0, float s1, float x)
+    public static double CubicHermite(double x0, double y0, double x1, double y1, double s0, double s1, double x)
     {
         var d = x1 - x0;
         var dx = x - x0;
@@ -41,7 +40,7 @@ public static class Interpolation
     }
 
     [MethodImpl(MethodImplOptions.AggressiveOptimization)]
-    public static float CubicHermitePrime(float x0, float y0, float x1, float y1, float s0, float s1, float x)
+    public static double CubicHermitePrime(double x0, double y0, double x1, double y1, double s0, double s1, double x)
     {
         var d = x - x0;
         var dx = x1 - x0;
@@ -53,7 +52,7 @@ public static class Interpolation
     }
 
     [MethodImpl(MethodImplOptions.AggressiveOptimization)]
-    private static void PchipSlopes(float x0, float y0, float x1, float y1, float x2, float y2, float x3, float y3, out float s1, out float s2)
+    private static void PchipSlopes(double x0, double y0, double x1, double y1, double x2, double y2, double x3, double y3, out double s1, out double s2)
     {
         var hkm1 = x1 - x0;
         var dkm1 = (y1 - y0) / hkm1;
@@ -64,7 +63,7 @@ public static class Interpolation
         var w12 = hk1 + 2 * hkm1;
 
         s1 = (w11 + w12) / (w11 / dkm1 + w12 / dk1);
-        if (!float.IsFinite(s1) || dk1 * dkm1 < 0)
+        if (!double.IsFinite(s1) || dk1 * dkm1 < 0)
             s1 = 0;
 
         var hkm2 = x2 - x1;
@@ -76,19 +75,19 @@ public static class Interpolation
         var w22 = hk2 + 2 * hkm2;
 
         s2 = (w21 + w22) / (w21 / dkm2 + w22 / dk2);
-        if (!float.IsFinite(s2) || dk2 * dkm2 < 0)
+        if (!double.IsFinite(s2) || dk2 * dkm2 < 0)
             s2 = 0;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveOptimization)]
-    public static float Pchip(float x0, float y0, float x1, float y1, float x2, float y2, float x3, float y3, float x)
+    public static double Pchip(double x0, double y0, double x1, double y1, double x2, double y2, double x3, double y3, double x)
     {
         PchipSlopes(x0, y0, x1, y1, x2, y2, x3, y3, out var s1, out var s2);
         return CubicHermite(x1, y1, x2, y2, s1, s2, x);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveOptimization)]
-    private static void MakimaSlopes(float x0, float y0, float x1, float y1, float x2, float y2, float x3, float y3, float x4, float y4, float x5, float y5, out float s1, out float s2)
+    private static void MakimaSlopes(double x0, double y0, double x1, double y1, double x2, double y2, double x3, double y3, double x4, double y4, double x5, double y5, out double s1, out double s2)
     {
         var m4 = (y5 - y4) / (x5 - x4);
         var m3 = (y4 - y3) / (x4 - x3);
@@ -99,32 +98,32 @@ public static class Interpolation
         var w11 = Math.Abs(m3 - m2) + Math.Abs(m3 + m2) / 2;
         var w12 = Math.Abs(m1 - m0) + Math.Abs(m1 + m0) / 2;
         s1 = (w11 * m1 + w12 * m2) / (w11 + w12);
-        if (!float.IsFinite(s1))
+        if (!double.IsFinite(s1))
             s1 = 0;
 
         var w21 = Math.Abs(m4 - m3) + Math.Abs(m4 + m3) / 2;
         var w22 = Math.Abs(m2 - m1) + Math.Abs(m2 + m1) / 2;
         s2 = (w21 * m2 + w22 * m3) / (w21 + w22);
-        if (!float.IsFinite(s2))
+        if (!double.IsFinite(s2))
             s2 = 0;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveOptimization)]
-    public static float Makima(float x0, float y0, float x1, float y1, float x2, float y2, float x3, float y3, float x4, float y4, float x5, float y5, float x)
+    public static double Makima(double x0, double y0, double x1, double y1, double x2, double y2, double x3, double y3, double x4, double y4, double x5, double y5, double x)
     {
         MakimaSlopes(x0, y0, x1, y1, x2, y2, x3, y3, x4, y4, x5, y5, out var s1, out var s2);
         return CubicHermite(x2, y2, x3, y3, s1, s2, x);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveOptimization)]
-    public static float Linear(float x0, float y0, float x1, float y1, float x)
+    public static double Linear(double x0, double y0, double x1, double y1, double x)
     {
         var t = (x - x0) / (x1 - x0);
         return MathUtils.Lerp(y0, y1, t);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveOptimization)]
-    public static float Linear<T>(IList<T> points, Func<T, float> getX, Func<T, float> getY, float x)
+    public static double Linear<T>(IList<T> points, Func<T, double> getX, Func<T, double> getY, double x)
     {
         if (x < getX(points[0]))
             return getY(points[0]);
@@ -141,7 +140,7 @@ public static class Interpolation
     }
 
     [MethodImpl(MethodImplOptions.AggressiveOptimization)]
-    public static float Step(float x0, float y0, float x) => y0;
+    public static double Step(double x0, double y0, double x) => y0;
 }
 
 public class OpenSimplex

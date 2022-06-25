@@ -19,40 +19,40 @@ public enum PatternType
 [JsonObject(MemberSerialization = MemberSerialization.OptIn)]
 public class PatternMotionProviderViewModel : AbstractMotionProvider
 {
-    private float _time;
+    private double _time;
 
     public PatternMotionProviderViewModel(DeviceAxis target, IEventAggregator eventAggregator)
         : base(target, eventAggregator) { }
 
     [JsonProperty] public PatternType Pattern { get; set; } = PatternType.Triangle;
 
-    public override void Update(float deltaTime)
+    public override void Update(double deltaTime)
     {
         Value = MathUtils.Map(Calculate(Pattern, _time), 0, 1, Minimum / 100, Maximum / 100);
         _time += Speed * deltaTime;
     }
 
-    private float Calculate(PatternType pattern, float time)
+    private double Calculate(PatternType pattern, double time)
     {
         var t = MathUtils.Clamp01(time % 4 / 4);
         switch (pattern)
         {
-            case PatternType.Triangle: return MathF.Abs(MathF.Abs(t * 2 - 1.5f) - 1);
-            case PatternType.Sine: return -MathF.Sin(t * MathF.PI * 2) / 2 + 0.5f;
+            case PatternType.Triangle: return Math.Abs(Math.Abs(t * 2 - 1.5) - 1);
+            case PatternType.Sine: return -Math.Sin(t * Math.PI * 2) / 2 + 0.5;
             case PatternType.DoubleBounce:
                 {
-                    var x = t * MathF.PI * 2 - MathF.PI / 4;
-                    return -(MathF.Pow(MathF.Sin(x), 5) + MathF.Pow(MathF.Cos(x), 5)) / 2 + 0.5f;
+                    var x = t * Math.PI * 2 - Math.PI / 4;
+                    return -(Math.Pow(Math.Sin(x), 5) + Math.Pow(Math.Cos(x), 5)) / 2 + 0.5;
                 }
             case PatternType.SharpBounce:
                 {
-                    var x = (t + 0.41957f) * MathF.PI / 2;
-                    var s = MathF.Sin(x) * MathF.Sin(x);
-                    var c = MathF.Cos(x) * MathF.Cos(x);
-                    return MathF.Sqrt(MathF.Max(c - s, s - c));
+                    var x = (t + 0.41957) * Math.PI / 2;
+                    var s = Math.Sin(x) * Math.Sin(x);
+                    var c = Math.Cos(x) * Math.Cos(x);
+                    return Math.Sqrt(Math.Max(c - s, s - c));
                 }
             case PatternType.Saw: return t;
-            case PatternType.Square: return t < 0.5f ? 1 : 0;
+            case PatternType.Square: return t < 0.5 ? 1 : 0;
             default: return 0;
         }
     }

@@ -72,7 +72,7 @@ public partial class InterpolationPreview : UserControl, INotifyPropertyChanged
 
     private void GenerateKeyframes()
     {
-        void AddKeyframe(float x, float y)
+        void AddKeyframe(double x, double y)
         {
             Points.Add(new Point(ActualWidth * x, ActualHeight * y));
             _keyframes.Add(new Keyframe(x, y));
@@ -81,24 +81,24 @@ public partial class InterpolationPreview : UserControl, INotifyPropertyChanged
         Points = new ObservableCollection<Point>();
         _keyframes = new KeyframeCollection();
 
-        AddKeyframe(0, 0.5f);
+        AddKeyframe(0, 0.5);
         while (_keyframes.Count < PointCount - 1)
         {
-            var y = MathUtils.Clamp01((int)Math.Round(Random.Shared.NextDouble() * 5) / 5f);
+            var y = MathUtils.Clamp01((int)Math.Round(Random.Shared.NextDouble() * 5) / 5d);
             if (y == _keyframes.Last().Value)
                 continue;
 
             for (var i = 0; i < 2; i++)
                 if (_keyframes.Count != PointCount - 1)
-                    AddKeyframe(_keyframes.Count / (PointCount - 1f), y);
+                    AddKeyframe(_keyframes.Count / (PointCount - 1d), y);
         }
 
-        AddKeyframe(1, 0.5f);
+        AddKeyframe(1, 0.5);
     }
 
     private void Refresh()
     {
-        void AddPoint(float x, float y)
+        void AddPoint(double x, double y)
             => CurvePoints.Add(new Point(ActualWidth * x, ActualHeight * y));
 
         if (_keyframes == null || _keyframes.Count == 0)
@@ -106,7 +106,7 @@ public partial class InterpolationPreview : UserControl, INotifyPropertyChanged
 
         CurvePoints = new PointCollection();
 
-        var step = 1f / CurvePointCount;
+        var step = 1d / CurvePointCount;
         for (var i = 0; i < _keyframes.Count - 1; i++)
             for (var x = _keyframes[i].Position; x < _keyframes[i + 1].Position; x += step)
                 AddPoint(x, MathUtils.Clamp01(_keyframes.Interpolate(i, x, InterpolationType)));

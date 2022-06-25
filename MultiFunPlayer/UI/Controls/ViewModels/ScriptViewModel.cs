@@ -38,8 +38,8 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
     private double _internalMediaPosition;
 
     public bool IsPlaying { get; private set; }
-    public float PlaybackSpeed { get; private set; }
-    public float MediaDuration { get; private set; }
+    public double PlaybackSpeed { get; private set; }
+    public double MediaDuration { get; private set; }
 
     [DoNotNotify]
     public double MediaPosition { get; private set; }
@@ -53,7 +53,7 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
 
     public MediaResourceInfo MediaResource { get; set; }
 
-    [JsonProperty] public float GlobalOffset { get; set; }
+    [JsonProperty] public double GlobalOffset { get; set; }
     [JsonProperty] public bool ValuesContentVisible { get; set; }
     [JsonProperty] public bool MediaContentVisible { get; set; } = true;
     [JsonProperty] public bool AxisContentVisible { get; set; } = false;
@@ -65,10 +65,10 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
     [JsonProperty] public int HeatmapBucketCount { get; set; } = 333;
     [JsonProperty] public bool HeatmapInvertY { get; set; } = false;
     [JsonProperty] public bool AutoSkipToScriptStartEnabled { get; set; } = true;
-    [JsonProperty] public float AutoSkipToScriptStartOffset { get; set; } = 5;
+    [JsonProperty] public double AutoSkipToScriptStartOffset { get; set; } = 5;
 
     public bool IsSyncing => AxisStates.Values.Any(s => s.SyncTime > 0);
-    public float SyncProgress => !IsSyncing ? 100 : GetSyncProgress(AxisStates.Values.Max(s => s.SyncTime), SyncSettings.Duration) * 100;
+    public double SyncProgress => !IsSyncing ? 100 : GetSyncProgress(AxisStates.Values.Max(s => s.SyncTime), SyncSettings.Duration) * 100;
 
     public ScriptViewModel(IShortcutManager shortcutManager, IMotionProviderManager motionProviderManager, IMediaResourceFactory mediaResourceFactory, IEventAggregator eventAggregator)
     {
@@ -108,8 +108,8 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
     {
         private readonly AxisState _state;
 
-        public float LastValue => _state.Value;
-        public float Value { get; set; } = float.NaN;
+        public double LastValue => _state.Value;
+        public double Value { get; set; } = double.NaN;
         public bool IsDirty { get; set; } = false;
         public bool InsideGap { get; set; } = false;
 
@@ -120,7 +120,7 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
 
         public void Commit()
         {
-            if (!float.IsFinite(LastValue) && float.IsFinite(Value))
+            if (!double.IsFinite(LastValue) && double.IsFinite(Value))
                 IsDirty = true;
 
             _state.InsideGap = InsideGap;
@@ -132,9 +132,9 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
 
     private void UpdateThread(CancellationToken token)
     {
-        const float uiUpdateInterval = 1f / 60f;
-        var uiUpdateTime = 0f;
-        var deltaTime = 0f;
+        const double uiUpdateInterval = 1d / 60d;
+        var uiUpdateTime = 0d;
+        var deltaTime = 0d;
 
         while (!token.IsCancellationRequested)
         {
@@ -144,7 +144,7 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
             UpdateUi();
 
             Thread.Sleep(IsPlaying || dirty ? 2 : 10);
-            deltaTime = (Stopwatch.GetTimestamp() - updateStartTicks) / (float)Stopwatch.Frequency;
+            deltaTime = (Stopwatch.GetTimestamp() - updateStartTicks) / (double)Stopwatch.Frequency;
         }
 
         bool UpdateValues()
@@ -154,7 +154,7 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                 _internalMediaPosition += deltaTime * PlaybackSpeed;
 
                 var error = _internalMediaPosition - MediaPosition;
-                MediaPosition += MathUtils.Clamp(error, deltaTime * PlaybackSpeed * 0.9f, deltaTime * PlaybackSpeed * 1.1f);
+                MediaPosition += MathUtils.Clamp(error, deltaTime * PlaybackSpeed * 0.9, deltaTime * PlaybackSpeed * 1.1);
             }
 
             var dirty = false;
@@ -174,11 +174,11 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                     context.IsDirty |= UpdateScript(axis, state, settings, ref context);
                     context.IsDirty |= UpdateMotionProvider(axis, state, settings, ref context);
 
-                    if (!context.IsDirty && float.IsFinite(state.OverrideValue))
+                    if (!context.IsDirty && double.IsFinite(state.OverrideValue))
                     {
-                        context.IsDirty = MathF.Abs(context.LastValue - state.OverrideValue) > 0.000001f;
+                        context.IsDirty = Math.Abs(context.LastValue - state.OverrideValue) > 0.000001;
                         context.Value = state.OverrideValue;
-                        state.OverrideValue = float.NaN;
+                        state.OverrideValue = double.NaN;
                     }
                 }
 
@@ -199,25 +199,25 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
 
             void SpeedLimit(DeviceAxis axis, AxisState state, AxisSettings settings, ref AxisUpdateContext context)
             {
-                static bool SpeedLimitInternal(AxisSettings settings, float deltaTime, ref AxisUpdateContext context)
+                static bool SpeedLimitInternal(AxisSettings settings, double deltaTime, ref AxisUpdateContext context)
                 {
                     if (!settings.SpeedLimitEnabled)
                         return false;
 
                     var step = context.Value - context.LastValue;
-                    if (!float.IsFinite(step))
+                    if (!double.IsFinite(step))
                         return false;
-                    if (MathF.Abs(step) < 0.000001f)
+                    if (Math.Abs(step) < 0.000001)
                         return false;
 
                     var speed = step / deltaTime;
                     var maxSpeed = 1 / settings.MaximumSecondsPerStroke;
-                    if (MathF.Abs(speed / maxSpeed) < 1)
+                    if (Math.Abs(speed / maxSpeed) < 1)
                         return false;
-                    if (!float.IsFinite(maxSpeed))
+                    if (!double.IsFinite(maxSpeed))
                         return false;
 
-                    context.Value = MathUtils.Clamp01(context.LastValue + maxSpeed * deltaTime * MathF.Sign(speed));
+                    context.Value = MathUtils.Clamp01(context.LastValue + maxSpeed * deltaTime * Math.Sign(speed));
                     return true;
                 }
 
@@ -234,17 +234,17 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
 
                 if (settings.SmartLimitInputAxis == null)
                     return NoUpdate();
-                if (!float.IsFinite(context.Value))
+                if (!double.IsFinite(context.Value))
                     return NoUpdate();
                 if (settings.SmartLimitPoints == null || settings.SmartLimitPoints.Count == 0)
                     return NoUpdate();
 
                 var x = AxisStates[settings.SmartLimitInputAxis].Value * 100;
-                var factor = Interpolation.Linear(settings.SmartLimitPoints, p => (float)p.X, p => (float)p.Y, x) / 100;
+                var factor = Interpolation.Linear(settings.SmartLimitPoints, p => p.X, p => p.Y, x) / 100;
                 state.IsSmartLimited = factor < 1;
 
                 context.Value = MathUtils.Clamp01(MathUtils.Lerp(axis.DefaultValue, context.Value, factor));
-                return MathF.Abs(context.LastValue - context.Value) > 0.000001f;
+                return Math.Abs(context.LastValue - context.Value) > 0.000001;
             }
 
             bool UpdateScript(DeviceAxis axis, AxisState state, AxisSettings settings, ref AxisUpdateContext context)
@@ -298,8 +298,8 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                 if (settings.Inverted)
                     scriptValue = 1 - scriptValue;
 
-                context.Value = MathUtils.Clamp01(axis.DefaultValue + (scriptValue - axis.DefaultValue) * settings.Scale / 100.0f);
-                return MathF.Abs(context.LastValue - context.Value) > 0.000001f;
+                context.Value = MathUtils.Clamp01(axis.DefaultValue + (scriptValue - axis.DefaultValue) * settings.Scale / 100);
+                return Math.Abs(context.LastValue - context.Value) > 0.000001;
             }
 
             bool UpdateMotionProvider(DeviceAxis axis, AxisState state, AxisSettings settings, ref AxisUpdateContext context)
@@ -307,7 +307,7 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                 if (settings.SelectedMotionProvider == null)
                     return false;
 
-                var providerValue = float.NaN;
+                var providerValue = double.NaN;
                 if (!settings.MotionProviderFillGaps)
                 {
                     bool ShouldUpdateMotionProvider()
@@ -331,11 +331,11 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                         MotionProviderManager.Update(axis, settings.SelectedMotionProvider, deltaTime);
 
                     providerValue = MotionProviderManager.GetValue(axis);
-                    if (!float.IsFinite(providerValue))
+                    if (!double.IsFinite(providerValue))
                         return false;
 
                     var blendT = IsPlaying && state.InsideScript ? MathUtils.Clamp01(settings.MotionProviderBlend / 100) : 1;
-                    var blendFrom = float.IsFinite(context.Value) ? context.Value : axis.DefaultValue;
+                    var blendFrom = double.IsFinite(context.Value) ? context.Value : axis.DefaultValue;
                     providerValue = MathUtils.Clamp01(MathUtils.Lerp(blendFrom, providerValue, blendT));
                 }
                 else
@@ -365,11 +365,11 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                     providerValue = MotionProviderManager.GetValue(axis);
                 }
 
-                if (!float.IsFinite(providerValue))
+                if (!double.IsFinite(providerValue))
                     return false;
 
                 context.Value = providerValue;
-                return MathF.Abs(context.LastValue - context.Value) > 0.000001f;
+                return Math.Abs(context.LastValue - context.Value) > 0.000001;
             }
 
             bool UpdateAutoHome(DeviceAxis axis, AxisState state, AxisSettings settings, ref AxisUpdateContext context)
@@ -382,13 +382,13 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                         return false;
                     }
 
-                    if (!float.IsFinite(state.Value))
+                    if (!double.IsFinite(state.Value))
                         return false;
 
                     if (!settings.AutoHomeEnabled)
                         return false;
 
-                    if (settings.AutoHomeDuration < 0.0001f)
+                    if (settings.AutoHomeDuration < 0.0001)
                     {
                         context.Value = axis.DefaultValue;
                         return context.Value != context.LastValue;
@@ -399,8 +399,8 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                     if (t < 0 || t > 1)
                         return false;
 
-                    context.Value = MathUtils.Clamp01(MathUtils.Lerp(state.Value, axis.DefaultValue, MathF.Pow(2, 10 * (t - 1))));
-                    return MathF.Abs(context.LastValue - context.Value) > 0.000001f;
+                    context.Value = MathUtils.Clamp01(MathUtils.Lerp(state.Value, axis.DefaultValue, Math.Pow(2, 10 * (t - 1))));
+                    return Math.Abs(context.LastValue - context.Value) > 0.000001;
                 }
 
                 return state.IsAutoHoming = UpdateAutoHomeInternal(ref context);
@@ -414,13 +414,13 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                 var t = GetSyncProgress(state.SyncTime, SyncSettings.Duration);
                 state.SyncTime -= deltaTime;
 
-                if (!float.IsFinite(context.Value))
+                if (!double.IsFinite(context.Value))
                     return false;
 
-                var from = !float.IsFinite(context.LastValue) ? axis.DefaultValue : context.LastValue;
+                var from = !double.IsFinite(context.LastValue) ? axis.DefaultValue : context.LastValue;
                 context.Value = MathUtils.Clamp01(MathUtils.Lerp(from, context.Value, t));
 
-                return MathF.Abs(context.LastValue - context.Value) > 0.000001f;
+                return Math.Abs(context.LastValue - context.Value) > 0.000001;
             }
         }
 
@@ -485,7 +485,7 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
 
     public void Handle(MediaDurationChangedMessage message)
     {
-        var newDuration = (float)(message.Duration?.TotalSeconds ?? float.NaN);
+        var newDuration = message.Duration?.TotalSeconds ?? double.NaN;
         if (MediaDuration == newDuration)
             return;
 
@@ -545,7 +545,7 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         }
         else
         {
-            _internalMediaPosition += 0.33f * (newPosition - _internalMediaPosition);
+            _internalMediaPosition += 0.33 * (newPosition - _internalMediaPosition);
         }
     }
 
@@ -583,7 +583,7 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                 ScriptLibraries.AddRange(scriptDirectories);
             }
 
-            if (settings.TryGetValue<float>(nameof(GlobalOffset), out var globalOffset)) GlobalOffset = globalOffset;
+            if (settings.TryGetValue<double>(nameof(GlobalOffset), out var globalOffset)) GlobalOffset = globalOffset;
             if (settings.TryGetValue<bool>(nameof(ValuesContentVisible), out var valuesContentVisible)) ValuesContentVisible = valuesContentVisible;
             if (settings.TryGetValue<bool>(nameof(MediaContentVisible), out var mediaContentVisible)) MediaContentVisible = mediaContentVisible;
             if (settings.TryGetValue<bool>(nameof(AxisContentVisible), out var axisContentVisible)) AxisContentVisible = axisContentVisible;
@@ -591,7 +591,7 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
             if (settings.TryGetValue<bool>(nameof(HeatmapInvertY), out var heatmapInvertY)) HeatmapInvertY = heatmapInvertY;
             if (settings.TryGetValue<bool>(nameof(HeatmapShowStrokeLength), out var heatmapShowStrokeLength)) HeatmapShowStrokeLength = heatmapShowStrokeLength;
             if (settings.TryGetValue<bool>(nameof(AutoSkipToScriptStartEnabled), out var autoSkipToScriptStartEnabled)) AutoSkipToScriptStartEnabled = autoSkipToScriptStartEnabled;
-            if (settings.TryGetValue<float>(nameof(AutoSkipToScriptStartOffset), out var autoSkipToScriptStartOffset)) AutoSkipToScriptStartOffset = autoSkipToScriptStartOffset;
+            if (settings.TryGetValue<double>(nameof(AutoSkipToScriptStartOffset), out var autoSkipToScriptStartOffset)) AutoSkipToScriptStartOffset = autoSkipToScriptStartOffset;
 
             if (settings.TryGetValue(nameof(SyncSettings), out var syncSettingsToken)) syncSettingsToken.Populate(SyncSettings);
         }
@@ -630,11 +630,11 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         }
     }
 
-    private float GetAxisPosition(DeviceAxis axis) => (float)(MediaPosition - GlobalOffset - AxisSettings[axis].Offset);
-    public float GetValue(DeviceAxis axis) => MathUtils.Clamp01(AxisStates[axis].Value);
+    private double GetAxisPosition(DeviceAxis axis) => MediaPosition - GlobalOffset - AxisSettings[axis].Offset;
+    public double GetValue(DeviceAxis axis) => MathUtils.Clamp01(AxisStates[axis].Value);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private float GetSyncProgress(float time, float duration) => MathUtils.Clamp01(MathF.Pow(2, -10 * MathUtils.Clamp01(time / duration)));
+    private double GetSyncProgress(double time, double duration) => MathUtils.Clamp01(Math.Pow(2, -10 * MathUtils.Clamp01(time / duration)));
 
     private void ResetSync(bool isSyncing = true, params DeviceAxis[] axes) => ResetSync(isSyncing, axes?.AsEnumerable());
     private void ResetSync(bool isSyncing = true, IEnumerable<DeviceAxis> axes = null)
@@ -846,10 +846,10 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         UpdateLinkScriptFor(axesWithLinkPriority);
     }
 
-    private void SkipGap(float minimumSkip = 0, params DeviceAxis[] axes) => SkipGap(axes?.AsEnumerable(), minimumSkip);
-    private void SkipGap(IEnumerable<DeviceAxis> axes = null, float minimumSkip = 0)
+    private void SkipGap(double minimumSkip = 0, params DeviceAxis[] axes) => SkipGap(axes?.AsEnumerable(), minimumSkip);
+    private void SkipGap(IEnumerable<DeviceAxis> axes = null, double minimumSkip = 0)
     {
-        float? GetSkipPosition(DeviceAxis axis)
+        double? GetSkipPosition(DeviceAxis axis)
         {
             var keyframes = AxisKeyframes[axis];
             if (keyframes == null)
@@ -871,9 +871,9 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         if (!axes.Any())
             return;
 
-        var maybeSkipPosition = AxisKeyframes.Keys.Select(a => GetSkipPosition(a)).MinBy(x => x ?? float.PositiveInfinity);
+        var maybeSkipPosition = AxisKeyframes.Keys.Select(a => GetSkipPosition(a)).MinBy(x => x ?? double.PositiveInfinity);
         var currentPosition = MediaPosition;
-        if (maybeSkipPosition is not float skipPosition || currentPosition >= skipPosition || (skipPosition - currentPosition) <= minimumSkip)
+        if (maybeSkipPosition is not double skipPosition || currentPosition >= skipPosition || (skipPosition - currentPosition) <= minimumSkip)
             return;
 
         SeekMediaToTime(skipPosition);
@@ -915,15 +915,15 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         if (e.ChangedButton != MouseButton.Left)
             return;
 
-        SeekMediaToPercent((float)e.GetPosition(element).X / (float)element.ActualWidth);
+        SeekMediaToPercent(e.GetPosition(element).X / element.ActualWidth);
     }
 
     private void InvalidateMediaState()
     {
         MediaResource = null;
-        MediaDuration = float.NaN;
+        MediaDuration = double.NaN;
         PlaybackSpeed = 1;
-        SetMediaPositionInternal(float.NaN);
+        SetMediaPositionInternal(double.NaN);
     }
 
     private void SetMediaPositionInternal(double position)
@@ -932,17 +932,17 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         _internalMediaPosition = position;
     }
 
-    private void SeekMediaToPercent(float percent)
+    private void SeekMediaToPercent(double percent)
     {
-        if (!float.IsFinite(MediaDuration) || !float.IsFinite(percent))
+        if (!double.IsFinite(MediaDuration) || !double.IsFinite(percent))
             return;
 
         _eventAggregator.Publish(new MediaSeekMessage(TimeSpan.FromSeconds(MediaDuration * MathUtils.Clamp01(percent))));
     }
 
-    private void SeekMediaToTime(float time)
+    private void SeekMediaToTime(double time)
     {
-        if (!float.IsFinite(MediaDuration) || !float.IsFinite(time))
+        if (!double.IsFinite(MediaDuration) || !double.IsFinite(time))
             return;
 
         _eventAggregator.Publish(new MediaSeekMessage(TimeSpan.FromSeconds(MathUtils.Clamp(time, 0, MediaDuration))));
@@ -961,19 +961,19 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                                          .ContinueWith(_ => SeekMediaToScriptStart(AutoSkipToScriptStartOffset, onlyWhenBefore: true));
     }
 
-    private void SeekMediaToScriptStart(float offset, bool onlyWhenBefore)
+    private void SeekMediaToScriptStart(double offset, bool onlyWhenBefore)
     {
-        if (!float.IsFinite(MediaDuration) || !float.IsFinite(offset))
+        if (!double.IsFinite(MediaDuration) || !double.IsFinite(offset))
             return;
 
         var startPosition = AxisKeyframes.Select(x => x.Value)
                                          .NotNull()
-                                         .Select(ks => ks.TryGet(ks.SkipGap(index: 0), out var k) ? k.Position : default(float?))
+                                         .Select(ks => ks.TryGet(ks.SkipGap(index: 0), out var k) ? k.Position : default(double?))
                                          .FirstOrDefault();
         if (startPosition == null)
             return;
 
-        var targetMediaTime = MathF.Max(MathF.Min(startPosition.Value, MediaDuration) - offset, 0);
+        var targetMediaTime = Math.Max(Math.Min(startPosition.Value, MediaDuration) - offset, 0);
         if (onlyWhenBefore && targetMediaTime <= MediaPosition)
             return;
 
@@ -1059,7 +1059,7 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
     public void OnAxisClear(DeviceAxis axis) => ResetAxes(axis);
     public void OnAxisReload(DeviceAxis axis) => ReloadAxes(axis);
 
-    public void SetAxisValue(DeviceAxis axis, float value, bool offset = false)
+    public void SetAxisValue(DeviceAxis axis, double value, bool offset = false)
     {
         if (axis == null)
             return;
@@ -1069,7 +1069,7 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         {
             if (offset)
             {
-                if (!float.IsFinite(state.Value))
+                if (!double.IsFinite(state.Value))
                     state.OverrideValue = axis.DefaultValue;
 
                 state.OverrideValue = MathUtils.Clamp01(state.Value + value);
@@ -1476,12 +1476,12 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         s.RegisterAction("Axis::SpeedLimitSecondsPerStroke::Offset",
             b => b.WithSetting<DeviceAxis>(p => p.WithLabel("Target axis").WithItemsSource(DeviceAxis.All))
                   .WithSetting<float>(p => p.WithLabel("Value offset").WithStringFormat("{}{0:F3}s/stroke"))
-                  .WithCallback((_, axis, offset) => UpdateSettings(axis, s => s.MaximumSecondsPerStroke = MathUtils.Clamp(s.MaximumSecondsPerStroke + offset, 0.001f, 2f))));
+                  .WithCallback((_, axis, offset) => UpdateSettings(axis, s => s.MaximumSecondsPerStroke = MathUtils.Clamp(s.MaximumSecondsPerStroke + offset, 0.001, 2))));
 
         s.RegisterAction("Axis::SpeedLimitSecondsPerStroke::Set",
             b => b.WithSetting<DeviceAxis>(p => p.WithLabel("Target axis").WithItemsSource(DeviceAxis.All))
                   .WithSetting<float>(p => p.WithLabel("Value").WithStringFormat("{}{0:F3}s/stroke"))
-                  .WithCallback((_, axis, value) => UpdateSettings(axis, s => s.MaximumSecondsPerStroke = MathUtils.Clamp(value, 0.001f, 2f))));
+                  .WithCallback((_, axis, value) => UpdateSettings(axis, s => s.MaximumSecondsPerStroke = MathUtils.Clamp(value, 0.001, 2))));
         #endregion
 
         #region Axis::AutoHomeEnabled
@@ -1499,7 +1499,7 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         s.RegisterAction("Axis::AutoHomeDelay::Offset",
             b => b.WithSetting<DeviceAxis>(p => p.WithLabel("Target axis").WithItemsSource(DeviceAxis.All))
                   .WithSetting<float>(p => p.WithLabel("Value offset").WithStringFormat("{}{0}s"))
-                  .WithCallback((_, axis, offset) => UpdateSettings(axis, s => s.AutoHomeDelay = MathF.Max(0, s.AutoHomeDelay + offset))));
+                  .WithCallback((_, axis, offset) => UpdateSettings(axis, s => s.AutoHomeDelay = Math.Max(0, s.AutoHomeDelay + offset))));
 
         s.RegisterAction("Axis::AutoHomeDelay::Set",
             b => b.WithSetting<DeviceAxis>(p => p.WithLabel("Target axis").WithItemsSource(DeviceAxis.All))
@@ -1511,7 +1511,7 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         s.RegisterAction("Axis::AutoHomeDuration::Offset",
             b => b.WithSetting<DeviceAxis>(p => p.WithLabel("Target axis").WithItemsSource(DeviceAxis.All))
                   .WithSetting<float>(p => p.WithLabel("Value offset").WithStringFormat("{}{0}s"))
-                  .WithCallback((_, axis, offset) => UpdateSettings(axis, s => s.AutoHomeDuration = MathF.Max(0, s.AutoHomeDuration + offset))));
+                  .WithCallback((_, axis, offset) => UpdateSettings(axis, s => s.AutoHomeDuration = Math.Max(0, s.AutoHomeDuration + offset))));
 
         s.RegisterAction("Axis::AutoHomeDuration::Set",
             b => b.WithSetting<DeviceAxis>(p => p.WithLabel("Target axis").WithItemsSource(DeviceAxis.All))
@@ -1627,8 +1627,8 @@ public class AxisModel : PropertyChangedBase
 public class AxisState : INotifyPropertyChanged
 {
     [DoNotNotify] public int Index { get; set; } = int.MinValue;
-    [DoNotNotify] public float Value { get; set; } = float.NaN;
-    [DoNotNotify] public float OverrideValue { get; set; } = float.NaN;
+    [DoNotNotify] public double Value { get; set; } = double.NaN;
+    [DoNotNotify] public double OverrideValue { get; set; } = double.NaN;
 
     [DoNotNotify] public bool Invalid => Index == int.MinValue;
     [DoNotNotify] public bool BeforeScript => Index == -1;
@@ -1637,8 +1637,8 @@ public class AxisState : INotifyPropertyChanged
 
     [DoNotNotify] public bool InsideGap { get; set; } = false;
 
-    [DoNotNotify] public float SyncTime { get; set; } = 0;
-    [DoNotNotify] public float AutoHomeTime { get; set; } = 0;
+    [DoNotNotify] public double SyncTime { get; set; } = 0;
+    [DoNotNotify] public double AutoHomeTime { get; set; } = 0;
 
     [DoNotNotify] public bool IsDirty { get; set; } = true;
     [DoNotNotify] public bool IsAutoHoming { get; set; } = false;
@@ -1669,27 +1669,27 @@ public class AxisSettings : PropertyChangedBase
 
     [JsonProperty] public InterpolationType InterpolationType { get; set; } = InterpolationType.Pchip;
     [JsonProperty] public bool AutoHomeEnabled { get; set; } = false;
-    [JsonProperty] public float AutoHomeDelay { get; set; } = 5;
-    [JsonProperty] public float AutoHomeDuration { get; set; } = 3;
+    [JsonProperty] public double AutoHomeDelay { get; set; } = 5;
+    [JsonProperty] public double AutoHomeDuration { get; set; } = 3;
     [JsonProperty] public bool Inverted { get; set; } = false;
-    [JsonProperty] public float Offset { get; set; } = 0;
-    [JsonProperty] public float Scale { get; set; } = 100;
+    [JsonProperty] public double Offset { get; set; } = 0;
+    [JsonProperty] public double Scale { get; set; } = 100;
     [JsonProperty] public bool Bypass { get; set; } = false;
-    [JsonProperty] public float MotionProviderBlend { get; set; } = 100;
+    [JsonProperty] public double MotionProviderBlend { get; set; } = 100;
     [JsonProperty] public bool MotionProviderFillGaps { get; set; } = false;
-    [JsonProperty] public float MotionProviderMinimumGapDuration { get; set; } = 5;
+    [JsonProperty] public double MotionProviderMinimumGapDuration { get; set; } = 5;
     [JsonProperty] public bool UpdateMotionProviderWhenPaused { get; set; } = false;
     [JsonProperty] public bool UpdateMotionProviderWithoutScript { get; set; } = true;
     [JsonProperty] public DeviceAxis UpdateMotionProviderWithAxis { get; set; } = null;
     [JsonProperty] public string SelectedMotionProvider { get; set; } = null;
     [JsonProperty] public bool SpeedLimitEnabled { get; set; } = false;
-    [JsonProperty] public float MaximumSecondsPerStroke { get; set; } = 0.1f;
+    [JsonProperty] public double MaximumSecondsPerStroke { get; set; } = 0.1;
 }
 
 [JsonObject(MemberSerialization.OptIn)]
 public class SyncSettings : PropertyChangedBase
 {
-    [JsonProperty] public float Duration { get; set; } = 4;
+    [JsonProperty] public double Duration { get; set; } = 4;
     [JsonProperty] public bool SyncOnMediaResourceChanged { get; set; } = true;
     [JsonProperty] public bool SyncOnMediaPlayPause { get; set; } = true;
     [JsonProperty] public bool SyncOnSeek { get; set; } = true;

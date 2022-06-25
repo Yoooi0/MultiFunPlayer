@@ -11,6 +11,6 @@ public interface IInputGesture : IEquatable<IInputGesture>
 public interface ISimpleInputGesture : IInputGesture { }
 public interface IAxisInputGesture : IInputGesture
 {
-    float Value { get; }
-    float Delta { get; }
+    double Value { get; }
+    double Delta { get; }
 }

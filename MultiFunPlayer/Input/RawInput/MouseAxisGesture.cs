@@ -17,13 +17,13 @@ public class MouseAxisGesture : IAxisInputGesture
 {
     private readonly MouseAxisGestureDescriptor _descriptor;
 
-    public float Value { get; }
-    public float Delta { get; }
+    public double Value { get; }
+    public double Delta { get; }
     public MouseAxis Axis => _descriptor.Axis;
 
     public IInputGestureDescriptor Descriptor => _descriptor;
 
-    public MouseAxisGesture(MouseAxisGestureDescriptor descriptor, float value, float delta)
+    public MouseAxisGesture(MouseAxisGestureDescriptor descriptor, double value, double delta)
     {
         _descriptor = descriptor;
 
@@ -33,5 +33,5 @@ public class MouseAxisGesture : IAxisInputGesture
 
     public override string ToString() => $"[Mouse Axis: {Axis}, Value: {Value}, Delta: {Delta}]";
 
-    public static MouseAxisGesture Create(MouseAxis axis, float value, float delta) => new(new(axis), value, delta);
+    public static MouseAxisGesture Create(MouseAxis axis, double value, double delta) => new(new(axis), value, delta);
 }

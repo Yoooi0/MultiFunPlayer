@@ -3,11 +3,11 @@
 public interface IMotionProvider
 {
     string Name { get; }
-    float Value { get; }
+    double Value { get; }
 
-    float Speed { get; set; }
-    float Minimum { get; set; }
-    float Maximum { get; set; }
+    double Speed { get; set; }
+    double Minimum { get; set; }
+    double Maximum { get; set; }
 
-    void Update(float deltaTime);
+    void Update(double deltaTime);
 }

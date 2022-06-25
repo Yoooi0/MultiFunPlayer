@@ -140,7 +140,7 @@ public class HereSphereMediaSourceViewModel : AbstractMediaSource, IHandle<Media
                         playerState.State = state;
                     }
 
-                    if (document.TryGetValue("duration", out var durationToken) && durationToken.TryToObject<float>(out var duration) && duration >= 0 && duration != playerState.Duration)
+                    if (document.TryGetValue("duration", out var durationToken) && durationToken.TryToObject<double>(out var duration) && duration >= 0 && duration != playerState.Duration)
                     {
                         _eventAggregator.Publish(new MediaDurationChangedMessage(TimeSpan.FromSeconds(duration)));
                         playerState.Duration = duration;
@@ -152,7 +152,7 @@ public class HereSphereMediaSourceViewModel : AbstractMediaSource, IHandle<Media
                         playerState.Position = position;
                     }
 
-                    if (document.TryGetValue("playbackSpeed", out var speedToken) && speedToken.TryToObject<float>(out var speed) && speed > 0 && speed != playerState.Speed)
+                    if (document.TryGetValue("playbackSpeed", out var speedToken) && speedToken.TryToObject<double>(out var speed) && speed > 0 && speed != playerState.Speed)
                     {
                         _eventAggregator.Publish(new MediaSpeedChangedMessage(speed));
                         playerState.Speed = speed;
@@ -189,7 +189,7 @@ public class HereSphereMediaSourceViewModel : AbstractMediaSource, IHandle<Media
                     if (message is MediaPlayPauseMessage playPauseMessage)
                         sendState.State = playPauseMessage.State ? 0 : 1;
                     else if (message is MediaSeekMessage seekMessage && seekMessage.Position.HasValue)
-                        sendState.Position = (float)seekMessage.Position.Value.TotalSeconds;
+                        sendState.Position = seekMessage.Position.Value.TotalSeconds;
 
                     var messageString = JsonConvert.SerializeObject(sendState);
 
@@ -288,8 +288,8 @@ public class HereSphereMediaSourceViewModel : AbstractMediaSource, IHandle<Media
     {
         [JsonProperty("path")] public string Path { get; set; }
         [JsonProperty("currentTime")] public double? Position { get; set; }
-        [JsonProperty("playbackSpeed")] public float? Speed { get; set; }
+        [JsonProperty("playbackSpeed")] public double? Speed { get; set; }
         [JsonProperty("playerState")] public int? State { get; set; }
-        [JsonProperty("duration")] public float? Duration { get; set; }
+        [JsonProperty("duration")] public double? Duration { get; set; }
     }
 }

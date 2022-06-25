@@ -8,13 +8,13 @@ public static class SliderAssist
 {
     public static readonly DependencyProperty DefaultValueOnDoubleClickProperty =
         DependencyProperty.RegisterAttached("DefaultValueOnDoubleClick",
-            typeof(float), typeof(SliderAssist),
-                new PropertyMetadata(float.NaN, OnDefaultValueOnDoubleClickPropertyChanged));
+            typeof(double), typeof(SliderAssist),
+                new PropertyMetadata(double.NaN, OnDefaultValueOnDoubleClickPropertyChanged));
 
-    public static float GetDefaultValueOnDoubleClick(DependencyObject dp)
-        => (float)dp.GetValue(DefaultValueOnDoubleClickProperty);
+    public static double GetDefaultValueOnDoubleClick(DependencyObject dp)
+        => (double)dp.GetValue(DefaultValueOnDoubleClickProperty);
 
-    public static void SetDefaultValueOnDoubleClick(DependencyObject dp, float value)
+    public static void SetDefaultValueOnDoubleClick(DependencyObject dp, double value)
         => dp.SetValue(DefaultValueOnDoubleClickProperty, value);
 
     private static void OnDefaultValueOnDoubleClickPropertyChanged(DependencyObject dp, DependencyPropertyChangedEventArgs e)

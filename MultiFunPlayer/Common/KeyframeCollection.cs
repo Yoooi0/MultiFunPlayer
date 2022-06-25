@@ -8,9 +8,9 @@ public class KeyframeCollection : List<Keyframe>
     public KeyframeCollection(IEnumerable<Keyframe> collection) : base(collection) { }
     public KeyframeCollection(int capacity) : base(capacity) { }
 
-    public int BinarySearch(float position)
+    public int BinarySearch(double position)
     {
-        var bestIndex = BinarySearch(new Keyframe(position, float.NaN), KeyframePositionComparer.Default);
+        var bestIndex = BinarySearch(new Keyframe(position, double.NaN), KeyframePositionComparer.Default);
         if (bestIndex >= 0)
             return bestIndex;
 
@@ -18,17 +18,17 @@ public class KeyframeCollection : List<Keyframe>
         return bestIndex == Count ? Count : bestIndex - 1;
     }
 
-    public int AdvanceIndex(int index, float position)
+    public int AdvanceIndex(int index, double position)
     {
         while (index + 1 >= 0 && index + 1 < Count && this[index + 1].Position < position)
             index++;
         return index;
     }
 
-    public float Interpolate(int index, float position, InterpolationType interpolationType)
+    public double Interpolate(int index, double position, InterpolationType interpolationType)
     {
-        static float Distance(Keyframe p0, Keyframe p1)
-            => MathF.Sqrt((p1.Position - p0.Position) * (p1.Position - p0.Position) + (p1.Value - p0.Value) * (p1.Value - p0.Value));
+        static double Distance(Keyframe p0, Keyframe p1)
+            => Math.Sqrt((p1.Position - p0.Position) * (p1.Position - p0.Position) + (p1.Value - p0.Value) * (p1.Value - p0.Value));
 
         Keyframe TakeOrExtrapolateRight(int index, Keyframe prev0, Keyframe prev1)
             => index < Count ? this[index] : new Keyframe(prev1.Position + Distance(prev0, prev1) * 2, prev1.Value);
@@ -92,7 +92,7 @@ public class KeyframeCollection : List<Keyframe>
         return IsGapInternal(index);
     }
 
-    public float SegmentDuration(int index)
+    public double SegmentDuration(int index)
     {
         if (!this.ValidateIndex(index) || !this.ValidateIndex(index + 1))
             return -1;
@@ -105,9 +105,9 @@ public class KeyframeCollection : List<Keyframe>
         var prev = this[index + 0];
         var next = this[index + 1];
 
-        var adx = MathF.Abs(next.Position - prev.Position);
-        var ady = MathF.Abs(next.Value - prev.Value);
+        var adx = Math.Abs(next.Position - prev.Position);
+        var ady = Math.Abs(next.Value - prev.Value);
 
-        return ady < 0.001f || adx < 0.001f;
+        return ady < 0.001 || adx < 0.001;
     }
 }

@@ -13,7 +13,7 @@ public sealed class DeviceAxis
     private int _id;
 
     [JsonProperty] public string Name { get; init; }
-    [JsonProperty] public float DefaultValue { get; init; }
+    [JsonProperty] public double DefaultValue { get; init; }
     [JsonProperty] public string FriendlyName { get; init; }
     [JsonProperty] public IEnumerable<string> FunscriptNames { get; init; }
 
@@ -38,14 +38,14 @@ public sealed class DeviceAxis
         return axis != null;
     }
 
-    public static string ToString(DeviceAxis axis, float value) => $"{axis}{string.Format(_outputFormat, value * _outputMaximum)}";
-    public static string ToString(DeviceAxis axis, float value, float interval) => $"{ToString(axis, value)}I{(int)Math.Floor(interval + 0.75f)}";
+    public static string ToString(DeviceAxis axis, double value) => $"{axis}{string.Format(_outputFormat, value * _outputMaximum)}";
+    public static string ToString(DeviceAxis axis, double value, double interval) => $"{ToString(axis, value)}I{(int)Math.Floor(interval + 0.75)}";
 
-    public static string ToString(IEnumerable<KeyValuePair<DeviceAxis, float>> values, float interval)
+    public static string ToString(IEnumerable<KeyValuePair<DeviceAxis, double>> values, double interval)
         => $"{values.Aggregate(string.Empty, (s, x) => $"{s} {ToString(x.Key, x.Value, interval)}")}\n".TrimStart();
 
-    public static bool IsDirty(float value, float lastValue)
-        => float.IsFinite(value) && (!float.IsFinite(lastValue) || MathF.Abs(lastValue - value) * (_outputMaximum + 1) >= 1);
+    public static bool IsDirty(double value, double lastValue)
+        => double.IsFinite(value) && (!double.IsFinite(lastValue) || Math.Abs(lastValue - value) * (_outputMaximum + 1) >= 1);
 
     public static void LoadSettings(JObject settings, JsonSerializer serializer)
     {
@@ -53,7 +53,7 @@ public sealed class DeviceAxis
          || !settings.TryGetValue<int>("OutputPrecision", serializer, out var precision))
             throw new JsonReaderException("Unable to read device settings");
 
-        _outputMaximum = (int)(MathF.Pow(10, precision) - 1);
+        _outputMaximum = (int)(Math.Pow(10, precision) - 1);
         _outputFormat = $"{{0:{new string('0', precision)}}}";
         _axes = axes.ToDictionary(a => a.Name, a => a);
     }

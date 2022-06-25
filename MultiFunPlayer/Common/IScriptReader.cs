@@ -71,7 +71,7 @@ public class FunscriptReader : IScriptReader
     }
 
     private record Script(List<Action> RawActions, List<Action> Actions);
-    private record Action(float At, float Pos);
+    private record Action(double At, double Pos);
 }
 
 public class CsvReader : IScriptReader
@@ -94,8 +94,8 @@ public class CsvReader : IScriptReader
             if (items.Length != 2)
                 continue;
 
-            if (!float.TryParse(items[0].Replace(',', '.'), NumberStyles.Any, NumberFormatInfo.InvariantInfo, out var position)
-             || !float.TryParse(items[1].Replace(',', '.'), NumberStyles.Any, NumberFormatInfo.InvariantInfo, out var value))
+            if (!double.TryParse(items[0].Replace(',', '.'), NumberStyles.Any, NumberFormatInfo.InvariantInfo, out var position)
+             || !double.TryParse(items[1].Replace(',', '.'), NumberStyles.Any, NumberFormatInfo.InvariantInfo, out var value))
                 continue;
 
             keyframes.Add(new Keyframe(position, value));

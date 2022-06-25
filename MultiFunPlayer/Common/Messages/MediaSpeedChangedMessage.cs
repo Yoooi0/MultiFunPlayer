@@ -2,6 +2,6 @@
 
 public class MediaSpeedChangedMessage
 {
-    public float Speed { get; }
-    public MediaSpeedChangedMessage(float speed) => Speed = speed;
+    public double Speed { get; }
+    public MediaSpeedChangedMessage(double speed) => Speed = speed;
 }

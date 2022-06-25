@@ -130,7 +130,7 @@ public class MpcMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlayPau
                     playerState.Position = position;
                 }
 
-                if (variables.TryGetValue("playbackrate", out var playbackrateString) && float.TryParse(playbackrateString, out var speed) && speed > 0 && speed != playerState.Speed)
+                if (variables.TryGetValue("playbackrate", out var playbackrateString) && double.TryParse(playbackrateString, out var speed) && speed > 0 && speed != playerState.Speed)
                 {
                     _eventAggregator.Publish(new MediaSpeedChangedMessage(speed));
                     playerState.Speed = speed;
@@ -257,7 +257,7 @@ public class MpcMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlayPau
     {
         public string Path { get; set; }
         public long? Position { get; set; }
-        public float? Speed { get; set; }
+        public double? Speed { get; set; }
         public int? State { get; set; }
         public long? Duration { get; set; }
     }

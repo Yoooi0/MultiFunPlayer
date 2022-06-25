@@ -14,16 +14,16 @@ public class RawInputProcessor : IInputProcessor
     private readonly Dictionary<Key, bool> _keyboardState;
     private HwndSource _source;
 
-    private float _mouseXAxis, _mouseYAxis;
-    private float _mouseWheelAxis, _mouseHorizontalWheelAxis;
+    private double _mouseXAxis, _mouseYAxis;
+    private double _mouseWheelAxis, _mouseHorizontalWheelAxis;
 
     public event EventHandler<IInputGesture> OnGesture;
 
     public RawInputProcessor()
     {
         _keyboardState = new Dictionary<Key, bool>();
-        _mouseXAxis = _mouseYAxis = 0.5f;
-        _mouseWheelAxis = _mouseHorizontalWheelAxis = 0.5f;
+        _mouseXAxis = _mouseYAxis = 0.5;
+        _mouseWheelAxis = _mouseHorizontalWheelAxis = 0.5;
     }
 
     public void RegisterWindow(HwndSource source)
@@ -94,21 +94,21 @@ public class RawInputProcessor : IInputProcessor
 
         if (data.Mouse.LastX != 0)
         {
-            var delta = data.Mouse.LastX / 500.0f;
+            var delta = data.Mouse.LastX / 500d;
             _mouseXAxis = MathUtils.Clamp01(_mouseXAxis + delta);
             HandleGesture(MouseAxisGesture.Create(MouseAxis.X, _mouseXAxis, delta));
         }
 
         if (data.Mouse.LastY != 0)
         {
-            var delta = data.Mouse.LastY / 500.0f;
+            var delta = data.Mouse.LastY / 500d;
             _mouseYAxis = MathUtils.Clamp01(_mouseYAxis + delta);
             HandleGesture(MouseAxisGesture.Create(MouseAxis.Y, _mouseYAxis, delta));
         }
 
         if (data.Mouse.ButtonData != 0)
         {
-            var delta = data.Mouse.ButtonData / (120.0f * 50.0f);
+            var delta = data.Mouse.ButtonData / (120d * 50d);
             if (HasFlag(RawMouseButtonFlags.MouseWheel))
             {
                 _mouseWheelAxis = MathUtils.Clamp01(_mouseWheelAxis + delta);

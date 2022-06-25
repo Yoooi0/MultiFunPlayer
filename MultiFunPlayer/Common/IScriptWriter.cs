@@ -6,7 +6,7 @@ namespace MultiFunPlayer.Common;
 
 public interface IScriptWriter : IDisposable
 {
-    void Write(float position, float value);
+    void Write(double position, double value);
     void Write(Keyframe keyframe) => Write(keyframe.Position, keyframe.Value);
     void Write(IEnumerable<Keyframe> keyframes)
     {
@@ -30,7 +30,7 @@ public class FunscriptWriter : IScriptWriter
         Write("{ \"actions\": [");
     }
 
-    public void Write(float position, float value)
+    public void Write(double position, double value)
     {
         if (!_isFirst)
             Write(",");
@@ -71,7 +71,7 @@ public class CsvWriter : IScriptWriter
         Write("position;value\n");
     }
 
-    public void Write(float position, float value)
+    public void Write(double position, double value)
         => Write($"{position.ToString(CultureInfo.InvariantCulture)};{value.ToString(CultureInfo.InvariantCulture)}\n");
 
     private void Write(string s) => _stream.Write(Encoding.UTF8.GetBytes(s));

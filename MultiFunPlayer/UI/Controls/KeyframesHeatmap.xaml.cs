@@ -22,8 +22,8 @@ public partial class KeyframesHeatmap : UserControl, INotifyPropertyChanged
     public GradientStopCollection Stops { get; set; }
     public PointCollection Points { get; set; }
 
-    public float ScrubberPosition => ShowScrubber ? Position / Duration * (float)ActualWidth : 0;
-    public bool ShowScrubber => float.IsFinite(Duration) && Duration > 0;
+    public double ScrubberPosition => ShowScrubber ? Position / Duration * ActualWidth : 0;
+    public bool ShowScrubber => double.IsFinite(Duration) && Duration > 0;
 
     [DoNotNotify]
     public IReadOnlyDictionary<DeviceAxis, KeyframeCollection> Keyframes
@@ -55,15 +55,15 @@ public partial class KeyframesHeatmap : UserControl, INotifyPropertyChanged
     private void OnKeyframesCollectionChanged(object sender, NotifyCollectionChangedEventArgs e) => Refresh();
 
     [DoNotNotify]
-    public float Duration
+    public double Duration
     {
-        get => (float)GetValue(DurationProperty);
+        get => (double)GetValue(DurationProperty);
         set => SetValue(DurationProperty, value);
     }
 
     public static readonly DependencyProperty DurationProperty =
-        DependencyProperty.Register(nameof(Duration), typeof(float),
-            typeof(KeyframesHeatmap), new FrameworkPropertyMetadata(float.NaN,
+        DependencyProperty.Register(nameof(Duration), typeof(double),
+            typeof(KeyframesHeatmap), new FrameworkPropertyMetadata(double.NaN,
                 new PropertyChangedCallback(OnDurationChanged)));
 
     [SuppressPropertyChangedWarnings]
@@ -77,15 +77,15 @@ public partial class KeyframesHeatmap : UserControl, INotifyPropertyChanged
     }
 
     [DoNotNotify]
-    public float Position
+    public double Position
     {
-        get => (float)GetValue(PositionProperty);
+        get => (double)GetValue(PositionProperty);
         set => SetValue(PositionProperty, value);
     }
 
     public static readonly DependencyProperty PositionProperty =
-        DependencyProperty.Register(nameof(Position), typeof(float),
-            typeof(KeyframesHeatmap), new FrameworkPropertyMetadata(float.NaN,
+        DependencyProperty.Register(nameof(Position), typeof(double),
+            typeof(KeyframesHeatmap), new FrameworkPropertyMetadata(double.NaN,
                 new PropertyChangedCallback(OnPositionChanged)));
 
     [SuppressPropertyChangedWarnings]
@@ -183,11 +183,11 @@ public partial class KeyframesHeatmap : UserControl, INotifyPropertyChanged
         Stops = new GradientStopCollection();
         Points = new PointCollection();
 
-        if (Keyframes == null || Keyframes.Count == 0 || !float.IsFinite(Duration) || Duration <= 0 || ActualWidth < 1 || ActualHeight < 1)
+        if (Keyframes == null || Keyframes.Count == 0 || !double.IsFinite(Duration) || Duration <= 0 || ActualWidth < 1 || ActualHeight < 1)
             return;
 
         var bucketSize = Duration / BucketCount;
-        var buckets = _buckets.AsSpan(0, (int)MathF.Floor(Duration / bucketSize));
+        var buckets = _buckets.AsSpan(0, (int)Math.Floor(Duration / bucketSize));
 
         for (var i = 0; i < buckets.Length; i++)
             buckets[i].Clear();
@@ -196,7 +196,7 @@ public partial class KeyframesHeatmap : UserControl, INotifyPropertyChanged
         UpdateStroke(buckets, bucketSize);
     }
 
-    private void UpdateHeat(Span<HeatmapBucket> buckets, float bucketSize)
+    private void UpdateHeat(Span<HeatmapBucket> buckets, double bucketSize)
     {
         foreach (var (_, keyframes) in Keyframes)
         {
@@ -213,39 +213,39 @@ public partial class KeyframesHeatmap : UserControl, INotifyPropertyChanged
 
                 var dx = next.Position - prev.Position;
                 var dy = next.Value - prev.Value;
-                var adx = MathF.Abs(dx);
-                var ady = MathF.Abs(dy);
-                if (ady < 0.001f || adx < 0.001f || MathF.Atan2(ady, adx) * 180 / MathF.PI < 5)
+                var adx = Math.Abs(dx);
+                var ady = Math.Abs(dy);
+                if (ady < 0.001 || adx < 0.001 || Math.Atan2(ady, adx) * 180 / MathF.PI < 5)
                     continue;
 
-                var startBucket = (int)MathF.Floor(prev.Position / bucketSize);
-                var endBucket = (int)MathF.Floor(next.Position / bucketSize);
+                var startBucket = (int)Math.Floor(prev.Position / bucketSize);
+                var endBucket = (int)Math.Floor(next.Position / bucketSize);
 
                 for (var index = startBucket; index < buckets.Length && index <= endBucket; index++)
                 {
-                    var positionFrom = MathF.Max(index * bucketSize, prev.Position);
-                    var positionTo = MathF.Min((index + 1) * bucketSize, next.Position);
+                    var positionFrom = Math.Max(index * bucketSize, prev.Position);
+                    var positionTo = Math.Min((index + 1) * bucketSize, next.Position);
 
                     buckets[index].TotalLength += ady * (positionTo - positionFrom) / adx;
                 }
             }
         }
 
-        void AddStop(Color color, float offset) => Stops.Add(new GradientStop(color, offset));
+        void AddStop(Color color, double offset) => Stops.Add(new GradientStop(color, offset));
 
         AddStop(Color.FromRgb(0, 0, 0), 0);
 
         var maxLength = buckets.Length > 0 ? buckets[0].TotalLength : 0;
         for (var i = 1; i < buckets.Length; i++)
-            maxLength = MathF.Max(maxLength, buckets[i].TotalLength);
+            maxLength = Math.Max(maxLength, buckets[i].TotalLength);
 
-        var normalizationFactor = 1.0f / maxLength;
-        if (float.IsFinite(normalizationFactor))
+        var normalizationFactor = 1d / maxLength;
+        if (double.IsFinite(normalizationFactor))
         {
             for (var i = 0; i < buckets.Length; i++)
             {
                 var heat = MathUtils.Clamp01(buckets[i].TotalLength * normalizationFactor);
-                var color = heat < 0.001f ? Color.FromRgb(0, 0, 0) : _colors[(int)MathF.Round(heat * (_colors.Length - 1))];
+                var color = heat < 0.001 ? Color.FromRgb(0, 0, 0) : _colors[(int)Math.Round(heat * (_colors.Length - 1))];
 
                 AddStop(color, i * bucketSize / Duration);
                 if (i < buckets.Length - 1)
@@ -256,23 +256,20 @@ public partial class KeyframesHeatmap : UserControl, INotifyPropertyChanged
         }
     }
 
-    private void UpdateStroke(Span<HeatmapBucket> buckets, float bucketSize)
+    private void UpdateStroke(Span<HeatmapBucket> buckets, double bucketSize)
     {
-        void AddPoint(float x, float y)
-            => Points.Add(new Point(float.IsFinite(x) ? x : 0, float.IsFinite(y) ? y : 0));
+        void AddPoint(double x, double y)
+            => Points.Add(new Point(double.IsFinite(x) ? x : 0, double.IsFinite(y) ? y : 0));
 
-        void AddPointForBucket(int index, float value)
-            => AddPoint(index * bucketSize / Duration * (float)ActualWidth, MathUtils.Clamp01(!InvertY ? 1 - value : value) * (float)ActualHeight);
+        void AddPointForBucket(int index, double value)
+            => AddPoint(index * bucketSize / Duration * ActualWidth, MathUtils.Clamp01(!InvertY ? 1 - value : value) * ActualHeight);
 
         if (!ShowStrokeLength || !DeviceAxis.TryParse("L0", out var axis) || !Keyframes.TryGetValue(axis, out var keyframes) || keyframes == null || keyframes.Count < 2)
         {
-            var width = (float)ActualWidth;
-            var height = (float)ActualHeight;
-
             AddPoint(0, 0);
-            AddPoint(width, 0);
-            AddPoint(width, height);
-            AddPoint(0, height);
+            AddPoint(ActualWidth, 0);
+            AddPoint(ActualWidth, ActualHeight);
+            AddPoint(0, ActualHeight);
 
             return;
         }
@@ -283,7 +280,7 @@ public partial class KeyframesHeatmap : UserControl, INotifyPropertyChanged
             var direction = default(int?);
             for (var k = j + 1; k < keyframes.Count; j = k++)
             {
-                var currentDirection = MathF.Sign(keyframes[k].Value - keyframes[j].Value);
+                var currentDirection = Math.Sign(keyframes[k].Value - keyframes[j].Value);
                 if (!direction.HasValue)
                     direction = currentDirection;
 
@@ -294,12 +291,12 @@ public partial class KeyframesHeatmap : UserControl, INotifyPropertyChanged
             var prev = keyframes[i];
             var next = keyframes[j];
 
-            var startBucket = (int)MathF.Floor(prev.Position / bucketSize);
-            var endBucket = (int)MathF.Floor(next.Position / bucketSize);
+            var startBucket = (int)Math.Floor(prev.Position / bucketSize);
+            var endBucket = (int)Math.Floor(next.Position / bucketSize);
             for (var index = startBucket; index < buckets.Length && index <= endBucket; index++)
             {
-                var positionFrom = MathF.Max(index * bucketSize, prev.Position);
-                var positionTo = MathF.Min((index + 1) * bucketSize, next.Position);
+                var positionFrom = Math.Max(index * bucketSize, prev.Position);
+                var positionTo = Math.Min((index + 1) * bucketSize, next.Position);
                 var valueFrom = MathUtils.Map(positionFrom, prev.Position, next.Position, prev.Value, next.Value);
                 var valueTo = MathUtils.Map(positionTo, prev.Position, next.Position, prev.Value, next.Value);
 
@@ -336,7 +333,7 @@ public partial class KeyframesHeatmap : UserControl, INotifyPropertyChanged
 
     private struct HeatmapBucket
     {
-        public float TotalLength;
+        public double TotalLength;
         public HeatmapBucketValue Top;
         public HeatmapBucketValue Bottom;
 
@@ -349,11 +346,11 @@ public partial class KeyframesHeatmap : UserControl, INotifyPropertyChanged
 
         public struct HeatmapBucketValue
         {
-            public float Total { get; private set; }
+            public double Total { get; private set; }
             public int Count { get; private set; }
-            public float Average => Total / Count;
+            public double Average => Total / Count;
 
-            public void Add(float value)
+            public void Add(double value)
             {
                 Total += value;
                 Count++;

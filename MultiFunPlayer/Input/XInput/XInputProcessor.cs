@@ -30,7 +30,7 @@ public class XInputProcessor : IInputProcessor
 
     private void Update(CancellationToken token)
     {
-        const int sleepMs = (int)(1000 / 30f);
+        const int sleepMs = (int)(1000 / 30d);
 
         Vortice.XInput.XInput.SetReporting(true);
 
@@ -76,14 +76,14 @@ public class XInputProcessor : IInputProcessor
     {
         void CreateAxisGestureShort(short last, short current, GamepadAxis axis)
         {
-            var delta = (float)(current - last) / ushort.MaxValue;
+            var delta = (double)(current - last) / ushort.MaxValue;
             var value = MathUtils.Map(current, short.MinValue, short.MaxValue, 0, 1);
             HandleGesture(GamepadAxisGesture.Create(userIndex, axis, value, delta));
         }
 
         void CreateAxisGestureByte(byte last, byte current, GamepadAxis axis)
         {
-            var delta = (float)(current - last) / byte.MaxValue;
+            var delta = (double)(current - last) / byte.MaxValue;
             var value = MathUtils.Map(current, byte.MinValue, byte.MaxValue, 0, 1);
             HandleGesture(GamepadAxisGesture.Create(userIndex, axis, value, delta));
         }

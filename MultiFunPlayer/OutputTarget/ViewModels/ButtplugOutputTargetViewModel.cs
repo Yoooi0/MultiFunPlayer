@@ -177,7 +177,7 @@ public class ButtplugOutputTargetViewModel : AsyncAbstractOutputTarget
         {
             _ = ScanAsync(client, token);
 
-            var lastSentValuesPerDevice = new Dictionary<ButtplugClientDevice, Dictionary<DeviceAxis, float>>();
+            var lastSentValuesPerDevice = new Dictionary<ButtplugClientDevice, Dictionary<DeviceAxis, double>>();
             bool CheckDirtyAndUpdate(ButtplugClientDeviceSettings settings)
             {
                 var device = GetDeviceFromSettings(settings);
@@ -185,19 +185,19 @@ public class ButtplugOutputTargetViewModel : AsyncAbstractOutputTarget
                     return false;
 
                 if (!lastSentValuesPerDevice.ContainsKey(device))
-                    lastSentValuesPerDevice.Add(device, DeviceAxis.All.ToDictionary(a => a, _ => float.NaN));
+                    lastSentValuesPerDevice.Add(device, DeviceAxis.All.ToDictionary(a => a, _ => double.NaN));
 
                 var axis = settings.SourceAxis;
                 var lastSentValues = lastSentValuesPerDevice[device];
                 var currentValue = Values[axis];
                 var lastValue = lastSentValues[axis];
 
-                if (!float.IsFinite(currentValue))
+                if (!double.IsFinite(currentValue))
                     return false;
 
-                var shouldUpdate = !float.IsFinite(lastValue)
+                var shouldUpdate = !double.IsFinite(lastValue)
                                 || (currentValue == 0 && lastValue != 0)
-                                || MathF.Abs(lastValue - currentValue) >= 0.005f;
+                                || Math.Abs(lastValue - currentValue) >= 0.005;
 
                 if (shouldUpdate)
                     lastSentValues[axis] = currentValue;
@@ -254,13 +254,13 @@ public class ButtplugOutputTargetViewModel : AsyncAbstractOutputTarget
     private ButtplugClientDevice GetDeviceByNameAndIndex(string deviceName, uint deviceIndex)
         => AvailableDevices.FirstOrDefault(d => string.Equals(deviceName, d.Name, StringComparison.OrdinalIgnoreCase) && deviceIndex == d.Index);
 
-    protected override float CoerceProviderValue(DeviceAxis axis, float value)
+    protected override double CoerceProviderValue(DeviceAxis axis, double value)
     {
         value = base.CoerceProviderValue(axis, value);
-        return value < 0.005f ? 0 : value;
+        return value < 0.005 ? 0 : value;
     }
 
-    private IEnumerable<Task> GetDeviceTasks(float interval, IEnumerable<ButtplugClientDeviceSettings> settings)
+    private IEnumerable<Task> GetDeviceTasks(double interval, IEnumerable<ButtplugClientDeviceSettings> settings)
     {
         return settings.GroupBy(m => m.DeviceName).SelectMany(deviceGroup =>
         {
@@ -278,7 +278,7 @@ public class ButtplugOutputTargetViewModel : AsyncAbstractOutputTarget
                     if (type == ServerMessage.Types.MessageAttributeType.VibrateCmd)
                     {
                         var cmds = typeGroup.ToDictionary(m => m.FeatureIndex,
-                                                            m => (double)Values[m.SourceAxis]);
+                                                            m => Values[m.SourceAxis]);
 
                         Logger.Trace("Sending vibrate commands \"{data}\" to \"{name}\"", cmds, device.Name);
                         return device.SendVibrateCmd(cmds);
@@ -287,7 +287,7 @@ public class ButtplugOutputTargetViewModel : AsyncAbstractOutputTarget
                     if (type == ServerMessage.Types.MessageAttributeType.LinearCmd)
                     {
                         var cmds = typeGroup.ToDictionary(m => m.FeatureIndex,
-                                                            m => ((uint)interval, (double)Values[m.SourceAxis]));
+                                                            m => ((uint)interval, Values[m.SourceAxis]));
 
                         Logger.Trace("Sending linear commands \"{data}\" to \"{name}\"", cmds, device.Name);
                         return device.SendLinearCmd(cmds);

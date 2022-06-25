@@ -1289,22 +1289,22 @@
                                                                 <EventTrigger RoutedEvent="Loaded">
                                                                     <BeginStoryboard>
                                                                         <Storyboard RepeatBehavior="Forever">
-                                                                            <SingleAnimation Storyboard.TargetProperty="Input"
+                                                                            <DoubleAnimation Storyboard.TargetProperty="Input"
                                                                                              From="0"
                                                                                              To="0"
                                                                                              BeginTime="0:0:0"
                                                                                              Duration="0:0:0.500"/>
-                                                                            <SingleAnimation Storyboard.TargetProperty="Input"
+                                                                            <DoubleAnimation Storyboard.TargetProperty="Input"
                                                                                              From="0"
                                                                                              To="100"
                                                                                              BeginTime="0:0:0.500"
                                                                                              Duration="0:0:3"/>
-                                                                            <SingleAnimation Storyboard.TargetProperty="Input"
+                                                                            <DoubleAnimation Storyboard.TargetProperty="Input"
                                                                                              From="100"
                                                                                              To="100"
                                                                                              BeginTime="0:0:3.500"
                                                                                              Duration="0:0:0.500"/>
-                                                                            <SingleAnimation Storyboard.TargetProperty="Input"
+                                                                            <DoubleAnimation Storyboard.TargetProperty="Input"
                                                                                              From="100"
                                                                                              To="0"
                                                                                              BeginTime="0:0:4"

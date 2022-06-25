@@ -15,7 +15,7 @@ public abstract class AbstractOutputTarget : Screen, IOutputTarget
 {
     private readonly IDeviceAxisValueProvider _valueProvider;
     private readonly AsyncManualResetEvent _statusEvent;
-    private float _statsTime;
+    private double _statsTime;
     private int _statsCount;
     private int _statsJitter = int.MinValue;
 
@@ -45,7 +45,7 @@ public abstract class AbstractOutputTarget : Screen, IOutputTarget
         }
     }
 
-    protected Dictionary<DeviceAxis, float> Values { get; }
+    protected Dictionary<DeviceAxis, double> Values { get; }
     protected IEventAggregator EventAggregator { get; }
 
     protected AbstractOutputTarget(int instanceIndex, IEventAggregator eventAggregator, IDeviceAxisValueProvider valueProvider)
@@ -92,9 +92,9 @@ public abstract class AbstractOutputTarget : Screen, IOutputTarget
             await _statusEvent.WaitAsync(token);
     }
 
-    protected virtual float CoerceProviderValue(DeviceAxis axis, float value)
+    protected virtual double CoerceProviderValue(DeviceAxis axis, double value)
     {
-        if (!float.IsFinite(value))
+        if (!double.IsFinite(value))
             return axis.DefaultValue;
 
         return value;
@@ -104,25 +104,25 @@ public abstract class AbstractOutputTarget : Screen, IOutputTarget
     {
         foreach (var axis in DeviceAxis.All)
         {
-            var value = CoerceProviderValue(axis, _valueProvider?.GetValue(axis) ?? float.NaN);
+            var value = CoerceProviderValue(axis, _valueProvider?.GetValue(axis) ?? double.NaN);
             var settings = AxisSettings[axis];
-            Values[axis] = MathUtils.Lerp(settings.Minimum / 100f, settings.Maximum / 100f, value);
+            Values[axis] = MathUtils.Lerp(settings.Minimum / 100, settings.Maximum / 100, value);
         }
     }
 
     protected void UpdateStats(Stopwatch stopwatch)
     {
-        var elapsed = stopwatch.ElapsedTicks / (float)Stopwatch.Frequency;
+        var elapsed = stopwatch.ElapsedTicks / (double)Stopwatch.Frequency;
         _statsTime += elapsed;
         _statsCount++;
 
-        var updateRateDiff = (int)MathF.Round(MathF.Abs(1000f / UpdateInterval - 1 / elapsed));
+        var updateRateDiff = (int)Math.Round(Math.Abs(1000d / UpdateInterval - 1 / elapsed));
         _statsJitter = Math.Max(_statsJitter, updateRateDiff);
 
-        if (_statsTime > 0.25f)
+        if (_statsTime > 0.25)
         {
             UpdateRateJitter = _statsJitter;
-            AverageUpdateRate = (int)MathF.Round(1 / (_statsTime / _statsCount));
+            AverageUpdateRate = (int)Math.Round(1 / (_statsTime / _statsCount));
             _statsTime = 0;
             _statsCount = 0;
             _statsJitter = int.MinValue;
@@ -157,10 +157,10 @@ public abstract class AbstractOutputTarget : Screen, IOutputTarget
                 callback(AxisSettings[axis]);
         }
 
-        static void SetMinimum(DeviceAxisSettings settings, float value, float minimumLimit) => settings.Minimum = MathUtils.Clamp(value, minimumLimit, settings.Maximum - 1);
-        static void SetMaximum(DeviceAxisSettings settings, float value, float maximumLimit) => settings.Maximum = MathUtils.Clamp(value, settings.Minimum + 1, maximumLimit);
+        static void SetMinimum(DeviceAxisSettings settings, double value, double minimumLimit) => settings.Minimum = MathUtils.Clamp(value, minimumLimit, settings.Maximum - 1);
+        static void SetMaximum(DeviceAxisSettings settings, double value, double maximumLimit) => settings.Maximum = MathUtils.Clamp(value, settings.Minimum + 1, maximumLimit);
 
-        static void OffsetMiddle(DeviceAxisSettings settings, float offset, float minimumLimit, float maximumLimit)
+        static void OffsetMiddle(DeviceAxisSettings settings, double offset, double minimumLimit, double maximumLimit)
         {
             if (offset > 0 && settings.Maximum + offset > maximumLimit)
                 offset = Math.Min(offset, maximumLimit - settings.Maximum);
@@ -171,9 +171,9 @@ public abstract class AbstractOutputTarget : Screen, IOutputTarget
             settings.Maximum = MathUtils.Clamp(settings.Maximum + offset, minimumLimit + 1, maximumLimit);
         }
 
-        static void OffsetSize(DeviceAxisSettings settings, float offset, float minimumLimit, float maximumLimit)
+        static void OffsetSize(DeviceAxisSettings settings, double offset, double minimumLimit, double maximumLimit)
         {
-            var middle = (settings.Maximum + settings.Minimum) / 2.0f;
+            var middle = (settings.Maximum + settings.Minimum) / 2d;
             var newRange = MathUtils.Clamp(settings.Maximum - settings.Minimum + offset, 1, maximumLimit - minimumLimit);
             var newMaximum = middle + newRange / 2;
             var newMinimum = middle - newRange / 2;
@@ -192,7 +192,7 @@ public abstract class AbstractOutputTarget : Screen, IOutputTarget
             b => b.WithSetting<int>(s => s.WithLabel("Update rate").WithDescription("Will be set to closest\npossible value.").WithStringFormat("{}{0} Hz"))
                   .WithCallback((_, updateRate) =>
                   {
-                      var interval = 1000f / updateRate;
+                      var interval = 1000d / updateRate;
                       UpdateInterval = (int)UpdateIntervalTicks.OrderBy(x => Math.Abs(interval - x)).First();
                   }));
         #endregion
@@ -400,28 +400,28 @@ public abstract class ThreadAbstractOutputTarget : AbstractOutputTarget
 
     protected void Sleep(Stopwatch stopwatch)
     {
-        static float ElapsedMiliseconds(Stopwatch stopwatch)
-            => stopwatch.ElapsedTicks * 1000f / Stopwatch.Frequency;
+        static double ElapsedMiliseconds(Stopwatch stopwatch)
+            => stopwatch.ElapsedTicks * 1000d / Stopwatch.Frequency;
 
-        static void SleepPrecise(Stopwatch stopwatch, float desiredMs)
+        static void SleepPrecise(Stopwatch stopwatch, double desiredMs)
         {
             while (true)
             {
                 var elapsed = ElapsedMiliseconds(stopwatch);
                 var diff = desiredMs - elapsed;
-                if (diff <= 0f)
+                if (diff <= 0)
                     break;
 
-                if (diff < 1f) Thread.SpinWait(10);
-                else if (diff < 2f) Thread.SpinWait(100);
-                else if (diff < 5f) Thread.Sleep(1);
-                else if (diff < 15f) Thread.Sleep(5);
+                if (diff < 1) Thread.SpinWait(10);
+                else if (diff < 2) Thread.SpinWait(100);
+                else if (diff < 5) Thread.Sleep(1);
+                else if (diff < 15) Thread.Sleep(5);
                 else Thread.Sleep(10);
             }
         }
 
         if (!UsePreciseSleep)
-            Thread.Sleep((int)MathF.Max(1, UpdateInterval - ElapsedMiliseconds(stopwatch)));
+            Thread.Sleep((int)Math.Max(1, UpdateInterval - ElapsedMiliseconds(stopwatch)));
         else
             SleepPrecise(stopwatch, UpdateInterval);
 
@@ -494,10 +494,10 @@ public abstract class AsyncAbstractOutputTarget : AbstractOutputTarget
 
     protected async Task Sleep(Stopwatch stopwatch, CancellationToken token)
     {
-        static float ElapsedMiliseconds(Stopwatch stopwatch)
-            => stopwatch.ElapsedTicks * 1000f / Stopwatch.Frequency;
+        static double ElapsedMiliseconds(Stopwatch stopwatch)
+            => stopwatch.ElapsedTicks * 1000d / Stopwatch.Frequency;
 
-        await Task.Delay((int)MathF.Max(1, UpdateInterval - ElapsedMiliseconds(stopwatch)), token);
+        await Task.Delay((int)Math.Max(1, UpdateInterval - ElapsedMiliseconds(stopwatch)), token);
         UpdateStats(stopwatch);
     }
 
