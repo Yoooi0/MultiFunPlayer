@@ -207,7 +207,7 @@ public class Bootstrapper : Bootstrapper<RootViewModel>
         var dirty = false;
         if (!settings.TryGetValue<string>("SelectedDevice", serializer, out var selectedDevice) || selectedDevice == null)
         {
-            selectedDevice = devices.Properties().First().Name;
+            selectedDevice = devices.Properties().Last().Name;
             settings["SelectedDevice"] = selectedDevice;
             dirty = true;
         }
