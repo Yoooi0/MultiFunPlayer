@@ -1067,17 +1067,9 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         var state = AxisStates[axis];
         lock (state)
         {
-            if (offset)
-            {
-                if (!double.IsFinite(state.Value))
-                    state.OverrideValue = axis.DefaultValue;
-
-                state.OverrideValue = MathUtils.Clamp01(state.Value + value);
-            }
-            else
-            {
-                state.OverrideValue = value;
-            }
+            state.OverrideValue = offset
+                ? MathUtils.Clamp01((double.IsFinite(state.Value) ? state.Value : axis.DefaultValue) + value)
+                : value;
         }
     }
 
@@ -1362,12 +1354,12 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         #region Axis::Value
         s.RegisterAction("Axis::Value::Offset",
             b => b.WithSetting<DeviceAxis>(p => p.WithLabel("Target axis").WithItemsSource(DeviceAxis.All))
-                  .WithSetting<float>(p => p.WithLabel("Value offset"))
+                  .WithSetting<float>(p => p.WithLabel("Value offset").WithStringFormat("{}{0:P0}"))
                   .WithCallback((_, axis, offset) => SetAxisValue(axis, offset, offset: true)));
 
         s.RegisterAction("Axis::Value::Set",
             b => b.WithSetting<DeviceAxis>(p => p.WithLabel("Target axis").WithItemsSource(DeviceAxis.All))
-                  .WithSetting<float>(p => p.WithLabel("Value"))
+                  .WithSetting<float>(p => p.WithLabel("Value").WithStringFormat("{}{0:P0}"))
                   .WithCallback((_, axis, value) => SetAxisValue(axis, value)));
 
         s.RegisterAction("Axis::Value::Drive",
