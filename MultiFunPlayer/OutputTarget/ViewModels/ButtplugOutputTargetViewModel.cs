@@ -91,8 +91,8 @@ public class ButtplugOutputTargetViewModel : AsyncAbstractOutputTarget
 
         ButtplugFFILog.LogMessage += (_, m) =>
         {
-            var prefix = m.Remove(25).Trim();
-            var level = prefix[^5..].Trim() switch
+            var parts = m.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            var level = parts[1] switch
             {
                 "TRACE" => LogLevel.Trace,
                 "DEBUG" => LogLevel.Debug,
@@ -103,8 +103,7 @@ public class ButtplugOutputTargetViewModel : AsyncAbstractOutputTarget
                 _ => LogLevel.Info,
             };
 
-            var message = m.Remove(0, 25).Trim();
-            Logger.Log(level, message);
+            Logger.Log(level, string.Join(' ', parts[3..]));
         };
 
         try
