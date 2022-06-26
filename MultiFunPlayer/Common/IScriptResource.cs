@@ -59,6 +59,12 @@ public class ScriptResource : IScriptResource
         return new ScriptResource(entry.Name, archivePath, keyframes, origin);
     }
 
+    public static IScriptResource FromBytes(string name, string source, IEnumerable<byte> bytes, ScriptResourceOrigin origin)
+    {
+        var keyframes = ScriptReader.Read(ScriptType.Funscript, bytes);
+        return new ScriptResource(name, source, keyframes, origin);
+    }
+
     public static LinkedScriptResource LinkTo(IScriptResource other) => other != null ? new LinkedScriptResource(other) : null;
 }
 
