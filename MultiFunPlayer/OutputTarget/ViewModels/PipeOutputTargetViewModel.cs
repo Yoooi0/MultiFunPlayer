@@ -57,22 +57,19 @@ public class PipeOutputTargetViewModel : ThreadAbstractOutputTarget
             EventAggregator.Publish(new SyncRequestMessage());
 
             var buffer = new byte[256];
-            var stopwatch = Stopwatch.StartNew();
-            while (!token.IsCancellationRequested && client?.IsConnected == true)
+            FixedUpdate(() => !token.IsCancellationRequested && client?.IsConnected == true, elapsed =>
             {
-                stopwatch.Restart();
-                Sleep(stopwatch);
-
+                Logger.Trace("Begin FixedUpdate [Elapsed: {0}]", elapsed);
                 UpdateValues();
 
-                var commands = DeviceAxis.ToString(Values, 1000 * stopwatch.ElapsedTicks / (double)Stopwatch.Frequency);
+                var commands = DeviceAxis.ToString(Values, elapsed * 1000);
                 if (client.IsConnected && !string.IsNullOrWhiteSpace(commands))
                 {
                     Logger.Trace("Sending \"{0}\" to \"{1}\"", commands.Trim(), PipeName);
                     var encoded = Encoding.UTF8.GetBytes(commands, buffer);
                     client.Write(buffer, 0, encoded);
                 }
-            }
+            });
         }
         catch (Exception e)
         {

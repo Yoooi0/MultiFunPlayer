@@ -74,20 +74,16 @@ public class FileOutputTargetViewModel : ThreadAbstractOutputTarget
 
         try
         {
-            var stopwatch = Stopwatch.StartNew();
             var currentTime = 0d;
-
-            while (!token.IsCancellationRequested)
+            FixedUpdate(() => !token.IsCancellationRequested, elapsed =>
             {
-                stopwatch.Restart();
-                Sleep(stopwatch);
-
+                Logger.Trace("Begin FixedUpdate [Elapsed: {0}]", elapsed);
                 UpdateValues();
 
-                currentTime += stopwatch.ElapsedTicks / (double)Stopwatch.Frequency;
+                currentTime += elapsed;
                 foreach (var axis in EnabledAxes)
                     writers[axis].Write(currentTime, Values[axis]);
-            }
+            });
         }
         catch (Exception e)
         {

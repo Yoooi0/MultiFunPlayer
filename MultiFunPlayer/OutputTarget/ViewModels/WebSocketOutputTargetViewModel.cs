@@ -72,21 +72,18 @@ public class WebSocketOutputTargetViewModel : AsyncAbstractOutputTarget
     {
         try
         {
-            var stopwatch = Stopwatch.StartNew();
-            while (!token.IsCancellationRequested && client.State == WebSocketState.Open)
+            await FixedUpdateAsync(() => !token.IsCancellationRequested && client.State == WebSocketState.Open, async elapsed =>
             {
-                stopwatch.Restart();
-                await Sleep(stopwatch, token);
-
+                Logger.Trace("Begin FixedUpdate [Elapsed: {0}]", elapsed);
                 UpdateValues();
 
-                var commands = DeviceAxis.ToString(Values, 1000 * stopwatch.ElapsedTicks / (double)Stopwatch.Frequency);
+                var commands = DeviceAxis.ToString(Values, elapsed * 1000);
                 if (client.State == WebSocketState.Open && !string.IsNullOrWhiteSpace(commands))
                 {
                     Logger.Trace("Sending \"{0}\" to \"{1}\"", commands.Trim(), Uri.ToString());
                     await client.SendAsync(Encoding.UTF8.GetBytes(commands), WebSocketMessageType.Text, true, token);
                 }
-            }
+            }, token);
         }
         catch (OperationCanceledException) { }
     }

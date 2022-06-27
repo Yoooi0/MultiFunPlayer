@@ -110,9 +110,8 @@ public abstract class AbstractOutputTarget : Screen, IOutputTarget
         }
     }
 
-    protected void UpdateStats(Stopwatch stopwatch)
+    protected void UpdateStats(double elapsed)
     {
-        var elapsed = stopwatch.ElapsedTicks / (double)Stopwatch.Frequency;
         _statsTime += elapsed;
         _statsCount++;
 
@@ -398,17 +397,18 @@ public abstract class ThreadAbstractOutputTarget : AbstractOutputTarget
         }
     }
 
-    protected void Sleep(Stopwatch stopwatch)
+    protected void FixedUpdate(Func<bool> condition, Action<double> body)
     {
-        static double ElapsedMiliseconds(Stopwatch stopwatch)
-            => stopwatch.ElapsedTicks * 1000d / Stopwatch.Frequency;
-
-        static void SleepPrecise(Stopwatch stopwatch, double desiredMs)
+        static void SleepPrecise(Stopwatch stopwatch, double millisecondsTimeout)
         {
+            if (millisecondsTimeout < 0)
+                return;
+
+            var frequencyInverse = 1d / Stopwatch.Frequency;
             while (true)
             {
-                var elapsed = ElapsedMiliseconds(stopwatch);
-                var diff = desiredMs - elapsed;
+                var elapsed = stopwatch.ElapsedTicks * frequencyInverse * 1000;
+                var diff = millisecondsTimeout - elapsed;
                 if (diff <= 0)
                     break;
 
@@ -420,12 +420,20 @@ public abstract class ThreadAbstractOutputTarget : AbstractOutputTarget
             }
         }
 
-        if (!UsePreciseSleep)
-            Thread.Sleep((int)Math.Max(1, UpdateInterval - ElapsedMiliseconds(stopwatch)));
-        else
-            SleepPrecise(stopwatch, UpdateInterval);
+        var stopwatch = Stopwatch.StartNew();
+        while (condition())
+        {
+            var elapsed = stopwatch.ElapsedTicks / (double)Stopwatch.Frequency;
+            stopwatch.Restart();
 
-        UpdateStats(stopwatch);
+            body(elapsed);
+            UpdateStats(elapsed);
+
+            if (!UsePreciseSleep)
+                Thread.Sleep((int)Math.Max(1, UpdateInterval - stopwatch.ElapsedTicks / (double)Stopwatch.Frequency * 1000));
+            else
+                SleepPrecise(stopwatch, UpdateInterval);
+        }
     }
 
     protected override async void Dispose(bool disposing)
@@ -492,13 +500,31 @@ public abstract class AsyncAbstractOutputTarget : AbstractOutputTarget
         _task = null;
     }
 
-    protected async Task Sleep(Stopwatch stopwatch, CancellationToken token)
+    protected async Task FixedUpdateAsync(Func<bool> condition, Func<double, Task> body, CancellationToken token)
     {
-        static double ElapsedMiliseconds(Stopwatch stopwatch)
-            => stopwatch.ElapsedTicks * 1000d / Stopwatch.Frequency;
+        var timer = new PeriodicTimer(TimeSpan.FromMilliseconds(UpdateInterval));
+        var timerInterval = UpdateInterval;
 
-        await Task.Delay((int)Math.Max(1, UpdateInterval - ElapsedMiliseconds(stopwatch)), token);
-        UpdateStats(stopwatch);
+        var stopwatch = Stopwatch.StartNew();
+        while (condition())
+        {
+            var elapsed = stopwatch.ElapsedTicks / (double)Stopwatch.Frequency;
+            stopwatch.Restart();
+
+            await body(elapsed);
+            UpdateStats(elapsed);
+
+            _ = await timer.WaitForNextTickAsync(token);
+
+            if (UpdateInterval != timerInterval)
+            {
+                timer.Dispose();
+                timer = new PeriodicTimer(TimeSpan.FromMilliseconds(UpdateInterval));
+                timerInterval = UpdateInterval;
+            }
+        }
+
+        timer.Dispose();
     }
 
     protected override async void Dispose(bool disposing)

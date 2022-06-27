@@ -66,13 +66,10 @@ public class NetworkOutputTargetViewModel : ThreadAbstractOutputTarget
         {
             EventAggregator.Publish(new SyncRequestMessage());
 
-            var stopwatch = Stopwatch.StartNew();
             using var stream = new StreamWriter(client.GetStream(), Encoding.UTF8);
-            while (!token.IsCancellationRequested && client.Connected)
+            FixedUpdate(() => !token.IsCancellationRequested && client.Connected, elapsed =>
             {
-                stopwatch.Restart();
-                Sleep(stopwatch);
-
+                Logger.Trace("Begin FixedUpdate [Elapsed: {0}]", elapsed);
                 UpdateValues();
 
                 if (client.Connected && client.Available > 0)
@@ -81,13 +78,13 @@ public class NetworkOutputTargetViewModel : ThreadAbstractOutputTarget
                     Logger.Debug("Received \"{0}\" from \"{1}\"", message, $"tcp://{Endpoint}");
                 }
 
-                var commands = DeviceAxis.ToString(Values, 1000 * stopwatch.ElapsedTicks / (double)Stopwatch.Frequency);
+                var commands = DeviceAxis.ToString(Values, elapsed * 1000);
                 if (client.Connected && !string.IsNullOrWhiteSpace(commands))
                 {
                     Logger.Trace("Sending \"{0}\" to \"{1}\"", commands.Trim(), $"tcp://{Endpoint}");
                     stream.WriteLine(commands);
                 }
-            }
+            });
         }
         catch (Exception e)
         {
@@ -122,12 +119,9 @@ public class NetworkOutputTargetViewModel : ThreadAbstractOutputTarget
             EventAggregator.Publish(new SyncRequestMessage());
 
             var buffer = new byte[256];
-            var stopwatch = Stopwatch.StartNew();
-            while (!token.IsCancellationRequested)
+            FixedUpdate(() => !token.IsCancellationRequested, elapsed =>
             {
-                stopwatch.Restart();
-                Sleep(stopwatch);
-
+                Logger.Trace("Begin FixedUpdate [Elapsed: {0}]", elapsed);
                 UpdateValues();
 
                 if (client.Available > 0)
@@ -137,7 +131,7 @@ public class NetworkOutputTargetViewModel : ThreadAbstractOutputTarget
                     Logger.Debug("Received \"{0}\" from \"{1}\"", message, $"udp://{endpoint}");
                 }
 
-                var commands = DeviceAxis.ToString(Values, 1000 * stopwatch.ElapsedTicks / (double)Stopwatch.Frequency);
+                var commands = DeviceAxis.ToString(Values, elapsed * 1000);
                 if (!string.IsNullOrWhiteSpace(commands))
                 {
                     Logger.Trace("Sending \"{0}\" to \"{1}\"", commands.Trim(), $"udp://{Endpoint}");
@@ -145,7 +139,7 @@ public class NetworkOutputTargetViewModel : ThreadAbstractOutputTarget
                     var encoded = Encoding.UTF8.GetBytes(commands, buffer);
                     client.Send(buffer, encoded);
                 }
-            }
+            });
         }
         catch (Exception e)
         {

@@ -147,20 +147,17 @@ public class SerialOutputTargetViewModel : ThreadAbstractOutputTarget
         {
             EventAggregator.Publish(new SyncRequestMessage());
 
-            var stopwatch = Stopwatch.StartNew();
             var lastSentValues = DeviceAxis.All.ToDictionary(a => a, _ => double.NaN);
-            while (!token.IsCancellationRequested && serialPort.IsOpen)
+            FixedUpdate(() => !token.IsCancellationRequested && serialPort.IsOpen, elapsed =>
             {
-                stopwatch.Restart();
-                Sleep(stopwatch);
-
+                Logger.Trace("Begin FixedUpdate [Elapsed: {0}]", elapsed);
                 UpdateValues();
 
                 if (serialPort.IsOpen && serialPort.BytesToRead > 0)
                     Logger.Debug("Received \"{0}\" from \"{1}\"", serialPort.ReadExisting(), SelectedSerialPortDeviceId);
 
                 var dirtyValues = Values.Where(x => DeviceAxis.IsDirty(x.Value, lastSentValues[x.Key]));
-                var commands = DeviceAxis.ToString(dirtyValues, 1000 * stopwatch.ElapsedTicks / (double)Stopwatch.Frequency);
+                var commands = DeviceAxis.ToString(dirtyValues, elapsed * 1000);
                 if (serialPort.IsOpen && !string.IsNullOrWhiteSpace(commands))
                 {
                     Logger.Trace("Sending \"{0}\" to \"{1}\"", commands.Trim(), SelectedSerialPortDeviceId);
@@ -169,7 +166,7 @@ public class SerialOutputTargetViewModel : ThreadAbstractOutputTarget
 
                 foreach (var (axis, value) in dirtyValues)
                     lastSentValues[axis] = value;
-            }
+            });
         }
         catch (Exception e) when (e is TimeoutException || e is IOException)
         {

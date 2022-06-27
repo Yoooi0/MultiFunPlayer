@@ -206,16 +206,16 @@ public class ButtplugOutputTargetViewModel : AsyncAbstractOutputTarget
 
             EventAggregator.Publish(new SyncRequestMessage());
 
-            var stopwatch = Stopwatch.StartNew();
-            while (!token.IsCancellationRequested && client.Connected)
+            await FixedUpdateAsync(() => !token.IsCancellationRequested && client.Connected, async elapsed =>
             {
+                Logger.Trace("Begin FixedUpdate [Elapsed: {0}]", elapsed);
                 UpdateValues();
 
                 foreach (var orphanedSettings in lastSentValuesPerDevice.Keys.Except(AvailableDevices))
                     lastSentValuesPerDevice.Remove(orphanedSettings);
 
                 var dirtySettings = DeviceSettings.Where(CheckDirtyAndUpdate);
-                var tasks = GetDeviceTasks(UpdateInterval, dirtySettings);
+                var tasks = GetDeviceTasks(elapsed * 1000, dirtySettings);
 
                 try
                 {
@@ -226,10 +226,7 @@ public class ButtplugOutputTargetViewModel : AsyncAbstractOutputTarget
                     foreach (var exception in tasks.Where(t => t.Exception != null).Select(t => t.Exception))
                         Logger.Debug(exception, "Buttplug device exception");
                 }
-
-                await Sleep(stopwatch, token);
-                stopwatch.Restart();
-            }
+            }, token);
         }
         catch (OperationCanceledException) { }
         catch (Exception e)
@@ -277,7 +274,7 @@ public class ButtplugOutputTargetViewModel : AsyncAbstractOutputTarget
                     if (type == ServerMessage.Types.MessageAttributeType.VibrateCmd)
                     {
                         var cmds = typeGroup.ToDictionary(m => m.FeatureIndex,
-                                                            m => Values[m.SourceAxis]);
+                                                          m => Values[m.SourceAxis]);
 
                         Logger.Trace("Sending vibrate commands \"{data}\" to \"{name}\"", cmds, device.Name);
                         return device.SendVibrateCmd(cmds);
@@ -286,7 +283,7 @@ public class ButtplugOutputTargetViewModel : AsyncAbstractOutputTarget
                     if (type == ServerMessage.Types.MessageAttributeType.LinearCmd)
                     {
                         var cmds = typeGroup.ToDictionary(m => m.FeatureIndex,
-                                                            m => ((uint)interval, Values[m.SourceAxis]));
+                                                          m => ((uint)Math.Floor(interval + 0.75), Values[m.SourceAxis]));
 
                         Logger.Trace("Sending linear commands \"{data}\" to \"{name}\"", cmds, device.Name);
                         return device.SendLinearCmd(cmds);
@@ -295,7 +292,7 @@ public class ButtplugOutputTargetViewModel : AsyncAbstractOutputTarget
                     if (type == ServerMessage.Types.MessageAttributeType.RotateCmd)
                     {
                         var cmds = typeGroup.ToDictionary(m => m.FeatureIndex,
-                                                            m => (Math.Clamp(Math.Abs(Values[m.SourceAxis] - 0.5) / 0.5, 0, 1), Values[m.SourceAxis] > 0.5));
+                                                          m => (Math.Clamp(Math.Abs(Values[m.SourceAxis] - 0.5) / 0.5, 0, 1), Values[m.SourceAxis] > 0.5));
 
                         Logger.Trace("Sending rotate commands \"{data}\" to \"{name}\"", cmds, device.Name);
                         return device.SendRotateCmd(cmds);
