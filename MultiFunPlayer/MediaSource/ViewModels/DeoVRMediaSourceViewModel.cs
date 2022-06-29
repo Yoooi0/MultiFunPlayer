@@ -209,7 +209,6 @@ public class DeoVRMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlayP
                     Logger.Trace("Sending keep-alive to \"{0}\"", Name);
 
                     await stream.WriteAsync(keepAliveBuffer, token);
-                    await stream.FlushAsync(token);
                 }
             }
         }
