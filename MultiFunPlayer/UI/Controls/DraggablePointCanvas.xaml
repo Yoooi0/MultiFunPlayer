@@ -10,19 +10,19 @@
         Background="Transparent"
         MouseDown="OnMouseDown"
         MouseUp="OnMouseUp"
-        MouseMove="OnMouseMove">
+        MouseMove="OnMouseMove"
+        SizeChanged="OnSizeChanged"
+        Loaded="OnLoaded">
     <Popup Name="Popup" 
            IsOpen="False" 
            Placement="Relative" 
            AllowsTransparency="True"
            PlacementTarget="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Canvas}}}">
         <Grid>
-        <material:Card Margin="5">
-            <TextBlock Text="{Binding PopupText, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Canvas}}}"
-                       Margin="4 2 4 2"/>
+            <material:Card Margin="5">
+                <TextBlock Text="{Binding PopupText, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Canvas}}}"
+                                Margin="4 2 4 2"/>
             </material:Card>
         </Grid>
     </Popup>
 </Canvas>
-
-

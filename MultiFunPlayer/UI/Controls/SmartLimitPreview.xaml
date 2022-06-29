@@ -1,4 +1,4 @@
-﻿<UserControl x:Class="MultiFunPlayer.UI.Controls.SmartLimitPreview"
+<UserControl x:Class="MultiFunPlayer.UI.Controls.SmartLimitPreview"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
@@ -119,7 +119,8 @@
 
                     <local:DraggablePointCanvas x:Name="Canvas" 
                                                 Points="{Binding Points, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}"
-                                                PopupFormat="{}{0}%, {1}%">
+                                                PopupFormat="{}{0:F0}%, {1:F0}%"
+                                                SizeChanged="OnCanvasSizeChanged">
                         <local:DraggablePointCanvas.ItemTemplate>
                             <DataTemplate DataType="{x:Type local:DraggablePoint}">
                                 <Path Fill="{StaticResource PrimaryHueMidBrush}"

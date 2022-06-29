@@ -84,7 +84,7 @@ public partial class SmartLimitPreview : UserControl, INotifyPropertyChanged
 
     private void RefreshLine()
     {
-        if (Canvas.Points == null)
+        if (Canvas.Points == null || Canvas.ActualWidth == 0 || Canvas.ActualHeight == 0)
             return;
 
         if (Canvas.Points.Count > 0)
@@ -98,10 +98,10 @@ public partial class SmartLimitPreview : UserControl, INotifyPropertyChanged
             while (LinePoints.Count < count)
                 LinePoints.Add(new Point());
 
-            LinePoints[0] = new Point(0, Canvas.Points[0].Y);
+            LinePoints[0] = Canvas.ToCanvas(new Point(0, Canvas.Points[0].Y));
             for (int i = 0; i < Canvas.Points.Count; i++)
-                LinePoints[i + 1] = Canvas.Points[i];
-            LinePoints[^1] = new Point(100, Canvas.Points[^1].Y);
+                LinePoints[i + 1] = Canvas.ToCanvas(Canvas.Points[i]);
+            LinePoints[^1] = Canvas.ToCanvas(new Point(100, Canvas.Points[^1].Y));
 
             LinePoints = new PointCollection(LinePoints);
         }
@@ -121,6 +121,13 @@ public partial class SmartLimitPreview : UserControl, INotifyPropertyChanged
 
     [SuppressPropertyChangedWarnings]
     private void OnPointsCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+    {
+        RefreshLine();
+        RefreshScrubber();
+    }
+
+    [SuppressPropertyChangedWarnings]
+    private void OnCanvasSizeChanged(object sender, SizeChangedEventArgs e)
     {
         RefreshLine();
         RefreshScrubber();

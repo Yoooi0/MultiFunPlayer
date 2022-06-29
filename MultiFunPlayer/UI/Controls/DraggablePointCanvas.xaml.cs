@@ -31,6 +31,19 @@ public partial class DraggablePointCanvas : Canvas, INotifyPropertyChanged
                     new PropertyChangedCallback(OnPointsPropertyChanged)));
 
     [DoNotNotify]
+    public Rect Viewport
+    {
+        get => (Rect)GetValue(ViewportProperty);
+        set => SetValue(ViewportProperty, value);
+    }
+
+    public static readonly DependencyProperty ViewportProperty =
+        DependencyProperty.Register(nameof(Viewport), typeof(Rect),
+            typeof(DraggablePointCanvas), new FrameworkPropertyMetadata(new Rect(0, 0, 100, 100),
+                FrameworkPropertyMetadataOptions.BindsTwoWayByDefault,
+                    new PropertyChangedCallback(OnViewportPropertyChanged)));
+
+    [DoNotNotify]
     public string PopupFormat
     {
         get => (string)GetValue(PopupFormatProperty);
@@ -68,11 +81,26 @@ public partial class DraggablePointCanvas : Canvas, INotifyPropertyChanged
     }
 
     [SuppressPropertyChangedWarnings]
+    private static void OnViewportPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        if (d is not DraggablePointCanvas @this)
+            return;
+
+        @this.SynchronizePointsFromElements();
+        @this.PropertyChanged?.Invoke(@this, new PropertyChangedEventArgs(e.Property.Name));
+    }
+
+    [SuppressPropertyChangedWarnings]
     private void OnPointsCollectionChanged(object sender, NotifyCollectionChangedEventArgs e) => SynchronizeElementsFromPoints();
 
     public DraggablePointCanvas()
     {
         InitializeComponent();
+    }
+
+    private void OnLoaded(object sender, EventArgs e)
+    {
+        Children.Remove(Popup);
     }
 
     private void OnMouseDown(object sender, MouseButtonEventArgs e)
@@ -145,6 +173,9 @@ public partial class DraggablePointCanvas : Canvas, INotifyPropertyChanged
         SynchronizePointsFromElements();
     }
 
+    [SuppressPropertyChangedWarnings]
+    private void OnSizeChanged(object sender, SizeChangedEventArgs e) => SynchronizeElementsFromPoints();
+
     private void OnElementMouseLeave(object sender, MouseEventArgs e)
     {
         if (e.Source is not DraggablePoint)
@@ -163,6 +194,9 @@ public partial class DraggablePointCanvas : Canvas, INotifyPropertyChanged
 
     private void SynchronizeElementsFromPoints()
     {
+        if (ActualWidth == 0 || ActualHeight == 0)
+            return;
+
         while (Children.Count > 0 && (Points == null || Children.Count > Points.Count))
             RemoveElement(Children[^1]);
 
@@ -172,13 +206,17 @@ public partial class DraggablePointCanvas : Canvas, INotifyPropertyChanged
         while (Children.Count < Points.Count)
             AddElement(new Point());
 
+        var childrenPoints = Children.OfType<DraggablePoint>().ToList();
         var orderedPoints = Points.OrderBy(p => p.X).ToList();
         for (var i = 0; i < orderedPoints.Count; i++)
-            (Children[i] as DraggablePoint).Position = orderedPoints[i];
+            childrenPoints[i].Position = ToCanvas(orderedPoints[i]);
     }
 
     private void SynchronizePointsFromElements()
     {
+        if (ActualWidth == 0 || ActualHeight == 0)
+            return;
+
         if (Points != null)
         {
             while (Points.Count > 0 && Points.Count > Children.Count)
@@ -188,17 +226,22 @@ public partial class DraggablePointCanvas : Canvas, INotifyPropertyChanged
                 Points.Add(new Point());
         }
 
-        var orderedPoints = Children.OfType<DraggablePoint>().OrderBy(p => p.Position.X).ToList();
-
-        Children.Clear();
-        for (var i = 0; i < orderedPoints.Count; i++)
+        var childrenPoints = Children.OfType<DraggablePoint>().OrderBy(p => p.Position.X).ToList();
+        for (var i = 0; i < childrenPoints.Count; i++)
         {
-            Children.Insert(i, orderedPoints[i]);
+            Children.Remove(childrenPoints[i]);
+            Children.Add(childrenPoints[i]);
 
             if (Points != null)
-                Points[i] = orderedPoints[i].Position;
+                Points[i] = FromCanvas(childrenPoints[i].Position);
         }
     }
+
+    public Point FromCanvas(Point point) => new(MathUtils.Map(point.X, 0, ActualWidth, Viewport.Left, Viewport.Right),
+                                                MathUtils.Map(point.Y, ActualHeight, 0, Viewport.Bottom, Viewport.Top));
+
+    public Point ToCanvas(Point point) => new(MathUtils.Map(point.X, Viewport.Left, Viewport.Right, 0, ActualWidth),
+                                              MathUtils.Map(point.Y, Viewport.Bottom, Viewport.Top, ActualHeight, 0));
 
     private void SynchronizePopup(Point? position)
     {
@@ -209,14 +252,12 @@ public partial class DraggablePointCanvas : Canvas, INotifyPropertyChanged
         }
         else
         {
-            var x = position.Value.X;
-            var y = position.Value.Y;
-
-            Popup.HorizontalOffset = x + 10;
-            Popup.VerticalOffset = y + 30;
+            Popup.HorizontalOffset = position.Value.X + 10;
+            Popup.VerticalOffset = position.Value.Y + 30;
             Popup.IsOpen = true;
 
-            PopupText = string.Format(PopupFormat, position.Value.X, position.Value.Y);
+            var point = FromCanvas(position.Value);
+            PopupText = string.Format(PopupFormat, point.X, point.Y);
         }
     }
 
