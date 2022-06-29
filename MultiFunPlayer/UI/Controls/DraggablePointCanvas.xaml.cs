@@ -113,7 +113,7 @@ public partial class DraggablePointCanvas : Canvas, INotifyPropertyChanged
                 Mouse.Capture(point, CaptureMode.Element);
                 SynchronizePopup(point.Position);
             }
-            else if (e.ClickCount == 2)
+            else if (e.ClickCount == 2 && Children.Count > 1)
             {
                 RemoveElement(point);
                 SynchronizePointsFromElements();
