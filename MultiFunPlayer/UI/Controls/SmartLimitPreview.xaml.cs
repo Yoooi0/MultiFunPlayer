@@ -1,4 +1,4 @@
-﻿using MultiFunPlayer.Common;
+using MultiFunPlayer.Common;
 using PropertyChanged;
 using System.Collections.Specialized;
 using System.ComponentModel;
@@ -84,27 +84,15 @@ public partial class SmartLimitPreview : UserControl, INotifyPropertyChanged
 
     private void RefreshLine()
     {
-        if (Canvas.Points == null || Canvas.ActualWidth == 0 || Canvas.ActualHeight == 0)
+        if (Points == null || Points.Count == 0 || Canvas.ActualWidth == 0 || Canvas.ActualHeight == 0)
             return;
 
-        if (Canvas.Points.Count > 0)
-        {
-            var count = Canvas.Points.Count + 2;
-            if (LinePoints == null)
-                LinePoints = new PointCollection();
+        var newLinePoints = new List<Point>(Points.Count + 2);
+        newLinePoints.Add(new Point(0, Points[0].Y));
+        newLinePoints.AddRange(Points);
+        newLinePoints.Add(new Point(100, Points[^1].Y));
 
-            while (LinePoints.Count > count)
-                LinePoints.RemoveAt(LinePoints.Count - 1);
-            while (LinePoints.Count < count)
-                LinePoints.Add(new Point());
-
-            LinePoints[0] = Canvas.ToCanvas(new Point(0, Canvas.Points[0].Y));
-            for (int i = 0; i < Canvas.Points.Count; i++)
-                LinePoints[i + 1] = Canvas.ToCanvas(Canvas.Points[i]);
-            LinePoints[^1] = Canvas.ToCanvas(new Point(100, Canvas.Points[^1].Y));
-
-            LinePoints = new PointCollection(LinePoints);
-        }
+        LinePoints = new PointCollection(newLinePoints.Select(p => Canvas.ToCanvas(p)));
     }
 
     private void RefreshScrubber()

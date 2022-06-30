@@ -237,11 +237,13 @@ public partial class DraggablePointCanvas : Canvas, INotifyPropertyChanged
         }
     }
 
-    public Point FromCanvas(Point point) => new(MathUtils.Map(point.X, 0, ActualWidth, Viewport.Left, Viewport.Right),
-                                                MathUtils.Map(point.Y, ActualHeight, 0, Viewport.Bottom, Viewport.Top));
+    public Point FromCanvas(Point point) => new(FromCanvasX(point.X), FromCanvasY(point.Y));
+    public double FromCanvasX(double x) => MathUtils.Map(x, 0, ActualWidth, Viewport.Left, Viewport.Right);
+    public double FromCanvasY(double y) => MathUtils.Map(y, ActualHeight, 0, Viewport.Bottom, Viewport.Top);
 
-    public Point ToCanvas(Point point) => new(MathUtils.Map(point.X, Viewport.Left, Viewport.Right, 0, ActualWidth),
-                                              MathUtils.Map(point.Y, Viewport.Bottom, Viewport.Top, ActualHeight, 0));
+    public Point ToCanvas(Point point) => new(ToCanvasX(point.X), ToCanvasY(point.Y));
+    public double ToCanvasX(double x) => MathUtils.Map(x, Viewport.Left, Viewport.Right, 0, ActualWidth);
+    public double ToCanvasY(double y) => MathUtils.Map(y, Viewport.Bottom, Viewport.Top, ActualHeight, 0);
 
     private void SynchronizePopup(Point? position)
     {

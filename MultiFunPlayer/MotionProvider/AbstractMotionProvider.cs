@@ -27,14 +27,12 @@ public abstract class AbstractMotionProvider : Screen, IMotionProvider
 
     protected override void OnPropertyChanged(string propertyName)
     {
-        if (ShouldRequestSyncOnPropertyChange(propertyName))
-            _eventAggregator?.Publish(new SyncRequestMessage(_target));
-
         if (propertyName != nameof(Value))
+        {
+            _eventAggregator?.Publish(new SyncRequestMessage(_target));
             base.OnPropertyChanged(propertyName);
+        }
     }
-
-    protected virtual bool ShouldRequestSyncOnPropertyChange(string propertyName) => propertyName != nameof(Value);
 
     public abstract void Update(double deltaTime);
 }
