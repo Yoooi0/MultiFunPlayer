@@ -25,10 +25,13 @@ public abstract class AbstractMotionProvider : Screen, IMotionProvider
         _eventAggregator = eventAggregator;
     }
 
-    protected void OnPropertyChanged(object sender, PropertyChangedEventArgs e)
+    protected override void OnPropertyChanged(string propertyName)
     {
-        if (ShouldRequestSyncOnPropertyChange(e.PropertyName))
-            _eventAggregator.Publish(new SyncRequestMessage(_target));
+        if (ShouldRequestSyncOnPropertyChange(propertyName))
+            _eventAggregator?.Publish(new SyncRequestMessage(_target));
+
+        if (propertyName != nameof(Value))
+            base.OnPropertyChanged(propertyName);
     }
 
     protected virtual bool ShouldRequestSyncOnPropertyChange(string propertyName) => propertyName != nameof(Value);
