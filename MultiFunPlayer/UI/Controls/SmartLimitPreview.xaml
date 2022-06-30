@@ -7,10 +7,10 @@
              xmlns:material="http://materialdesigninxaml.net/winfx/xaml/themes"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
-    <DockPanel LastChildFill="True" Width="150" Height="140">
+    <DockPanel LastChildFill="True">
         <Canvas DockPanel.Dock="Top"
-                Width="150"
-                Height="150">
+                Width="175"
+                Height="175">
 
             <TextBlock Text="0%"
                        FontSize="9"
@@ -18,23 +18,20 @@
                        Canvas.Left="18"
                        Canvas.Bottom="5"/>
 
-            <TextBlock FontSize="10"
+            <TextBlock FontSize="11"
                        Typography.Capitals="AllSmallCaps"
                        FontWeight="Bold"
                        TextAlignment="Center"
-                       LineStackingStrategy="BlockLineHeight"
-                       LineHeight="7"
-                       Text="Input Value"
-                       Width="30"
+                       Text="Input"
                        TextWrapping="Wrap"
-                       Canvas.Left="62"
-                       Canvas.Bottom="2">
+                       Canvas.Left="70"
+                       Canvas.Bottom="5">
             </TextBlock>
 
             <TextBlock Text="100%"
                        FontSize="9"
                        FontWeight="Bold"
-                       Canvas.Left="115"
+                       Canvas.Left="139"
                        Canvas.Bottom="5"/>
 
             <TextBlock Text="0%"
@@ -47,17 +44,14 @@
                 </TextBlock.LayoutTransform>
             </TextBlock>
 
-            <TextBlock FontSize="10"
+            <TextBlock FontSize="11"
                        Typography.Capitals="AllSmallCaps"
                        FontWeight="Bold"
                        TextAlignment="Center"
-                       LineStackingStrategy="BlockLineHeight"
-                       LineHeight="7"
-                       Text="Output Range"
-                       Width="35"
+                       Text="Output"
                        TextWrapping="Wrap"
-                       Canvas.Left="5"
-                       Canvas.Bottom="60">
+                       Canvas.Left="3"
+                       Canvas.Bottom="70">
                 <TextBlock.LayoutTransform>
                     <RotateTransform Angle="-90"/>
                 </TextBlock.LayoutTransform>
@@ -67,7 +61,7 @@
                        FontSize="9"
                        FontWeight="Bold"
                        Canvas.Left="5"
-                       Canvas.Bottom="115">
+                       Canvas.Bottom="139">
                 <TextBlock.LayoutTransform>
                     <RotateTransform Angle="-90"/>
                 </TextBlock.LayoutTransform>
@@ -75,8 +69,8 @@
 
             <material:Card material:ShadowAssist.ShadowDepth="Depth1"
                            Margin="25"
-                           Width="100"
-                           Height="100">
+                           Width="125"
+                           Height="125">
                 <material:Card.Background>
                     <DrawingBrush Stretch="None" TileMode="Tile" Viewport="4 8 20 20" ViewportUnits="Absolute">
                         <DrawingBrush.Drawing>

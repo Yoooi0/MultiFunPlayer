@@ -240,10 +240,19 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                     return NoUpdate();
 
                 var x = AxisStates[settings.SmartLimitInputAxis].Value * 100;
+                if (!double.IsFinite(x))
+                    return NoUpdate();
+
                 var factor = Interpolation.Linear(settings.SmartLimitPoints, p => p.X, p => p.Y, x) / 100;
                 state.IsSmartLimited = factor < 1;
 
-                context.Value = MathUtils.Clamp01(MathUtils.Lerp(axis.DefaultValue, context.Value, factor));
+                context.Value = settings.SmartLimitMode switch
+                {
+                    SmartLimitMode.Value => MathUtils.Clamp01(MathUtils.Lerp(settings.SmartLimitTargetValue, context.Value, factor)),
+                    SmartLimitMode.Speed when double.IsFinite(context.LastValue) => MathUtils.Clamp01(MathUtils.Lerp(context.LastValue, context.Value, Math.Pow(factor, 4))),
+                    _ => context.Value
+                };
+
                 return Math.Abs(context.LastValue - context.Value) > 0.000001;
             }
 
@@ -1654,10 +1663,12 @@ public class AxisSettings : PropertyChangedBase
 {
     [JsonProperty] public bool LinkAxisHasPriority { get; set; } = false;
     [JsonProperty] public DeviceAxis LinkAxis { get; set; } = null;
-    [JsonProperty] public DeviceAxis SmartLimitInputAxis { get; set; } = null;
 
+    [JsonProperty] public DeviceAxis SmartLimitInputAxis { get; set; } = null;
     [JsonProperty(ObjectCreationHandling = ObjectCreationHandling.Replace)]
     public ObservableConcurrentCollection<Point> SmartLimitPoints { get; set; } = new ObservableConcurrentCollection<Point>();
+    [JsonProperty] public SmartLimitMode SmartLimitMode { get; set; } = SmartLimitMode.Value;
+    [JsonProperty] public double SmartLimitTargetValue { get; set; } = 0.5;
 
     [JsonProperty] public InterpolationType InterpolationType { get; set; } = InterpolationType.Pchip;
     [JsonProperty] public bool AutoHomeEnabled { get; set; } = false;
@@ -1676,6 +1687,12 @@ public class AxisSettings : PropertyChangedBase
     [JsonProperty] public string SelectedMotionProvider { get; set; } = null;
     [JsonProperty] public bool SpeedLimitEnabled { get; set; } = false;
     [JsonProperty] public double MaximumSecondsPerStroke { get; set; } = 0.1;
+}
+
+public enum SmartLimitMode
+{
+    Value,
+    Speed
 }
 
 [JsonObject(MemberSerialization.OptIn)]
