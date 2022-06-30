@@ -1,4 +1,4 @@
-using MultiFunPlayer.Common;
+﻿using MultiFunPlayer.Common;
 using PropertyChanged;
 using System.Collections.Specialized;
 using System.ComponentModel;
@@ -97,14 +97,14 @@ public partial class SmartLimitPreview : UserControl, INotifyPropertyChanged
 
     private void RefreshScrubber()
     {
-        if (LinePoints == null || LinePoints.Count == 0)
+        if (Points == null || Points.Count == 0)
             return;
 
         var x = MathUtils.Clamp(Input, 0, 100);
-        var y = Interpolation.Linear(LinePoints, p => p.X, p => p.Y, x);
+        var y = Interpolation.Linear(Points, p => p.X, p => p.Y, x);
 
         Output = y;
-        (Scrubber.Data as EllipseGeometry).Center = new Point(x, y);
+        (Scrubber.Data as EllipseGeometry).Center = Canvas.ToCanvas(new Point(x, y));
     }
 
     [SuppressPropertyChangedWarnings]
