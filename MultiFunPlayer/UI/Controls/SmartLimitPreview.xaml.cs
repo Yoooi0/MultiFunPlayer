@@ -87,12 +87,11 @@ public partial class SmartLimitPreview : UserControl, INotifyPropertyChanged
         if (Points == null || Points.Count == 0 || Canvas.ActualWidth == 0 || Canvas.ActualHeight == 0)
             return;
 
-        var newLinePoints = new List<Point>(Points.Count + 2);
-        newLinePoints.Add(new Point(0, Points[0].Y));
-        newLinePoints.AddRange(Points);
-        newLinePoints.Add(new Point(100, Points[^1].Y));
+        var newLinePoints = Points.Prepend(new Point(0, Points[0].Y))
+                                  .Append(new Point(100, Points[^1].Y))
+                                  .Select(p => Canvas.ToCanvas(p));
 
-        LinePoints = new PointCollection(newLinePoints.Select(p => Canvas.ToCanvas(p)));
+        LinePoints = new PointCollection(newLinePoints);
     }
 
     private void RefreshScrubber()
