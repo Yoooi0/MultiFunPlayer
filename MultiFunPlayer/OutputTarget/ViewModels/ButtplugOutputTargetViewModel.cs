@@ -34,7 +34,7 @@ public class ButtplugOutputTargetViewModel : AsyncAbstractOutputTarget
     public override int MaximumUpdateInterval => 200;
 
     public override ConnectionStatus Status { get; protected set; }
-    public IPEndPoint Endpoint { get; set; } = new IPEndPoint(IPAddress.Loopback, 12345);
+    public EndPoint Endpoint { get; set; } = new IPEndPoint(IPAddress.Loopback, 12345);
     public ObservableConcurrentCollection<ButtplugClientDevice> AvailableDevices { get; protected set; }
 
     [DependsOn(nameof(SelectedDevice))]
@@ -359,7 +359,7 @@ public class ButtplugOutputTargetViewModel : AsyncAbstractOutputTarget
         }
         else if (action == SettingsAction.Loading)
         {
-            if (settings.TryGetValue<IPEndPoint>(nameof(Endpoint), out var endpoint))
+            if (settings.TryGetValue<EndPoint>(nameof(Endpoint), out var endpoint))
                 Endpoint = endpoint;
 
             if (settings.TryGetValue<List<ButtplugClientDeviceSettings>>(nameof(DeviceSettings), out var deviceSettings))
@@ -375,9 +375,9 @@ public class ButtplugOutputTargetViewModel : AsyncAbstractOutputTarget
         base.RegisterActions(s);
 
         #region Endpoint
-        s.RegisterAction($"{Identifier}::Endpoint::Set", b => b.WithSetting<string>(s => s.WithLabel("Endpoint").WithDescription("ip:port")).WithCallback((_, endpointString) =>
+        s.RegisterAction($"{Identifier}::Endpoint::Set", b => b.WithSetting<string>(s => s.WithLabel("Endpoint").WithDescription("ip/host:port")).WithCallback((_, endpointString) =>
         {
-            if (IPEndPoint.TryParse(endpointString, out var endpoint))
+            if (NetUtils.TryParseEndpoint(endpointString, out var endpoint))
                 Endpoint = endpoint;
         }));
         #endregion

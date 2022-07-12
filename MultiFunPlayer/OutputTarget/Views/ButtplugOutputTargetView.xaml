@@ -8,10 +8,10 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:common="clr-namespace:MultiFunPlayer.Common" 
              xmlns:converters="clr-namespace:MultiFunPlayer.UI.Converters"
+             xmlns:controls="clr-namespace:MultiFunPlayer.UI.Controls"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
     <UserControl.Resources>
-        <converters:IPEndPointToStringConverter x:Key="IPEndPointToStringConverter"/>
         <converters:MsToHzConverter x:Key="MsToHzConverter"/>
         <converters:ButtplugClientDeviceConnectedConverter x:Key="ButtplugClientDeviceConnectedConverter"/>
     </UserControl.Resources>
@@ -98,13 +98,10 @@
                             </Style.Triggers>
                         </Style>
                     </DockPanel.Resources>
-                    <TextBox Text="{Binding Endpoint, Converter={StaticResource IPEndPointToStringConverter}}"
-                                 material:HintAssist.Hint="address:port"
-                                 Style="{StaticResource MaterialDesignFloatingHintTextBox}"
-                                 DockPanel.Dock="Left"
-                                 Width="150"
-                                 Margin="0 -12 20 0"
-                                 VerticalAlignment="Center"/>
+                    <controls:EndPointBox EndPoint="{Binding Endpoint}"
+                                          DockPanel.Dock="Left"
+                                          Margin="0 0 20 0"
+                                          VerticalAlignment="Center"/>
                 </DockPanel>
 
                 <StackPanel DockPanel.Dock="Right" 

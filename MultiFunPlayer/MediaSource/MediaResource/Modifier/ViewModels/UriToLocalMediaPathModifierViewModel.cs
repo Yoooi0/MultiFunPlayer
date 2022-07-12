@@ -21,13 +21,13 @@ public class UriToLocalMediaPathModifierViewModel : AbstractMediaPathModifier
     public override string Description => UriEndpoint?.ToString();
 
     [JsonProperty] public DirectoryInfo MediaDirectory { get; set; }
-    [JsonProperty] public IPEndPoint UriEndpoint { get; set; }
+    [JsonProperty] public EndPoint UriEndpoint { get; set; }
 
     public UriToLocalMediaPathModifierViewModel()
     {
         _mediaPathCache = new Dictionary<string, string>();
         _mediaSizeCache = new Dictionary<long, FileInfo>();
-        _client = WebUtils.CreateClient();
+        _client = NetUtils.CreateHttpClient();
     }
 
     public void OnMediaDirectoryChanged()
@@ -60,7 +60,14 @@ public class UriToLocalMediaPathModifierViewModel : AbstractMediaPathModifier
              && !Uri.TryCreate($"file://{path}", UriKind.Absolute, out uri))
                 return false;
 
-            var uriEndpoint = FindEndpoint(uri);
+            var uriEndpoint = uri.HostNameType switch
+            {
+                UriHostNameType.IPv4 or UriHostNameType.IPv6 when IPAddress.TryParse(uri.Host, out var ipAddress) => new IPEndPoint(ipAddress, uri.Port),
+                UriHostNameType.Dns => new DnsEndPoint(uri.Host, uri.Port),
+                UriHostNameType.Basic when !string.IsNullOrWhiteSpace(uri.Host) => new DnsEndPoint(uri.Host, uri.Port),
+                _ => default(EndPoint)
+            };
+
             if (!UriEndpoint.Equals(uriEndpoint))
                 return false;
 
@@ -101,23 +108,5 @@ public class UriToLocalMediaPathModifierViewModel : AbstractMediaPathModifier
             return;
 
         MediaDirectory = new DirectoryInfo(dialog.FileName);
-    }
-
-    private IPEndPoint FindEndpoint(Uri uri)
-    {
-        if (uri.IsFile)
-            return null;
-
-        if (IPEndPoint.TryParse(uri.Authority, out var endpoint))
-            return endpoint;
-
-        try
-        {
-            var hostEntry = Dns.GetHostEntry(uri.Host);
-            return new IPEndPoint(hostEntry.AddressList[0], uri.Port);
-        }
-        catch { }
-
-        return null;
     }
 }

@@ -3,6 +3,7 @@ using Newtonsoft.Json.Linq;
 using System.Collections;
 using System.IO;
 using System.Linq.Expressions;
+using System.Net;
 using System.Net.Http;
 using System.Net.Sockets;
 using System.Runtime.CompilerServices;
@@ -322,7 +323,7 @@ public static class DeconstructExtensions
     }
 }
 
-public static class WebExtensions
+public static class NetExtensions
 {
     public static async Task DownloadFileAsync(this HttpClient client, Uri address, string fileName)
     {
@@ -332,6 +333,56 @@ public static class WebExtensions
         var stream = await response.Content.ReadAsStreamAsync();
         using var fileStream = File.Create(fileName);
         stream.CopyTo(fileStream);
+    }
+
+    public static ValueTask ConnectAsync(this TcpClient client , EndPoint endpoint, CancellationToken cancellationToken)
+    {
+        if (endpoint is IPEndPoint ipEndPoint)
+            return client.ConnectAsync(ipEndPoint.Address, ipEndPoint.Port, cancellationToken);
+        if (endpoint is DnsEndPoint dnsEndPoint)
+            return client.ConnectAsync(dnsEndPoint.Host, dnsEndPoint.Port, cancellationToken);
+
+        throw new NotSupportedException($"{endpoint.GetType()} in not supported.");
+    }
+
+    public static void Connect(this TcpClient client, EndPoint endpoint)
+    {
+        if (endpoint is IPEndPoint ipEndPoint)
+            client.Connect(ipEndPoint.Address, ipEndPoint.Port);
+        else if (endpoint is DnsEndPoint dnsEndPoint)
+            client.Connect(dnsEndPoint.Host, dnsEndPoint.Port);
+        else
+            throw new NotSupportedException($"{endpoint.GetType()} in not supported.");
+    }
+
+    public static void Connect(this UdpClient client, EndPoint endpoint)
+    {
+        if (endpoint is IPEndPoint ipEndPoint)
+            client.Connect(ipEndPoint.Address, ipEndPoint.Port);
+        else if (endpoint is DnsEndPoint dnsEndPoint)
+            client.Connect(dnsEndPoint.Host, dnsEndPoint.Port);
+        else
+            throw new NotSupportedException($"{endpoint.GetType()} in not supported.");
+    }
+
+    public static bool IsLocalhost(this EndPoint endpoint)
+    {
+        if (endpoint is IPEndPoint ipEndPoint)
+            return IPAddress.IsLoopback(ipEndPoint.Address);
+        if (endpoint is DnsEndPoint dnsEndPoint)
+            return string.Equals(dnsEndPoint.Host, "localhost", StringComparison.OrdinalIgnoreCase);
+
+        throw new NotSupportedException($"{endpoint.GetType()} in not supported.");
+    }
+
+    public static string ToUriString(this EndPoint endpoint)
+    {
+        if (endpoint is IPEndPoint ipEndPoint)
+            return $"{ipEndPoint.Address}:{ipEndPoint.Port}";
+        if (endpoint is DnsEndPoint dnsEndPoint)
+            return $"{dnsEndPoint.Host}:{dnsEndPoint.Port}";
+
+        throw new NotSupportedException($"{endpoint.GetType()} in not supported.");
     }
 }
 

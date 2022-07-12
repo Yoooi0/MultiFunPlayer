@@ -5,11 +5,11 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-             xmlns:converters="clr-namespace:MultiFunPlayer.UI.Converters"
+             xmlns:converters="clr-namespace:MultiFunPlayer.UI.Converters" 
+             xmlns:controls="clr-namespace:MultiFunPlayer.UI.Controls"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
     <UserControl.Resources>
-        <converters:IPEndPointToStringConverter x:Key="IPEndPointToStringConverter"/>
         <converters:FileSystemInfoToStringConverter x:Key="FileSystemInfoToStringConverter"/>
     </UserControl.Resources>
     <StackPanel>
@@ -20,13 +20,10 @@
                        VerticalAlignment="Center"
                        Margin="0 0 10 0"/>
 
-            <TextBox Text="{Binding UriEndpoint, Converter={StaticResource IPEndPointToStringConverter}}"
-                 material:HintAssist.Hint="address:port"
-                 Style="{StaticResource MaterialDesignFloatingHintTextBox}"
-                 DockPanel.Dock="Left"
-                 Width="150"
-                 Margin="0 -12 20 0"
-                 VerticalAlignment="Center"/>
+            <controls:EndPointBox EndPoint="{Binding UriEndpoint}"
+                                  DockPanel.Dock="Left"
+                                  Margin="0 -12 20 0"
+                                  VerticalAlignment="Center"/>
         </DockPanel>
 
         <DockPanel LastChildFill="True">

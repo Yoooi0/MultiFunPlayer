@@ -23,7 +23,7 @@ public class MpcMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlayPau
 
     public override ConnectionStatus Status { get; protected set; }
 
-    public IPEndPoint Endpoint { get; set; } = new IPEndPoint(IPAddress.Loopback, 13579);
+    public EndPoint Endpoint { get; set; } = new IPEndPoint(IPAddress.Loopback, 13579);
 
     public MpcMediaSourceViewModel(IShortcutManager shortcutManager, IEventAggregator eventAggregator)
         : base(shortcutManager, eventAggregator)
@@ -48,10 +48,10 @@ public class MpcMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlayPau
             if (Endpoint == null)
                 throw new Exception("Endpoint cannot be null.");
 
-            using var client = WebUtils.CreateClient();
+            using var client = NetUtils.CreateHttpClient();
             client.Timeout = TimeSpan.FromMilliseconds(1000);
 
-            var uri = new Uri($"http://{Endpoint.Address}:{Endpoint.Port}");
+            var uri = new Uri($"http://{Endpoint.ToUriString()}");
             var response = await UnwrapTimeout(() => client.GetAsync(uri, token));
             response.EnsureSuccessStatusCode();
 
@@ -77,7 +77,7 @@ public class MpcMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlayPau
 
     private async Task ReadAsync(HttpClient client, CancellationToken token)
     {
-        var variablesUri = new Uri($"http://{Endpoint.Address}:{Endpoint.Port}/variables.html");
+        var variablesUri = new Uri($"http://{Endpoint.ToUriString()}/variables.html");
         var variableRegex = new Regex(@"<p id=""(.+?)"">(.+?)<\/p>", RegexOptions.Compiled);
         var playerState = new PlayerState();
 
@@ -142,7 +142,7 @@ public class MpcMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlayPau
 
     private async Task WriteAsync(HttpClient client, CancellationToken token)
     {
-        var commandUriBase = $"http://{Endpoint.Address}:{Endpoint.Port}/command.html?wm_command=";
+        var commandUriBase = $"http://{Endpoint.ToUriString()}/command.html?wm_command=";
 
         try
         {
@@ -177,7 +177,7 @@ public class MpcMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlayPau
         }
         else if (action == SettingsAction.Loading)
         {
-            if (settings.TryGetValue<IPEndPoint>(nameof(Endpoint), out var endpoint))
+            if (settings.TryGetValue<EndPoint>(nameof(Endpoint), out var endpoint))
                 Endpoint = endpoint;
         }
     }
@@ -189,9 +189,9 @@ public class MpcMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlayPau
             if (Endpoint == null)
                 return await ValueTask.FromResult(false);
 
-            var uri = new Uri($"http://{Endpoint.Address}:{Endpoint.Port}");
+            var uri = new Uri($"http://{Endpoint.ToUriString()}");
 
-            using var client = WebUtils.CreateClient();
+            using var client = NetUtils.CreateHttpClient();
             client.Timeout = TimeSpan.FromMilliseconds(50);
 
             var response = await client.GetAsync(uri, token);
@@ -233,9 +233,9 @@ public class MpcMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlayPau
         base.RegisterShortcuts(s);
 
         #region Endpoint
-        s.RegisterAction($"{Name}::Endpoint::Set", b => b.WithSetting<string>(s => s.WithLabel("Endpoint").WithDescription("ip:port")).WithCallback((_, endpointString) =>
+        s.RegisterAction($"{Name}::Endpoint::Set", b => b.WithSetting<string>(s => s.WithLabel("Endpoint").WithDescription("ip/host:port")).WithCallback((_, endpointString) =>
         {
-            if (IPEndPoint.TryParse(endpointString, out var endpoint))
+            if (NetUtils.TryParseEndpoint(endpointString, out var endpoint))
                 Endpoint = endpoint;
         }));
         #endregion

@@ -160,7 +160,7 @@ public class Bootstrapper : Bootstrapper<RootViewModel>
             settings.Converters.Add(new LogLevelConverter());
             settings.Converters.Add(new FileSystemInfoConverter());
             settings.Converters.Add(new StringEnumConverter());
-            settings.Converters.Add(new IPEndPointConverter());
+            settings.Converters.Add(new EndPointConverter());
             settings.Converters.Add(new DeviceAxisConverter());
             settings.Converters.Add(new TypedValueConverter());
             settings.Error += (s, e) =>

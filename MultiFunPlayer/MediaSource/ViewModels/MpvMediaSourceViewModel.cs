@@ -254,7 +254,7 @@ public class MpvMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlayPau
             var bootstrapperZip = new FileInfo(Path.Combine(downloadRoot.FullName, "bootstrapper.zip"));
 
             {
-                using var client = WebUtils.CreateClient();
+                using var client = NetUtils.CreateHttpClient();
                 await client.DownloadFileAsync(bootstrapperUri, bootstrapperZip.FullName);
             }
 

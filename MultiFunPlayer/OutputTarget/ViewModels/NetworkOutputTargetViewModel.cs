@@ -27,7 +27,7 @@ public class NetworkOutputTargetViewModel : ThreadAbstractOutputTarget
 
     public override ConnectionStatus Status { get; protected set; }
 
-    public IPEndPoint Endpoint { get; set; } = new IPEndPoint(IPAddress.Loopback, 8080);
+    public EndPoint Endpoint { get; set; } = new IPEndPoint(IPAddress.Loopback, 8080);
     public ProtocolType Protocol { get; set; } = ProtocolType.Tcp;
 
     public NetworkOutputTargetViewModel(int instanceIndex, IEventAggregator eventAggregator, IDeviceAxisValueProvider valueProvider)
@@ -126,7 +126,7 @@ public class NetworkOutputTargetViewModel : ThreadAbstractOutputTarget
 
                 if (client.Available > 0)
                 {
-                    var endpoint = new IPEndPoint(Endpoint.Address, Endpoint.Port);
+                    var endpoint = new IPEndPoint(IPAddress.Any, 0);
                     var message = Encoding.UTF8.GetString(client.Receive(ref endpoint));
                     Logger.Debug("Received \"{0}\" from \"{1}\"", message, $"udp://{endpoint}");
                 }
@@ -161,7 +161,7 @@ public class NetworkOutputTargetViewModel : ThreadAbstractOutputTarget
         }
         else if (action == SettingsAction.Loading)
         {
-            if (settings.TryGetValue<IPEndPoint>(nameof(Endpoint), out var endpoint))
+            if (settings.TryGetValue<EndPoint>(nameof(Endpoint), out var endpoint))
                 Endpoint = endpoint;
 
             if (settings.TryGetValue<ProtocolType>(nameof(Protocol), out var protocol))
@@ -174,9 +174,9 @@ public class NetworkOutputTargetViewModel : ThreadAbstractOutputTarget
         base.RegisterActions(s);
 
         #region Endpoint
-        s.RegisterAction($"{Identifier}::Endpoint::Set", b => b.WithSetting<string>(s => s.WithLabel("Endpoint").WithDescription("ip:port")).WithCallback((_, endpointString) =>
+        s.RegisterAction($"{Identifier}::Endpoint::Set", b => b.WithSetting<string>(s => s.WithLabel("Endpoint").WithDescription("ip/host:port")).WithCallback((_, endpointString) =>
         {
-            if (IPEndPoint.TryParse(endpointString, out var endpoint))
+            if (NetUtils.TryParseEndpoint(endpointString, out var endpoint))
                 Endpoint = endpoint;
         }));
         #endregion

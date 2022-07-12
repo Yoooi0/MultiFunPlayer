@@ -27,7 +27,7 @@ public class HereSphereMediaSourceViewModel : AbstractMediaSource, IHandle<Media
 
     public override ConnectionStatus Status { get; protected set; }
 
-    public IPEndPoint Endpoint { get; set; } = new IPEndPoint(IPAddress.Loopback, 23554);
+    public EndPoint Endpoint { get; set; } = new IPEndPoint(IPAddress.Loopback, 23554);
 
     public HereSphereMediaSourceViewModel(IShortcutManager shortcutManager, IEventAggregator eventAggregator)
         : base(shortcutManager, eventAggregator)
@@ -52,7 +52,7 @@ public class HereSphereMediaSourceViewModel : AbstractMediaSource, IHandle<Media
             if (Endpoint == null)
                 throw new Exception("Endpoint cannot be null.");
 
-            if (string.Equals(Endpoint.Address.ToString(), "localhost") || string.Equals(Endpoint.Address.ToString(), "127.0.0.1"))
+            if (Endpoint.IsLocalhost())
                 if (!Process.GetProcesses().Any(p => Regex.IsMatch(p.ProcessName, "(?i)heresphere")))
                     throw new Exception($"Could not find a running {Name} process.");
 
@@ -61,7 +61,7 @@ public class HereSphereMediaSourceViewModel : AbstractMediaSource, IHandle<Media
                 using var timeoutCancellationSource = new CancellationTokenSource(5000);
                 using var connectCancellationSource = CancellationTokenSource.CreateLinkedTokenSource(token, timeoutCancellationSource.Token);
 
-                await client.ConnectAsync(Endpoint.Address, Endpoint.Port, connectCancellationSource.Token);
+                await client.ConnectAsync(Endpoint, connectCancellationSource.Token);
             }
 
             using var stream = client.GetStream();
@@ -225,7 +225,7 @@ public class HereSphereMediaSourceViewModel : AbstractMediaSource, IHandle<Media
         }
         else if (action == SettingsAction.Loading)
         {
-            if (settings.TryGetValue<IPEndPoint>(nameof(Endpoint), out var endpoint))
+            if (settings.TryGetValue<EndPoint>(nameof(Endpoint), out var endpoint))
                 Endpoint = endpoint;
         }
     }
@@ -237,7 +237,7 @@ public class HereSphereMediaSourceViewModel : AbstractMediaSource, IHandle<Media
             if (Endpoint == null)
                 return await ValueTask.FromResult(false);
 
-            if (string.Equals(Endpoint.Address.ToString(), "localhost") || string.Equals(Endpoint.Address.ToString(), "127.0.0.1"))
+            if (Endpoint.IsLocalhost())
                 if (!Process.GetProcesses().Any(p => Regex.IsMatch(p.ProcessName, "(?i)heresphere")))
                     return await ValueTask.FromResult(false);
 
@@ -246,7 +246,7 @@ public class HereSphereMediaSourceViewModel : AbstractMediaSource, IHandle<Media
                 using var timeoutCancellationSource = new CancellationTokenSource(2500);
                 using var connectCancellationSource = CancellationTokenSource.CreateLinkedTokenSource(token, timeoutCancellationSource.Token);
 
-                await client.ConnectAsync(Endpoint.Address, Endpoint.Port, connectCancellationSource.Token);
+                await client.ConnectAsync(Endpoint, connectCancellationSource.Token);
             }
 
             using var stream = client.GetStream();
@@ -264,9 +264,9 @@ public class HereSphereMediaSourceViewModel : AbstractMediaSource, IHandle<Media
         base.RegisterShortcuts(s);
 
         #region Endpoint
-        s.RegisterAction($"{Name}::Endpoint::Set", b => b.WithSetting<string>(s => s.WithLabel("Endpoint").WithDescription("ip:port")).WithCallback((_, endpointString) =>
+        s.RegisterAction($"{Name}::Endpoint::Set", b => b.WithSetting<string>(s => s.WithLabel("Endpoint").WithDescription("ip/host:port")).WithCallback((_, endpointString) =>
         {
-            if (IPEndPoint.TryParse(endpointString, out var endpoint))
+            if (NetUtils.TryParseEndpoint(endpointString, out var endpoint))
                 Endpoint = endpoint;
         }));
         #endregion
