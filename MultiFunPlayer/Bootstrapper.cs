@@ -237,7 +237,6 @@ public class Bootstrapper : Bootstrapper<RootViewModel>
         }
 
         var config = new LoggingConfiguration();
-        const string layout = "${longdate}|${level:uppercase=true}|${logger}|${message}${onexception:|${exception:format=ToString}}";
         if (settings.TryGetValue<Dictionary<string, LogLevel>>("LogBlacklist", out var blacklist))
         {
             var blackhole = new NullTarget();
@@ -252,26 +251,18 @@ public class Bootstrapper : Bootstrapper<RootViewModel>
                 FileName = @"${basedir}\Logs\latest.log",
                 ArchiveFileName = @"${basedir}\Logs\log.{#}.log",
                 ArchiveNumbering = ArchiveNumberingMode.DateAndSequence,
-                ArchiveAboveSize = 1048576,
+                ArchiveAboveSize = 5 * 1024 * 1024,
                 ArchiveDateFormat = "yyyyMMdd",
                 ArchiveOldFileOnStartup = true,
                 MaxArchiveFiles = 10,
-                ConcurrentWrites = false,
-                KeepFileOpen = true,
                 OpenFileCacheTimeout = 30,
                 AutoFlush = false,
-                OpenFileFlushTimeout = 5,
-                Layout = layout
+                OpenFileFlushTimeout = 5
             });
         }
 
         if (Debugger.IsAttached)
-        {
-            config.AddRule(LogLevel.Debug, LogLevel.Fatal, new OutputDebugStringTarget("debug")
-            {
-                Layout = layout
-            });
-        }
+            config.AddRule(LogLevel.Debug, LogLevel.Fatal, new DebugSystemTarget("debug"));
 
         LogManager.Configuration = config;
         return dirty;
