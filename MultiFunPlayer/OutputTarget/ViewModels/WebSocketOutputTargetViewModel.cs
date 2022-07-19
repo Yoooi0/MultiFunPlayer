@@ -1,4 +1,4 @@
-﻿using MultiFunPlayer.Common;
+using MultiFunPlayer.Common;
 using MultiFunPlayer.Common.Messages;
 using MultiFunPlayer.Input;
 using MultiFunPlayer.UI;
@@ -118,8 +118,7 @@ public class WebSocketOutputTargetViewModel : AsyncAbstractOutputTarget
 
         if (action == SettingsAction.Saving)
         {
-            if (Uri != null)
-                settings[nameof(Uri)] = new JValue(Uri.ToString());
+            settings[nameof(Uri)] = Uri?.ToString();
         }
         else if (action == SettingsAction.Loading)
         {

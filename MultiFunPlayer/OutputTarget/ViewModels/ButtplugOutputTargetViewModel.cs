@@ -351,11 +351,8 @@ public class ButtplugOutputTargetViewModel : AsyncAbstractOutputTarget
 
         if (action == SettingsAction.Saving)
         {
-            if (Endpoint != null)
-                settings[nameof(Endpoint)] = new JValue(Endpoint.ToString());
-
-            if (DeviceSettings != null)
-                settings[nameof(DeviceSettings)] = JArray.FromObject(DeviceSettings);
+            settings[nameof(Endpoint)] = Endpoint?.ToString();
+            settings[nameof(DeviceSettings)] = JArray.FromObject(DeviceSettings);
         }
         else if (action == SettingsAction.Loading)
         {

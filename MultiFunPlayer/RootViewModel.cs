@@ -53,7 +53,12 @@ public class RootViewModel : Conductor<IScreen>.Collection.AllActive, IHandle<Ap
     public void Handle(AppSettingsMessage message)
     {
         var settings = message.Settings;
-        if (message.Action == SettingsAction.Loading)
+
+        if (message.Action == SettingsAction.Saving)
+        {
+            settings[nameof(DisablePopup)] = DisablePopup;
+        }
+        else if (message.Action == SettingsAction.Loading)
         {
             DisablePopup = settings.TryGetValue(nameof(DisablePopup), out var disablePopupToken) && disablePopupToken.Value<bool>();
             if (!DisablePopup)
@@ -67,10 +72,6 @@ public class RootViewModel : Conductor<IScreen>.Collection.AllActive, IHandle<Ap
                     DisablePopup = disablePopup;
                 });
             }
-        }
-        else if (message.Action == SettingsAction.Saving)
-        {
-            settings[nameof(DisablePopup)] = DisablePopup;
         }
     }
 }

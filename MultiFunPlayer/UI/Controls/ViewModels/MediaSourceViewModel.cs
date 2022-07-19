@@ -55,9 +55,7 @@ public class MediaSourceViewModel : Conductor<IMediaSource>.Collection.OneActive
             settings[nameof(ContentVisible)] = ContentVisible;
             settings[nameof(ScanDelay)] = ScanDelay;
             settings[nameof(ScanInterval)] = ScanInterval;
-
-            if (ActiveItem != null)
-                settings[nameof(ActiveItem)] = ActiveItem.Name;
+            settings[nameof(ActiveItem)] = ActiveItem?.Name;
         }
         else if (message.Action == SettingsAction.Loading)
         {
@@ -70,7 +68,6 @@ public class MediaSourceViewModel : Conductor<IMediaSource>.Collection.OneActive
                 ScanDelay = scanDelay;
             if (settings.TryGetValue<int>(nameof(ScanInterval), out var scanInterval))
                 ScanInterval = scanInterval;
-
             if (settings.TryGetValue<string>(nameof(ActiveItem), out var selectedItem))
                 ChangeActiveItem(Items.FirstOrDefault(x => string.Equals(x.Name, selectedItem)) ?? Items[0], closePrevious: false);
         }

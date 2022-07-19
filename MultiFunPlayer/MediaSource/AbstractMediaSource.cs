@@ -103,7 +103,7 @@ public abstract class AbstractMediaSource : Screen, IMediaSource, IHandle<AppSet
              || !message.Settings.TryGetObject(out var settings, "MediaSource", Name))
                 return;
 
-            settings[nameof(AutoConnectEnabled)] = new JValue(AutoConnectEnabled);
+            settings[nameof(AutoConnectEnabled)] = AutoConnectEnabled;
 
             HandleSettings(settings, message.Action);
         }

@@ -1,4 +1,4 @@
-﻿using Microsoft.WindowsAPICodePack.Dialogs;
+using Microsoft.WindowsAPICodePack.Dialogs;
 using MultiFunPlayer.Common;
 using MultiFunPlayer.Common.Messages;
 using MultiFunPlayer.Input;
@@ -198,12 +198,9 @@ public class MpvMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlayPau
     {
         if (action == SettingsAction.Saving)
         {
-            if (Executable != null)
-                settings[nameof(Executable)] = JToken.FromObject(Executable);
-            if (Arguments != null)
-                settings[nameof(Arguments)] = new JValue(Arguments);
-
-            settings[nameof(AutoStartEnabled)] = new JValue(AutoStartEnabled);
+            settings[nameof(Executable)] = Executable != null ? JToken.FromObject(Executable) : null;
+            settings[nameof(Arguments)] = Arguments;
+            settings[nameof(AutoStartEnabled)] = AutoStartEnabled;
         }
         else if (action == SettingsAction.Loading)
         {
@@ -234,8 +231,6 @@ public class MpvMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlayPau
 
         Executable = new FileInfo(dialog.FileName);
     }
-
-    public void OnClearExecutable() => Executable = null;
 
     public bool IsDownloading { get; set; } = false;
     public async void OnDownloadExecutable()

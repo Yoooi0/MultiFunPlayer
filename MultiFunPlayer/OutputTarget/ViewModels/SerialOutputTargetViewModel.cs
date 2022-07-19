@@ -189,7 +189,7 @@ public class SerialOutputTargetViewModel : ThreadAbstractOutputTarget
 
         if (action == SettingsAction.Saving)
         {
-            settings[nameof(SelectedSerialPort)] = new JValue(SelectedSerialPortDeviceId);
+            settings[nameof(SelectedSerialPort)] = SelectedSerialPortDeviceId;
         }
         else if (action == SettingsAction.Loading)
         {

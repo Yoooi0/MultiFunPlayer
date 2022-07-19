@@ -50,25 +50,21 @@ public class ApplicationViewModel : Screen, IHandle<AppSettingsMessage>
     {
         if (message.Action == SettingsAction.Saving)
         {
-            message.Settings[nameof(SelectedDevice)] = JToken.FromObject(SelectedDevice);
-            message.Settings[nameof(AlwaysOnTop)] = JToken.FromObject(AlwaysOnTop);
-
-            if (SelectedLogLevel != null)
-                message.Settings["LogLevel"] = JToken.FromObject(SelectedLogLevel);
+            message.Settings[nameof(SelectedDevice)] = SelectedDevice;
+            message.Settings[nameof(AlwaysOnTop)] = AlwaysOnTop;
+            message.Settings[nameof(ShowErrorDialogs)] = ShowErrorDialogs;
+            message.Settings["LogLevel"] = JToken.FromObject(SelectedLogLevel ?? LogLevel.Info);
         }
         else if (message.Action == SettingsAction.Loading)
         {
             if (message.Settings.TryGetValue<string>(nameof(SelectedDevice), out var selectedDevice))
                 SelectedDevice = selectedDevice;
-
-            if (message.Settings.TryGetValue<LogLevel>("LogLevel", out var logLevel))
-                SelectedLogLevel = logLevel;
-
             if (message.Settings.TryGetValue<bool>(nameof(AlwaysOnTop), out var alwaysOnTop))
                 AlwaysOnTop = alwaysOnTop;
-
             if (message.Settings.TryGetValue<bool>(nameof(ShowErrorDialogs), out var showErrorDialogs))
                 ShowErrorDialogs = showErrorDialogs;
+            if (message.Settings.TryGetValue<LogLevel>("LogLevel", out var logLevel))
+                SelectedLogLevel = logLevel;
         }
     }
 }

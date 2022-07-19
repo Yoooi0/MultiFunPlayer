@@ -92,7 +92,9 @@
                         <material:PackIcon Kind="Folder"/>
                     </Button>
 
-                    <TextBox Text="{Binding OutputDirectory, Converter={StaticResource FileSystemInfoToStringConverter}}"
+                    <TextBox IsReadOnly="True"
+                             Text="{Binding OutputDirectory, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource FileSystemInfoToStringConverter}}"
+                             material:TextFieldAssist.HasClearButton="True"
                              DockPanel.Dock="Left"
                              Margin="0 0 10 0"
                              VerticalAlignment="Center"/>

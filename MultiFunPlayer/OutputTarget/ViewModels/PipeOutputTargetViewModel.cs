@@ -90,8 +90,7 @@ public class PipeOutputTargetViewModel : ThreadAbstractOutputTarget
 
         if (action == SettingsAction.Saving)
         {
-            if (PipeName != null)
-                settings[nameof(PipeName)] = new JValue(PipeName);
+            settings[nameof(PipeName)] = PipeName;
         }
         else if (action == SettingsAction.Loading)
         {

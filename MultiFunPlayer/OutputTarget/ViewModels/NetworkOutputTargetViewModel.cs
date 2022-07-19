@@ -154,16 +154,13 @@ public class NetworkOutputTargetViewModel : ThreadAbstractOutputTarget
 
         if (action == SettingsAction.Saving)
         {
-            if (Endpoint != null)
-                settings[nameof(Endpoint)] = new JValue(Endpoint.ToString());
-
-            settings[nameof(Protocol)] = new JValue(Protocol.ToString());
+            settings[nameof(Endpoint)] = Endpoint?.ToString();
+            settings[nameof(Protocol)] = Protocol.ToString();
         }
         else if (action == SettingsAction.Loading)
         {
             if (settings.TryGetValue<EndPoint>(nameof(Endpoint), out var endpoint))
                 Endpoint = endpoint;
-
             if (settings.TryGetValue<ProtocolType>(nameof(Protocol), out var protocol))
                 Protocol = protocol;
         }

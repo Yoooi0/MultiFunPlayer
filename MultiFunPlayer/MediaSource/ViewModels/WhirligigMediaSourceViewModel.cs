@@ -106,8 +106,7 @@ public class WhirligigMediaSourceViewModel : AbstractMediaSource
     {
         if (action == SettingsAction.Saving)
         {
-            if (Endpoint != null)
-                settings[nameof(Endpoint)] = new JValue(Endpoint.ToString());
+            settings[nameof(Endpoint)] = Endpoint?.ToString();
         }
         else if (action == SettingsAction.Loading)
         {

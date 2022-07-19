@@ -132,19 +132,20 @@ public abstract class AbstractOutputTarget : Screen, IOutputTarget
     {
         if (action == SettingsAction.Saving)
         {
-            settings[nameof(UpdateInterval)] = new JValue(UpdateInterval);
+            settings[nameof(UpdateInterval)] = UpdateInterval;
+            settings[nameof(AutoConnectEnabled)] = AutoConnectEnabled;
             settings[nameof(AxisSettings)] = JObject.FromObject(AxisSettings);
-            settings[nameof(AutoConnectEnabled)] = new JValue(AutoConnectEnabled);
         }
         else if (action == SettingsAction.Loading)
         {
             if (settings.TryGetValue<int>(nameof(UpdateInterval), out var updateInterval))
                 UpdateInterval = updateInterval;
+            if (settings.TryGetValue<bool>(nameof(AutoConnectEnabled), out var autoConnectEnabled))
+                AutoConnectEnabled = autoConnectEnabled;
+
             if (settings.TryGetValue<Dictionary<DeviceAxis, DeviceAxisSettings>>(nameof(AxisSettings), out var axisSettingsMap))
                 foreach (var (axis, axisSettings) in axisSettingsMap)
                     AxisSettings[axis] = axisSettings;
-            if (settings.TryGetValue<bool>(nameof(AutoConnectEnabled), out var autoConnectEnabled))
-                AutoConnectEnabled = autoConnectEnabled;
         }
     }
 
@@ -388,7 +389,7 @@ public abstract class ThreadAbstractOutputTarget : AbstractOutputTarget
 
         if (action == SettingsAction.Saving)
         {
-            settings[nameof(UsePreciseSleep)] = JValue.FromObject(UsePreciseSleep);
+            settings[nameof(UsePreciseSleep)] = UsePreciseSleep;
         }
         else if (action == SettingsAction.Loading)
         {

@@ -117,8 +117,7 @@ public class FileOutputTargetViewModel : ThreadAbstractOutputTarget
 
         if (action == SettingsAction.Saving)
         {
-            if (OutputDirectory != null)
-                settings[nameof(OutputDirectory)] = JValue.FromObject(OutputDirectory);
+            settings[nameof(OutputDirectory)] = OutputDirectory != null ? JToken.FromObject(OutputDirectory) : null;
             settings[nameof(ScriptType)] = new JValue(ScriptType);
             settings[nameof(EnabledAxes)] = JArray.FromObject(EnabledAxes);
         }

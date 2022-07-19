@@ -219,8 +219,7 @@ public class DeoVRMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlayP
     {
         if (action == SettingsAction.Saving)
         {
-            if (Endpoint != null)
-                settings[nameof(Endpoint)] = new JValue(Endpoint.ToString());
+            settings[nameof(Endpoint)] = Endpoint?.ToString();
         }
         else if (action == SettingsAction.Loading)
         {

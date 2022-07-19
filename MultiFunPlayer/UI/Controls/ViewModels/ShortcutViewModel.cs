@@ -239,12 +239,10 @@ public class ShortcutViewModel : Screen, IHandle<AppSettingsMessage>, IDisposabl
     {
         if (message.Action == SettingsAction.Saving)
         {
-            message.Settings["Shortcuts"] = JObject.FromObject(this);
-
-            if (!message.Settings.TryGetObject(out var settings, "Shortcuts"))
-                return;
-
+            var settings = JObject.FromObject(this);
             settings[nameof(Bindings)] = JArray.FromObject(Bindings.Select(x => BindingSettingsModel.FromBinding(x)));
+
+            message.Settings["Shortcuts"] = settings;
         }
         else if (message.Action == SettingsAction.Loading)
         {

@@ -19,8 +19,8 @@ public class TheHandyOutputTargetViewModel : AsyncAbstractOutputTarget
 {
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
-    public string ConnectionKey { get; set; }
-    public DeviceAxis SourceAxis { get; set; }
+    public string ConnectionKey { get; set; } = null;
+    public DeviceAxis SourceAxis { get; set; } = null;
 
     public override ConnectionStatus Status { get; protected set; }
 
@@ -148,14 +148,13 @@ public class TheHandyOutputTargetViewModel : AsyncAbstractOutputTarget
 
         if (action == SettingsAction.Saving)
         {
-            settings[nameof(ConnectionKey)] = new JValue(ConnectionKey);
+            settings[nameof(ConnectionKey)] = ConnectionKey;
             settings[nameof(SourceAxis)] = SourceAxis != null ? JToken.FromObject(SourceAxis) : null;
         }
         else if (action == SettingsAction.Loading)
         {
             if (settings.TryGetValue<string>(nameof(ConnectionKey), out var connectionKey))
                 ConnectionKey = connectionKey;
-
             if (settings.TryGetValue<DeviceAxis>(nameof(SourceAxis), out var sourceAxis))
                 SourceAxis = sourceAxis;
         }

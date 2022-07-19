@@ -120,9 +120,7 @@ public class OutputTargetViewModel : Conductor<IOutputTarget>.Collection.OneActi
             settings[nameof(ContentVisible)] = ContentVisible;
             settings[nameof(ScanDelay)] = ScanDelay;
             settings[nameof(ScanInterval)] = ScanInterval;
-
-            if (ActiveItem != null)
-                settings[nameof(ActiveItem)] = ActiveItem.Identifier;
+            settings[nameof(ActiveItem)] = ActiveItem?.Identifier;
 
             settings[nameof(Items)] = JArray.FromObject(Items.Select(x =>
             {
