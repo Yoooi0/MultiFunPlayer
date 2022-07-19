@@ -67,7 +67,7 @@
         </Expander.Header>
 
         <StackPanel Margin="20">
-            <DockPanel LastChildFill="True">
+            <DockPanel LastChildFill="True" Margin="0 -10 0 0">
                 <TextBlock Text="Endpoint:"
                            DockPanel.Dock="Left"
                            Margin="0 0 10 0"
@@ -75,7 +75,6 @@
 
                 <controls:EndPointBox EndPoint="{Binding Endpoint}"
                                       DockPanel.Dock="Left"
-                                      Margin="0 -12 20 0"
                                       HorizontalAlignment="Left"/>
             </DockPanel>
         </StackPanel>

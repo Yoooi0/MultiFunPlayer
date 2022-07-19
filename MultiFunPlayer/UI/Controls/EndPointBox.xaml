@@ -10,65 +10,68 @@
              d:DesignHeight="450" d:DesignWidth="800">
     <UserControl.Resources>
         <converters:PortToStringConverter x:Key="PortToStringConverter"/>
+        <Style TargetType="{x:Type local:EndPointBox}">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type local:EndPointBox}">
+                        <Grid Margin="0">
+                            <AdornerDecorator VerticalAlignment="Center">
+                                <Border x:Name="Base"
+                                        BorderBrush="{StaticResource MaterialDesignTextBoxBorder}"
+                                        BorderThickness="0 0 0 1"
+                                        SnapsToDevicePixels="True"
+                                        Background="Transparent"
+                                        material:BottomDashedLineAdorner.Brush="{StaticResource MaterialDesignTextBoxBorder}"
+                                        material:BottomDashedLineAdorner.Thickness="0 0 0 1">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBox Text="{Binding HostOrIPAddress, RelativeSource={RelativeSource TemplatedParent}}"
+                                                 material:TextFieldAssist.DecorationVisibility="Collapsed"
+                                                 MinWidth="50"
+                                                 MaxWidth="150"
+                                                 Height="24"
+                                                 BorderBrush="Transparent"
+                                                 TextAlignment="Right"
+                                                 material:HintAssist.HelperText="ip/host"
+                                                 material:ValidationAssist.Suppress="True"/>
+
+                                        <TextBlock Text=":"
+                                                   Margin="5 0 5 2"
+                                                   FontWeight="Black"
+                                                   VerticalAlignment="Center"/>
+
+                                        <TextBox Text="{Binding Port, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource PortToStringConverter}}"
+                                                 material:TextFieldAssist.DecorationVisibility="Collapsed"
+                                                 MinWidth="20"
+                                                 MaxWidth="40"
+                                                 Height="24"
+                                                 BorderBrush="Transparent"
+                                                 TextAlignment="Left"
+                                                 material:HintAssist.HelperText="port"
+                                                 material:ValidationAssist.Suppress="True"/>
+                                    </StackPanel>
+                                </Border>
+                            </AdornerDecorator>
+
+                            <material:Underline x:Name="Underline"
+                                                Visibility="Visible"/>
+                        </Grid>
+
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="Base" Property="Opacity" Value="0.42" />
+                                <Setter TargetName="Base" Property="BorderBrush" Value="Transparent" />
+                                <Setter TargetName="Base" Property="material:BottomDashedLineAdorner.IsAttached" Value="True" />
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Base" Property="BorderBrush" Value="{StaticResource PrimaryHueMidBrush}" />
+                            </Trigger>
+                            <Trigger Property="IsKeyboardFocusWithin" Value="True">
+                                <Setter TargetName="Underline" Property="IsActive" Value="True"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
     </UserControl.Resources>
-    <UserControl.Template>
-        <ControlTemplate TargetType="{x:Type local:EndPointBox}">
-            <Grid>
-                <AdornerDecorator VerticalAlignment="Stretch">
-                    <Border x:Name="Base"
-                            BorderBrush="{StaticResource MahApps.Brushes.TextBox.Border}"
-                            BorderThickness="0 0 0 1"
-                            SnapsToDevicePixels="True"
-                            Background="Transparent"
-                            material:BottomDashedLineAdorner.Brush="{StaticResource MahApps.Brushes.TextBox.Border}"
-                            material:BottomDashedLineAdorner.Thickness="0 0 0 1">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBox Text="{Binding HostOrIPAddress, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type local:EndPointBox}}}"
-                                     material:TextFieldAssist.DecorationVisibility="Collapsed"
-                                     MinWidth="50"
-                                     MaxWidth="150"
-                                     Height="24"
-                                     BorderBrush="Transparent"
-                                     TextAlignment="Right"
-                                     material:HintAssist.HelperText="ip/host"
-                                     material:ValidationAssist.Suppress="True"/>
-
-                            <TextBlock Text=":"
-                                       Margin="5 0 5 2"
-                                       FontWeight="Black"
-                                       VerticalAlignment="Center"/>
-
-                            <TextBox Text="{Binding Port, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type local:EndPointBox}}, Converter={StaticResource PortToStringConverter}}"
-                                     material:TextFieldAssist.DecorationVisibility="Collapsed"
-                                     MinWidth="20"
-                                     MaxWidth="40"
-                                     Height="24"
-                                     BorderBrush="Transparent"
-                                     TextAlignment="Left"
-                                     material:HintAssist.HelperText="port"
-                                     material:ValidationAssist.Suppress="True"/>
-                        </StackPanel>
-                    </Border>
-                </AdornerDecorator>
-
-                <material:Underline x:Name="Underline" 
-                                    Grid.Column="0"
-                                    Visibility="Visible"/>
-            </Grid>
-
-            <ControlTemplate.Triggers>
-                <Trigger Property="IsEnabled" Value="False">
-                    <Setter TargetName="Base" Property="Opacity" Value="0.42" />
-                    <Setter TargetName="Base" Property="BorderBrush" Value="Transparent" />
-                    <Setter TargetName="Base" Property="material:BottomDashedLineAdorner.IsAttached" Value="True" />
-                </Trigger>
-                <Trigger Property="IsMouseOver" Value="True">
-                    <Setter TargetName="Base" Property="BorderBrush" Value="{DynamicResource MahApps.Brushes.TextBox.Border.MouseOver}" />
-                </Trigger>
-                <Trigger Property="IsKeyboardFocusWithin" Value="True">
-                    <Setter TargetName="Underline" Property="IsActive" Value="True"/>
-                </Trigger>
-            </ControlTemplate.Triggers>
-        </ControlTemplate>
-    </UserControl.Template>
 </UserControl>
