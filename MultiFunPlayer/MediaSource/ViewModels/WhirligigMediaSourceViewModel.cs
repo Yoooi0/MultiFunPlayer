@@ -120,11 +120,11 @@ public class WhirligigMediaSourceViewModel : AbstractMediaSource
         try
         {
             if (Endpoint == null)
-                return await ValueTask.FromResult(false);
+                return false;
 
             if (Endpoint.IsLocalhost())
                 if (!Process.GetProcesses().Any(p => Regex.IsMatch(p.ProcessName, "(?i)whirligig")))
-                    return await ValueTask.FromResult(false);
+                    return false;
 
             using var client = new TcpClient();
             {
@@ -136,11 +136,11 @@ public class WhirligigMediaSourceViewModel : AbstractMediaSource
 
             using var stream = client.GetStream();
 
-            return await ValueTask.FromResult(client.Connected);
+            return client.Connected;
         }
         catch
         {
-            return await ValueTask.FromResult(false);
+            return false;
         }
     }
 

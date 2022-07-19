@@ -365,6 +365,16 @@ public static class NetExtensions
             throw new NotSupportedException($"{endpoint.GetType()} in not supported.");
     }
 
+    public static Task ConnectAsync(this TcpClient client, EndPoint endpoint)
+    {
+        if (endpoint is IPEndPoint ipEndPoint)
+            return client.ConnectAsync(ipEndPoint.Address, ipEndPoint.Port);
+        else if (endpoint is DnsEndPoint dnsEndPoint)
+            return client.ConnectAsync(dnsEndPoint.Host, dnsEndPoint.Port);
+        else
+            throw new NotSupportedException($"{endpoint.GetType()} in not supported.");
+    }
+
     public static bool IsLocalhost(this EndPoint endpoint)
     {
         if (endpoint is IPEndPoint ipEndPoint)

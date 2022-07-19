@@ -233,11 +233,11 @@ public class DeoVRMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlayP
         try
         {
             if (Endpoint == null)
-                return await ValueTask.FromResult(false);
+                return false;
 
             if (Endpoint.IsLocalhost())
                 if (!Process.GetProcesses().Any(p => Regex.IsMatch(p.ProcessName, "(?i)(?>deovr|slr)")))
-                    return await ValueTask.FromResult(false);
+                    return false;
 
             using var client = new TcpClient();
             {
@@ -249,11 +249,11 @@ public class DeoVRMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlayP
 
             using var stream = client.GetStream();
 
-            return await ValueTask.FromResult(client.Connected);
+            return client.Connected;
         }
         catch
         {
-            return await ValueTask.FromResult(false);
+            return false;
         }
     }
 

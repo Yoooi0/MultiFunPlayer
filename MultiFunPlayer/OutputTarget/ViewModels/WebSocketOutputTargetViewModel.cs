@@ -1,4 +1,4 @@
-using MultiFunPlayer.Common;
+﻿using MultiFunPlayer.Common;
 using MultiFunPlayer.Common.Messages;
 using MultiFunPlayer.Input;
 using MultiFunPlayer.UI;
@@ -156,11 +156,11 @@ public class WebSocketOutputTargetViewModel : AsyncAbstractOutputTarget
 
             await client.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, null, token);
 
-            return await ValueTask.FromResult(true);
+            return true;
         }
         catch
         {
-            return await ValueTask.FromResult(false);
+            return false;
         }
     }
 }

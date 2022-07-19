@@ -219,7 +219,7 @@ public class SerialOutputTargetViewModel : ThreadAbstractOutputTarget
         {
             await RefreshPorts();
             if (SelectedSerialPort == null)
-                return await ValueTask.FromResult(false);
+                return false;
 
             using var serialPort = new SerialPort(SelectedSerialPort.PortName, 115200)
             {
@@ -233,11 +233,11 @@ public class SerialOutputTargetViewModel : ThreadAbstractOutputTarget
             serialPort.ReadExisting();
             serialPort.Close();
 
-            return await ValueTask.FromResult(true);
+            return true;
         }
         catch
         {
-            return await ValueTask.FromResult(false);
+            return false;
         }
     }
 

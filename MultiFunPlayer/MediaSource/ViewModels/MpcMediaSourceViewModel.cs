@@ -186,7 +186,7 @@ public class MpcMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlayPau
         try
         {
             if (Endpoint == null)
-                return await ValueTask.FromResult(false);
+                return false;
 
             var uri = new Uri($"http://{Endpoint.ToUriString()}");
 
@@ -196,11 +196,11 @@ public class MpcMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlayPau
             var response = await client.GetAsync(uri, token);
             response.EnsureSuccessStatusCode();
 
-            return await ValueTask.FromResult(true);
+            return true;
         }
         catch
         {
-            return await ValueTask.FromResult(false);
+            return false;
         }
     }
 

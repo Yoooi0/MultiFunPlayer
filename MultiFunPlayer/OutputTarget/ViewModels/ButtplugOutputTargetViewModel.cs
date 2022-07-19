@@ -394,11 +394,11 @@ public class ButtplugOutputTargetViewModel : AsyncAbstractOutputTarget
             await client.ConnectAsync(new Uri($"ws://{Endpoint}"), token);
             var result = client.State == WebSocketState.Open;
             await client.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, null, token);
-            return await ValueTask.FromResult(result);
+            return result;
         }
         catch
         {
-            return await ValueTask.FromResult(false);
+            return false;
         }
     }
 

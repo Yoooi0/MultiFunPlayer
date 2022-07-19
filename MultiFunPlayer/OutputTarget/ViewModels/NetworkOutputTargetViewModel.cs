@@ -199,16 +199,16 @@ public class NetworkOutputTargetViewModel : ThreadAbstractOutputTarget
         try
         {
             if (Protocol == ProtocolType.Udp)
-                return await ValueTask.FromResult(true);
+                return true;
 
             using var client = new TcpClient();
-            client.Connect(Endpoint);
+            await client.ConnectAsync(Endpoint);
             client.GetStream();
-            return await ValueTask.FromResult(true);
+            return true;
         }
         catch
         {
-            return await ValueTask.FromResult(false);
+            return false;
         }
     }
 }
