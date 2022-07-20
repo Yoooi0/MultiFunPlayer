@@ -23,7 +23,10 @@ public class WebSocketOutputTargetViewModel : AsyncAbstractOutputTarget
     public Uri Uri { get; set; } = new Uri("ws://127.0.0.1/ws");
 
     public WebSocketOutputTargetViewModel(int instanceIndex, IEventAggregator eventAggregator, IDeviceAxisValueProvider valueProvider)
-        : base(instanceIndex, eventAggregator, valueProvider) { }
+        : base(instanceIndex, eventAggregator, valueProvider)
+    {
+        UpdateInterval = 16;
+    }
 
     public override int MinimumUpdateInterval => 16;
     public override int MaximumUpdateInterval => 200;
