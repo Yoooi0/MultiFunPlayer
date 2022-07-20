@@ -65,7 +65,7 @@ public class TheHandyOutputTargetViewModel : AsyncAbstractOutputTarget
 
             {
                 var response = await ApiPutAsync(client, "mode", "{ \"mode\": 2 }", token);
-                if (!response.TryGetValue<int>("mode", out var mode) || !response.TryGetValue<int>("result", out var result) || result != 0 || mode != 2)
+                if (!response.TryGetValue<int>("result", out var result) || result == -1)
                     throw new Exception($"Unable to set HDSP device mode [Response: {response.ToString(Formatting.None)}]");
             }
 
