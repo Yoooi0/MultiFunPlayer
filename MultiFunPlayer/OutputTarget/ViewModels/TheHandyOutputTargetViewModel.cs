@@ -1,4 +1,4 @@
-﻿using Google.Protobuf.WellKnownTypes;
+using Google.Protobuf.WellKnownTypes;
 using MultiFunPlayer.Common;
 using MultiFunPlayer.Common.Messages;
 using MultiFunPlayer.Input;
@@ -28,6 +28,14 @@ public class TheHandyOutputTargetViewModel : AsyncAbstractOutputTarget
         : base(instanceIndex, eventAggregator, valueProvider)
     {
         UpdateInterval = 100;
+
+        PropertyChanged += (s, e) =>
+        {
+            if (Status != ConnectionStatus.Connected || e.PropertyName != nameof(SourceAxis) || SourceAxis == null)
+                return;
+
+            EventAggregator.Publish(new SyncRequestMessage(SourceAxis));
+        };
     }
 
     public override int MinimumUpdateInterval => 16;
