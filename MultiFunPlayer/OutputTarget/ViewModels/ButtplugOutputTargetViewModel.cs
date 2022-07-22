@@ -144,6 +144,11 @@ public class ButtplugOutputTargetViewModel : AsyncAbstractOutputTarget
             Logger.Info($"Device added: \"{device.Name}\"");
 
             AvailableDevices.Add(device);
+
+            var syncAxes = GetSettingsForDevice(device)
+                                .GroupBy(s => s.SourceAxis)
+                                .Select(g => g.Key);
+            EventAggregator.Publish(new SyncRequestMessage(syncAxes));
         }
 
         using var client = new ButtplugClient(nameof(MultiFunPlayer));
@@ -249,6 +254,8 @@ public class ButtplugOutputTargetViewModel : AsyncAbstractOutputTarget
         => GetDeviceByNameAndIndex(settings.DeviceName, settings.DeviceIndex);
     private ButtplugClientDevice GetDeviceByNameAndIndex(string deviceName, uint deviceIndex)
         => AvailableDevices.FirstOrDefault(d => string.Equals(deviceName, d.Name, StringComparison.OrdinalIgnoreCase) && deviceIndex == d.Index);
+    private IEnumerable<ButtplugClientDeviceSettings> GetSettingsForDevice(ButtplugClientDevice device)
+        => DeviceSettings.Where(s => string.Equals(s.DeviceName, device.Name, StringComparison.OrdinalIgnoreCase) && s.DeviceIndex == device.Index);
 
     protected override double CoerceProviderValue(DeviceAxis axis, double value)
     {
