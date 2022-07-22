@@ -1,5 +1,4 @@
-﻿using Buttplug;
-using MultiFunPlayer.Common;
+﻿using MultiFunPlayer.Common;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System.Net;

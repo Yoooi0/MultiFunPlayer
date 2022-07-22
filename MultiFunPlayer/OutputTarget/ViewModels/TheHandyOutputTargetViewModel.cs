@@ -1,4 +1,3 @@
-using Google.Protobuf.WellKnownTypes;
 using MultiFunPlayer.Common;
 using MultiFunPlayer.Common.Messages;
 using MultiFunPlayer.Input;
@@ -104,8 +103,9 @@ public class TheHandyOutputTargetViewModel : AsyncAbstractOutputTarget
                 {
                     var position = MathUtils.Clamp(currentValue * 100, 0, 100);
                     var duration = (int)Math.Floor(elapsed * 1000 + 0.75);
+                    var content = $"{{ \"stopOnTarget\": false, \"duration\": {duration}, \"position\": {position.ToString(CultureInfo.InvariantCulture)} }}";
 
-                    _ = await ApiPutAsync(client, "hdsp/xpt", $"{{ \"stopOnTarget\": false, \"duration\": {duration}, \"position\": {position.ToString(CultureInfo.InvariantCulture)} }}", token);
+                    _ = await ApiPutAsync(client, "hdsp/xpt", content, token);
                     lastSentValue = currentValue;
                 }
             }, token);
@@ -123,7 +123,7 @@ public class TheHandyOutputTargetViewModel : AsyncAbstractOutputTarget
     {
         var response = JObject.Parse(await message.Content.ReadAsStringAsync(token));
 
-        Logger.Trace("{0} api response: {1}", Identifier, response.ToString(Formatting.None));
+        Logger.Trace("{0} api response [Content: {1}]", Identifier, response.ToString(Formatting.None));
         if (response.TryGetObject(out var error, "error"))
             throw new Exception($"Api call failed: {error.ToString(Formatting.None)}");
 

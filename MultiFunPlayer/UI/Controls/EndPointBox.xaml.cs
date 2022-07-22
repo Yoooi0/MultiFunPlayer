@@ -1,5 +1,4 @@
-﻿using MultiFunPlayer.Common;
-using PropertyChanged;
+﻿using PropertyChanged;
 using System.ComponentModel;
 using System.Net;
 using System.Windows;
