@@ -966,7 +966,11 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         if (!_autoSkipToScriptStartTask.IsCompleted)
             return;
 
-        _autoSkipToScriptStartTask = Task.Delay(1000, _cancellationSource.Token)
+        var token = _cancellationSource?.Token;
+        if (token == null)
+            return;
+
+        _autoSkipToScriptStartTask = Task.Delay(1000, token.Value)
                                          .ContinueWith(_ => SeekMediaToScriptStart(AutoSkipToScriptStartOffset, onlyWhenBefore: true));
     }
 
