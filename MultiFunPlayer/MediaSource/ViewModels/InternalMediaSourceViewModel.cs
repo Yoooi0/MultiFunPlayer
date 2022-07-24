@@ -65,7 +65,7 @@ public class InternalMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPl
             var isPlaying = false;
             var currentPosition = double.NaN;
             var currentDuration = double.NaN;
-            var currentScript = default(IScriptResource);
+            var currentScriptPath = default(string);
             var currentQueueIndex = 0;
             var scriptQueue = default(List<string>);
             var lastTicks = Stopwatch.GetTimestamp();
@@ -87,12 +87,32 @@ public class InternalMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPl
 
             void SetCurrentScript(string scriptPath)
             {
-                currentScript = scriptPath != null ? ScriptResource.FromPath(scriptPath, userLoaded: true) : null;
+                static string GetMediaPath(string scriptPath)
+                {
+                    if (scriptPath == null)
+                        return null;
 
-                SetCurrentDuration(currentScript?.Keyframes.Last().Position ?? double.NaN);
-                SetCurrentPosition(currentScript != null ? 0 : double.NaN);
+                    const string mediaExtension = "mp4";
+                    var basePath = Path.ChangeExtension(scriptPath, null);
+                    var basePathExtension = Path.GetExtension(basePath);
 
-                _eventAggregator.Publish(new ScriptLoadMessage(DeviceAxis.All.First(), currentScript));
+                    if (string.IsNullOrWhiteSpace(basePathExtension))
+                        return $"{basePath}.{mediaExtension}";
+
+                    foreach (var axis in DeviceAxis.All)
+                        foreach (var funscriptName in axis.FunscriptNames)
+                            if (string.Equals(basePathExtension, $".{funscriptName}", StringComparison.InvariantCultureIgnoreCase))
+                                return $"{Path.ChangeExtension(basePath, null)}.{mediaExtension}";
+
+                    return $"{basePath}.{mediaExtension}";
+                }
+
+                var script = scriptPath != null ? ScriptResource.FromPath(scriptPath, userLoaded: true) : null;
+                SetCurrentDuration(script?.Keyframes.Last().Position ?? double.NaN);
+                SetCurrentPosition(script != null ? 0 : double.NaN);
+
+                currentScriptPath = scriptPath;
+                _eventAggregator.Publish(new MediaPathChangedMessage(GetMediaPath(scriptPath)));
             }
 
             void SetCurrentDuration(double duration)
@@ -124,7 +144,7 @@ public class InternalMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPl
                 {
                     if (message is MediaPlayPauseMessage playPauseMessage)
                         SetIsPlaying(playPauseMessage.State);
-                    else if (message is MediaSeekMessage seekMessage && seekMessage.Position.HasValue && currentScript != null)
+                    else if (message is MediaSeekMessage seekMessage && seekMessage.Position.HasValue && currentScriptPath != null)
                         SetCurrentPosition(seekMessage.Position.Value.TotalSeconds);
                 }
 
@@ -133,7 +153,7 @@ public class InternalMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPl
                 else if (scriptQueue == null)
                     continue;
 
-                if (currentScript == null)
+                if (currentScriptPath == null)
                     SetCurrentScriptIndex(IsShuffling ? Random.Shared.Next(0, scriptQueue.Count) : 0);
 
                 if (currentPosition > currentDuration)
@@ -148,7 +168,7 @@ public class InternalMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPl
                         SetCurrentQueue(null);
                 }
 
-                if (!isPlaying || currentScript == null)
+                if (!isPlaying || currentScriptPath == null)
                     continue;
 
                 SetCurrentPosition(currentPosition + elapsed);
