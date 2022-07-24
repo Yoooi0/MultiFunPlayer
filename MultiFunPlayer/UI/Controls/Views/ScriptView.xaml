@@ -38,21 +38,30 @@
                     <DockPanel LastChildFill="True" 
                                Height="35">
                         <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
-                            <Button Style="{StaticResource MaterialDesignToolBarButton}"
-                                    Click="{s:Action OnPlayPauseClick}"
-                                    Padding="5"
-                                    ToolTip="Play/Pause">
+                            <Button Click="{s:Action OnPlayPauseClick}"
+                                    Padding="5">
+                                <Button.Style BasedOn="{StaticResource MaterialDesignToolBarButton}">
+                                    <Style TargetType="{x:Type Button}">
+                                        <Setter Property="ToolTip" Value="Play"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsPlaying}" Value="True">
+                                                <Setter Property="ToolTip" Value="Pause"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Button.Style>
+
                                 <material:PackIcon Width="28" 
                                                    Height="28"
                                                    VerticalAlignment="Center">
                                     <material:PackIcon.Style>
                                         <Style TargetType="material:PackIcon">
-                                            <Setter Property="Foreground" Value="{StaticResource MaterialDesignErrorBrush}"/>
-                                            <Setter Property="Kind" Value="Pause"/>
+                                            <Setter Property="Foreground" Value="{StaticResource MaterialDesignSuccessBrush}"/>
+                                            <Setter Property="Kind" Value="Play"/>
                                             <Style.Triggers>
                                                 <DataTrigger Binding="{Binding IsPlaying}" Value="True">
-                                                    <Setter Property="Foreground" Value="{StaticResource MaterialDesignSuccessBrush}"/>
-                                                    <Setter Property="Kind" Value="Play"/>
+                                                    <Setter Property="Foreground" Value="{StaticResource MaterialDesignErrorBrush}"/>
+                                                    <Setter Property="Kind" Value="Pause"/>
                                                 </DataTrigger>
                                             </Style.Triggers>
                                         </Style>
