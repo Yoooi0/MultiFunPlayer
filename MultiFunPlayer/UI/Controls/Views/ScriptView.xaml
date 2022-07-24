@@ -40,8 +40,8 @@
                         <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
                             <Button Click="{s:Action OnPlayPauseClick}"
                                     Padding="5">
-                                <Button.Style BasedOn="{StaticResource MaterialDesignToolBarButton}">
-                                    <Style TargetType="{x:Type Button}">
+                                <Button.Style>
+                                    <Style TargetType="{x:Type Button}" BasedOn="{StaticResource MaterialDesignToolBarButton}">
                                         <Setter Property="ToolTip" Value="Play"/>
                                         <Style.Triggers>
                                             <DataTrigger Binding="{Binding IsPlaying}" Value="True">
