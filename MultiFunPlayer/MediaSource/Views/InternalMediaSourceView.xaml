@@ -63,6 +63,26 @@
                         <material:PackIcon Kind="MotionPlayOutline" Width="20" Height="20"/>
                     </material:ToggleButtonAssist.OnContent>
                 </ToggleButton>
+
+                <ToggleButton DockPanel.Dock="Left"
+                              IsChecked="{Binding IsLooping}"           
+                              Style="{StaticResource MaterialDesignToolBarToggleButton}"
+                              ToolTip="Loop">
+                    <material:PackIcon Kind="Refresh" Opacity=".56" Width="20" Height="20"/>
+                    <material:ToggleButtonAssist.OnContent>
+                        <material:PackIcon Kind="Refresh" Width="20" Height="20"/>
+                    </material:ToggleButtonAssist.OnContent>
+                </ToggleButton>
+
+                <ToggleButton DockPanel.Dock="Left"
+                              IsChecked="{Binding IsShuffling}"           
+                              Style="{StaticResource MaterialDesignToolBarToggleButton}"
+                              ToolTip="Shuffle">
+                    <material:PackIcon Kind="ShuffleVariant" Opacity=".56" Width="20" Height="20"/>
+                    <material:ToggleButtonAssist.OnContent>
+                        <material:PackIcon Kind="ShuffleVariant" Width="20" Height="20"/>
+                    </material:ToggleButtonAssist.OnContent>
+                </ToggleButton>
             </StackPanel>
         </Expander.Header>
 

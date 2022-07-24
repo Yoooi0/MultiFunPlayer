@@ -20,29 +20,39 @@ public class InternalMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPl
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
     private readonly IEventAggregator _eventAggregator;
-    private readonly Channel<IScriptResource> _scriptChannel;
+    private readonly Channel<List<string>> _scriptChannel;
     private readonly Channel<object> _messageChannel;
 
-    private bool _isPlaying;
-    private double _currentPosition;
-
     public override ConnectionStatus Status { get; protected set; }
+    public bool IsShuffling { get; set; } = false;
+    public bool IsLooping { get; set; } = false;
 
     public InternalMediaSourceViewModel(IShortcutManager shortcutManager, IEventAggregator eventAggregator)
         : base(shortcutManager, eventAggregator)
     {
         _eventAggregator = eventAggregator;
-        _scriptChannel = Channel.CreateUnbounded<IScriptResource>(new UnboundedChannelOptions()
+        _scriptChannel = Channel.CreateUnbounded<List<string>>(new UnboundedChannelOptions()
         {
             SingleReader = true,
             SingleWriter = true
         });
-
         _messageChannel = Channel.CreateUnbounded<object>(new UnboundedChannelOptions()
         {
             SingleReader = true,
             SingleWriter = true
         });
+    }
+
+    public void OnIsLoopingChanged()
+    {
+        if (IsLooping && IsShuffling)
+            IsShuffling = false;
+    }
+
+    public void OnIsShufflingChanged()
+    {
+        if (IsShuffling && IsLooping)
+            IsLooping = false;
     }
 
     public bool IsConnected => Status == ConnectionStatus.Connected;
@@ -64,49 +74,97 @@ public class InternalMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPl
 
             Status = ConnectionStatus.Connected;
 
+            var isPlaying = false;
+            var currentPosition = double.NaN;
+            var currentDuration = double.NaN;
             var currentScript = default(IScriptResource);
+            var currentQueueIndex = 0;
+            var scriptQueue = default(List<string>);
             var lastTicks = Stopwatch.GetTimestamp();
+
+            void SetCurrentQueue(List<string> queue)
+            {
+                scriptQueue = queue;
+                SetCurrentScript(null);
+
+                if (queue == null)
+                    SetIsPlaying(false);
+            }
+
+            void SetCurrentScriptIndex(int index)
+            {
+                currentQueueIndex = MathUtils.Clamp(index, 0, scriptQueue.Count - 1);
+                SetCurrentScript(scriptQueue[currentQueueIndex]);
+            }
+
+            void SetCurrentScript(string scriptPath)
+            {
+                currentScript = scriptPath != null ? ScriptResource.FromPath(scriptPath, userLoaded: true) : null;
+
+                SetCurrentDuration(currentScript?.Keyframes.Last().Position ?? double.NaN);
+                SetCurrentPosition(currentScript != null ? 0 : double.NaN);
+
+                _eventAggregator.Publish(new ScriptLoadMessage(DeviceAxis.All.First(), currentScript));
+            }
+
+            void SetCurrentDuration(double duration)
+            {
+                _eventAggregator.Publish(new MediaDurationChangedMessage(double.IsFinite(duration) ? TimeSpan.FromSeconds(duration) : null));
+                currentDuration = duration;
+            }
+
+            void SetCurrentPosition(double position)
+            {
+                _eventAggregator.Publish(new MediaPositionChangedMessage(double.IsFinite(position) ? TimeSpan.FromSeconds(position) : null));
+                currentPosition = position;
+            }
+
+            void SetIsPlaying(bool state)
+            {
+                _eventAggregator.Publish(new MediaPlayingChangedMessage(isPlaying: state));
+                isPlaying = state;
+            }
+
             using var timer = new PeriodicTimer(TimeSpan.FromMilliseconds(100));
             while (!token.IsCancellationRequested && await timer.WaitForNextTickAsync(token))
             {
-                if (_scriptChannel.Reader.TryRead(out var script))
-                {
-                    _currentPosition = 0;
-                    _eventAggregator.Publish(new MediaDurationChangedMessage(TimeSpan.FromSeconds(script.Keyframes.Last().Position)));
-                    _eventAggregator.Publish(new MediaPositionChangedMessage(TimeSpan.FromSeconds(0)));
-                    _eventAggregator.Publish(new ScriptLoadMessage(DeviceAxis.All.First(), script));
-
-                    if (currentScript == null)
-                    {
-                        _eventAggregator.Publish(new MediaPlayingChangedMessage(isPlaying: true));
-                        _isPlaying = true;
-                    }
-
-                    currentScript = script;
-                }
-
-                while (_messageChannel.Reader.TryRead(out var message))
-                {
-                    if (message is MediaPlayPauseMessage playPauseMessage)
-                    {
-                        _eventAggregator.Publish(new MediaPlayingChangedMessage(isPlaying: playPauseMessage.State));
-                        _isPlaying = playPauseMessage.State;
-                    }
-                    else if (message is MediaSeekMessage seekMessage && seekMessage.Position.HasValue)
-                    {
-                        _currentPosition = seekMessage.Position.Value.TotalSeconds;
-                    }
-                }
-
                 var currentTicks = Stopwatch.GetTimestamp();
                 var elapsed = (currentTicks - lastTicks) / (double)Stopwatch.Frequency;
                 lastTicks = currentTicks;
 
-                if (!_isPlaying)
+                while (_messageChannel.Reader.TryRead(out var message))
+                {
+                    if (message is MediaPlayPauseMessage playPauseMessage)
+                        SetIsPlaying(playPauseMessage.State);
+                    else if (message is MediaSeekMessage seekMessage && seekMessage.Position.HasValue && currentScript != null)
+                        SetCurrentPosition(seekMessage.Position.Value.TotalSeconds);
+                }
+
+                if (_scriptChannel.Reader.TryRead(out var queue))
+                    SetCurrentQueue(queue);
+                else if (scriptQueue == null)
                     continue;
 
-                _currentPosition += elapsed;
-                _eventAggregator.Publish(new MediaPositionChangedMessage(TimeSpan.FromSeconds(_currentPosition)));
+                if (currentScript == null)
+                    SetCurrentScriptIndex(IsShuffling ? Random.Shared.Next(0, scriptQueue.Count) : 0);
+
+                if (currentPosition > currentDuration)
+                {
+                    if (IsLooping)
+                        SetCurrentPosition(0);
+                    else if (IsShuffling)
+                        SetCurrentScriptIndex(Random.Shared.Next(0, scriptQueue.Count));
+                    else if (currentQueueIndex < scriptQueue.Count - 1)
+                        SetCurrentScriptIndex(currentQueueIndex + 1);
+                    else
+                        SetCurrentQueue(null);
+                }
+
+                if (!isPlaying || currentScript == null)
+                    continue;
+
+                currentPosition += elapsed;
+                _eventAggregator.Publish(new MediaPositionChangedMessage(TimeSpan.FromSeconds(currentPosition)));
             }
         }
         catch (OperationCanceledException) { }
@@ -120,22 +178,20 @@ public class InternalMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPl
         _eventAggregator.Publish(new MediaPathChangedMessage(null));
         _eventAggregator.Publish(new MediaPlayingChangedMessage(isPlaying: false));
         _eventAggregator.Publish(new MediaDurationChangedMessage(null));
-
-        _isPlaying = false;
-        _currentPosition = 0;
     }
 
     public void OnDrop(object sender, DragEventArgs e)
     {
         var drop = e.Data.GetData(DataFormats.FileDrop);
-        if (drop is not IEnumerable<string> paths)
+        if (drop is not string[] paths)
             return;
 
-        var path = paths.FirstOrDefault(p => Path.GetExtension(p) == ".funscript");
-        if (path == null)
-            return;
+        if (paths.Length == 1 && Path.GetExtension(paths[0]) == ".txt")
+            paths = File.ReadAllLines(paths[0]).ToArray();
 
-        _ = _scriptChannel.Writer.TryWrite(ScriptResource.FromPath(path, userLoaded: true));
+        var result = paths.Where(p => File.Exists(p) && Path.GetExtension(p) == ".funscript").ToList();
+        if (result.Count > 0)
+            _ = _scriptChannel.Writer.TryWrite(result);
     }
 
     public void OnPreviewDragOver(object sender, DragEventArgs e)
