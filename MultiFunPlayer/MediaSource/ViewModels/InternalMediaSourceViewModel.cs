@@ -20,7 +20,7 @@ public class InternalMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPl
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
     private readonly IEventAggregator _eventAggregator;
-    private readonly Channel<List<string>> _scriptChannel;
+    private readonly Channel<List<string>> _scriptQueueChannel;
     private readonly Channel<object> _messageChannel;
 
     public override ConnectionStatus Status { get; protected set; }
@@ -31,7 +31,7 @@ public class InternalMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPl
         : base(shortcutManager, eventAggregator)
     {
         _eventAggregator = eventAggregator;
-        _scriptChannel = Channel.CreateUnbounded<List<string>>(new UnboundedChannelOptions()
+        _scriptQueueChannel = Channel.CreateUnbounded<List<string>>(new UnboundedChannelOptions()
         {
             SingleReader = true,
             SingleWriter = true
@@ -41,18 +41,6 @@ public class InternalMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPl
             SingleReader = true,
             SingleWriter = true
         });
-    }
-
-    public void OnIsLoopingChanged()
-    {
-        if (IsLooping && IsShuffling)
-            IsShuffling = false;
-    }
-
-    public void OnIsShufflingChanged()
-    {
-        if (IsShuffling && IsLooping)
-            IsLooping = false;
     }
 
     public bool IsConnected => Status == ConnectionStatus.Connected;
@@ -140,7 +128,7 @@ public class InternalMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPl
                         SetCurrentPosition(seekMessage.Position.Value.TotalSeconds);
                 }
 
-                if (_scriptChannel.Reader.TryRead(out var queue))
+                if (_scriptQueueChannel.Reader.TryRead(out var queue))
                     SetCurrentQueue(queue);
                 else if (scriptQueue == null)
                     continue;
@@ -163,8 +151,7 @@ public class InternalMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPl
                 if (!isPlaying || currentScript == null)
                     continue;
 
-                currentPosition += elapsed;
-                _eventAggregator.Publish(new MediaPositionChangedMessage(TimeSpan.FromSeconds(currentPosition)));
+                SetCurrentPosition(currentPosition + elapsed);
             }
         }
         catch (OperationCanceledException) { }
@@ -191,7 +178,7 @@ public class InternalMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPl
 
         var result = paths.Where(p => File.Exists(p) && Path.GetExtension(p) == ".funscript").ToList();
         if (result.Count > 0)
-            _ = _scriptChannel.Writer.TryWrite(result);
+            _ = _scriptQueueChannel.Writer.TryWrite(result);
     }
 
     public void OnPreviewDragOver(object sender, DragEventArgs e)
@@ -213,5 +200,17 @@ public class InternalMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPl
     {
         if (Status == ConnectionStatus.Connected)
             await _messageChannel.Writer.WriteAsync(message);
+    }
+
+    public void OnIsLoopingChanged()
+    {
+        if (IsLooping && IsShuffling)
+            IsShuffling = false;
+    }
+
+    public void OnIsShufflingChanged()
+    {
+        if (IsShuffling && IsLooping)
+            IsLooping = false;
     }
 }
