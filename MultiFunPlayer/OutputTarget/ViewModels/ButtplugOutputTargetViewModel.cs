@@ -151,9 +151,12 @@ public class ButtplugOutputTargetViewModel : AsyncAbstractOutputTarget
         }
 
         using var client = new ButtplugClient(nameof(MultiFunPlayer));
+        using var serverDisconnectSemaphore = new SemaphoreSlim(0, 1);
+
         client.DeviceAdded += (_, e) => OnDeviceAdded(e.Device);
         client.DeviceRemoved += (_, e) => OnDeviceRemoved(e.Device);
         client.ErrorReceived += (_, e) => Logger.Debug(e.Exception);
+        client.ServerDisconnect += (_, _) => serverDisconnectSemaphore.Release();
         client.ScanningFinished += (_, _) =>
         {
             if (IsScanBusy && _endScanSemaphore?.CurrentCount == 0)
@@ -241,11 +244,21 @@ public class ButtplugOutputTargetViewModel : AsyncAbstractOutputTarget
 
         try
         {
-            if (client?.Connected == true)
+            if (client.IsScanning)
+                await client.StopScanningAsync();
+            IsScanBusy = false;
+        }
+        catch { }
+
+        try
+        {
+            if (client.Connected)
                 await client.DisconnectAsync();
+
+            await serverDisconnectSemaphore.WaitAsync(CancellationToken.None)
+                                           .WithCancellation(10000);
         } catch { }
 
-        IsScanBusy = false;
         AvailableDevices.Clear();
     }
 
