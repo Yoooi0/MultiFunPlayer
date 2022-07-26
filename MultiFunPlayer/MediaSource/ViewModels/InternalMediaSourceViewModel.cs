@@ -1,8 +1,7 @@
-﻿using MultiFunPlayer.Common;
+using MultiFunPlayer.Common;
 using MultiFunPlayer.Common.Messages;
 using MultiFunPlayer.Input;
 using MultiFunPlayer.UI;
-using MultiFunPlayer.UI.Controls.ViewModels;
 using Newtonsoft.Json.Linq;
 using NLog;
 using Stylet;
@@ -20,22 +19,23 @@ public class InternalMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPl
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
     private readonly IEventAggregator _eventAggregator;
-    private readonly Channel<List<string>> _scriptQueueChannel;
     private readonly Channel<object> _messageChannel;
+
+    private bool _isPlaying;
+    private double _position;
+    private double _duration;
+    private FileInfo _scriptInfo;
 
     public override ConnectionStatus Status { get; protected set; }
     public bool IsShuffling { get; set; } = false;
     public bool IsLooping { get; set; } = false;
+    public int PlaylistIndex { get; set; } = 0;
+    public List<FileInfo> ScriptPlaylist { get; set; } = null;
 
     public InternalMediaSourceViewModel(IShortcutManager shortcutManager, IEventAggregator eventAggregator)
         : base(shortcutManager, eventAggregator)
     {
         _eventAggregator = eventAggregator;
-        _scriptQueueChannel = Channel.CreateUnbounded<List<string>>(new UnboundedChannelOptions()
-        {
-            SingleReader = true,
-            SingleWriter = true
-        });
         _messageChannel = Channel.CreateUnbounded<object>(new UnboundedChannelOptions()
         {
             SingleReader = true,
@@ -54,85 +54,11 @@ public class InternalMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPl
             Logger.Info("Connecting to {0} at \"{1}\"", Name);
 
             await Task.Delay(250, token);
-
-            _eventAggregator.Publish(new ScriptLoadMessage(DeviceAxis.All.First(), null));
-            _eventAggregator.Publish(new MediaPathChangedMessage(null));
-            _eventAggregator.Publish(new MediaPlayingChangedMessage(isPlaying: false));
-            _eventAggregator.Publish(new MediaDurationChangedMessage(null));
+            SetPlaylist(null);
 
             Status = ConnectionStatus.Connected;
 
-            var isPlaying = false;
-            var currentPosition = double.NaN;
-            var currentDuration = double.NaN;
-            var currentScriptPath = default(string);
-            var currentQueueIndex = 0;
-            var scriptQueue = default(List<string>);
             var lastTicks = Stopwatch.GetTimestamp();
-
-            void SetCurrentQueue(List<string> queue)
-            {
-                scriptQueue = queue;
-                SetCurrentScript(null);
-
-                if (queue == null)
-                    SetIsPlaying(false);
-            }
-
-            void SetCurrentScriptIndex(int index)
-            {
-                currentQueueIndex = MathUtils.Clamp(index, 0, scriptQueue.Count - 1);
-                SetCurrentScript(scriptQueue[currentQueueIndex]);
-            }
-
-            void SetCurrentScript(string scriptPath)
-            {
-                static string GetMediaPath(string scriptPath)
-                {
-                    if (scriptPath == null)
-                        return null;
-
-                    const string mediaExtension = "mp4";
-                    var basePath = Path.ChangeExtension(scriptPath, null);
-                    var basePathExtension = Path.GetExtension(basePath);
-
-                    if (string.IsNullOrWhiteSpace(basePathExtension))
-                        return $"{basePath}.{mediaExtension}";
-
-                    foreach (var axis in DeviceAxis.All)
-                        foreach (var funscriptName in axis.FunscriptNames)
-                            if (string.Equals(basePathExtension, $".{funscriptName}", StringComparison.InvariantCultureIgnoreCase))
-                                return $"{Path.ChangeExtension(basePath, null)}.{mediaExtension}";
-
-                    return $"{basePath}.{mediaExtension}";
-                }
-
-                var script = scriptPath != null ? ScriptResource.FromPath(scriptPath, userLoaded: true) : null;
-                SetCurrentDuration(script?.Keyframes.Last().Position ?? double.NaN);
-                SetCurrentPosition(script != null ? 0 : double.NaN);
-
-                currentScriptPath = scriptPath;
-                _eventAggregator.Publish(new MediaPathChangedMessage(GetMediaPath(scriptPath)));
-            }
-
-            void SetCurrentDuration(double duration)
-            {
-                _eventAggregator.Publish(new MediaDurationChangedMessage(double.IsFinite(duration) ? TimeSpan.FromSeconds(duration) : null));
-                currentDuration = duration;
-            }
-
-            void SetCurrentPosition(double position)
-            {
-                _eventAggregator.Publish(new MediaPositionChangedMessage(double.IsFinite(position) ? TimeSpan.FromSeconds(position) : null));
-                currentPosition = position;
-            }
-
-            void SetIsPlaying(bool state)
-            {
-                _eventAggregator.Publish(new MediaPlayingChangedMessage(isPlaying: state));
-                isPlaying = state;
-            }
-
             using var timer = new PeriodicTimer(TimeSpan.FromMilliseconds(100));
             while (!token.IsCancellationRequested && await timer.WaitForNextTickAsync(token))
             {
@@ -144,34 +70,36 @@ public class InternalMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPl
                 {
                     if (message is MediaPlayPauseMessage playPauseMessage)
                         SetIsPlaying(playPauseMessage.State);
-                    else if (message is MediaSeekMessage seekMessage && seekMessage.Position.HasValue && currentScriptPath != null)
-                        SetCurrentPosition(seekMessage.Position.Value.TotalSeconds);
+                    else if (message is MediaSeekMessage seekMessage && seekMessage.Position.HasValue && _scriptInfo != null)
+                        SetPosition(seekMessage.Position.Value.TotalSeconds);
+                    else if (message is ScriptPlaylistMessage playlistMessage)
+                        SetPlaylist(playlistMessage.Playlist);
+                    else if (message is PlayScriptAtIndexMessage playIndexMessage)
+                        SetScriptByPlaylistIndex(playIndexMessage.Index);
                 }
 
-                if (_scriptQueueChannel.Reader.TryRead(out var queue))
-                    SetCurrentQueue(queue);
-                else if (scriptQueue == null)
+                if (ScriptPlaylist == null)
                     continue;
 
-                if (currentScriptPath == null)
-                    SetCurrentScriptIndex(IsShuffling ? Random.Shared.Next(0, scriptQueue.Count) : 0);
+                if (_scriptInfo == null)
+                    SetScriptByPlaylistIndex(IsShuffling ? Random.Shared.Next(0, ScriptPlaylist.Count) : 0);
 
-                if (currentPosition > currentDuration)
+                if (_position > _duration)
                 {
                     if (IsLooping)
-                        SetCurrentPosition(0);
+                        SetPosition(0);
                     else if (IsShuffling)
-                        SetCurrentScriptIndex(Random.Shared.Next(0, scriptQueue.Count));
-                    else if (currentQueueIndex < scriptQueue.Count - 1)
-                        SetCurrentScriptIndex(currentQueueIndex + 1);
+                        SetScriptByPlaylistIndex(Random.Shared.Next(0, ScriptPlaylist.Count));
+                    else if (PlaylistIndex < ScriptPlaylist.Count - 1)
+                        SetScriptByPlaylistIndex(PlaylistIndex + 1);
                     else
-                        SetCurrentQueue(null);
+                        SetPlaylist(null);
                 }
 
-                if (!isPlaying || currentScriptPath == null)
+                if (!_isPlaying || _scriptInfo == null)
                     continue;
 
-                SetCurrentPosition(currentPosition + elapsed);
+                SetPosition(_position + elapsed);
             }
         }
         catch (OperationCanceledException) { }
@@ -181,10 +109,77 @@ public class InternalMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPl
             _ = DialogHelper.ShowErrorAsync(e, $"{Name} failed with exception", "RootDialog");
         }
 
-        _eventAggregator.Publish(new ScriptLoadMessage(DeviceAxis.All.First(), null));
-        _eventAggregator.Publish(new MediaPathChangedMessage(null));
-        _eventAggregator.Publish(new MediaPlayingChangedMessage(isPlaying: false));
-        _eventAggregator.Publish(new MediaDurationChangedMessage(null));
+        SetPlaylist(null);
+    }
+
+    private void SetPlaylist(List<FileInfo> playlist)
+    {
+        ScriptPlaylist = playlist;
+        SetScript(null);
+
+        if (playlist == null)
+            SetIsPlaying(false);
+    }
+
+    private void SetScriptByPlaylistIndex(int index)
+    {
+        if (index < 0 || index >= ScriptPlaylist.Count)
+            return;
+
+        PlaylistIndex = index;
+        SetScript(ScriptPlaylist[PlaylistIndex]);
+    }
+
+    private void SetScript(FileInfo scriptInfo)
+    {
+        if (scriptInfo?.AsRefreshed().Exists == false)
+            scriptInfo = null;
+
+        var script = scriptInfo != null ? ScriptResource.FromFileInfo(scriptInfo, userLoaded: true) : null;
+        SetDuration(script?.Keyframes.Last().Position ?? double.NaN);
+        SetPosition(script != null ? 0 : double.NaN);
+
+        _scriptInfo = scriptInfo;
+        _eventAggregator.Publish(new MediaPathChangedMessage(GetFakeMediaPath(scriptInfo)));
+    }
+
+    private string GetFakeMediaPath(FileInfo scriptInfo)
+    {
+        if (scriptInfo == null)
+            return null;
+
+        const string mediaExtension = "mp4";
+        var scriptPath = scriptInfo.FullName;
+        var basePath = Path.ChangeExtension(scriptPath, null);
+        var basePathExtension = Path.GetExtension(basePath);
+
+        if (string.IsNullOrWhiteSpace(basePathExtension))
+            return $"{basePath}.{mediaExtension}";
+
+        foreach (var axis in DeviceAxis.All)
+            foreach (var funscriptName in axis.FunscriptNames)
+                if (string.Equals(basePathExtension, $".{funscriptName}", StringComparison.InvariantCultureIgnoreCase))
+                    return $"{Path.ChangeExtension(basePath, null)}.{mediaExtension}";
+
+        return $"{basePath}.{mediaExtension}";
+    }
+
+    private void SetDuration(double duration)
+    {
+        _eventAggregator.Publish(new MediaDurationChangedMessage(double.IsFinite(duration) ? TimeSpan.FromSeconds(duration) : null));
+        _duration = duration;
+    }
+
+    private void SetPosition(double position)
+    {
+        _eventAggregator.Publish(new MediaPositionChangedMessage(double.IsFinite(position) ? TimeSpan.FromSeconds(position) : null));
+        _position = position;
+    }
+
+    private void SetIsPlaying(bool isPlaying)
+    {
+        _eventAggregator.Publish(new MediaPlayingChangedMessage(isPlaying));
+        _isPlaying = isPlaying;
     }
 
     public void OnDrop(object sender, DragEventArgs e)
@@ -196,9 +191,12 @@ public class InternalMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPl
         if (paths.Length == 1 && Path.GetExtension(paths[0]) == ".txt")
             paths = File.ReadAllLines(paths[0]).ToArray();
 
-        var result = paths.Where(p => File.Exists(p) && Path.GetExtension(p) == ".funscript").ToList();
-        if (result.Count > 0)
-            _ = _scriptQueueChannel.Writer.TryWrite(result);
+        var playlist = paths.Select(p => new FileInfo(p))
+                            .Where(f => f.Exists && string.Equals(f.Extension, ".funscript", StringComparison.OrdinalIgnoreCase))
+                            .ToList();
+
+        if (playlist.Count > 0)
+            _ = _messageChannel.Writer.TryWrite(new ScriptPlaylistMessage(playlist));
     }
 
     public void OnPreviewDragOver(object sender, DragEventArgs e)
@@ -210,16 +208,16 @@ public class InternalMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPl
     protected override void HandleSettings(JObject settings, SettingsAction action) { }
     public override async ValueTask<bool> CanConnectAsync(CancellationToken token) => await ValueTask.FromResult(true);
 
-    public async void Handle(MediaSeekMessage message)
+    public void Handle(MediaSeekMessage message)
     {
         if (Status == ConnectionStatus.Connected)
-            await _messageChannel.Writer.WriteAsync(message);
+            _messageChannel.Writer.TryWrite(message);
     }
 
-    public async void Handle(MediaPlayPauseMessage message)
+    public void Handle(MediaPlayPauseMessage message)
     {
         if (Status == ConnectionStatus.Connected)
-            await _messageChannel.Writer.WriteAsync(message);
+            _messageChannel.Writer.TryWrite(message);
     }
 
     public void OnIsLoopingChanged()
@@ -233,4 +231,7 @@ public class InternalMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPl
         if (IsShuffling && IsLooping)
             IsLooping = false;
     }
+
+    private record ScriptPlaylistMessage(List<FileInfo> Playlist);
+    private record PlayScriptAtIndexMessage(int Index);
 }
