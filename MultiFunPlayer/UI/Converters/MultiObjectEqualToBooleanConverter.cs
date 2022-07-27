@@ -10,13 +10,27 @@ public class MultiObjectEqualToBooleanConverter : IMultiValueConverter
         if (values.Length < 2)
             return false;
 
-        for(var i = 1; i < values.Length; i++)
+        try
         {
-            if (values[i].GetType() != values[0].GetType())
-                return false;
+            for (var i = 1; i < values.Length; i++)
+            {
+                if (values[i].GetType() == values[0].GetType() && !Equals(values[0], values[i]))
+                    return false;
 
-            if (!Equals(values[0], values[1]))
-                return false;
+                if (values[i] is not IConvertible convertible)
+                    return false;
+
+                var converted = convertible.ToType(values[0].GetType(), CultureInfo.InvariantCulture);
+                if (converted == null)
+                    return false;
+
+                if (converted.GetType() != values[0].GetType() || !Equals(values[0], converted))
+                    return false;
+            }
+        }
+        catch
+        {
+            return false;
         }
 
         return true;

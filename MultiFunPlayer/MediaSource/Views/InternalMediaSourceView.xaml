@@ -9,7 +9,6 @@
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
     <UserControl.Resources>
-        <converters:IsLastItemInContainerConverter x:Key="IsLastItemInContainerConverter"/>
         <converters:MultiObjectEqualToBooleanConverter x:Key="MultiObjectEqualToBooleanConverter"/>
         <converters:ItemIndexInContainerConverter x:Key="ItemIndexInContainerConverter"/>
     </UserControl.Resources>
@@ -236,8 +235,22 @@
                             </Border>
 
                             <DataTemplate.Triggers>
-                                <DataTrigger Binding="{Binding RelativeSource={RelativeSource Self}, Converter={StaticResource IsLastItemInContainerConverter}}" Value="True">
-                                    <Setter Property="Margin" TargetName="Container" Value="8 2 8 8"/>
+                                <DataTrigger Value="True">
+                                    <DataTrigger.Binding>
+                                        <MultiBinding Converter="{StaticResource MultiObjectEqualToBooleanConverter}">
+                                            <MultiBinding.Bindings>
+                                                <Binding RelativeSource="{RelativeSource Self}" Converter="{StaticResource ItemIndexInContainerConverter}"/>
+                                                <Binding Path="DataContext.ScriptPlaylist.Count" 
+                                                         RelativeSource="{RelativeSource FindAncestor, AncestorType={x:Type UserControl}}"
+                                                         Converter="{StaticResource MathAddConverter}"
+                                                         ConverterParameter="-1"/>
+                                            </MultiBinding.Bindings>
+                                        </MultiBinding>
+                                    </DataTrigger.Binding>
+
+                                    <DataTrigger.Setters>
+                                        <Setter Property="Margin" TargetName="Container" Value="8 2 8 8"/>
+                                    </DataTrigger.Setters>
                                 </DataTrigger>
 
                                 <DataTrigger Value="False">
