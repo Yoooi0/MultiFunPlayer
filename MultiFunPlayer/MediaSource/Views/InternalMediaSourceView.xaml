@@ -204,7 +204,7 @@
                         <DataTemplate>
                             <Border>
                                 <material:Card Name="Container"
-                                               Margin="8 8 8 0"
+                                               Margin="8 2 8 0"
                                                material:ShadowAssist.ShadowDepth="Depth1">
                                     <DockPanel LastChildFill="True">
                                         <material:ColorZone Name="Selector"
@@ -237,7 +237,7 @@
 
                             <DataTemplate.Triggers>
                                 <DataTrigger Binding="{Binding RelativeSource={RelativeSource Self}, Converter={StaticResource IsLastItemInContainerConverter}}" Value="True">
-                                    <Setter Property="Margin" TargetName="Container" Value="8 8 8 8"/>
+                                    <Setter Property="Margin" TargetName="Container" Value="8 2 8 8"/>
                                 </DataTrigger>
 
                                 <DataTrigger Value="False">
