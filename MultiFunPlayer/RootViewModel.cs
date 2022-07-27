@@ -1,4 +1,4 @@
-using MultiFunPlayer.Common.Messages;
+using MultiFunPlayer.Common;
 using MultiFunPlayer.UI;
 using MultiFunPlayer.UI.Controls.ViewModels;
 using Newtonsoft.Json.Linq;

@@ -8,7 +8,6 @@ using System.Windows;
 using System.IO.Compression;
 using PropertyChanged;
 using Newtonsoft.Json.Linq;
-using MultiFunPlayer.Common.Messages;
 using Newtonsoft.Json;
 using Microsoft.WindowsAPICodePack.Dialogs;
 using System.ComponentModel;

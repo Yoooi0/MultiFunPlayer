@@ -1,6 +1,5 @@
 using Microsoft.WindowsAPICodePack.Dialogs;
 using MultiFunPlayer.Common;
-using MultiFunPlayer.Common.Messages;
 using MultiFunPlayer.Input;
 using MultiFunPlayer.UI;
 using Newtonsoft.Json;
@@ -108,7 +107,7 @@ public class MpvMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlayPau
         }
 
         _eventAggregator.Publish(new MediaPathChangedMessage(null));
-        _eventAggregator.Publish(new MediaPlayingChangedMessage(isPlaying: false));
+        _eventAggregator.Publish(new MediaPlayingChangedMessage(false));
     }
 
     private async Task ReadAsync(NamedPipeClientStream client, StreamReader reader, CancellationToken token)

@@ -1,5 +1,4 @@
 ﻿using MultiFunPlayer.Common;
-using MultiFunPlayer.Common.Messages;
 using MultiFunPlayer.Input;
 using MultiFunPlayer.UI;
 using Newtonsoft.Json;
@@ -84,7 +83,7 @@ public class HereSphereMediaSourceViewModel : AbstractMediaSource, IHandle<Media
         }
 
         _eventAggregator.Publish(new MediaPathChangedMessage(null));
-        _eventAggregator.Publish(new MediaPlayingChangedMessage(isPlaying: false));
+        _eventAggregator.Publish(new MediaPlayingChangedMessage(false));
     }
 
     private async Task ReadAsync(TcpClient client, NetworkStream stream, CancellationToken token)
@@ -106,7 +105,7 @@ public class HereSphereMediaSourceViewModel : AbstractMediaSource, IHandle<Media
                     if (playerState != null)
                     {
                         _eventAggregator.Publish(new MediaPathChangedMessage(null));
-                        _eventAggregator.Publish(new MediaPlayingChangedMessage(isPlaying: false));
+                        _eventAggregator.Publish(new MediaPlayingChangedMessage(false));
                         playerState = null;
                     }
 

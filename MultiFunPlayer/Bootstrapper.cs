@@ -1,6 +1,5 @@
 using Microsoft.Win32;
 using MultiFunPlayer.Common;
-using MultiFunPlayer.Common.Messages;
 using MultiFunPlayer.Input;
 using MultiFunPlayer.Input.RawInput;
 using MultiFunPlayer.Input.XInput;

@@ -1,6 +1,5 @@
 using Buttplug;
 using MultiFunPlayer.Common;
-using MultiFunPlayer.Common.Messages;
 using MultiFunPlayer.Input;
 using MultiFunPlayer.UI;
 using Newtonsoft.Json;

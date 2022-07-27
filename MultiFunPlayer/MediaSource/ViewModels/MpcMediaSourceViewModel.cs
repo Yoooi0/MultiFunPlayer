@@ -1,5 +1,4 @@
 using MultiFunPlayer.Common;
-using MultiFunPlayer.Common.Messages;
 using MultiFunPlayer.Input;
 using MultiFunPlayer.UI;
 using Newtonsoft.Json.Linq;
@@ -72,7 +71,7 @@ public class MpcMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlayPau
         }
 
         _eventAggregator.Publish(new MediaPathChangedMessage(null));
-        _eventAggregator.Publish(new MediaPlayingChangedMessage(isPlaying: false));
+        _eventAggregator.Publish(new MediaPlayingChangedMessage(false));
     }
 
     private async Task ReadAsync(HttpClient client, CancellationToken token)

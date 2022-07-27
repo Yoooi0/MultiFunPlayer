@@ -1,5 +1,4 @@
 ﻿using MultiFunPlayer.Common;
-using MultiFunPlayer.Common.Messages;
 using MultiFunPlayer.Input;
 using MultiFunPlayer.UI;
 using Newtonsoft.Json.Linq;
@@ -72,7 +71,7 @@ public class WhirligigMediaSourceViewModel : AbstractMediaSource
                 }
                 else if (message.Length >= 1 && message[0] == 'S')
                 {
-                    _eventAggregator.Publish(new MediaPlayingChangedMessage(isPlaying: false));
+                    _eventAggregator.Publish(new MediaPlayingChangedMessage(false));
                 }
                 else if (message.Length >= 8 && message[..8] == "duration")
                 {
@@ -83,7 +82,7 @@ public class WhirligigMediaSourceViewModel : AbstractMediaSource
                 else if (message.Length >= 1 && message[0] == 'P')
                 {
                     var parts = message.Split(' ', 2);
-                    _eventAggregator.Publish(new MediaPlayingChangedMessage(isPlaying: true));
+                    _eventAggregator.Publish(new MediaPlayingChangedMessage(true));
 
                     if (parts.Length == 2 && double.TryParse(parts[1].Replace(',', '.'), NumberStyles.Any, NumberFormatInfo.InvariantInfo, out var position) && position >= 0)
                         _eventAggregator.Publish(new MediaPositionChangedMessage(TimeSpan.FromSeconds(position)));
@@ -99,7 +98,7 @@ public class WhirligigMediaSourceViewModel : AbstractMediaSource
         }
 
         _eventAggregator.Publish(new MediaPathChangedMessage(null));
-        _eventAggregator.Publish(new MediaPlayingChangedMessage(isPlaying: false));
+        _eventAggregator.Publish(new MediaPlayingChangedMessage(false));
     }
 
     protected override void HandleSettings(JObject settings, SettingsAction action)
