@@ -1,4 +1,4 @@
-using MultiFunPlayer.Common;
+﻿using MultiFunPlayer.Common;
 using MultiFunPlayer.Common.Messages;
 using MultiFunPlayer.Input;
 using MultiFunPlayer.UI;
@@ -68,14 +68,24 @@ public class InternalMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPl
 
                 while (_messageChannel.Reader.TryRead(out var message))
                 {
-                    if (message is MediaPlayPauseMessage playPauseMessage)
-                        SetIsPlaying(playPauseMessage.State);
-                    else if (message is MediaSeekMessage seekMessage && seekMessage.Position.HasValue && _scriptInfo != null)
-                        SetPosition(seekMessage.Position.Value.TotalSeconds);
-                    else if (message is ScriptPlaylistMessage playlistMessage)
-                        SetPlaylist(playlistMessage.Playlist);
-                    else if (message is PlayScriptAtIndexMessage playIndexMessage)
-                        SetScriptByPlaylistIndex(playIndexMessage.Index);
+                    if (message is MediaPlayPauseMessage playPauseMessage) { SetIsPlaying(playPauseMessage.State); }
+                    else if (message is MediaSeekMessage seekMessage && _scriptInfo != null) { SetPosition(seekMessage.Position?.TotalSeconds ?? double.NaN); }
+                    else if (message is ScriptPlaylistMessage playlistMessage) { SetPlaylist(playlistMessage.Playlist); }
+                    else if (message is PlayScriptAtIndexMessage playIndexMessage) { SetScriptByPlaylistIndex(playIndexMessage.Index); }
+                    else if (message is PlayPrevNextScriptMessage prevNextMessage)
+                    {
+                        var desiredIndex = PlaylistIndex + prevNextMessage.Offset;
+                        var index = IsLooping ? PlaylistIndex
+                                  : IsShuffling ? Random.Shared.Next(0, ScriptPlaylist.Count)
+                                  : desiredIndex < 0 ? 0
+                                  : desiredIndex < ScriptPlaylist.Count ? desiredIndex
+                                  : -1;
+
+                        if (index < 0)
+                            SetPlaylist(null);
+                        else
+                            SetScriptByPlaylistIndex(index);
+                    }
                 }
 
                 if (ScriptPlaylist == null)
@@ -135,12 +145,19 @@ public class InternalMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPl
         if (scriptInfo?.AsRefreshed().Exists == false)
             scriptInfo = null;
 
-        var script = scriptInfo != null ? ScriptResource.FromFileInfo(scriptInfo, userLoaded: true) : null;
-        SetDuration(script?.Keyframes.Last().Position ?? double.NaN);
-        SetPosition(script != null ? 0 : double.NaN);
+        if (_scriptInfo != scriptInfo)
+        {
+            _scriptInfo = scriptInfo;
+            var script = scriptInfo != null ? ScriptResource.FromFileInfo(scriptInfo, userLoaded: true) : null;
 
-        _scriptInfo = scriptInfo;
-        _eventAggregator.Publish(new MediaPathChangedMessage(GetFakeMediaPath(scriptInfo)));
+            _eventAggregator.Publish(new MediaPathChangedMessage(GetFakeMediaPath(scriptInfo)));
+            SetDuration(script?.Keyframes.Last().Position ?? double.NaN);
+            SetPosition(script != null ? 0 : double.NaN, forceSeek: true);
+        }
+        else if(_scriptInfo != null)
+        {
+            SetPosition(0, forceSeek: true);
+        }
     }
 
     private string GetFakeMediaPath(FileInfo scriptInfo)
@@ -170,9 +187,9 @@ public class InternalMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPl
         _duration = duration;
     }
 
-    private void SetPosition(double position)
+    private void SetPosition(double position, bool forceSeek = false)
     {
-        _eventAggregator.Publish(new MediaPositionChangedMessage(double.IsFinite(position) ? TimeSpan.FromSeconds(position) : null));
+        _eventAggregator.Publish(new MediaPositionChangedMessage(double.IsFinite(position) ? TimeSpan.FromSeconds(position) : null, forceSeek));
         _position = position;
     }
 
@@ -220,6 +237,27 @@ public class InternalMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPl
             _messageChannel.Writer.TryWrite(message);
     }
 
+    public void OnPlayScript(object sender, EventArgs e)
+    {
+        if (sender is not FrameworkElement element || element.DataContext is not FileInfo scriptInfo)
+            return;
+
+        var playlist = ScriptPlaylist;
+        if (playlist == null)
+            return;
+
+        var index = playlist.IndexOf(scriptInfo);
+        if (index < 0)
+            return;
+
+        _ = _messageChannel.Writer.TryWrite(new PlayScriptAtIndexMessage(index));
+    }
+
+    public bool CanPlayNext => IsConnected && ScriptPlaylist != null;
+    public bool CanPlayPrevious => IsConnected && ScriptPlaylist != null;
+    public void PlayNext() => _ = _messageChannel.Writer.TryWrite(new PlayPrevNextScriptMessage(1));
+    public void PlayPrevious() => _ = _messageChannel.Writer.TryWrite(new PlayPrevNextScriptMessage(-1));
+
     public void OnIsLoopingChanged()
     {
         if (IsLooping && IsShuffling)
@@ -234,4 +272,5 @@ public class InternalMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPl
 
     private record ScriptPlaylistMessage(List<FileInfo> Playlist);
     private record PlayScriptAtIndexMessage(int Index);
+    private record PlayPrevNextScriptMessage(int Offset);
 }

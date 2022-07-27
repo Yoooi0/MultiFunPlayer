@@ -543,7 +543,7 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         }
 
         var error = double.IsFinite(_internalMediaPosition) ? newPosition - _internalMediaPosition : 0;
-        var wasSeek = Math.Abs(error) > 1.0;
+        var wasSeek = Math.Abs(error) > 1.0 || message.ForceSeek;
         if (wasSeek)
         {
             Logger.Debug("Detected seek: {0}", error);

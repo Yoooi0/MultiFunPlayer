@@ -5,9 +5,14 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-             xmlns:controls="clr-namespace:MultiFunPlayer.UI.Controls"
+             xmlns:converters="clr-namespace:MultiFunPlayer.UI.Converters"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
+    <UserControl.Resources>
+        <converters:IsLastItemInContainerConverter x:Key="IsLastItemInContainerConverter"/>
+        <converters:MultiObjectEqualToBooleanConverter x:Key="MultiObjectEqualToBooleanConverter"/>
+        <converters:ItemIndexInContainerConverter x:Key="ItemIndexInContainerConverter"/>
+    </UserControl.Resources>
     <Expander material:ExpanderAssist.HorizontalHeaderPadding="0 0 6 0"
               Style="{StaticResource MaterialDesignToolBarExpander}"
               Background="{StaticResource MaterialDesignToolBarBackground}"
@@ -83,11 +88,28 @@
                         <material:PackIcon Kind="ShuffleVariant" Width="20" Height="20"/>
                     </material:ToggleButtonAssist.OnContent>
                 </ToggleButton>
+
+                <Button DockPanel.Dock="Left"
+                        Command="{s:Action PlayPrevious}"
+                        IsEnabled="{Binding CanPlayPrevious}"
+                        Style="{StaticResource MaterialDesignProgressToolBarButton}"
+                        ToolTip="Prev">
+                    <material:PackIcon Width="19" Height="19" Kind="SkipPrevious"/>
+                </Button>
+
+                <Button DockPanel.Dock="Left"
+                        Command="{s:Action PlayNext}"
+                        IsEnabled="{Binding CanPlayNext}"
+                        Style="{StaticResource MaterialDesignProgressToolBarButton}"
+                        ToolTip="Next">
+                    <material:PackIcon Width="19" Height="19" Kind="SkipNext"/>
+                </Button>
             </StackPanel>
         </Expander.Header>
 
-        <StackPanel Margin="15">
+        <StackPanel>
             <Border BorderThickness="1"
+                    Margin="15"
                     Height="100"
                     Background="Transparent"
                     AllowDrop="True"
@@ -125,6 +147,118 @@
                                Typography.Capitals="AllSmallCaps"/>
                 </StackPanel>
             </Border>
+
+            <Expander Visibility="{Binding ScriptPlaylist, Converter={StaticResource notNullToVisibilityConverter}}">
+                <Expander.Header>
+                    <StackPanel Orientation="Horizontal"
+                                Margin="12 0 0 0">
+
+                        <TextBlock Text="Playlist" 
+                                   VerticalAlignment="Center"
+                                   Margin="0 0 15 0"
+                                   FontSize="14"
+                                   FontWeight="Bold"
+                                   Typography.Capitals="AllSmallCaps"/>
+                        
+                        <material:Badged Badge="{Binding PlaylistIndex, Converter={StaticResource MathAddConverter}, ConverterParameter=1}"
+                                         BadgePlacementMode="Right"
+                                         BadgeColorZoneMode="Dark"
+                                         VerticalAlignment="Center"
+                                         Margin="0 0 13 0"/>
+                        
+                        <TextBlock Text="/" 
+                                   VerticalAlignment="Center"
+                                   Margin="0 0 13 0"
+                                   FontSize="14"
+                                   FontWeight="Bold"/>
+
+                        <material:Badged Badge="{Binding ScriptPlaylist.Count}"
+                                         BadgePlacementMode="Right"
+                                         BadgeColorZoneMode="Dark"
+                                         VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Expander.Header>
+
+                <ItemsControl ItemsSource="{Binding ScriptPlaylist}"
+                              VirtualizingStackPanel.IsVirtualizing="True"
+                              VirtualizingStackPanel.VirtualizationMode="Standard"
+                              ScrollViewer.VerticalScrollBarVisibility="Auto"
+                              Margin="0 0 0 0"
+                              MaxHeight="200">
+                    <ItemsControl.Template>
+                        <ControlTemplate TargetType="ItemsControl">
+                            <ScrollViewer CanContentScroll="True" 
+                                          Focusable="False">
+                                <ItemsPresenter/>
+                            </ScrollViewer>
+                        </ControlTemplate>
+                    </ItemsControl.Template>
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <VirtualizingStackPanel IsVirtualizing="True"
+                                                    VirtualizationMode="Standard"/>
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Border>
+                                <material:Card Name="Container"
+                                               Margin="8 8 8 0"
+                                               material:ShadowAssist.ShadowDepth="Depth1">
+                                    <DockPanel LastChildFill="True">
+                                        <material:ColorZone Name="Selector"
+                                                            DockPanel.Dock="Left"
+                                                            Background="{StaticResource HighlightBrush}"
+                                                            VerticalAlignment="Stretch"
+                                                            HorizontalAlignment="Stretch"
+                                                            CornerRadius="2 0 0 2"
+                                                            Width="5"/>
+
+                                        <Button DockPanel.Dock="Right"   
+                                                Style="{StaticResource MaterialDesignFlatButton}"
+                                                Click="{s:Action OnPlayScript}"
+                                                ToolTip="Play"
+                                                material:RippleAssist.Feedback="{StaticResource HighlightBrush}"
+                                                Foreground="{StaticResource HighlightBrush}"
+                                                Height="16" 
+                                                Width="16" 
+                                                Padding="0">
+                                            <material:PackIcon Kind="Play"/>
+                                        </Button>
+
+                                        <TextBlock Text="{Binding Name}"
+                                                   DockPanel.Dock="Left"
+                                                   VerticalAlignment="Center"
+                                                   Margin="5 0 5 0"/>
+                                    </DockPanel>
+                                </material:Card>
+                            </Border>
+
+                            <DataTemplate.Triggers>
+                                <DataTrigger Binding="{Binding RelativeSource={RelativeSource Self}, Converter={StaticResource IsLastItemInContainerConverter}}" Value="True">
+                                    <Setter Property="Margin" TargetName="Container" Value="8 8 8 8"/>
+                                </DataTrigger>
+
+                                <DataTrigger Value="False">
+                                    <DataTrigger.Binding>
+                                        <MultiBinding Converter="{StaticResource MultiObjectEqualToBooleanConverter}">
+                                            <MultiBinding.Bindings>
+                                                <Binding RelativeSource="{RelativeSource Self}" Converter="{StaticResource ItemIndexInContainerConverter}"/>
+                                                <Binding Path="DataContext.PlaylistIndex" RelativeSource="{RelativeSource FindAncestor, AncestorType={x:Type UserControl}}"/>
+                                            </MultiBinding.Bindings>
+                                        </MultiBinding>
+                                    </DataTrigger.Binding>
+
+                                    <DataTrigger.Setters>
+                                        <Setter Property="Visibility" TargetName="Selector" Value="Hidden"/>
+                                    </DataTrigger.Setters>
+                                </DataTrigger>
+                            </DataTemplate.Triggers>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </Expander>
         </StackPanel>
     </Expander>
 </UserControl>
