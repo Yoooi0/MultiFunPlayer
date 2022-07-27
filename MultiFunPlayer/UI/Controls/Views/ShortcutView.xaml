@@ -16,7 +16,9 @@
              d:DesignHeight="450" d:DesignWidth="800">
     <UserControl.Resources>
         <converters:MultiBooleanToBooleanAndConverter x:Key="MultiBooleanToBooleanAndConverter"/>
+        <converters:MultiObjectEqualToBooleanConverter x:Key="MultiObjectEqualToBooleanConverter"/>
         <converters:InvertedNullableToBooleanConverter x:Key="InvertedNullableToBooleanConverter"/>
+        <converters:ItemIndexInContainerConverter x:Key="ItemIndexInContainerConverter"/>
 
         <DataTemplate DataType="{x:Type xinput:GamepadButtonGestureDescriptor}">
             <DockPanel LastChildFill="True">
@@ -307,7 +309,7 @@
                                  SelectedItem="{Binding SelectedBinding}"
                                  Height="275"
                                  VirtualizingStackPanel.IsVirtualizing="True"
-                                 VirtualizingStackPanel.VirtualizationMode="Recycling"
+                                 VirtualizingStackPanel.VirtualizationMode="Standard"
                                  ScrollViewer.VerticalScrollBarVisibility="Visible">
                             <ListBox.Resources>
                                 <Style TargetType="{x:Type ListBoxItem}" x:Key="ContainerStyle">
@@ -321,6 +323,24 @@
                                                 </material:Card>
 
                                                 <ControlTemplate.Triggers>
+                                                    <DataTrigger Value="True">
+                                                        <DataTrigger.Binding>
+                                                            <MultiBinding Converter="{StaticResource MultiObjectEqualToBooleanConverter}">
+                                                                <MultiBinding.Bindings>
+                                                                    <Binding RelativeSource="{RelativeSource Self}" Converter="{StaticResource ItemIndexInContainerConverter}"/>
+                                                                    <Binding Path="DataContext.Bindings.Count" 
+                                                                             RelativeSource="{RelativeSource FindAncestor, AncestorType={x:Type UserControl}}"
+                                                                             Converter="{StaticResource MathAddConverter}"
+                                                                             ConverterParameter="-1"/>
+                                                                </MultiBinding.Bindings>
+                                                            </MultiBinding>
+                                                        </DataTrigger.Binding>
+
+                                                        <DataTrigger.Setters>
+                                                            <Setter Property="Margin" TargetName="Container" Value="8 8 8 8"/>
+                                                        </DataTrigger.Setters>
+                                                    </DataTrigger>
+                                                    
                                                     <Trigger Property="UIElement.IsMouseOver" Value="True">
                                                         <Setter Property="Panel.Background" TargetName="Container">
                                                             <Setter.Value>
@@ -358,7 +378,7 @@
                             <ListBox.ItemsPanel>
                                 <ItemsPanelTemplate>
                                     <VirtualizingStackPanel IsVirtualizing="True"
-                                                            VirtualizationMode="Recycling" />
+                                                            VirtualizationMode="Standard" />
                                 </ItemsPanelTemplate>
                             </ListBox.ItemsPanel>
 
