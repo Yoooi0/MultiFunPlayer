@@ -1,4 +1,4 @@
-using MultiFunPlayer.Common;
+﻿using MultiFunPlayer.Common;
 using MultiFunPlayer.Input;
 using MultiFunPlayer.UI;
 using Newtonsoft.Json.Linq;
@@ -51,7 +51,7 @@ public class InternalMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPl
     {
         try
         {
-            Logger.Info("Connecting to {0} at \"{1}\"", Name);
+            Logger.Info("Connecting to {0}", Name);
 
             await Task.Delay(250, token);
             SetPlaylist(null);
@@ -71,10 +71,13 @@ public class InternalMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPl
                     if (message is MediaPlayPauseMessage playPauseMessage) { SetIsPlaying(playPauseMessage.State); }
                     else if (message is MediaSeekMessage seekMessage && _scriptInfo != null) { SetPosition(seekMessage.Position?.TotalSeconds ?? double.NaN); }
                     else if (message is ScriptPlaylistMessage playlistMessage) { SetPlaylist(playlistMessage.Playlist); }
-                    else if (message is PlayScriptAtIndexMessage playIndexMessage) { SetScriptByPlaylistIndex(playIndexMessage.Index); }
-                    else if (message is PlayPrevNextScriptMessage prevNextMessage)
+                    else if (message is PlayScriptAtIndexMessage playIndexMessage) { PlayByIndex(playIndexMessage.Index); }
+                    else if (message is PlayScriptWithOffsetMessage playOffsetMessage)
                     {
-                        var desiredIndex = PlaylistIndex + prevNextMessage.Offset;
+                        if (ScriptPlaylist == null)
+                            return;
+
+                        var desiredIndex = PlaylistIndex + playOffsetMessage.Offset;
                         var index = IsLooping ? PlaylistIndex
                                   : IsShuffling ? Random.Shared.Next(0, ScriptPlaylist.Count)
                                   : desiredIndex < 0 ? 0
@@ -84,7 +87,7 @@ public class InternalMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPl
                         if (index < 0)
                             SetPlaylist(null);
                         else
-                            SetScriptByPlaylistIndex(index);
+                            PlayByIndex(index);
                     }
                 }
 
@@ -92,16 +95,16 @@ public class InternalMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPl
                     continue;
 
                 if (_scriptInfo == null)
-                    SetScriptByPlaylistIndex(IsShuffling ? Random.Shared.Next(0, ScriptPlaylist.Count) : 0);
+                    PlayByIndex(IsShuffling ? Random.Shared.Next(0, ScriptPlaylist.Count) : 0);
 
                 if (_position > _duration)
                 {
                     if (IsLooping)
                         SetPosition(0);
                     else if (IsShuffling)
-                        SetScriptByPlaylistIndex(Random.Shared.Next(0, ScriptPlaylist.Count));
+                        PlayByIndex(Random.Shared.Next(0, ScriptPlaylist.Count));
                     else if (PlaylistIndex < ScriptPlaylist.Count - 1)
-                        SetScriptByPlaylistIndex(PlaylistIndex + 1);
+                        PlayByIndex(PlaylistIndex + 1);
                     else
                         SetPlaylist(null);
                 }
@@ -122,63 +125,89 @@ public class InternalMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPl
         SetPlaylist(null);
     }
 
-    private void SetPlaylist(List<FileInfo> playlist)
+    private void PlayByIndex(int index)
     {
-        ScriptPlaylist = playlist;
-        SetScript(null);
-
-        if (playlist == null)
-            SetIsPlaying(false);
-    }
-
-    private void SetScriptByPlaylistIndex(int index)
-    {
+        if (ScriptPlaylist == null)
+            return;
         if (index < 0 || index >= ScriptPlaylist.Count)
             return;
 
-        PlaylistIndex = index;
-        SetScript(ScriptPlaylist[PlaylistIndex]);
-    }
-
-    private void SetScript(FileInfo scriptInfo)
-    {
+        var scriptInfo = ScriptPlaylist[index];
         if (scriptInfo?.AsRefreshed().Exists == false)
             scriptInfo = null;
 
         if (_scriptInfo != scriptInfo)
         {
-            _scriptInfo = scriptInfo;
             var script = scriptInfo != null ? ScriptResource.FromFileInfo(scriptInfo, userLoaded: true) : null;
+            if (script == null)
+                return;
 
-            _eventAggregator.Publish(new MediaPathChangedMessage(GetFakeMediaPath(scriptInfo)));
+            PlaylistIndex = index;
+
+            SetScriptInfo(scriptInfo);
             SetDuration(script?.Keyframes.Last().Position ?? double.NaN);
             SetPosition(script != null ? 0 : double.NaN, forceSeek: true);
         }
-        else if(_scriptInfo != null)
+        else if (_scriptInfo != null)
         {
             SetPosition(0, forceSeek: true);
         }
     }
 
-    private string GetFakeMediaPath(FileInfo scriptInfo)
+    private void PlayByName(string name)
     {
-        if (scriptInfo == null)
-            return null;
+        if (ScriptPlaylist == null)
+            return;
 
-        const string mediaExtension = "mp4";
-        var scriptPath = scriptInfo.FullName;
-        var basePath = Path.ChangeExtension(scriptPath, null);
-        var basePathExtension = Path.GetExtension(basePath);
+        var index = ScriptPlaylist.FindIndex(f => string.Equals(name, f.Name, StringComparison.OrdinalIgnoreCase)
+                                               || string.Equals(name, f.FullName, StringComparison.OrdinalIgnoreCase));
+        if (index < 0)
+            return;
 
-        if (string.IsNullOrWhiteSpace(basePathExtension))
+        PlayByIndex(index);
+    }
+
+    public bool CanPlayNext => IsConnected && ScriptPlaylist != null;
+    public bool CanPlayPrevious => IsConnected && ScriptPlaylist != null;
+    public void PlayNext() => _ = _messageChannel.Writer.TryWrite(new PlayScriptWithOffsetMessage(1));
+    public void PlayPrevious() => _ = _messageChannel.Writer.TryWrite(new PlayScriptWithOffsetMessage(-1));
+
+    private void SetPlaylist(List<FileInfo> playlist)
+    {
+        ScriptPlaylist = playlist;
+
+        SetScriptInfo(null);
+        SetDuration(double.NaN);
+        SetPosition(double.NaN);
+
+        if (playlist == null)
+            SetIsPlaying(false);
+
+        while (_messageChannel.Reader.TryRead(out var _)) ;
+    }
+
+    private void SetScriptInfo(FileInfo scriptInfo)
+    {
+        static string GetFakeMediaPath(FileInfo scriptInfo)
+        {
+            const string mediaExtension = "mp4";
+            var scriptPath = scriptInfo.FullName;
+            var basePath = Path.ChangeExtension(scriptPath, null);
+            var basePathExtension = Path.GetExtension(basePath);
+
+            if (string.IsNullOrWhiteSpace(basePathExtension))
+                return $"{basePath}.{mediaExtension}";
+
+            foreach (var axis in DeviceAxis.All)
+                foreach (var funscriptName in axis.FunscriptNames)
+                    if (string.Equals(basePathExtension, $".{funscriptName}", StringComparison.InvariantCultureIgnoreCase))
+                        return $"{Path.ChangeExtension(basePath, null)}.{mediaExtension}";
+
             return $"{basePath}.{mediaExtension}";
+        }
 
-        foreach (var axis in DeviceAxis.All)
-            foreach (var funscriptName in axis.FunscriptNames)
-                if (string.Equals(basePathExtension, $".{funscriptName}", StringComparison.InvariantCultureIgnoreCase))
-                    return $"{Path.ChangeExtension(basePath, null)}.{mediaExtension}";
-
-        return $"{basePath}.{mediaExtension}";
+        _eventAggregator.Publish(new MediaPathChangedMessage(scriptInfo != null ? GetFakeMediaPath(scriptInfo) : null));
+        _scriptInfo = scriptInfo;
     }
 
     private void SetDuration(double duration)
@@ -240,6 +269,34 @@ public class InternalMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPl
 
     public override async ValueTask<bool> CanConnectAsync(CancellationToken token) => await ValueTask.FromResult(true);
 
+    protected override void RegisterShortcuts(IShortcutManager s)
+    {
+        base.RegisterShortcuts(s);
+
+        void WhenConnected(Action callback)
+        {
+            if (Status == ConnectionStatus.Connected)
+                callback();
+        }
+
+        #region IsShuffling
+        s.RegisterAction($"{Name}::Shuffle::Set", b => b.WithSetting<bool>(s => s.WithLabel("Enable shuffle")).WithCallback((_, enabled) => IsShuffling = enabled));
+        s.RegisterAction($"{Name}::Shuffle::Toggle", b => b.WithCallback(_ => IsShuffling = !IsShuffling));
+        #endregion
+
+        #region IsLooping
+        s.RegisterAction($"{Name}::Looping::Set", b => b.WithSetting<bool>(s => s.WithLabel("Enable looping")).WithCallback((_, enabled) => IsLooping = enabled));
+        s.RegisterAction($"{Name}::Looping::Toggle", b => b.WithCallback(_ => IsLooping = !IsLooping));
+        #endregion
+
+        #region Playlist
+        s.RegisterAction($"{Name}::Playlist::Prev", b => b.WithCallback(_ => WhenConnected(PlayPrevious)));
+        s.RegisterAction($"{Name}::Playlist::Next", b => b.WithCallback(_ => WhenConnected(PlayNext)));
+        s.RegisterAction($"{Name}::Playlist::PlayByIndex", b => b.WithSetting<int>(s => s.WithLabel("Index")).WithCallback((_, index) => WhenConnected(() => PlayByIndex(index))));
+        s.RegisterAction($"{Name}::Playlist::PlayByName", b => b.WithSetting<string>(s => s.WithLabel("File name/path")).WithCallback((_, name) => WhenConnected(() => PlayByName(name))));
+        #endregion
+    }
+
     public void Handle(MediaSeekMessage message)
     {
         if (Status == ConnectionStatus.Connected)
@@ -268,11 +325,6 @@ public class InternalMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPl
         _ = _messageChannel.Writer.TryWrite(new PlayScriptAtIndexMessage(index));
     }
 
-    public bool CanPlayNext => IsConnected && ScriptPlaylist != null;
-    public bool CanPlayPrevious => IsConnected && ScriptPlaylist != null;
-    public void PlayNext() => _ = _messageChannel.Writer.TryWrite(new PlayPrevNextScriptMessage(1));
-    public void PlayPrevious() => _ = _messageChannel.Writer.TryWrite(new PlayPrevNextScriptMessage(-1));
-
     public void OnIsLoopingChanged()
     {
         if (IsLooping && IsShuffling)
@@ -287,5 +339,5 @@ public class InternalMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPl
 
     private record ScriptPlaylistMessage(List<FileInfo> Playlist);
     private record PlayScriptAtIndexMessage(int Index);
-    private record PlayPrevNextScriptMessage(int Offset);
+    private record PlayScriptWithOffsetMessage(int Offset);
 }
