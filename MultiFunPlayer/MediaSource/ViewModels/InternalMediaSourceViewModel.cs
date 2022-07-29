@@ -1,4 +1,4 @@
-﻿using MultiFunPlayer.Common;
+using MultiFunPlayer.Common;
 using MultiFunPlayer.Input;
 using MultiFunPlayer.UI;
 using Newtonsoft.Json.Linq;
@@ -26,10 +26,11 @@ public class InternalMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPl
     private FileInfo _scriptInfo;
 
     public override ConnectionStatus Status { get; protected set; }
-    public bool IsShuffling { get; set; } = false;
-    public bool IsLooping { get; set; } = false;
     public int PlaylistIndex { get; set; } = 0;
     public List<FileInfo> ScriptPlaylist { get; set; } = null;
+
+    public bool IsShuffling { get; set; } = false;
+    public bool IsLooping { get; set; } = false;
 
     public InternalMediaSourceViewModel(IShortcutManager shortcutManager, IEventAggregator eventAggregator)
         : base(shortcutManager, eventAggregator)
@@ -221,7 +222,22 @@ public class InternalMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPl
         e.Effects = DragDropEffects.Link;
     }
 
-    protected override void HandleSettings(JObject settings, SettingsAction action) { }
+    protected override void HandleSettings(JObject settings, SettingsAction action)
+    {
+        if (action == SettingsAction.Saving)
+        {
+            settings[nameof(IsShuffling)] = IsShuffling;
+            settings[nameof(IsLooping)] = IsLooping;
+        }
+        else if (action == SettingsAction.Loading)
+        {
+            if (settings.TryGetValue<bool>(nameof(IsShuffling), out var isShuffling))
+                IsShuffling = isShuffling;
+            if (settings.TryGetValue<bool>(nameof(IsLooping), out var isLooping))
+                IsLooping = isLooping;
+        }
+    }
+
     public override async ValueTask<bool> CanConnectAsync(CancellationToken token) => await ValueTask.FromResult(true);
 
     public void Handle(MediaSeekMessage message)
