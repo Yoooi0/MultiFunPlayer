@@ -4,6 +4,7 @@ using MultiFunPlayer.UI;
 using Newtonsoft.Json.Linq;
 using NLog;
 using Stylet;
+using System.Collections;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
@@ -17,6 +18,7 @@ public class InternalMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPl
 {
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
+    private readonly object _playlistLock = new();
     private readonly IEventAggregator _eventAggregator;
     private readonly Channel<object> _messageChannel;
 
@@ -27,7 +29,7 @@ public class InternalMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPl
 
     public override ConnectionStatus Status { get; protected set; }
     public int PlaylistIndex { get; set; } = 0;
-    public List<FileInfo> ScriptPlaylist { get; set; } = null;
+    public Playlist ScriptPlaylist { get; set; } = null;
 
     public bool IsShuffling { get; set; } = false;
     public bool IsLooping { get; set; } = false;
@@ -54,7 +56,12 @@ public class InternalMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPl
             Logger.Info("Connecting to {0}", Name);
 
             await Task.Delay(250, token);
-            SetPlaylist(null);
+            SetScriptInfo(null);
+            SetDuration(double.NaN);
+            SetPosition(double.NaN);
+            SetIsPlaying(false);
+
+            while (_messageChannel.Reader.TryRead(out var _)) ;
 
             Status = ConnectionStatus.Connected;
 
@@ -62,57 +69,59 @@ public class InternalMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPl
             using var timer = new PeriodicTimer(TimeSpan.FromMilliseconds(100));
             while (!token.IsCancellationRequested && await timer.WaitForNextTickAsync(token))
             {
-                var currentTicks = Stopwatch.GetTimestamp();
-                var elapsed = (currentTicks - lastTicks) / (double)Stopwatch.Frequency;
-                lastTicks = currentTicks;
-
-                while (_messageChannel.Reader.TryRead(out var message))
+                lock (_playlistLock)
                 {
-                    if (message is MediaPlayPauseMessage playPauseMessage) { SetIsPlaying(playPauseMessage.State); }
-                    else if (message is MediaSeekMessage seekMessage && _scriptInfo != null) { SetPosition(seekMessage.Position?.TotalSeconds ?? double.NaN); }
-                    else if (message is ScriptPlaylistMessage playlistMessage) { SetPlaylist(playlistMessage.Playlist); }
-                    else if (message is PlayScriptAtIndexMessage playIndexMessage) { PlayByIndex(playIndexMessage.Index); }
-                    else if (message is PlayScriptWithOffsetMessage playOffsetMessage)
+                    var currentTicks = Stopwatch.GetTimestamp();
+                    var elapsed = (currentTicks - lastTicks) / (double)Stopwatch.Frequency;
+                    lastTicks = currentTicks;
+
+                    while (_messageChannel.Reader.TryRead(out var message))
                     {
-                        if (ScriptPlaylist == null)
-                            return;
+                        if (message is MediaPlayPauseMessage playPauseMessage) { SetIsPlaying(playPauseMessage.State); }
+                        else if (message is MediaSeekMessage seekMessage && _scriptInfo != null) { SetPosition(seekMessage.Position?.TotalSeconds ?? double.NaN); }
+                        else if (message is PlayScriptAtIndexMessage playIndexMessage) { PlayByIndex(playIndexMessage.Index); }
+                        else if (message is PlayScriptWithOffsetMessage playOffsetMessage)
+                        {
+                            if (ScriptPlaylist == null)
+                                continue;
 
-                        var desiredIndex = PlaylistIndex + playOffsetMessage.Offset;
-                        var index = IsLooping ? PlaylistIndex
-                                  : IsShuffling ? Random.Shared.Next(0, ScriptPlaylist.Count)
-                                  : desiredIndex < 0 ? 0
-                                  : desiredIndex < ScriptPlaylist.Count ? desiredIndex
-                                  : -1;
+                            var desiredIndex = PlaylistIndex + playOffsetMessage.Offset;
+                            var index = IsLooping ? PlaylistIndex
+                                      : IsShuffling ? Random.Shared.Next(0, ScriptPlaylist.Count)
+                                      : desiredIndex < 0 ? 0
+                                      : desiredIndex < ScriptPlaylist.Count ? desiredIndex
+                                      : -1;
 
-                        if (index < 0)
-                            SetPlaylist(null);
-                        else
-                            PlayByIndex(index);
+                            if (index < 0)
+                                SetPlaylist(null);
+                            else
+                                PlayByIndex(index);
+                        }
                     }
+
+                    if (ScriptPlaylist == null)
+                        continue;
+
+                    if (_scriptInfo == null)
+                        PlayByIndex(IsShuffling ? Random.Shared.Next(0, ScriptPlaylist.Count) : 0);
+
+                    if (_position > _duration)
+                    {
+                        if (IsLooping)
+                            SetPosition(0);
+                        else if (IsShuffling)
+                            PlayByIndex(Random.Shared.Next(0, ScriptPlaylist.Count));
+                        else if (PlaylistIndex < ScriptPlaylist.Count - 1)
+                            PlayByIndex(PlaylistIndex + 1);
+                        else
+                            SetPlaylist(null);
+                    }
+
+                    if (!_isPlaying || _scriptInfo == null)
+                        continue;
+
+                    SetPosition(_position + elapsed);
                 }
-
-                if (ScriptPlaylist == null)
-                    continue;
-
-                if (_scriptInfo == null)
-                    PlayByIndex(IsShuffling ? Random.Shared.Next(0, ScriptPlaylist.Count) : 0);
-
-                if (_position > _duration)
-                {
-                    if (IsLooping)
-                        SetPosition(0);
-                    else if (IsShuffling)
-                        PlayByIndex(Random.Shared.Next(0, ScriptPlaylist.Count));
-                    else if (PlaylistIndex < ScriptPlaylist.Count - 1)
-                        PlayByIndex(PlaylistIndex + 1);
-                    else
-                        SetPlaylist(null);
-                }
-
-                if (!_isPlaying || _scriptInfo == null)
-                    continue;
-
-                SetPosition(_position + elapsed);
             }
         }
         catch (OperationCanceledException) { }
@@ -122,7 +131,12 @@ public class InternalMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPl
             _ = DialogHelper.ShowErrorAsync(e, $"{Name} failed with exception", "RootDialog");
         }
 
-        SetPlaylist(null);
+        SetScriptInfo(null);
+        SetDuration(double.NaN);
+        SetPosition(double.NaN);
+        SetIsPlaying(false);
+
+        while (_messageChannel.Reader.TryRead(out var _));
     }
 
     private void PlayByIndex(int index)
@@ -154,36 +168,24 @@ public class InternalMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPl
         }
     }
 
-    private void PlayByName(string name)
-    {
-        if (ScriptPlaylist == null)
-            return;
-
-        var index = ScriptPlaylist.FindIndex(f => string.Equals(name, f.Name, StringComparison.OrdinalIgnoreCase)
-                                               || string.Equals(name, f.FullName, StringComparison.OrdinalIgnoreCase));
-        if (index < 0)
-            return;
-
-        PlayByIndex(index);
-    }
-
     public bool CanPlayNext => IsConnected && ScriptPlaylist != null;
     public bool CanPlayPrevious => IsConnected && ScriptPlaylist != null;
     public void PlayNext() => _ = _messageChannel.Writer.TryWrite(new PlayScriptWithOffsetMessage(1));
     public void PlayPrevious() => _ = _messageChannel.Writer.TryWrite(new PlayScriptWithOffsetMessage(-1));
 
-    private void SetPlaylist(List<FileInfo> playlist)
+    private void SetPlaylist(Playlist playlist)
     {
-        ScriptPlaylist = playlist;
+        lock (_playlistLock)
+        {
+            ScriptPlaylist = playlist;
 
-        SetScriptInfo(null);
-        SetDuration(double.NaN);
-        SetPosition(double.NaN);
+            SetScriptInfo(null);
+            SetDuration(double.NaN);
+            SetPosition(double.NaN);
 
-        if (playlist == null)
-            SetIsPlaying(false);
-
-        while (_messageChannel.Reader.TryRead(out var _)) ;
+            if (playlist == null)
+                SetIsPlaying(false);
+        }
     }
 
     private void SetScriptInfo(FileInfo scriptInfo)
@@ -234,15 +236,9 @@ public class InternalMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPl
         if (drop is not string[] paths)
             return;
 
-        if (paths.Length == 1 && Path.GetExtension(paths[0]) == ".txt")
-            paths = File.ReadAllLines(paths[0]).ToArray();
-
-        var playlist = paths.Select(p => new FileInfo(p))
-                            .Where(f => f.Exists && string.Equals(f.Extension, ".funscript", StringComparison.OrdinalIgnoreCase))
-                            .ToList();
-
-        if (playlist.Count > 0)
-            _ = _messageChannel.Writer.TryWrite(new ScriptPlaylistMessage(playlist));
+        var isPlaylistFile = paths.Length == 1 && Path.GetExtension(paths[0]) == ".txt";
+        var playlist = isPlaylistFile ? new Playlist(paths[0]) : new Playlist(paths);
+        SetPlaylist(playlist);
     }
 
     public void OnPreviewDragOver(object sender, DragEventArgs e)
@@ -257,6 +253,13 @@ public class InternalMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPl
         {
             settings[nameof(IsShuffling)] = IsShuffling;
             settings[nameof(IsLooping)] = IsLooping;
+
+            settings[nameof(ScriptPlaylist)] = ScriptPlaylist switch
+            {
+                Playlist { SourceFile: not null } => JToken.FromObject(ScriptPlaylist.SourceFile.FullName),
+                Playlist { Count: > 0 } => JArray.FromObject(ScriptPlaylist),
+                _ => null,
+            };
         }
         else if (action == SettingsAction.Loading)
         {
@@ -264,6 +267,11 @@ public class InternalMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPl
                 IsShuffling = isShuffling;
             if (settings.TryGetValue<bool>(nameof(IsLooping), out var isLooping))
                 IsLooping = isLooping;
+
+            if (settings.TryGetValue<string>(nameof(ScriptPlaylist), out var playlistFile) && Path.GetExtension(playlistFile) == ".txt")
+                SetPlaylist(new Playlist(playlistFile));
+            else if (settings.TryGetValue<List<string>>(nameof(ScriptPlaylist), out var playlistFiles))
+                SetPlaylist(new Playlist(playlistFiles));
         }
     }
 
@@ -292,8 +300,18 @@ public class InternalMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPl
         #region Playlist
         s.RegisterAction($"{Name}::Playlist::Prev", b => b.WithCallback(_ => WhenConnected(PlayPrevious)));
         s.RegisterAction($"{Name}::Playlist::Next", b => b.WithCallback(_ => WhenConnected(PlayNext)));
-        s.RegisterAction($"{Name}::Playlist::PlayByIndex", b => b.WithSetting<int>(s => s.WithLabel("Index")).WithCallback((_, index) => WhenConnected(() => PlayByIndex(index))));
-        s.RegisterAction($"{Name}::Playlist::PlayByName", b => b.WithSetting<string>(s => s.WithLabel("File name/path")).WithCallback((_, name) => WhenConnected(() => PlayByName(name))));
+        s.RegisterAction($"{Name}::Playlist::PlayByIndex", b => b.WithSetting<int>(s => s.WithLabel("Index")).WithCallback((_, index) => WhenConnected(() => _messageChannel.Writer.TryWrite(new PlayScriptAtIndexMessage(index)))));
+        s.RegisterAction($"{Name}::Playlist::PlayByName", b => b.WithSetting<string>(s => s.WithLabel("File name/path")).WithCallback((_, name) => WhenConnected(() =>
+        {
+            var playlist = ScriptPlaylist;
+            if (playlist == null)
+                return;
+
+            var index = playlist.FindIndex(f => string.Equals(name, f.Name, StringComparison.OrdinalIgnoreCase)
+                                             || string.Equals(name, f.FullName, StringComparison.OrdinalIgnoreCase));
+            if (index >= 0)
+                _messageChannel.Writer.TryWrite(new PlayScriptAtIndexMessage(index));
+        })));
         #endregion
     }
 
@@ -337,7 +355,41 @@ public class InternalMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPl
             IsLooping = false;
     }
 
-    private record ScriptPlaylistMessage(List<FileInfo> Playlist);
     private record PlayScriptAtIndexMessage(int Index);
     private record PlayScriptWithOffsetMessage(int Offset);
+
+    public class Playlist : IReadOnlyList<FileInfo>
+    {
+        private readonly List<FileInfo> _files;
+
+        public FileInfo SourceFile { get; }
+
+        public Playlist(string sourceFile)
+        {
+            SourceFile = new FileInfo(sourceFile);
+
+            if (SourceFile.Exists)
+                _files = File.ReadAllLines(SourceFile.FullName)
+                             .Select(p => new FileInfo(p))
+                             .Where(f => f.Exists && string.Equals(f.Extension, ".funscript", StringComparison.OrdinalIgnoreCase))
+                             .ToList();
+
+            _files ??= new List<FileInfo>();
+        }
+
+        public Playlist(IEnumerable<string> files)
+        {
+            _files = files.Select(p => new FileInfo(p))
+                          .Where(f => f.Exists && string.Equals(f.Extension, ".funscript", StringComparison.OrdinalIgnoreCase))
+                          .ToList();
+        }
+
+        public FileInfo this[int index] => _files[index];
+        public int Count => _files.Count;
+        public IEnumerator<FileInfo> GetEnumerator() => _files.GetEnumerator();
+        IEnumerator IEnumerable.GetEnumerator() => _files.GetEnumerator();
+
+        public int FindIndex(Predicate<FileInfo> match) => _files.FindIndex(match);
+        public int IndexOf(FileInfo file) => _files.IndexOf(file);
+    }
 }
