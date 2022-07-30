@@ -106,7 +106,7 @@
             </StackPanel>
         </Expander.Header>
 
-        <StackPanel>
+        <StackPanel Visibility="{Binding IsConnected, Converter={StaticResource BooleanToVisibilityConverter}}">
             <Border BorderThickness="1"
                     Margin="15"
                     Height="100"
@@ -114,8 +114,7 @@
                     AllowDrop="True"
                     Drop="{s:Action OnDrop}"
                     PreviewDragEnter="{s:Action OnPreviewDragOver}"
-                    PreviewDragOver="{s:Action OnPreviewDragOver}"
-                    Visibility="{Binding IsConnected, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    PreviewDragOver="{s:Action OnPreviewDragOver}">
 
                 <Border.BorderBrush>
                     <DrawingBrush Viewport="0 0 8 8" ViewportUnits="Absolute" TileMode="Tile">
