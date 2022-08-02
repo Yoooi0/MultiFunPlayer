@@ -122,7 +122,7 @@ public class TheHandyOutputTargetViewModel : AsyncAbstractOutputTarget
                 {
                     var position = MathUtils.Clamp(currentValue * 100, 0, 100);
                     var duration = (int)Math.Floor(elapsed * 1000 + 0.75);
-                    var content = $"{{ \"stopOnTarget\": false, \"duration\": {duration}, \"position\": {position.ToString(CultureInfo.InvariantCulture)} }}";
+                    var content = $"{{ \"immediateResponse\": true, \"stopOnTarget\": true, \"duration\": {duration}, \"position\": {position.ToString(CultureInfo.InvariantCulture)} }}";
 
                     _ = await ApiPutAsync(client, "hdsp/xpt", content, token);
                     lastSentValue = currentValue;
