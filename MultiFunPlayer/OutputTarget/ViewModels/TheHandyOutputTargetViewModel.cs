@@ -6,6 +6,7 @@ using Newtonsoft.Json.Linq;
 using NLog;
 using Stylet;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Globalization;
 using System.Net.Http;
 using System.Text;
@@ -86,6 +87,25 @@ public class TheHandyOutputTargetViewModel : AsyncAbstractOutputTarget
 
         try
         {
+            const int sampleCount = 30;
+            const int discardCount = 3;
+            var samples = new List<long>(sampleCount);
+
+            Logger.Debug("Calculating RTD time");
+            for(var i = 0; i < sampleCount; i++)
+            {
+                var sendTicks = Stopwatch.GetTimestamp();
+                var response = await ApiGetAsync(client, "servertime", token);
+                var sample = Stopwatch.GetTimestamp() - sendTicks;
+
+                Logger.Debug("RTD sample: {0}", sample);
+                samples.Add(sample);
+            }
+
+            samples.Sort();
+            var averageRtd = samples.Take(discardCount..-discardCount).Average() / Stopwatch.Frequency;
+            Logger.Info("Calculated RTD: {0}", averageRtd);
+
             EventAggregator.Publish(new SyncRequestMessage());
 
             var lastSentValue = double.NaN;
