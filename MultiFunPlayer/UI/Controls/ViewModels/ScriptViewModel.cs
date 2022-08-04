@@ -20,6 +20,7 @@ using System.Reflection;
 using MultiFunPlayer.MediaSource.MediaResource;
 using MultiFunPlayer.MediaSource.MediaResource.Modifier;
 using MultiFunPlayer.MediaSource.MediaResource.Modifier.ViewModels;
+using System.Collections.Concurrent;
 
 namespace MultiFunPlayer.UI.Controls.ViewModels;
 
@@ -32,6 +33,7 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
 
     private readonly IEventAggregator _eventAggregator;
     private readonly IMediaResourceFactory _mediaResourceFactory;
+    private readonly ConcurrentDictionary<DeviceAxis, double> _axisOverrideValues;
     private Thread _updateThread;
     private CancellationTokenSource _cancellationSource;
     private double _internalMediaPosition;
@@ -95,38 +97,13 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         foreach (var (_, settings) in AxisSettings)
             settings.PropertyChanged += OnAxisSettingsPropertyChanged;
 
+        _axisOverrideValues = new ConcurrentDictionary<DeviceAxis, double>(DeviceAxis.All.ToDictionary(a => a, _ => double.NaN));
         _cancellationSource = new CancellationTokenSource();
         _updateThread = new Thread(() => UpdateThread(_cancellationSource.Token)) { IsBackground = true };
         _updateThread.Start();
 
         ResetSync(false);
         RegisterShortcuts(shortcutManager);
-    }
-
-    private ref struct AxisUpdateContext
-    {
-        private readonly AxisState _state;
-
-        public double LastValue => _state.Value;
-        public double Value { get; set; } = double.NaN;
-        public bool IsDirty { get; set; } = false;
-        public bool InsideGap { get; set; } = false;
-
-        public AxisUpdateContext(AxisState state)
-        {
-            _state = state;
-        }
-
-        public void Commit()
-        {
-            if (!double.IsFinite(LastValue) && double.IsFinite(Value))
-                IsDirty = true;
-
-            _state.InsideGap = InsideGap;
-            _state.IsDirty = IsDirty;
-            if (IsDirty)
-                _state.Value = Value;
-        }
     }
 
     private void UpdateThread(CancellationToken token)
@@ -166,29 +143,10 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                 var state = AxisStates[axis];
                 var settings = AxisSettings[axis];
 
-                var context = new AxisUpdateContext(state);
-
-                if (!settings.Bypass)
-                {
-                    context.IsDirty |= UpdateScript(axis, state, settings, ref context);
-                    context.IsDirty |= UpdateMotionProvider(axis, state, settings, ref context);
-
-                    if (!context.IsDirty && double.IsFinite(state.OverrideValue))
-                    {
-                        context.IsDirty = Math.Abs(context.LastValue - state.OverrideValue) > 0.000001;
-                        context.Value = state.OverrideValue;
-                        state.OverrideValue = double.NaN;
-                    }
-                }
-
-                context.IsDirty |= UpdateSync(axis, state, ref context);
-                context.IsDirty |= UpdateAutoHome(axis, state, settings, ref context);
-                context.IsDirty |= UpdateSmartLimit(axis, state, settings, ref context);
-
-                SpeedLimit(axis, state, settings, ref context);
-
+                var context = new AxisStateUpdateContext(state);
+                dirty |= UpdateValuesInternal(axis, state, settings, ref context);
+                dirty |= CalculateFinalValue(axis, state, settings, ref context);
                 context.Commit();
-                dirty |= context.IsDirty;
             }
 
             foreach (var axis in DeviceAxis.All)
@@ -196,239 +154,307 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
 
             return dirty;
 
-            void SpeedLimit(DeviceAxis axis, AxisState state, AxisSettings settings, ref AxisUpdateContext context)
+            bool UpdateValuesInternal(DeviceAxis axis, AxisState state, AxisSettings settings, ref AxisStateUpdateContext context)
             {
-                static bool SpeedLimitInternal(AxisSettings settings, double deltaTime, ref AxisUpdateContext context)
+                var dirty = false;
+                if (!settings.Bypass)
                 {
-                    if (!settings.SpeedLimitEnabled)
-                        return false;
-
-                    var step = context.Value - context.LastValue;
-                    if (!double.IsFinite(step))
-                        return false;
-                    if (Math.Abs(step) < 0.000001)
-                        return false;
-
-                    var speed = step / deltaTime;
-                    var maxSpeed = 1 / settings.MaximumSecondsPerStroke;
-                    if (Math.Abs(speed / maxSpeed) < 1)
-                        return false;
-                    if (!double.IsFinite(maxSpeed))
-                        return false;
-
-                    context.Value = MathUtils.Clamp01(context.LastValue + maxSpeed * deltaTime * Math.Sign(speed));
-                    return true;
+                    dirty |= UpdateScript(ref context);
+                    dirty |= UpdateMotionProvider(ref context);
+                    dirty |= UpdateOverrideValue(ref context);
                 }
 
-                state.IsSpeedLimited = SpeedLimitInternal(settings, deltaTime, ref context);
-            }
+                return dirty;
 
-            bool UpdateSmartLimit(DeviceAxis axis, AxisState state, AxisSettings settings, ref AxisUpdateContext context)
-            {
-                bool NoUpdate()
+                bool UpdateScript(ref AxisStateUpdateContext context)
                 {
-                    state.IsSmartLimited = false;
-                    return false;
-                }
-
-                if (settings.SmartLimitInputAxis == null)
-                    return NoUpdate();
-                if (!double.IsFinite(context.Value))
-                    return NoUpdate();
-                if (settings.SmartLimitPoints == null || settings.SmartLimitPoints.Count == 0)
-                    return NoUpdate();
-
-                var x = AxisStates[settings.SmartLimitInputAxis].Value * 100;
-                if (!double.IsFinite(x))
-                    return NoUpdate();
-
-                var factor = Interpolation.Linear(settings.SmartLimitPoints, p => p.X, p => p.Y, x) / 100;
-                state.IsSmartLimited = factor < 1;
-
-                context.Value = settings.SmartLimitMode switch
-                {
-                    SmartLimitMode.Value => MathUtils.Clamp01(MathUtils.Lerp(settings.SmartLimitTargetValue, context.Value, factor)),
-                    SmartLimitMode.Speed when double.IsFinite(context.LastValue) => MathUtils.Clamp01(MathUtils.Lerp(context.LastValue, context.Value, Math.Pow(factor, 4))),
-                    _ => context.Value
-                };
-
-                return Math.Abs(context.LastValue - context.Value) > 0.000001;
-            }
-
-            bool UpdateScript(DeviceAxis axis, AxisState state, AxisSettings settings, ref AxisUpdateContext context)
-            {
-                static bool NoUpdate(ref AxisUpdateContext context)
-                {
-                    context.InsideGap = false;
-                    return false;
-                }
-
-                if (!AxisKeyframes.TryGetValue(axis, out var keyframes) || keyframes == null || keyframes.Count == 0)
-                    return NoUpdate(ref context);
-
-                var axisPosition = GetAxisPosition(axis);
-                var shouldSearch = state.Invalid
-                               || (keyframes.ValidateIndex(state.Index) && keyframes[state.Index].Position > axisPosition)
-                               || (state.AfterScript && keyframes[^1].Position > axisPosition);
-
-                if (shouldSearch)
-                {
-                    Logger.Debug("Searching for valid index [Axis: {0}]", axis);
-                    state.Index = keyframes.BinarySearch(axisPosition);
-                }
-
-                if (!IsPlaying || state.AfterScript)
-                    return NoUpdate(ref context);
-
-                var beforeIndex = state.Index;
-                state.Index = keyframes.AdvanceIndex(state.Index, axisPosition);
-
-                if (beforeIndex == -1 && state.Index >= 0)
-                {
-                    Logger.Debug("Resetting sync on script start [Axis: {0}]", axis);
-                    ResetSyncNoLock(state);
-                }
-
-                if (!keyframes.ValidateIndex(state.Index) || !keyframes.ValidateIndex(state.Index + 1))
-                {
-                    if (state.Index + 1 >= keyframes.Count)
+                    static bool NoUpdate(ref AxisStateUpdateContext context)
                     {
-                        Logger.Debug("Resetting sync on script end [Axis: {0}]", axis);
-                        state.Invalidate(end: true);
+                        context.IsScriptDirty = false;
+                        context.InsideGap = false;
+                        return false;
+                    }
+
+                    if (!AxisKeyframes.TryGetValue(axis, out var keyframes) || keyframes == null || keyframes.Count == 0)
+                        return NoUpdate(ref context);
+
+                    var axisPosition = GetAxisPosition(axis);
+                    var shouldSearch = state.Invalid
+                                   || (keyframes.ValidateIndex(state.Index) && keyframes[state.Index].Position > axisPosition)
+                                   || (state.AfterScript && keyframes[^1].Position > axisPosition);
+
+                    if (shouldSearch)
+                    {
+                        Logger.Debug("Searching for valid index [Axis: {0}]", axis);
+                        state.Index = keyframes.BinarySearch(axisPosition);
+                    }
+
+                    if (state.AfterScript)
+                        return NoUpdate(ref context);
+
+                    var beforeIndex = state.Index;
+                    state.Index = keyframes.AdvanceIndex(state.Index, axisPosition);
+
+                    if (beforeIndex == -1 && state.Index >= 0)
+                    {
+                        Logger.Debug("Resetting sync on script start [Axis: {0}]", axis);
                         ResetSyncNoLock(state);
                     }
 
-                    return NoUpdate(ref context);
-                }
-
-                context.InsideGap = keyframes.IsGap(state.Index);
-                var scriptValue = MathUtils.Clamp01(keyframes.Interpolate(state.Index, axisPosition, settings.InterpolationType));
-                if (settings.Inverted)
-                    scriptValue = 1 - scriptValue;
-
-                context.Value = MathUtils.Clamp01(axis.DefaultValue + (scriptValue - axis.DefaultValue) * settings.Scale / 100);
-                return Math.Abs(context.LastValue - context.Value) > 0.000001;
-            }
-
-            bool UpdateMotionProvider(DeviceAxis axis, AxisState state, AxisSettings settings, ref AxisUpdateContext context)
-            {
-                if (settings.SelectedMotionProvider == null)
-                    return false;
-
-                var providerValue = double.NaN;
-                if (!settings.MotionProviderFillGaps)
-                {
-                    bool ShouldUpdateMotionProvider()
+                    if (!keyframes.ValidateIndex(state.Index) || !keyframes.ValidateIndex(state.Index + 1))
                     {
-                        if (!settings.UpdateMotionProviderWhenPaused && !IsPlaying)
-                            return false;
-                        if (!settings.UpdateMotionProviderWithoutScript && !state.InsideScript)
-                            return false;
-
-                        if (settings.UpdateMotionProviderWithAxis != null)
+                        if (state.Index + 1 >= keyframes.Count)
                         {
-                            var targetState = AxisStates[settings.UpdateMotionProviderWithAxis];
-                            if (!targetState.IsDirty || targetState.IsAutoHoming)
-                                return false;
+                            Logger.Debug("Resetting sync on script end [Axis: {0}]", axis);
+                            state.Invalidate(end: true);
+                            ResetSyncNoLock(state);
                         }
 
+                        return NoUpdate(ref context);
+                    }
+
+                    if (state.BeforeScript)
+                        return NoUpdate(ref context);
+
+                    context.InsideGap = keyframes.IsGap(state.Index);
+                    var scriptValue = MathUtils.Clamp01(keyframes.Interpolate(state.Index, axisPosition, settings.InterpolationType));
+                    if (settings.Inverted)
+                        scriptValue = 1 - scriptValue;
+
+                    context.ScriptValue = MathUtils.Clamp01(axis.DefaultValue + (scriptValue - axis.DefaultValue) * settings.Scale / 100);
+                    context.IsScriptDirty = Math.Abs(context.LastScriptValue - context.ScriptValue) > 0.000001;
+                    return context.IsScriptDirty;
+                }
+
+                bool UpdateMotionProvider(ref AxisStateUpdateContext context)
+                {
+                    static bool NoUpdate(ref AxisStateUpdateContext context)
+                    {
+                        context.IsMotionProviderDirty = false;
+                        return false;
+                    }
+
+                    if (settings.SelectedMotionProvider == null)
+                        return NoUpdate(ref context);
+
+                    var providerValue = double.NaN;
+                    if (!settings.MotionProviderFillGaps)
+                    {
+                        bool ShouldUpdateMotionProvider()
+                        {
+                            if (!settings.UpdateMotionProviderWhenPaused && !IsPlaying)
+                                return false;
+                            if (!settings.UpdateMotionProviderWithoutScript && !state.InsideScript)
+                                return false;
+
+                            if (settings.UpdateMotionProviderWithAxis != null)
+                            {
+                                var targetState = AxisStates[settings.UpdateMotionProviderWithAxis];
+                                if (!targetState.IsDirty || targetState.IsAutoHoming)
+                                    return false;
+                            }
+
+                            return true;
+                        }
+
+                        if (ShouldUpdateMotionProvider())
+                            MotionProviderManager.Update(axis, settings.SelectedMotionProvider, deltaTime);
+
+                        providerValue = MotionProviderManager.GetValue(axis);
+                    }
+                    else
+                    {
+                        bool CanMotionProviderFillGap(ref AxisStateUpdateContext context)
+                        {
+                            if (!IsPlaying || !state.InsideScript)
+                                return false;
+
+                            if (!AxisKeyframes.TryGetValue(axis, out var keyframes) || keyframes == null || keyframes.Count == 0)
+                                return false;
+
+                            var index = state.Index;
+
+                            var gapStarted = !state.InsideGap && context.InsideGap;
+                            var gapEnded = state.InsideGap && !context.InsideGap;
+                            if (gapStarted || gapEnded)
+                                ResetSyncNoLock(state);
+
+                            return context.InsideGap && keyframes.SegmentDuration(index) >= settings.MotionProviderMinimumGapDuration;
+                        }
+
+                        if (!CanMotionProviderFillGap(ref context))
+                            return NoUpdate(ref context);
+
+                        MotionProviderManager.Update(axis, settings.SelectedMotionProvider, deltaTime);
+                        providerValue = MotionProviderManager.GetValue(axis);
+                    }
+
+                    if (!double.IsFinite(providerValue))
+                        return NoUpdate(ref context);
+
+                    context.MotionProviderValue = providerValue;
+                    context.IsMotionProviderDirty = Math.Abs(context.LastMotionProviderValue - context.MotionProviderValue) > 0.000001;
+                    return context.IsMotionProviderDirty;
+                }
+
+                bool UpdateOverrideValue(ref AxisStateUpdateContext context)
+                {
+                    var overrideValue = _axisOverrideValues[axis];
+                    if (!double.IsFinite(overrideValue))
+                        return false;
+
+                    context.OverrideValue = overrideValue;
+                    context.IsOverrideDirty = Math.Abs(context.LastOverrideValue - context.OverrideValue) > 0.000001;
+                    return context.IsOverrideDirty;
+                }
+            }
+
+            bool CalculateFinalValue(DeviceAxis axis, AxisState state, AxisSettings settings, ref AxisStateUpdateContext context)
+            {
+                context.Value = context.LastValue;
+
+                if (!context.IsAutoHoming)
+                {
+                    if (context.IsScriptDirty && double.IsFinite(context.ScriptValue))
+                        context.Value = context.ScriptValue;
+
+                    if (context.IsMotionProviderDirty && double.IsFinite(context.MotionProviderValue))
+                    {
+                        if (!settings.MotionProviderFillGaps)
+                        {
+                            var blendT = state.InsideScript ? MathUtils.Clamp01(settings.MotionProviderBlend / 100) : 1;
+                            var blendFrom = double.IsFinite(context.ScriptValue) ? context.ScriptValue : axis.DefaultValue;
+                            context.Value = MathUtils.Clamp01(MathUtils.Lerp(blendFrom, context.MotionProviderValue, blendT));
+                        }
+                        else
+                        {
+                            context.Value = context.MotionProviderValue;
+                        }
+                    }
+
+                    if (!IsPlaying || state.AfterScript)
+                        if (context.IsOverrideDirty && !context.IsScriptDirty && !context.IsMotionProviderDirty)
+                            context.Value = context.OverrideValue;
+                }
+
+                UpdateSync(ref context);
+                UpdateAutoHome(ref context);
+                UpdateSmartLimit(ref context);
+                SpeedLimit(ref context);
+
+                context.IsDirty |= Math.Abs(context.LastValue - context.Value) > 0.000001;
+                return context.IsDirty;
+
+                void UpdateSync(ref AxisStateUpdateContext context)
+                {
+                    if (state.SyncTime <= 0)
+                        return;
+
+                    var t = GetSyncProgress(state.SyncTime, SyncSettings.Duration);
+                    state.SyncTime -= deltaTime;
+
+                    if (!double.IsFinite(context.Value))
+                        return;
+
+                    var from = !double.IsFinite(context.LastValue) ? axis.DefaultValue : context.LastValue;
+                    context.Value = MathUtils.Clamp01(MathUtils.Lerp(from, context.Value, t));
+                }
+
+                void UpdateAutoHome(ref AxisStateUpdateContext context)
+                {
+                    bool UpdateAutoHomeInternal(ref AxisStateUpdateContext context)
+                    {
+                        if (!double.IsFinite(context.Value))
+                            return false;
+
+                        if (!settings.AutoHomeEnabled)
+                            return false;
+
+                        var isDirty = context.IsScriptDirty || context.IsMotionProviderDirty || context.IsOverrideDirty;
+                        if (isDirty || (state.InsideScript && IsPlaying))
+                        {
+                            state.AutoHomeTime = 0;
+                            return false;
+                        }
+
+                        if (settings.AutoHomeDuration < 0.0001)
+                        {
+                            context.Value = axis.DefaultValue;
+                            return false;
+                        }
+
+                        state.AutoHomeTime += deltaTime;
+                        var t = (state.AutoHomeTime - settings.AutoHomeDelay) / settings.AutoHomeDuration;
+                        if (t < 0) return false;
+                        if (t > 1) return true;
+
+                        context.Value = MathUtils.Clamp01(MathUtils.Lerp(context.Value, axis.DefaultValue, Math.Pow(2, 10 * (t - 1))));
                         return true;
                     }
 
-                    if (ShouldUpdateMotionProvider())
-                        MotionProviderManager.Update(axis, settings.SelectedMotionProvider, deltaTime);
+                    var isAutoHoming = UpdateAutoHomeInternal(ref context);
+                    if (context.IsAutoHoming && !isAutoHoming)
+                        ResetSyncNoLock(state);
 
-                    providerValue = MotionProviderManager.GetValue(axis);
-                    if (!double.IsFinite(providerValue))
-                        return false;
-
-                    var blendT = IsPlaying && state.InsideScript ? MathUtils.Clamp01(settings.MotionProviderBlend / 100) : 1;
-                    var blendFrom = double.IsFinite(context.Value) ? context.Value : axis.DefaultValue;
-                    providerValue = MathUtils.Clamp01(MathUtils.Lerp(blendFrom, providerValue, blendT));
+                    context.IsAutoHoming = isAutoHoming;
                 }
-                else
+
+                void UpdateSmartLimit(ref AxisStateUpdateContext context)
                 {
-                    bool CanMotionProviderFillGap(ref AxisUpdateContext context)
+                    bool UpdateSmartLimitInternal(ref AxisStateUpdateContext context)
                     {
-                        if (!IsPlaying || !state.InsideScript)
+                        if (settings.SmartLimitInputAxis == null)
+                            return false;
+                        if (!double.IsFinite(context.Value))
+                            return false;
+                        if (settings.SmartLimitPoints == null || settings.SmartLimitPoints.Count == 0)
                             return false;
 
-                        if (!AxisKeyframes.TryGetValue(axis, out var keyframes) || keyframes == null || keyframes.Count == 0)
+                        var x = AxisStates[settings.SmartLimitInputAxis].Value * 100;
+                        if (!double.IsFinite(x))
                             return false;
 
-                        var index = state.Index;
+                        var factor = Interpolation.Linear(settings.SmartLimitPoints, p => p.X, p => p.Y, x) / 100;
 
-                        var gapStarted = !state.InsideGap && context.InsideGap;
-                        var gapEnded = state.InsideGap && !context.InsideGap;
-                        if (gapStarted || gapEnded)
-                            ResetSyncNoLock(state);
+                        context.Value = settings.SmartLimitMode switch
+                        {
+                            SmartLimitMode.Value => MathUtils.Clamp01(MathUtils.Lerp(settings.SmartLimitTargetValue, context.Value, factor)),
+                            SmartLimitMode.Speed when double.IsFinite(context.LastValue) => MathUtils.Clamp01(MathUtils.Lerp(context.LastValue, context.Value, Math.Pow(factor, 4))),
+                            _ => context.Value
+                        };
 
-                        return context.InsideGap && keyframes.SegmentDuration(index) >= settings.MotionProviderMinimumGapDuration;
+                        return factor < 1;
                     }
 
-                    if (!CanMotionProviderFillGap(ref context))
-                        return false;
-
-                    MotionProviderManager.Update(axis, settings.SelectedMotionProvider, deltaTime);
-                    providerValue = MotionProviderManager.GetValue(axis);
+                    context.IsSmartLimited = UpdateSmartLimitInternal(ref context);
                 }
 
-                if (!double.IsFinite(providerValue))
-                    return false;
-
-                context.Value = providerValue;
-                return Math.Abs(context.LastValue - context.Value) > 0.000001;
-            }
-
-            bool UpdateAutoHome(DeviceAxis axis, AxisState state, AxisSettings settings, ref AxisUpdateContext context)
-            {
-                bool UpdateAutoHomeInternal(ref AxisUpdateContext context)
+                void SpeedLimit(ref AxisStateUpdateContext context)
                 {
-                    if (context.IsDirty || (state.InsideScript && IsPlaying))
+                    bool SpeedLimitInternal(ref AxisStateUpdateContext context)
                     {
-                        state.AutoHomeTime = 0;
-                        return false;
+                        if (!settings.SpeedLimitEnabled)
+                            return false;
+
+                        var step = context.Value - context.LastValue;
+                        if (!double.IsFinite(step))
+                            return false;
+                        if (Math.Abs(step) < 0.000001)
+                            return false;
+
+                        var speed = step / deltaTime;
+                        var maxSpeed = 1 / settings.MaximumSecondsPerStroke;
+                        if (Math.Abs(speed / maxSpeed) < 1)
+                            return false;
+                        if (!double.IsFinite(maxSpeed))
+                            return false;
+
+                        context.Value = MathUtils.Clamp01(context.LastValue + maxSpeed * deltaTime * Math.Sign(speed));
+                        return true;
                     }
 
-                    if (!double.IsFinite(state.Value))
-                        return false;
-
-                    if (!settings.AutoHomeEnabled)
-                        return false;
-
-                    if (settings.AutoHomeDuration < 0.0001)
-                    {
-                        context.Value = axis.DefaultValue;
-                        return context.Value != context.LastValue;
-                    }
-
-                    state.AutoHomeTime += deltaTime;
-                    var t = (state.AutoHomeTime - settings.AutoHomeDelay) / settings.AutoHomeDuration;
-                    if (t < 0 || t > 1)
-                        return false;
-
-                    context.Value = MathUtils.Clamp01(MathUtils.Lerp(state.Value, axis.DefaultValue, Math.Pow(2, 10 * (t - 1))));
-                    return Math.Abs(context.LastValue - context.Value) > 0.000001;
+                    context.IsSpeedLimited = SpeedLimitInternal(ref context);
                 }
-
-                return state.IsAutoHoming = UpdateAutoHomeInternal(ref context);
-            }
-
-            bool UpdateSync(DeviceAxis axis, AxisState state, ref AxisUpdateContext context)
-            {
-                if (state.SyncTime <= 0)
-                    return false;
-
-                var t = GetSyncProgress(state.SyncTime, SyncSettings.Duration);
-                state.SyncTime -= deltaTime;
-
-                if (!double.IsFinite(context.Value))
-                    return false;
-
-                var from = !double.IsFinite(context.LastValue) ? axis.DefaultValue : context.LastValue;
-                context.Value = MathUtils.Clamp01(MathUtils.Lerp(from, context.Value, t));
-
-                return Math.Abs(context.LastValue - context.Value) > 0.000001;
             }
         }
 
@@ -1071,18 +1097,15 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
     public void OnAxisClear(DeviceAxis axis) => ResetAxes(axis);
     public void OnAxisReload(DeviceAxis axis) => ReloadAxes(axis);
 
-    public void SetAxisValue(DeviceAxis axis, double value, bool offset = false)
+    public void SetAxisOverrideValue(DeviceAxis axis, double value, bool offset = false)
     {
         if (axis == null)
             return;
 
         var state = AxisStates[axis];
         lock (state)
-        {
-            state.OverrideValue = offset
-                ? MathUtils.Clamp01((double.IsFinite(state.Value) ? state.Value : axis.DefaultValue) + value)
-                : value;
-        }
+            _axisOverrideValues[axis] = offset ? MathUtils.Clamp01((double.IsFinite(state.Value) ? state.Value : axis.DefaultValue) + value)
+                                               : value;
     }
 
     private bool MoveScript(DeviceAxis axis, DirectoryInfo directory)
@@ -1367,19 +1390,19 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         s.RegisterAction("Axis::Value::Offset",
             b => b.WithSetting<DeviceAxis>(p => p.WithLabel("Target axis").WithItemsSource(DeviceAxis.All))
                   .WithSetting<float>(p => p.WithLabel("Value offset").WithStringFormat("{}{0:P0}"))
-                  .WithCallback((_, axis, offset) => SetAxisValue(axis, offset, offset: true)));
+                  .WithCallback((_, axis, offset) => SetAxisOverrideValue(axis, offset, offset: true)));
 
         s.RegisterAction("Axis::Value::Set",
             b => b.WithSetting<DeviceAxis>(p => p.WithLabel("Target axis").WithItemsSource(DeviceAxis.All))
                   .WithSetting<float>(p => p.WithLabel("Value").WithStringFormat("{}{0:P0}"))
-                  .WithCallback((_, axis, value) => SetAxisValue(axis, value)));
+                  .WithCallback((_, axis, value) => SetAxisOverrideValue(axis, value)));
 
         s.RegisterAction("Axis::Value::Drive",
             b => b.WithSetting<DeviceAxis>(p => p.WithLabel("Target axis").WithItemsSource(DeviceAxis.All))
                   .WithCallback((gesture, axis) =>
                   {
                       if (gesture is IAxisInputGesture axisGesture)
-                          SetAxisValue(axis, axisGesture.Delta, offset: true);
+                          SetAxisOverrideValue(axis, axisGesture.Delta, offset: true);
                   }), ShortcutActionDescriptorFlags.AcceptsAxisGesture);
         #endregion
 
@@ -1630,10 +1653,12 @@ public class AxisModel : PropertyChangedBase
 
 public class AxisState : INotifyPropertyChanged
 {
-    [DoNotNotify] public int Index { get; set; } = int.MinValue;
     [DoNotNotify] public double Value { get; set; } = double.NaN;
+    [DoNotNotify] public double ScriptValue { get; set; } = double.NaN;
     [DoNotNotify] public double OverrideValue { get; set; } = double.NaN;
+    [DoNotNotify] public double MotionProviderValue { get; set; } = double.NaN;
 
+    [DoNotNotify] public int Index { get; set; } = int.MinValue;
     [DoNotNotify] public bool Invalid => Index == int.MinValue;
     [DoNotNotify] public bool BeforeScript => Index == -1;
     [DoNotNotify] public bool AfterScript => Index == int.MaxValue;
@@ -1644,7 +1669,7 @@ public class AxisState : INotifyPropertyChanged
     [DoNotNotify] public double SyncTime { get; set; } = 0;
     [DoNotNotify] public double AutoHomeTime { get; set; } = 0;
 
-    [DoNotNotify] public bool IsDirty { get; set; } = true;
+    [DoNotNotify] public bool IsDirty { get; set; } = false;
     [DoNotNotify] public bool IsAutoHoming { get; set; } = false;
 
     public bool IsSpeedLimited { get; set; } = false;
@@ -1658,6 +1683,61 @@ public class AxisState : INotifyPropertyChanged
     {
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(InsideScript)));
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Value)));
+    }
+}
+
+public ref struct AxisStateUpdateContext
+{
+    private readonly AxisState _state;
+
+    public double LastValue { get; }
+    public double LastScriptValue { get; }
+    public double LastMotionProviderValue { get; }
+    public double LastOverrideValue { get; }
+
+    public bool IsDirty { get; set; } = false;
+    public bool IsScriptDirty { get; set; } = false;
+    public bool IsMotionProviderDirty { get; set; } = false;
+    public bool IsOverrideDirty { get; set; } = false;
+
+    public double Value { get; set; } = double.NaN;
+    public double ScriptValue { get; set; } = double.NaN;
+    public double OverrideValue { get; set; } = double.NaN;
+    public double MotionProviderValue { get; set; } = double.NaN;
+
+    public bool InsideGap { get; set; } = false;
+    public bool IsAutoHoming { get; set; } = false;
+    public bool IsSpeedLimited { get; set; } = false;
+    public bool IsSmartLimited { get; set; } = false;
+
+    public AxisStateUpdateContext(AxisState state)
+    {
+        _state = state;
+
+        LastValue = state.Value;
+        LastScriptValue = state.ScriptValue;
+        LastMotionProviderValue = state.MotionProviderValue;
+        LastOverrideValue = state.OverrideValue;
+
+        InsideGap = state.InsideGap;
+        IsAutoHoming = state.IsAutoHoming;
+        IsSpeedLimited = state.IsSpeedLimited;
+        IsSmartLimited = state.IsSmartLimited;
+    }
+
+    public void Commit()
+    {
+        _state.IsDirty = IsDirty;
+
+        _state.Value = Value;
+        _state.ScriptValue = ScriptValue;
+        _state.OverrideValue = OverrideValue;
+        _state.MotionProviderValue = MotionProviderValue;
+
+        _state.InsideGap = InsideGap;
+        _state.IsAutoHoming = IsAutoHoming;
+        _state.IsSpeedLimited = IsSpeedLimited;
+        _state.IsSmartLimited = IsSmartLimited;
     }
 }
 
