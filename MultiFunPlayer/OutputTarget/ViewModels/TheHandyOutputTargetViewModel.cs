@@ -75,8 +75,6 @@ public class TheHandyOutputTargetViewModel : AsyncAbstractOutputTarget
                 if (!response.TryGetValue<int>("result", out var result) || result == -1)
                     throw new Exception($"Unable to set HDSP device mode [Response: {response.ToString(Formatting.None)}]");
             }
-
-            Status = ConnectionStatus.Connected;
         }
         catch (Exception e)
         {
@@ -103,9 +101,10 @@ public class TheHandyOutputTargetViewModel : AsyncAbstractOutputTarget
             }
 
             samples.Sort();
-            var averageRtd = samples.Take(discardCount..-discardCount).Average() / Stopwatch.Frequency;
+            var averageRtd = samples.Take(discardCount..(sampleCount-discardCount)).Average() / Stopwatch.Frequency;
             Logger.Info("Calculated RTD: {0}", averageRtd);
 
+            Status = ConnectionStatus.Connected;
             EventAggregator.Publish(new SyncRequestMessage());
 
             var lastSentValue = double.NaN;
