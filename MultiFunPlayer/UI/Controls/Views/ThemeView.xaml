@@ -34,8 +34,10 @@
 
         
         <StackPanel Margin="0 20 0 0">
-            <StackPanel>
-                <StackPanel Orientation="Horizontal">
+            <DockPanel LastChildFill="True"
+                       Margin="0 0 0 10">
+                <StackPanel Orientation="Horizontal"
+                            DockPanel.Dock="Top">
                     <UniformGrid Columns="3" Width="225">
                         <Border Background="{DynamicResource PrimaryHueLightBrush}">
                             <TextBlock Text="Light"
@@ -60,10 +62,11 @@
                         </Border>
                     </UniformGrid>
                 </StackPanel>
-            </StackPanel>
 
-            <material:ColorPicker Color="{Binding PrimaryColor}"
-                                  Width="Auto" Height="200"/>
+                <material:ColorPicker Color="{Binding PrimaryColor, Delay=50}"
+                                      DockPanel.Dock="Top"
+                                      Width="Auto" Height="200"/>
+            </DockPanel>
 
             <DockPanel LastChildFill="False"
                        Margin="0 0 0 10">
@@ -95,7 +98,7 @@
                                VerticalAlignment="Center"
                                Margin="0 0 10 0"/>
 
-                    <Slider Value="{Binding ContrastRatio}"
+                    <Slider Value="{Binding ContrastRatio, Delay=50}"
                             DockPanel.Dock="Left"
                             Minimum="1"
                             Maximum="20"/>
