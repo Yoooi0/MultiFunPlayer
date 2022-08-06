@@ -123,15 +123,22 @@ public class Bootstrapper : Bootstrapper<RootViewModel>
         Environment.Exit(1157 /* ERROR_DLL_NOT_FOUND */);
     }
 
+    protected override void Launch()
+    {
+        _ = RootViewModel;
+
+        var settings = SettingsHelper.ReadOrEmpty(SettingsType.Application);
+        var eventAggregator = Container.Get<IEventAggregator>();
+        eventAggregator.Publish(new AppSettingsMessage(settings, SettingsAction.Loading));
+
+        base.Launch();
+    }
+
     protected override void OnLaunch()
     {
         base.OnLaunch();
         var window = GetActiveWindow();
         window.Closing += OnWindowClosing;
-
-        var settings = SettingsHelper.ReadOrEmpty(SettingsType.Application);
-        var eventAggregator = Container.Get<IEventAggregator>();
-        eventAggregator.Publish(new AppSettingsMessage(settings, SettingsAction.Loading));
 
         var source = PresentationSource.FromVisual(GetActiveWindow()) as HwndSource;
         var rawInput = Container.GetAll<IInputProcessor>().OfType<RawInputProcessor>().FirstOrDefault();
