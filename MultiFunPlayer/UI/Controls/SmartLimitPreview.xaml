@@ -117,7 +117,7 @@
                                                 SizeChanged="OnCanvasSizeChanged">
                         <local:DraggablePointCanvas.ItemTemplate>
                             <DataTemplate DataType="{x:Type local:DraggablePoint}">
-                                <Path Fill="{StaticResource PrimaryHueMidBrush}"
+                                <Path Fill="{DynamicResource PrimaryHueMidBrush}"
                                       DataContext="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type local:DraggablePoint}}}"
                                       Cursor="Hand">
                                     <Path.Data>

@@ -18,7 +18,7 @@
     </UserControl.Resources>
     <Expander material:ExpanderAssist.HorizontalHeaderPadding="0 0 6 0"
               Style="{StaticResource MaterialDesignToolBarExpander}"
-              Background="{StaticResource MaterialDesignToolBarBackground}"
+              Background="{DynamicResource MaterialDesignToolBarBackground}"
               IsExpanded="{Binding DataContext.ContentVisible, RelativeSource={RelativeSource FindAncestor, AncestorLevel=2, AncestorType={x:Type UserControl}}}">
         <Expander.Header>
             <StackPanel Orientation="Horizontal"

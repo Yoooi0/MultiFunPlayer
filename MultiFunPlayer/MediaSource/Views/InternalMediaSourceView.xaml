@@ -14,7 +14,7 @@
     </UserControl.Resources>
     <Expander material:ExpanderAssist.HorizontalHeaderPadding="0 0 6 0"
               Style="{StaticResource MaterialDesignToolBarExpander}"
-              Background="{StaticResource MaterialDesignToolBarBackground}"
+              Background="{DynamicResource MaterialDesignToolBarBackground}"
               IsExpanded="{Binding DataContext.ContentVisible, RelativeSource={RelativeSource FindAncestor, AncestorLevel=2, AncestorType={x:Type UserControl}}}">
         <Expander.Header>
             <StackPanel Orientation="Horizontal"
@@ -207,7 +207,7 @@
                                     <DockPanel LastChildFill="True">
                                         <material:ColorZone Name="Selector"
                                                             DockPanel.Dock="Left"
-                                                            Background="{StaticResource HighlightBrush}"
+                                                            Background="{DynamicResource HighlightBrush}"
                                                             VerticalAlignment="Stretch"
                                                             HorizontalAlignment="Stretch"
                                                             CornerRadius="2 0 0 2"
@@ -217,8 +217,8 @@
                                                 Style="{StaticResource MaterialDesignFlatButton}"
                                                 Click="{s:Action OnPlayScript}"
                                                 ToolTip="Play"
-                                                material:RippleAssist.Feedback="{StaticResource HighlightBrush}"
-                                                Foreground="{StaticResource HighlightBrush}"
+                                                material:RippleAssist.Feedback="{DynamicResource HighlightBrush}"
+                                                Foreground="{DynamicResource HighlightBrush}"
                                                 Height="16" 
                                                 Width="16" 
                                                 Padding="0">

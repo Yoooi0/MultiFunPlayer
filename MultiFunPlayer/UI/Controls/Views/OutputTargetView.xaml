@@ -44,7 +44,7 @@
                                        FontSize="10"
                                        FontFamily="Consolas"
                                        Padding="0"
-                                       Foreground="{StaticResource IdealForegroundDisabledBrush}"
+                                       Foreground="{DynamicResource IdealForegroundDisabledBrush}"
                                        HorizontalAlignment="Left"
                                        VerticalAlignment="Top"
                                        Margin="3 -3 0 0"/>
@@ -152,7 +152,7 @@
                                                                     VerticalAlignment="Center"
                                                                     CornerRadius="7"
                                                                     Mode="Custom"
-                                                                    Background="{StaticResource PrimaryHueLightBrush}"
+                                                                    Background="{DynamicResource PrimaryHueLightBrush}"
                                                                     Width="14"
                                                                     Height="14">
                                                     <material:ColorZone.ToolTip>

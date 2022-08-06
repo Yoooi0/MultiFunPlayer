@@ -17,11 +17,11 @@
                         <Grid Margin="0">
                             <AdornerDecorator VerticalAlignment="Center">
                                 <Border x:Name="Base"
-                                        BorderBrush="{StaticResource MaterialDesignTextBoxBorder}"
+                                        BorderBrush="{DynamicResource MaterialDesignTextBoxBorder}"
                                         BorderThickness="0 0 0 1"
                                         SnapsToDevicePixels="True"
                                         Background="Transparent"
-                                        material:BottomDashedLineAdorner.Brush="{StaticResource MaterialDesignTextBoxBorder}"
+                                        material:BottomDashedLineAdorner.Brush="{DynamicResource MaterialDesignTextBoxBorder}"
                                         material:BottomDashedLineAdorner.Thickness="0 0 0 1">
                                     <StackPanel Orientation="Horizontal">
                                         <TextBox Text="{Binding HostOrIPAddress, RelativeSource={RelativeSource TemplatedParent}}"
@@ -63,7 +63,7 @@
                                 <Setter TargetName="Base" Property="material:BottomDashedLineAdorner.IsAttached" Value="True" />
                             </Trigger>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Base" Property="BorderBrush" Value="{StaticResource PrimaryHueMidBrush}" />
+                                <Setter TargetName="Base" Property="BorderBrush" Value="{DynamicResource PrimaryHueMidBrush}" />
                             </Trigger>
                             <Trigger Property="IsKeyboardFocusWithin" Value="True">
                                 <Setter TargetName="Underline" Property="IsActive" Value="True"/>

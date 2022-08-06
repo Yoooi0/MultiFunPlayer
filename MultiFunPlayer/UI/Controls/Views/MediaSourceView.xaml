@@ -78,7 +78,7 @@
                                                                 VerticalAlignment="Center"
                                                                 CornerRadius="7"
                                                                 Mode="Custom"
-                                                                Background="{StaticResource PrimaryHueLightBrush}"
+                                                                Background="{DynamicResource PrimaryHueLightBrush}"
                                                                 Width="14"
                                                                 Height="14">
                                                 <material:ColorZone.ToolTip>

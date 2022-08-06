@@ -32,7 +32,7 @@
                       Margin="0 0 0 10">
             <Expander material:ExpanderAssist.HorizontalHeaderPadding="0 0 6 0"
                       Style="{StaticResource MaterialDesignToolBarExpander}"
-                      Background="{StaticResource MaterialDesignToolBarBackground}"
+                      Background="{DynamicResource MaterialDesignToolBarBackground}"
                       IsExpanded="{Binding MediaContentVisible}">
                 <Expander.Header>
                     <DockPanel LastChildFill="True" 
@@ -92,7 +92,7 @@
                                                                Kind="FastForward">
                                                 <material:PackIcon.Style>
                                                     <Style TargetType="material:PackIcon">
-                                                        <Setter Property="Foreground" Value="{StaticResource PrimaryHueLightBrush}"/>
+                                                        <Setter Property="Foreground" Value="{DynamicResource PrimaryHueLightBrush}"/>
                                                         <Style.Triggers>
                                                             <DataTrigger Binding="{Binding IsSyncing}" Value="True">
                                                                 <Setter Property="Foreground" Value="{StaticResource MaterialDesignErrorBrush}"/>
@@ -109,7 +109,7 @@
                                                          Margin="0 -24 0 24">
                                                 <ProgressBar.Style>
                                                     <Style TargetType="ProgressBar" BasedOn="{StaticResource MaterialDesignCircularProgressBar}">
-                                                        <Setter Property="Foreground" Value="{StaticResource PrimaryHueLightBrush}"/>
+                                                        <Setter Property="Foreground" Value="{DynamicResource PrimaryHueLightBrush}"/>
                                                         <Style.Triggers>
                                                             <DataTrigger Binding="{Binding IsSyncing}" Value="True">
                                                                 <Setter Property="Foreground" Value="{StaticResource MaterialDesignErrorBrush}"/>
@@ -257,7 +257,7 @@
                                                     </ItemsControl.Template>
                                                     <ItemsControl.ItemTemplate>
                                                         <DataTemplate>
-                                                            <Border Padding="5" Background="{StaticResource MaterialDesignLightBackground}">
+                                                            <Border Padding="5" Background="{DynamicResource MaterialDesignLightBackground}">
                                                                 <DockPanel LastChildFill="True">
                                                                     <Button DockPanel.Dock="Right"   
                                                                             Style="{StaticResource MaterialDesignFlatButton}"
@@ -382,7 +382,7 @@
                                                         </ItemsControl.Template>
                                                         <ItemsControl.ItemTemplate>
                                                             <DataTemplate>
-                                                                <Border Padding="5" Background="{StaticResource MaterialDesignLightBackground}">
+                                                                <Border Padding="5" Background="{DynamicResource MaterialDesignLightBackground}">
                                                                     <DockPanel LastChildFill="True" Margin="5 0 0 0">
                                                                         <Button DockPanel.Dock="Right"   
                                                                                 Style="{StaticResource MaterialDesignFlatButton}"
@@ -603,16 +603,16 @@
                                        VerticalAlignment="Center">
                                 <TextBlock.Resources>
                                     <Style TargetType="TextBlock">
-                                        <Setter Property="Foreground" Value="{StaticResource PrimaryHueLightBrush}"/>
+                                        <Setter Property="Foreground" Value="{DynamicResource PrimaryHueLightBrush}"/>
                                         <Style.Triggers>
                                             <DataTrigger Binding="{Binding Value.Settings.LinkAxis, Converter={StaticResource notNullBooleanConverter}}" Value="True">
-                                                <Setter Property="Foreground" Value="{StaticResource PrimaryHueMidBrush}"/>
+                                                <Setter Property="Foreground" Value="{DynamicResource PrimaryHueMidBrush}"/>
                                             </DataTrigger>
                                             <DataTrigger Binding="{Binding Value.Settings.SelectedMotionProvider, Converter={StaticResource notNullBooleanConverter}}" Value="True">
-                                                <Setter Property="Foreground" Value="{StaticResource PrimaryHueMidBrush}"/>
+                                                <Setter Property="Foreground" Value="{DynamicResource PrimaryHueMidBrush}"/>
                                             </DataTrigger>
                                             <DataTrigger Binding="{Binding Value.Script, Converter={StaticResource notNullBooleanConverter}}" Value="True">
-                                                <Setter Property="Foreground" Value="{StaticResource MaterialDesignDarkBackground}"/>
+                                                <Setter Property="Foreground" Value="{DynamicResource MaterialDesignDarkBackground}"/>
                                             </DataTrigger>
                                             <DataTrigger Binding="{Binding Value.Settings.Bypass}" Value="True">
                                                 <Setter Property="Foreground" Value="{StaticResource MaterialDesignErrorBrush}"/>
@@ -812,14 +812,14 @@
                         <DockPanel LastChildFill="True">
                             <Expander material:ExpanderAssist.HorizontalHeaderPadding="0 0 6 0"
                                       Style="{StaticResource MaterialDesignToolBarExpander}"
-                                      Background="{StaticResource MaterialDesignToolBarBackground}"
+                                      Background="{DynamicResource MaterialDesignToolBarBackground}"
                                       IsExpanded="{Binding DataContext.AxisContentVisible, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}">
                                 <Expander.Header>
                                     <DockPanel LastChildFill="True"
                                                Height="35">
                                         <StackPanel Orientation="Horizontal" DockPanel.Dock="Right">
                                             <TextBlock Text="{Binding Key, Converter={StaticResource DeviceAxisFriendlyNameConverter}}"
-                                                       Foreground="{StaticResource PrimaryHueLightBrush}"
+                                                       Foreground="{DynamicResource PrimaryHueLightBrush}"
                                                        Margin="0 0 10 0"
                                                        VerticalAlignment="Center"
                                                        FontSize="14"
@@ -891,7 +891,7 @@
                                                     </MenuItem>
 
                                                     <MenuItem IsEnabled="{Binding Value.Script, Converter={StaticResource InvertedNullableToBooleanConverter}}"
-                                                              Background="{StaticResource MaterialDesignToolBarBackground}"
+                                                              Background="{DynamicResource MaterialDesignToolBarBackground}"
                                                               Padding="8">
                                                         <MenuItem.Header>
                                                             <DockPanel LastChildFill="True">
@@ -1633,7 +1633,7 @@
                                             </TextBlock.LayoutTransform>
                                             <TextBlock.Style>
                                                 <Style TargetType="{x:Type TextBlock}">
-                                                    <Setter Property="Foreground" Value="{StaticResource PrimaryHueLightBrush}"/>
+                                                    <Setter Property="Foreground" Value="{DynamicResource PrimaryHueLightBrush}"/>
                                                     <Style.Triggers>
                                                         <DataTrigger Binding="{Binding Value.Script.Keyframes.IsRawCollection}" Value="True">
                                                             <Setter Property="Foreground" Value="{StaticResource MaterialDesignErrorBrush}"/>
@@ -1697,7 +1697,7 @@
             <Expander IsExpanded="{Binding ValuesContentVisible}"
                       Style="{StaticResource MaterialDesignToolBarExpander}"
                       material:ExpanderAssist.HorizontalHeaderPadding="24 6 6 6"
-                      Background="{StaticResource MaterialDesignToolBarBackground}">
+                      Background="{DynamicResource MaterialDesignToolBarBackground}">
                 <Expander.Header>
                     <TextBlock Text="Axis values" 
                                VerticalAlignment="Center"
@@ -1736,7 +1736,7 @@
                                             <Style TargetType="ProgressBar" BasedOn="{StaticResource MaterialDesignLinearProgressBar}">
                                                 <Style.Triggers>
                                                     <DataTrigger Binding="{Binding Value.InsideScript}" Value="False">
-                                                        <Setter Property="Foreground" Value="{StaticResource IdealForegroundDisabledBrush}"/>
+                                                        <Setter Property="Foreground" Value="{DynamicResource IdealForegroundDisabledBrush}"/>
                                                     </DataTrigger>
                                                 </Style.Triggers>
                                             </Style>
