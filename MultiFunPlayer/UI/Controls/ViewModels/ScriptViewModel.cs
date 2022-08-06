@@ -218,10 +218,10 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
 
                     context.InsideGap = keyframes.IsGap(state.Index);
                     var scriptValue = MathUtils.Clamp01(keyframes.Interpolate(state.Index, axisPosition, settings.InterpolationType));
-                    if (settings.Inverted)
+                    if (settings.InvertScript)
                         scriptValue = 1 - scriptValue;
 
-                    context.ScriptValue = MathUtils.Clamp01(axis.DefaultValue + (scriptValue - axis.DefaultValue) * settings.Scale / 100);
+                    context.ScriptValue = MathUtils.Clamp01(axis.DefaultValue + (scriptValue - axis.DefaultValue) * settings.ScriptScale / 100);
                     context.IsScriptDirty = Math.Abs(context.LastScriptValue - context.ScriptValue) > 0.000001;
                     return context.IsScriptDirty;
                 }
@@ -1031,7 +1031,7 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         {
             case nameof(ViewModels.AxisSettings.UpdateMotionProviderWhenPaused):
             case nameof(ViewModels.AxisSettings.UpdateMotionProviderWithoutScript):
-            case nameof(ViewModels.AxisSettings.Inverted):
+            case nameof(ViewModels.AxisSettings.InvertScript):
             case nameof(ViewModels.AxisSettings.Bypass):
                 var (axis, _) = AxisSettings.FirstOrDefault(x => x.Value == settings);
                 if (axis != null)
@@ -1439,14 +1439,14 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         #endregion
 
         #region Axis::Inverted
-        s.RegisterAction("Axis::Inverted::Set",
+        s.RegisterAction("Axis::InvertScript::Set",
             b => b.WithSetting<DeviceAxis>(p => p.WithLabel("Target axis").WithItemsSource(DeviceAxis.All))
-                  .WithSetting<bool>(p => p.WithLabel("Invert"))
-                  .WithCallback((_, axis, enabled) => UpdateSettings(axis, s => s.Inverted = enabled)));
+                  .WithSetting<bool>(p => p.WithLabel("Invert script"))
+                  .WithCallback((_, axis, enabled) => UpdateSettings(axis, s => s.InvertScript = enabled)));
 
-        s.RegisterAction("Axis::Inverted::Toggle",
+        s.RegisterAction("Axis::InvertScript::Toggle",
             b => b.WithSetting<DeviceAxis>(p => p.WithLabel("Target axis").WithItemsSource(DeviceAxis.All))
-                  .WithCallback((_, axis) => UpdateSettings(axis, s => s.Inverted = !s.Inverted)));
+                  .WithCallback((_, axis) => UpdateSettings(axis, s => s.InvertScript = !s.InvertScript)));
         #endregion
 
         #region Axis::LinkPriority
@@ -1562,12 +1562,12 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         s.RegisterAction("Axis::ScriptScale::Offset",
             b => b.WithSetting<DeviceAxis>(p => p.WithLabel("Target axis").WithItemsSource(DeviceAxis.All))
                   .WithSetting<float>(p => p.WithLabel("Value offset").WithStringFormat("{}{0}%"))
-                  .WithCallback((_, axis, offset) => UpdateSettings(axis, s => s.Scale = MathUtils.Clamp(s.Scale + offset, 1, 400))));
+                  .WithCallback((_, axis, offset) => UpdateSettings(axis, s => s.ScriptScale = MathUtils.Clamp(s.ScriptScale + offset, 1, 400))));
 
         s.RegisterAction("Axis::ScriptScale::Set",
             b => b.WithSetting<DeviceAxis>(p => p.WithLabel("Target axis").WithItemsSource(DeviceAxis.All))
                   .WithSetting<float>(p => p.WithLabel("Value").WithStringFormat("{}{0}%"))
-                  .WithCallback((_, axis, value) => UpdateSettings(axis, s => s.Scale = MathUtils.Clamp(value, 1, 400))));
+                  .WithCallback((_, axis, value) => UpdateSettings(axis, s => s.ScriptScale = MathUtils.Clamp(value, 1, 400))));
         #endregion
 
         #region Axis::MotionProvider
@@ -1757,9 +1757,9 @@ public class AxisSettings : PropertyChangedBase
     [JsonProperty] public bool AutoHomeEnabled { get; set; } = false;
     [JsonProperty] public double AutoHomeDelay { get; set; } = 5;
     [JsonProperty] public double AutoHomeDuration { get; set; } = 3;
-    [JsonProperty] public bool Inverted { get; set; } = false;
+    [JsonProperty] public bool InvertScript { get; set; } = false;
     [JsonProperty] public double Offset { get; set; } = 0;
-    [JsonProperty] public double Scale { get; set; } = 100;
+    [JsonProperty] public double ScriptScale { get; set; } = 100;
     [JsonProperty] public bool Bypass { get; set; } = false;
     [JsonProperty] public double MotionProviderBlend { get; set; } = 100;
     [JsonProperty] public bool MotionProviderFillGaps { get; set; } = false;

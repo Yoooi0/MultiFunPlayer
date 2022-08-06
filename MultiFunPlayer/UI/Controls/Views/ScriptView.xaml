@@ -939,10 +939,9 @@
                                                 </MenuItem>
                                             </Menu>
 
-                                            <ToggleButton IsChecked="{Binding Value.Settings.Inverted}"
+                                            <ToggleButton IsChecked="{Binding Value.Settings.InvertScript}"
                                                           Style="{StaticResource MaterialDesignToolBarToggleButton}"
-                                                          ToolTip="Invert">
-
+                                                          ToolTip="Invert script">
                                                 <material:PackIcon Kind="FlipVertical" Opacity=".56" Width="20" Height="20"/>
                                                 <material:ToggleButtonAssist.OnContent>
                                                     <material:PackIcon Kind="FlipVertical" Width="20" Height="20" Foreground="{StaticResource MaterialDesignSuccessBrush}"/>
@@ -1668,13 +1667,13 @@
                                         </DockPanel>
                                         <DockPanel LastChildFill="True" DockPanel.Dock="Left">
                                             <TextBlock Text="Scale:" DockPanel.Dock="Left" Margin="0 0 10 0" VerticalAlignment="Center"/>
-                                            <TextBlock Text="{Binding Value.Settings.Scale, StringFormat={}{0:0}%}" 
+                                            <TextBlock Text="{Binding Value.Settings.ScriptScale, StringFormat={}{0:0}%}" 
                                                    VerticalAlignment="Center"
                                                    DockPanel.Dock="Right" 
                                                    Width="50"
                                                    TextAlignment="Right"/>
 
-                                            <Slider Value="{Binding Value.Settings.Scale}" 
+                                            <Slider Value="{Binding Value.Settings.ScriptScale}" 
                                                 DockPanel.Dock="Left"
                                                 Minimum="1" 
                                                 Maximum="400"
