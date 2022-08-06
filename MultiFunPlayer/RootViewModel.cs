@@ -1,3 +1,4 @@
+using MaterialDesignThemes.Wpf;
 using MultiFunPlayer.Common;
 using MultiFunPlayer.UI;
 using MultiFunPlayer.UI.Controls.ViewModels;
@@ -16,6 +17,7 @@ public class RootViewModel : Conductor<IScreen>.Collection.AllActive, IHandle<Ap
     [Inject] public OutputTargetViewModel OutputTarget { get; set; }
     [Inject] public ShortcutViewModel Shortcut { get; set; }
     [Inject] public ApplicationViewModel Application { get; set; }
+    [Inject] public ThemeViewModel Theme { get; set; }
 
     public bool DisablePopup { get; set; }
 
@@ -37,6 +39,7 @@ public class RootViewModel : Conductor<IScreen>.Collection.AllActive, IHandle<Ap
     public void OnInformationClick() => _ = DialogHelper.ShowOnUIThreadAsync(new InformationMessageDialogViewModel(showCheckbox: false), "RootDialog");
     public void OnShortcutClick() => _ = DialogHelper.ShowOnUIThreadAsync(Shortcut, "RootDialog");
     public void OnSettingsClick() => _ = DialogHelper.ShowOnUIThreadAsync(Application, "RootDialog");
+    public void OnThemeClick() => _ = DialogHelper.ShowOnUIThreadAsync(Theme, "RootDialog");
 
     public void OnMouseDown(object sender, MouseButtonEventArgs e)
     {

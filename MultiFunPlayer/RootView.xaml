@@ -40,13 +40,23 @@
                         VerticalAlignment="Stretch" 
                         Margin="8,4,8,4"
                         Background="{Binding Path=BorderForegroundBrush, RelativeSource={RelativeSource AncestorType={x:Type materialExtensions:MaterialWindow}}}" />
-                
+
                 <Button Style="{StaticResource WindowButtonStyle}"
                         Click="{s:Action OnInformationClick}"
                         DockPanel.Dock="Right"
                         Margin="0 -1 0 -1">
                     <material:PackIcon Foreground="{Binding Path=BorderForegroundBrush, RelativeSource={RelativeSource AncestorType={x:Type materialExtensions:MaterialWindow}}}"
                                        Kind="InformationOutline"
+                                       Width="24"
+                                       Height="24"
+                                       Margin="0"/>
+                </Button>
+                <Button Style="{StaticResource WindowButtonStyle}"
+                        Click="{s:Action OnThemeClick}"
+                        DockPanel.Dock="Right"
+                        Margin="0 -1 0 -1">
+                    <material:PackIcon Foreground="{Binding Path=BorderForegroundBrush, RelativeSource={RelativeSource AncestorType={x:Type materialExtensions:MaterialWindow}}}"
+                                       Kind="Palette"
                                        Width="24"
                                        Height="24"
                                        Margin="0"/>
