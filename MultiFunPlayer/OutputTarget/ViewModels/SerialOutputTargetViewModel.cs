@@ -16,7 +16,8 @@ namespace MultiFunPlayer.OutputTarget.ViewModels;
 [DisplayName("Serial")]
 public class SerialOutputTargetViewModel : ThreadAbstractOutputTarget
 {
-    private CancellationTokenSource _cancellationSource;
+    private SemaphoreSlim _refreshSemaphore;
+    private CancellationTokenSource _refreshCancellationSource;
 
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
@@ -30,7 +31,9 @@ public class SerialOutputTargetViewModel : ThreadAbstractOutputTarget
         : base(instanceIndex, eventAggregator, valueProvider)
     {
         SerialPorts = new ObservableConcurrentCollection<SerialPortInfo>();
-        _cancellationSource = new CancellationTokenSource();
+
+        _refreshSemaphore = new SemaphoreSlim(1, 1);
+        _refreshCancellationSource = new CancellationTokenSource();
 
         _ = RefreshPorts();
     }
@@ -40,15 +43,18 @@ public class SerialOutputTargetViewModel : ThreadAbstractOutputTarget
     public bool CanRefreshPorts => !IsRefreshBusy && !IsConnectBusy && !IsConnected;
     public async Task RefreshPorts()
     {
-        var token = _cancellationSource.Token;
+        var token = _refreshCancellationSource.Token;
 
+        if (_refreshSemaphore.CurrentCount == 0)
+            return;
+
+        await _refreshSemaphore.WaitAsync(token);
         IsRefreshBusy = true;
-        await Task.Delay(750, token).ConfigureAwait(true);
-
-        var serialPorts = new List<SerialPortInfo>();
+        await Task.Delay(250, token).ConfigureAwait(true);
 
         try
         {
+            var serialPorts = new List<SerialPortInfo>();
             var scope = new ManagementScope("\\\\.\\ROOT\\cimv2");
             var observer = new ManagementOperationObserver();
             using var searcher = new ManagementObjectSearcher(scope, new SelectQuery("Win32_PnPEntity"));
@@ -68,20 +74,21 @@ public class SerialOutputTargetViewModel : ThreadAbstractOutputTarget
             searcher.Get(observer);
             using (token.Register(() => taskCompletion.TrySetCanceled()))
                 await taskCompletion.Task.WaitAsync(token).ConfigureAwait(true);
+
+            var lastSelectedDeviceId = SelectedSerialPortDeviceId;
+            SerialPorts.RemoveRange(SerialPorts.Except(serialPorts).ToList());
+            SerialPorts.AddRange(serialPorts.Except(SerialPorts).ToList());
+
+            SelectSerialPortByDeviceId(lastSelectedDeviceId);
         }
         catch (Exception e)
         {
             Logger.Warn(e, $"{Identifier} port refresh failed with exception");
         }
 
-        var lastSelectedDeviceId = SelectedSerialPortDeviceId;
-        SerialPorts.RemoveRange(SerialPorts.Except(serialPorts));
-        SerialPorts.AddRange(serialPorts.Except(SerialPorts));
-
-        SelectSerialPortByDeviceId(lastSelectedDeviceId);
-
         await Task.Delay(250, token).ConfigureAwait(true);
         IsRefreshBusy = false;
+        _refreshSemaphore.Release();
     }
 
     private void SelectSerialPortByDeviceId(string deviceId)
@@ -130,14 +137,9 @@ public class SerialOutputTargetViewModel : ThreadAbstractOutputTarget
             Logger.Error(e, "Error when opening serial port");
 
             try { serialPort?.Close(); }
-            catch (IOException) { }
+            catch { }
 
-            _ = Execute.OnUIThreadAsync(async () =>
-            {
-                _ = DialogHelper.ShowErrorAsync(e, "Error when opening serial port", "RootDialog");
-                await RefreshPorts().ConfigureAwait(true);
-            });
-
+            _ = Execute.OnUIThreadAsync(() => _ = DialogHelper.ShowErrorAsync(e, "Error when opening serial port", "RootDialog"));
             return;
         }
 
@@ -169,11 +171,7 @@ public class SerialOutputTargetViewModel : ThreadAbstractOutputTarget
         catch (Exception e) when (e is TimeoutException || e is IOException)
         {
             Logger.Error(e, $"{Identifier} failed with exception");
-            _ = Execute.OnUIThreadAsync(async () =>
-            {
-                _ = DialogHelper.ShowErrorAsync(e, $"{Identifier} failed with exception", "RootDialog");
-                await RefreshPorts().ConfigureAwait(true);
-            });
+            _ = DialogHelper.ShowErrorAsync(e, $"{Identifier} failed with exception", "RootDialog");
         }
         catch (Exception e) { Logger.Error(e, $"{Identifier} failed with exception"); }
 
@@ -241,9 +239,12 @@ public class SerialOutputTargetViewModel : ThreadAbstractOutputTarget
 
     protected override void Dispose(bool disposing)
     {
-        _cancellationSource?.Cancel();
-        _cancellationSource?.Dispose();
-        _cancellationSource = null;
+        _refreshCancellationSource?.Cancel();
+        _refreshCancellationSource?.Dispose();
+        _refreshCancellationSource = null;
+
+        _refreshSemaphore?.Dispose();
+        _refreshSemaphore = null;
 
         base.Dispose(disposing);
     }
