@@ -78,7 +78,7 @@ public class TheHandyOutputTargetViewModel : AsyncAbstractOutputTarget
         }
         catch (Exception e)
         {
-            Logger.Warn(e, "Error when connecting to the device");
+            Logger.Error(e, "Error when connecting to the device");
             _ = DialogHelper.ShowErrorAsync(e, "Error when connecting to the device", "RootDialog");
             return;
         }

@@ -127,7 +127,7 @@ public class SerialOutputTargetViewModel : ThreadAbstractOutputTarget
         }
         catch (Exception e)
         {
-            Logger.Warn(e, "Error when opening serial port");
+            Logger.Error(e, "Error when opening serial port");
 
             try { serialPort?.Close(); }
             catch (IOException) { }
@@ -175,7 +175,7 @@ public class SerialOutputTargetViewModel : ThreadAbstractOutputTarget
                 await RefreshPorts().ConfigureAwait(true);
             });
         }
-        catch (Exception e) { Logger.Debug(e, $"{Identifier} failed with exception"); }
+        catch (Exception e) { Logger.Error(e, $"{Identifier} failed with exception"); }
 
         try { serialPort?.Close(); }
         catch { }

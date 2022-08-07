@@ -170,7 +170,7 @@ public class ButtplugOutputTargetViewModel : AsyncAbstractOutputTarget
         }
         catch (Exception e)
         {
-            Logger.Warn(e, "Error when connecting to server");
+            Logger.Error(e, "Error when connecting to server");
             if (client.Connected)
                 await client.DisconnectAsync();
 

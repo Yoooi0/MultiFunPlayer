@@ -65,7 +65,7 @@ public class FileOutputTargetViewModel : ThreadAbstractOutputTarget
         }
         catch (Exception e)
         {
-            Logger.Warn(e, "Error when initializing writers");
+            Logger.Error(e, "Error when initializing writers");
             _ = DialogHelper.ShowErrorAsync(e, "Error when initializing writers", "RootDialog");
             return;
         }

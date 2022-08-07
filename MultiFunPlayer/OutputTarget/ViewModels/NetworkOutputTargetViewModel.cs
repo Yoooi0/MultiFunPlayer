@@ -55,7 +55,7 @@ public class NetworkOutputTargetViewModel : ThreadAbstractOutputTarget
         }
         catch (Exception e)
         {
-            Logger.Warn(e, "Error when connecting to server");
+            Logger.Error(e, "Error when connecting to server");
             _ = DialogHelper.ShowErrorAsync(e, "Error when connecting to server", "RootDialog");
             return;
         }
@@ -107,7 +107,7 @@ public class NetworkOutputTargetViewModel : ThreadAbstractOutputTarget
         }
         catch (Exception e)
         {
-            Logger.Warn(e, "Error when connecting to server");
+            Logger.Error(e, "Error when connecting to server");
             _ = DialogHelper.ShowErrorAsync(e, "Error when connecting to server", "RootDialog");
             return;
         }

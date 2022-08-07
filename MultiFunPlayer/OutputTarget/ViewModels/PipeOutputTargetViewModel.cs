@@ -42,7 +42,7 @@ public class PipeOutputTargetViewModel : ThreadAbstractOutputTarget
         }
         catch (Exception e)
         {
-            Logger.Warn(e, "Error when opening pipe");
+            Logger.Error(e, "Error when opening pipe");
             if (client?.IsConnected == true)
                 client.Close();
 
