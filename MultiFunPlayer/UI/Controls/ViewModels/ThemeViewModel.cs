@@ -31,8 +31,10 @@ public class ThemeViewModel : Screen, IHandle<AppSettingsMessage>
         }
     }
 
-    public void OnPropertyChanged(string propertyName)
+    protected override void OnPropertyChanged(string propertyName)
     {
+        base.OnPropertyChanged(propertyName);
+
         if (propertyName is nameof(EnableColorAdjustment) or nameof(PrimaryColor)
                          or nameof(Contrast) or nameof(ContrastRatio))
             ApplyTheme();
