@@ -103,6 +103,14 @@
                         ToolTip="Next">
                     <material:PackIcon Width="19" Height="19" Kind="SkipNext"/>
                 </Button>
+
+                <Button DockPanel.Dock="Left"
+                        Command="{s:Action ClearPlaylist}"
+                        IsEnabled="{Binding CanClearPlaylist}"
+                        Style="{StaticResource MaterialDesignProgressToolBarButton}"
+                        ToolTip="Clear playlist">
+                    <material:PackIcon Width="19" Height="19" Kind="Close"/>
+                </Button>
             </StackPanel>
         </Expander.Header>
 
@@ -147,8 +155,8 @@
                             <Setter Property="Content">
                                 <Setter.Value>
                                     <Border BorderThickness="1"
-                                            Margin="15"
-                                            Height="100">
+                                            Margin="15 5 15 15"
+                                            Height="80">
                                         <Border.BorderBrush>
                                             <DrawingBrush Viewport="0 0 8 8" ViewportUnits="Absolute" TileMode="Tile">
                                                 <DrawingBrush.Drawing>

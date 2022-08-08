@@ -172,6 +172,8 @@ public class InternalMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPl
     public bool CanPlayPrevious => IsConnected && ScriptPlaylist != null;
     public void PlayNext() => _ = _messageChannel.Writer.TryWrite(new PlayScriptWithOffsetMessage(1));
     public void PlayPrevious() => _ = _messageChannel.Writer.TryWrite(new PlayScriptWithOffsetMessage(-1));
+    public bool CanClearPlaylist => IsConnected && ScriptPlaylist != null;
+    public void ClearPlaylist() => SetPlaylist(null);
 
     private void SetPlaylist(Playlist playlist)
     {
@@ -298,6 +300,7 @@ public class InternalMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPl
         #endregion
 
         #region Playlist
+        s.RegisterAction($"{Name}::Playlist::Clear", b => b.WithCallback(_ => WhenConnected(ClearPlaylist)));
         s.RegisterAction($"{Name}::Playlist::Prev", b => b.WithCallback(_ => WhenConnected(PlayPrevious)));
         s.RegisterAction($"{Name}::Playlist::Next", b => b.WithCallback(_ => WhenConnected(PlayNext)));
         s.RegisterAction($"{Name}::Playlist::PlayByIndex", b => b.WithSetting<int>(s => s.WithLabel("Index")).WithCallback((_, index) => WhenConnected(() => _messageChannel.Writer.TryWrite(new PlayScriptAtIndexMessage(index)))));
