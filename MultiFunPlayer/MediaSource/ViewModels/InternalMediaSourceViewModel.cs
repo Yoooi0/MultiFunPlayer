@@ -270,10 +270,13 @@ public class InternalMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPl
             if (settings.TryGetValue<bool>(nameof(IsLooping), out var isLooping))
                 IsLooping = isLooping;
 
-            if (settings.TryGetValue<string>(nameof(ScriptPlaylist), out var playlistFile) && Path.GetExtension(playlistFile) == ".txt")
-                SetPlaylist(new Playlist(playlistFile));
-            else if (settings.TryGetValue<List<string>>(nameof(ScriptPlaylist), out var playlistFiles))
-                SetPlaylist(new Playlist(playlistFiles));
+            if (settings.TryGetValue(nameof(ScriptPlaylist), out var scriptPlaylistToken))
+            {
+                if (scriptPlaylistToken.Type == JTokenType.String && scriptPlaylistToken.TryToObject<string>(out var playlistFile) && Path.GetExtension(playlistFile) == ".txt")
+                    SetPlaylist(new Playlist(playlistFile));
+                else if (scriptPlaylistToken.Type == JTokenType.Array && scriptPlaylistToken.TryToObject<List<string>>(out var playlistFiles))
+                    SetPlaylist(new Playlist(playlistFiles));
+            }
         }
     }
 
