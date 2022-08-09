@@ -964,6 +964,8 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
     {
         MediaPosition = position;
         _internalMediaPosition = position;
+
+        NotifyOfPropertyChange(nameof(MediaPosition));
     }
 
     private void SeekMediaToPercent(double percent)
