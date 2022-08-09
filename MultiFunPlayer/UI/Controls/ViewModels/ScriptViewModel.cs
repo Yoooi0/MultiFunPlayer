@@ -305,10 +305,10 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
 
                 if (!context.IsAutoHoming)
                 {
-                    if (context.IsScriptDirty && double.IsFinite(context.ScriptValue))
+                    if (double.IsFinite(context.ScriptValue))
                         context.Value = context.ScriptValue;
 
-                    if (context.IsMotionProviderDirty && double.IsFinite(context.MotionProviderValue))
+                    if (double.IsFinite(context.MotionProviderValue))
                     {
                         if (!settings.MotionProviderFillGaps)
                         {
@@ -322,9 +322,10 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                         }
                     }
 
-                    if (!IsPlaying || state.AfterScript)
-                        if (context.IsOverrideDirty && !context.IsScriptDirty && !context.IsMotionProviderDirty)
-                            context.Value = context.OverrideValue;
+                    if(double.IsFinite(context.OverrideValue))
+                        if (!IsPlaying || state.AfterScript)
+                            if (!context.IsScriptDirty && !context.IsMotionProviderDirty)
+                                context.Value = context.OverrideValue;
                 }
 
                 UpdateSync(ref context);
