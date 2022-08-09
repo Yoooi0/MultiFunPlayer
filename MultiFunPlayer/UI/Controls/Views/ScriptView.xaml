@@ -1747,7 +1747,7 @@
                                             <Style TargetType="ProgressBar" BasedOn="{StaticResource MaterialDesignLinearProgressBar}">
                                                 <Style.Triggers>
                                                     <DataTrigger Binding="{Binding Value.InsideScript}" Value="False">
-                                                        <Setter Property="Foreground" Value="{DynamicResource IdealForegroundDisabledBrush}"/>
+                                                        <Setter Property="Foreground" Value="{DynamicResource PrimaryHueMidBrush}"/>
                                                     </DataTrigger>
                                                 </Style.Triggers>
                                             </Style>
