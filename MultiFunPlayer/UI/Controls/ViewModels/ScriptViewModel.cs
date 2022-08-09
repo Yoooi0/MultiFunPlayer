@@ -361,7 +361,7 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                             return false;
 
                         var isDirty = context.IsScriptDirty || context.IsMotionProviderDirty || context.IsOverrideDirty;
-                        if (isDirty || (state.InsideScript && IsPlaying))
+                        if (isDirty || (!settings.AutoHomeInsideScript && state.InsideScript && IsPlaying))
                         {
                             state.AutoHomeTime = 0;
                             return false;
@@ -1753,6 +1753,7 @@ public class AxisSettings : PropertyChangedBase
     [JsonProperty] public bool AutoHomeEnabled { get; set; } = false;
     [JsonProperty] public double AutoHomeDelay { get; set; } = 5;
     [JsonProperty] public double AutoHomeDuration { get; set; } = 3;
+    [JsonProperty] public bool AutoHomeInsideScript { get; set; } = false;
     [JsonProperty] public bool InvertScript { get; set; } = false;
     [JsonProperty] public double Offset { get; set; } = 0;
     [JsonProperty] public double ScriptScale { get; set; } = 100;

@@ -1547,15 +1547,27 @@
                                                 </material:PopupBox.ToggleContent>
                                                 <Grid Width="200" Margin="10">
                                                     <StackPanel>
-                                                        <StackPanel Margin="0 0 0 10" Orientation="Horizontal">
-                                                            <TextBlock Text="Enabled:" 
-                                                                           Width="50"
-                                                                           Margin="0 0 10 0"
-                                                                           VerticalAlignment="Center"/>
+                                                        <DockPanel LastChildFill="False" Margin="0 0 0 10">
+                                                            <TextBlock Text="Enabled:"
+                                                                       DockPanel.Dock="Left"
+                                                                       Margin="0 0 10 0"
+                                                                       VerticalAlignment="Center"/>
 
                                                             <CheckBox IsChecked="{Binding Value.Settings.AutoHomeEnabled}"
-                                                                          Style="{StaticResource MaterialDesignSwitchToggleButton}"/>
-                                                        </StackPanel>
+                                                                      Style="{StaticResource MaterialDesignSwitchToggleButton}"
+                                                                      DockPanel.Dock="Left"/>
+                                                        </DockPanel>
+                                                        
+                                                        <DockPanel LastChildFill="False" Margin="0 0 0 10">
+                                                            <TextBlock Text="Auto-home inside script:"
+                                                                       DockPanel.Dock="Left"
+                                                                       Margin="0 0 10 0"
+                                                                       VerticalAlignment="Center"/>
+
+                                                            <CheckBox IsChecked="{Binding Value.Settings.AutoHomeInsideScript}"
+                                                                      Style="{StaticResource MaterialDesignSwitchToggleButton}"
+                                                                      DockPanel.Dock="Left"/>
+                                                        </DockPanel>
 
                                                         <DockPanel Margin="0 0 0 10">
                                                             <TextBlock Text="Delay:" 
