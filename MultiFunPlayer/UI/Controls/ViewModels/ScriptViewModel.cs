@@ -170,7 +170,6 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                 {
                     static bool NoUpdate(ref AxisStateUpdateContext context)
                     {
-                        context.IsScriptDirty = false;
                         context.InsideGap = false;
                         return false;
                     }
@@ -222,20 +221,13 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                         scriptValue = 1 - scriptValue;
 
                     context.ScriptValue = MathUtils.Clamp01(axis.DefaultValue + (scriptValue - axis.DefaultValue) * settings.ScriptScale / 100);
-                    context.IsScriptDirty = Math.Abs(context.LastScriptValue - context.ScriptValue) > 0.000001;
                     return context.IsScriptDirty;
                 }
 
                 bool UpdateMotionProvider(ref AxisStateUpdateContext context)
                 {
-                    static bool NoUpdate(ref AxisStateUpdateContext context)
-                    {
-                        context.IsMotionProviderDirty = false;
-                        return false;
-                    }
-
                     if (settings.SelectedMotionProvider == null)
-                        return NoUpdate(ref context);
+                        return false;
 
                     var providerValue = double.NaN;
                     if (!settings.MotionProviderFillGaps)
@@ -283,17 +275,16 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                         }
 
                         if (!CanMotionProviderFillGap(ref context))
-                            return NoUpdate(ref context);
+                            return false;
 
                         MotionProviderManager.Update(axis, settings.SelectedMotionProvider, deltaTime);
                         providerValue = MotionProviderManager.GetValue(axis);
                     }
 
                     if (!double.IsFinite(providerValue))
-                        return NoUpdate(ref context);
+                        return false;
 
                     context.MotionProviderValue = providerValue;
-                    context.IsMotionProviderDirty = Math.Abs(context.LastMotionProviderValue - context.MotionProviderValue) > 0.000001;
                     return context.IsMotionProviderDirty;
                 }
 
@@ -304,7 +295,6 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                         return false;
 
                     context.OverrideValue = overrideValue;
-                    context.IsOverrideDirty = Math.Abs(context.LastOverrideValue - context.OverrideValue) > 0.000001;
                     return context.IsOverrideDirty;
                 }
             }
@@ -342,7 +332,6 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                 UpdateSmartLimit(ref context);
                 SpeedLimit(ref context);
 
-                context.IsDirty |= Math.Abs(context.LastValue - context.Value) > 0.000001;
                 return context.IsDirty;
 
                 void UpdateSync(ref AxisStateUpdateContext context)
@@ -1697,10 +1686,14 @@ public ref struct AxisStateUpdateContext
     public double LastMotionProviderValue { get; }
     public double LastOverrideValue { get; }
 
-    public bool IsDirty { get; set; } = false;
-    public bool IsScriptDirty { get; set; } = false;
-    public bool IsMotionProviderDirty { get; set; } = false;
-    public bool IsOverrideDirty { get; set; } = false;
+    public bool IsDirty => ValueChanged(LastValue, Value, 0.000001);
+    public bool IsScriptDirty => ValueChanged(LastScriptValue, ScriptValue, 0.000001);
+    public bool IsMotionProviderDirty => ValueChanged(LastMotionProviderValue, MotionProviderValue, 0.000001);
+    public bool IsOverrideDirty => ValueChanged(LastOverrideValue, OverrideValue, 0.000001);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static bool ValueChanged(double last, double current, double epsilon)
+        => Math.Abs(last - current) > epsilon || (double.IsFinite(current) ^ double.IsFinite(last));
 
     public double Value { get; set; } = double.NaN;
     public double ScriptValue { get; set; } = double.NaN;
