@@ -93,9 +93,7 @@
                               Margin="0 -12 20 0"
                               Width="150"
                               ItemsSource="{Binding SerialPorts}"
-                              SelectedItem="{Binding SelectedSerialPort}"
-                              SelectedValue="{Binding SelectedSerialPortDeviceId}"
-                              SelectedValuePath="DeviceID">
+                              SelectedItem="{Binding SelectedSerialPort}">
                         <ComboBox.ItemContainerStyle>
                             <Style TargetType="ComboBoxItem" BasedOn="{StaticResource MaterialDesignComboBoxItemStyle}">
                                 <Setter Property="HorizontalContentAlignment" Value="Stretch" />

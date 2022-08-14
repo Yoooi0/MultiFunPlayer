@@ -98,6 +98,8 @@ public class SerialOutputTargetViewModel : ThreadAbstractOutputTarget
             SelectedSerialPortDeviceId = deviceId;
     }
 
+    public void OnSelectedSerialPortChanged() => SelectedSerialPortDeviceId = SelectedSerialPort?.DeviceID;
+
     public bool IsConnected => Status == ConnectionStatus.Connected;
     public bool IsConnectBusy => Status == ConnectionStatus.Connecting || Status == ConnectionStatus.Disconnecting;
     public bool CanToggleConnect => !IsConnectBusy && !IsRefreshBusy && SelectedSerialPortDeviceId != null;
