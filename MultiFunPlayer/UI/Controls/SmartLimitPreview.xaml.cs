@@ -80,10 +80,18 @@ public partial class SmartLimitPreview : UserControl, INotifyPropertyChanged
     public SmartLimitPreview()
     {
         InitializeComponent();
+
+        IsVisibleChanged += (_, _) =>
+        {
+            RefreshLine();
+            RefreshScrubber();
+        };
     }
 
     private void RefreshLine()
     {
+        if (!IsVisible)
+            return;
         if (Points == null || Points.Count == 0 || Canvas.ActualWidth == 0 || Canvas.ActualHeight == 0)
             return;
 
@@ -96,6 +104,8 @@ public partial class SmartLimitPreview : UserControl, INotifyPropertyChanged
 
     private void RefreshScrubber()
     {
+        if (!IsVisible)
+            return;
         if (Points == null || Points.Count == 0)
             return;
 
