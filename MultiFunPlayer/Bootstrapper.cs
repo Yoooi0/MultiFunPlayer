@@ -132,6 +132,8 @@ public class Bootstrapper : Bootstrapper<RootViewModel>
         eventAggregator.Publish(new AppSettingsMessage(settings, SettingsAction.Loading));
 
         base.Launch();
+
+        eventAggregator.Publish(new AppMainWindowCreatedMessage());
     }
 
     protected override void OnLaunch()

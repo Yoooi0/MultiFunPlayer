@@ -7,7 +7,7 @@ using System.Windows;
 
 namespace MultiFunPlayer.UI.Controls.ViewModels;
 
-public class ApplicationViewModel : Screen, IHandle<AppSettingsMessage>
+public class ApplicationViewModel : Screen, IHandle<AppSettingsMessage>, IHandle<AppMainWindowCreatedMessage>
 {
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
@@ -31,7 +31,11 @@ public class ApplicationViewModel : Screen, IHandle<AppSettingsMessage>
 
     public void OnAlwaysOnTopChanged()
     {
-        Application.Current.MainWindow.Topmost = AlwaysOnTop;
+        var window = Application.Current.MainWindow;
+        if (window == null)
+            return;
+
+        window.Topmost = AlwaysOnTop;
     }
 
     public void OnSelectedLogLevelChanged()
@@ -66,4 +70,6 @@ public class ApplicationViewModel : Screen, IHandle<AppSettingsMessage>
                 SelectedLogLevel = logLevel;
         }
     }
+
+    public void Handle(AppMainWindowCreatedMessage message) => OnAlwaysOnTopChanged();
 }

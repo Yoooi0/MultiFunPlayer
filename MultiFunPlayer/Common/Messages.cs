@@ -9,6 +9,7 @@ public enum SettingsAction
 }
 
 public record AppSettingsMessage(JObject Settings, SettingsAction Action);
+public record AppMainWindowCreatedMessage();
 
 public record MediaSpeedChangedMessage(double Speed);
 public record MediaSeekMessage(TimeSpan? Position);
