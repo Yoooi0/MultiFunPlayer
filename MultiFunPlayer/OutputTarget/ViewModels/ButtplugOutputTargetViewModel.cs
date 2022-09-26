@@ -76,7 +76,7 @@ public class ButtplugOutputTargetViewModel : AsyncAbstractOutputTarget
         AvailableDevices.CollectionChanged += (s, e) => DeviceSettings.Refresh();
 
         var rule = LogManager.Configuration.LoggingRules.FirstOrDefault(r => r.Targets.Any(t => string.Equals(t.Name, "file", StringComparison.OrdinalIgnoreCase)));
-        var logLevel = (rule?.Levels.Min().Ordinal ?? 2) switch
+        var logLevel = (rule?.Levels?.Min()?.Ordinal ?? 6) switch
         {
             0 => ButtplugLogLevel.Trace,
             1 => ButtplugLogLevel.Debug,
