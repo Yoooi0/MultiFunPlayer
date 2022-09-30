@@ -205,7 +205,8 @@
                                                 CornerRadius="10"
                                                 Mode="PrimaryLight"
                                                 Width="20"
-                                                Height="20">
+                                                Height="20"
+                                                material:ShadowAssist.ShadowDepth="Depth2">
                                 <material:PackIcon Kind="Cog"
                                                    Width="16"
                                                    Height="16"

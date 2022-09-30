@@ -1,4 +1,3 @@
-using MaterialDesignThemes.Wpf;
 using MultiFunPlayer.Common;
 using MultiFunPlayer.UI;
 using MultiFunPlayer.UI.Controls.ViewModels;

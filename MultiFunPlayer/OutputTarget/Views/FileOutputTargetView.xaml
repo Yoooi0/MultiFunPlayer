@@ -1,4 +1,4 @@
-﻿<UserControl x:Class="MultiFunPlayer.OutputTarget.Views.FileOutputTargetView"
+<UserControl x:Class="MultiFunPlayer.OutputTarget.Views.FileOutputTargetView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:material="http://materialdesigninxaml.net/winfx/xaml/themes"
              xmlns:metro="http://metro.mahapps.com/winfx/xaml/controls"
@@ -87,9 +87,13 @@
                             Click="{s:Action OnSetOutputDirectory}"
                             DockPanel.Dock="Right"
                             ToolTip="Set output directory"
-                            Width="24"
-                            Height="24">
-                        <material:PackIcon Kind="Folder"/>
+                            Width="20"
+                            Height="20">
+                        <material:PackIcon Kind="Folder"
+                                           Width="14"
+                                           Height="14"
+                                           HorizontalAlignment="Center"
+                                           VerticalAlignment="Center"/>
                     </Button>
 
                     <TextBox IsReadOnly="True"
@@ -143,7 +147,8 @@
 
                             <material:PopupBox PlacementMode="TopAndAlignRightEdges"
                                                PopupMode="Click"
-                                               StaysOpen="True">
+                                               StaysOpen="True"
+                                               Margin="0 0 -1 0">
                                 <StackPanel Margin="10">
                                     <DockPanel Width="100" HorizontalAlignment="Left">
                                         <TextBlock DockPanel.Dock="Left"
@@ -197,7 +202,8 @@
                                                         CornerRadius="10"
                                                         Mode="PrimaryLight"
                                                         Width="20"
-                                                        Height="20">
+                                                        Height="20"
+                                                        material:ShadowAssist.ShadowDepth="Depth2">
                                         <material:PackIcon Kind="Cog"
                                                            Width="16"
                                                            Height="16"

@@ -9,6 +9,7 @@ using System.ComponentModel;
 using System.IO;
 using System.IO.Ports;
 using System.Management;
+using System.Text;
 using System.Text.RegularExpressions;
 
 namespace MultiFunPlayer.OutputTarget.ViewModels;

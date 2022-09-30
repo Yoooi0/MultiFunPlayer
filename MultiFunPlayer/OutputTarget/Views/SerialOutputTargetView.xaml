@@ -1,4 +1,4 @@
-﻿<UserControl x:Class="MultiFunPlayer.OutputTarget.Views.SerialOutputTargetView"
+<UserControl x:Class="MultiFunPlayer.OutputTarget.Views.SerialOutputTargetView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:material="http://materialdesigninxaml.net/winfx/xaml/themes"
              xmlns:metro="http://metro.mahapps.com/winfx/xaml/controls"
@@ -74,6 +74,7 @@
         <StackPanel Margin="20">
             <DockPanel LastChildFill="True" Margin="0 0 0 20">
                 <DockPanel DockPanel.Dock="Left"
+                           VerticalAlignment="Center"
                            LastChildFill="False">
                     <DockPanel.Resources>
                         <Style TargetType="{x:Type DockPanel}">
@@ -85,15 +86,17 @@
                             </Style.Triggers>
                         </Style>
                     </DockPanel.Resources>
+                    
                     <ComboBox Style="{StaticResource MaterialDesignFloatingHintComboBox}"
                               IsEnabled="{Binding CanChangePort}"
                               DockPanel.Dock="Left"
                               material:HintAssist.Hint="serial port"
                               material:TextFieldAssist.HasClearButton="True"
-                              Margin="0 -12 20 0"
+                              Margin="0 -12 10 0"
                               Width="150"
                               ItemsSource="{Binding SerialPorts}"
-                              SelectedItem="{Binding SelectedSerialPort}">
+                              SelectedItem="{Binding SelectedSerialPort}"
+                           VerticalAlignment="Center">
                         <ComboBox.ItemContainerStyle>
                             <Style TargetType="ComboBoxItem" BasedOn="{StaticResource MaterialDesignComboBoxItemStyle}">
                                 <Setter Property="HorizontalContentAlignment" Value="Stretch" />
@@ -126,14 +129,19 @@
                             Style="{StaticResource MaterialDesignFloatingActionMiniLightButton}"
                             Command="{s:Action RefreshPorts}"
                             IsEnabled="{Binding CanRefreshPorts}"
-                            Margin="0 -12 0 0"
-                            Height="24"
-                            Width="24"
+                            Height="20"
+                            Width="20"
+                            Margin="0 1 3 0"
                             ToolTip="Refresh" 
+                            VerticalAlignment="Center"
                             material:ButtonProgressAssist.IsIndicatorVisible="{Binding IsRefreshBusy}"
                             material:ButtonProgressAssist.Value="-1"
                             material:ButtonProgressAssist.IsIndeterminate="True">
-                        <material:PackIcon Kind="Refresh"/>
+                        <material:PackIcon Kind="Refresh"
+                                           Width="16"
+                                           Height="16"
+                                           HorizontalAlignment="Center"
+                                           VerticalAlignment="Center"/>
                     </Button>
                 </DockPanel>
 
@@ -249,7 +257,8 @@
                                                 CornerRadius="10"
                                                 Mode="PrimaryLight"
                                                 Width="20"
-                                                Height="20">
+                                                Height="20"
+                                                material:ShadowAssist.ShadowDepth="Depth2">
                                 <material:PackIcon Kind="Cog"
                                                    Width="16"
                                                    Height="16"
