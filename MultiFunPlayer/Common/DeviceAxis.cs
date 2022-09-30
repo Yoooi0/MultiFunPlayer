@@ -1,4 +1,4 @@
-﻿using MultiFunPlayer.Settings.Converters;
+using MultiFunPlayer.Settings.Converters;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System.ComponentModel;
@@ -44,8 +44,10 @@ public sealed class DeviceAxis
     public static string ToString(IEnumerable<KeyValuePair<DeviceAxis, double>> values, double interval)
         => $"{values.Aggregate(string.Empty, (s, x) => $"{s} {ToString(x.Key, x.Value, interval)}")}\n".TrimStart();
 
-    public static bool IsDirty(double value, double lastValue)
-        => double.IsFinite(value) && (!double.IsFinite(lastValue) || Math.Abs(lastValue - value) * (_outputMaximum + 1) >= 1);
+    public static bool IsValueDirty(double value, double lastValue)
+        => Math.Abs(lastValue - value) * (_outputMaximum + 1) >= 1 || (double.IsFinite(value) ^ double.IsFinite(lastValue));
+    public static bool IsValueDirty(double value, double lastValue, double epsilon)
+        => Math.Abs(lastValue - value) >= epsilon || (double.IsFinite(value) ^ double.IsFinite(lastValue));
 
     public static void LoadSettings(JObject settings, JsonSerializer serializer)
     {

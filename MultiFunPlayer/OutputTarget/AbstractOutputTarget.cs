@@ -54,7 +54,7 @@ public abstract class AbstractOutputTarget : Screen, IOutputTarget
         _valueProvider = valueProvider;
 
         _statusEvent = new AsyncManualResetEvent();
-        Values = DeviceAxis.All.ToDictionary(a => a, a => a.DefaultValue);
+        Values = DeviceAxis.All.ToDictionary(a => a, _ => double.NaN);
         AxisSettings = new ObservableConcurrentDictionary<DeviceAxis, DeviceAxisSettings>(DeviceAxis.All.ToDictionary(a => a, _ => new DeviceAxisSettings()));
         UpdateInterval = 10;
 

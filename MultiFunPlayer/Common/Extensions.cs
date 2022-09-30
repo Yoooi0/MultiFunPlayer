@@ -273,6 +273,12 @@ public static class CollectionExtensions
     }
 
     public static IEnumerable<T> NotNull<T>(this IEnumerable<T> enumerable) where T : class => enumerable.Where(x => x != null);
+
+    public static void Merge<TKey, TValue>(this IDictionary<TKey, TValue> dictionary, IEnumerable<KeyValuePair<TKey, TValue>> other)
+    {
+        foreach (var (key, value) in other)
+            dictionary[key] = value;
+    }
 }
 
 public static class StreamExtensions

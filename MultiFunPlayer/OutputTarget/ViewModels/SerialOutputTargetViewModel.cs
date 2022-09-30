@@ -158,16 +158,14 @@ public class SerialOutputTargetViewModel : ThreadAbstractOutputTarget
                 if (serialPort.IsOpen && serialPort.BytesToRead > 0)
                     Logger.Debug("Received \"{0}\" from \"{1}\"", serialPort.ReadExisting(), SelectedSerialPortDeviceId);
 
-                var dirtyValues = Values.Where(x => DeviceAxis.IsDirty(x.Value, lastSentValues[x.Key]));
+                var dirtyValues = Values.Where(x => DeviceAxis.IsValueDirty(x.Value, lastSentValues[x.Key]));
                 var commands = DeviceAxis.ToString(dirtyValues, elapsed * 1000);
                 if (serialPort.IsOpen && !string.IsNullOrWhiteSpace(commands))
                 {
                     Logger.Trace("Sending \"{0}\" to \"{1}\"", commands.Trim(), SelectedSerialPortDeviceId);
                     serialPort.Write(commands);
+                    lastSentValues.Merge(dirtyValues);
                 }
-
-                foreach (var (axis, value) in dirtyValues)
-                    lastSentValues[axis] = value;
             });
         }
         catch (Exception e) when (e is TimeoutException || e is IOException)

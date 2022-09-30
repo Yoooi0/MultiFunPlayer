@@ -73,14 +73,18 @@ public class FileOutputTargetViewModel : ThreadAbstractOutputTarget
         try
         {
             var currentTime = 0d;
+            var lastSavedValues = DeviceAxis.All.ToDictionary(a => a, _ => double.NaN);
             FixedUpdate(() => !token.IsCancellationRequested, elapsed =>
             {
                 Logger.Trace("Begin FixedUpdate [Elapsed: {0}]", elapsed);
                 UpdateValues();
 
                 currentTime += elapsed;
-                foreach (var axis in EnabledAxes)
+                foreach (var axis in EnabledAxes.Where(x => DeviceAxis.IsValueDirty(Values[x], lastSavedValues[x], 1E-10)))
+                {
                     writers[axis].Write(currentTime, Values[axis]);
+                    lastSavedValues[axis] = Values[axis];
+                }
             });
         }
         catch (Exception e)

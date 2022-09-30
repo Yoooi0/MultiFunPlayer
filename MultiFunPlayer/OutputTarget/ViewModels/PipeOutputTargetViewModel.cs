@@ -55,17 +55,20 @@ public class PipeOutputTargetViewModel : ThreadAbstractOutputTarget
             EventAggregator.Publish(new SyncRequestMessage());
 
             var buffer = new byte[256];
+            var lastSentValues = DeviceAxis.All.ToDictionary(a => a, _ => double.NaN);
             FixedUpdate(() => !token.IsCancellationRequested && client?.IsConnected == true, elapsed =>
             {
                 Logger.Trace("Begin FixedUpdate [Elapsed: {0}]", elapsed);
                 UpdateValues();
 
-                var commands = DeviceAxis.ToString(Values, elapsed * 1000);
+                var dirtyValues = Values.Where(x => DeviceAxis.IsValueDirty(x.Value, lastSentValues[x.Key]));
+                var commands = DeviceAxis.ToString(dirtyValues, elapsed * 1000);
                 if (client.IsConnected && !string.IsNullOrWhiteSpace(commands))
                 {
                     Logger.Trace("Sending \"{0}\" to \"{1}\"", commands.Trim(), PipeName);
                     var encoded = Encoding.UTF8.GetBytes(commands, buffer);
                     client.Write(buffer, 0, encoded);
+                    lastSentValues.Merge(dirtyValues);
                 }
             });
         }

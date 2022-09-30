@@ -73,16 +73,19 @@ public class WebSocketOutputTargetViewModel : AsyncAbstractOutputTarget
     {
         try
         {
+            var lastSentValues = DeviceAxis.All.ToDictionary(a => a, _ => double.NaN);
             await FixedUpdateAsync(() => !token.IsCancellationRequested && client.State == WebSocketState.Open, async elapsed =>
             {
                 Logger.Trace("Begin FixedUpdate [Elapsed: {0}]", elapsed);
                 UpdateValues();
 
-                var commands = DeviceAxis.ToString(Values, elapsed * 1000);
+                var dirtyValues = Values.Where(x => DeviceAxis.IsValueDirty(x.Value, lastSentValues[x.Key]));
+                var commands = DeviceAxis.ToString(dirtyValues, elapsed * 1000);
                 if (client.State == WebSocketState.Open && !string.IsNullOrWhiteSpace(commands))
                 {
                     Logger.Trace("Sending \"{0}\" to \"{1}\"", commands.Trim(), Uri.ToString());
                     await client.SendAsync(Encoding.UTF8.GetBytes(commands), WebSocketMessageType.Text, true, token);
+                    lastSentValues.Merge(dirtyValues);
                 }
             }, token);
         }

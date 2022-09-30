@@ -65,6 +65,7 @@ public class NetworkOutputTargetViewModel : ThreadAbstractOutputTarget
             EventAggregator.Publish(new SyncRequestMessage());
 
             using var stream = new StreamWriter(client.GetStream(), Encoding.UTF8);
+            var lastSentValues = DeviceAxis.All.ToDictionary(a => a, _ => double.NaN);
             FixedUpdate(() => !token.IsCancellationRequested && client.Connected, elapsed =>
             {
                 Logger.Trace("Begin FixedUpdate [Elapsed: {0}]", elapsed);
@@ -76,11 +77,13 @@ public class NetworkOutputTargetViewModel : ThreadAbstractOutputTarget
                     Logger.Debug("Received \"{0}\" from \"{1}\"", message, $"tcp://{Endpoint}");
                 }
 
-                var commands = DeviceAxis.ToString(Values, elapsed * 1000);
+                var dirtyValues = Values.Where(x => DeviceAxis.IsValueDirty(x.Value, lastSentValues[x.Key]));
+                var commands = DeviceAxis.ToString(dirtyValues, elapsed * 1000);
                 if (client.Connected && !string.IsNullOrWhiteSpace(commands))
                 {
                     Logger.Trace("Sending \"{0}\" to \"{1}\"", commands.Trim(), $"tcp://{Endpoint}");
                     stream.WriteLine(commands);
+                    lastSentValues.Merge(dirtyValues);
                 }
             });
         }
@@ -117,6 +120,7 @@ public class NetworkOutputTargetViewModel : ThreadAbstractOutputTarget
             EventAggregator.Publish(new SyncRequestMessage());
 
             var buffer = new byte[256];
+            var lastSentValues = DeviceAxis.All.ToDictionary(a => a, _ => double.NaN);
             FixedUpdate(() => !token.IsCancellationRequested, elapsed =>
             {
                 Logger.Trace("Begin FixedUpdate [Elapsed: {0}]", elapsed);
@@ -129,13 +133,15 @@ public class NetworkOutputTargetViewModel : ThreadAbstractOutputTarget
                     Logger.Debug("Received \"{0}\" from \"{1}\"", message, $"udp://{endpoint}");
                 }
 
-                var commands = DeviceAxis.ToString(Values, elapsed * 1000);
+                var dirtyValues = Values.Where(x => DeviceAxis.IsValueDirty(x.Value, lastSentValues[x.Key]));
+                var commands = DeviceAxis.ToString(dirtyValues, elapsed * 1000);
                 if (!string.IsNullOrWhiteSpace(commands))
                 {
                     Logger.Trace("Sending \"{0}\" to \"{1}\"", commands.Trim(), $"udp://{Endpoint}");
 
                     var encoded = Encoding.UTF8.GetBytes(commands, buffer);
                     client.Send(buffer, encoded);
+                    lastSentValues.Merge(dirtyValues);
                 }
             });
         }
