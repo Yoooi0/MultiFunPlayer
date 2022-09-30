@@ -25,6 +25,7 @@ public class NetworkOutputTargetViewModel : ThreadAbstractOutputTarget
 
     public override ConnectionStatus Status { get; protected set; }
 
+    public bool OffloadElapsedTime { get; set; } = true;
     public EndPoint Endpoint { get; set; } = new IPEndPoint(IPAddress.Loopback, 8080);
     public ProtocolType Protocol { get; set; } = ProtocolType.Tcp;
 
@@ -78,7 +79,7 @@ public class NetworkOutputTargetViewModel : ThreadAbstractOutputTarget
                 }
 
                 var dirtyValues = Values.Where(x => DeviceAxis.IsValueDirty(x.Value, lastSentValues[x.Key]));
-                var commands = DeviceAxis.ToString(dirtyValues, elapsed * 1000);
+                var commands = OffloadElapsedTime ? DeviceAxis.ToString(dirtyValues) : DeviceAxis.ToString(dirtyValues, elapsed * 1000);
                 if (client.Connected && !string.IsNullOrWhiteSpace(commands))
                 {
                     Logger.Trace("Sending \"{0}\" to \"{1}\"", commands.Trim(), $"tcp://{Endpoint}");
@@ -134,7 +135,7 @@ public class NetworkOutputTargetViewModel : ThreadAbstractOutputTarget
                 }
 
                 var dirtyValues = Values.Where(x => DeviceAxis.IsValueDirty(x.Value, lastSentValues[x.Key]));
-                var commands = DeviceAxis.ToString(dirtyValues, elapsed * 1000);
+                var commands = OffloadElapsedTime ? DeviceAxis.ToString(dirtyValues) : DeviceAxis.ToString(dirtyValues, elapsed * 1000);
                 if (!string.IsNullOrWhiteSpace(commands))
                 {
                     Logger.Trace("Sending \"{0}\" to \"{1}\"", commands.Trim(), $"udp://{Endpoint}");

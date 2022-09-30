@@ -23,6 +23,7 @@ public class SerialOutputTargetViewModel : ThreadAbstractOutputTarget
 
     public override ConnectionStatus Status { get; protected set; }
 
+    public bool OffloadElapsedTime { get; set; } = true;
     public ObservableConcurrentCollection<SerialPortInfo> SerialPorts { get; set; }
     public SerialPortInfo SelectedSerialPort { get; set; }
     public string SelectedSerialPortDeviceId { get; set; }
@@ -159,7 +160,7 @@ public class SerialOutputTargetViewModel : ThreadAbstractOutputTarget
                     Logger.Debug("Received \"{0}\" from \"{1}\"", serialPort.ReadExisting(), SelectedSerialPortDeviceId);
 
                 var dirtyValues = Values.Where(x => DeviceAxis.IsValueDirty(x.Value, lastSentValues[x.Key]));
-                var commands = DeviceAxis.ToString(dirtyValues, elapsed * 1000);
+                var commands = OffloadElapsedTime ? DeviceAxis.ToString(dirtyValues) : DeviceAxis.ToString(dirtyValues, elapsed * 1000);
                 if (serialPort.IsOpen && !string.IsNullOrWhiteSpace(commands))
                 {
                     Logger.Trace("Sending \"{0}\" to \"{1}\"", commands.Trim(), SelectedSerialPortDeviceId);

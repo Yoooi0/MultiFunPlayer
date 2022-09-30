@@ -142,9 +142,10 @@
                                        Text="{Binding UpdateInterval, Converter={StaticResource MsToHzConverter}, StringFormat={}{0} hz}"/>
 
                             <material:PopupBox PlacementMode="TopAndAlignRightEdges"
-                                               PopupMode="Click">
+                                               PopupMode="Click"
+                                               StaysOpen="True">
                                 <StackPanel Margin="10">
-                                    <DockPanel Width="100">
+                                    <DockPanel Width="100" HorizontalAlignment="Left">
                                         <TextBlock DockPanel.Dock="Left"
                                                    Text="Average:"/>
                                         <TextBlock DockPanel.Dock="Right" 
@@ -152,7 +153,7 @@
                                                    TextAlignment="Right"/>
                                     </DockPanel>
 
-                                    <DockPanel Width="100">
+                                    <DockPanel Width="100" HorizontalAlignment="Left">
                                         <TextBlock DockPanel.Dock="Left"
                                                    Text="Jitter:"/>
                                         <TextBlock DockPanel.Dock="Right" 
@@ -160,24 +161,46 @@
                                                    TextAlignment="Right"/>
                                     </DockPanel>
 
-                                    <DockPanel Width="100">
+                                    <DockPanel HorizontalAlignment="Left">
                                         <TextBlock DockPanel.Dock="Left"
-                                                   Text="Precise:"/>
+                                                   Text="Precise sleep:"
+                                                   Margin="0 0 5 0"/>
                                         <ToggleButton DockPanel.Dock="Left"
-                                                      IsChecked="{Binding UsePreciseSleep}"
-                                                      Style="{StaticResource MaterialDesignSwitchToggleButton}"/>
+                                              Margin="0 0 5 0"
+                                              IsChecked="{Binding UsePreciseSleep}"
+                                              Style="{StaticResource MaterialDesignSwitchToggleButton}"/>
+
+                                        <material:ColorZone DockPanel.Dock="Right"
+                                                            VerticalAlignment="Center"
+                                                            CornerRadius="7"
+                                                            Mode="Custom"
+                                                            Background="{DynamicResource PrimaryHueLightBrush}"
+                                                            Width="14"
+                                                            Height="14">
+                                            <material:ColorZone.ToolTip>
+                                                <TextBlock>
+                                                    Sacrifices processor time in exchange for<LineBreak/>more consistent update ticks (lower jitter)
+                                                </TextBlock>
+                                            </material:ColorZone.ToolTip>
+                                            <material:PackIcon Kind="QuestionMark"
+                                                               Foreground="Black"
+                                                               Width="10"
+                                                               Height="10"
+                                                               HorizontalAlignment="Center"
+                                                               VerticalAlignment="Center"/>
+                                        </material:ColorZone>
                                     </DockPanel>
                                 </StackPanel>
 
                                 <material:PopupBox.ToggleContent>
                                     <material:ColorZone VerticalAlignment="Center"
-                                                        CornerRadius="7"
+                                                        CornerRadius="10"
                                                         Mode="PrimaryLight"
-                                                        Width="14"
-                                                        Height="14">
-                                        <material:PackIcon Kind="Help"
-                                                           Width="10"
-                                                           Height="10"
+                                                        Width="20"
+                                                        Height="20">
+                                        <material:PackIcon Kind="Cog"
+                                                           Width="16"
+                                                           Height="16"
                                                            HorizontalAlignment="Center"
                                                            VerticalAlignment="Center"/>
                                     </material:ColorZone>

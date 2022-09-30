@@ -18,6 +18,7 @@ public class WebSocketOutputTargetViewModel : AsyncAbstractOutputTarget
 
     public override ConnectionStatus Status { get; protected set; }
 
+    public bool OffloadElapsedTime { get; set; } = true;
     public Uri Uri { get; set; } = new Uri("ws://127.0.0.1/ws");
 
     public WebSocketOutputTargetViewModel(int instanceIndex, IEventAggregator eventAggregator, IDeviceAxisValueProvider valueProvider)
@@ -80,7 +81,7 @@ public class WebSocketOutputTargetViewModel : AsyncAbstractOutputTarget
                 UpdateValues();
 
                 var dirtyValues = Values.Where(x => DeviceAxis.IsValueDirty(x.Value, lastSentValues[x.Key]));
-                var commands = DeviceAxis.ToString(dirtyValues, elapsed * 1000);
+                var commands = OffloadElapsedTime ? DeviceAxis.ToString(dirtyValues) : DeviceAxis.ToString(dirtyValues, elapsed * 1000);
                 if (client.State == WebSocketState.Open && !string.IsNullOrWhiteSpace(commands))
                 {
                     Logger.Trace("Sending \"{0}\" to \"{1}\"", commands.Trim(), Uri.ToString());

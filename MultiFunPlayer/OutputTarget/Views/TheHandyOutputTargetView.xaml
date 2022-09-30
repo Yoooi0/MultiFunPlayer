@@ -134,34 +134,35 @@
                                Text="{Binding UpdateInterval, Converter={StaticResource MsToHzConverter}, StringFormat={}{0} hz}"/>
 
                     <material:PopupBox PlacementMode="TopAndAlignRightEdges"
-                                       PopupMode="Click">
+                                       PopupMode="Click"
+                                       StaysOpen="True">
                         <StackPanel Margin="10">
-                            <DockPanel Width="100">
+                            <DockPanel Width="100" HorizontalAlignment="Left">
                                 <TextBlock DockPanel.Dock="Left"
-                                        Text="Average:"/>
+                                           Text="Average:"/>
                                 <TextBlock DockPanel.Dock="Right" 
-                                        Text="{Binding AverageUpdateRate, StringFormat={}{0} hz}"
-                                        TextAlignment="Right"/>
+                                           Text="{Binding AverageUpdateRate, StringFormat={}{0} hz}"
+                                           TextAlignment="Right"/>
                             </DockPanel>
 
-                            <DockPanel Width="100">
+                            <DockPanel Width="100" HorizontalAlignment="Left">
                                 <TextBlock DockPanel.Dock="Left"
-                                        Text="Jitter:"/>
+                                           Text="Jitter:"/>
                                 <TextBlock DockPanel.Dock="Right" 
-                                        Text="{Binding UpdateRateJitter, StringFormat={}{0} hz}"
-                                        TextAlignment="Right"/>
+                                           Text="{Binding UpdateRateJitter, StringFormat={}{0} hz}"
+                                           TextAlignment="Right"/>
                             </DockPanel>
                         </StackPanel>
 
                         <material:PopupBox.ToggleContent>
                             <material:ColorZone VerticalAlignment="Center"
-                                                CornerRadius="7"
+                                                CornerRadius="10"
                                                 Mode="PrimaryLight"
-                                                Width="14"
-                                                Height="14">
-                                <material:PackIcon Kind="Help"
-                                                   Width="10"
-                                                   Height="10"
+                                                Width="20"
+                                                Height="20">
+                                <material:PackIcon Kind="Cog"
+                                                   Width="16"
+                                                   Height="16"
                                                    HorizontalAlignment="Center"
                                                    VerticalAlignment="Center"/>
                             </material:ColorZone>

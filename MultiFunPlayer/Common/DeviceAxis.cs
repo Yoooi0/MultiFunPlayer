@@ -41,6 +41,8 @@ public sealed class DeviceAxis
     public static string ToString(DeviceAxis axis, double value) => $"{axis}{string.Format(_outputFormat, value * _outputMaximum)}";
     public static string ToString(DeviceAxis axis, double value, double interval) => $"{ToString(axis, value)}I{(int)Math.Floor(interval + 0.75)}";
 
+    public static string ToString(IEnumerable<KeyValuePair<DeviceAxis, double>> values)
+        => $"{values.Aggregate(string.Empty, (s, x) => $"{s} {ToString(x.Key, x.Value)}")}\n".TrimStart();
     public static string ToString(IEnumerable<KeyValuePair<DeviceAxis, double>> values, double interval)
         => $"{values.Aggregate(string.Empty, (s, x) => $"{s} {ToString(x.Key, x.Value, interval)}")}\n".TrimStart();
 
