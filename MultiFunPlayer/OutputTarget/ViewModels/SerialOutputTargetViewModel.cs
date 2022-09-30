@@ -29,6 +29,20 @@ public class SerialOutputTargetViewModel : ThreadAbstractOutputTarget
     public SerialPortInfo SelectedSerialPort { get; set; }
     public string SelectedSerialPortDeviceId { get; set; }
 
+    public int BaudRate { get; set; } = 115200;
+    public Parity Parity { get; set; } = Parity.None;
+    public StopBits StopBits { get; set; } = StopBits.One;
+    public int DataBits { get; set; } = 8;
+    public Handshake Handshake { get; set; } = Handshake.None;
+    public bool DtrEnable { get; set; } = true;
+    public bool RtsEnable { get; set; } = true;
+    public int ReadTimeout { get; set; } = 250;
+    public int WriteTimeout { get; set; } = 250;
+    public int WriteBufferSize { get; set; } = 2048;
+    public int ReadBufferSize { get; set; } = 4096;
+
+    public IReadOnlyList<int> AvailableBaudRates { get; } = new List<int>() { 50, 75, 110, 134, 150, 200, 300, 600, 1200, 1800, 2400, 4800, 9600, 19200, 28800, 38400, 57600, 76800, 115200, 230400, 460800, 576000, 921600 };
+    
     public SerialOutputTargetViewModel(int instanceIndex, IEventAggregator eventAggregator, IDeviceAxisValueProvider valueProvider)
         : base(instanceIndex, eventAggregator, valueProvider)
     {
@@ -124,14 +138,7 @@ public class SerialOutputTargetViewModel : ThreadAbstractOutputTarget
         {
             Logger.Info("Connecting to {0} at \"{1}\"", Identifier, SelectedSerialPortDeviceId);
 
-            serialPort = new SerialPort(SelectedSerialPort.PortName, 115200)
-            {
-                ReadTimeout = 1000,
-                WriteTimeout = 1000,
-                DtrEnable = true,
-                RtsEnable = true
-            };
-
+            serialPort = CreateSerialPort();
             serialPort.Open();
             serialPort.ReadExisting();
             Status = ConnectionStatus.Connected;
@@ -177,7 +184,7 @@ public class SerialOutputTargetViewModel : ThreadAbstractOutputTarget
         }
         catch (Exception e) { Logger.Error(e, $"{Identifier} failed with exception"); }
 
-        try { serialPort?.Close(); }
+        try { serialPort?.Dispose(); }
         catch { }
     }
 
@@ -188,11 +195,34 @@ public class SerialOutputTargetViewModel : ThreadAbstractOutputTarget
         if (action == SettingsAction.Saving)
         {
             settings[nameof(SelectedSerialPort)] = SelectedSerialPortDeviceId;
+            settings[nameof(BaudRate)] = BaudRate;
+            settings[nameof(Parity)] = JToken.FromObject(Parity);
+            settings[nameof(StopBits)] = JToken.FromObject(StopBits);
+            settings[nameof(DataBits)] = DataBits;
+            settings[nameof(Handshake)] = JToken.FromObject(Handshake);
+            settings[nameof(DtrEnable)] = DtrEnable;
+            settings[nameof(RtsEnable)] = RtsEnable;
+            settings[nameof(ReadTimeout)] = ReadTimeout;
+            settings[nameof(WriteTimeout)] = WriteTimeout;
+            settings[nameof(WriteBufferSize)] = WriteBufferSize;
+            settings[nameof(ReadBufferSize)] = ReadBufferSize;
         }
         else if (action == SettingsAction.Loading)
         {
             if (settings.TryGetValue<string>(nameof(SelectedSerialPort), out var selectedSerialPort))
                 SelectSerialPortByDeviceId(selectedSerialPort);
+
+            if (settings.TryGetValue<int>(nameof(BaudRate), out var baudRate)) BaudRate = baudRate;
+            if (settings.TryGetValue<Parity>(nameof(Parity), out var parity)) Parity = parity;
+            if (settings.TryGetValue<StopBits>(nameof(StopBits), out var stopBits)) StopBits = stopBits;
+            if (settings.TryGetValue<int>(nameof(DataBits), out var dataBits)) DataBits = dataBits;
+            if (settings.TryGetValue<Handshake>(nameof(Handshake), out var handshake)) Handshake = handshake;
+            if (settings.TryGetValue<bool>(nameof(DtrEnable), out var dtrEnable)) DtrEnable = dtrEnable;
+            if (settings.TryGetValue<bool>(nameof(RtsEnable), out var rtsEnable)) RtsEnable = rtsEnable;
+            if (settings.TryGetValue<int>(nameof(ReadTimeout), out var readTimeout)) ReadTimeout = readTimeout;
+            if (settings.TryGetValue<int>(nameof(WriteTimeout), out var writeTimeout)) WriteTimeout = writeTimeout;
+            if (settings.TryGetValue<int>(nameof(WriteBufferSize), out var writeBufferSize)) WriteBufferSize = writeBufferSize;
+            if (settings.TryGetValue<int>(nameof(ReadBufferSize), out var readBufferSize)) ReadBufferSize = readBufferSize;
         }
     }
 
@@ -219,14 +249,7 @@ public class SerialOutputTargetViewModel : ThreadAbstractOutputTarget
             if (SelectedSerialPort == null)
                 return false;
 
-            using var serialPort = new SerialPort(SelectedSerialPort.PortName, 115200)
-            {
-                ReadTimeout = 1000,
-                WriteTimeout = 1000,
-                DtrEnable = true,
-                RtsEnable = true
-            };
-
+            using var serialPort = CreateSerialPort();
             serialPort.Open();
             serialPort.ReadExisting();
             serialPort.Close();
@@ -250,6 +273,22 @@ public class SerialOutputTargetViewModel : ThreadAbstractOutputTarget
 
         base.Dispose(disposing);
     }
+
+    private SerialPort CreateSerialPort() => new()
+    {
+        PortName = SelectedSerialPort.PortName,
+        BaudRate = BaudRate,
+        Parity = Parity,
+        StopBits = StopBits,
+        DataBits = DataBits,
+        Handshake = Handshake,
+        DtrEnable = DtrEnable,
+        RtsEnable = RtsEnable,
+        ReadTimeout = ReadTimeout,
+        WriteTimeout = WriteTimeout,
+        WriteBufferSize = WriteBufferSize,
+        ReadBufferSize = ReadBufferSize,
+    };
 
     public sealed class SerialPortInfo
     {
