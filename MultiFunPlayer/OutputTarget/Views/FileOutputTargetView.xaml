@@ -148,7 +148,8 @@
                             <material:PopupBox PlacementMode="TopAndAlignRightEdges"
                                                PopupMode="Click"
                                                StaysOpen="True"
-                                               Margin="0 0 -1 0">
+                                               Margin="0 0 -1 0"
+                                               ToolTip="Update settings">
                                 <StackPanel Margin="10">
                                     <DockPanel Width="100" HorizontalAlignment="Left">
                                         <TextBlock DockPanel.Dock="Left"
