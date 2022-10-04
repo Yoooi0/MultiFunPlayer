@@ -19,6 +19,7 @@ public class PipeOutputTargetViewModel : ThreadAbstractOutputTarget
     public override ConnectionStatus Status { get; protected set; }
 
     public bool OffloadElapsedTime { get; set; } = true;
+    public bool SendDirtyValuesOnly { get; set; } = true;
     public string PipeName { get; set; } = "mfp-pipe";
 
     public PipeOutputTargetViewModel(int instanceIndex, IEventAggregator eventAggregator, IDeviceAxisValueProvider valueProvider)
@@ -62,14 +63,14 @@ public class PipeOutputTargetViewModel : ThreadAbstractOutputTarget
                 Logger.Trace("Begin FixedUpdate [Elapsed: {0}]", elapsed);
                 UpdateValues();
 
-                var dirtyValues = Values.Where(x => DeviceAxis.IsValueDirty(x.Value, lastSentValues[x.Key]));
-                var commands = OffloadElapsedTime ? DeviceAxis.ToString(dirtyValues) : DeviceAxis.ToString(dirtyValues, elapsed * 1000);
+                var values = SendDirtyValuesOnly ? Values.Where(x => DeviceAxis.IsValueDirty(x.Value, lastSentValues[x.Key])) : Values;
+                var commands = OffloadElapsedTime ? DeviceAxis.ToString(values) : DeviceAxis.ToString(values, elapsed * 1000);
                 if (client.IsConnected && !string.IsNullOrWhiteSpace(commands))
                 {
                     Logger.Trace("Sending \"{0}\" to \"{1}\"", commands.Trim(), PipeName);
                     var encoded = Encoding.UTF8.GetBytes(commands, buffer);
                     client.Write(buffer, 0, encoded);
-                    lastSentValues.Merge(dirtyValues);
+                    lastSentValues.Merge(values);
                 }
             });
         }

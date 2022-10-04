@@ -26,6 +26,7 @@ public class NetworkOutputTargetViewModel : ThreadAbstractOutputTarget
     public override ConnectionStatus Status { get; protected set; }
 
     public bool OffloadElapsedTime { get; set; } = true;
+    public bool SendDirtyValuesOnly { get; set; } = false;
     public EndPoint Endpoint { get; set; } = new IPEndPoint(IPAddress.Loopback, 8080);
     public ProtocolType Protocol { get; set; } = ProtocolType.Tcp;
 
@@ -78,13 +79,13 @@ public class NetworkOutputTargetViewModel : ThreadAbstractOutputTarget
                     Logger.Debug("Received \"{0}\" from \"{1}\"", message, $"tcp://{Endpoint}");
                 }
 
-                var dirtyValues = Values.Where(x => DeviceAxis.IsValueDirty(x.Value, lastSentValues[x.Key]));
-                var commands = OffloadElapsedTime ? DeviceAxis.ToString(dirtyValues) : DeviceAxis.ToString(dirtyValues, elapsed * 1000);
+                var values = SendDirtyValuesOnly ? Values.Where(x => DeviceAxis.IsValueDirty(x.Value, lastSentValues[x.Key])) : Values;
+                var commands = OffloadElapsedTime ? DeviceAxis.ToString(values) : DeviceAxis.ToString(values, elapsed * 1000);
                 if (client.Connected && !string.IsNullOrWhiteSpace(commands))
                 {
                     Logger.Trace("Sending \"{0}\" to \"{1}\"", commands.Trim(), $"tcp://{Endpoint}");
                     stream.WriteLine(commands);
-                    lastSentValues.Merge(dirtyValues);
+                    lastSentValues.Merge(values);
                 }
             });
         }
@@ -134,15 +135,15 @@ public class NetworkOutputTargetViewModel : ThreadAbstractOutputTarget
                     Logger.Debug("Received \"{0}\" from \"{1}\"", message, $"udp://{endpoint}");
                 }
 
-                var dirtyValues = Values.Where(x => DeviceAxis.IsValueDirty(x.Value, lastSentValues[x.Key]));
-                var commands = OffloadElapsedTime ? DeviceAxis.ToString(dirtyValues) : DeviceAxis.ToString(dirtyValues, elapsed * 1000);
+                var values = SendDirtyValuesOnly ? Values.Where(x => DeviceAxis.IsValueDirty(x.Value, lastSentValues[x.Key])) : Values;
+                var commands = OffloadElapsedTime ? DeviceAxis.ToString(values) : DeviceAxis.ToString(values, elapsed * 1000);
                 if (!string.IsNullOrWhiteSpace(commands))
                 {
                     Logger.Trace("Sending \"{0}\" to \"{1}\"", commands.Trim(), $"udp://{Endpoint}");
 
                     var encoded = Encoding.UTF8.GetBytes(commands, buffer);
                     client.Send(buffer, encoded);
-                    lastSentValues.Merge(dirtyValues);
+                    lastSentValues.Merge(values);
                 }
             });
         }

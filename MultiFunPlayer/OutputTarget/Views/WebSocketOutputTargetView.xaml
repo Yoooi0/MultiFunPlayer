@@ -160,8 +160,39 @@
                                                     Height="14">
                                     <material:ColorZone.ToolTip>
                                         <TextBlock>
-                                            If enabled offloads update tick elapsed time calculation to the device,<LineBreak/>
-                                            if disabled sends update tick elapsed time calculated by MultiFunPlayer
+                                            If enabled: offloads update tick elapsed time calculation to the device<LineBreak/>
+                                            If disabled: sends update tick elapsed time calculated by MultiFunPlayer
+                                        </TextBlock>
+                                    </material:ColorZone.ToolTip>
+                                    <material:PackIcon Kind="QuestionMark"
+                                                       Foreground="Black"
+                                                       Width="10"
+                                                       Height="10"
+                                                       HorizontalAlignment="Center"
+                                                       VerticalAlignment="Center"/>
+                                </material:ColorZone>
+                            </DockPanel>
+                            
+                            <DockPanel HorizontalAlignment="Left">
+                                <TextBlock DockPanel.Dock="Left"
+                                           Text="Send dirty axes only:"
+                                           Margin="0 0 5 0"/>
+                                <ToggleButton DockPanel.Dock="Left"
+                                              Margin="0 0 5 0"
+                                              IsChecked="{Binding SendDirtyValuesOnly}"
+                                              Style="{StaticResource MaterialDesignSwitchToggleButton}"/>
+
+                                <material:ColorZone DockPanel.Dock="Right"
+                                                    VerticalAlignment="Center"
+                                                    CornerRadius="7"
+                                                    Mode="Custom"
+                                                    Background="{DynamicResource PrimaryHueLightBrush}"
+                                                    Width="14"
+                                                    Height="14">
+                                    <material:ColorZone.ToolTip>
+                                        <TextBlock>
+                                            If enabled: only axes with changed values are sent on each update tick<LineBreak/>
+                                            If disabled: all axes are sent on each update tick
                                         </TextBlock>
                                     </material:ColorZone.ToolTip>
                                     <material:PackIcon Kind="QuestionMark"
