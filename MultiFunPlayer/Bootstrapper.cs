@@ -54,8 +54,6 @@ public class Bootstrapper : Bootstrapper<RootViewModel>
         builder.Bind<IMotionProviderFactory>().To<MotionProviderFactory>().InSingletonScope();
         builder.Bind<IMotionProviderManager>().To<MotionProviderManager>().InSingletonScope();
         builder.Bind<IInputProcessor>().ToAllImplementations().InSingletonScope();
-
-        builder.Bind<DialogHelper>().To<DialogHelper>().InSingletonScope();
     }
 
     protected override void Configure()
@@ -64,7 +62,7 @@ public class Bootstrapper : Bootstrapper<RootViewModel>
         var workingDirectory = Path.GetDirectoryName(Environment.ProcessPath);
         Directory.SetCurrentDirectory(workingDirectory);
 
-        _ = Container.Get<DialogHelper>();
+        DialogHelper.Initialize(Container.Get<IViewManager>(), Container.Get<SettingsViewModel>());
 
         SetupJson();
         var settings = SettingsHelper.ReadOrEmpty(SettingsType.Application);

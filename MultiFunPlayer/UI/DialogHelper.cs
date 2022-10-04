@@ -5,20 +5,18 @@ using System.Windows;
 
 namespace MultiFunPlayer.UI;
 
-public class DialogHelper
+public static class DialogHelper
 {
-    private static DialogHelper Instance { get; set; }
-    private SettingsViewModel Settings { get; }
-    private IViewManager ViewManager { get; }
+    private static SettingsViewModel Settings { get; set; }
+    private static IViewManager ViewManager { get; set; }
 
-    public DialogHelper(SettingsViewModel settings, IViewManager viewManager)
+    private static bool CanShowError => Settings?.General?.ShowErrorDialogs ?? true;
+
+    public static void Initialize(IViewManager viewManager, SettingsViewModel settings)
     {
-        Instance = this;
-        Settings = settings;
         ViewManager = viewManager;
+        Settings = settings;
     }
-
-    private static bool CanShowError => Instance?.Settings?.General?.ShowErrorDialogs ?? true;
 
     public static Task ShowErrorAsync(string message, string dialogName)
         => CanShowError ? ShowOnUIThreadAsync(new ErrorMessageDialogViewModel(message), dialogName) : Task.CompletedTask;
@@ -31,7 +29,7 @@ public class DialogHelper
 
     public static async Task<object> ShowAsync(object model, string dialogName)
     {
-        var view = Instance.ViewManager.CreateAndBindViewForModelIfNecessary(model);
+        var view = ViewManager.CreateAndBindViewForModelIfNecessary(model);
         var session = DialogHost.GetDialogSession(dialogName);
         var sessionContext = (session?.Content as FrameworkElement)?.DataContext;
         if (model.Equals(sessionContext))
