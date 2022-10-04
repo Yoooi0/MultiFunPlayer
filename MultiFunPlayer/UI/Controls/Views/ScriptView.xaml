@@ -1722,7 +1722,7 @@
                     <ItemsControl ItemsSource="{Binding AxisStates}">
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate>
-                                <UniformGrid Columns="3" Rows="3" IsItemsHost="True"/>
+                                <UniformGrid Columns="3" IsItemsHost="True"/>
                             </ItemsPanelTemplate>
                         </ItemsControl.ItemsPanel>
                         <ItemsControl.ItemContainerStyle>

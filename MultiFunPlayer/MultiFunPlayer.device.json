@@ -154,6 +154,15 @@
         ]
       },
       {
+        "Name": "V1",
+        "DefaultValue": 0,
+        "FriendlyName": "Pump",
+        "FunscriptNames": [
+          "pump",
+          "V1"
+        ]
+      },
+      {
         "Name": "A0",
         "DefaultValue": 0,
         "FriendlyName": "Valve",
@@ -169,6 +178,15 @@
         "FunscriptNames": [
           "suck",
           "A1"
+        ]
+      },
+      {
+        "Name": "A2",
+        "DefaultValue": 0,
+        "FriendlyName": "Lube",
+        "FunscriptNames": [
+          "lube",
+          "A2"
         ]
       }
     ]
