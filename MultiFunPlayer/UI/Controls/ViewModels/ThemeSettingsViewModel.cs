@@ -7,7 +7,7 @@ using System.Windows.Media;
 
 namespace MultiFunPlayer.UI.Controls.ViewModels;
 
-public class ThemeViewModel : Screen, IHandle<AppSettingsMessage>
+public class ThemeSettingsViewModel : Screen, IHandle<AppSettingsMessage>
 {
     private readonly PaletteHelper _paletteHelper;
 
@@ -16,8 +16,9 @@ public class ThemeViewModel : Screen, IHandle<AppSettingsMessage>
     public Contrast Contrast { get; set; } = Contrast.Medium;
     public double ContrastRatio { get; set; } = 4.5;
 
-    public ThemeViewModel(IEventAggregator eventAggregator)
+    public ThemeSettingsViewModel(IEventAggregator eventAggregator)
     {
+        DisplayName = "Theme";
         eventAggregator.Subscribe(this);
         _paletteHelper = new PaletteHelper();
 

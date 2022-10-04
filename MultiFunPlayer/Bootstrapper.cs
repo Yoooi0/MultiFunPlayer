@@ -42,7 +42,7 @@ public class Bootstrapper : Bootstrapper<RootViewModel>
 
     protected override void ConfigureIoC(IStyletIoCBuilder builder)
     {
-        builder.Bind<ApplicationViewModel>().ToSelf().InSingletonScope();
+        builder.Bind<SettingsViewModel>().ToSelf().InSingletonScope();
 
         builder.Bind<IConfigMigration>().ToAllImplementations().InSingletonScope();
         builder.Bind<ScriptViewModel>().And<IDeviceAxisValueProvider>().To<ScriptViewModel>().InSingletonScope();
@@ -239,7 +239,7 @@ public class Bootstrapper : Bootstrapper<RootViewModel>
             {
                 [$"{typeof(RawInputProcessor).Namespace}.*"] = LogLevel.Trace,
                 [$"{typeof(XInputProcessor).Namespace}.*"] = LogLevel.Trace,
-                [$"{typeof(ShortcutViewModel).FullName}"] = LogLevel.Trace
+                [$"{typeof(ShortcutSettingsViewModel).FullName}"] = LogLevel.Trace
             });
             dirty = true;
         }

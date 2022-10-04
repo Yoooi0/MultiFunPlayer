@@ -7,7 +7,7 @@ using System.Windows;
 
 namespace MultiFunPlayer.UI.Controls.ViewModels;
 
-public class ApplicationViewModel : Screen, IHandle<AppSettingsMessage>, IHandle<AppMainWindowCreatedMessage>
+public class GeneralSettingsViewModel : Screen, IHandle<AppSettingsMessage>, IHandle<AppMainWindowCreatedMessage>
 {
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
@@ -19,8 +19,9 @@ public class ApplicationViewModel : Screen, IHandle<AppSettingsMessage>, IHandle
     public bool AlwaysOnTop { get; set; } = false;
     public bool ShowErrorDialogs { get; set; } = true;
 
-    public ApplicationViewModel(IEventAggregator eventAggregator)
+    public GeneralSettingsViewModel(IEventAggregator eventAggregator)
     {
+        DisplayName = "General";
         eventAggregator.Subscribe(this);
 
         LogLevels = new ObservableConcurrentCollection<LogLevel>(LogLevel.AllLevels);

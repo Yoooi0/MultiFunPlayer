@@ -16,7 +16,7 @@ using System.Windows.Data;
 namespace MultiFunPlayer.UI.Controls.ViewModels;
 
 [JsonObject(MemberSerialization = MemberSerialization.OptIn)]
-public class ShortcutViewModel : Screen, IHandle<AppSettingsMessage>, IDisposable
+public class ShortcutSettingsViewModel : Screen, IHandle<AppSettingsMessage>, IDisposable
 {
     protected static readonly Logger Logger = LogManager.GetCurrentClassLogger();
     private readonly IShortcutManager _manager;
@@ -38,8 +38,9 @@ public class ShortcutViewModel : Screen, IHandle<AppSettingsMessage>, IDisposabl
     [JsonProperty] public bool IsGamepadAxisGestureEnabled { get; set; } = true;
     [JsonProperty] public bool IsGamepadButtonGestureEnabled { get; set; } = true;
 
-    public ShortcutViewModel(IShortcutManager manager, IEventAggregator eventAggregator)
+    public ShortcutSettingsViewModel(IShortcutManager manager, IEventAggregator eventAggregator)
     {
+        DisplayName = "Shortcut";
         _manager = manager;
         Logger.Debug($"Initialized with {manager.AvailableActions.Count} available actions");
 
@@ -182,12 +183,12 @@ public class ShortcutViewModel : Screen, IHandle<AppSettingsMessage>, IDisposabl
         binding.Value.Move(index, index - 1);
     }
 
-    public async void ConfigureAssignedAction(object sender, RoutedEventArgs e)
+    public void ConfigureAssignedAction(object sender, RoutedEventArgs e)
     {
         if (sender is not FrameworkElement element || element.DataContext is not IShortcutAction action)
             return;
 
-        _ = await DialogHost.Show(action, "ShortcutDialog").ConfigureAwait(true);
+        _ = DialogHelper.ShowOnUIThreadAsync(new ConfigureShortcutActionViewModel(action), "SettingsDialog");
     }
 
     public void MoveAssignedActionDown(object sender, RoutedEventArgs e)
