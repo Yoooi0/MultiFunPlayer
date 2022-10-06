@@ -4,6 +4,7 @@ using MultiFunPlayer.Input;
 using MultiFunPlayer.Input.RawInput;
 using MultiFunPlayer.Input.XInput;
 using MultiFunPlayer.Settings;
+using MultiFunPlayer.UI.Dialogs.ViewModels;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NLog;
@@ -188,7 +189,7 @@ public class ShortcutSettingsViewModel : Screen, IHandle<AppSettingsMessage>, ID
         if (sender is not FrameworkElement element || element.DataContext is not IShortcutAction action)
             return;
 
-        _ = DialogHelper.ShowOnUIThreadAsync(new ConfigureShortcutActionViewModel(action), "SettingsDialog");
+        _ = DialogHelper.ShowOnUIThreadAsync(new ConfigureShortcutActionDialogViewModel(action), "SettingsDialog");
     }
 
     public void MoveAssignedActionDown(object sender, RoutedEventArgs e)

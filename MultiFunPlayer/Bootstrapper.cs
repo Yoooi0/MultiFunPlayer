@@ -222,14 +222,14 @@ public class Bootstrapper : Bootstrapper<RootViewModel>
             dirty = true;
         }
 
-        var device = devices.FirstOrDefault(d => string.Equals(d["Name"].ToString(), selectedDevice, StringComparison.InvariantCultureIgnoreCase)) as JObject;
+        var device = devices.FirstOrDefault(d => string.Equals(d["Name"].ToString(), selectedDevice, StringComparison.InvariantCultureIgnoreCase));
         if (device == null)
         {
             logger.Warn("Unable to find device! [SelectedDevice: \"{0}\"]", selectedDevice);
-            device = devices[^1] as JObject;
+            device = devices[^1];
         }
 
-        DeviceAxis.LoadSettings(device, serializer);
+        DeviceAxis.LoadSettings(device as JObject, serializer);
         return dirty;
     }
 

@@ -1,4 +1,5 @@
 ﻿using MultiFunPlayer.Common;
+using MultiFunPlayer.UI.Dialogs.ViewModels;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NLog;
@@ -9,48 +10,6 @@ namespace MultiFunPlayer.UI.Controls.ViewModels;
 
 public class DeviceSettingsViewModel : Screen, IHandle<AppSettingsMessage>
 {
-    public static readonly IReadOnlyList<DeviceSettingsModel> DefaultDevices = new List<DeviceSettingsModel>()
-    {
-        new()
-        {
-            Name = "TCode-0.2",
-            OutputPrecision = 3,
-            Axes = new()
-            {
-                new() { Name = "L0", FriendlyName = "Up/Down", FunscriptNames = new() { "stroke", "L0" }, Enabled = true, DefaultValue = 0.5, },
-                new() { Name = "L1", FriendlyName = "Forward/Backward", FunscriptNames = new() { "surge", "L1" }, Enabled = true, DefaultValue = 0.5, },
-                new() { Name = "L2", FriendlyName = "Left/Right", FunscriptNames = new() { "sway", "L2" }, Enabled = true, DefaultValue = 0.5, },
-                new() { Name = "R0", FriendlyName = "Twist", FunscriptNames = new() { "twist", "R0" }, Enabled = true, DefaultValue = 0.5, },
-                new() { Name = "R1", FriendlyName = "Roll", FunscriptNames = new() { "roll", "L1" }, Enabled = true, DefaultValue = 0.5, },
-                new() { Name = "R2", FriendlyName = "Pitch", FunscriptNames = new() { "pitch", "L1" }, Enabled = true, DefaultValue = 0.5, },
-                new() { Name = "V0", FriendlyName = "Vibrate", FunscriptNames = new() { "vib", "V0" }, Enabled = false, DefaultValue = 0, },
-                new() { Name = "V1", FriendlyName = "Pump", FunscriptNames = new() { "pump", "lube", "V1" }, Enabled = false, DefaultValue = 0, },
-                new() { Name = "L3", FriendlyName = "Suction", FunscriptNames = new() { "suck", "valve", "L3" }, Enabled = false, DefaultValue = 0, }
-            }
-        },
-        new()
-        {
-            Name = "TCode-0.3",
-            OutputPrecision = 4,
-            Axes = new()
-            {
-                new() { Name = "L0", FriendlyName = "Up/Down", FunscriptNames = new() { "stroke", "L0" }, Enabled = true, DefaultValue = 0.5, },
-                new() { Name = "L1", FriendlyName = "Forward/Backward", FunscriptNames = new() { "surge", "L1" }, Enabled = true, DefaultValue = 0.5, },
-                new() { Name = "L2", FriendlyName = "Left/Right", FunscriptNames = new() { "sway", "L2" }, Enabled = true, DefaultValue = 0.5, },
-                new() { Name = "R0", FriendlyName = "Twist", FunscriptNames = new() { "twist", "R0" }, Enabled = true, DefaultValue = 0.5, },
-                new() { Name = "R1", FriendlyName = "Roll", FunscriptNames = new() { "roll", "L1" }, Enabled = true, DefaultValue = 0.5, },
-                new() { Name = "R2", FriendlyName = "Pitch", FunscriptNames = new() { "pitch", "L1" }, Enabled = true, DefaultValue = 0.5, },
-                new() { Name = "V0", FriendlyName = "Vibrate", FunscriptNames = new() { "vib", "V0" }, Enabled = false, DefaultValue = 0, },
-                new() { Name = "V1", FriendlyName = "Pump", FunscriptNames = new() { "pump", "V1" }, Enabled = false, DefaultValue = 0, },
-                new() { Name = "A0", FriendlyName = "Valve", FunscriptNames = new() { "valve", "A0" }, Enabled = false, DefaultValue = 0, },
-                new() { Name = "A1", FriendlyName = "Suction", FunscriptNames = new() { "suck", "A1" }, Enabled = false, DefaultValue = 0, },
-                new() { Name = "A2", FriendlyName = "Lube", FunscriptNames = new() { "lube", "A2" }, Enabled = false, DefaultValue = 0, }
-            }
-        }
-    };
-
-    private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
-
     public DeviceSettingsModel SelectedDevice { get; set; } = null;
     public ObservableConcurrentCollection<DeviceSettingsModel> Devices { get; set; } = new(DefaultDevices);
 
@@ -63,6 +22,9 @@ public class DeviceSettingsViewModel : Screen, IHandle<AppSettingsMessage>
     public bool CanRemoveSelectedDevice => Devices?.Count > 1;
     public void OnRemoveSelectedDevice()
     {
+        if (!CanRemoveSelectedDevice)
+            return;
+
         var index = Devices.IndexOf(SelectedDevice);
         Devices.Remove(SelectedDevice);
         SelectedDevice = Devices[MathUtils.Clamp(index, 0, Devices.Count - 1)];
@@ -103,17 +65,17 @@ public class DeviceSettingsViewModel : Screen, IHandle<AppSettingsMessage>
     {
         var letters = Enumerable.Range('A', 'Z' - 'A' + 1);
         var numbers = Enumerable.Range('0', '9' - '0' + 1);
-        var newName = letters.SelectMany(l => numbers.Select(n => $"{(char)l}{(char)n}"))
-                             .FirstOrDefault(x => !SelectedDevice.Axes.Any(a => string.Equals(a.Name, x, StringComparison.InvariantCultureIgnoreCase)));
-        if (newName == null)
+        var availableName = letters.SelectMany(l => numbers.Select(n => $"{(char)l}{(char)n}"))
+                                   .FirstOrDefault(x => !SelectedDevice.Axes.Any(a => string.Equals(a.Name, x, StringComparison.InvariantCultureIgnoreCase)));
+        if (availableName == null)
             return;
 
         SelectedDevice.Axes.Add(new DeviceAxisSettingsModel()
         {
-            Name = newName,
+            Name = availableName,
             FunscriptNames = new()
             {
-                newName
+                availableName
             }
         });
     }
@@ -133,6 +95,46 @@ public class DeviceSettingsViewModel : Screen, IHandle<AppSettingsMessage>
                 SelectedDevice = Devices.FirstOrDefault(d => string.Equals(d.Name, selectedDevice, StringComparison.InvariantCultureIgnoreCase)) ?? Devices[^1];
         }
     }
+
+    public static readonly IReadOnlyList<DeviceSettingsModel> DefaultDevices = new List<DeviceSettingsModel>()
+    {
+        new()
+        {
+            Name = "TCode-0.2",
+            OutputPrecision = 3,
+            Axes = new()
+            {
+                new() { Name = "L0", FriendlyName = "Up/Down", FunscriptNames = new() { "stroke", "L0" }, Enabled = true, DefaultValue = 0.5, },
+                new() { Name = "L1", FriendlyName = "Forward/Backward", FunscriptNames = new() { "surge", "L1" }, Enabled = true, DefaultValue = 0.5, },
+                new() { Name = "L2", FriendlyName = "Left/Right", FunscriptNames = new() { "sway", "L2" }, Enabled = true, DefaultValue = 0.5, },
+                new() { Name = "R0", FriendlyName = "Twist", FunscriptNames = new() { "twist", "R0" }, Enabled = true, DefaultValue = 0.5, },
+                new() { Name = "R1", FriendlyName = "Roll", FunscriptNames = new() { "roll", "L1" }, Enabled = true, DefaultValue = 0.5, },
+                new() { Name = "R2", FriendlyName = "Pitch", FunscriptNames = new() { "pitch", "L1" }, Enabled = true, DefaultValue = 0.5, },
+                new() { Name = "V0", FriendlyName = "Vibrate", FunscriptNames = new() { "vib", "V0" }, Enabled = false, DefaultValue = 0, },
+                new() { Name = "V1", FriendlyName = "Pump", FunscriptNames = new() { "pump", "lube", "V1" }, Enabled = false, DefaultValue = 0, },
+                new() { Name = "L3", FriendlyName = "Suction", FunscriptNames = new() { "suck", "valve", "L3" }, Enabled = false, DefaultValue = 0, }
+            }
+        },
+        new()
+        {
+            Name = "TCode-0.3",
+            OutputPrecision = 4,
+            Axes = new()
+            {
+                new() { Name = "L0", FriendlyName = "Up/Down", FunscriptNames = new() { "stroke", "L0" }, Enabled = true, DefaultValue = 0.5, },
+                new() { Name = "L1", FriendlyName = "Forward/Backward", FunscriptNames = new() { "surge", "L1" }, Enabled = true, DefaultValue = 0.5, },
+                new() { Name = "L2", FriendlyName = "Left/Right", FunscriptNames = new() { "sway", "L2" }, Enabled = true, DefaultValue = 0.5, },
+                new() { Name = "R0", FriendlyName = "Twist", FunscriptNames = new() { "twist", "R0" }, Enabled = true, DefaultValue = 0.5, },
+                new() { Name = "R1", FriendlyName = "Roll", FunscriptNames = new() { "roll", "L1" }, Enabled = true, DefaultValue = 0.5, },
+                new() { Name = "R2", FriendlyName = "Pitch", FunscriptNames = new() { "pitch", "L1" }, Enabled = true, DefaultValue = 0.5, },
+                new() { Name = "V0", FriendlyName = "Vibrate", FunscriptNames = new() { "vib", "V0" }, Enabled = false, DefaultValue = 0, },
+                new() { Name = "V1", FriendlyName = "Pump", FunscriptNames = new() { "pump", "V1" }, Enabled = false, DefaultValue = 0, },
+                new() { Name = "A0", FriendlyName = "Valve", FunscriptNames = new() { "valve", "A0" }, Enabled = false, DefaultValue = 0, },
+                new() { Name = "A1", FriendlyName = "Suction", FunscriptNames = new() { "suck", "A1" }, Enabled = false, DefaultValue = 0, },
+                new() { Name = "A2", FriendlyName = "Lube", FunscriptNames = new() { "lube", "A2" }, Enabled = false, DefaultValue = 0, }
+            }
+        }
+    };
 }
 
 [JsonObject(MemberSerialization = MemberSerialization.OptIn)]

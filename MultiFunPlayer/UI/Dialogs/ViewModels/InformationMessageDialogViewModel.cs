@@ -4,7 +4,7 @@ using Stylet;
 using System.Diagnostics;
 using System.Windows.Navigation;
 
-namespace MultiFunPlayer.UI.Controls.ViewModels;
+namespace MultiFunPlayer.UI.Dialogs.ViewModels;
 
 public class InformationMessageDialogViewModel : Screen
 {

@@ -1,6 +1,6 @@
 ﻿using Stylet;
 
-namespace MultiFunPlayer.UI.Controls.ViewModels;
+namespace MultiFunPlayer.UI.Dialogs.ViewModels;
 
 public class ErrorMessageDialogViewModel : Screen
 {

@@ -1,5 +1,6 @@
 ﻿using MaterialDesignThemes.Wpf;
 using MultiFunPlayer.UI.Controls.ViewModels;
+using MultiFunPlayer.UI.Dialogs.ViewModels;
 using Stylet;
 using System.Windows;
 

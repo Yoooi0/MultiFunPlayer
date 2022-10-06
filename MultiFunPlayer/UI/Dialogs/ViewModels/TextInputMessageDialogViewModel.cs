@@ -1,4 +1,4 @@
-﻿namespace MultiFunPlayer.UI.Controls.ViewModels;
+﻿namespace MultiFunPlayer.UI.Dialogs.ViewModels;
 
 public class TextInputMessageDialogViewModel
 {
