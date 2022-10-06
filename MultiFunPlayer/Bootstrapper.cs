@@ -58,7 +58,6 @@ public class Bootstrapper : Bootstrapper<RootViewModel>
 
     protected override void Configure()
     {
-        var logger = LogManager.GetLogger(nameof(MultiFunPlayer));
         var workingDirectory = Path.GetDirectoryName(Environment.ProcessPath);
         Directory.SetCurrentDirectory(workingDirectory);
 
@@ -68,6 +67,16 @@ public class Bootstrapper : Bootstrapper<RootViewModel>
         var settings = SettingsHelper.ReadOrEmpty();
 
         var dirty = SetupLoging(settings);
+
+        var logger = LogManager.GetLogger(nameof(MultiFunPlayer));
+        AppDomain.CurrentDomain.UnhandledException += (s, e) =>
+        {
+            logger.Fatal(e.ExceptionObject as Exception);
+            LogManager.Flush();
+            if (e.IsTerminating)
+                LogManager.Shutdown();
+        };
+
         dirty |= MigrateSettings(settings);
         dirty |= SetupDevice(settings);
 
@@ -79,13 +88,6 @@ public class Bootstrapper : Bootstrapper<RootViewModel>
         logger.Info("Timer [IsHighResolution: {0}, Frequency: {1}]", Stopwatch.IsHighResolution, Stopwatch.Frequency);
 
         logger.Info("Set working directory to \"{0}\"", workingDirectory);
-        AppDomain.CurrentDomain.UnhandledException += (s, e) =>
-        {
-            logger.Fatal(e.ExceptionObject as Exception);
-            LogManager.Flush();
-            if (e.IsTerminating)
-                LogManager.Shutdown();
-        };
     }
 
     protected override void OnStart()
