@@ -28,10 +28,10 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="MahApps.Metro" Version="2.4.5" />
-    <PackageReference Include="MaterialDesignExtensions" Version="3.3.0" />
-    <PackageReference Include="MaterialDesignThemes" Version="4.3.0" />
-    <PackageReference Include="MaterialDesignThemes.MahApps" Version="0.2.0" />
+    <PackageReference Include="MahApps.Metro" Version="2.4.9" />
+    <PackageReference Include="MaterialDesignExtensions" Version="4.0.0-a02" />
+    <PackageReference Include="MaterialDesignThemes" Version="4.7.0-ci325" />
+    <PackageReference Include="MaterialDesignThemes.MahApps" Version="0.2.6-ci325" />
     <PackageReference Include="NETStandard.Library" Version="2.0.3" />
     <PackageReference Include="Newtonsoft.Json" Version="13.*" />
     <PackageReference Include="NLog" Version="5.*" />
@@ -43,7 +43,7 @@
     <PackageReference Include="System.IO.Ports" Version="6.*" />
     <PackageReference Include="Microsoft-WindowsAPICodePack-Shell" Version="1.1.4" />
     <PackageReference Include="System.Management" Version="6.*" />
-    <PackageReference Include="Vortice.XInput" Version="2.1.21-beta" />
+    <PackageReference Include="Vortice.XInput" Version="2.1.32" />
   </ItemGroup>
 	
   <ItemGroup>
