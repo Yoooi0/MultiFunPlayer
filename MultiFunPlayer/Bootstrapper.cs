@@ -65,14 +65,14 @@ public class Bootstrapper : Bootstrapper<RootViewModel>
         DialogHelper.Initialize(Container.Get<IViewManager>(), Container.Get<SettingsViewModel>());
 
         SetupJson();
-        var settings = SettingsHelper.ReadOrEmpty(SettingsType.Application);
+        var settings = SettingsHelper.ReadOrEmpty();
 
-        var dirty = SetupDevice(settings);
-        dirty |= SetupLoging(settings);
+        var dirty = SetupLoging(settings);
         dirty |= MigrateSettings(settings);
+        dirty |= SetupDevice(settings);
 
         if (dirty)
-            SettingsHelper.Write(SettingsType.Application, settings);
+            SettingsHelper.Write(settings);
 
         logger.Info("Environment [OSVersion: {0}, CLRVersion: {1}]", Environment.OSVersion, Environment.Version);
         logger.Info("Assembly [Version: {0}, FileVersion: {1}, InformationalVersion: {2}]", ReflectionUtils.AssemblyVersion, ReflectionUtils.AssemblyFileVersion, ReflectionUtils.AssemblyInformationalVersion);
@@ -125,7 +125,7 @@ public class Bootstrapper : Bootstrapper<RootViewModel>
     {
         _ = RootViewModel;
 
-        var settings = SettingsHelper.ReadOrEmpty(SettingsType.Application);
+        var settings = SettingsHelper.ReadOrEmpty();
         var eventAggregator = Container.Get<IEventAggregator>();
         eventAggregator.Publish(new AppSettingsMessage(settings, SettingsAction.Loading));
 
@@ -147,10 +147,10 @@ public class Bootstrapper : Bootstrapper<RootViewModel>
 
     private void OnWindowClosing(object sender, CancelEventArgs e)
     {
-        var settings = SettingsHelper.ReadOrEmpty(SettingsType.Application);
+        var settings = SettingsHelper.ReadOrEmpty();
         var eventAggregator = Container.Get<IEventAggregator>();
         eventAggregator.Publish(new AppSettingsMessage(settings, SettingsAction.Saving));
-        SettingsHelper.Write(SettingsType.Application, settings);
+        SettingsHelper.Write(settings);
     }
 
     private void SetupJson()
@@ -204,21 +204,32 @@ public class Bootstrapper : Bootstrapper<RootViewModel>
 
     private bool SetupDevice(JObject settings)
     {
-        var devices = SettingsHelper.Read(SettingsType.Devices);
+        var logger = LogManager.GetLogger(nameof(MultiFunPlayer));
         var serializer = JsonSerializer.Create(new JsonSerializerSettings()
         {
             ContractResolver = new DefaultContractResolver()
         });
 
+        if (!settings.ContainsKey("Devices"))
+            settings["Devices"] = JArray.FromObject(DeviceSettingsViewModel.DefaultDevices);
+
         var dirty = false;
-        if (!settings.TryGetValue<string>("SelectedDevice", serializer, out var selectedDevice) || selectedDevice == null)
+        var devices = settings["Devices"] as JArray;
+        if (!settings.TryGetValue<string>("SelectedDevice", serializer, out var selectedDevice) || string.IsNullOrWhiteSpace(selectedDevice))
         {
-            selectedDevice = devices.Properties().Last().Name;
+            selectedDevice = devices[^1]["Name"].ToString();
             settings["SelectedDevice"] = selectedDevice;
             dirty = true;
         }
 
-        DeviceAxis.LoadSettings(devices[selectedDevice] as JObject, serializer);
+        var device = devices.FirstOrDefault(d => string.Equals(d["Name"].ToString(), selectedDevice, StringComparison.InvariantCultureIgnoreCase)) as JObject;
+        if (device == null)
+        {
+            logger.Warn("Unable to find device! [SelectedDevice: \"{0}\"]", selectedDevice);
+            device = devices[^1] as JObject;
+        }
+
+        DeviceAxis.LoadSettings(device, serializer);
         return dirty;
     }
 

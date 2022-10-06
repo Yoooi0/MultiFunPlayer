@@ -53,7 +53,8 @@ public sealed class DeviceAxis
 
     public static void LoadSettings(JObject settings, JsonSerializer serializer)
     {
-        if (!settings.TryGetValue<List<DeviceAxis>>("Axes", serializer, out var axes)
+        var enabledAxes = JArray.FromObject((settings["Axes"] as JArray).Where(x => x["Enabled"].ToObject<bool>()));
+        if (!enabledAxes.TryToObject<List<DeviceAxis>>(serializer, out var axes)
          || !settings.TryGetValue<int>("OutputPrecision", serializer, out var precision))
             throw new JsonReaderException("Unable to read device settings");
 

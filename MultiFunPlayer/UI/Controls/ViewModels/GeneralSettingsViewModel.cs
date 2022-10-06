@@ -12,10 +12,8 @@ public class GeneralSettingsViewModel : Screen, IHandle<AppSettingsMessage>, IHa
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
     public ObservableConcurrentCollection<LogLevel> LogLevels { get; }
-    public ObservableConcurrentCollection<string> DeviceTypes { get; }
 
     public LogLevel SelectedLogLevel { get; set; } = LogLevel.Info;
-    public string SelectedDevice { get; set; } = null;
     public bool AlwaysOnTop { get; set; } = false;
     public bool ShowErrorDialogs { get; set; } = true;
 
@@ -25,9 +23,6 @@ public class GeneralSettingsViewModel : Screen, IHandle<AppSettingsMessage>, IHa
         eventAggregator.Subscribe(this);
 
         LogLevels = new ObservableConcurrentCollection<LogLevel>(LogLevel.AllLevels);
-
-        var devices = SettingsHelper.Read(SettingsType.Devices).Properties().Select(p => p.Name);
-        DeviceTypes = new ObservableConcurrentCollection<string>(devices);
     }
 
     public void OnAlwaysOnTopChanged()
@@ -54,15 +49,12 @@ public class GeneralSettingsViewModel : Screen, IHandle<AppSettingsMessage>, IHa
     {
         if (message.Action == SettingsAction.Saving)
         {
-            message.Settings[nameof(SelectedDevice)] = SelectedDevice;
             message.Settings[nameof(AlwaysOnTop)] = AlwaysOnTop;
             message.Settings[nameof(ShowErrorDialogs)] = ShowErrorDialogs;
             message.Settings["LogLevel"] = JToken.FromObject(SelectedLogLevel ?? LogLevel.Info);
         }
         else if (message.Action == SettingsAction.Loading)
         {
-            if (message.Settings.TryGetValue<string>(nameof(SelectedDevice), out var selectedDevice))
-                SelectedDevice = selectedDevice;
             if (message.Settings.TryGetValue<bool>(nameof(AlwaysOnTop), out var alwaysOnTop))
                 AlwaysOnTop = alwaysOnTop;
             if (message.Settings.TryGetValue<bool>(nameof(ShowErrorDialogs), out var showErrorDialogs))

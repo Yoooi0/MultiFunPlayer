@@ -20,7 +20,7 @@
                           DockPanel.Dock="Left"
                           Margin="0 0 10 0"/>
             </DockPanel>
-            
+
             <DockPanel LastChildFill="False"
                        DockPanel.Dock="Top">
                 <TextBlock Text="Show error dialogs:" 
@@ -31,40 +31,6 @@
                 <CheckBox IsChecked="{Binding ShowErrorDialogs}"
                           DockPanel.Dock="Left"
                           Margin="0 0 10 0"/>
-            </DockPanel>
-        
-            <DockPanel LastChildFill="True"
-                       DockPanel.Dock="Top">
-                <TextBlock Text="Device type:" 
-                           DockPanel.Dock="Left"
-                           Margin="0 0 10 0" 
-                           VerticalAlignment="Center"/>
-
-                <material:ColorZone DockPanel.Dock="Right"
-                                    VerticalAlignment="Center"
-                                    CornerRadius="7"
-                                    Mode="Custom"
-                                    Background="#ff0f0f"
-                                    Width="14"
-                                    Height="14">
-                    <material:ColorZone.ToolTip>
-                        <TextBlock>
-                            Some settings might be lost or reset after change!<LineBreak/>
-                            Requires application restart!
-                        </TextBlock>
-                    </material:ColorZone.ToolTip>
-                    <material:PackIcon Kind="ExclamationBold"
-                                            Foreground="Black"
-                                            Width="10"
-                                            Height="10"
-                                            HorizontalAlignment="Center"
-                                            VerticalAlignment="Center"/>
-                </material:ColorZone>
-            
-                <ComboBox DockPanel.Dock="Left"
-                          Margin="0 0 10 0"
-                          ItemsSource="{Binding DeviceTypes}" 
-                          SelectedItem="{Binding SelectedDevice}"/>
             </DockPanel>
 
             <DockPanel LastChildFill="False"

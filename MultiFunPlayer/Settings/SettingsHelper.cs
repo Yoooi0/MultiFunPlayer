@@ -4,28 +4,21 @@ using System.IO;
 
 namespace MultiFunPlayer.Settings;
 
-public enum SettingsType
-{
-    Application,
-    Devices
-}
-
 public static class SettingsHelper
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-    private static string FileFormat => $"{nameof(MultiFunPlayer)}.{{0}}.json";
+    private static string Path => $"{nameof(MultiFunPlayer)}.config.json";
 
-    public static JObject Read(SettingsType type)
+    public static JObject Read()
     {
-        var path = GetFilePath(type);
-        if (!File.Exists(path))
+        if (!File.Exists(Path))
             return null;
 
-        Logger.Info("Reading settings from \"{0}\"", path);
+        Logger.Info("Reading settings from \"{0}\"", Path);
         try
         {
-            return JObject.Parse(File.ReadAllText(path));
+            return JObject.Parse(File.ReadAllText(Path));
         }
         catch (Exception e)
         {
@@ -34,32 +27,18 @@ public static class SettingsHelper
         }
     }
 
-    public static JObject ReadOrEmpty(SettingsType type) => Read(type) ?? new JObject();
+    public static JObject ReadOrEmpty() => Read() ?? new JObject();
 
-    public static void Write(SettingsType type, JObject settings)
+    public static void Write(JObject settings)
     {
-        var path = GetFilePath(type);
-
         try
         {
-            Logger.Info("Saving settings to \"{0}\"", path);
-            File.WriteAllText(path, settings.ToString());
+            Logger.Info("Saving settings to \"{0}\"", Path);
+            File.WriteAllText(Path, settings.ToString());
         }
         catch (Exception e)
         {
             Logger.Error(e, "Failed to save settings");
         }
-    }
-
-    public static string GetFilePath(SettingsType type)
-    {
-        var filePostFix = type switch
-        {
-            SettingsType.Application => "config",
-            SettingsType.Devices => "device",
-            _ => throw new NotSupportedException(),
-        };
-
-        return string.Format(FileFormat, filePostFix);
     }
 }
