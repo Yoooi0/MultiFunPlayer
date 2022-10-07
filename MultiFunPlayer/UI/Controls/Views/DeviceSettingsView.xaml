@@ -83,7 +83,28 @@
                           DisplayMemberPath="Name"/>
             </DockPanel>
 
-            <material:Card material:ShadowAssist.ShadowDepth="Depth1">
+            <material:Card material:ShadowAssist.ShadowDepth="Depth1"
+                           DockPanel.Dock="Top"
+                           Margin="0 0 0 10">
+                <DockPanel DockPanel.Dock="Top"
+                               LastChildFill="False"
+                               Margin="10">
+                    <TextBlock Text="Output precision:"
+                                   DockPanel.Dock="Left"
+                                   Margin="0 0 10 0" 
+                                   VerticalAlignment="Center"/>
+
+                    <metro:NumericUpDown DockPanel.Dock="Left"
+                                             Minimum="1" 
+                                             Maximum="10" 
+                                             Value="{Binding SelectedDevice.OutputPrecision}" 
+                                             HideUpDownButtons="True"
+                                             Width="50"/>
+                </DockPanel>
+            </material:Card>
+
+            <material:Card material:ShadowAssist.ShadowDepth="Depth1"
+                           DockPanel.Dock="Top">
                 <DockPanel LastChildFill="True">
                     <Button DockPanel.Dock="Bottom"
                             Style="{StaticResource MaterialDesignFloatingActionMiniLightButton}"
@@ -109,7 +130,8 @@
                                   CanUserDeleteRows="False"
                                   ItemsSource="{Binding SelectedDevice.Axes}"
                                   AutoGenerateColumns="False"
-                                  material:DataGridAssist.CellPadding="10 5 10 5">
+                                  material:DataGridAssist.CellPadding="10 5 10 5"
+                                  Background="{DynamicResource MaterialDesignCardBackground}">
                             <DataGrid.Columns>
                                 <DataGridTextColumn Binding="{Binding Name}"
                                                     Header="Name"
