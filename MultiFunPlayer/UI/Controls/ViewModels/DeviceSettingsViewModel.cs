@@ -108,10 +108,10 @@ public class DeviceSettingsViewModel : Screen, IHandle<AppSettingsMessage>
             Default = true,
             Axes = new()
             {
-                new() { Name = "L0", FriendlyName = "Up/Down", FunscriptNames = new() { "stroke", "L0", "z", "up" }, Enabled = true, DefaultValue = 0.5, },
-                new() { Name = "L1", FriendlyName = "Forward/Backward", FunscriptNames = new() { "surge", "L1", "y", "forward" }, Enabled = true, DefaultValue = 0.5, },
-                new() { Name = "L2", FriendlyName = "Left/Right", FunscriptNames = new() { "sway", "L2", "x", "left" }, Enabled = true, DefaultValue = 0.5, },
-                new() { Name = "R0", FriendlyName = "Twist", FunscriptNames = new() { "twist", "R0" }, Enabled = true, DefaultValue = 0.5, },
+                new() { Name = "L0", FriendlyName = "Up/Down", FunscriptNames = new() { "stroke", "L0", "up" }, Enabled = true, DefaultValue = 0.5, },
+                new() { Name = "L1", FriendlyName = "Forward/Backward", FunscriptNames = new() { "surge", "L1", "forward" }, Enabled = true, DefaultValue = 0.5, },
+                new() { Name = "L2", FriendlyName = "Left/Right", FunscriptNames = new() { "sway", "L2", "left" }, Enabled = true, DefaultValue = 0.5, },
+                new() { Name = "R0", FriendlyName = "Twist", FunscriptNames = new() { "twist", "R0", "yaw" }, Enabled = true, DefaultValue = 0.5, },
                 new() { Name = "R1", FriendlyName = "Roll", FunscriptNames = new() { "roll", "L1" }, Enabled = true, DefaultValue = 0.5, },
                 new() { Name = "R2", FriendlyName = "Pitch", FunscriptNames = new() { "pitch", "L1" }, Enabled = true, DefaultValue = 0.5, },
                 new() { Name = "V0", FriendlyName = "Vibrate", FunscriptNames = new() { "vib", "V0" }, Enabled = false, DefaultValue = 0, },
@@ -126,10 +126,10 @@ public class DeviceSettingsViewModel : Screen, IHandle<AppSettingsMessage>
             Default = true,
             Axes = new()
             {
-                new() { Name = "L0", FriendlyName = "Up/Down", FunscriptNames = new() { "stroke", "L0", "z", "up" }, Enabled = true, DefaultValue = 0.5, },
-                new() { Name = "L1", FriendlyName = "Forward/Backward", FunscriptNames = new() { "surge", "L1", "y", "forward"}, Enabled = true, DefaultValue = 0.5, },
-                new() { Name = "L2", FriendlyName = "Left/Right", FunscriptNames = new() { "sway", "L2", "x", "left" }, Enabled = true, DefaultValue = 0.5, },
-                new() { Name = "R0", FriendlyName = "Twist", FunscriptNames = new() { "twist", "R0" }, Enabled = true, DefaultValue = 0.5, },
+                new() { Name = "L0", FriendlyName = "Up/Down", FunscriptNames = new() { "stroke", "L0", "up" }, Enabled = true, DefaultValue = 0.5, },
+                new() { Name = "L1", FriendlyName = "Forward/Backward", FunscriptNames = new() { "surge", "L1", "forward"}, Enabled = true, DefaultValue = 0.5, },
+                new() { Name = "L2", FriendlyName = "Left/Right", FunscriptNames = new() { "sway", "L2", "left" }, Enabled = true, DefaultValue = 0.5, },
+                new() { Name = "R0", FriendlyName = "Twist", FunscriptNames = new() { "twist", "R0", "yaw" }, Enabled = true, DefaultValue = 0.5, },
                 new() { Name = "R1", FriendlyName = "Roll", FunscriptNames = new() { "roll", "L1" }, Enabled = true, DefaultValue = 0.5, },
                 new() { Name = "R2", FriendlyName = "Pitch", FunscriptNames = new() { "pitch", "L1" }, Enabled = true, DefaultValue = 0.5, },
                 new() { Name = "V0", FriendlyName = "Vibrate", FunscriptNames = new() { "vib", "V0" }, Enabled = false, DefaultValue = 0, },
