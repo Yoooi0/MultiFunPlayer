@@ -212,11 +212,28 @@ public class Bootstrapper : Bootstrapper<RootViewModel>
             ContractResolver = new DefaultContractResolver()
         });
 
-        if (!settings.ContainsKey("Devices"))
-            settings["Devices"] = JArray.FromObject(DeviceSettingsViewModel.DefaultDevices);
-
         var dirty = false;
-        var devices = settings["Devices"] as JArray;
+        var defaultDevices = JArray.FromObject(DeviceSettingsViewModel.DefaultDevices);
+        if (!settings.TryGetValue("Devices", out var devicesToken) || devicesToken is not JArray devices)
+        {
+            settings["Devices"] = defaultDevices;
+            devices = defaultDevices;
+        }
+
+        var loadedDefaultDevices = devices.Children<JObject>().Where(t => t["Default"].ToObject<bool>()).ToList();
+        if (!JToken.DeepEquals(new JArray(loadedDefaultDevices), defaultDevices))
+        {
+            logger.Info("Updating changes in default devices");
+            dirty = true;
+
+            foreach (var deviceToken in loadedDefaultDevices)
+                devices.Remove(deviceToken);
+
+            var insertIndex = 0;
+            foreach (var deviceToken in defaultDevices)
+                devices.Insert(insertIndex++, deviceToken);
+        }
+
         if (!settings.TryGetValue<string>("SelectedDevice", serializer, out var selectedDevice) || string.IsNullOrWhiteSpace(selectedDevice))
         {
             selectedDevice = devices[^1]["Name"].ToString();
@@ -229,6 +246,8 @@ public class Bootstrapper : Bootstrapper<RootViewModel>
         {
             logger.Warn("Unable to find device! [SelectedDevice: \"{0}\"]", selectedDevice);
             device = devices[^1];
+            settings["SelectedDevice"] = device["Name"].ToString();
+            dirty = true;
         }
 
         DeviceAxis.LoadSettings(device as JObject, serializer);

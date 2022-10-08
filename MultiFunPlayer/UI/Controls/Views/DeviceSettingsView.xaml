@@ -28,10 +28,11 @@
                                        HorizontalAlignment="Center"
                                        VerticalAlignment="Center"/>
 
-                    <TextBlock DockPanel.Dock="Right" TextWrapping="Wrap"
-                               HorizontalAlignment="Center"
-                               MaxWidth="450">
-                        Changing device, removing or disabling axes will reset certain settings. <LineBreak/>
+                    <TextBlock DockPanel.Dock="Right"
+                               HorizontalAlignment="Left"
+                               VerticalAlignment="Center"
+                               Margin="50 0 0 0">
+                        Changing device and removing or disabling axes will reset certain settings. <LineBreak/>
                         All changes require application restart to apply.
                     </TextBlock>
                 </DockPanel>
@@ -43,7 +44,6 @@
                            DockPanel.Dock="Left"
                            Margin="0 0 10 0" 
                            VerticalAlignment="Center"/>
-
 
                 <Button DockPanel.Dock="Right"   
                         Style="{StaticResource MaterialDesignFlatButton}"
@@ -68,12 +68,12 @@
                 </Button>
                 <Button DockPanel.Dock="Right"   
                         Style="{StaticResource MaterialDesignFlatButton}"
-                        ToolTip="Add new"
+                        ToolTip="Clone selected"
                         Height="24" 
                         Width="24" 
                         Padding="0"
-                        Click="{s:Action OnAddNewDevice}">
-                    <material:PackIcon Kind="Plus"/>
+                        Click="{s:Action OnCloneDevice}">
+                    <material:PackIcon Kind="ContentDuplicate"/>
                 </Button>
 
                 <ComboBox DockPanel.Dock="Left"
@@ -83,9 +83,32 @@
                           DisplayMemberPath="Name"/>
             </DockPanel>
 
+            <material:Card DockPanel.Dock="Top"
+                           material:ShadowAssist.ShadowDepth="Depth1"
+                           Margin="0 0 0 10"
+                           Visibility="{Binding SelectedDevice.Default, Converter={StaticResource BooleanToVisibilityConverter}}">
+                <DockPanel Margin="5">
+                    <material:PackIcon Kind="Alert"
+                                       DockPanel.Dock="Left"
+                                       Foreground="{DynamicResource MaterialDesignWarningBrush}"
+                                       Width="20"
+                                       Height="20"
+                                       Margin="17 0 2 0"
+                                       HorizontalAlignment="Center"
+                                       VerticalAlignment="Center"/>
+
+                    <TextBlock DockPanel.Dock="Right"
+                               VerticalAlignment="Center"
+                               Margin="50 0 0 0">
+                        Clone this device to customize settings.
+                    </TextBlock>
+                </DockPanel>
+            </material:Card>
+
             <material:Card material:ShadowAssist.ShadowDepth="Depth1"
                            DockPanel.Dock="Top"
-                           Margin="0 0 0 10">
+                           Margin="0 0 0 10"
+                           IsEnabled="{Binding SelectedDevice.Default, Converter={StaticResource NotConverter}}">
                 <DockPanel DockPanel.Dock="Top"
                                LastChildFill="False"
                                Margin="10">
@@ -104,7 +127,8 @@
             </material:Card>
 
             <material:Card material:ShadowAssist.ShadowDepth="Depth1"
-                           DockPanel.Dock="Top">
+                           DockPanel.Dock="Top"
+                           IsEnabled="{Binding SelectedDevice.Default, Converter={StaticResource NotConverter}}">
                 <DockPanel LastChildFill="True">
                     <Button DockPanel.Dock="Bottom"
                             Style="{StaticResource MaterialDesignFloatingActionMiniLightButton}"

@@ -1,4 +1,4 @@
-﻿using MultiFunPlayer.Common;
+using MultiFunPlayer.Common;
 using MultiFunPlayer.UI.Dialogs.ViewModels;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -42,13 +42,16 @@ public class DeviceSettingsViewModel : Screen, IHandle<AppSettingsMessage>
         SelectedDevice.Name = result;
     }
 
-    public async void OnAddNewDevice()
+    public async void OnCloneDevice()
     {
-        var result = await DialogHelper.ShowAsync(new TextInputMessageDialogViewModel("Device name:"), "SettingsDialog") as string;
+        var result = await DialogHelper.ShowAsync(new TextInputMessageDialogViewModel("Device name:", $"{SelectedDevice.Name} (custom)"), "SettingsDialog") as string;
         if (string.IsNullOrWhiteSpace(result))
             return;
 
-        var device = new DeviceSettingsModel() { Name = result };
+        if (DefaultDevices.Any(d => string.Equals(d.Name, result, StringComparison.InvariantCultureIgnoreCase)))
+            return;
+
+        var device = SelectedDevice != null ? SelectedDevice.Clone(result) : new DeviceSettingsModel() { Name = result };
         Devices.Add(device);
         SelectedDevice = device;
     }
@@ -102,6 +105,7 @@ public class DeviceSettingsViewModel : Screen, IHandle<AppSettingsMessage>
         {
             Name = "TCode-0.2",
             OutputPrecision = 3,
+            Default = true,
             Axes = new()
             {
                 new() { Name = "L0", FriendlyName = "Up/Down", FunscriptNames = new() { "stroke", "L0" }, Enabled = true, DefaultValue = 0.5, },
@@ -119,6 +123,7 @@ public class DeviceSettingsViewModel : Screen, IHandle<AppSettingsMessage>
         {
             Name = "TCode-0.3",
             OutputPrecision = 4,
+            Default = true,
             Axes = new()
             {
                 new() { Name = "L0", FriendlyName = "Up/Down", FunscriptNames = new() { "stroke", "L0" }, Enabled = true, DefaultValue = 0.5, },
@@ -141,8 +146,17 @@ public class DeviceSettingsViewModel : Screen, IHandle<AppSettingsMessage>
 public class DeviceSettingsModel : PropertyChangedBase
 {
     [JsonProperty] public string Name { get; set; } = null;
+    [JsonProperty] public bool Default { get; set; } = false;
     [JsonProperty] public int OutputPrecision { get; set; } = 3;
     [JsonProperty] public ObservableConcurrentCollection<DeviceAxisSettingsModel> Axes { get; set; } = new();
+
+    public DeviceSettingsModel Clone(string name) => new()
+    {
+        Name = name,
+        Default = false,
+        OutputPrecision = OutputPrecision,
+        Axes = new(Axes.Select(a => a.Clone()))
+    };
 }
 
 [JsonObject(MemberSerialization = MemberSerialization.OptIn)]
@@ -153,4 +167,13 @@ public class DeviceAxisSettingsModel : PropertyChangedBase
     [JsonProperty] public ObservableConcurrentCollection<string> FunscriptNames { get; set; } = new();
     [JsonProperty] public bool Enabled { get; set; } = false;
     [JsonProperty] public double DefaultValue { get; set; } = 0;
+
+    public DeviceAxisSettingsModel Clone() => new()
+    {
+        Name = Name,
+        FriendlyName = FriendlyName,
+        FunscriptNames = new(FunscriptNames),
+        Enabled = Enabled,
+        DefaultValue = DefaultValue
+    };
 }
