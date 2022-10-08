@@ -79,8 +79,33 @@
                 <ComboBox DockPanel.Dock="Left"
                           Margin="0 0 10 0"
                           SelectedItem="{Binding SelectedDevice}"
-                          ItemsSource="{Binding Devices}"
-                          DisplayMemberPath="Name"/>
+                          ItemsSource="{Binding Devices}">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="{Binding Name}"
+                                           VerticalAlignment="Center">
+                                    <TextBlock.Resources>
+                                        <Style TargetType="{x:Type TextBlock}" BasedOn="{StaticResource MaterialDesignTextBlock}">
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding Default}" Value="True">
+                                                    <DataTrigger.Setters>
+                                                        <Setter Property="FontWeight" Value="Bold"/>
+                                                    </DataTrigger.Setters>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Resources>
+                                </TextBlock>
+                                
+                                <TextBlock Text=" (default)"
+                                           VerticalAlignment="Center" 
+                                           FontWeight="Bold"
+                                           Visibility="{Binding Default, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                            </StackPanel>
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
             </DockPanel>
 
             <material:Card DockPanel.Dock="Top"
