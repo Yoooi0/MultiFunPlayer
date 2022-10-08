@@ -156,7 +156,7 @@
                                                                 VerticalAlignment="Center"
                                                                 CornerRadius="7"
                                                                 Mode="Custom"
-                                                                Background="#ffcc00"
+                                                                Background="{DynamicResource MaterialDesignWarningBrush}"
                                                                 Width="14"
                                                                 Height="14">
                                                 <material:ColorZone.ToolTip>
