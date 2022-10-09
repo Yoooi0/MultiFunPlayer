@@ -827,7 +827,7 @@
                                                        Typography.Capitals="AllSmallCaps"/>
                                         </StackPanel>
                                         <StackPanel Orientation="Horizontal" DockPanel.Dock="Left">
-                                            <Menu>
+                                            <Menu Background="{DynamicResource MaterialDesignPaper}">
                                                 <MenuItem Style="{StaticResource MaterialDesignToolBarMenuItem}" ToolTip="Script">
                                                     <MenuItem.Icon>
                                                         <material:PackIcon Kind="File" Width="19" Height="19"/>
