@@ -236,7 +236,7 @@ public class Bootstrapper : Bootstrapper<RootViewModel>
 
         if (!settings.TryGetValue<string>("SelectedDevice", serializer, out var selectedDevice) || string.IsNullOrWhiteSpace(selectedDevice))
         {
-            selectedDevice = devices[^1]["Name"].ToString();
+            selectedDevice = devices.Last["Name"].ToString();
             settings["SelectedDevice"] = selectedDevice;
             dirty = true;
         }
@@ -245,7 +245,7 @@ public class Bootstrapper : Bootstrapper<RootViewModel>
         if (device == null)
         {
             logger.Warn("Unable to find device! [SelectedDevice: \"{0}\"]", selectedDevice);
-            device = devices[^1];
+            device = devices.Last;
             settings["SelectedDevice"] = device["Name"].ToString();
             dirty = true;
         }
