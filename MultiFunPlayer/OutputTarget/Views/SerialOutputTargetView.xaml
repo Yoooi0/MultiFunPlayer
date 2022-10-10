@@ -206,8 +206,9 @@
                             <DockPanel HorizontalAlignment="Left">
                                 <TextBlock DockPanel.Dock="Left"
                                            Text="Enable DTR:"
+                                           Width="75"
                                            VerticalAlignment="Center"
-                                           Margin="0 0 10 0"/>
+                                           Margin="0 5 0 5"/>
                                 <ToggleButton DockPanel.Dock="Right"
                                               IsChecked="{Binding DtrEnable}"
                                               Style="{StaticResource MaterialDesignSwitchToggleButton}"/>
@@ -216,8 +217,9 @@
                             <DockPanel HorizontalAlignment="Left">
                                 <TextBlock DockPanel.Dock="Left"
                                            Text="Enable RTS:"
+                                           Width="75"
                                            VerticalAlignment="Center"
-                                           Margin="0 0 10 0"/>
+                                           Margin="0 5 0 5"/>
                                 <ToggleButton DockPanel.Dock="Right"
                                               IsChecked="{Binding RtsEnable}"
                                               Style="{StaticResource MaterialDesignSwitchToggleButton}"/>
@@ -230,6 +232,7 @@
                                            Margin="0 0 10 0"/>
                                 <metro:NumericUpDown DockPanel.Dock="Right"
                                                      Value="{Binding ReadTimeout}"
+                                                     StringFormat="{}{0} ms"
                                                      HideUpDownButtons="True"
                                                      Minimum="-1"/>
                             </DockPanel>
@@ -241,6 +244,7 @@
                                            Margin="0 0 10 0"/>
                                 <metro:NumericUpDown DockPanel.Dock="Right"
                                                      Value="{Binding WriteTimeout}"
+                                                     StringFormat="{}{0} ms"
                                                      HideUpDownButtons="True"
                                                      Minimum="-1"/>
                             </DockPanel>
@@ -378,7 +382,7 @@
                                                     Height="14">
                                     <material:ColorZone.ToolTip>
                                         <TextBlock>
-                                            If enabled: offloads update tick elapsed time calculation to the device,<LineBreak/>
+                                            If enabled: offloads update tick elapsed time calculation to the device<LineBreak/>
                                             If disabled: sends update tick elapsed time calculated by MultiFunPlayer
                                         </TextBlock>
                                     </material:ColorZone.ToolTip>
