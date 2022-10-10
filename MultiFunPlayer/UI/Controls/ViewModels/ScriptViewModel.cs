@@ -27,7 +27,7 @@ namespace MultiFunPlayer.UI.Controls.ViewModels;
 [JsonObject(MemberSerialization = MemberSerialization.OptIn)]
 public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
     IHandle<MediaPositionChangedMessage>, IHandle<MediaPlayingChangedMessage>, IHandle<MediaPathChangedMessage>, IHandle<MediaDurationChangedMessage>,
-    IHandle<MediaSpeedChangedMessage>, IHandle<AppSettingsMessage>, IHandle<SyncRequestMessage>, IHandle<ScriptLoadMessage>
+    IHandle<MediaSpeedChangedMessage>, IHandle<SettingsMessage>, IHandle<SyncRequestMessage>, IHandle<ScriptLoadMessage>
 {
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
@@ -573,7 +573,7 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         }
     }
 
-    public void Handle(AppSettingsMessage message)
+    public void Handle(SettingsMessage message)
     {
         if (message.Action == SettingsAction.Saving)
         {

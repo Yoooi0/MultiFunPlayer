@@ -8,7 +8,7 @@ using System.Reflection;
 
 namespace MultiFunPlayer.MediaSource;
 
-public abstract class AbstractMediaSource : Screen, IMediaSource, IHandle<AppSettingsMessage>
+public abstract class AbstractMediaSource : Screen, IMediaSource, IHandle<SettingsMessage>
 {
     private readonly AsyncManualResetEvent _statusEvent;
     private CancellationTokenSource _cancellationSource;
@@ -94,7 +94,7 @@ public abstract class AbstractMediaSource : Screen, IMediaSource, IHandle<AppSet
     }
 
     protected abstract void HandleSettings(JObject settings, SettingsAction action);
-    public void Handle(AppSettingsMessage message)
+    public void Handle(SettingsMessage message)
     {
         if (message.Action == SettingsAction.Saving)
         {

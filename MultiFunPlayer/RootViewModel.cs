@@ -10,7 +10,7 @@ using System.Windows.Input;
 
 namespace MultiFunPlayer;
 
-public class RootViewModel : Conductor<IScreen>.Collection.AllActive, IHandle<AppSettingsMessage>
+public class RootViewModel : Conductor<IScreen>.Collection.AllActive, IHandle<SettingsMessage>
 {
     [Inject] public ScriptViewModel Script { get; set; }
     [Inject] public MediaSourceViewModel MediaSource { get; set; }
@@ -48,7 +48,7 @@ public class RootViewModel : Conductor<IScreen>.Collection.AllActive, IHandle<Ap
         window.DragMove();
     }
 
-    public void Handle(AppSettingsMessage message)
+    public void Handle(SettingsMessage message)
     {
         var settings = message.Settings;
 

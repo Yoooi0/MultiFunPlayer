@@ -63,10 +63,9 @@ public class Bootstrapper : Bootstrapper<RootViewModel>
 
         DialogHelper.Initialize(Container.Get<IViewManager>(), Container.Get<SettingsViewModel>());
 
-        SetupJson();
+        ConfigureJson();
         var settings = SettingsHelper.ReadOrEmpty();
-
-        var dirty = SetupLoging(settings);
+        var dirty = ConfigureLoging(settings);
 
         var logger = LogManager.GetLogger(nameof(MultiFunPlayer));
         AppDomain.CurrentDomain.UnhandledException += (s, e) =>
@@ -78,7 +77,7 @@ public class Bootstrapper : Bootstrapper<RootViewModel>
         };
 
         dirty |= MigrateSettings(settings);
-        dirty |= SetupDevice(settings);
+        dirty |= ConfigureDevice(settings);
 
         if (dirty)
             SettingsHelper.Write(settings);
@@ -86,7 +85,6 @@ public class Bootstrapper : Bootstrapper<RootViewModel>
         logger.Info("Environment [OSVersion: {0}, CLRVersion: {1}]", Environment.OSVersion, Environment.Version);
         logger.Info("Assembly [Version: {0}, FileVersion: {1}, InformationalVersion: {2}]", ReflectionUtils.AssemblyVersion, ReflectionUtils.AssemblyFileVersion, ReflectionUtils.AssemblyInformationalVersion);
         logger.Info("Timer [IsHighResolution: {0}, Frequency: {1}]", Stopwatch.IsHighResolution, Stopwatch.Frequency);
-
         logger.Info("Set working directory to \"{0}\"", workingDirectory);
     }
 
@@ -129,33 +127,35 @@ public class Bootstrapper : Bootstrapper<RootViewModel>
 
         var settings = SettingsHelper.ReadOrEmpty();
         var eventAggregator = Container.Get<IEventAggregator>();
-        eventAggregator.Publish(new AppSettingsMessage(settings, SettingsAction.Loading));
+        eventAggregator.Publish(new SettingsMessage(settings, SettingsAction.Loading));
 
         base.Launch();
-
-        eventAggregator.Publish(new AppMainWindowCreatedMessage());
     }
 
     protected override void OnLaunch()
     {
-        base.OnLaunch();
         var window = GetActiveWindow();
         window.Closing += OnWindowClosing;
+
+        var eventAggregator = Container.Get<IEventAggregator>();
+        eventAggregator.Publish(new WindowCreatedMessage());
 
         var source = PresentationSource.FromVisual(GetActiveWindow()) as HwndSource;
         var rawInput = Container.GetAll<IInputProcessor>().OfType<RawInputProcessor>().FirstOrDefault();
         rawInput?.RegisterWindow(source);
+
+        base.OnLaunch();
     }
 
     private void OnWindowClosing(object sender, CancelEventArgs e)
     {
         var settings = SettingsHelper.ReadOrEmpty();
         var eventAggregator = Container.Get<IEventAggregator>();
-        eventAggregator.Publish(new AppSettingsMessage(settings, SettingsAction.Saving));
+        eventAggregator.Publish(new SettingsMessage(settings, SettingsAction.Saving));
         SettingsHelper.Write(settings);
     }
 
-    private void SetupJson()
+    private void ConfigureJson()
     {
         var logger = LogManager.GetLogger(nameof(JsonConvert));
         JsonConvert.DefaultSettings = () =>
@@ -204,7 +204,7 @@ public class Bootstrapper : Bootstrapper<RootViewModel>
         return dirty;
     }
 
-    private bool SetupDevice(JObject settings)
+    private bool ConfigureDevice(JObject settings)
     {
         var logger = LogManager.GetLogger(nameof(MultiFunPlayer));
         var serializer = JsonSerializer.Create(new JsonSerializerSettings()
@@ -254,7 +254,7 @@ public class Bootstrapper : Bootstrapper<RootViewModel>
         return dirty;
     }
 
-    private bool SetupLoging(JObject settings)
+    private bool ConfigureLoging(JObject settings)
     {
         var dirty = false;
         if (!settings.ContainsKey("LogLevel"))

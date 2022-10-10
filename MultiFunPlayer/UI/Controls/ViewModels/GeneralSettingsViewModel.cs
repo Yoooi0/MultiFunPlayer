@@ -7,7 +7,7 @@ using System.Windows;
 
 namespace MultiFunPlayer.UI.Controls.ViewModels;
 
-public class GeneralSettingsViewModel : Screen, IHandle<AppSettingsMessage>, IHandle<AppMainWindowCreatedMessage>
+public class GeneralSettingsViewModel : Screen, IHandle<SettingsMessage>, IHandle<WindowCreatedMessage>
 {
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
@@ -45,7 +45,7 @@ public class GeneralSettingsViewModel : Screen, IHandle<AppSettingsMessage>, IHa
         rule?.SetLoggingLevels(SelectedLogLevel, LogLevel.Fatal);
     }
 
-    public void Handle(AppSettingsMessage message)
+    public void Handle(SettingsMessage message)
     {
         if (message.Action == SettingsAction.Saving)
         {
@@ -64,5 +64,5 @@ public class GeneralSettingsViewModel : Screen, IHandle<AppSettingsMessage>, IHa
         }
     }
 
-    public void Handle(AppMainWindowCreatedMessage message) => OnAlwaysOnTopChanged();
+    public void Handle(WindowCreatedMessage message) => OnAlwaysOnTopChanged();
 }

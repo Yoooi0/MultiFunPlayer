@@ -8,7 +8,7 @@ using System.Windows;
 
 namespace MultiFunPlayer.UI.Controls.ViewModels;
 
-public class DeviceSettingsViewModel : Screen, IHandle<AppSettingsMessage>
+public class DeviceSettingsViewModel : Screen, IHandle<SettingsMessage>
 {
     public DeviceSettingsModel SelectedDevice { get; set; } = null;
     public ObservableConcurrentCollection<DeviceSettingsModel> Devices { get; set; } = new(DefaultDevices);
@@ -83,7 +83,7 @@ public class DeviceSettingsViewModel : Screen, IHandle<AppSettingsMessage>
         });
     }
 
-    public void Handle(AppSettingsMessage message)
+    public void Handle(SettingsMessage message)
     {
         if (message.Action == SettingsAction.Saving)
         {

@@ -7,7 +7,7 @@ using Stylet;
 
 namespace MultiFunPlayer.UI.Controls.ViewModels;
 
-public class OutputTargetViewModel : Conductor<IOutputTarget>.Collection.OneActive, IHandle<AppSettingsMessage>, IDisposable
+public class OutputTargetViewModel : Conductor<IOutputTarget>.Collection.OneActive, IHandle<SettingsMessage>, IDisposable
 {
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
@@ -108,7 +108,7 @@ public class OutputTargetViewModel : Conductor<IOutputTarget>.Collection.OneActi
             .Unwrap();
     }
 
-    public void Handle(AppSettingsMessage message)
+    public void Handle(SettingsMessage message)
     {
         if (message.Action == SettingsAction.Saving)
         {

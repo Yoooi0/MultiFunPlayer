@@ -7,7 +7,7 @@ using System.Windows.Media;
 
 namespace MultiFunPlayer.UI.Controls.ViewModels;
 
-public class ThemeSettingsViewModel : Screen, IHandle<AppSettingsMessage>
+public class ThemeSettingsViewModel : Screen, IHandle<SettingsMessage>
 {
     private readonly PaletteHelper _paletteHelper;
 
@@ -61,7 +61,7 @@ public class ThemeSettingsViewModel : Screen, IHandle<AppSettingsMessage>
         _paletteHelper.SetTheme(theme);
     }
 
-    public void Handle(AppSettingsMessage message)
+    public void Handle(SettingsMessage message)
     {
         if (message.Action == SettingsAction.Saving)
         {

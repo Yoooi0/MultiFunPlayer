@@ -18,7 +18,7 @@ public interface IMotionProviderManager : IDeviceAxisValueProvider
     void RegisterShortcuts(IShortcutManager shortcutManager);
 }
 
-public class MotionProviderManager : IMotionProviderManager, IHandle<AppSettingsMessage>
+public class MotionProviderManager : IMotionProviderManager, IHandle<SettingsMessage>
 {
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
@@ -68,7 +68,7 @@ public class MotionProviderManager : IMotionProviderManager, IHandle<AppSettings
 
     public double GetValue(DeviceAxis axis) => _values[axis];
 
-    public void Handle(AppSettingsMessage message)
+    public void Handle(SettingsMessage message)
     {
         if (message.Action == SettingsAction.Saving)
         {

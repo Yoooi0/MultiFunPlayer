@@ -5,7 +5,7 @@ using Stylet;
 
 namespace MultiFunPlayer.UI.Controls.ViewModels;
 
-public class MediaSourceViewModel : Conductor<IMediaSource>.Collection.OneActive, IHandle<AppSettingsMessage>, IDisposable
+public class MediaSourceViewModel : Conductor<IMediaSource>.Collection.OneActive, IHandle<SettingsMessage>, IDisposable
 {
     private Task _task;
     private CancellationTokenSource _cancellationSource;
@@ -43,7 +43,7 @@ public class MediaSourceViewModel : Conductor<IMediaSource>.Collection.OneActive
             .Unwrap();
     }
 
-    public void Handle(AppSettingsMessage message)
+    public void Handle(SettingsMessage message)
     {
         if (message.Action == SettingsAction.Saving)
         {
