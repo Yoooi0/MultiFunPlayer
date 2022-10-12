@@ -45,6 +45,18 @@
                           DockPanel.Dock="Left"
                           Width="100"/>
             </DockPanel>
+
+            <DockPanel LastChildFill="False"
+                       DockPanel.Dock="Top">
+                <TextBlock Text="Enable UI logging:" 
+                           DockPanel.Dock="Left"
+                           Margin="0 0 10 0" 
+                           VerticalAlignment="Center"/>
+
+                <CheckBox IsChecked="{Binding EnableUILogging}"
+                          DockPanel.Dock="Left"
+                          Margin="0 0 10 0"/>
+            </DockPanel>
         </DockPanel>
     </Grid>
 </UserControl>

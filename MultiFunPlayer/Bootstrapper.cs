@@ -50,6 +50,7 @@ public class Bootstrapper : Bootstrapper<RootViewModel>
         builder.Bind<IConfigMigration>().ToAllImplementations().InSingletonScope();
         builder.Bind<IInputProcessor>().ToAllImplementations().InSingletonScope();
 
+        builder.Bind<IStyletLoggerManager>().To<StyletLoggerManager>().InSingletonScope();
         builder.Bind<IMediaResourceFactory>().To<MediaResourceFactory>().InSingletonScope();
         builder.Bind<IOutputTargetFactory>().To<OutputTargetFactory>().InSingletonScope();
         builder.Bind<IShortcutManager>().To<ShortcutManager>().InSingletonScope();
@@ -305,8 +306,12 @@ public class Bootstrapper : Bootstrapper<RootViewModel>
 
         if (Debugger.IsAttached)
             config.AddRule(LogLevel.Debug, LogLevel.Fatal, new DebugSystemTarget("debug"));
-
         LogManager.Configuration = config;
+
+        var styletLoggerManager = Container.Get<IStyletLoggerManager>();
+        Stylet.Logging.LogManager.LoggerFactory = name => styletLoggerManager.GetLogger(name);
+        Stylet.Logging.LogManager.Enabled = true;
+
         return dirty;
     }
 }

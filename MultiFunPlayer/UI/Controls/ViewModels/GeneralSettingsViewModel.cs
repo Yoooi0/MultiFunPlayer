@@ -11,17 +11,21 @@ public class GeneralSettingsViewModel : Screen, IHandle<SettingsMessage>, IHandl
 {
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
+    private readonly IStyletLoggerManager _styletLoggerManager;
+
     public ObservableConcurrentCollection<LogLevel> LogLevels { get; }
 
     public LogLevel SelectedLogLevel { get; set; } = LogLevel.Info;
+    public bool EnableUILogging { get; set; } = false;
     public bool AlwaysOnTop { get; set; } = false;
     public bool ShowErrorDialogs { get; set; } = true;
 
-    public GeneralSettingsViewModel(IEventAggregator eventAggregator)
+    public GeneralSettingsViewModel(IStyletLoggerManager styletLoggerManager, IEventAggregator eventAggregator)
     {
         DisplayName = "General";
         eventAggregator.Subscribe(this);
 
+        _styletLoggerManager = styletLoggerManager;
         LogLevels = new ObservableConcurrentCollection<LogLevel>(LogLevel.AllLevels);
     }
 
@@ -32,6 +36,14 @@ public class GeneralSettingsViewModel : Screen, IHandle<SettingsMessage>, IHandl
             return;
 
         window.Topmost = AlwaysOnTop;
+    }
+
+    public void OnEnableUILoggingChanged()
+    {
+        if (EnableUILogging)
+            _styletLoggerManager.ResumeLogging();
+        else
+            _styletLoggerManager.SuspendLogging();
     }
 
     public void OnSelectedLogLevelChanged()
@@ -52,6 +64,7 @@ public class GeneralSettingsViewModel : Screen, IHandle<SettingsMessage>, IHandl
             message.Settings[nameof(AlwaysOnTop)] = AlwaysOnTop;
             message.Settings[nameof(ShowErrorDialogs)] = ShowErrorDialogs;
             message.Settings["LogLevel"] = JToken.FromObject(SelectedLogLevel ?? LogLevel.Info);
+            message.Settings[nameof(EnableUILogging)] = EnableUILogging;
         }
         else if (message.Action == SettingsAction.Loading)
         {
@@ -61,6 +74,8 @@ public class GeneralSettingsViewModel : Screen, IHandle<SettingsMessage>, IHandl
                 ShowErrorDialogs = showErrorDialogs;
             if (message.Settings.TryGetValue<LogLevel>("LogLevel", out var logLevel))
                 SelectedLogLevel = logLevel;
+            if (message.Settings.TryGetValue<bool>(nameof(EnableUILogging), out var enableUILogging))
+                EnableUILogging = enableUILogging;
         }
     }
 
