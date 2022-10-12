@@ -42,6 +42,7 @@ public class Bootstrapper : Bootstrapper<RootViewModel>
 
     protected override void ConfigureIoC(IStyletIoCBuilder builder)
     {
+        builder.Bind<OutputTargetViewModel>().ToSelf().InSingletonScope();
         builder.Bind<SettingsViewModel>().ToSelf().InSingletonScope();
 
         builder.Bind<IConfigMigration>().ToAllImplementations().InSingletonScope();
@@ -60,8 +61,6 @@ public class Bootstrapper : Bootstrapper<RootViewModel>
     {
         var workingDirectory = Path.GetDirectoryName(Environment.ProcessPath);
         Directory.SetCurrentDirectory(workingDirectory);
-
-        DialogHelper.Initialize(Container.Get<IViewManager>(), Container.Get<SettingsViewModel>());
 
         ConfigureJson();
         var settings = SettingsHelper.ReadOrEmpty();
@@ -123,11 +122,16 @@ public class Bootstrapper : Bootstrapper<RootViewModel>
 
     protected override void Launch()
     {
+        //TODO: temporary fix due to SettingsViewModel IoC binding causing output targets
+        //      to be initialized after shortcuts and clearing all output target actions
+        _ = Container.Get<OutputTargetViewModel>();
         _ = RootViewModel;
 
         var settings = SettingsHelper.ReadOrEmpty();
         var eventAggregator = Container.Get<IEventAggregator>();
         eventAggregator.Publish(new SettingsMessage(settings, SettingsAction.Loading));
+
+        DialogHelper.Initialize(Container.Get<IViewManager>(), Container.Get<SettingsViewModel>());
 
         base.Launch();
     }
