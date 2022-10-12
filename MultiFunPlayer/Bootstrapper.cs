@@ -44,17 +44,17 @@ public class Bootstrapper : Bootstrapper<RootViewModel>
     {
         builder.Bind<OutputTargetViewModel>().ToSelf().InSingletonScope();
         builder.Bind<SettingsViewModel>().ToSelf().InSingletonScope();
-
-        builder.Bind<IConfigMigration>().ToAllImplementations().InSingletonScope();
         builder.Bind<ScriptViewModel>().And<IDeviceAxisValueProvider>().To<ScriptViewModel>().InSingletonScope();
-        builder.Bind<IMediaResourceFactory>().To<MediaResourceFactory>().InSingletonScope();
 
         builder.Bind<IMediaSource>().ToAllImplementations().InSingletonScope();
+        builder.Bind<IConfigMigration>().ToAllImplementations().InSingletonScope();
+        builder.Bind<IInputProcessor>().ToAllImplementations().InSingletonScope();
+
+        builder.Bind<IMediaResourceFactory>().To<MediaResourceFactory>().InSingletonScope();
         builder.Bind<IOutputTargetFactory>().To<OutputTargetFactory>().InSingletonScope();
         builder.Bind<IShortcutManager>().To<ShortcutManager>().InSingletonScope();
         builder.Bind<IMotionProviderFactory>().To<MotionProviderFactory>().InSingletonScope();
         builder.Bind<IMotionProviderManager>().To<MotionProviderManager>().InSingletonScope();
-        builder.Bind<IInputProcessor>().ToAllImplementations().InSingletonScope();
     }
 
     protected override void Configure()
