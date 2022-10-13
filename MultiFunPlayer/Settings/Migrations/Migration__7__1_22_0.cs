@@ -4,10 +4,9 @@ using NLog;
 
 namespace MultiFunPlayer.Settings.Migrations;
 
-public class Migration__1_22_0__1 : AbstractConfigMigration
+public class Migration__7__1_22_0 : AbstractConfigMigration
 {
     private readonly Logger Logger = LogManager.GetCurrentClassLogger();
-    public override int TargetVersion => 7;
 
     public override void Migrate(JObject settings)
     {

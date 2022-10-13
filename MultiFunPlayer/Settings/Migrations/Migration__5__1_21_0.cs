@@ -5,10 +5,9 @@ using System.Text.RegularExpressions;
 
 namespace MultiFunPlayer.Settings.Migrations;
 
-public class Migration__1_21_0__1 : AbstractConfigMigration
+public class Migration__5__1_21_0 : AbstractConfigMigration
 {
     private readonly Logger Logger = LogManager.GetCurrentClassLogger();
-    public override int TargetVersion => 5;
 
     public override void Migrate(JObject settings)
     {

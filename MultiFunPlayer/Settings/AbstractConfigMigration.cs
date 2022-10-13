@@ -4,10 +4,8 @@ namespace MultiFunPlayer.Settings;
 
 public abstract class AbstractConfigMigration : IConfigMigration
 {
-    public abstract int TargetVersion { get; }
+    public int TargetVersion { get; }
 
-    public virtual void Migrate(JObject settings)
-    {
-        settings["ConfigVersion"] = JToken.FromObject(TargetVersion);
-    }
+    protected AbstractConfigMigration() => TargetVersion = int.Parse(GetType().Name.Split("__")[1]);
+    public virtual void Migrate(JObject settings) => settings["ConfigVersion"] = TargetVersion;
 }

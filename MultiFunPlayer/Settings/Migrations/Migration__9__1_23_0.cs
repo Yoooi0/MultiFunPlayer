@@ -5,14 +5,13 @@ using NLog;
 
 namespace MultiFunPlayer.Settings.Migrations;
 
-public class Migration__1_23_0__2 : AbstractConfigMigration
+public class Migration__9__1_23_0 : AbstractConfigMigration
 {
     private readonly Logger Logger = LogManager.GetCurrentClassLogger();
-    public override int TargetVersion => 9;
 
     public override void Migrate(JObject settings)
     {
-        if (!settings.TryGetObject(out var _, "Device"))
+        if (!settings.TryGetValue("Devices", out var _))
         {
             MigrateDevices(settings);
         }

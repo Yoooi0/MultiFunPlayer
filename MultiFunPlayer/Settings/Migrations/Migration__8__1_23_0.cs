@@ -1,16 +1,12 @@
 ﻿using MultiFunPlayer.Common;
-using MultiFunPlayer.Input.RawInput;
-using MultiFunPlayer.Input.XInput;
-using MultiFunPlayer.UI.Controls.ViewModels;
 using Newtonsoft.Json.Linq;
 using NLog;
 
 namespace MultiFunPlayer.Settings.Migrations;
 
-public class Migration__1_19_0__2 : AbstractConfigMigration
+public class Migration__8__1_23_0 : AbstractConfigMigration
 {
-    private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
-    public override int TargetVersion => 2;
+    private readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
     public override void Migrate(JObject settings)
     {
@@ -27,9 +23,7 @@ public class Migration__1_19_0__2 : AbstractConfigMigration
         Logger.Info("Migrating LogBlacklist");
         var filterMap = new Dictionary<string, string>()
         {
-            ["MultiFunPlayer.Common.Input.RawInput.*"] = "MultiFunPlayer.Input.RawInput.*",
-            ["MultiFunPlayer.Common.Input.XInput.*"] = "MultiFunPlayer.Input.XInput.*",
-            ["MultiFunPlayer.ViewModels.ShortcutViewModel"] = "MultiFunPlayer.UI.Controls.ViewModels.ShortcutViewModel"
+            ["MultiFunPlayer.UI.Controls.ViewModels.ShortcutViewModel"] = "MultiFunPlayer.UI.Controls.ViewModels.ShortcutSettingsViewModel"
         };
 
         foreach (var (from, to) in filterMap)
