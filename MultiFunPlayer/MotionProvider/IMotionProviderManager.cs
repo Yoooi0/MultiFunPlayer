@@ -1,10 +1,12 @@
 ﻿using MultiFunPlayer.Common;
 using MultiFunPlayer.Input;
+using MultiFunPlayer.MotionProvider.ViewModels;
 using MultiFunPlayer.Settings;
 using Newtonsoft.Json.Linq;
 using NLog;
 using Stylet;
 using System.ComponentModel;
+using System.IO;
 using System.Reflection;
 
 namespace MultiFunPlayer.MotionProvider;
@@ -56,6 +58,12 @@ public class MotionProviderManager : IMotionProviderManager, IHandle<SettingsMes
         return motionProvider;
     }
 
+    public T GetMotionProvider<T>(DeviceAxis axis) where T : class, IMotionProvider
+    {
+        var name = typeof(T).GetCustomAttribute<DisplayNameAttribute>(inherit: false).DisplayName;
+        return GetMotionProvider(axis, name) as T;
+    }
+
     public void Update(DeviceAxis axis, string motionProviderName, double deltaTime)
     {
         var motionProvider = GetMotionProvider(axis, motionProviderName);
@@ -99,45 +107,37 @@ public class MotionProviderManager : IMotionProviderManager, IHandle<SettingsMes
 
     public void RegisterShortcuts(IShortcutManager s)
     {
-        foreach (var name in MotionProviderNames)
+        static void UpdateProperty<T>(T motionProvicer, Action<T> callback) where T : IMotionProvider
         {
+            if (motionProvicer != null)
+                callback(motionProvicer);
+        }
+
+        foreach (var type in ReflectionUtils.FindImplementations<IMotionProvider>())
+        {
+            var name = type.GetCustomAttribute<DisplayNameAttribute>(inherit: false).DisplayName;
+
             #region MotionProvider::Speed
             s.RegisterAction($"MotionProvider::{name}::Speed::Offset",
             b => b.WithSetting<DeviceAxis>(p => p.WithLabel("Target axis").WithItemsSource(DeviceAxis.All))
                   .WithSetting<float>(p => p.WithLabel("Value offset").WithStringFormat("{}{0}%"))
                   .WithCallback((_, axis, offset) =>
-                  {
-                      var motionProvider = GetMotionProvider(axis, name);
-                      if (motionProvider == null)
-                          return;
-
-                      motionProvider.Speed = Math.Max(0.01, motionProvider.Speed + offset / 100);
-                  }));
+                      UpdateProperty(GetMotionProvider(axis, name), p => p.Speed = Math.Max(0.01, p.Speed + offset / 100))
+                  ));
 
             s.RegisterAction($"MotionProvider::{name}::Speed::Set",
                 b => b.WithSetting<DeviceAxis>(p => p.WithLabel("Target axis").WithItemsSource(DeviceAxis.All))
                       .WithSetting<float>(p => p.WithLabel("Value").WithStringFormat("{}{0}%"))
                       .WithCallback((_, axis, value) =>
-                      {
-                          var motionProvider = GetMotionProvider(axis, name);
-                          if (motionProvider == null)
-                              return;
-
-                          motionProvider.Speed = Math.Max(0.01, value / 100);
-                      }));
+                          UpdateProperty(GetMotionProvider(axis, name), p => p.Speed = Math.Max(0.01, value / 100))
+                      ));
 
             s.RegisterAction($"MotionProvider::{name}::Speed::Drive",
                 b => b.WithSetting<DeviceAxis>(p => p.WithLabel("Target axis").WithItemsSource(DeviceAxis.All))
                       .WithCallback((gesture, axis) =>
                       {
-                          if (gesture is not IAxisInputGesture axisGesture)
-                              return;
-
-                          var motionProvider = GetMotionProvider(axis, name);
-                          if (motionProvider == null)
-                              return;
-
-                          motionProvider.Speed = Math.Max(0.01, motionProvider.Speed + axisGesture.Delta);
+                          if (gesture is IAxisInputGesture axisGesture)
+                              UpdateProperty(GetMotionProvider(axis, name), p => p.Speed = Math.Max(0.01, p.Speed + axisGesture.Delta));
                       }), ShortcutActionDescriptorFlags.AcceptsAxisGesture);
             #endregion
 
@@ -146,38 +146,22 @@ public class MotionProviderManager : IMotionProviderManager, IHandle<SettingsMes
             b => b.WithSetting<DeviceAxis>(p => p.WithLabel("Target axis").WithItemsSource(DeviceAxis.All))
                   .WithSetting<float>(p => p.WithLabel("Value offset").WithStringFormat("{}{0}%"))
                   .WithCallback((_, axis, offset) =>
-                  {
-                      var motionProvider = GetMotionProvider(axis, name);
-                      if (motionProvider == null)
-                          return;
-
-                      motionProvider.Minimum = MathUtils.Clamp(motionProvider.Minimum + offset, 0, 100);
-                  }));
+                      UpdateProperty(GetMotionProvider(axis, name), p => p.Minimum = MathUtils.Clamp(p.Minimum + offset, 0, 100))
+                  ));
 
             s.RegisterAction($"MotionProvider::{name}::Minimum::Set",
                 b => b.WithSetting<DeviceAxis>(p => p.WithLabel("Target axis").WithItemsSource(DeviceAxis.All))
                       .WithSetting<float>(p => p.WithLabel("Value").WithStringFormat("{}{0}%"))
                       .WithCallback((_, axis, value) =>
-                      {
-                          var motionProvider = GetMotionProvider(axis, name);
-                          if (motionProvider == null)
-                              return;
-
-                          motionProvider.Minimum = MathUtils.Clamp(value, 0, 100);
-                      }));
+                          UpdateProperty(GetMotionProvider(axis, name), p => p.Minimum = MathUtils.Clamp(value, 0, 100))
+                      ));
 
             s.RegisterAction($"MotionProvider::{name}::Minimum::Drive",
                 b => b.WithSetting<DeviceAxis>(p => p.WithLabel("Target axis").WithItemsSource(DeviceAxis.All))
                       .WithCallback((gesture, axis) =>
                       {
-                          if (gesture is not IAxisInputGesture axisGesture)
-                              return;
-
-                          var motionProvider = GetMotionProvider(axis, name);
-                          if (motionProvider == null)
-                              return;
-
-                          motionProvider.Minimum = MathUtils.Clamp(motionProvider.Minimum + axisGesture.Delta, 0, 100);
+                          if (gesture is IAxisInputGesture axisGesture)
+                              UpdateProperty(GetMotionProvider(axis, name), p => p.Minimum = MathUtils.Clamp(p.Minimum + axisGesture.Delta, 0, 100));
                       }), ShortcutActionDescriptorFlags.AcceptsAxisGesture);
             #endregion
 
@@ -186,39 +170,92 @@ public class MotionProviderManager : IMotionProviderManager, IHandle<SettingsMes
             b => b.WithSetting<DeviceAxis>(p => p.WithLabel("Target axis").WithItemsSource(DeviceAxis.All))
                   .WithSetting<float>(p => p.WithLabel("Value offset").WithStringFormat("{}{0}%"))
                   .WithCallback((_, axis, offset) =>
-                  {
-                      var motionProvider = GetMotionProvider(axis, name);
-                      if (motionProvider == null)
-                          return;
-
-                      motionProvider.Maximum = MathUtils.Clamp(motionProvider.Maximum + offset, 0, 100);
-                  }));
+                      UpdateProperty(GetMotionProvider(axis, name), p => p.Maximum = MathUtils.Clamp(p.Maximum + offset, 0, 100))
+                  ));
 
             s.RegisterAction($"MotionProvider::{name}::Maximum::Set",
                 b => b.WithSetting<DeviceAxis>(p => p.WithLabel("Target axis").WithItemsSource(DeviceAxis.All))
                       .WithSetting<float>(p => p.WithLabel("Value").WithStringFormat("{}{0}%"))
                       .WithCallback((_, axis, value) =>
-                      {
-                          var motionProvider = GetMotionProvider(axis, name);
-                          if (motionProvider == null)
-                              return;
-
-                          motionProvider.Maximum = MathUtils.Clamp(value, 0, 100);
-                      }));
+                          UpdateProperty(GetMotionProvider(axis, name), p => p.Maximum = MathUtils.Clamp(value, 0, 100))
+                      ));
 
             s.RegisterAction($"MotionProvider::{name}::Maximum::Drive",
                 b => b.WithSetting<DeviceAxis>(p => p.WithLabel("Target axis").WithItemsSource(DeviceAxis.All))
                       .WithCallback((gesture, axis) =>
                       {
-                          if (gesture is not IAxisInputGesture axisGesture)
-                              return;
-
-                          var motionProvider = GetMotionProvider(axis, name);
-                          if (motionProvider == null)
-                              return;
-
-                          motionProvider.Maximum = MathUtils.Clamp(motionProvider.Maximum + axisGesture.Delta, 0, 100);
+                          if (gesture is IAxisInputGesture axisGesture)
+                              UpdateProperty(GetMotionProvider(axis, name), p => p.Maximum = MathUtils.Clamp(p.Maximum + axisGesture.Delta, 0, 100));
                       }), ShortcutActionDescriptorFlags.AcceptsAxisGesture);
+            #endregion
+
+            #region PatternMotionProvider
+            if (type == typeof(PatternMotionProviderViewModel))
+            {
+                #region PatternMotionProvider::Pattern
+                s.RegisterAction($"MotionProvider::{name}::Pattern::Set",
+                    b => b.WithSetting<DeviceAxis>(p => p.WithLabel("Target axis").WithItemsSource(DeviceAxis.All))
+                          .WithSetting<PatternType>(p => p.WithLabel("Pattern").WithItemsSource(Enum.GetValues<PatternType>()))
+                          .WithCallback((_, axis, pattern) =>
+                              UpdateProperty(GetMotionProvider<PatternMotionProviderViewModel>(axis), p => p.Pattern = pattern)
+                          ));
+                #endregion
+            }
+            #endregion
+
+            #region RandomMotionProvider
+            if (type == typeof(RandomMotionProviderViewModel))
+            {
+                #region RandomMotionProvider::Octaves
+                s.RegisterAction($"MotionProvider::{name}::Octaves::Set",
+                    b => b.WithSetting<DeviceAxis>(p => p.WithLabel("Target axis").WithItemsSource(DeviceAxis.All))
+                          .WithSetting<int>(p => p.WithLabel("Octaves"))
+                          .WithCallback((_, axis, octaves) =>
+                              UpdateProperty(GetMotionProvider<RandomMotionProviderViewModel>(axis), p => p.Octaves = octaves)
+                          ));
+                #endregion
+
+                #region RandomMotionProvider::Persistence
+                s.RegisterAction($"MotionProvider::{name}::Persistence::Set",
+                    b => b.WithSetting<DeviceAxis>(p => p.WithLabel("Target axis").WithItemsSource(DeviceAxis.All))
+                          .WithSetting<float>(p => p.WithLabel("Persistence"))
+                          .WithCallback((_, axis, persistence) =>
+                              UpdateProperty(GetMotionProvider<RandomMotionProviderViewModel>(axis), p => p.Persistence = persistence)
+                          ));
+                #endregion
+
+                #region RandomMotionProvider::Lacunarity
+                s.RegisterAction($"MotionProvider::{name}::Lacunarity::Set",
+                    b => b.WithSetting<DeviceAxis>(p => p.WithLabel("Target axis").WithItemsSource(DeviceAxis.All))
+                          .WithSetting<float>(p => p.WithLabel("Lacunarity"))
+                          .WithCallback((_, axis, lacunarity) =>
+                              UpdateProperty(GetMotionProvider<RandomMotionProviderViewModel>(axis), p => p.Lacunarity = lacunarity)
+                          ));
+                #endregion
+            }
+            #endregion
+
+            #region LoopingScriptMotionProvider
+            if (type == typeof(LoopingScriptMotionProviderViewModel))
+            {
+                #region LoopingMotionProvider::Script
+                s.RegisterAction($"MotionProvider::{name}::Script::Set",
+                    b => b.WithSetting<DeviceAxis>(p => p.WithLabel("Target axis").WithItemsSource(DeviceAxis.All))
+                          .WithSetting<string>(p => p.WithLabel("Script path"))
+                          .WithCallback((_, axis, script) =>
+                              UpdateProperty(GetMotionProvider<LoopingScriptMotionProviderViewModel>(axis), p => p.SourceFile = new FileInfo(script))
+                          ));
+                #endregion
+
+                #region LoopingMotionProvider::Interpolation
+                s.RegisterAction($"MotionProvider::{name}::Interpolation::Set",
+                    b => b.WithSetting<DeviceAxis>(p => p.WithLabel("Target axis").WithItemsSource(DeviceAxis.All))
+                          .WithSetting<InterpolationType>(p => p.WithLabel("Interpolation type").WithItemsSource(Enum.GetValues<InterpolationType>()))
+                          .WithCallback((_, axis, interpolation) =>
+                              UpdateProperty(GetMotionProvider<LoopingScriptMotionProviderViewModel>(axis), p => p.InterpolationType = interpolation)
+                          ));
+                #endregion
+            }
             #endregion
         }
     }
