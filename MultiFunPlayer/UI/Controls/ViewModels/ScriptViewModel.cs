@@ -718,6 +718,7 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
             var funscriptWithoutExtension = Path.GetFileNameWithoutExtension(fileName);
             var isUnnamedScript = string.Equals(funscriptWithoutExtension, mediaWithoutExtension, StringComparison.OrdinalIgnoreCase);
 
+            var result = false;
             foreach (var axis in axes)
             {
                 if ((isUnnamedScript && axis.LoadUnnamedScript) || axis.FunscriptNames.Any(n => funscriptWithoutExtension.EndsWith(n, StringComparison.OrdinalIgnoreCase)))
@@ -726,11 +727,11 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                     updated.Add(axis);
 
                     Logger.Debug("Matched {0} script to \"{1}\"", axis, fileName);
-                    return true;
+                    result = true;
                 }
             }
 
-            return false;
+            return result;
         }
 
         bool TryMatchArchive(string path)
