@@ -109,7 +109,7 @@ public class DeviceSettingsViewModel : Screen, IHandle<SettingsMessage>
             Default = true,
             Axes = new()
             {
-                new() { Name = "L0", FriendlyName = "Up/Down", FunscriptNames = new() { "stroke", "L0", "up" }, Enabled = true, DefaultValue = 0.5, },
+                new() { Name = "L0", FriendlyName = "Up/Down", FunscriptNames = new() { "stroke", "L0", "up" }, LoadUnnamedScript = true, Enabled = true, DefaultValue = 0.5, },
                 new() { Name = "L1", FriendlyName = "Forward/Backward", FunscriptNames = new() { "surge", "L1", "forward" }, Enabled = true, DefaultValue = 0.5, },
                 new() { Name = "L2", FriendlyName = "Left/Right", FunscriptNames = new() { "sway", "L2", "left" }, Enabled = true, DefaultValue = 0.5, },
                 new() { Name = "R0", FriendlyName = "Twist", FunscriptNames = new() { "twist", "R0", "yaw" }, Enabled = true, DefaultValue = 0.5, },
@@ -127,7 +127,7 @@ public class DeviceSettingsViewModel : Screen, IHandle<SettingsMessage>
             Default = true,
             Axes = new()
             {
-                new() { Name = "L0", FriendlyName = "Up/Down", FunscriptNames = new() { "stroke", "L0", "up" }, Enabled = true, DefaultValue = 0.5, },
+                new() { Name = "L0", FriendlyName = "Up/Down", FunscriptNames = new() { "stroke", "L0", "up" }, LoadUnnamedScript = true, Enabled = true, DefaultValue = 0.5, },
                 new() { Name = "L1", FriendlyName = "Forward/Backward", FunscriptNames = new() { "surge", "L1", "forward"}, Enabled = true, DefaultValue = 0.5, },
                 new() { Name = "L2", FriendlyName = "Left/Right", FunscriptNames = new() { "sway", "L2", "left" }, Enabled = true, DefaultValue = 0.5, },
                 new() { Name = "R0", FriendlyName = "Twist", FunscriptNames = new() { "twist", "R0", "yaw" }, Enabled = true, DefaultValue = 0.5, },
@@ -166,6 +166,7 @@ public class DeviceAxisSettingsModel : PropertyChangedBase
     [JsonProperty] public string Name { get; set; } = null;
     [JsonProperty] public string FriendlyName { get; set; } = null;
     [JsonProperty] public ObservableConcurrentCollection<string> FunscriptNames { get; set; } = new();
+    [JsonProperty] public bool LoadUnnamedScript { get; set; } = false;
     [JsonProperty] public double DefaultValue { get; set; } = 0;
     [JsonProperty] public bool Enabled { get; set; } = false;
 
@@ -174,7 +175,8 @@ public class DeviceAxisSettingsModel : PropertyChangedBase
         Name = Name,
         FriendlyName = FriendlyName,
         FunscriptNames = new(FunscriptNames),
-        Enabled = Enabled,
-        DefaultValue = DefaultValue
+        LoadUnnamedScript = LoadUnnamedScript,
+        DefaultValue = DefaultValue,
+        Enabled = Enabled
     };
 }

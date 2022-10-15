@@ -6,7 +6,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:metro="http://metro.mahapps.com/winfx/xaml/controls" 
-             xmlns:converters="clr-namespace:MultiFunPlayer.UI.Converters"
+             xmlns:converters="clr-namespace:MultiFunPlayer.UI.Converters" 
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
     <UserControl.Resources>
@@ -137,17 +137,21 @@
                 <DockPanel DockPanel.Dock="Top"
                                LastChildFill="False"
                                Margin="10">
-                    <TextBlock Text="Output precision:"
-                                   DockPanel.Dock="Left"
-                                   Margin="0 0 10 0" 
-                                   VerticalAlignment="Center"/>
 
-                    <metro:NumericUpDown DockPanel.Dock="Left"
-                                             Minimum="1" 
-                                             Maximum="10" 
-                                             Value="{Binding SelectedDevice.OutputPrecision}" 
-                                             HideUpDownButtons="True"
-                                             Width="50"/>
+                    <DockPanel LastChildFill="False"
+                               DockPanel.Dock="Top">
+                        <TextBlock Text="Output precision:"
+                                       DockPanel.Dock="Left"
+                                       Margin="0 0 10 0" 
+                                       VerticalAlignment="Center"/>
+
+                        <metro:NumericUpDown DockPanel.Dock="Left"
+                                                 Minimum="1" 
+                                                 Maximum="10" 
+                                                 Value="{Binding SelectedDevice.OutputPrecision}" 
+                                                 HideUpDownButtons="True"
+                                                 Width="50"/>
+                    </DockPanel>
                 </DockPanel>
             </material:Card>
 
@@ -167,68 +171,123 @@
                                            Height="24"/>
                     </Button>
 
-                    <ScrollViewer VerticalScrollBarVisibility="Auto"
-                                  HorizontalScrollBarVisibility="Disabled"
-                                  MaxHeight="400">
-                        <DataGrid DockPanel.Dock="Top"
-                                  CanUserReorderColumns="False"
-                                  CanUserSortColumns="False"
-                                  CanUserResizeColumns="True"
-                                  CanUserResizeRows="False"
-                                  CanUserAddRows="False"
-                                  CanUserDeleteRows="False"
-                                  ItemsSource="{Binding SelectedDevice.Axes}"
-                                  AutoGenerateColumns="False"
-                                  material:DataGridAssist.CellPadding="10 5 10 5"
-                                  Background="{DynamicResource MaterialDesignCardBackground}">
-                            <DataGrid.Columns>
-                                <DataGridTextColumn Binding="{Binding Name}"
-                                                    Header="Name"
-                                                    ElementStyle="{StaticResource MaterialDesignDataGridTextColumnStyle}"
-                                                    EditingElementStyle="{StaticResource MaterialDesignDataGridTextColumnEditingStyle}"/>
+                    <DataGrid DockPanel.Dock="Top"
+                              MaxHeight="400"
+                              CanUserReorderColumns="False"
+                              CanUserSortColumns="False"
+                              CanUserResizeColumns="True"
+                              CanUserResizeRows="False"
+                              CanUserAddRows="False"
+                              CanUserDeleteRows="False"
+                              ItemsSource="{Binding SelectedDevice.Axes}"
+                              AutoGenerateColumns="False"
+                              material:DataGridAssist.CellPadding="10 5 10 5"
+                              Background="{DynamicResource MaterialDesignCardBackground}">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Binding="{Binding Name}"
+                                                Header="Name"
+                                                ElementStyle="{StaticResource MaterialDesignDataGridTextColumnStyle}"
+                                                EditingElementStyle="{StaticResource MaterialDesignDataGridTextColumnEditingStyle}"/>
 
-                                <DataGridTextColumn Binding="{Binding FriendlyName}"
-                                                    Header="Friendly name"
-                                                    ElementStyle="{StaticResource MaterialDesignDataGridTextColumnStyle}"
-                                                    EditingElementStyle="{StaticResource MaterialDesignDataGridTextColumnEditingStyle}"/>
+                            <DataGridTextColumn Binding="{Binding FriendlyName}"
+                                                Header="Friendly name"
+                                                ElementStyle="{StaticResource MaterialDesignDataGridTextColumnStyle}"
+                                                EditingElementStyle="{StaticResource MaterialDesignDataGridTextColumnEditingStyle}">
+                                <DataGridTextColumn.HeaderStyle>
+                                    <Style TargetType="{x:Type DataGridColumnHeader}" BasedOn="{StaticResource MaterialDesignDataGridColumnHeader}">
+                                        <Setter Property="HorizontalContentAlignment" Value="Right" />
+                                        <Setter Property="ContentTemplate">
+                                            <Setter.Value>
+                                                <DataTemplate>
+                                                    <TextBlock TextWrapping="Wrap" Text="{Binding}" TextAlignment="Right" Width="50"/>
+                                                </DataTemplate>
+                                            </Setter.Value>
+                                        </Setter>
+                                    </Style>
+                                </DataGridTextColumn.HeaderStyle>
+                            </DataGridTextColumn>
 
-                                <DataGridTextColumn Binding="{Binding FunscriptNames, Converter={StaticResource StringListToStringConverter}}"
-                                                    Header="Funscript names"
-                                                    ElementStyle="{StaticResource MaterialDesignDataGridTextColumnStyle}"
-                                                    EditingElementStyle="{StaticResource MaterialDesignDataGridTextColumnEditingStyle}"/>
+                            <DataGridTextColumn Binding="{Binding FunscriptNames, Converter={StaticResource StringListToStringConverter}}"
+                                                Header="Funscript names"
+                                                ElementStyle="{StaticResource MaterialDesignDataGridTextColumnStyle}"
+                                                EditingElementStyle="{StaticResource MaterialDesignDataGridTextColumnEditingStyle}">
+                                <DataGridTextColumn.HeaderStyle>
+                                    <Style TargetType="{x:Type DataGridColumnHeader}" BasedOn="{StaticResource MaterialDesignDataGridColumnHeader}">
+                                        <Setter Property="HorizontalContentAlignment" Value="Right" />
+                                        <Setter Property="ContentTemplate">
+                                            <Setter.Value>
+                                                <DataTemplate>
+                                                    <TextBlock TextWrapping="Wrap" Text="{Binding}" TextAlignment="Right" Width="60"/>
+                                                </DataTemplate>
+                                            </Setter.Value>
+                                        </Setter>
+                                    </Style>
+                                </DataGridTextColumn.HeaderStyle>
+                            </DataGridTextColumn>
 
-                                <metro:DataGridNumericUpDownColumn Header="Default value"
-                                                                   Minimum="0" 
-                                                                   Maximum="1" 
-                                                                   HideUpDownButtons="True" 
-                                                                   Binding="{Binding DefaultValue}"/>
+                            <DataGridCheckBoxColumn Binding="{Binding LoadUnnamedScript, UpdateSourceTrigger=PropertyChanged}"
+                                                    Header="Load unnamed script"
+                                                    ElementStyle="{StaticResource MaterialDesignDataGridCheckBoxColumnStyle}"
+                                                    EditingElementStyle="{StaticResource MaterialDesignDataGridCheckBoxColumnEditingStyle}">
+                                <DataGridCheckBoxColumn.HeaderStyle>
+                                    <Style TargetType="{x:Type DataGridColumnHeader}" BasedOn="{StaticResource MaterialDesignDataGridColumnHeader}">
+                                        <Setter Property="HorizontalContentAlignment" Value="Right" />
+                                        <Setter Property="ContentTemplate">
+                                            <Setter.Value>
+                                                <DataTemplate>
+                                                    <TextBlock TextWrapping="Wrap" Text="{Binding}" TextAlignment="Right" Width="90"/>
+                                                </DataTemplate>
+                                            </Setter.Value>
+                                        </Setter>
+                                    </Style>
+                                </DataGridCheckBoxColumn.HeaderStyle>
+                            </DataGridCheckBoxColumn>
 
-                                <DataGridCheckBoxColumn Binding="{Binding Enabled, UpdateSourceTrigger=PropertyChanged}"
-                                                        Header="Enabled"
-                                                        ElementStyle="{StaticResource MaterialDesignDataGridCheckBoxColumnStyle}"
-                                                        EditingElementStyle="{StaticResource MaterialDesignDataGridCheckBoxColumnEditingStyle}"/>
+                            <metro:DataGridNumericUpDownColumn Header="Default value"
+                                                               Minimum="0" 
+                                                               Maximum="1" 
+                                                               HideUpDownButtons="True" 
+                                                               Binding="{Binding DefaultValue}"
+                                                               StringFormat="{}{0:P0}">
+                                <metro:DataGridNumericUpDownColumn.HeaderStyle>
+                                    <Style TargetType="{x:Type DataGridColumnHeader}" BasedOn="{StaticResource MaterialDesignDataGridColumnHeader}">
+                                        <Setter Property="HorizontalContentAlignment" Value="Right" />
+                                        <Setter Property="ContentTemplate">
+                                            <Setter.Value>
+                                                <DataTemplate>
+                                                    <TextBlock TextWrapping="Wrap" Text="{Binding}" TextAlignment="Right" Width="50"/>
+                                                </DataTemplate>
+                                            </Setter.Value>
+                                        </Setter>
+                                    </Style>
+                                </metro:DataGridNumericUpDownColumn.HeaderStyle>
+                            </metro:DataGridNumericUpDownColumn>
 
-                                <DataGridTemplateColumn>
-                                    <DataGridTemplateColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <Button DockPanel.Dock="Right"   
-                                                    Style="{StaticResource MaterialDesignFlatButton}"
-                                                    ToolTip="Remove"
-                                                    material:RippleAssist.Feedback="{StaticResource MaterialDesignErrorBrush}"
-                                                    Foreground="{StaticResource MaterialDesignErrorBrush}"
-                                                    Height="20" 
-                                                    Width="20" 
-                                                    Padding="0"
-                                                    Margin="0"
-                                                    Click="{s:Action OnDeleteAxis}" >
-                                                <material:PackIcon Kind="Delete"/>
-                                            </Button>
-                                        </DataTemplate>
-                                    </DataGridTemplateColumn.CellTemplate>
-                                </DataGridTemplateColumn>
-                            </DataGrid.Columns>
-                        </DataGrid>
-                    </ScrollViewer>
+                            <DataGridCheckBoxColumn Binding="{Binding Enabled, UpdateSourceTrigger=PropertyChanged}"
+                                                    Header="Enabled"
+                                                    ElementStyle="{StaticResource MaterialDesignDataGridCheckBoxColumnStyle}"
+                                                    EditingElementStyle="{StaticResource MaterialDesignDataGridCheckBoxColumnEditingStyle}"/>
+
+                            <DataGridTemplateColumn>
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Button DockPanel.Dock="Right"   
+                                                Style="{StaticResource MaterialDesignFlatButton}"
+                                                ToolTip="Remove"
+                                                material:RippleAssist.Feedback="{StaticResource MaterialDesignErrorBrush}"
+                                                Foreground="{StaticResource MaterialDesignErrorBrush}"
+                                                Height="20" 
+                                                Width="20" 
+                                                Padding="0"
+                                                Margin="0"
+                                                Click="{s:Action OnDeleteAxis}" >
+                                            <material:PackIcon Kind="Delete"/>
+                                        </Button>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
                 </DockPanel>
             </material:Card>
         </DockPanel>

@@ -716,25 +716,11 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         {
             var mediaWithoutExtension = Path.GetFileNameWithoutExtension(MediaResource.Name);
             var funscriptWithoutExtension = Path.GetFileNameWithoutExtension(fileName);
-
-            if (DeviceAxis.TryParse("L0", out var strokeAxis))
-            {
-                if (axes.Contains(strokeAxis))
-                {
-                    if (string.Equals(funscriptWithoutExtension, mediaWithoutExtension, StringComparison.OrdinalIgnoreCase))
-                    {
-                        SetScript(strokeAxis, generator());
-                        updated.Add(strokeAxis);
-
-                        Logger.Debug("Matched {0} script to \"{1}\"", strokeAxis, fileName);
-                        return true;
-                    }
-                }
-            }
+            var isUnnamedScript = string.Equals(funscriptWithoutExtension, mediaWithoutExtension, StringComparison.OrdinalIgnoreCase);
 
             foreach (var axis in axes)
             {
-                if (axis.FunscriptNames.Any(n => funscriptWithoutExtension.EndsWith(n, StringComparison.OrdinalIgnoreCase)))
+                if ((isUnnamedScript && axis.LoadUnnamedScript) || axis.FunscriptNames.Any(n => funscriptWithoutExtension.EndsWith(n, StringComparison.OrdinalIgnoreCase)))
                 {
                     SetScript(axis, generator());
                     updated.Add(axis);
