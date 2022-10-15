@@ -726,7 +726,7 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                         SetScript(strokeAxis, generator());
                         updated.Add(strokeAxis);
 
-                        Logger.Debug("Matched {0} script to \"{1}\"", strokeAxis.Name, fileName);
+                        Logger.Debug("Matched {0} script to \"{1}\"", strokeAxis, fileName);
                         return true;
                     }
                 }
@@ -814,7 +814,7 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                     continue;
             }
 
-            Logger.Debug("Linked {0} to {1}", axis.Name, model.Settings.LinkAxis.Name);
+            Logger.Debug("Linked {0} to {1}", axis, model.Settings.LinkAxis);
 
             SetScript(axis, ScriptResource.LinkTo(AxisModels[model.Settings.LinkAxis].Script));
         }

@@ -165,8 +165,8 @@ public class DeviceAxisSettingsModel : PropertyChangedBase
     [JsonProperty] public string Name { get; set; } = null;
     [JsonProperty] public string FriendlyName { get; set; } = null;
     [JsonProperty] public ObservableConcurrentCollection<string> FunscriptNames { get; set; } = new();
-    [JsonProperty] public bool Enabled { get; set; } = false;
     [JsonProperty] public double DefaultValue { get; set; } = 0;
+    [JsonProperty] public bool Enabled { get; set; } = false;
 
     public DeviceAxisSettingsModel Clone() => new()
     {

@@ -15,7 +15,7 @@ public sealed class DeviceAxis
     [JsonProperty] public string Name { get; init; }
     [JsonProperty] public double DefaultValue { get; init; }
     [JsonProperty] public string FriendlyName { get; init; }
-    [JsonProperty] public IEnumerable<string> FunscriptNames { get; init; }
+    [JsonProperty] public IReadOnlyList<string> FunscriptNames { get; init; }
 
     public override string ToString() => Name;
     public override int GetHashCode() => _id;

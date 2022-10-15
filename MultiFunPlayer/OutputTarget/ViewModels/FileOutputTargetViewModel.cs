@@ -55,8 +55,8 @@ public class FileOutputTargetViewModel : ThreadAbstractOutputTarget
             {
                 writers[axis] = ScriptType switch
                 {
-                    ScriptType.Funscript => new FunscriptWriter(Path.Join(OutputDirectory.FullName, $"{baseFileName}.{axis.Name}.funscript")),
-                    ScriptType.Csv => new CsvWriter(Path.Join(OutputDirectory.FullName, $"{baseFileName}.{axis.Name}.csv")),
+                    ScriptType.Funscript => new FunscriptWriter(Path.Join(OutputDirectory.FullName, $"{baseFileName}.{axis}.funscript")),
+                    ScriptType.Csv => new CsvWriter(Path.Join(OutputDirectory.FullName, $"{baseFileName}.{axis}.csv")),
                     _ => throw new NotSupportedException()
                 };
             }

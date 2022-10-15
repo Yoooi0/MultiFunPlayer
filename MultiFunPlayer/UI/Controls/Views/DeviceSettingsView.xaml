@@ -197,16 +197,16 @@
                                                     ElementStyle="{StaticResource MaterialDesignDataGridTextColumnStyle}"
                                                     EditingElementStyle="{StaticResource MaterialDesignDataGridTextColumnEditingStyle}"/>
 
-                                <DataGridCheckBoxColumn Binding="{Binding Enabled, UpdateSourceTrigger=PropertyChanged}"
-                                                        Header="Enabled"
-                                                        ElementStyle="{StaticResource MaterialDesignDataGridCheckBoxColumnStyle}"
-                                                        EditingElementStyle="{StaticResource MaterialDesignDataGridCheckBoxColumnEditingStyle}"/>
-
-                                <metro:DataGridNumericUpDownColumn Header="Default value" 
+                                <metro:DataGridNumericUpDownColumn Header="Default value"
                                                                    Minimum="0" 
                                                                    Maximum="1" 
                                                                    HideUpDownButtons="True" 
                                                                    Binding="{Binding DefaultValue}"/>
+
+                                <DataGridCheckBoxColumn Binding="{Binding Enabled, UpdateSourceTrigger=PropertyChanged}"
+                                                        Header="Enabled"
+                                                        ElementStyle="{StaticResource MaterialDesignDataGridCheckBoxColumnStyle}"
+                                                        EditingElementStyle="{StaticResource MaterialDesignDataGridCheckBoxColumnEditingStyle}"/>
 
                                 <DataGridTemplateColumn>
                                     <DataGridTemplateColumn.CellTemplate>
