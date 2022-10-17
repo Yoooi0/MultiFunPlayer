@@ -8,7 +8,7 @@ using System.Reflection;
 
 namespace MultiFunPlayer.MediaSource;
 
-public abstract class AbstractMediaSource : Screen, IMediaSource, IHandle<SettingsMessage>
+public abstract class AbstractMediaSource : Screen, IMediaSource
 {
     private readonly AsyncManualResetEvent _statusEvent;
     private CancellationTokenSource _cancellationSource;
@@ -22,7 +22,6 @@ public abstract class AbstractMediaSource : Screen, IMediaSource, IHandle<Settin
     {
         _statusEvent = new AsyncManualResetEvent();
 
-        eventAggregator.Subscribe(this);
         PropertyChanged += (s, e) =>
         {
             if (string.Equals(e.PropertyName, "Status", StringComparison.OrdinalIgnoreCase))
@@ -92,28 +91,16 @@ public abstract class AbstractMediaSource : Screen, IMediaSource, IHandle<Settin
             await _statusEvent.WaitAsync(token);
     }
 
-    protected abstract void HandleSettings(JObject settings, SettingsAction action);
-    public void Handle(SettingsMessage message)
+    public virtual void HandleSettings(JObject settings, SettingsAction action)
     {
-        if (message.Action == SettingsAction.Saving)
+        if (action == SettingsAction.Saving)
         {
-            if (!message.Settings.EnsureContainsObjects("MediaSource", Name)
-             || !message.Settings.TryGetObject(out var settings, "MediaSource", Name))
-                return;
-
             settings[nameof(AutoConnectEnabled)] = AutoConnectEnabled;
-
-            HandleSettings(settings, message.Action);
         }
-        else if (message.Action == SettingsAction.Loading)
+        else if (action == SettingsAction.Loading)
         {
-            if (!message.Settings.TryGetObject(out var settings, "MediaSource", Name))
-                return;
-
             if (settings.TryGetValue<bool>(nameof(AutoConnectEnabled), out var autoConnectEnabled))
                 AutoConnectEnabled = autoConnectEnabled;
-
-            HandleSettings(settings, message.Action);
         }
     }
 

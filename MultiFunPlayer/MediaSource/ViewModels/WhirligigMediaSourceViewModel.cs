@@ -1,4 +1,4 @@
-﻿using MultiFunPlayer.Common;
+using MultiFunPlayer.Common;
 using MultiFunPlayer.Input;
 using MultiFunPlayer.UI;
 using Newtonsoft.Json.Linq;
@@ -101,8 +101,10 @@ public class WhirligigMediaSourceViewModel : AbstractMediaSource
         _eventAggregator.Publish(new MediaPlayingChangedMessage(false));
     }
 
-    protected override void HandleSettings(JObject settings, SettingsAction action)
+    public override void HandleSettings(JObject settings, SettingsAction action)
     {
+        base.HandleSettings(settings, action);
+
         if (action == SettingsAction.Saving)
         {
             settings[nameof(Endpoint)] = Endpoint?.ToString();

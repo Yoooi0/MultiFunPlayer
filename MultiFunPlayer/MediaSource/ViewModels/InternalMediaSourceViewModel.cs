@@ -1,4 +1,4 @@
-﻿using MultiFunPlayer.Common;
+using MultiFunPlayer.Common;
 using MultiFunPlayer.Input;
 using MultiFunPlayer.UI;
 using Newtonsoft.Json.Linq;
@@ -249,8 +249,10 @@ public class InternalMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPl
         e.Effects = DragDropEffects.Link;
     }
 
-    protected override void HandleSettings(JObject settings, SettingsAction action)
+    public override void HandleSettings(JObject settings, SettingsAction action)
     {
+        base.HandleSettings(settings, action);
+
         if (action == SettingsAction.Saving)
         {
             settings[nameof(IsShuffling)] = IsShuffling;

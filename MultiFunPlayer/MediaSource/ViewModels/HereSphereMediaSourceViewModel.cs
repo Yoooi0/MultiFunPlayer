@@ -1,4 +1,4 @@
-﻿using MultiFunPlayer.Common;
+using MultiFunPlayer.Common;
 using MultiFunPlayer.Input;
 using MultiFunPlayer.UI;
 using Newtonsoft.Json;
@@ -215,8 +215,10 @@ public class HereSphereMediaSourceViewModel : AbstractMediaSource, IHandle<Media
         catch (OperationCanceledException) { }
     }
 
-    protected override void HandleSettings(JObject settings, SettingsAction action)
+    public override void HandleSettings(JObject settings, SettingsAction action)
     {
+        base.HandleSettings(settings, action);
+
         if (action == SettingsAction.Saving)
         {
             settings[nameof(Endpoint)] = Endpoint?.ToString();

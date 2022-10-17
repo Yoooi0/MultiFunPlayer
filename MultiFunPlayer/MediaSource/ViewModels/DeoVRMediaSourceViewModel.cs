@@ -214,8 +214,10 @@ public class DeoVRMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlayP
         catch (OperationCanceledException) { }
     }
 
-    protected override void HandleSettings(JObject settings, SettingsAction action)
+    public override void HandleSettings(JObject settings, SettingsAction action)
     {
+        base.HandleSettings(settings, action);
+
         if (action == SettingsAction.Saving)
         {
             settings[nameof(Endpoint)] = Endpoint?.ToString();

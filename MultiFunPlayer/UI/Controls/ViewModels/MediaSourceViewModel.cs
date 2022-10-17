@@ -83,6 +83,15 @@ public class MediaSourceViewModel : Conductor<IMediaSource>.Collection.OneActive
             settings[nameof(ScanInterval)] = ScanInterval;
             settings[nameof(Items)] = JArray.FromObject(Items.Select(x => x.Name));
             settings[nameof(ActiveItem)] = ActiveItem?.Name;
+
+            foreach (var source in AvailableSources)
+            {
+                if (!settings.EnsureContainsObjects(source.Name)
+                 || !settings.TryGetObject(out var sourceSettings, source.Name))
+                    continue;
+
+                source.HandleSettings(sourceSettings, message.Action);
+            }
         }
         else if (message.Action == SettingsAction.Loading)
         {
@@ -99,6 +108,14 @@ public class MediaSourceViewModel : Conductor<IMediaSource>.Collection.OneActive
                 Items.AddRange(AvailableSources.Where(x => items.Any(s => string.Equals(s, x.Name, StringComparison.OrdinalIgnoreCase))));
             if (settings.TryGetValue<string>(nameof(ActiveItem), out var selectedItem))
                 ChangeActiveItem(Items.FirstOrDefault(x => string.Equals(x.Name, selectedItem, StringComparison.OrdinalIgnoreCase)) ?? Items.FirstOrDefault(), closePrevious: false);
+
+            foreach (var source in AvailableSources)
+            {
+                if (!settings.TryGetObject(out var sourceSettings, source.Name))
+                    continue;
+
+                source.HandleSettings(sourceSettings, message.Action);
+            }
         }
     }
 
