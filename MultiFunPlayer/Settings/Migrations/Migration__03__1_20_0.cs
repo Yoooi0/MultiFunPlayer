@@ -1,4 +1,4 @@
-﻿using MultiFunPlayer.Common;
+using MultiFunPlayer.Common;
 using MultiFunPlayer.OutputTarget.ViewModels;
 using Newtonsoft.Json.Linq;
 using NLog;
@@ -24,12 +24,12 @@ public class Migration__03__1_20_0 : AbstractConfigMigration
     {
         Logger.Info("Migrating OutputTargets");
 
-        var nameToTypeMap = new Dictionary<string, Type>()
+        var nameToTypeMap = new Dictionary<string, string>()
         {
-            ["Buttplug.io"] = typeof(ButtplugOutputTargetViewModel),
-            ["Network"] = typeof(NetworkOutputTargetViewModel),
-            ["Pipe"] = typeof(PipeOutputTargetViewModel),
-            ["Serial"] = typeof(SerialOutputTargetViewModel)
+            ["Buttplug.io"] = "MultiFunPlayer.OutputTarget.ViewModels.ButtplugOutputTargetViewModel, MultiFunPlayer",
+            ["Network"] = "MultiFunPlayer.OutputTarget.ViewModels.NetworkOutputTargetViewModel, MultiFunPlayer",
+            ["Pipe"] = "MultiFunPlayer.OutputTarget.ViewModels.PipeOutputTargetViewModel, MultiFunPlayer",
+            ["Serial"] = "MultiFunPlayer.OutputTarget.ViewModels.SerialOutputTargetViewModel, MultiFunPlayer"
         };
 
         var items = new List<JObject>();
@@ -41,7 +41,7 @@ public class Migration__03__1_20_0 : AbstractConfigMigration
             var o = settings[name] as JObject;
 
             settings.Remove(name);
-            o.AddTypeProperty(type);
+            o["$type"] = type;
             o["$index"] = 0;
 
             items.Add(o);
