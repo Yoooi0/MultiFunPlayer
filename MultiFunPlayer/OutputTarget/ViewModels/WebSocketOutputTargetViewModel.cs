@@ -125,11 +125,17 @@ public class WebSocketOutputTargetViewModel : AsyncAbstractOutputTarget
         if (action == SettingsAction.Saving)
         {
             settings[nameof(Uri)] = Uri?.ToString();
+            settings[nameof(OffloadElapsedTime)] = OffloadElapsedTime;
+            settings[nameof(SendDirtyValuesOnly)] = SendDirtyValuesOnly;
         }
         else if (action == SettingsAction.Loading)
         {
             if (settings.TryGetValue<Uri>(nameof(Uri), out var uri))
                 Uri = uri;
+            if (settings.TryGetValue<bool>(nameof(OffloadElapsedTime), out var offloadElapsedTime))
+                OffloadElapsedTime = offloadElapsedTime;
+            if (settings.TryGetValue<bool>(nameof(SendDirtyValuesOnly), out var sendDirtyValuesOnly))
+                SendDirtyValuesOnly = sendDirtyValuesOnly;
         }
     }
 

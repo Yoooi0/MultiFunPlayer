@@ -196,6 +196,8 @@ public class SerialOutputTargetViewModel : ThreadAbstractOutputTarget
         if (action == SettingsAction.Saving)
         {
             settings[nameof(SelectedSerialPort)] = SelectedSerialPortDeviceId;
+            settings[nameof(OffloadElapsedTime)] = OffloadElapsedTime;
+            settings[nameof(SendDirtyValuesOnly)] = SendDirtyValuesOnly;
             settings[nameof(BaudRate)] = BaudRate;
             settings[nameof(Parity)] = JToken.FromObject(Parity);
             settings[nameof(StopBits)] = JToken.FromObject(StopBits);
@@ -212,6 +214,10 @@ public class SerialOutputTargetViewModel : ThreadAbstractOutputTarget
         {
             if (settings.TryGetValue<string>(nameof(SelectedSerialPort), out var selectedSerialPort))
                 SelectSerialPortByDeviceId(selectedSerialPort);
+            if (settings.TryGetValue<bool>(nameof(OffloadElapsedTime), out var offloadElapsedTime))
+                OffloadElapsedTime = offloadElapsedTime;
+            if (settings.TryGetValue<bool>(nameof(SendDirtyValuesOnly), out var sendDirtyValuesOnly))
+                SendDirtyValuesOnly = sendDirtyValuesOnly;
 
             if (settings.TryGetValue<int>(nameof(BaudRate), out var baudRate)) BaudRate = baudRate;
             if (settings.TryGetValue<Parity>(nameof(Parity), out var parity)) Parity = parity;

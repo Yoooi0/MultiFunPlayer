@@ -88,11 +88,17 @@ public class TcpOutputTargetViewModel : ThreadAbstractOutputTarget
         if (action == SettingsAction.Saving)
         {
             settings[nameof(Endpoint)] = Endpoint?.ToString();
+            settings[nameof(OffloadElapsedTime)] = OffloadElapsedTime;
+            settings[nameof(SendDirtyValuesOnly)] = SendDirtyValuesOnly;
         }
         else if (action == SettingsAction.Loading)
         {
             if (settings.TryGetValue<EndPoint>(nameof(Endpoint), out var endpoint))
                 Endpoint = endpoint;
+            if (settings.TryGetValue<bool>(nameof(OffloadElapsedTime), out var offloadElapsedTime))
+                OffloadElapsedTime = offloadElapsedTime;
+            if (settings.TryGetValue<bool>(nameof(SendDirtyValuesOnly), out var sendDirtyValuesOnly))
+                SendDirtyValuesOnly = sendDirtyValuesOnly;
         }
     }
 
