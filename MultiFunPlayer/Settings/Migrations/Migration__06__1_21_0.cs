@@ -13,7 +13,8 @@ public class Migration__06__1_21_0 : AbstractConfigMigration
         if (settings.TryGetObject(out var axisSettings, "Script", "AxisSettings"))
             MigrateSmartLimitSettings(axisSettings);
 
-        MigrateSmartLimitActions(settings);
+        if (settings.TryGetObject(out var shortcutSettings, "Shortcuts"))
+            MigrateSmartLimitActions(shortcutSettings);
 
         base.Migrate(settings);
     }
@@ -49,7 +50,7 @@ public class Migration__06__1_21_0 : AbstractConfigMigration
     private void MigrateSmartLimitActions(JObject settings)
     {
         Logger.Info("Migrating Smart Limit Actions");
-        foreach (var action in settings.SelectTokens("$.Shortcuts.Bindings[*].Actions[?(@.Descriptor =~ /Axis::SmartLimitEnabled::Set.*/i)]").OfType<JObject>())
+        foreach (var action in settings.SelectTokens("$.Bindings[*].Actions[?(@.Descriptor =~ /Axis::SmartLimitEnabled::Set.*/i)]").OfType<JObject>())
         {
             const string newDescriptor = "Axis::SmartLimitInputAxis::Set";
             var oldDescriptor = action["Descriptor"].ToString();
@@ -75,7 +76,7 @@ public class Migration__06__1_21_0 : AbstractConfigMigration
             }
         }
 
-        foreach (var action in settings.SelectTokens("$.Shortcuts.Bindings[*].Actions[?(@.Descriptor =~ /Axis::SmartLimitEnabled::Toggle.*/i)]").ToList())
+        foreach (var action in settings.SelectTokens("$.Bindings[*].Actions[?(@.Descriptor =~ /Axis::SmartLimitEnabled::Toggle.*/i)]").ToList())
         {
             var parent = action.Parent as JArray;
             parent.Remove(action);

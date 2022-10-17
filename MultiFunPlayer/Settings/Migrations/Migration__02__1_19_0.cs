@@ -11,9 +11,7 @@ public class Migration__02__1_19_0 : AbstractConfigMigration
     public override void Migrate(JObject settings)
     {
         if (settings.TryGetObject(out var logBlacklistSettings, "LogBlacklist"))
-        {
             MigrateLogBlacklist(logBlacklistSettings);
-        }
 
         base.Migrate(settings);
     }

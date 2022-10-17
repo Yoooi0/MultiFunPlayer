@@ -14,14 +14,10 @@ public class Migration__01__1_19_0 : AbstractConfigMigration
     public override void Migrate(JObject settings)
     {
         if (settings.TryGetObject(out var serialSettings, "OutputTarget", "Serial"))
-        {
             MigrateSerialOutputTargetSelectedComPort(serialSettings);
-        }
 
         if (settings.TryGetObject(out var shortcutSettings, "Shortcuts"))
-        {
             MigrateSerialComPortSetAction(shortcutSettings);
-        }
 
         base.Migrate(settings);
     }
@@ -61,7 +57,7 @@ public class Migration__01__1_19_0 : AbstractConfigMigration
             if (deviceId != null)
             {
                 settings["SelectedSerialPort"] = deviceId;
-                Logger.Info("Migrated \"SelectedComPort={0}\" to \"SelectedSerialPort={1}\"", selectedComPort, settings["SelectedSerialPort"]);
+                Logger.Info("Migrated SelectedComPort from \"{0}\" to \"{1}\"", selectedComPort, settings["SelectedSerialPort"]);
             }
             else
             {

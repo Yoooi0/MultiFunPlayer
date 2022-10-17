@@ -13,9 +13,7 @@ public class Migration__11__1_23_0 : AbstractConfigMigration
         if (settings.TryGetObject(out var outputTargetSettings, "OutputTarget"))
         {
             if (settings.TryGetObject(out var shortcutSettings, "Shortcuts"))
-            {
                 MigrateNetworkOutputTargetActions(shortcutSettings, outputTargetSettings);
-            }
 
             MigrateOutputTargetActiveItem(outputTargetSettings);
             MigrateNetworkOutputTargets(outputTargetSettings);

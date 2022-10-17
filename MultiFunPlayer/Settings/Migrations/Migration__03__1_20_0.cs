@@ -1,4 +1,4 @@
-using MultiFunPlayer.Common;
+﻿using MultiFunPlayer.Common;
 using MultiFunPlayer.OutputTarget.ViewModels;
 using Newtonsoft.Json.Linq;
 using NLog;
@@ -57,7 +57,8 @@ public class Migration__03__1_20_0 : AbstractConfigMigration
         if (!settings.ContainsKey("ActiveItem"))
             return;
 
-        Logger.Info($"Migrated ActiveItem=\"{settings["ActiveItem"]}\" to ActiveItem=\"{settings["ActiveItem"]}/0\"");
-        settings["ActiveItem"] = $"{settings["ActiveItem"]}/0";
+        var activeItem = settings["ActiveItem"].ToString();
+        Logger.Info($"Migrated ActiveItem from \"{activeItem}\" to \"{activeItem}/0\"");
+        settings["ActiveItem"] = $"{activeItem}/0";
     }
 }

@@ -11,9 +11,7 @@ public class Migration__04__1_20_0 : AbstractConfigMigration
     public override void Migrate(JObject settings)
     {
         if (settings.TryGetObject(out var shortcutSettings, "Shortcuts"))
-        {
             MigrateOutputTargetBindings(shortcutSettings);
-        }
 
         base.Migrate(settings);
     }

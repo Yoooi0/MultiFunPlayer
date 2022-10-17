@@ -12,9 +12,7 @@ public class Migration__09__1_23_0 : AbstractConfigMigration
     public override void Migrate(JObject settings)
     {
         if (!settings.TryGetValue("Devices", out var _))
-        {
             MigrateDevices(settings);
-        }
 
         base.Migrate(settings);
     }

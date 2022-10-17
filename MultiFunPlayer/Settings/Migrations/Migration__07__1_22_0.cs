@@ -13,7 +13,8 @@ public class Migration__07__1_22_0 : AbstractConfigMigration
         if (settings.TryGetObject(out var axisSettings, "Script", "AxisSettings"))
             MigrateAxisSettings(axisSettings);
 
-        MigrateInvertedActions(settings);
+        if (settings.TryGetObject(out var shortcutSettings, "Shortcuts"))
+            MigrateInvertedActions(shortcutSettings);
 
         base.Migrate(settings);
     }
@@ -37,7 +38,7 @@ public class Migration__07__1_22_0 : AbstractConfigMigration
     private void MigrateInvertedActions(JObject settings)
     {
         Logger.Info("Migrating Inverted Actions");
-        foreach (var action in settings.SelectTokens("$.Shortcuts.Bindings[*].Actions[?(@.Descriptor =~ /Axis::Inverted::.*/i)]").OfType<JObject>())
+        foreach (var action in settings.SelectTokens("$.Bindings[*].Actions[?(@.Descriptor =~ /Axis::Inverted::.*/i)]").OfType<JObject>())
         {
             var oldDescriptor = action["Descriptor"].ToString();
             var newDescriptor = oldDescriptor.Replace("Axis::Inverted::", "Axis::InvertScript::");

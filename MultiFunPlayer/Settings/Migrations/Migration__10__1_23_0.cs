@@ -11,9 +11,7 @@ public class Migration__10__1_23_0 : AbstractConfigMigration
     public override void Migrate(JObject settings)
     {
         if (settings.TryGetObject(out var mediaSourceSettings, "MediaSource"))
-        {
             MigrateMediaSourceItems(mediaSourceSettings);
-        }
 
         base.Migrate(settings);
     }
