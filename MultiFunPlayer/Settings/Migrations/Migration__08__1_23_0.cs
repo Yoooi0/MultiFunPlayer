@@ -4,9 +4,9 @@ using NLog;
 
 namespace MultiFunPlayer.Settings.Migrations;
 
-public class Migration__2__1_19_0 : AbstractConfigMigration
+public class Migration__08__1_23_0 : AbstractConfigMigration
 {
-    private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
+    private readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
     public override void Migrate(JObject settings)
     {
@@ -23,9 +23,7 @@ public class Migration__2__1_19_0 : AbstractConfigMigration
         Logger.Info("Migrating LogBlacklist");
         var filterMap = new Dictionary<string, string>()
         {
-            ["MultiFunPlayer.Common.Input.RawInput.*"] = "MultiFunPlayer.Input.RawInput.*",
-            ["MultiFunPlayer.Common.Input.XInput.*"] = "MultiFunPlayer.Input.XInput.*",
-            ["MultiFunPlayer.ViewModels.ShortcutViewModel"] = "MultiFunPlayer.UI.Controls.ViewModels.ShortcutViewModel"
+            ["MultiFunPlayer.UI.Controls.ViewModels.ShortcutViewModel"] = "MultiFunPlayer.UI.Controls.ViewModels.ShortcutSettingsViewModel"
         };
 
         foreach (var (from, to) in filterMap)
