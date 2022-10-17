@@ -1,6 +1,7 @@
-using MultiFunPlayer.Common;
+﻿using MultiFunPlayer.Common;
 using MultiFunPlayer.Input;
 using MultiFunPlayer.MediaSource;
+using Newtonsoft.Json.Linq;
 using Stylet;
 
 namespace MultiFunPlayer.UI.Controls.ViewModels;
@@ -12,6 +13,8 @@ public class MediaSourceViewModel : Conductor<IMediaSource>.Collection.OneActive
     private IMediaSource _currentSource;
     private SemaphoreSlim _semaphore;
 
+    public IReadOnlyList<IMediaSource> AvailableSources { get; }
+
     public bool ContentVisible { get; set; }
     public int ScanDelay { get; set; } = 2500;
     public int ScanInterval { get; set; } = 5000;
@@ -19,14 +22,38 @@ public class MediaSourceViewModel : Conductor<IMediaSource>.Collection.OneActive
     public MediaSourceViewModel(IShortcutManager shortcutManager, IEventAggregator eventAggregator, IEnumerable<IMediaSource> sources)
     {
         eventAggregator.Subscribe(this);
-        Items.AddRange(sources);
+
+        AvailableSources = new List<IMediaSource>(sources);
 
         _currentSource = null;
-
         _semaphore = new SemaphoreSlim(1, 1);
         _cancellationSource = new CancellationTokenSource();
 
         RegisterShortcuts(shortcutManager);
+    }
+
+    public async void ToggleItem(IMediaSource source)
+    {
+        if (!Items.Contains(source))
+        {
+            Items.Add(source);
+            ActiveItem = source;
+        }
+        else
+        {
+            var token = _cancellationSource.Token;
+            await _semaphore.WaitAsync(token);
+            if (_currentSource == source)
+                await DisconnectCurrentSourceAsync(token);
+
+            var selectedIndex = Items.IndexOf(ActiveItem);
+            Items.Remove(source);
+            ActiveItem = Items.Count > 0 ? Items[Math.Min(selectedIndex, Items.Count - 1)] : null;
+
+            _semaphore.Release();
+        }
+
+        NotifyOfPropertyChange(() => Items);
     }
 
     protected override void OnViewLoaded()
@@ -54,6 +81,7 @@ public class MediaSourceViewModel : Conductor<IMediaSource>.Collection.OneActive
             settings[nameof(ContentVisible)] = ContentVisible;
             settings[nameof(ScanDelay)] = ScanDelay;
             settings[nameof(ScanInterval)] = ScanInterval;
+            settings[nameof(Items)] = JArray.FromObject(Items.Select(x => x.Name));
             settings[nameof(ActiveItem)] = ActiveItem?.Name;
         }
         else if (message.Action == SettingsAction.Loading)
@@ -67,6 +95,8 @@ public class MediaSourceViewModel : Conductor<IMediaSource>.Collection.OneActive
                 ScanDelay = scanDelay;
             if (settings.TryGetValue<int>(nameof(ScanInterval), out var scanInterval))
                 ScanInterval = scanInterval;
+            if (settings.TryGetValue<List<string>>(nameof(Items), out var items))
+                Items.AddRange(AvailableSources.Where(x => items.Any(s => string.Equals(s, x.Name, StringComparison.OrdinalIgnoreCase))));
             if (settings.TryGetValue<string>(nameof(ActiveItem), out var selectedItem))
                 ChangeActiveItem(Items.FirstOrDefault(x => string.Equals(x.Name, selectedItem, StringComparison.OrdinalIgnoreCase)) ?? Items.FirstOrDefault(), closePrevious: false);
         }
@@ -146,9 +176,9 @@ public class MediaSourceViewModel : Conductor<IMediaSource>.Collection.OneActive
                     if (!source.AutoConnectEnabled)
                         continue;
 
+                    await _semaphore.WaitAsync(token);
                     if (await source.CanConnectAsyncWithStatus(token))
                     {
-                        await _semaphore.WaitAsync(token);
                         if (_currentSource == null)
                         {
                             await source.ConnectAsync();
@@ -157,9 +187,9 @@ public class MediaSourceViewModel : Conductor<IMediaSource>.Collection.OneActive
                             if (source.Status == ConnectionStatus.Connected)
                                 _currentSource = source;
                         }
-
-                        _semaphore.Release();
                     }
+
+                    _semaphore.Release();
                 }
 
                 await Task.Delay(ScanInterval, token);
@@ -171,7 +201,7 @@ public class MediaSourceViewModel : Conductor<IMediaSource>.Collection.OneActive
     private void RegisterShortcuts(IShortcutManager s)
     {
         var token = _cancellationSource.Token;
-        foreach (var source in Items)
+        foreach (var source in AvailableSources)
         {
             s.RegisterAction($"{source.Name}::Connection::Toggle", b => b.WithCallback(async (_) => await ToggleConnectAsync(source)));
             s.RegisterAction($"{source.Name}::Connection::Connect", b => b.WithCallback(async (_) =>

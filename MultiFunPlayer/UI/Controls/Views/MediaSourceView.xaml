@@ -13,6 +13,7 @@
              d:DesignHeight="450" d:DesignWidth="800">
     <UserControl.Resources>
         <converters:ConnectionStatusToBrushConverter x:Key="ConnectionStatusToBrushConverter"/>
+        <converters:CollectionContainsItemConverter x:Key="CollectionContainsItemConverter"/>
         <ui:BindingProxy x:Key="ViewModelProxy" DataContext="{Binding}"/>
     </UserControl.Resources>
     <material:Card material:ShadowAssist.ShadowDepth="Depth1" Margin="0 0 0 20">
@@ -39,86 +40,145 @@
                 </TabControl.ContentTemplate>
                 <controls:NonReloadingTabControl.AdditionalPanelContent>
                     <DataTemplate>
-                        <Button Style="{StaticResource MaterialDesignToolBarButton}"
-                                ToolTip="Common settings"
-                                Padding="8"
-                                Command="{x:Static material:DialogHost.OpenDialogCommand}">
-                            <Button.CommandParameter>
-                                <Grid Margin="20" Width="200" MaxHeight="400">
-                                    <TextBlock Text="Media source settings" 
-                                               HorizontalAlignment="Left"
-                                               VerticalAlignment="Top"
-                                               Margin="0 -12 -15 0"
-                                               FontSize="14"
-                                               FontWeight="Bold"
-                                               Typography.Capitals="AllSmallCaps"/>
+                        <DockPanel>
+                            <material:PopupBox Style="{StaticResource MaterialDesignToolBarPopupBox}"
+                                               ToolTip="Add media source"
+                                               PlacementMode="RightAndAlignMiddles">
+                                <material:PopupBox.ToggleContent>
+                                    <Border Width="35">
+                                        <material:PackIcon Kind="Plus" 
+                                                           Width="22" 
+                                                           Height="22" 
+                                                           HorizontalAlignment="Center" 
+                                                           VerticalAlignment="Center"/>
+                                    </Border>
+                                </material:PopupBox.ToggleContent>
 
-                                    <Button Style="{StaticResource MaterialDesignFlatButton}"
-                                            material:RippleAssist.Feedback="Black"
-                                            Foreground="Black"
-                                            Height="24"
-                                            Width="24"
-                                            Padding="0"
-                                            HorizontalAlignment="Right"
-                                            VerticalAlignment="Top"
-                                            Margin="0 -15 -15 0"
-                                            Command="{x:Static material:DialogHost.CloseDialogCommand}">
-                                        <material:PackIcon Kind="Close" 
-                                                           Height="20" 
-                                                           Width="20"/>
-                                    </Button>
-                                    <DockPanel LastChildFill="True"
-                                               Margin="0 20 0 0">
-                                        <DockPanel DockPanel.Dock="Top">
-                                            <TextBlock Text="Scan delay: "
-                                                       Margin="0 0 10 0"
-                                                       DockPanel.Dock="Left" 
-                                                       VerticalAlignment="Center"/>
-                                            <material:ColorZone DockPanel.Dock="Right"
-                                                                VerticalAlignment="Center"
-                                                                CornerRadius="7"
-                                                                Mode="Custom"
-                                                                Background="{DynamicResource PrimaryHueLightBrush}"
-                                                                Width="14"
-                                                                Height="14">
-                                                <material:ColorZone.ToolTip>
-                                                    <TextBlock> 
-                                                        Initial scan delay after application start. <LineBreak/>
-                                                        Requires application restart. 
-                                                    </TextBlock>
-                                                </material:ColorZone.ToolTip>
-                                                <material:PackIcon Kind="QuestionMark"
-                                                                   Foreground="Black"
-                                                                   Width="10"
-                                                                   Height="10"
-                                                                   HorizontalAlignment="Center"
-                                                                   VerticalAlignment="Center"/>
-                                            </material:ColorZone>
-                                            
-                                            <metro:NumericUpDown DockPanel.Dock="Left"
-                                                                 Value="{Binding DataContext.ScanDelay, Source={StaticResource ViewModelProxy}}"
-                                                                 Minimum="0"
-                                                                 Interval="100"
-                                                                 StringFormat="{}{0}ms"
-                                                                 Margin="0 0 10 0"/>
-                                        </DockPanel>
+                                <Grid Margin="10 0 10 5">
+                                    <ItemsControl ItemsSource="{Binding DataContext.AvailableSources, Source={StaticResource ViewModelProxy}}">
+                                        <ItemsControl.ItemsPanel>
+                                            <ItemsPanelTemplate>
+                                                <StackPanel/>
+                                            </ItemsPanelTemplate>
+                                        </ItemsControl.ItemsPanel>
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Button Command="{s:Action ToggleItem}"
+                                                        CommandParameter="{Binding}"
+                                                        s:View.ActionTarget="{Binding DataContext, Source={StaticResource ViewModelProxy}}"
+                                                        material:ShadowAssist.ShadowDepth="Depth0"
+                                                        Margin="0 5 0 0"
+                                                        Padding="0"
+                                                        VerticalContentAlignment="Center">
+                                                    <Button.Resources>
+                                                        <Style TargetType="{x:Type Button}" BasedOn="{StaticResource MaterialDesignPaperLightButton}">
+                                                            <Style.Triggers>
+                                                                <DataTrigger Value="True">
+                                                                    <DataTrigger.Binding>
+                                                                        <MultiBinding Mode="OneWay" Converter="{StaticResource CollectionContainsItemConverter}">
+                                                                            <Binding Path="DataContext.Items" Source="{StaticResource ViewModelProxy}"/>
+                                                                            <Binding/>
+                                                                        </MultiBinding>
+                                                                    </DataTrigger.Binding>
 
-                                        <DockPanel DockPanel.Dock="Top">
-                                            <TextBlock Text="Scan interval: "
-                                                       Margin="0 0 10 0"
-                                                       DockPanel.Dock="Left" 
-                                                       VerticalAlignment="Center"/>
-                                            <metro:NumericUpDown DockPanel.Dock="Left"
-                                                                 Value="{Binding DataContext.ScanInterval, Source={StaticResource ViewModelProxy}}"
-                                                                 Minimum="0"
-                                                                 Interval="100"
-                                                                 StringFormat="{}{0}ms"/>
-                                        </DockPanel>
-                                    </DockPanel>
+                                                                    <Setter Property="Background" Value="{DynamicResource PrimaryHueLightBrush}"/>
+                                                                    <Setter Property="Foreground" Value="{DynamicResource PrimaryHueLightForegroundBrush}"/>
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </Button.Resources>
+                                                    
+                                                    <TextBlock Text="{Binding Name}"
+                                                               Margin="10 0 10 0"
+                                                               FontSize="12"/>
+                                                </Button>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
                                 </Grid>
-                            </Button.CommandParameter>
-                            <material:PackIcon Kind="Settings" Height="19" Width="19"/>
-                        </Button>
+                            </material:PopupBox>
+                            
+                            <Button Style="{StaticResource MaterialDesignToolBarButton}"
+                                    ToolTip="Common settings"
+                                    Padding="8"
+                                    Command="{x:Static material:DialogHost.OpenDialogCommand}">
+                                    <Button.CommandParameter>
+                                        <Grid Margin="20" Width="200" MaxHeight="400">
+                                            <TextBlock Text="Media source settings" 
+                                                   HorizontalAlignment="Left"
+                                                   VerticalAlignment="Top"
+                                                   Margin="0 -12 -15 0"
+                                                   FontSize="14"
+                                                   FontWeight="Bold"
+                                                   Typography.Capitals="AllSmallCaps"/>
+
+                                            <Button Style="{StaticResource MaterialDesignFlatButton}"
+                                                material:RippleAssist.Feedback="Black"
+                                                Foreground="Black"
+                                                Height="24"
+                                                Width="24"
+                                                Padding="0"
+                                                HorizontalAlignment="Right"
+                                                VerticalAlignment="Top"
+                                                Margin="0 -15 -15 0"
+                                                Command="{x:Static material:DialogHost.CloseDialogCommand}">
+                                                <material:PackIcon Kind="Close" 
+                                                               Height="20" 
+                                                               Width="20"/>
+                                            </Button>
+                                            <DockPanel LastChildFill="True"
+                                                   Margin="0 20 0 0">
+                                                <DockPanel DockPanel.Dock="Top">
+                                                    <TextBlock Text="Scan delay: "
+                                                           Margin="0 0 10 0"
+                                                           DockPanel.Dock="Left" 
+                                                           VerticalAlignment="Center"/>
+                                                    <material:ColorZone DockPanel.Dock="Right"
+                                                                    VerticalAlignment="Center"
+                                                                    CornerRadius="7"
+                                                                    Mode="Custom"
+                                                                    Background="{DynamicResource PrimaryHueLightBrush}"
+                                                                    Width="14"
+                                                                    Height="14">
+                                                        <material:ColorZone.ToolTip>
+                                                            <TextBlock> 
+                                                            Initial scan delay after application start. <LineBreak/>
+                                                            Requires application restart.
+                                                            </TextBlock>
+                                                        </material:ColorZone.ToolTip>
+                                                        <material:PackIcon Kind="QuestionMark"
+                                                                       Foreground="Black"
+                                                                       Width="10"
+                                                                       Height="10"
+                                                                       HorizontalAlignment="Center"
+                                                                       VerticalAlignment="Center"/>
+                                                    </material:ColorZone>
+
+                                                    <metro:NumericUpDown DockPanel.Dock="Left"
+                                                                     Value="{Binding DataContext.ScanDelay, Source={StaticResource ViewModelProxy}}"
+                                                                     Minimum="0"
+                                                                     Interval="100"
+                                                                     StringFormat="{}{0}ms"
+                                                                     Margin="0 0 10 0"/>
+                                                </DockPanel>
+
+                                                <DockPanel DockPanel.Dock="Top">
+                                                    <TextBlock Text="Scan interval: "
+                                                           Margin="0 0 10 0"
+                                                           DockPanel.Dock="Left" 
+                                                           VerticalAlignment="Center"/>
+                                                    <metro:NumericUpDown DockPanel.Dock="Left"
+                                                                     Value="{Binding DataContext.ScanInterval, Source={StaticResource ViewModelProxy}}"
+                                                                     Minimum="0"
+                                                                     Interval="100"
+                                                                     StringFormat="{}{0}ms"/>
+                                                </DockPanel>
+                                            </DockPanel>
+                                        </Grid>
+                                    </Button.CommandParameter>
+                                <material:PackIcon Kind="Settings" Height="19" Width="19"/>
+                            </Button>
+                        </DockPanel>
                     </DataTemplate>
                 </controls:NonReloadingTabControl.AdditionalPanelContent>
             </controls:NonReloadingTabControl>
