@@ -25,7 +25,7 @@ public class Migration__09__1_23_0 : AbstractConfigMigration
         if (!settings.TryGetValue<string>("SelectedDevice", out var selectedDevice) || string.IsNullOrWhiteSpace(selectedDevice))
             selectedDevice = devices.Last().Name;
 
-        var device = devices.FirstOrDefault(d => string.Equals(d.Name, selectedDevice, StringComparison.OrdinalIgnoreCase)) ?? devices.Last();
+        var device = devices.Find(d => string.Equals(d.Name, selectedDevice, StringComparison.OrdinalIgnoreCase)) ?? devices.Last();
         var migratedName = $"{device.Name} (migrated)";
         var migratedDevice = device.Clone(migratedName);
 
