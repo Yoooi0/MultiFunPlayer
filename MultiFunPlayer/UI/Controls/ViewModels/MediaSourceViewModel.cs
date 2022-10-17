@@ -1,4 +1,4 @@
-﻿using MultiFunPlayer.Common;
+using MultiFunPlayer.Common;
 using MultiFunPlayer.Input;
 using MultiFunPlayer.MediaSource;
 using Stylet;
@@ -68,7 +68,7 @@ public class MediaSourceViewModel : Conductor<IMediaSource>.Collection.OneActive
             if (settings.TryGetValue<int>(nameof(ScanInterval), out var scanInterval))
                 ScanInterval = scanInterval;
             if (settings.TryGetValue<string>(nameof(ActiveItem), out var selectedItem))
-                ChangeActiveItem(Items.FirstOrDefault(x => string.Equals(x.Name, selectedItem)) ?? Items[0], closePrevious: false);
+                ChangeActiveItem(Items.FirstOrDefault(x => string.Equals(x.Name, selectedItem, StringComparison.OrdinalIgnoreCase)) ?? Items.FirstOrDefault(), closePrevious: false);
         }
     }
 

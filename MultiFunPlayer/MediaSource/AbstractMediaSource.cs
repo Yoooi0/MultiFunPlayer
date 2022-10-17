@@ -14,6 +14,7 @@ public abstract class AbstractMediaSource : Screen, IMediaSource, IHandle<Settin
     private CancellationTokenSource _cancellationSource;
     private Task _task;
 
+    public string Name => GetType().GetCustomAttribute<DisplayNameAttribute>(inherit: false).DisplayName;
     [SuppressPropertyChangedWarnings] public abstract ConnectionStatus Status { get; protected set; }
     public bool AutoConnectEnabled { get; set; } = false;
 
@@ -30,8 +31,6 @@ public abstract class AbstractMediaSource : Screen, IMediaSource, IHandle<Settin
 
         RegisterShortcuts(shortcutManager);
     }
-
-    public string Name => GetType().GetCustomAttribute<DisplayNameAttribute>(inherit: false).DisplayName;
 
     protected abstract Task RunAsync(CancellationToken token);
 

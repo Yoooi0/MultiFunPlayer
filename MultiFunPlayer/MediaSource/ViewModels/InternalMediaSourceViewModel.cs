@@ -204,7 +204,7 @@ public class InternalMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPl
 
             foreach (var axis in DeviceAxis.All)
                 foreach (var funscriptName in axis.FunscriptNames)
-                    if (string.Equals(basePathExtension, $".{funscriptName}", StringComparison.InvariantCultureIgnoreCase))
+                    if (string.Equals(basePathExtension, $".{funscriptName}", StringComparison.OrdinalIgnoreCase))
                         return $"{Path.ChangeExtension(basePath, null)}.{mediaExtension}";
 
             return $"{basePath}.{mediaExtension}";

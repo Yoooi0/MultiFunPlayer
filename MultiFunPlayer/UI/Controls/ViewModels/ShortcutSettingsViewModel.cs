@@ -64,7 +64,7 @@ public class ShortcutSettingsViewModel : Screen, IHandle<SettingsMessage>, IDisp
             if (!string.IsNullOrWhiteSpace(ActionsFilter))
             {
                 var filterWords = ActionsFilter.Split(' ');
-                if (!filterWords.All(w => actionDescriptor.Name.Contains(w, StringComparison.InvariantCultureIgnoreCase)))
+                if (!filterWords.All(w => actionDescriptor.Name.Contains(w, StringComparison.OrdinalIgnoreCase)))
                     return false;
             }
 

@@ -246,7 +246,7 @@ public class Bootstrapper : Bootstrapper<RootViewModel>
             dirty = true;
         }
 
-        var device = devices.FirstOrDefault(d => string.Equals(d["Name"].ToString(), selectedDevice, StringComparison.InvariantCultureIgnoreCase));
+        var device = devices.FirstOrDefault(d => string.Equals(d["Name"].ToString(), selectedDevice, StringComparison.OrdinalIgnoreCase));
         if (device == null)
         {
             logger.Warn("Unable to find device! [SelectedDevice: \"{0}\"]", selectedDevice);

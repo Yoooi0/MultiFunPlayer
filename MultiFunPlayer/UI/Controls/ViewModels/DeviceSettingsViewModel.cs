@@ -36,7 +36,7 @@ public class DeviceSettingsViewModel : Screen, IHandle<SettingsMessage>
         if (string.IsNullOrWhiteSpace(result))
             return;
 
-        if (Devices.Any(d => string.Equals(d.Name, result, StringComparison.InvariantCultureIgnoreCase)))
+        if (Devices.Any(d => string.Equals(d.Name, result, StringComparison.OrdinalIgnoreCase)))
             return;
 
         SelectedDevice.Name = result;
@@ -49,7 +49,7 @@ public class DeviceSettingsViewModel : Screen, IHandle<SettingsMessage>
         if (string.IsNullOrWhiteSpace(result))
             return;
 
-        if (DefaultDevices.Any(d => string.Equals(d.Name, result, StringComparison.InvariantCultureIgnoreCase)))
+        if (DefaultDevices.Any(d => string.Equals(d.Name, result, StringComparison.OrdinalIgnoreCase)))
             return;
 
         var device = SelectedDevice != null ? SelectedDevice.Clone(result) : new DeviceSettingsModel() { Name = result };
@@ -70,7 +70,7 @@ public class DeviceSettingsViewModel : Screen, IHandle<SettingsMessage>
         var letters = Enumerable.Range('A', 'Z' - 'A' + 1);
         var numbers = Enumerable.Range('0', '9' - '0' + 1);
         var availableName = letters.SelectMany(l => numbers.Select(n => $"{(char)l}{(char)n}"))
-                                   .FirstOrDefault(x => !SelectedDevice.Axes.Any(a => string.Equals(a.Name, x, StringComparison.InvariantCultureIgnoreCase)));
+                                   .FirstOrDefault(x => !SelectedDevice.Axes.Any(a => string.Equals(a.Name, x, StringComparison.OrdinalIgnoreCase)));
         if (availableName == null)
             return;
 
@@ -96,7 +96,7 @@ public class DeviceSettingsViewModel : Screen, IHandle<SettingsMessage>
             if (message.Settings.TryGetValue<List<DeviceSettingsModel>>(nameof(Devices), out var devices))
                 Devices = new ObservableConcurrentCollection<DeviceSettingsModel>(devices);
             if (message.Settings.TryGetValue<string>(nameof(SelectedDevice), out var selectedDevice))
-                SelectedDevice = Devices.FirstOrDefault(d => string.Equals(d.Name, selectedDevice, StringComparison.InvariantCultureIgnoreCase)) ?? Devices[^1];
+                SelectedDevice = Devices.FirstOrDefault(d => string.Equals(d.Name, selectedDevice, StringComparison.OrdinalIgnoreCase)) ?? Devices[^1];
         }
     }
 

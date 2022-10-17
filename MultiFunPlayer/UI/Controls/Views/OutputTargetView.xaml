@@ -101,11 +101,9 @@
                                                         Margin="0 5 0 0"
                                                         Padding="0"
                                                         VerticalContentAlignment="Center">
-                                                    <Button.Content>
-                                                        <TextBlock Text="{Binding Converter={StaticResource DisplayNameConverter}}"
-                                                                   Margin="10 0 10 0"
-                                                                   FontSize="12"/>
-                                                    </Button.Content>
+                                                    <TextBlock Text="{Binding Converter={StaticResource DisplayNameConverter}}"
+                                                               Margin="10 0 10 0"
+                                                               FontSize="12"/>
                                                 </Button>
                                             </DataTemplate>
                                         </ItemsControl.ItemTemplate>
