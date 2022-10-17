@@ -21,7 +21,6 @@ public class DeoVRMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlayP
 {
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
-    private readonly IEventAggregator _eventAggregator;
     private readonly Channel<object> _writeMessageChannel;
 
     public override ConnectionStatus Status { get; protected set; }
@@ -31,7 +30,6 @@ public class DeoVRMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlayP
     public DeoVRMediaSourceViewModel(IShortcutManager shortcutManager, IEventAggregator eventAggregator)
         : base(shortcutManager, eventAggregator)
     {
-        _eventAggregator = eventAggregator;
         _writeMessageChannel = Channel.CreateUnbounded<object>(new UnboundedChannelOptions()
         {
             SingleReader = true,
@@ -82,8 +80,8 @@ public class DeoVRMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlayP
             _ = DialogHelper.ShowErrorAsync(e, $"{Name} failed with exception", "RootDialog");
         }
 
-        _eventAggregator.Publish(new MediaPathChangedMessage(null));
-        _eventAggregator.Publish(new MediaPlayingChangedMessage(false));
+        EventAggregator.Publish(new MediaPathChangedMessage(null));
+        EventAggregator.Publish(new MediaPlayingChangedMessage(false));
     }
 
     private async Task ReadAsync(TcpClient client, NetworkStream stream, CancellationToken token)
@@ -104,8 +102,8 @@ public class DeoVRMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlayP
 
                     if (playerState != null)
                     {
-                        _eventAggregator.Publish(new MediaPathChangedMessage(null));
-                        _eventAggregator.Publish(new MediaPlayingChangedMessage(false));
+                        EventAggregator.Publish(new MediaPathChangedMessage(null));
+                        EventAggregator.Publish(new MediaPlayingChangedMessage(false));
                         playerState = null;
                     }
 
@@ -128,32 +126,32 @@ public class DeoVRMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlayP
 
                         if (path != playerState.Path)
                         {
-                            _eventAggregator.Publish(new MediaPathChangedMessage(path));
+                            EventAggregator.Publish(new MediaPathChangedMessage(path));
                             playerState.Path = path;
                         }
                     }
 
                     if (document.TryGetValue("playerState", out var stateToken) && stateToken.TryToObject<int>(out var state) && state != playerState.State)
                     {
-                        _eventAggregator.Publish(new MediaPlayingChangedMessage(state == 0));
+                        EventAggregator.Publish(new MediaPlayingChangedMessage(state == 0));
                         playerState.State = state;
                     }
 
                     if (document.TryGetValue("duration", out var durationToken) && durationToken.TryToObject<double>(out var duration) && duration >= 0 && duration != playerState.Duration)
                     {
-                        _eventAggregator.Publish(new MediaDurationChangedMessage(TimeSpan.FromSeconds(duration)));
+                        EventAggregator.Publish(new MediaDurationChangedMessage(TimeSpan.FromSeconds(duration)));
                         playerState.Duration = duration;
                     }
 
                     if (document.TryGetValue("currentTime", out var timeToken) && timeToken.TryToObject<double>(out var position) && position >= 0 && position != playerState.Position)
                     {
-                        _eventAggregator.Publish(new MediaPositionChangedMessage(TimeSpan.FromSeconds(position)));
+                        EventAggregator.Publish(new MediaPositionChangedMessage(TimeSpan.FromSeconds(position)));
                         playerState.Position = position;
                     }
 
                     if (document.TryGetValue("playbackSpeed", out var speedToken) && speedToken.TryToObject<double>(out var speed) && speed > 0 && speed != playerState.Speed)
                     {
-                        _eventAggregator.Publish(new MediaSpeedChangedMessage(speed));
+                        EventAggregator.Publish(new MediaSpeedChangedMessage(speed));
                         playerState.Speed = speed;
                     }
                 }

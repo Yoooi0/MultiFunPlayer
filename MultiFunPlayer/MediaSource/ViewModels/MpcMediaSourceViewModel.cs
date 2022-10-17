@@ -17,7 +17,6 @@ public class MpcMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlayPau
 {
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
-    private readonly IEventAggregator _eventAggregator;
     private readonly Channel<object> _writeMessageChannel;
 
     public override ConnectionStatus Status { get; protected set; }
@@ -27,7 +26,6 @@ public class MpcMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlayPau
     public MpcMediaSourceViewModel(IShortcutManager shortcutManager, IEventAggregator eventAggregator)
         : base(shortcutManager, eventAggregator)
     {
-        _eventAggregator = eventAggregator;
         _writeMessageChannel = Channel.CreateUnbounded<object>(new UnboundedChannelOptions()
         {
             SingleReader = true,
@@ -70,8 +68,8 @@ public class MpcMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlayPau
             _ = DialogHelper.ShowErrorAsync(e, $"{Name} failed with exception", "RootDialog");
         }
 
-        _eventAggregator.Publish(new MediaPathChangedMessage(null));
-        _eventAggregator.Publish(new MediaPlayingChangedMessage(false));
+        EventAggregator.Publish(new MediaPathChangedMessage(null));
+        EventAggregator.Publish(new MediaPlayingChangedMessage(false));
     }
 
     private async Task ReadAsync(HttpClient client, CancellationToken token)
@@ -98,7 +96,7 @@ public class MpcMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlayPau
 
                 if (variables.TryGetValue("state", out var stateString) && int.TryParse(stateString, out var state) && state != playerState.State)
                 {
-                    _eventAggregator.Publish(new MediaPlayingChangedMessage(state == 2));
+                    EventAggregator.Publish(new MediaPlayingChangedMessage(state == 2));
                     playerState.State = state;
                 }
 
@@ -112,26 +110,26 @@ public class MpcMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlayPau
 
                     if (path != playerState.Path)
                     {
-                        _eventAggregator.Publish(new MediaPathChangedMessage(path));
+                        EventAggregator.Publish(new MediaPathChangedMessage(path));
                         playerState.Path = path;
                     }
                 }
 
                 if (variables.TryGetValue("duration", out var durationString) && long.TryParse(durationString, out var duration) && duration >= 0 && duration != playerState.Duration)
                 {
-                    _eventAggregator.Publish(new MediaDurationChangedMessage(TimeSpan.FromMilliseconds(duration)));
+                    EventAggregator.Publish(new MediaDurationChangedMessage(TimeSpan.FromMilliseconds(duration)));
                     playerState.Duration = duration;
                 }
 
                 if (variables.TryGetValue("position", out var positionString) && long.TryParse(positionString, out var position) && position >= 0 && position != playerState.Position)
                 {
-                    _eventAggregator.Publish(new MediaPositionChangedMessage(TimeSpan.FromMilliseconds(position)));
+                    EventAggregator.Publish(new MediaPositionChangedMessage(TimeSpan.FromMilliseconds(position)));
                     playerState.Position = position;
                 }
 
                 if (variables.TryGetValue("playbackrate", out var playbackrateString) && double.TryParse(playbackrateString, out var speed) && speed > 0 && speed != playerState.Speed)
                 {
-                    _eventAggregator.Publish(new MediaSpeedChangedMessage(speed));
+                    EventAggregator.Publish(new MediaSpeedChangedMessage(speed));
                     playerState.Speed = speed;
                 }
             }

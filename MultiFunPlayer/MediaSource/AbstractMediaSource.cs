@@ -18,8 +18,11 @@ public abstract class AbstractMediaSource : Screen, IMediaSource
     [SuppressPropertyChangedWarnings] public abstract ConnectionStatus Status { get; protected set; }
     public bool AutoConnectEnabled { get; set; } = false;
 
+    protected IEventAggregator EventAggregator { get; }
+
     protected AbstractMediaSource(IShortcutManager shortcutManager, IEventAggregator eventAggregator)
     {
+        EventAggregator = eventAggregator;
         _statusEvent = new AsyncManualResetEvent();
 
         PropertyChanged += (s, e) =>

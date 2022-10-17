@@ -21,7 +21,6 @@ public class MpvMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlayPau
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
     private readonly string _pipeName = "multifunplayer-mpv";
-    private readonly IEventAggregator _eventAggregator;
     private readonly Channel<object> _writeMessageChannel;
 
     public override ConnectionStatus Status { get; protected set; }
@@ -33,7 +32,6 @@ public class MpvMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlayPau
     public MpvMediaSourceViewModel(IShortcutManager shortcutManager, IEventAggregator eventAggregator)
         : base(shortcutManager, eventAggregator)
     {
-        _eventAggregator = eventAggregator;
         _writeMessageChannel = Channel.CreateUnbounded<object>(new UnboundedChannelOptions()
         {
             SingleReader = true,
@@ -106,8 +104,8 @@ public class MpvMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlayPau
             _ = DialogHelper.ShowErrorAsync(e, $"{Name} failed with exception", "RootDialog");
         }
 
-        _eventAggregator.Publish(new MediaPathChangedMessage(null));
-        _eventAggregator.Publish(new MediaPlayingChangedMessage(false));
+        EventAggregator.Publish(new MediaPathChangedMessage(null));
+        EventAggregator.Publish(new MediaPlayingChangedMessage(false));
     }
 
     private async Task ReadAsync(NamedPipeClientStream client, StreamReader reader, CancellationToken token)
@@ -138,23 +136,23 @@ public class MpvMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlayPau
                             switch (nameToken.ToObject<string>())
                             {
                                 case "path":
-                                    _eventAggregator.Publish(new MediaPathChangedMessage(dataToken.TryToObject<string>(out var path) && !string.IsNullOrWhiteSpace(path) ? path : null));
+                                    EventAggregator.Publish(new MediaPathChangedMessage(dataToken.TryToObject<string>(out var path) && !string.IsNullOrWhiteSpace(path) ? path : null));
                                     break;
                                 case "pause":
                                     if (dataToken.TryToObject<string>(out var paused))
-                                        _eventAggregator.Publish(new MediaPlayingChangedMessage(!string.Equals(paused, "yes", StringComparison.OrdinalIgnoreCase)));
+                                        EventAggregator.Publish(new MediaPlayingChangedMessage(!string.Equals(paused, "yes", StringComparison.OrdinalIgnoreCase)));
                                     break;
                                 case "duration":
                                     if (dataToken.TryToObject<double>(out var duration) && duration >= 0)
-                                        _eventAggregator.Publish(new MediaDurationChangedMessage(TimeSpan.FromSeconds(duration)));
+                                        EventAggregator.Publish(new MediaDurationChangedMessage(TimeSpan.FromSeconds(duration)));
                                     break;
                                 case "time-pos":
                                     if (dataToken.TryToObject<double>(out var position) && position >= 0)
-                                        _eventAggregator.Publish(new MediaPositionChangedMessage(TimeSpan.FromSeconds(position)));
+                                        EventAggregator.Publish(new MediaPositionChangedMessage(TimeSpan.FromSeconds(position)));
                                     break;
                                 case "speed":
                                     if (dataToken.TryToObject<double>(out var speed) && speed > 0)
-                                        _eventAggregator.Publish(new MediaSpeedChangedMessage(speed));
+                                        EventAggregator.Publish(new MediaSpeedChangedMessage(speed));
                                     break;
                             }
 

@@ -1,4 +1,4 @@
-using MultiFunPlayer.Common;
+﻿using MultiFunPlayer.Common;
 using MultiFunPlayer.Input;
 using MultiFunPlayer.UI;
 using Newtonsoft.Json.Linq;
@@ -19,7 +19,6 @@ public class InternalMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPl
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
     private readonly object _playlistLock = new();
-    private readonly IEventAggregator _eventAggregator;
     private readonly Channel<object> _messageChannel;
 
     private bool _isPlaying;
@@ -37,7 +36,6 @@ public class InternalMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPl
     public InternalMediaSourceViewModel(IShortcutManager shortcutManager, IEventAggregator eventAggregator)
         : base(shortcutManager, eventAggregator)
     {
-        _eventAggregator = eventAggregator;
         _messageChannel = Channel.CreateUnbounded<object>(new UnboundedChannelOptions()
         {
             SingleReader = true,
@@ -210,25 +208,25 @@ public class InternalMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPl
             return $"{basePath}.{mediaExtension}";
         }
 
-        _eventAggregator.Publish(new MediaPathChangedMessage(scriptInfo != null ? GetFakeMediaPath(scriptInfo) : null));
+        EventAggregator.Publish(new MediaPathChangedMessage(scriptInfo != null ? GetFakeMediaPath(scriptInfo) : null));
         _scriptInfo = scriptInfo;
     }
 
     private void SetDuration(double duration)
     {
-        _eventAggregator.Publish(new MediaDurationChangedMessage(double.IsFinite(duration) ? TimeSpan.FromSeconds(duration) : null));
+        EventAggregator.Publish(new MediaDurationChangedMessage(double.IsFinite(duration) ? TimeSpan.FromSeconds(duration) : null));
         _duration = duration;
     }
 
     private void SetPosition(double position, bool forceSeek = false)
     {
-        _eventAggregator.Publish(new MediaPositionChangedMessage(double.IsFinite(position) ? TimeSpan.FromSeconds(position) : null, forceSeek));
+        EventAggregator.Publish(new MediaPositionChangedMessage(double.IsFinite(position) ? TimeSpan.FromSeconds(position) : null, forceSeek));
         _position = position;
     }
 
     private void SetIsPlaying(bool isPlaying)
     {
-        _eventAggregator.Publish(new MediaPlayingChangedMessage(isPlaying));
+        EventAggregator.Publish(new MediaPlayingChangedMessage(isPlaying));
         _isPlaying = isPlaying;
     }
 
