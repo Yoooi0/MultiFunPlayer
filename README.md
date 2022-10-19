@@ -22,6 +22,7 @@ The player's main feature is the ability to play multiple funscripts at the same
 * Supports [buttplug.io](https://buttplug.io), network TCP/UDP, websockets, namedpipes, serial, file and The Handy outputs
 * Supports multiple outputs of the same type working concurrently
 * Supports TCode v0.2 and TCode v0.3 devices
+* Allows customization of TCode axes via "Device" settings
 * Auto detection and connection to any supported video player and output
 * Bind keyboard/mouse/gamepad input to almost any customizable action (150+ available actions)
 * Seek and play/pause video from MultiFunPlayer
@@ -53,12 +54,12 @@ To synchronize with videos, start your desired video player and wait for automat
 
 | Axis | Description | Valid file names |
 |-|-|-|
-| L0 | Up/Down | **`<video name>.funscript`** <br/> <sub>`<video name>.stroke.funscript`</sub> <br/> <sub>`<video name>.L0.funscript`</sub> |
-| L1 | Forward/Backward | **`<video name>.sway.funscript`** <br/> <sub>`<video name>.L1.funscript`</sub> |
-| L2 | Left/Right | **`<video name>.surge.funscript`** <br/> <sub>`<video name>.L2.funscript`</sub> |
-| R0 | Twist | **`<video name>.twist.funscript`** <br/> <sub>`<video name>.R0.funscript`</sub> |
-| R1 | Roll | **`<video name>.roll.funscript`** <br/> <sub>`<video name>.R1.funscript`</sub> |
-| R2 | Pitch | **`<video name>.pitch.funscript`** <br/> <sub>`<video name>.R2.funscript`</sub> |
+| L0 | Up/Down | **`<video name>.funscript`** |
+| L1 | Forward/Backward | **`<video name>.sway.funscript`**  |
+| L2 | Left/Right | **`<video name>.surge.funscript`** |
+| R0 | Twist | **`<video name>.twist.funscript`** |
+| R1 | Roll | **`<video name>.roll.funscript`** |
+| R2 | Pitch | **`<video name>.pitch.funscript`** |
 
 </details>
 
@@ -67,9 +68,9 @@ To synchronize with videos, start your desired video player and wait for automat
 
 | Axis | Description | Valid file names |
 |-|-|-|
-| V0 | Vibrate | **`<video name>.vib.funscript`** <br/> <sub>`<video name>.V0.funscript`</sub> |
-| V1 | Pump | **`<video name>.lube.funscript`** <br/> <sub>`<video name>.pump.funscript`</sub> <br/> <sub>`<video name>.V1.funscript`</sub> |
-| L3 | Suction | **`<video name>.suck.funscript`** <br/> <sub>`<video name>.valve.funscript`</sub> <br/> <sub>`<video name>.L3.funscript`</sub> |
+| V0 | Vibrate | **`<video name>.vib.funscript`** |
+| V1 | Pump | **`<video name>.lube.funscript`** |
+| L3 | Suction | **`<video name>.suck.funscript`** |
 
 </details>
 
@@ -78,14 +79,14 @@ To synchronize with videos, start your desired video player and wait for automat
 
 | Axis | Description | Valid file names |
 |-|-|-|
-| V0 | Vibrate | **`<video name>.vib.funscript`** <br/> <sub>`<video name>.V0.funscript`</sub> |
-| A0 | Valve | **`<video name>.valve.funscript`** <br/> <sub>`<video name>.A0.funscript`</sub> |
-| A1 | Suction | **`<video name>.suck.funscript`** <br/> <sub>`<video name>.A1.funscript`</sub> |
+| V0 | Vibrate | **`<video name>.vib.funscript`** |
+| A0 | Valve | **`<video name>.valve.funscript`** |
+| A1 | Suction | **`<video name>.suck.funscript`** |
 
 </details>
 </br>
 
-> Names in **bold** are commonly used used and are preferred 
+> The above file names are standard and recommended, other supported funscript names can be seen and configured in "Device" settings.
 
 > The above file names are matched in all script libraries and in the currently playing video directory.
 
