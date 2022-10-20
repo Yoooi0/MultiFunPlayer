@@ -23,6 +23,9 @@ public abstract class AbstractMediaSource : Screen, IMediaSource
     protected AbstractMediaSource(IShortcutManager shortcutManager, IEventAggregator eventAggregator)
     {
         EventAggregator = eventAggregator;
+        if (this is IHandle handler)
+            EventAggregator.Subscribe(handler);
+
         _statusEvent = new AsyncManualResetEvent();
 
         PropertyChanged += (s, e) =>
