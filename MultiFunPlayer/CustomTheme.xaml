@@ -6,7 +6,8 @@
                     xmlns:material="http://materialdesigninxaml.net/winfx/xaml/themes"
                     xmlns:metro="http://metro.mahapps.com/winfx/xaml/controls">
     <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
-    
+    <material:NotConverter x:Key="NotConverter"/>
+
     <Style TargetType="{x:Type ButtonBase}" x:Key="MaterialDesignProgressToolBarButton">
         <Setter Property="Padding" Value="0"/>
         <Setter Property="Foreground" Value="{DynamicResource MaterialDesignBody}"/>
@@ -93,6 +94,7 @@
         <Setter Property="TextElement.FontWeight" Value="Normal" />
         <Setter Property="Padding" Value="0 8 0 8" />
         <Setter Property="Focusable" Value="True" />
+        <Setter Property="ToolTipService.IsEnabled" Value="{Binding IsPopupOpen, RelativeSource={RelativeSource Self}, Converter={StaticResource NotConverter}}"/>
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type material:PopupBox}">
