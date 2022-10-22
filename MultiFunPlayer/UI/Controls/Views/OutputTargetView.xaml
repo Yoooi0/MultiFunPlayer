@@ -73,7 +73,8 @@
                         <DockPanel>
                             <material:PopupBox Style="{StaticResource MaterialDesignToolBarPopupBox}"
                                                ToolTip="Add output"
-                                               PlacementMode="RightAndAlignMiddles">
+                                               PlacementMode="RightAndAlignMiddles"
+                                               PopupHorizontalOffset="-5">
                                 <material:PopupBox.ToggleContent>
                                     <Border Width="35">
                                         <material:PackIcon Kind="Plus" 
@@ -100,7 +101,8 @@
                                                         material:ShadowAssist.ShadowDepth="Depth0"
                                                         Margin="0 5 0 0"
                                                         Padding="0"
-                                                        VerticalContentAlignment="Center">
+                                                        VerticalContentAlignment="Center"
+                                                        ToolTip="Add new">
                                                     <TextBlock Text="{Binding Converter={StaticResource DisplayNameConverter}}"
                                                                Margin="10 0 10 0"
                                                                FontSize="12"/>

@@ -42,8 +42,9 @@
                     <DataTemplate>
                         <DockPanel>
                             <material:PopupBox Style="{StaticResource MaterialDesignToolBarPopupBox}"
-                                               ToolTip="Add media source"
-                                               PlacementMode="RightAndAlignMiddles">
+                                               ToolTip="Toggle media source"
+                                               PlacementMode="RightAndAlignMiddles"
+                                               PopupHorizontalOffset="-5">
                                 <material:PopupBox.ToggleContent>
                                     <Border Width="35">
                                         <material:PackIcon Kind="Plus" 
@@ -72,6 +73,7 @@
                                                         VerticalContentAlignment="Center">
                                                     <Button.Resources>
                                                         <Style TargetType="{x:Type Button}" BasedOn="{StaticResource MaterialDesignPaperLightButton}">
+                                                            <Setter Property="ToolTip" Value="Show"/>
                                                             <Style.Triggers>
                                                                 <DataTrigger Value="True">
                                                                     <DataTrigger.Binding>
@@ -83,6 +85,7 @@
 
                                                                     <Setter Property="Background" Value="{DynamicResource PrimaryHueLightBrush}"/>
                                                                     <Setter Property="Foreground" Value="{DynamicResource PrimaryHueLightForegroundBrush}"/>
+                                                                    <Setter Property="ToolTip" Value="Hide"/>
                                                                 </DataTrigger>
                                                             </Style.Triggers>
                                                         </Style>
