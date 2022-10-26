@@ -256,16 +256,16 @@ public class DeoVRMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlayP
         }
     }
 
-    protected override void RegisterShortcuts(IShortcutManager s)
+    protected override void RegisterActions(IShortcutManager s)
     {
-        base.RegisterShortcuts(s);
+        base.RegisterActions(s);
 
         #region Endpoint
-        s.RegisterAction($"{Name}::Endpoint::Set", b => b.WithSetting<string>(s => s.WithLabel("Endpoint").WithDescription("ip/host:port")).WithCallback((_, endpointString) =>
+        s.RegisterAction<string>($"{Name}::Endpoint::Set", s => s.WithLabel("Endpoint").WithDescription("ip/host:port"), endpointString =>
         {
             if (NetUtils.TryParseEndpoint(endpointString, out var endpoint))
                 Endpoint = endpoint;
-        }));
+        });
         #endregion
     }
 

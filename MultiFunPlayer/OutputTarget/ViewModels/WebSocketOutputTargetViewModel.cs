@@ -144,11 +144,11 @@ public class WebSocketOutputTargetViewModel : AsyncAbstractOutputTarget
         base.RegisterActions(s);
 
         #region Uri
-        s.RegisterAction($"{Identifier}::Uri::Set", b => b.WithSetting<string>(s => s.WithLabel("Uri").WithDescription("websocket uri")).WithCallback((_, uriString) =>
+        s.RegisterAction<string>($"{Identifier}::Uri::Set", s => s.WithLabel("Uri").WithDescription("websocket uri"), uriString =>
         {
             if (Uri.TryCreate(uriString, UriKind.Absolute, out var uri))
                 Uri = uri;
-        }));
+        });
         #endregion
     }
 

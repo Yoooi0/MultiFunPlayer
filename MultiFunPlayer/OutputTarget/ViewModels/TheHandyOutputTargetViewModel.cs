@@ -191,13 +191,11 @@ public class TheHandyOutputTargetViewModel : AsyncAbstractOutputTarget
         base.RegisterActions(s);
 
         #region ConnectionKey
-        s.RegisterAction($"{Identifier}::ConnectionKey::Set", b => b.WithSetting<string>(s => s.WithLabel("Connection key"))
-                                                                    .WithCallback((_, connectionKey) => ConnectionKey = connectionKey));
+        s.RegisterAction<string>($"{Identifier}::ConnectionKey::Set", s => s.WithLabel("Connection key"), connectionKey => ConnectionKey = connectionKey);
         #endregion
 
         #region SourceAxis
-        s.RegisterAction($"{Identifier}::SourceAxis::Set", b => b.WithSetting<DeviceAxis>(s => s.WithLabel("Source axis"))
-                                                                 .WithCallback((_, axis) => SourceAxis = axis));
+        s.RegisterAction<DeviceAxis>($"{Identifier}::SourceAxis::Set", s => s.WithLabel("Source axis").WithItemsSource(DeviceAxis.All), axis => SourceAxis = axis);
         #endregion
     }
 

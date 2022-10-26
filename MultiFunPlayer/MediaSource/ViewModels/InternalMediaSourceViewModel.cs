@@ -282,9 +282,9 @@ public class InternalMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPl
 
     public override async ValueTask<bool> CanConnectAsync(CancellationToken token) => await ValueTask.FromResult(true);
 
-    protected override void RegisterShortcuts(IShortcutManager s)
+    protected override void RegisterActions(IShortcutManager s)
     {
-        base.RegisterShortcuts(s);
+        base.RegisterActions(s);
 
         void WhenConnected(Action callback)
         {
@@ -293,21 +293,21 @@ public class InternalMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPl
         }
 
         #region IsShuffling
-        s.RegisterAction($"{Name}::Shuffle::Set", b => b.WithSetting<bool>(s => s.WithLabel("Enable shuffle")).WithCallback((_, enabled) => IsShuffling = enabled));
-        s.RegisterAction($"{Name}::Shuffle::Toggle", b => b.WithCallback(_ => IsShuffling = !IsShuffling));
+        s.RegisterAction<bool>($"{Name}::Shuffle::Set", s => s.WithLabel("Enable shuffle"), enabled => IsShuffling = enabled);
+        s.RegisterAction($"{Name}::Shuffle::Toggle", () => IsShuffling = !IsShuffling);
         #endregion
 
         #region IsLooping
-        s.RegisterAction($"{Name}::Looping::Set", b => b.WithSetting<bool>(s => s.WithLabel("Enable looping")).WithCallback((_, enabled) => IsLooping = enabled));
-        s.RegisterAction($"{Name}::Looping::Toggle", b => b.WithCallback(_ => IsLooping = !IsLooping));
+        s.RegisterAction<bool>($"{Name}::Looping::Set", s => s.WithLabel("Enable looping"), enabled => IsLooping = enabled);
+        s.RegisterAction($"{Name}::Looping::Toggle", () => IsLooping = !IsLooping);
         #endregion
 
         #region Playlist
-        s.RegisterAction($"{Name}::Playlist::Clear", b => b.WithCallback(_ => WhenConnected(ClearPlaylist)));
-        s.RegisterAction($"{Name}::Playlist::Prev", b => b.WithCallback(_ => WhenConnected(PlayPrevious)));
-        s.RegisterAction($"{Name}::Playlist::Next", b => b.WithCallback(_ => WhenConnected(PlayNext)));
-        s.RegisterAction($"{Name}::Playlist::PlayByIndex", b => b.WithSetting<int>(s => s.WithLabel("Index")).WithCallback((_, index) => WhenConnected(() => _messageChannel.Writer.TryWrite(new PlayScriptAtIndexMessage(index)))));
-        s.RegisterAction($"{Name}::Playlist::PlayByName", b => b.WithSetting<string>(s => s.WithLabel("File name/path")).WithCallback((_, name) => WhenConnected(() =>
+        s.RegisterAction($"{Name}::Playlist::Clear", () => WhenConnected(ClearPlaylist));
+        s.RegisterAction($"{Name}::Playlist::Prev", () => WhenConnected(PlayPrevious));
+        s.RegisterAction($"{Name}::Playlist::Next", () => WhenConnected(PlayNext));
+        s.RegisterAction<int>($"{Name}::Playlist::PlayByIndex", s => s.WithLabel("Index"), index => WhenConnected(() => _messageChannel.Writer.TryWrite(new PlayScriptAtIndexMessage(index))));
+        s.RegisterAction<string>($"{Name}::Playlist::PlayByName", s => s.WithLabel("File name/path"), name => WhenConnected(() =>
         {
             var playlist = ScriptPlaylist;
             if (playlist == null)
@@ -317,7 +317,7 @@ public class InternalMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPl
                                              || string.Equals(name, f.FullName, StringComparison.OrdinalIgnoreCase));
             if (index >= 0)
                 _messageChannel.Writer.TryWrite(new PlayScriptAtIndexMessage(index));
-        })));
+        }));
         #endregion
     }
 

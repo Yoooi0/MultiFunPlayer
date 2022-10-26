@@ -289,12 +289,12 @@ public class MpvMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlayPau
         IsDownloading = false;
     }
 
-    protected override void RegisterShortcuts(IShortcutManager s)
+    protected override void RegisterActions(IShortcutManager s)
     {
-        base.RegisterShortcuts(s);
+        base.RegisterActions(s);
 
         #region Arguments
-        s.RegisterAction($"{Name}::Arguments::Set", b => b.WithSetting<string>(s => s.WithLabel("Arguments")).WithCallback((_, arguments) => Arguments = arguments));
+        s.RegisterAction<string>($"{Name}::Arguments::Set", s => s.WithLabel("Arguments") , arguments => Arguments = arguments);
         #endregion
     }
 

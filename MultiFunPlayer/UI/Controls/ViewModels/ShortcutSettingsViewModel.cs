@@ -1,4 +1,3 @@
-using MaterialDesignThemes.Wpf;
 using MultiFunPlayer.Common;
 using MultiFunPlayer.Input;
 using MultiFunPlayer.Input.RawInput;
@@ -21,17 +20,18 @@ public class ShortcutSettingsViewModel : Screen, IHandle<SettingsMessage>, IDisp
 {
     protected static readonly Logger Logger = LogManager.GetCurrentClassLogger();
     private readonly IShortcutManager _manager;
+    private readonly IShortcutBinder _binder;
     private readonly Channel<IInputGesture> _captureGestureChannel;
     private CancellationTokenSource _captureGestureCancellationSource;
 
     public string ActionsFilter { get; set; }
     public ICollectionView AvailableActionsView { get; }
     public ObservableConcurrentCollection<IShortcutActionDescriptor> AvailableActions => _manager.AvailableActions;
-    public ObservableConcurrentDictionary<IInputGestureDescriptor, ObservableConcurrentCollection<IShortcutAction>> Bindings => _manager.Bindings;
+    public ObservableConcurrentDictionary<IInputGestureDescriptor, ObservableConcurrentCollection<IShortcutActionConfiguration>> Bindings => _binder.Bindings;
 
     public bool IsCapturingGesture { get; private set; }
     public IInputGestureDescriptor CapturedGesture { get; set; }
-    public KeyValuePair<IInputGestureDescriptor, ObservableConcurrentCollection<IShortcutAction>>? SelectedBinding { get; set; }
+    public KeyValuePair<IInputGestureDescriptor, ObservableConcurrentCollection<IShortcutActionConfiguration>>? SelectedBinding { get; set; }
 
     [JsonProperty] public bool IsKeyboardKeysGestureEnabled { get; set; } = true;
     [JsonProperty] public bool IsMouseAxisGestureEnabled { get; set; } = false;
@@ -39,10 +39,12 @@ public class ShortcutSettingsViewModel : Screen, IHandle<SettingsMessage>, IDisp
     [JsonProperty] public bool IsGamepadAxisGestureEnabled { get; set; } = true;
     [JsonProperty] public bool IsGamepadButtonGestureEnabled { get; set; } = true;
 
-    public ShortcutSettingsViewModel(IShortcutManager manager, IEventAggregator eventAggregator)
+    public ShortcutSettingsViewModel(IShortcutManager manager, IShortcutBinder binder, IEventAggregator eventAggregator)
     {
         DisplayName = "Shortcut";
         _manager = manager;
+        _binder = binder;
+
         Logger.Debug($"Initialized with {manager.AvailableActions.Count} available actions");
 
         eventAggregator.Subscribe(this);
@@ -55,10 +57,8 @@ public class ShortcutSettingsViewModel : Screen, IHandle<SettingsMessage>, IDisp
             if (SelectedBinding == null)
                 return false;
 
-            var (selectedGesture, _) = SelectedBinding.Value;
-            if (!actionDescriptor.AcceptsSimpleGesture && selectedGesture is ISimpleInputGestureDescriptor)
-                return false;
-            if (!actionDescriptor.AcceptsAxisGesture && selectedGesture is IAxisInputGestureDescriptor)
+            var (gestureDescriptor, _) = SelectedBinding.Value;
+            if (!_manager.ActionAcceptsGesture(actionDescriptor, gestureDescriptor))
                 return false;
 
             if (!string.IsNullOrWhiteSpace(ActionsFilter))
@@ -71,7 +71,7 @@ public class ShortcutSettingsViewModel : Screen, IHandle<SettingsMessage>, IDisp
             return true;
         };
 
-        _manager.OnGesture += HandleGesture;
+        _binder.OnGesture += HandleGesture;
         _captureGestureChannel = Channel.CreateBounded<IInputGesture>(new BoundedChannelOptions(1)
         {
             FullMode = BoundedChannelFullMode.DropOldest,
@@ -86,8 +86,8 @@ public class ShortcutSettingsViewModel : Screen, IHandle<SettingsMessage>, IDisp
         };
     }
 
-    protected override void OnActivate() => _manager.HandleGestures = false;
-    protected override void OnDeactivate() => _manager.HandleGestures = true;
+    protected override void OnActivate() => _binder.HandleGestures = false;
+    protected override void OnDeactivate() => _binder.HandleGestures = true;
 
     private async void HandleGesture(object sender, GestureEventArgs e)
     {
@@ -132,7 +132,7 @@ public class ShortcutSettingsViewModel : Screen, IHandle<SettingsMessage>, IDisp
         if (CapturedGesture == null)
             return;
 
-        _manager.RegisterGesture(CapturedGesture);
+        _binder.RegisterGesture(CapturedGesture);
         SelectedBinding = KeyValuePair.Create(CapturedGesture, Bindings[CapturedGesture]);
 
         CapturedGesture = null;
@@ -140,11 +140,11 @@ public class ShortcutSettingsViewModel : Screen, IHandle<SettingsMessage>, IDisp
 
     public void RemoveGesture(object sender, RoutedEventArgs e)
     {
-        if (sender is not FrameworkElement element || element.DataContext is not KeyValuePair<IInputGestureDescriptor, ObservableConcurrentCollection<IShortcutAction>> pair)
+        if (sender is not FrameworkElement element || element.DataContext is not KeyValuePair<IInputGestureDescriptor, ObservableConcurrentCollection<IShortcutActionConfiguration>> pair)
             return;
 
         var (gestureDescriptor, _) = pair;
-        _manager.UnregisterGesture(gestureDescriptor);
+        _binder.UnregisterGesture(gestureDescriptor);
     }
 
     public void AssignAction(object sender, RoutedEventArgs e)
@@ -155,29 +155,29 @@ public class ShortcutSettingsViewModel : Screen, IHandle<SettingsMessage>, IDisp
             return;
 
         var binding = SelectedBinding.Value;
-        _manager.BindAction(binding.Key, actionDescriptor);
+        _binder.BindAction(binding.Key, actionDescriptor);
     }
 
     public void RemoveAssignedAction(object sender, RoutedEventArgs e)
     {
-        if (sender is not FrameworkElement element || element.DataContext is not IShortcutAction action)
+        if (sender is not FrameworkElement element || element.DataContext is not IShortcutActionConfiguration configuration)
             return;
         if (SelectedBinding == null)
             return;
 
         var binding = SelectedBinding.Value;
-        _manager.UnbindAction(binding.Key, action);
+        _binder.UnbindAction(binding.Key, configuration);
     }
 
     public void MoveAssignedActionUp(object sender, RoutedEventArgs e)
     {
-        if (sender is not FrameworkElement element || element.DataContext is not IShortcutAction action)
+        if (sender is not FrameworkElement element || element.DataContext is not IShortcutActionConfiguration configuration)
             return;
         if (SelectedBinding == null)
             return;
 
         var binding = SelectedBinding.Value;
-        var index = binding.Value.IndexOf(action);
+        var index = binding.Value.IndexOf(configuration);
         if (index == 0)
             return;
 
@@ -186,21 +186,21 @@ public class ShortcutSettingsViewModel : Screen, IHandle<SettingsMessage>, IDisp
 
     public void ConfigureAssignedAction(object sender, RoutedEventArgs e)
     {
-        if (sender is not FrameworkElement element || element.DataContext is not IShortcutAction action)
+        if (sender is not FrameworkElement element || element.DataContext is not IShortcutActionConfiguration configuration)
             return;
 
-        _ = DialogHelper.ShowOnUIThreadAsync(new ConfigureShortcutActionDialogViewModel(action), "SettingsDialog");
+        _ = DialogHelper.ShowOnUIThreadAsync(new ShortcutActionConfigurationDialogViewModel(configuration), "SettingsDialog");
     }
 
     public void MoveAssignedActionDown(object sender, RoutedEventArgs e)
     {
-        if (sender is not FrameworkElement element || element.DataContext is not IShortcutAction action)
+        if (sender is not FrameworkElement element || element.DataContext is not IShortcutActionConfiguration configuration)
             return;
         if (SelectedBinding == null)
             return;
 
         var binding = SelectedBinding.Value;
-        var index = binding.Value.IndexOf(action);
+        var index = binding.Value.IndexOf(configuration);
         if (index == binding.Value.Count - 1)
             return;
 
@@ -210,7 +210,7 @@ public class ShortcutSettingsViewModel : Screen, IHandle<SettingsMessage>, IDisp
     private async Task TryCaptureGestureAsync(CancellationToken token)
     {
         bool ValidateGesture(IInputGesture gesture)
-            => !_manager.Bindings.ContainsKey(gesture.Descriptor);
+            => !_binder.Bindings.ContainsKey(gesture.Descriptor);
 
         var tryCount = 0;
         var gesture = default(IInputGesture);
@@ -264,12 +264,12 @@ public class ShortcutSettingsViewModel : Screen, IHandle<SettingsMessage>, IDisp
             if (settings.TryGetValue<List<BindingSettingsModel>>(nameof(Bindings), out var loadedBindings))
             {
                 foreach (var gestureDescriptor in Bindings.Keys.ToList())
-                    _manager.UnregisterGesture(gestureDescriptor);
+                    _binder.UnregisterGesture(gestureDescriptor);
 
                 foreach (var binding in loadedBindings)
                 {
                     var gestureDescriptor = binding.Gesture;
-                    _manager.RegisterGesture(gestureDescriptor);
+                    _binder.RegisterGesture(gestureDescriptor);
 
                     if (binding.Actions == null)
                         continue;
@@ -280,7 +280,7 @@ public class ShortcutSettingsViewModel : Screen, IHandle<SettingsMessage>, IDisp
                         if (actionDescriptor == null)
                             Logger.Warn($"Action \"{action.Descriptor}\" not found!");
                         else
-                            _manager.BindActionWithSettings(gestureDescriptor, actionDescriptor, action.Values);
+                            _binder.BindActionWithSettings(gestureDescriptor, actionDescriptor, action.Values);
                     }
                 }
             }
@@ -305,7 +305,7 @@ public class BindingSettingsModel
     public IInputGestureDescriptor Gesture { get; init; }
     public List<ActionSettingsModel> Actions { get; init; }
 
-    public static BindingSettingsModel FromBinding(KeyValuePair<IInputGestureDescriptor, ObservableConcurrentCollection<IShortcutAction>> binding)
+    public static BindingSettingsModel FromBinding(KeyValuePair<IInputGestureDescriptor, ObservableConcurrentCollection<IShortcutActionConfiguration>> binding)
         => new()
         {
             Gesture = binding.Key,

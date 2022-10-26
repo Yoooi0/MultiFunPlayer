@@ -29,7 +29,7 @@ public class MediaSourceViewModel : Conductor<IMediaSource>.Collection.OneActive
         _semaphore = new SemaphoreSlim(1, 1);
         _cancellationSource = new CancellationTokenSource();
 
-        RegisterShortcuts(shortcutManager);
+        RegisterActions(shortcutManager);
     }
 
     public async void ToggleItem(IMediaSource source)
@@ -215,26 +215,26 @@ public class MediaSourceViewModel : Conductor<IMediaSource>.Collection.OneActive
         catch (OperationCanceledException) { }
     }
 
-    private void RegisterShortcuts(IShortcutManager s)
+    private void RegisterActions(IShortcutManager s)
     {
         var token = _cancellationSource.Token;
         foreach (var source in AvailableSources)
         {
-            s.RegisterAction($"{source.Name}::Connection::Toggle", b => b.WithCallback(async (_) => await ToggleConnectAsync(source)));
-            s.RegisterAction($"{source.Name}::Connection::Connect", b => b.WithCallback(async (_) =>
+            s.RegisterAction($"{source.Name}::Connection::Toggle", async () => await ToggleConnectAsync(source));
+            s.RegisterAction($"{source.Name}::Connection::Connect",async () =>
             {
                 await _semaphore.WaitAsync(token);
                 if (_currentSource != source)
                     await ConnectAndSetAsCurrentSourceAsync(source, token);
                 _semaphore.Release();
-            }));
-            s.RegisterAction($"{source.Name}::Connection::Disconnect", b => b.WithCallback(async (_) =>
+            });
+            s.RegisterAction($"{source.Name}::Connection::Disconnect", async () =>
             {
                 await _semaphore.WaitAsync(token);
                 if (_currentSource == source)
                     await DisconnectCurrentSourceAsync(token);
                 _semaphore.Release();
-            }));
+            });
         }
     }
 

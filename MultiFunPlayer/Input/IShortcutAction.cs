@@ -1,175 +1,112 @@
-﻿using Newtonsoft.Json;
-using PropertyChanged;
-using System.ComponentModel;
-
-namespace MultiFunPlayer.Input;
+﻿namespace MultiFunPlayer.Input;
 
 public interface IShortcutAction
 {
     IShortcutActionDescriptor Descriptor { get; }
-    IEnumerable<IShortcutSetting> Settings { get; }
-    void Invoke(IInputGesture gesture);
+    void Invoke(params object[] arguments);
 }
 
-[AddINotifyPropertyChangedInterface]
-[JsonObject(MemberSerialization = MemberSerialization.OptIn)]
-public class ShortcutAction : IShortcutAction
+public abstract class AbstractShortcutAction : IShortcutAction
 {
-    private readonly Action<IInputGesture> _action;
+    public IShortcutActionDescriptor Descriptor { get; }
 
-    [JsonProperty] public IShortcutActionDescriptor Descriptor { get; }
-    [JsonProperty(ItemTypeNameHandling = TypeNameHandling.Objects)] public IEnumerable<IShortcutSetting> Settings { get; }
+    protected AbstractShortcutAction(IShortcutActionDescriptor descriptor)
+        => Descriptor = descriptor;
 
-    public string DisplayName => $"{Descriptor.Name}";
+    public abstract void Invoke(params object[] arguments);
 
-    [JsonConstructor]
-    public ShortcutAction(IShortcutActionDescriptor descriptor, Action<IInputGesture> action)
+    protected bool GetArgument<T>(object argument, out T value)
     {
-        _action = action;
-        Descriptor = descriptor;
-        Settings = Array.Empty<IShortcutSetting>();
-    }
+        value = default;
 
-    public void Invoke(IInputGesture gesture) => _action?.Invoke(gesture);
+        var result = argument == null ? !typeof(T).IsValueType || Nullable.GetUnderlyingType(typeof(T)) != null : argument is T;
+        if (result)
+            value = (T)argument;
+
+        return result;
+    }
 }
 
-[JsonObject(MemberSerialization = MemberSerialization.OptIn)]
-public class ShortcutAction<T0> : IShortcutAction, INotifyPropertyChanged
+public class ShortcutAction : AbstractShortcutAction
 {
-    private readonly Action<IInputGesture, T0> _action;
-    private readonly IShortcutSetting<T0> _setting0;
+    private readonly Action _action;
 
-    [JsonProperty] public IShortcutActionDescriptor Descriptor { get; }
-    [JsonProperty(ItemTypeNameHandling = TypeNameHandling.Objects)] public IEnumerable<IShortcutSetting> Settings
-        => Enumerable.Empty<IShortcutSetting>().Append(_setting0);
+    public ShortcutAction(IShortcutActionDescriptor descriptor, Action action)
+        : base(descriptor) => _action = action;
 
-    public string DisplayName => $"{Descriptor.Name} [{string.Join(", ", Settings.Select(s => s.Value?.ToString() ?? "null"))}]";
-
-    public ShortcutAction(IShortcutActionDescriptor descriptor, Action<IInputGesture, T0> action, IShortcutSetting<T0> setting0)
+    public override void Invoke(params object[] arguments)
     {
-        _action = action;
-        Descriptor = descriptor;
-
-        _setting0 = setting0;
-
-        foreach (var setting in Settings.OfType<INotifyPropertyChanged>())
-            setting.PropertyChanged += OnSettingsValueChanged;
+        if (arguments == null || arguments.Length == 0)
+            _action?.Invoke();
     }
-
-    [SuppressPropertyChangedWarnings]
-    private void OnSettingsValueChanged(object sender, PropertyChangedEventArgs e)
-        => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(DisplayName)));
-
-    public void Invoke(IInputGesture gesture) => _action?.Invoke(gesture, _setting0.Value);
-
-    public event PropertyChangedEventHandler PropertyChanged;
 }
 
-[JsonObject(MemberSerialization = MemberSerialization.OptIn)]
-public class ShortcutAction<T0, T1> : IShortcutAction, INotifyPropertyChanged
+public class ShortcutAction<T0> : AbstractShortcutAction
 {
-    private readonly Action<IInputGesture, T0, T1> _action;
-    private readonly IShortcutSetting<T0> _setting0;
-    private readonly IShortcutSetting<T1> _setting1;
+    private readonly Action<T0> _action;
 
-    [JsonProperty] public IShortcutActionDescriptor Descriptor { get; }
-    [JsonProperty(ItemTypeNameHandling = TypeNameHandling.Objects)] public IEnumerable<IShortcutSetting> Settings
-        => Enumerable.Empty<IShortcutSetting>().Append(_setting0).Append(_setting1);
+    public ShortcutAction(IShortcutActionDescriptor descriptor, Action<T0> action)
+        : base(descriptor) => _action = action;
 
-    public string DisplayName => $"{Descriptor.Name} [{string.Join(", ", Settings.Select(s => s.Value?.ToString() ?? "null"))}]";
-
-    public ShortcutAction(IShortcutActionDescriptor descriptor, Action<IInputGesture, T0, T1> action, IShortcutSetting<T0> setting0, IShortcutSetting<T1> setting1)
+    public override void Invoke(params object[] arguments)
     {
-        _action = action;
-        Descriptor = descriptor;
-
-        _setting0 = setting0;
-        _setting1 = setting1;
-
-        foreach (var setting in Settings.OfType<INotifyPropertyChanged>())
-            setting.PropertyChanged += OnSettingsValueChanged;
+        if (arguments?.Length == 1 && GetArgument<T0>(arguments[0], out var arg0))
+            _action?.Invoke(arg0);
     }
-
-    [SuppressPropertyChangedWarnings]
-    private void OnSettingsValueChanged(object sender, PropertyChangedEventArgs e)
-        => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(DisplayName)));
-
-    public void Invoke(IInputGesture gesture) => _action?.Invoke(gesture, _setting0.Value, _setting1.Value);
-
-    public event PropertyChangedEventHandler PropertyChanged;
 }
 
-[JsonObject(MemberSerialization = MemberSerialization.OptIn)]
-public class ShortcutAction<T0, T1, T2> : IShortcutAction, INotifyPropertyChanged
+public class ShortcutAction<T0, T1> : AbstractShortcutAction
 {
-    private readonly Action<IInputGesture, T0, T1, T2> _action;
-    private readonly IShortcutSetting<T0> _setting0;
-    private readonly IShortcutSetting<T1> _setting1;
-    private readonly IShortcutSetting<T2> _setting2;
+    private readonly Action<T0, T1> _action;
 
-    [JsonProperty] public IShortcutActionDescriptor Descriptor { get; }
-    [JsonProperty(ItemTypeNameHandling = TypeNameHandling.Objects)] public IEnumerable<IShortcutSetting> Settings
-        => Enumerable.Empty<IShortcutSetting>().Append(_setting0).Append(_setting1).Append(_setting2);
+    public ShortcutAction(IShortcutActionDescriptor descriptor, Action<T0, T1> action)
+        : base(descriptor) => _action = action;
 
-    public string DisplayName => $"{Descriptor.Name} [{string.Join(", ", Settings.Select(s => s.Value?.ToString() ?? "null"))}]";
-
-    public ShortcutAction(IShortcutActionDescriptor descriptor, Action<IInputGesture, T0, T1, T2> action, IShortcutSetting<T0> setting0, IShortcutSetting<T1> setting1, IShortcutSetting<T2> setting2)
+    public override void Invoke(params object[] arguments)
     {
-        _action = action;
-        Descriptor = descriptor;
-
-        _setting0 = setting0;
-        _setting1 = setting1;
-        _setting2 = setting2;
-
-        foreach (var setting in Settings.OfType<INotifyPropertyChanged>())
-            setting.PropertyChanged += OnSettingsValueChanged;
+        if (arguments?.Length == 2 && GetArgument<T0>(arguments[0], out var arg0) && GetArgument<T1>(arguments[1], out var arg1))
+            _action?.Invoke(arg0, arg1);
     }
-
-    [SuppressPropertyChangedWarnings]
-    private void OnSettingsValueChanged(object sender, PropertyChangedEventArgs e)
-        => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(DisplayName)));
-
-    public void Invoke(IInputGesture gesture) => _action?.Invoke(gesture, _setting0.Value, _setting1.Value, _setting2.Value);
-
-    public event PropertyChangedEventHandler PropertyChanged;
 }
 
-[JsonObject(MemberSerialization = MemberSerialization.OptIn)]
-public class ShortcutAction<T0, T1, T2, T3> : IShortcutAction, INotifyPropertyChanged
+public class ShortcutAction<T0, T1, T2> : AbstractShortcutAction
 {
-    private readonly Action<IInputGesture, T0, T1, T2, T3> _action;
-    private readonly IShortcutSetting<T0> _setting0;
-    private readonly IShortcutSetting<T1> _setting1;
-    private readonly IShortcutSetting<T2> _setting2;
-    private readonly IShortcutSetting<T3> _setting3;
+    private readonly Action<T0, T1, T2> _action;
 
-    [JsonProperty] public IShortcutActionDescriptor Descriptor { get; }
-    [JsonProperty(ItemTypeNameHandling = TypeNameHandling.Objects)]
-    public IEnumerable<IShortcutSetting> Settings
-        => Enumerable.Empty<IShortcutSetting>().Append(_setting0).Append(_setting1).Append(_setting2).Append(_setting3);
+    public ShortcutAction(IShortcutActionDescriptor descriptor, Action<T0, T1, T2> action)
+        : base(descriptor) => _action = action;
 
-    public string DisplayName => $"{Descriptor.Name} [{string.Join(", ", Settings.Select(s => s.Value?.ToString() ?? "null"))}]";
-
-    public ShortcutAction(IShortcutActionDescriptor descriptor, Action<IInputGesture, T0, T1, T2, T3> action, IShortcutSetting<T0> setting0, IShortcutSetting<T1> setting1, IShortcutSetting<T2> setting2, IShortcutSetting<T3> setting3)
+    public override void Invoke(params object[] arguments)
     {
-        _action = action;
-        Descriptor = descriptor;
-
-        _setting0 = setting0;
-        _setting1 = setting1;
-        _setting2 = setting2;
-        _setting3 = setting3;
-
-        foreach (var setting in Settings.OfType<INotifyPropertyChanged>())
-            setting.PropertyChanged += OnSettingsValueChanged;
+        if (arguments?.Length == 3 && GetArgument<T0>(arguments[0], out var arg0) && GetArgument<T1>(arguments[1], out var arg1) && GetArgument<T2>(arguments[2], out var arg2))
+            _action?.Invoke(arg0, arg1, arg2);
     }
+}
 
-    [SuppressPropertyChangedWarnings]
-    private void OnSettingsValueChanged(object sender, PropertyChangedEventArgs e)
-        => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(DisplayName)));
+public class ShortcutAction<T0, T1, T2, T3> : AbstractShortcutAction
+{
+    private readonly Action<T0, T1, T2, T3> _action;
 
-    public void Invoke(IInputGesture gesture) => _action?.Invoke(gesture, _setting0.Value, _setting1.Value, _setting2.Value, _setting3.Value);
+    public ShortcutAction(IShortcutActionDescriptor descriptor, Action<T0, T1, T2, T3> action)
+        : base(descriptor) => _action = action;
 
-    public event PropertyChangedEventHandler PropertyChanged;
+    public override void Invoke(params object[] arguments)
+    {
+        if (arguments?.Length == 4 && GetArgument<T0>(arguments[0], out var arg0) && GetArgument<T1>(arguments[1], out var arg1) && GetArgument<T2>(arguments[2], out var arg2) && GetArgument<T3>(arguments[3], out var arg3))
+            _action?.Invoke(arg0, arg1, arg2, arg3);
+    }
+}
+
+public class ShortcutAction<T0, T1, T2, T3, T4> : AbstractShortcutAction
+{
+    private readonly Action<T0, T1, T2, T3, T4> _action;
+
+    public ShortcutAction(IShortcutActionDescriptor descriptor, Action<T0, T1, T2, T3, T4> action)
+        : base(descriptor) => _action = action;
+
+    public override void Invoke(params object[] arguments)
+    {
+        if (arguments?.Length == 5 && GetArgument<T0>(arguments[0], out var arg0) && GetArgument<T1>(arguments[1], out var arg1) && GetArgument<T2>(arguments[2], out var arg2) && GetArgument<T3>(arguments[3], out var arg3) && GetArgument<T4>(arguments[4], out var arg4))
+            _action?.Invoke(arg0, arg1, arg2, arg3, arg4);
+    }
 }

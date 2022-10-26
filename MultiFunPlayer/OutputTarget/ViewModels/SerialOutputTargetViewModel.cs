@@ -9,7 +9,6 @@ using System.ComponentModel;
 using System.IO;
 using System.IO.Ports;
 using System.Management;
-using System.Text;
 using System.Text.RegularExpressions;
 
 namespace MultiFunPlayer.OutputTarget.ViewModels;
@@ -238,7 +237,7 @@ public class SerialOutputTargetViewModel : ThreadAbstractOutputTarget
         base.RegisterActions(s);
 
         #region ComPort
-        s.RegisterAction($"{Identifier}::SerialPort::Set", b => b.WithSetting<string>(s => s.WithLabel("Device ID")).WithCallback((_, deviceId) => SelectSerialPortByDeviceId(deviceId)));
+        s.RegisterAction<string>($"{Identifier}::SerialPort::Set", s => s.WithLabel("Device ID"), deviceId => SelectSerialPortByDeviceId(deviceId));
         #endregion
     }
 

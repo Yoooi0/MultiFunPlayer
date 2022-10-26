@@ -113,7 +113,7 @@ public class PipeOutputTargetViewModel : ThreadAbstractOutputTarget
         base.RegisterActions(s);
 
         #region PipeName
-        s.RegisterAction($"{Identifier}::PipeName::Set", b => b.WithSetting<string>(s => s.WithLabel("Pipe name")).WithCallback((_, pipeName) => PipeName = pipeName));
+        s.RegisterAction<string>($"{Identifier}::PipeName::Set", s => s.WithLabel("Pipe name"), pipeName => PipeName = pipeName);
         #endregion
     }
 

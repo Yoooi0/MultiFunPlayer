@@ -1,24 +1,11 @@
 ﻿namespace MultiFunPlayer.Input;
 
-[Flags]
-public enum ShortcutActionDescriptorFlags
-{
-    None = 0,
-    AcceptsSimpleGesture = 1 << 1,
-    AcceptsAxisGesture = 1 << 2,
-    All = AcceptsSimpleGesture | AcceptsAxisGesture
-}
-
 public interface IShortcutActionDescriptor
 {
     public string Name { get; }
-    public ShortcutActionDescriptorFlags Flags { get; }
-
-    public bool AcceptsSimpleGesture => Flags.HasFlag(ShortcutActionDescriptorFlags.AcceptsSimpleGesture);
-    public bool AcceptsAxisGesture => Flags.HasFlag(ShortcutActionDescriptorFlags.AcceptsAxisGesture);
 }
 
-public record ShortcutActionDescriptor(string Name, ShortcutActionDescriptorFlags Flags) : IShortcutActionDescriptor
+public record ShortcutActionDescriptor(string Name) : IShortcutActionDescriptor
 {
     public virtual bool Equals(ShortcutActionDescriptor other) => other != null && string.Equals(Name, other.Name, StringComparison.OrdinalIgnoreCase);
     public bool Equals(IShortcutActionDescriptor other) => other is IShortcutActionDescriptor d && Equals(d);

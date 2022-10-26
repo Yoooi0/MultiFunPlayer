@@ -113,11 +113,11 @@ public class UdpOutputTargetViewModel : ThreadAbstractOutputTarget
         base.RegisterActions(s);
 
         #region Endpoint
-        s.RegisterAction($"{Identifier}::Endpoint::Set", b => b.WithSetting<string>(s => s.WithLabel("Endpoint").WithDescription("ip/host:port")).WithCallback((_, endpointString) =>
+        s.RegisterAction<string>($"{Identifier}::Endpoint::Set", s => s.WithLabel("Endpoint").WithDescription("ip/host:port"), endpointString =>
         {
             if (NetUtils.TryParseEndpoint(endpointString, out var endpoint))
                 Endpoint = endpoint;
-        }));
+        });
         #endregion
     }
 

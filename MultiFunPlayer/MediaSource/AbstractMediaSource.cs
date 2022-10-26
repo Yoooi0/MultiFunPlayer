@@ -34,7 +34,7 @@ public abstract class AbstractMediaSource : Screen, IMediaSource
                 _statusEvent.Reset();
         };
 
-        RegisterShortcuts(shortcutManager);
+        RegisterActions(shortcutManager);
     }
 
     protected abstract Task RunAsync(CancellationToken token);
@@ -110,11 +110,11 @@ public abstract class AbstractMediaSource : Screen, IMediaSource
         }
     }
 
-    protected virtual void RegisterShortcuts(IShortcutManager s)
+    protected virtual void RegisterActions(IShortcutManager s)
     {
         #region AutoConnectEnabled
-        s.RegisterAction($"{Name}::AutoConnectEnabled::Set", b => b.WithSetting<bool>(s => s.WithLabel("Enable auto connect")).WithCallback((_, enabled) => AutoConnectEnabled = enabled));
-        s.RegisterAction($"{Name}::AutoConnectEnabled::Toggle", b => b.WithCallback(_ => AutoConnectEnabled = !AutoConnectEnabled));
+        s.RegisterAction<bool>($"{Name}::AutoConnectEnabled::Set", s => s.WithLabel("Enable auto connect"), enabled => AutoConnectEnabled = enabled);
+        s.RegisterAction($"{Name}::AutoConnectEnabled::Toggle", () => AutoConnectEnabled = !AutoConnectEnabled);
         #endregion
     }
 

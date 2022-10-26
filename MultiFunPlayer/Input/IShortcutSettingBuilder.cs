@@ -2,9 +2,14 @@
 
 namespace MultiFunPlayer.Input;
 
-public interface IShortcutSettingBuilder<T>
+public interface IShortcutSettingBuilder
 {
-    public IShortcutSetting<T> Build();
+    public IShortcutSetting Build();
+}
+
+public interface IShortcutSettingBuilder<T> : IShortcutSettingBuilder
+{
+    public new IShortcutSetting<T> Build();
     public IShortcutSettingBuilder<T> WithDefaultValue(T defaultValue);
     public IShortcutSettingBuilder<T> WithLabel(string label);
     public IShortcutSettingBuilder<T> WithDescription(string description);
@@ -20,6 +25,7 @@ public class ShortcutSettingBuilder<T> : IShortcutSettingBuilder<T>
     private ObservableConcurrentCollection<T> _itemsSource;
     private string _stringFormat;
 
+    IShortcutSetting IShortcutSettingBuilder.Build() => Build();
     public IShortcutSetting<T> Build()
     {
         if (_itemsSource == null)
