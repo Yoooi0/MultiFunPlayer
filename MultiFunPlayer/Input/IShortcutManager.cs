@@ -148,17 +148,17 @@ public class ShortcutManager : IShortcutManager
         _actions.Add(descriptor, new ShortcutAction<TG, T0, T1>(descriptor, callback));
         _actionConfigurationBuilders.Add(descriptor, new ShortcutActionConfigurationBuilder(descriptor, builder0(new ShortcutSettingBuilder<T0>()), builder1(new ShortcutSettingBuilder<T1>())));
 
-        AvailableActions.Add(descriptor); 
+        AvailableActions.Add(descriptor);
         ActionRegistered?.Invoke(this, descriptor);
     }
 
     public void RegisterAction<TG, T0, T1, T2>(string name, Func<IShortcutSettingBuilder<T0>, IShortcutSettingBuilder<T0>> builder0, Func<IShortcutSettingBuilder<T1>, IShortcutSettingBuilder<T1>> builder1, Func<IShortcutSettingBuilder<T2>, IShortcutSettingBuilder<T2>> builder2, Action<TG, T0, T1, T2> callback) where TG : IInputGesture
     {
         var descriptor = new ShortcutActionDescriptor(name);
-        _actions.Add(descriptor, new ShortcutAction<TG, T0, T1, T2>(descriptor, callback)); 
+        _actions.Add(descriptor, new ShortcutAction<TG, T0, T1, T2>(descriptor, callback));
         _actionConfigurationBuilders.Add(descriptor, new ShortcutActionConfigurationBuilder(descriptor, builder0(new ShortcutSettingBuilder<T0>()), builder1(new ShortcutSettingBuilder<T1>()), builder2(new ShortcutSettingBuilder<T2>())));
 
-        AvailableActions.Add(descriptor); 
+        AvailableActions.Add(descriptor);
         ActionRegistered?.Invoke(this, descriptor);
     }
 
@@ -193,7 +193,7 @@ public class ShortcutManager : IShortcutManager
         if (gestureDescriptor.GetType().IsAssignableTo(typeof(ISimpleInputGestureDescriptor)))
             return genericArguments == null || genericArguments.Length == 0 || !genericArguments[0].IsAssignableTo(typeof(IInputGesture)) || genericArguments[0] == typeof(ISimpleInputGesture);
         else if (gestureDescriptor.GetType().IsAssignableTo(typeof(IAxisInputGestureDescriptor)))
-            return genericArguments != null && genericArguments.Length > 0 && genericArguments[0] == typeof(IAxisInputGesture);
+            return genericArguments?.Length > 0 && genericArguments[0] == typeof(IAxisInputGesture);
 
         return false;
     }

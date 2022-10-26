@@ -1321,9 +1321,9 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         #endregion
 
         #region Media::ScriptOffset
-        s.RegisterAction<double>("Media::ScriptOffset::Offset", 
+        s.RegisterAction<double>("Media::ScriptOffset::Offset",
             s => s.WithLabel("Value offset").WithStringFormat("{}{0}s"), offset => GlobalOffset += offset);
-        s.RegisterAction<double>("Media::ScriptOffset::Set", 
+        s.RegisterAction<double>("Media::ScriptOffset::Set",
             s => s.WithLabel("Value").WithStringFormat("{}{0}s"), value => GlobalOffset = value);
         #endregion
 
@@ -1334,7 +1334,7 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
             s => s.WithLabel("Value").WithStringFormat("{}{0}s"), value => SeekMediaToTime(value));
 
         s.RegisterAction<double>( "Media::Position::Percent::Offset",
-            s => s.WithLabel("Value offset").WithStringFormat("{}{0}%"), 
+            s => s.WithLabel("Value offset").WithStringFormat("{}{0}%"),
             offset => SeekMediaToPercent(MediaPosition / MediaDuration + offset / 100));
         s.RegisterAction<double>("Media::Position::Percent::Set",
             s => s.WithLabel("Value").WithStringFormat("{}{0}%"),
