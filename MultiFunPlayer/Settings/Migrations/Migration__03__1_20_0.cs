@@ -1,5 +1,4 @@
 ﻿using MultiFunPlayer.Common;
-using MultiFunPlayer.OutputTarget.ViewModels;
 using Newtonsoft.Json.Linq;
 using NLog;
 

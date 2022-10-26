@@ -2,7 +2,6 @@ using MultiFunPlayer.Common;
 using MultiFunPlayer.UI.Dialogs.ViewModels;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using NLog;
 using Stylet;
 using System.Windows;
 
