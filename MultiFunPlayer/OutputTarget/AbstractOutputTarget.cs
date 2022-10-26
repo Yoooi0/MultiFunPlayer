@@ -200,7 +200,7 @@ public abstract class AbstractOutputTarget : Screen, IOutputTarget
         #endregion
 
         #region Axis::Range::Minimum
-        s.RegisterAction<DeviceAxis, int, float>($"{Identifier}::Axis::Range::Minimum::Offset",
+        s.RegisterAction<DeviceAxis, int, double>($"{Identifier}::Axis::Range::Minimum::Offset",
             s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All),
             s => s.WithLabel("Value offset").WithStringFormat("{}{0}%"),
             s => s.WithDefaultValue(0).WithLabel("Value limit").WithStringFormat("{}{0}%"),
@@ -211,14 +211,14 @@ public abstract class AbstractOutputTarget : Screen, IOutputTarget
             s => s.WithLabel("Value").WithStringFormat("{}{0}%"),
             (axis, value) => UpdateSettings(axis, s => SetMinimum(s, value, 0)));
 
-        s.RegisterAction<IAxisInputGesture, DeviceAxis, float>($"{Identifier}::Axis::Range::Minimum::Drive",
+        s.RegisterAction<IAxisInputGesture, DeviceAxis, double>($"{Identifier}::Axis::Range::Minimum::Drive",
             s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All),
             s => s.WithDefaultValue(0).WithLabel("Value limit").WithStringFormat("{}{0}%"),
             (gesture, axis, limit) => UpdateSettings(axis, s => SetMinimum(s, s.Minimum + gesture.Delta * 100, limit)));
         #endregion
 
         #region Axis::Range::Maximum
-        s.RegisterAction<DeviceAxis, int, float>($"{Identifier}::Axis::Range::Maximum::Offset",
+        s.RegisterAction<DeviceAxis, int, double>($"{Identifier}::Axis::Range::Maximum::Offset",
             s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All),
             s => s.WithLabel("Value offset").WithStringFormat("{}{0}%"),
             s => s.WithDefaultValue(100).WithLabel("Value limit").WithStringFormat("{}{0}%"),
@@ -229,14 +229,14 @@ public abstract class AbstractOutputTarget : Screen, IOutputTarget
             s => s.WithLabel("Value").WithStringFormat("{}{0}%"),
             (axis, value) => UpdateSettings(axis, s => SetMaximum(s, value, 100)));
 
-        s.RegisterAction<IAxisInputGesture, DeviceAxis, float>($"{Identifier}::Axis::Range::Maximum::Drive",
+        s.RegisterAction<IAxisInputGesture, DeviceAxis, double>($"{Identifier}::Axis::Range::Maximum::Drive",
             s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All),
             s => s.WithDefaultValue(100).WithLabel("Value limit").WithStringFormat("{}{0}%"),
             (gesture, axis, limit) => UpdateSettings(axis, s => SetMaximum(s, s.Maximum + gesture.Delta * 100, limit)));
         #endregion
 
         #region Axis::Range::Middle
-        s.RegisterAction<DeviceAxis, int, float, float>($"{Identifier}::Axis::Range::Middle::Offset",
+        s.RegisterAction<DeviceAxis, int, double, double>($"{Identifier}::Axis::Range::Middle::Offset",
             s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All),
             s => s.WithLabel("Value offset").WithStringFormat("{}{0}%"),
             s => s.WithDefaultValue(0).WithLabel("Minimum limit").WithStringFormat("{}{0}%"),
@@ -248,7 +248,7 @@ public abstract class AbstractOutputTarget : Screen, IOutputTarget
             s => s.WithLabel("Value").WithStringFormat("{}{0}%"),
             (axis, value) => UpdateSettings(axis, s => OffsetMiddle(s, value - (s.Maximum - s.Minimum) / 2, 0, 100)));
 
-        s.RegisterAction<IAxisInputGesture, DeviceAxis, float, float>($"{Identifier}::Axis::Range::Middle::Drive",
+        s.RegisterAction<IAxisInputGesture, DeviceAxis, double, double>($"{Identifier}::Axis::Range::Middle::Drive",
             s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All),
             s => s.WithDefaultValue(0).WithLabel("Minimum limit").WithStringFormat("{}{0}%"),
             s => s.WithDefaultValue(100).WithLabel("Maximium limit").WithStringFormat("{}{0}%"),
@@ -256,7 +256,7 @@ public abstract class AbstractOutputTarget : Screen, IOutputTarget
         #endregion
 
         #region Axis::Range::Size
-        s.RegisterAction<DeviceAxis, int, float, float>($"{Identifier}::Axis::Range::Size::Offset",
+        s.RegisterAction<DeviceAxis, int, double, double>($"{Identifier}::Axis::Range::Size::Offset",
             s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All),
             s => s.WithLabel("Value offset").WithStringFormat("{}{0}%"),
             s => s.WithDefaultValue(0).WithLabel("Minimum limit").WithStringFormat("{}{0}%"),
@@ -268,7 +268,7 @@ public abstract class AbstractOutputTarget : Screen, IOutputTarget
             s => s.WithLabel("Value").WithStringFormat("{}{0}%"),
             (axis, value) => UpdateSettings(axis, s => OffsetSize(s, value - (s.Maximum - s.Minimum), 0, 100)));
 
-        s.RegisterAction<IAxisInputGesture, DeviceAxis, float, float>($"{Identifier}::Axis::Range::Size::Drive",
+        s.RegisterAction<IAxisInputGesture, DeviceAxis, double, double>($"{Identifier}::Axis::Range::Size::Drive",
             s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All),
             s => s.WithDefaultValue(0).WithLabel("Minimum limit").WithStringFormat("{}{0}%"),
             s => s.WithDefaultValue(100).WithLabel("Maximium limit").WithStringFormat("{}{0}%"),

@@ -46,6 +46,11 @@
                         <metro:NumericUpDown Value="{Binding Value}" StringFormat="{Binding StringFormat}"/>
                     </DockPanel>
                 </DataTemplate>
+                <DataTemplate x:Key="DoubleTemplate" DataType="{x:Type input:IShortcutSetting}">
+                    <DockPanel>
+                        <metro:NumericUpDown Value="{Binding Value}" StringFormat="{Binding StringFormat}"/>
+                    </DockPanel>
+                </DataTemplate>
                 <DataTemplate x:Key="StringTemplate" DataType="{x:Type input:IShortcutSetting}">
                     <DockPanel>
                         <TextBox Text="{Binding Value}"

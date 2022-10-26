@@ -118,12 +118,12 @@ public class MotionProviderManager : IMotionProviderManager, IHandle<SettingsMes
             var name = type.GetCustomAttribute<DisplayNameAttribute>(inherit: false).DisplayName;
 
             #region MotionProvider::Speed
-            s.RegisterAction<DeviceAxis, float>($"MotionProvider::{name}::Speed::Offset",
+            s.RegisterAction<DeviceAxis, double>($"MotionProvider::{name}::Speed::Offset",
             s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All),
             s => s.WithLabel("Value offset").WithStringFormat("{}{0}%"),
             (axis, offset) => UpdateProperty(GetMotionProvider(axis, name), p => p.Speed = Math.Max(0.01, p.Speed + offset / 100)));
 
-            s.RegisterAction<DeviceAxis, float>($"MotionProvider::{name}::Speed::Set",
+            s.RegisterAction<DeviceAxis, double>($"MotionProvider::{name}::Speed::Set",
                 s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All),
                 s => s.WithLabel("Value").WithStringFormat("{}{0}%"),
                 (axis, value) => UpdateProperty(GetMotionProvider(axis, name), p => p.Speed = Math.Max(0.01, value / 100)));
@@ -134,12 +134,12 @@ public class MotionProviderManager : IMotionProviderManager, IHandle<SettingsMes
             #endregion
 
             #region MotionProvider::Minimum
-            s.RegisterAction<DeviceAxis, float>($"MotionProvider::{name}::Minimum::Offset",
+            s.RegisterAction<DeviceAxis, double>($"MotionProvider::{name}::Minimum::Offset",
                 s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All),
                 s => s.WithLabel("Value offset").WithStringFormat("{}{0}%"),
                 (axis, offset) => UpdateProperty(GetMotionProvider(axis, name), p => p.Minimum = MathUtils.Clamp(p.Minimum + offset, 0, 100)));
 
-            s.RegisterAction<DeviceAxis, float>($"MotionProvider::{name}::Minimum::Set",
+            s.RegisterAction<DeviceAxis, double>($"MotionProvider::{name}::Minimum::Set",
                 s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All),
                 s => s.WithLabel("Value").WithStringFormat("{}{0}%"),
                 (axis, value) => UpdateProperty(GetMotionProvider(axis, name), p => p.Minimum = MathUtils.Clamp(value, 0, 100)));
@@ -150,12 +150,12 @@ public class MotionProviderManager : IMotionProviderManager, IHandle<SettingsMes
             #endregion
 
             #region MotionProvider::Maximum
-            s.RegisterAction<DeviceAxis, float>($"MotionProvider::{name}::Maximum::Offset",
+            s.RegisterAction<DeviceAxis, double>($"MotionProvider::{name}::Maximum::Offset",
                 s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All),
                 s => s.WithLabel("Value offset").WithStringFormat("{}{0}%"),
                 (axis, offset) => UpdateProperty(GetMotionProvider(axis, name), p => p.Maximum = MathUtils.Clamp(p.Maximum + offset, 0, 100)));
 
-            s.RegisterAction<DeviceAxis, float>($"MotionProvider::{name}::Maximum::Set",
+            s.RegisterAction<DeviceAxis, double>($"MotionProvider::{name}::Maximum::Set",
                 s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All),
                 s => s.WithLabel("Value").WithStringFormat("{}{0}%"),
                 (axis, value) => UpdateProperty(GetMotionProvider(axis, name), p => p.Maximum = MathUtils.Clamp(value, 0, 100)));
@@ -188,14 +188,14 @@ public class MotionProviderManager : IMotionProviderManager, IHandle<SettingsMes
                 #endregion
 
                 #region RandomMotionProvider::Persistence
-                s.RegisterAction<DeviceAxis, float>($"MotionProvider::{name}::Persistence::Set",
+                s.RegisterAction<DeviceAxis, double>($"MotionProvider::{name}::Persistence::Set",
                     s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All),
                     s => s.WithLabel("Persistence"),
                     (axis, persistence) => UpdateProperty(GetMotionProvider<RandomMotionProviderViewModel>(axis), p => p.Persistence = persistence));
                 #endregion
 
                 #region RandomMotionProvider::Lacunarity
-                s.RegisterAction<DeviceAxis, float>($"MotionProvider::{name}::Lacunarity::Set",
+                s.RegisterAction<DeviceAxis, double>($"MotionProvider::{name}::Lacunarity::Set",
                    s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All),
                    s => s.WithLabel("Lacunarity"),
                    (axis, lacunarity) => UpdateProperty(GetMotionProvider<RandomMotionProviderViewModel>(axis), p => p.Lacunarity = lacunarity));

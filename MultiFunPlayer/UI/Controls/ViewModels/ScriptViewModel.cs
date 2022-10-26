@@ -1321,26 +1321,26 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         #endregion
 
         #region Media::ScriptOffset
-        s.RegisterAction<float>("Media::ScriptOffset::Offset", 
+        s.RegisterAction<double>("Media::ScriptOffset::Offset", 
             s => s.WithLabel("Value offset").WithStringFormat("{}{0}s"), offset => GlobalOffset += offset);
-        s.RegisterAction<float>("Media::ScriptOffset::Set", 
+        s.RegisterAction<double>("Media::ScriptOffset::Set", 
             s => s.WithLabel("Value").WithStringFormat("{}{0}s"), value => GlobalOffset = value);
         #endregion
 
         #region Media::Position
-        s.RegisterAction<float>("Media::Position::Time::Offset",
-            s => s.WithLabel("Value offset").WithStringFormat("{}{0}s"), offset => SeekMediaToTime((float)(MediaPosition + offset)));
-        s.RegisterAction<float>("Media::Position::Time::Set",
+        s.RegisterAction<double>("Media::Position::Time::Offset",
+            s => s.WithLabel("Value offset").WithStringFormat("{}{0}s"), offset => SeekMediaToTime(MediaPosition + offset));
+        s.RegisterAction<double>("Media::Position::Time::Set",
             s => s.WithLabel("Value").WithStringFormat("{}{0}s"), value => SeekMediaToTime(value));
 
-        s.RegisterAction<float>( "Media::Position::Percent::Offset",
+        s.RegisterAction<double>( "Media::Position::Percent::Offset",
             s => s.WithLabel("Value offset").WithStringFormat("{}{0}%"), 
-            offset => SeekMediaToPercent((float)(MediaPosition / MediaDuration + offset / 100)));
-        s.RegisterAction<float>("Media::Position::Percent::Set",
+            offset => SeekMediaToPercent(MediaPosition / MediaDuration + offset / 100));
+        s.RegisterAction<double>("Media::Position::Percent::Set",
             s => s.WithLabel("Value").WithStringFormat("{}{0}%"),
             value => SeekMediaToPercent(value / 100));
 
-        s.RegisterAction<float>("Media::Position::SkipToScriptStart",
+        s.RegisterAction<double>("Media::Position::SkipToScriptStart",
             s => s.WithLabel("Offset").WithStringFormat("{}{0}s"), offset => SeekMediaToScriptStart(offset, onlyWhenBefore: false));
         #endregion
 
@@ -1353,24 +1353,24 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         #endregion
 
         #region Media::AutoSkipToScriptStartOffset
-        s.RegisterAction<float>("Media::AutoSkipToScriptStartOffset::Set",
+        s.RegisterAction<double>("Media::AutoSkipToScriptStartOffset::Set",
             s => s.WithLabel("Script start auto-skip offset").WithStringFormat("{}{0}s"), offset => AutoSkipToScriptStartOffset = offset);
         #endregion
 
         #region Script::SkipGap
-        s.RegisterAction<DeviceAxis, float>("Script::SkipGap",
+        s.RegisterAction<DeviceAxis, double>("Script::SkipGap",
             s => s.WithLabel("Target").WithItemsSource(DeviceAxis.All).WithDescription("Target axis script to check for gaps\nEmpty to check all scripts"),
             s => s.WithLabel("Minimum skip").WithDefaultValue(2).WithStringFormat("{}{0}s"),
             (axis, minimumSkip) => SkipGap(minimumSkip, axis));
         #endregion
 
         #region Axis::Value
-        s.RegisterAction<DeviceAxis, float>("Axis::Value::Offset",
+        s.RegisterAction<DeviceAxis, double>("Axis::Value::Offset",
             s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All),
             s => s.WithLabel("Value offset").WithStringFormat("{}{0:P0}"),
             (axis, offset) => SetAxisOverrideValue(axis, offset, offset: true));
 
-        s.RegisterAction<DeviceAxis, float>("Axis::Value::Set",
+        s.RegisterAction<DeviceAxis, double>("Axis::Value::Set",
             s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All),
             s => s.WithLabel("Value").WithStringFormat("{}{0:P0}"),
             (axis, value) => SetAxisOverrideValue(axis, value));
@@ -1466,12 +1466,12 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         #endregion
 
         #region Axis::SpeedLimitSecondsPerStroke
-        s.RegisterAction<DeviceAxis, float>("Axis::SpeedLimitSecondsPerStroke::Offset",
+        s.RegisterAction<DeviceAxis, double>("Axis::SpeedLimitSecondsPerStroke::Offset",
             s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All),
             s => s.WithLabel("Value offset").WithStringFormat("{}{0:F3}s/stroke"),
             (axis, offset) => UpdateSettings(axis, s => s.MaximumSecondsPerStroke = MathUtils.Clamp(s.MaximumSecondsPerStroke + offset, 0.001, 2)));
 
-        s.RegisterAction<DeviceAxis, float>("Axis::SpeedLimitSecondsPerStroke::Set",
+        s.RegisterAction<DeviceAxis, double>("Axis::SpeedLimitSecondsPerStroke::Set",
             s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All),
             s => s.WithLabel("Value").WithStringFormat("{}{0:F3}s/stroke"),
             (axis, value) => UpdateSettings(axis, s => s.MaximumSecondsPerStroke = MathUtils.Clamp(value, 0.001, 2)));
@@ -1488,48 +1488,48 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         #endregion
 
         #region Axis::AutoHomeDelay
-        s.RegisterAction<DeviceAxis, float>("Axis::AutoHomeDelay::Offset",
+        s.RegisterAction<DeviceAxis, double>("Axis::AutoHomeDelay::Offset",
             s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All),
             s => s.WithLabel("Value offset").WithStringFormat("{}{0}s"),
             (axis, offset) => UpdateSettings(axis, s => s.AutoHomeDelay = Math.Max(0, s.AutoHomeDelay + offset)));
 
-        s.RegisterAction<DeviceAxis, float>("Axis::AutoHomeDelay::Set",
+        s.RegisterAction<DeviceAxis, double>("Axis::AutoHomeDelay::Set",
             s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All),
             s => s.WithLabel("Value").WithStringFormat("{}{0}s"),
-            (axis, value) => UpdateSettings(axis, s => s.AutoHomeDelay = MathF.Max(0, value)));
+            (axis, value) => UpdateSettings(axis, s => s.AutoHomeDelay = Math.Max(0, value)));
         #endregion
 
         #region Axis::AutoHomeDuration
-        s.RegisterAction<DeviceAxis, float>("Axis::AutoHomeDuration::Offset",
+        s.RegisterAction<DeviceAxis, double>("Axis::AutoHomeDuration::Offset",
             s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All),
             s => s.WithLabel("Value offset").WithStringFormat("{}{0}s"),
             (axis, offset) => UpdateSettings(axis, s => s.AutoHomeDuration = Math.Max(0, s.AutoHomeDuration + offset)));
 
-        s.RegisterAction<DeviceAxis, float>("Axis::AutoHomeDuration::Set",
+        s.RegisterAction<DeviceAxis, double>("Axis::AutoHomeDuration::Set",
             s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All),
             s => s.WithLabel("Value").WithStringFormat("{}{0}s"),
-            (axis, value) => UpdateSettings(axis, s => s.AutoHomeDuration = MathF.Max(0, value)));
+            (axis, value) => UpdateSettings(axis, s => s.AutoHomeDuration = Math.Max(0, value)));
         #endregion
 
         #region Axis::ScriptOffset
-        s.RegisterAction<DeviceAxis, float>("Axis::ScriptOffset::Offset",
+        s.RegisterAction<DeviceAxis, double>("Axis::ScriptOffset::Offset",
             s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All),
             s => s.WithLabel("Value offset").WithStringFormat("{}{0}s"),
             (axis, offset) => UpdateSettings(axis, s => s.Offset += offset));
 
-        s.RegisterAction<DeviceAxis, float>("Axis::ScriptOffset::Set",
+        s.RegisterAction<DeviceAxis, double>("Axis::ScriptOffset::Set",
             s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All),
             s => s.WithLabel("Value").WithStringFormat("{}{0}s"),
             (axis, value) => UpdateSettings(axis, s => s.Offset = value));
         #endregion
 
         #region Axis::ScriptScale
-        s.RegisterAction<DeviceAxis, float>("Axis::ScriptScale::Offset",
+        s.RegisterAction<DeviceAxis, double>("Axis::ScriptScale::Offset",
             s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All),
             s => s.WithLabel("Value offset").WithStringFormat("{}{0}%"),
             (axis, offset) => UpdateSettings(axis, s => s.ScriptScale = MathUtils.Clamp(s.ScriptScale + offset, 1, 400)));
 
-        s.RegisterAction<DeviceAxis, float>("Axis::ScriptScale::Set",
+        s.RegisterAction<DeviceAxis, double>("Axis::ScriptScale::Set",
             s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All),
             s => s.WithLabel("Value").WithStringFormat("{}{0}%"),
             (axis, value) => UpdateSettings(axis, s => s.ScriptScale = MathUtils.Clamp(value, 1, 400)));
@@ -1546,12 +1546,12 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         #endregion
 
         #region Axis::MotionProviderBlend
-        s.RegisterAction<DeviceAxis, float>("Axis::MotionProviderBlend::Offset",
+        s.RegisterAction<DeviceAxis, double>("Axis::MotionProviderBlend::Offset",
             s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All),
             s => s.WithLabel("Value offset"),
             (axis, offset) => UpdateSettings(axis, s => s.MotionProviderBlend = MathUtils.Clamp(s.MotionProviderBlend + offset, 0, 100)));
 
-        s.RegisterAction<DeviceAxis, float>("Axis::MotionProviderBlend::Set",
+        s.RegisterAction<DeviceAxis, double>("Axis::MotionProviderBlend::Set",
             s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All),
             s => s.WithLabel("Value").WithStringFormat("{}{0}%"),
             (axis, value) => UpdateSettings(axis, s => s.MotionProviderBlend = MathUtils.Clamp(value, 0, 100)));
