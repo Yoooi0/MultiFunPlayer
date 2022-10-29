@@ -2,6 +2,7 @@
 using Linearstar.Windows.RawInput.Native;
 using MultiFunPlayer.Common;
 using NLog;
+using System.Diagnostics;
 using System.Windows.Input;
 using System.Windows.Interop;
 
@@ -14,7 +15,9 @@ public class RawInputProcessor : IInputProcessor
     private readonly Dictionary<Key, bool> _keyboardState;
     private HwndSource _source;
 
+    private long _lastMouseAxisTimestamp;
     private double _mouseXAxis, _mouseYAxis;
+    private double _lastMouseXAxis, _lastMouseYAxis;
     private double _mouseWheelAxis, _mouseHorizontalWheelAxis;
 
     public event EventHandler<IInputGesture> OnGesture;
@@ -22,7 +25,9 @@ public class RawInputProcessor : IInputProcessor
     public RawInputProcessor()
     {
         _keyboardState = new Dictionary<Key, bool>();
+        _lastMouseAxisTimestamp = 0;
         _mouseXAxis = _mouseYAxis = 0.5;
+        _lastMouseXAxis = _lastMouseYAxis = 0.5;
         _mouseWheelAxis = _mouseHorizontalWheelAxis = 0.5;
     }
 
@@ -92,20 +97,6 @@ public class RawInputProcessor : IInputProcessor
         else if (HasFlag(RawMouseButtonFlags.RightButtonDown)) HandleGesture(MouseButtonGesture.Create(MouseButton.Right));
         else if (HasFlag(RawMouseButtonFlags.MiddleButtonDown)) HandleGesture(MouseButtonGesture.Create(MouseButton.Middle));
 
-        if (data.Mouse.LastX != 0)
-        {
-            var delta = data.Mouse.LastX / 500d;
-            _mouseXAxis = MathUtils.Clamp01(_mouseXAxis + delta);
-            HandleGesture(MouseAxisGesture.Create(MouseAxis.X, _mouseXAxis, delta));
-        }
-
-        if (data.Mouse.LastY != 0)
-        {
-            var delta = data.Mouse.LastY / 500d;
-            _mouseYAxis = MathUtils.Clamp01(_mouseYAxis + delta);
-            HandleGesture(MouseAxisGesture.Create(MouseAxis.Y, _mouseYAxis, delta));
-        }
-
         if (data.Mouse.ButtonData != 0)
         {
             var delta = data.Mouse.ButtonData / (120d * 50d);
@@ -118,6 +109,29 @@ public class RawInputProcessor : IInputProcessor
             {
                 _mouseHorizontalWheelAxis = MathUtils.Clamp01(_mouseHorizontalWheelAxis + delta);
                 HandleGesture(MouseAxisGesture.Create(MouseAxis.MouseHorizontalWheel, _mouseHorizontalWheelAxis, delta));
+            }
+        }
+
+        _mouseXAxis = MathUtils.Clamp01(_mouseXAxis + data.Mouse.LastX / 500d);
+        _mouseYAxis = MathUtils.Clamp01(_mouseYAxis + data.Mouse.LastY / 500d);
+
+        var timestamp = Stopwatch.GetTimestamp();
+        if ((timestamp - _lastMouseAxisTimestamp) / (double)Stopwatch.Frequency >= 0.01)
+        {
+            _lastMouseAxisTimestamp = timestamp;
+
+            var deltaX = _mouseXAxis - _lastMouseXAxis;
+            var deltaY = _mouseYAxis - _lastMouseYAxis;
+            if (Math.Abs(deltaX) > 0.000001)
+            {
+                HandleGesture(MouseAxisGesture.Create(MouseAxis.X, _mouseXAxis, deltaX));
+                _lastMouseXAxis = _mouseXAxis;
+            }
+
+            if (Math.Abs(deltaY) > 0.000001)
+            {
+                HandleGesture(MouseAxisGesture.Create(MouseAxis.Y, _mouseYAxis, deltaY));
+                _lastMouseYAxis = _mouseYAxis;
             }
         }
     }
