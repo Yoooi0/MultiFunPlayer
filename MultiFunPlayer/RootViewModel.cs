@@ -16,6 +16,7 @@ public class RootViewModel : Conductor<IScreen>.Collection.AllActive, IHandle<Se
     [Inject] public MediaSourceViewModel MediaSource { get; set; }
     [Inject] public OutputTargetViewModel OutputTarget { get; set; }
     [Inject] public SettingsViewModel Settings { get; set; }
+    [Inject] public PluginViewModel Plugin { get; set; }
 
     public bool DisablePopup { get; set; }
 
@@ -36,6 +37,7 @@ public class RootViewModel : Conductor<IScreen>.Collection.AllActive, IHandle<Se
 
     public void OnInformationClick() => _ = DialogHelper.ShowOnUIThreadAsync(new InformationMessageDialogViewModel(showCheckbox: false), "RootDialog");
     public void OnSettingsClick() => _ = DialogHelper.ShowOnUIThreadAsync(Settings, "RootDialog");
+    public void OnPluginClick() => _ = DialogHelper.ShowOnUIThreadAsync(Plugin, "RootDialog");
 
     public void OnMouseDown(object sender, MouseButtonEventArgs e)
     {

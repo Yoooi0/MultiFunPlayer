@@ -7,6 +7,7 @@ using MultiFunPlayer.MediaSource;
 using MultiFunPlayer.MediaSource.MediaResource;
 using MultiFunPlayer.MotionProvider;
 using MultiFunPlayer.OutputTarget;
+using MultiFunPlayer.Plugin;
 using MultiFunPlayer.Settings;
 using MultiFunPlayer.Settings.Converters;
 using MultiFunPlayer.UI;
@@ -124,6 +125,8 @@ public class Bootstrapper : Bootstrapper<RootViewModel>
 
     protected override void Launch()
     {
+        PluginCompiler.Initialize(Container);
+
         //TODO: temporary fix due to SettingsViewModel IoC binding causing output targets
         //      to be initialized after shortcuts and clearing all output target actions
         _ = Container.Get<OutputTargetViewModel>();
