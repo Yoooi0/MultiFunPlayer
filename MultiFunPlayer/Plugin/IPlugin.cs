@@ -21,7 +21,7 @@ public interface IAsyncPlugin : IPlugin
     public Task ExecuteAsync(CancellationToken cancellationToken);
 }
 
-public abstract class AbstractPluginBase : IPlugin
+public abstract class AbstractPlugin : IPlugin
 {
     [Inject] internal IEventAggregator EventAggregator { get; set; }
     [Inject] internal IShortcutManager ShortcutManager { get; set; }
@@ -30,7 +30,7 @@ public abstract class AbstractPluginBase : IPlugin
 
     protected Logger Logger { get; }
 
-    protected AbstractPluginBase()
+    protected AbstractPlugin()
     {
         Logger = LogManager.GetLogger(GetType().FullName);
     }
@@ -54,12 +54,12 @@ public abstract class AbstractPluginBase : IPlugin
         => EventAggregator.Publish(new MediaDurationChangedMessage(duration));
 }
 
-public abstract class PluginBase : AbstractPluginBase, ISyncPlugin
+public abstract class SyncPluginBase : AbstractPlugin, ISyncPlugin
 {
     public abstract void Execute(CancellationToken cancellationToken);
 }
 
-public abstract class AsyncPluginBase : AbstractPluginBase, IAsyncPlugin
+public abstract class AsyncPluginBase : AbstractPlugin, IAsyncPlugin
 {
     public abstract Task ExecuteAsync(CancellationToken cancellationToken);
 }

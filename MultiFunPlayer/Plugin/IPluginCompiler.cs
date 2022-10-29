@@ -104,7 +104,7 @@ public static class PluginCompiler
 
             var validPluginBaseClasses = new List<string>()
             {
-                nameof(PluginBase),
+                nameof(SyncPluginBase),
                 nameof(AsyncPluginBase)
             };
 
