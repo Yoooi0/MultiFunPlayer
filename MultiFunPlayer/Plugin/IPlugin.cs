@@ -1,6 +1,5 @@
 ﻿using MultiFunPlayer.Common;
 using MultiFunPlayer.Input;
-using Newtonsoft.Json.Linq;
 using NLog;
 using Stylet;
 using StyletIoC;
