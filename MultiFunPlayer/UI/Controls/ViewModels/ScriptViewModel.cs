@@ -54,14 +54,15 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
 
     public MediaResourceInfo MediaResource { get; set; }
 
-    [JsonProperty] public double GlobalOffset { get; set; }
-    [JsonProperty] public bool ValuesContentVisible { get; set; }
-    [JsonProperty] public bool MediaContentVisible { get; set; } = true;
-    [JsonProperty] public bool AxisContentVisible { get; set; } = false;
     [JsonProperty] public ObservableConcurrentDictionaryView<DeviceAxis, AxisModel, AxisSettings> AxisSettings { get; }
     [JsonProperty(ItemTypeNameHandling = TypeNameHandling.Objects)] public ObservableConcurrentCollection<IMediaPathModifier> MediaPathModifiers => _mediaResourceFactory.PathModifiers;
     [JsonProperty] public ObservableConcurrentCollection<ScriptLibrary> ScriptLibraries { get; }
     [JsonProperty] public SyncSettings SyncSettings { get; set; }
+
+    [JsonProperty] public double GlobalOffset { get; set; } = 0;
+    [JsonProperty] public bool ValuesContentVisible { get; set; } = false;
+    [JsonProperty] public bool MediaContentVisible { get; set; } = true;
+    [JsonProperty] public bool AxisContentVisible { get; set; } = false;
     [JsonProperty] public bool HeatmapShowStrokeLength { get; set; } = true;
     [JsonProperty] public bool HeatmapEnablePreview { get; set; } = true;
     [JsonProperty] public int HeatmapBucketCount { get; set; } = 333;
