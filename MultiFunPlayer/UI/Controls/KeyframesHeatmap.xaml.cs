@@ -178,6 +178,29 @@ public partial class KeyframesHeatmap : UserControl, INotifyPropertyChanged
         InitializeComponent();
     }
 
+    protected override void OnMouseMove(MouseEventArgs e)
+    {
+        base.OnMouseMove(e);
+        UpdateToolTipOffset();
+    }
+
+    protected override void OnMouseEnter(MouseEventArgs e)
+    {
+        base.OnMouseEnter(e);
+        UpdateToolTipOffset();
+    }
+
+    private void UpdateToolTipOffset()
+    {
+        if (Keyframes == null || Keyframes.Count == 0 || !double.IsFinite(Duration) || Duration <= 0 || ActualWidth < 1 || ActualHeight < 1)
+            return;
+
+        if (ToolTip is not KeyframesHeatmapToolTip toolTip)
+            return;
+
+        toolTip.Offset = Mouse.GetPosition(this).X / (double)ActualWidth * Duration;
+    }
+
     private void Refresh()
     {
         Stops = new GradientStopCollection();

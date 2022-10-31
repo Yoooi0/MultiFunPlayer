@@ -562,15 +562,43 @@
                                    BucketCount="{Binding HeatmapBucketCount}"
                                    InvertY="{Binding HeatmapInvertY}"
                                    ShowStrokeLength="{Binding HeatmapShowStrokeLength}"
-                                   Panel.ZIndex="-1">
+                                   Panel.ZIndex="-1"
+                                   ToolTipService.InitialShowDelay="500"
+                                   ToolTipService.Placement="Center"
+                                   ToolTipService.VerticalOffset="-40"
+                                   ToolTipService.IsEnabled="{Binding HeatmapEnablePreview}">
+            <controls:KeyframesHeatmap.Resources>
+                <Style TargetType="{x:Type ToolTip}">
+                    <Setter Property="OverridesDefaultStyle" Value="True"/>
+                    <Setter Property="Template">
+                        <Setter.Value>
+                            <ControlTemplate TargetType="ToolTip">
+                                <Grid>
+                                    <ContentPresenter Margin="20"/>
+                                </Grid>
+                            </ControlTemplate>
+                        </Setter.Value>
+                    </Setter>
+                </Style>
+            </controls:KeyframesHeatmap.Resources>
+            <controls:KeyframesHeatmap.ToolTip>
+                <controls:KeyframesHeatmapToolTip Keyframes="{Binding AxisKeyframes, Mode=OneWay}"
+                                                  Settings="{Binding AxisSettings, Mode=OneWay}"
+                                                  Position="{Binding MediaPosition, Mode=OneWay}"
+                                                  Height="60" Width="200"/>
+            </controls:KeyframesHeatmap.ToolTip>
+            
             <controls:KeyframesHeatmap.ContextMenu>
                 <ContextMenu>
                     <MenuItem Header="Show stroke length" 
-                                          IsCheckable="True"
-                                          IsChecked="{Binding HeatmapShowStrokeLength}"/>
+                              IsCheckable="True"
+                              IsChecked="{Binding HeatmapShowStrokeLength}"/>
+                    <MenuItem Header="Enable preview tooltip" 
+                              IsCheckable="True"
+                              IsChecked="{Binding HeatmapEnablePreview}"/>
                     <MenuItem Header="Invert Y" 
-                                          IsCheckable="True"
-                                          IsChecked="{Binding HeatmapInvertY}"/>
+                              IsCheckable="True"
+                              IsChecked="{Binding HeatmapInvertY}"/>
                     <Separator/>
                     <MenuItem Header="Quality" IsEnabled="False"/>
                     <MenuItem material:RippleAssist.IsDisabled="True">
