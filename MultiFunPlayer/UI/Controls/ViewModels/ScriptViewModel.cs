@@ -62,7 +62,7 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
     [JsonProperty(ItemTypeNameHandling = TypeNameHandling.Objects)] public ObservableConcurrentCollection<IMediaPathModifier> MediaPathModifiers => _mediaResourceFactory.PathModifiers;
     [JsonProperty] public ObservableConcurrentCollection<ScriptLibrary> ScriptLibraries { get; }
     [JsonProperty] public SyncSettings SyncSettings { get; set; }
-    [JsonProperty] public bool HeatmapShowStrokeLength { get; set; }
+    [JsonProperty] public bool HeatmapShowStrokeLength { get; set; } = true;
     [JsonProperty] public bool HeatmapEnablePreview { get; set; } = true;
     [JsonProperty] public int HeatmapBucketCount { get; set; } = 333;
     [JsonProperty] public bool HeatmapInvertY { get; set; } = false;
