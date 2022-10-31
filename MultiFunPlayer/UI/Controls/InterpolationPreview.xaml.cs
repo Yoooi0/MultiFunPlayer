@@ -88,9 +88,9 @@ public partial class InterpolationPreview : UserControl, INotifyPropertyChanged
             if (y == _keyframes.Last().Value)
                 continue;
 
-            for (var i = 0; i < 2; i++)
-                if (_keyframes.Count != PointCount - 1)
-                    AddKeyframe(_keyframes.Count / (PointCount - 1d), y);
+            var count = Random.Shared.Next(1, 4);
+            for (var i = 0; _keyframes.Count != PointCount - 1 && i < count; i++)
+                AddKeyframe(_keyframes.Count / (PointCount - 1d), y);
         }
 
         AddKeyframe(1, 0.5);
