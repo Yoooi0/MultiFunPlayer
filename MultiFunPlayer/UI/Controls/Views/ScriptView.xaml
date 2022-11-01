@@ -1485,7 +1485,7 @@
 
                                                             <metro:NumericUpDown Value="{Binding Value.Settings.MaximumSecondsPerStroke}"
                                                                                  Minimum="0.001"
-                                                                                 Maximum="2"
+                                                                                 Maximum="10"
                                                                                  Interval="0.001"
                                                                                  StringFormat="{}{0:F3}s/stroke"/>
                                                         </DockPanel>
