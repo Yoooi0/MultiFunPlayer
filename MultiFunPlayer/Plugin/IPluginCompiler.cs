@@ -1,4 +1,4 @@
-﻿using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using MultiFunPlayer.Common;
@@ -51,7 +51,7 @@ public class PluginCompilationResult : IDisposable
 public static class PluginCompiler
 {
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
-    private static Regex ReferenceRegex { get; } = new Regex("^#r\\s+\\\"(?<type>name|file):(?<value>.+?)\\\"", RegexOptions.Compiled);
+    private static Regex ReferenceRegex { get; } = new Regex("^#r\\s+\\\"(?<type>name|file):(?<value>.+?)\\\"", RegexOptions.Compiled | RegexOptions.Multiline);
     private static IContainer Container { get; set; }
 
     public static void QueueCompile(string pluginSource, Action<PluginCompilationResult> callback)
