@@ -1,4 +1,4 @@
-﻿using MultiFunPlayer.Common;
+using MultiFunPlayer.Common;
 using MultiFunPlayer.Input;
 using NLog;
 using Stylet;
@@ -35,8 +35,7 @@ public abstract class AbstractPlugin : PropertyChangedBase, IPlugin
 
     protected AbstractPlugin()
     {
-        _messageProxy = new();
-        _messageProxy.OnMessage += (_, e) => HandleMessageInternal(e);
+        _messageProxy = new(HandleMessageInternal);
         Logger = LogManager.GetLogger(GetType().FullName);
     }
 
@@ -82,8 +81,9 @@ public abstract class AbstractPlugin : PropertyChangedBase, IPlugin
 
     internal class MessageProxy : IHandle<object>
     {
-        public event EventHandler<object> OnMessage;
-        public void Handle(object message) => OnMessage?.Invoke(this, message);
+        private readonly Action<object> _callback;
+        public MessageProxy(Action<object> callback) => _callback = callback;
+        public void Handle(object message) => _callback(message);
     }
 }
 
