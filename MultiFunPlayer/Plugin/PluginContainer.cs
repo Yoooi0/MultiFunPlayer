@@ -1,4 +1,4 @@
-using MultiFunPlayer.Common;
+﻿using MultiFunPlayer.Common;
 using MultiFunPlayer.Settings;
 using NLog;
 using Stylet;
@@ -111,18 +111,23 @@ public class PluginContainer : PropertyChangedBase, IDisposable
             return;
 
         State = PluginState.Stopping;
+        ThreadPool.QueueUserWorkItem(_ =>
+        {
+            _cancellationSource?.Cancel();
 
-        _cancellationSource?.Cancel();
-        _thread?.Join();
-        _cancellationSource?.Dispose();
+            if (_thread?.Join(TimeSpan.FromSeconds(10)) == false)
+                Logger.Warn($"{_plugin.Name} failed to stop in allotted time");
 
-        HandleSettings(SettingsAction.Saving);
+            _cancellationSource?.Dispose();
 
-        _thread = null;
-        _cancellationSource = null;
-        _plugin = null;
+            HandleSettings(SettingsAction.Saving);
 
-        State = PluginState.Idle;
+            _thread = null;
+            _cancellationSource = null;
+            _plugin = null;
+
+            State = PluginState.Idle;
+        });
     }
 
     public void HandleSettings(SettingsAction action)
