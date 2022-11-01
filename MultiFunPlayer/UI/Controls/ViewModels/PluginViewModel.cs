@@ -7,27 +7,28 @@ namespace MultiFunPlayer.UI.Controls.ViewModels;
 
 public class PluginViewModel : Screen, IHandle<SettingsMessage>, IDisposable
 {
-    private const string PluginDirectory = "Plugins";
     private FileSystemWatcher _watcher;
 
     public ObservableConcurrentDictionary<FileInfo, PluginContainer> Containers { get; }
 
-    public PluginViewModel()
+    public PluginViewModel(IEventAggregator eventAggregator)
     {
-        Directory.CreateDirectory(PluginDirectory);
+        eventAggregator.Subscribe(this);
+
+        Directory.CreateDirectory("Plugins");
 
         Containers = new ObservableConcurrentDictionary<FileInfo, PluginContainer>();
         _watcher = new FileSystemWatcher()
         {
             Filter = "*.cs",
-            Path = Path.Join(Directory.GetCurrentDirectory(), PluginDirectory),
+            Path = Path.Join(Directory.GetCurrentDirectory(), "Plugins"),
             EnableRaisingEvents = true
         };
 
         _watcher.Created += OnWatcherCreated;
         _watcher.Deleted += OnWatcherDeleted;
 
-        foreach (var fileInfo in new DirectoryInfo(PluginDirectory).SafeEnumerateFileSystemInfos("*.cs"))
+        foreach (var fileInfo in new DirectoryInfo("Plugins").SafeEnumerateFileSystemInfos("*.cs"))
             AddContainer(new FileInfo(fileInfo.FullName));
     }
 
@@ -68,6 +69,8 @@ public class PluginViewModel : Screen, IHandle<SettingsMessage>, IDisposable
 
     public void Handle(SettingsMessage message)
     {
+        foreach (var (_, container) in Containers)
+            container.HandleSettings(message.Action);
     }
 
     protected virtual void Dispose(bool disposing)

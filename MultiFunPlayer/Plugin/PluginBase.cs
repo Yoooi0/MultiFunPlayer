@@ -1,5 +1,6 @@
 ﻿using MultiFunPlayer.Common;
 using MultiFunPlayer.Input;
+using Newtonsoft.Json.Linq;
 using NLog;
 using Stylet;
 using StyletIoC;
@@ -28,6 +29,7 @@ public abstract class PluginBase : PropertyChangedBase
     }
 
     public virtual UIElement CreateView() => null;
+    public virtual void HandleSettings(JObject settings, SettingsAction action) { }
 
     protected UIElement CreateViewFromStream(Stream stream) => XamlReader.Load(stream) as UIElement;
     protected UIElement CreateViewFromFile(string path) => CreateViewFromStream(File.OpenRead(path));

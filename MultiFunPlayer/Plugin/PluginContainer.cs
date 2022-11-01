@@ -1,4 +1,5 @@
 ﻿using MultiFunPlayer.Common;
+using MultiFunPlayer.Settings;
 using NLog;
 using Stylet;
 using System.IO;
@@ -121,11 +122,26 @@ public class PluginContainer : PropertyChangedBase, IDisposable
         _thread?.Join();
         _cancellationSource?.Dispose();
 
+        HandleSettings(SettingsAction.Saving);
+
         _thread = null;
         _cancellationSource = null;
         _plugin = null;
 
         State = PluginState.Idle;
+    }
+
+    public void HandleSettings(SettingsAction action)
+    {
+        if (_plugin == null)
+            return;
+
+        var settingsPath = $"Plugins\\{Path.GetFileNameWithoutExtension(PluginFile.Name)}.config.json";
+        var settings = SettingsHelper.ReadOrEmpty(settingsPath);
+        _plugin.HandleSettings(settings, action);
+
+        if (action == SettingsAction.Saving && settings.HasValues)
+            SettingsHelper.Write(settings, settingsPath);
     }
 
     private void QueueCompile(Action callback = null)
@@ -154,6 +170,7 @@ public class PluginContainer : PropertyChangedBase, IDisposable
 
                 Exception = null;
                 _plugin = _compilationResult.Instance;
+                HandleSettings(SettingsAction.Loading);
             }
             else
             {

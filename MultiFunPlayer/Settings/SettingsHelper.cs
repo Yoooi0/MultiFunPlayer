@@ -8,17 +8,18 @@ public static class SettingsHelper
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-    private static string Path => $"{nameof(MultiFunPlayer)}.config.json";
+    private const string DefaultPath = $"{nameof(MultiFunPlayer)}.config.json";
 
-    public static JObject Read()
+    public static JObject ReadOrEmpty(string path = DefaultPath) => Read(path) ?? new JObject();
+    public static JObject Read(string path = DefaultPath)
     {
-        if (!File.Exists(Path))
+        if (!File.Exists(path))
             return null;
 
-        Logger.Info("Reading settings from \"{0}\"", Path);
+        Logger.Info("Reading settings from \"{0}\"", path);
         try
         {
-            return JObject.Parse(File.ReadAllText(Path));
+            return JObject.Parse(File.ReadAllText(path));
         }
         catch (Exception e)
         {
@@ -27,14 +28,12 @@ public static class SettingsHelper
         }
     }
 
-    public static JObject ReadOrEmpty() => Read() ?? new JObject();
-
-    public static void Write(JObject settings)
+    public static void Write(JObject settings, string path = DefaultPath)
     {
         try
         {
-            Logger.Info("Saving settings to \"{0}\"", Path);
-            File.WriteAllText(Path, settings.ToString());
+            Logger.Info("Saving settings to \"{0}\"", path);
+            File.WriteAllText(path, settings.ToString());
         }
         catch (Exception e)
         {
