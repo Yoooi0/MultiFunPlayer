@@ -39,6 +39,7 @@ public class PluginViewModel : Screen, IHandle<SettingsMessage>, IDisposable
         if (!Containers.ContainsKey(fileInfo))
             return;
 
+        Containers[fileInfo].Dispose();
         Containers.Remove(fileInfo);
     }
 
@@ -47,7 +48,9 @@ public class PluginViewModel : Screen, IHandle<SettingsMessage>, IDisposable
         if (Containers.ContainsKey(fileInfo))
             return;
 
-        Containers.Add(fileInfo, new PluginContainer(fileInfo));
+        var container = new PluginContainer(fileInfo);
+        Containers.Add(fileInfo, container);
+        container.Compile();
     }
 
     public void Handle(SettingsMessage message)
