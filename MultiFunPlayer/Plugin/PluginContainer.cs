@@ -1,4 +1,4 @@
-﻿using MultiFunPlayer.Common;
+using MultiFunPlayer.Common;
 using MultiFunPlayer.Settings;
 using NLog;
 using Stylet;
@@ -87,9 +87,9 @@ public class PluginContainer : PropertyChangedBase, IDisposable
             }
             else if (_plugin is AsyncPluginBase asyncPlugin)
             {
-                //TODO: handle this better
+                // https://stackoverflow.com/a/9343733 ¯\_(ツ)_/¯
                 var task = asyncPlugin.ExecuteAsync(token);
-                task.Wait();
+                task.GetAwaiter().GetResult();
             }
 
             State = PluginState.RanToCompletion;
