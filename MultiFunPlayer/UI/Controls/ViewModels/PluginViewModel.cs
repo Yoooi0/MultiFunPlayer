@@ -31,8 +31,21 @@ public class PluginViewModel : Screen, IHandle<SettingsMessage>, IDisposable
             AddContainer(new FileInfo(fileInfo.FullName));
     }
 
-    private void OnWatcherDeleted(object sender, FileSystemEventArgs e) => RemoveContainer(new FileInfo(e.FullPath));
-    private void OnWatcherCreated(object sender, FileSystemEventArgs e) => AddContainer(new FileInfo(e.FullPath));
+    private void OnWatcherDeleted(object sender, FileSystemEventArgs e)
+    {
+        if (!File.Exists(e.FullPath))
+            return;
+
+        RemoveContainer(new FileInfo(e.FullPath));
+    }
+
+    private void OnWatcherCreated(object sender, FileSystemEventArgs e)
+    {
+        if (!File.Exists(e.FullPath))
+            return;
+
+        AddContainer(new FileInfo(e.FullPath));
+    }
 
     private void RemoveContainer(FileInfo fileInfo)
     {
