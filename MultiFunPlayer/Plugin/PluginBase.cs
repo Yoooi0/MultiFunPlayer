@@ -1,27 +1,16 @@
-using MultiFunPlayer.Common;
+﻿using MultiFunPlayer.Common;
 using MultiFunPlayer.Input;
 using NLog;
 using Stylet;
 using StyletIoC;
+using System.IO;
+using System.Text;
+using System.Windows;
+using System.Windows.Markup;
 
 namespace MultiFunPlayer.Plugin;
 
-public interface IPlugin
-{
-    string Name { get; }
-}
-
-public interface ISyncPlugin : IPlugin
-{
-    public void Execute(CancellationToken cancellationToken);
-}
-
-public interface IAsyncPlugin : IPlugin
-{
-    public Task ExecuteAsync(CancellationToken cancellationToken);
-}
-
-public abstract class AbstractPlugin : PropertyChangedBase, IPlugin
+public abstract class PluginBase : PropertyChangedBase
 {
     internal readonly MessageProxy _messageProxy;
 
@@ -29,14 +18,23 @@ public abstract class AbstractPlugin : PropertyChangedBase, IPlugin
     [Inject] internal IEventAggregator EventAggregator { get; set; }
     [Inject] internal IShortcutManager ShortcutManager { get; set; }
 
-    public string Name => GetType().Name;
-
+    public virtual string Name => GetType().Name;
     protected Logger Logger { get; }
 
-    protected AbstractPlugin()
+    protected PluginBase()
     {
         _messageProxy = new(HandleMessageInternal);
         Logger = LogManager.GetLogger(GetType().FullName);
+    }
+
+    public virtual UIElement CreateView() => null;
+
+    protected UIElement CreateViewFromStream(Stream stream) => XamlReader.Load(stream) as UIElement;
+    protected UIElement CreateViewFromFile(string path) => CreateViewFromStream(File.OpenRead(path));
+    protected UIElement CreateViewFromString(string xamlContent)
+    {
+        using var stream = new MemoryStream(Encoding.UTF8.GetBytes(xamlContent));
+        return CreateViewFromStream(stream);
     }
 
     protected void GetAxisValue(DeviceAxis axis)
@@ -87,12 +85,12 @@ public abstract class AbstractPlugin : PropertyChangedBase, IPlugin
     }
 }
 
-public abstract class SyncPluginBase : AbstractPlugin, ISyncPlugin
+public abstract class SyncPluginBase : PluginBase
 {
     public abstract void Execute(CancellationToken cancellationToken);
 }
 
-public abstract class AsyncPluginBase : AbstractPlugin, IAsyncPlugin
+public abstract class AsyncPluginBase : PluginBase
 {
     public abstract Task ExecuteAsync(CancellationToken cancellationToken);
 }

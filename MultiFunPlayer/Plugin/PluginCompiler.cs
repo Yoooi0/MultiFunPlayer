@@ -1,26 +1,29 @@
-using Microsoft.CodeAnalysis;
+﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using MultiFunPlayer.Common;
 using NLog;
+using Stylet;
 using StyletIoC;
 using System.IO;
 using System.Reflection;
 using System.Runtime.Loader;
 using System.Text.RegularExpressions;
+using System.Windows;
 
 namespace MultiFunPlayer.Plugin;
 
 public class PluginCompilationResult : IDisposable
 {
-    public IPlugin Instance { get; init; }
+    public PluginBase Instance { get; init; }
     public Exception Exception { get; init; }
     public AssemblyLoadContext Context { get; private set; }
+    public UIElement View { get; private set; }
 
     public bool Success => Exception == null && Instance != null;
 
     public static PluginCompilationResult FromFailure(Exception e) => new() { Exception = e };
-    public static PluginCompilationResult FromSuccess(IPlugin instance, AssemblyLoadContext context) => new() { Instance = instance, Context = context };
+    public static PluginCompilationResult FromSuccess(PluginBase instance, AssemblyLoadContext context, UIElement view) => new() { Instance = instance, Context = context, View = view };
 
     protected virtual void Dispose(bool disposing)
     {
@@ -52,7 +55,9 @@ public static class PluginCompiler
 {
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
     private static Regex ReferenceRegex { get; } = new Regex("^#r\\s+\\\"(?<type>name|file):(?<value>.+?)\\\"", RegexOptions.Compiled | RegexOptions.Multiline);
+
     private static IContainer Container { get; set; }
+    private static IViewManager ViewManager { get; set; }
 
     public static void QueueCompile(string pluginSource, Action<PluginCompilationResult> callback)
     {
@@ -71,7 +76,7 @@ public static class PluginCompiler
             var references = new List<MetadataReference>
             {
                 MetadataReference.CreateFromFile(typeof(object).Assembly.Location),
-                MetadataReference.CreateFromFile(typeof(IPlugin).Assembly.Location)
+                MetadataReference.CreateFromFile(typeof(PluginBase).Assembly.Location)
             };
 
             pluginSource = ReferenceRegex.Replace(pluginSource, m =>
@@ -141,13 +146,22 @@ public static class PluginCompiler
             stream.Seek(0, SeekOrigin.Begin);
             var context = new CollectibleAssemblyLoadContext();
             var assembly = context.LoadFromStream(stream);
-            var pluginType = Array.Find(assembly.GetExportedTypes(), t => t.GetInterface(nameof(IPlugin)) != null);
+            var pluginType = Array.Find(assembly.GetExportedTypes(), t => t.IsAssignableTo(typeof(PluginBase)));
 
-            if (Activator.CreateInstance(pluginType) is not IPlugin instance)
+            if (Activator.CreateInstance(pluginType) is not PluginBase instance)
                 return PluginCompilationResult.FromFailure(new PluginCompileException("Failed to instantiate Plugin instance"));
 
             Container.BuildUp(instance);
-            return PluginCompilationResult.FromSuccess(instance, context);
+
+            var view = default(UIElement);
+            Execute.OnUIThreadSync(() => {
+                view = instance.CreateView();
+
+                if (view != null)
+                    ViewManager.BindViewToModel(view, instance);
+            });
+
+            return PluginCompilationResult.FromSuccess(instance, context, view);
         }
         catch (Exception e)
         {
@@ -159,6 +173,7 @@ public static class PluginCompiler
     public static void Initialize(IContainer container)
     {
         Container = container;
+        ViewManager = container.Get<IViewManager>();
     }
 
     private class CollectibleAssemblyLoadContext : AssemblyLoadContext

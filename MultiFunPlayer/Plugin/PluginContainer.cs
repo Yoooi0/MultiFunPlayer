@@ -2,6 +2,7 @@
 using NLog;
 using Stylet;
 using System.IO;
+using System.Windows;
 
 namespace MultiFunPlayer.Plugin;
 
@@ -20,19 +21,20 @@ public class PluginContainer : PropertyChangedBase, IDisposable
 {
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
-    private PluginCompilationResult _compileResult;
+    private PluginCompilationResult _compilationResult;
     private CancellationTokenSource _cancellationSource;
     private Thread _thread;
-    private IPlugin _plugin;
+    private PluginBase _plugin;
 
     public FileInfo PluginFile { get; }
     public Exception Exception { get; private set; }
+    public PluginState State { get; private set; } = PluginState.Idle;
+
+    public UIElement View => _compilationResult?.View;
 
     public bool CanStart => State == PluginState.Idle || State == PluginState.RanToCompletion;
     public bool CanStop => State == PluginState.Running;
     public bool CanCompile => State == PluginState.Idle || State == PluginState.Faulted || State == PluginState.RanToCompletion;
-
-    public PluginState State { get; private set; } = PluginState.Idle;
     public bool IsBusy => State != PluginState.Idle && State != PluginState.RanToCompletion && State != PluginState.Running;
 
     public PluginContainer(FileInfo pluginFile)
@@ -78,11 +80,11 @@ public class PluginContainer : PropertyChangedBase, IDisposable
             State = PluginState.Running;
 
             var token = _cancellationSource.Token;
-            if (_plugin is ISyncPlugin syncPlugin)
+            if (_plugin is SyncPluginBase syncPlugin)
             {
                 syncPlugin.Execute(token);
             }
-            else if (_plugin is IAsyncPlugin asyncPlugin)
+            else if (_plugin is AsyncPluginBase asyncPlugin)
             {
                 var handle = new ManualResetEvent(false);
                 var task = Task.Factory.StartNew(async () => {
@@ -141,29 +143,27 @@ public class PluginContainer : PropertyChangedBase, IDisposable
 
         void OnCompile(PluginCompilationResult result)
         {
-            _compileResult?.Dispose();
-            _compileResult = result;
             if (_plugin != null)
                 Stop();
 
-            if (_compileResult.Success)
+            _compilationResult?.Dispose();
+            _compilationResult = result;
+            if (_compilationResult.Success)
             {
                 State = PluginState.Idle;
 
                 Exception = null;
-                _plugin = _compileResult.Instance;
+                _plugin = _compilationResult.Instance;
             }
             else
             {
                 State = PluginState.Faulted;
 
-                Exception = _compileResult.Exception;
+                Exception = _compilationResult.Exception;
                 _plugin = null;
             }
 
-            NotifyOfPropertyChange(nameof(CanStart));
-            NotifyOfPropertyChange(nameof(CanStop));
-            NotifyOfPropertyChange(nameof(CanCompile));
+            NotifyOfPropertyChange(nameof(View));
         }
     }
 
