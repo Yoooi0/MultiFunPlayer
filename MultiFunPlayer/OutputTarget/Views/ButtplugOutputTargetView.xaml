@@ -21,7 +21,7 @@
               IsExpanded="{Binding DataContext.ContentVisible, RelativeSource={RelativeSource FindAncestor, AncestorLevel=2, AncestorType={x:Type UserControl}}}">
         <Expander.Header>
             <StackPanel Orientation="Horizontal"
-                        Height="35">
+                        Height="36">
                 <Button DockPanel.Dock="Left"
                         Command="{s:Action ToggleConnectAsync}"
                         CommandParameter="{Binding}"
@@ -243,7 +243,7 @@
                             <ListView.ItemContainerStyle>
                                 <Style TargetType="ListViewItem" BasedOn="{StaticResource MaterialDesignGridViewItem}">
                                     <Setter Property="Focusable" Value="False"/>
-                                    <Setter Property="Height" Value="35"/>
+                                    <Setter Property="Height" Value="36"/>
                                     <Setter Property="HorizontalContentAlignment" Value="Stretch" />
                                     <Setter Property="VerticalContentAlignment" Value="Center" />
                                 </Style>

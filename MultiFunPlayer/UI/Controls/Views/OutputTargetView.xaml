@@ -76,13 +76,9 @@
                                                PlacementMode="RightAndAlignMiddles"
                                                PopupHorizontalOffset="-5">
                                 <material:PopupBox.ToggleContent>
-                                    <Border Width="35">
-                                        <material:PackIcon Kind="Plus" 
-                                                           Width="22" 
-                                                           Height="22" 
-                                                           HorizontalAlignment="Center" 
-                                                           VerticalAlignment="Center"/>
-                                    </Border>
+                                    <material:PackIcon Kind="Plus" 
+                                                       Width="22" 
+                                                       Height="22"/>
                                 </material:PopupBox.ToggleContent>
 
                                 <Grid Margin="10 0 10 5">

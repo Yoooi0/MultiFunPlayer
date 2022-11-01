@@ -19,7 +19,7 @@
               IsExpanded="{Binding DataContext.ContentVisible, RelativeSource={RelativeSource FindAncestor, AncestorLevel=2, AncestorType={x:Type UserControl}}}">
         <Expander.Header>
             <StackPanel Orientation="Horizontal"
-                        Height="35">
+                        Height="36">
                 <Button DockPanel.Dock="Left"
                         Command="{s:Action ToggleConnectAsync}"
                         CommandParameter="{Binding}"

@@ -36,10 +36,12 @@
                       IsExpanded="{Binding MediaContentVisible}">
                 <Expander.Header>
                     <DockPanel LastChildFill="True" 
-                               Height="35">
+                               Height="36">
                         <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
                             <Button Click="{s:Action OnPlayPauseClick}"
-                                    Padding="5">
+                                    Padding="0"
+                                    Width="36"
+                                    Height="36">
                                 <Button.Style>
                                     <Style TargetType="{x:Type Button}" BasedOn="{StaticResource MaterialDesignToolBarButton}">
                                         <Setter Property="ToolTip" Value="Play"/>
@@ -74,52 +76,47 @@
                                                Style="{StaticResource MaterialDesignToolBarPopupBox}"
                                                ToolTip="Sync settings">
                                 <material:PopupBox.ToggleContent>
-                                    <Border Width="35" 
-                                            Height="35" 
-                                            VerticalAlignment="Center"
-                                            HorizontalAlignment="Center">
-                                        <Grid Width="24" Height="24">
-                                            <Grid.RowDefinitions>
-                                                <RowDefinition Height="24" />
-                                                <RowDefinition Height="24" />
-                                            </Grid.RowDefinitions>
+                                    <Grid Width="24" Height="24">
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="24" />
+                                            <RowDefinition Height="24" />
+                                        </Grid.RowDefinitions>
 
-                                            <material:PackIcon Grid.Row="0"
-                                                               Width="16" 
-                                                               Height="16"
-                                                               VerticalAlignment="Center"
-                                                               HorizontalAlignment="Center"
-                                                               Kind="FastForward">
-                                                <material:PackIcon.Style>
-                                                    <Style TargetType="material:PackIcon">
-                                                        <Setter Property="Foreground" Value="{DynamicResource PrimaryHueLightBrush}"/>
-                                                        <Style.Triggers>
-                                                            <DataTrigger Binding="{Binding IsSyncing}" Value="True">
-                                                                <Setter Property="Foreground" Value="{StaticResource MaterialDesignErrorBrush}"/>
-                                                            </DataTrigger>
-                                                        </Style.Triggers>
-                                                    </Style>
-                                                </material:PackIcon.Style>
-                                            </material:PackIcon>
-                                            <ProgressBar Value="{Binding SyncProgress, Mode=OneWay}"
+                                        <material:PackIcon Grid.Row="0"
+                                                           Width="16" 
+                                                           Height="16"
+                                                           VerticalAlignment="Center"
+                                                           HorizontalAlignment="Center"
+                                                           Kind="FastForward">
+                                            <material:PackIcon.Style>
+                                                <Style TargetType="material:PackIcon">
+                                                    <Setter Property="Foreground" Value="{DynamicResource PrimaryHueLightBrush}"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsSyncing}" Value="True">
+                                                            <Setter Property="Foreground" Value="{StaticResource MaterialDesignErrorBrush}"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </material:PackIcon.Style>
+                                        </material:PackIcon>
+                                        <ProgressBar Value="{Binding SyncProgress, Mode=OneWay}"
                                                          VerticalAlignment="Center"
                                                          Grid.Row="1"
                                                          Width="24"
                                                          Height="24"
                                                          Margin="0 -24 0 24">
-                                                <ProgressBar.Style>
-                                                    <Style TargetType="ProgressBar" BasedOn="{StaticResource MaterialDesignCircularProgressBar}">
-                                                        <Setter Property="Foreground" Value="{DynamicResource PrimaryHueLightBrush}"/>
-                                                        <Style.Triggers>
-                                                            <DataTrigger Binding="{Binding IsSyncing}" Value="True">
-                                                                <Setter Property="Foreground" Value="{StaticResource MaterialDesignErrorBrush}"/>
-                                                            </DataTrigger>
-                                                        </Style.Triggers>
-                                                    </Style>
-                                                </ProgressBar.Style>
-                                            </ProgressBar>
-                                        </Grid>
-                                    </Border>
+                                            <ProgressBar.Style>
+                                                <Style TargetType="ProgressBar" BasedOn="{StaticResource MaterialDesignCircularProgressBar}">
+                                                    <Setter Property="Foreground" Value="{DynamicResource PrimaryHueLightBrush}"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsSyncing}" Value="True">
+                                                            <Setter Property="Foreground" Value="{StaticResource MaterialDesignErrorBrush}"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </ProgressBar.Style>
+                                        </ProgressBar>
+                                    </Grid>
                                 </material:PopupBox.ToggleContent>
 
                                 <Grid Width="250" Margin="10">
@@ -473,13 +470,9 @@
                                                Style="{StaticResource MaterialDesignToolBarPopupBox}"
                                                ToolTip="Auto-skip">
                                 <material:PopupBox.ToggleContent>
-                                    <Border Width="35" Height="35">
-                                        <material:PackIcon Kind="SkipForward" 
-                                                           Width="22" 
-                                                           Height="22" 
-                                                           HorizontalAlignment="Center" 
-                                                           VerticalAlignment="Center"/>
-                                    </Border>
+                                    <material:PackIcon Kind="SkipForward" 
+                                                       Width="22" 
+                                                       Height="22"/>
                                 </material:PopupBox.ToggleContent>
                                 <Grid Width="200" Margin="10">
                                     <StackPanel>
@@ -552,7 +545,7 @@
             </Expander>
         </material:Card>
 
-        <controls:KeyframesHeatmap Height="35"
+        <controls:KeyframesHeatmap Height="36"
                                    Margin="0 0 0 20"
                                    Cursor="Hand"
                                    MouseUp="{s:Action OnKeyframesHeatmapMouseUp}"
@@ -625,7 +618,7 @@
             <controls:NonReloadingTabControl ItemsSource="{Binding AxisModels}">
                 <TabControl.ItemTemplate>
                     <DataTemplate>
-                        <Grid Width="46" Height="35">
+                        <Grid Width="46" Height="36">
                             <TextBlock Text="{Binding Key}"
                                        HorizontalAlignment="Center"
                                        VerticalAlignment="Center">
@@ -653,7 +646,7 @@
                             <Grid HorizontalAlignment="Stretch"
                                   VerticalAlignment="Bottom">
                                 <Border Margin="8 0 8 0" 
-                                        Padding="0 3 0 3" 
+                                        Padding="0 0 0 4" 
                                         Background="Transparent"
                                         ToolTipService.InitialShowDelay="750"
                                         ToolTipService.Placement="Right"
@@ -844,7 +837,7 @@
                                       IsExpanded="{Binding DataContext.AxisContentVisible, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}">
                                 <Expander.Header>
                                     <DockPanel LastChildFill="True"
-                                               Height="35">
+                                               Height="36">
                                         <StackPanel Orientation="Horizontal" DockPanel.Dock="Right">
                                             <TextBlock Text="{Binding Key, Converter={StaticResource DeviceAxisFriendlyNameConverter}}"
                                                        Foreground="{DynamicResource PrimaryHueLightBrush}"
@@ -867,7 +860,7 @@
                                                               Padding="8">
                                                         <MenuItem.Header>
                                                             <DockPanel LastChildFill="True">
-                                                                <Border Width="35" Height="35" DockPanel.Dock="Left">
+                                                                <Border Width="36" Height="36" DockPanel.Dock="Left">
                                                                     <material:PackIcon Kind="FolderOpen" Width="16" Height="16"/>
                                                                 </Border>
 
@@ -881,7 +874,7 @@
                                                               Padding="8">
                                                         <MenuItem.Header>
                                                             <DockPanel LastChildFill="True">
-                                                                <Border Width="35" Height="35" DockPanel.Dock="Left">
+                                                                <Border Width="36" Height="36" DockPanel.Dock="Left">
                                                                     <material:PackIcon Kind="FileDownload" Width="16" Height="16"/>
                                                                 </Border>
 
@@ -895,7 +888,7 @@
                                                               Padding="8">
                                                         <MenuItem.Header>
                                                             <DockPanel LastChildFill="True">
-                                                                <Border Width="35" Height="35" DockPanel.Dock="Left">
+                                                                <Border Width="36" Height="36" DockPanel.Dock="Left">
                                                                     <material:PackIcon Kind="Close" Width="16" Height="16"/>
                                                                 </Border>
 
@@ -909,7 +902,7 @@
                                                               Padding="8">
                                                         <MenuItem.Header>
                                                             <DockPanel LastChildFill="True">
-                                                                <Border Width="35" Height="35" DockPanel.Dock="Left">
+                                                                <Border Width="36" Height="36" DockPanel.Dock="Left">
                                                                     <material:PackIcon Kind="Reload" Width="16" Height="16"/>
                                                                 </Border>
 
@@ -923,7 +916,7 @@
                                                               Padding="8">
                                                         <MenuItem.Header>
                                                             <DockPanel LastChildFill="True">
-                                                                <Border Width="35" Height="35" DockPanel.Dock="Left">
+                                                                <Border Width="36" Height="36" DockPanel.Dock="Left">
                                                                     <material:PackIcon Kind="FileMove" Width="16" Height="16"/>
                                                                 </Border>
 
@@ -991,26 +984,22 @@
                                                                    Style="{StaticResource MaterialDesignToolBarPopupBox}"
                                                                    ToolTip="Link script">
                                                 <material:PopupBox.ToggleContent>
-                                                    <Border Width="35" Height="35">
-                                                        <material:PackIcon Kind="LinkVariant" 
-                                                                           Width="19" 
-                                                                           Height="19" 
-                                                                           HorizontalAlignment="Center" 
-                                                                           VerticalAlignment="Center">
-                                                            <material:PackIcon.Style>
-                                                                <Style TargetType="material:PackIcon">
-                                                                    <Style.Triggers>
-                                                                        <DataTrigger Binding="{Binding Value.Settings.LinkAxis, Converter={StaticResource notNullBooleanConverter}}" Value="True">
-                                                                            <Setter Property="Foreground" Value="{StaticResource MaterialDesignSuccessBrush}"/>
-                                                                        </DataTrigger>
-                                                                        <DataTrigger Binding="{Binding Value.Settings.LinkAxisHasPriority}" Value="True">
-                                                                            <Setter Property="Foreground" Value="{StaticResource MaterialDesignSuccessBrush}"/>
-                                                                        </DataTrigger>
-                                                                    </Style.Triggers>
-                                                                </Style>
-                                                            </material:PackIcon.Style>
-                                                        </material:PackIcon>
-                                                    </Border>
+                                                    <material:PackIcon Kind="LinkVariant" 
+                                                                       Width="20" 
+                                                                       Height="20">
+                                                        <material:PackIcon.Style>
+                                                            <Style TargetType="material:PackIcon">
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding Value.Settings.LinkAxis, Converter={StaticResource notNullBooleanConverter}}" Value="True">
+                                                                        <Setter Property="Foreground" Value="{StaticResource MaterialDesignSuccessBrush}"/>
+                                                                    </DataTrigger>
+                                                                    <DataTrigger Binding="{Binding Value.Settings.LinkAxisHasPriority}" Value="True">
+                                                                        <Setter Property="Foreground" Value="{StaticResource MaterialDesignSuccessBrush}"/>
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </material:PackIcon.Style>
+                                                    </material:PackIcon>
                                                 </material:PopupBox.ToggleContent>
                                                 <Grid Width="100" Margin="10">
                                                     <StackPanel>
@@ -1064,23 +1053,19 @@
                                                                Style="{StaticResource MaterialDesignToolBarPopupBox}"
                                                                ToolTip="Motion">
                                                 <material:PopupBox.ToggleContent>
-                                                    <Border Width="35" Height="35">
-                                                        <material:PackIcon Kind="Motion" 
-                                                                           Width="19" 
-                                                                           Height="19" 
-                                                                           HorizontalAlignment="Center" 
-                                                                           VerticalAlignment="Center">
-                                                            <material:PackIcon.Style>
-                                                                <Style TargetType="material:PackIcon">
-                                                                    <Style.Triggers>
-                                                                        <DataTrigger Binding="{Binding Value.Settings.SelectedMotionProvider, Converter={StaticResource notNullBooleanConverter}}" Value="True">
-                                                                            <Setter Property="Foreground" Value="{StaticResource MaterialDesignSuccessBrush}"/>
-                                                                        </DataTrigger>
-                                                                    </Style.Triggers>
-                                                                </Style>
-                                                            </material:PackIcon.Style>
-                                                        </material:PackIcon>
-                                                    </Border>
+                                                    <material:PackIcon Kind="Motion" 
+                                                                       Width="20" 
+                                                                       Height="20">
+                                                        <material:PackIcon.Style>
+                                                            <Style TargetType="material:PackIcon">
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding Value.Settings.SelectedMotionProvider, Converter={StaticResource notNullBooleanConverter}}" Value="True">
+                                                                        <Setter Property="Foreground" Value="{StaticResource MaterialDesignSuccessBrush}"/>
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </material:PackIcon.Style>
+                                                    </material:PackIcon>
                                                 </material:PopupBox.ToggleContent>
                                                 <Grid Width="250" Margin="10 0 10 0">
                                                     <StackPanel>
@@ -1282,23 +1267,19 @@
                                                                Style="{StaticResource MaterialDesignToolBarPopupBox}"
                                                                ToolTip="Smart limit">
                                                 <material:PopupBox.ToggleContent>
-                                                    <Border Width="35" Height="35">
-                                                        <material:PackIcon Kind="ChartSnakeyVariant" 
-                                                                               Width="17" 
-                                                                               Height="17" 
-                                                                               HorizontalAlignment="Center" 
-                                                                               VerticalAlignment="Center">
-                                                            <material:PackIcon.Style>
-                                                                <Style TargetType="material:PackIcon">
-                                                                    <Style.Triggers>
-                                                                        <DataTrigger Binding="{Binding Value.Settings.SmartLimitInputAxis, Converter={StaticResource notNullBooleanConverter}}" Value="True">
-                                                                            <Setter Property="Foreground" Value="{StaticResource MaterialDesignSuccessBrush}"/>
-                                                                        </DataTrigger>
-                                                                    </Style.Triggers>
-                                                                </Style>
-                                                            </material:PackIcon.Style>
-                                                        </material:PackIcon>
-                                                    </Border>
+                                                    <material:PackIcon Kind="ChartSnakeyVariant" 
+                                                                       Width="18" 
+                                                                       Height="18">
+                                                        <material:PackIcon.Style>
+                                                            <Style TargetType="material:PackIcon">
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding Value.Settings.SmartLimitInputAxis, Converter={StaticResource notNullBooleanConverter}}" Value="True">
+                                                                        <Setter Property="Foreground" Value="{StaticResource MaterialDesignSuccessBrush}"/>
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </material:PackIcon.Style>
+                                                    </material:PackIcon>
                                                 </material:PopupBox.ToggleContent>
                                                 
                                                 <Grid Margin="10" Width="195">
@@ -1470,23 +1451,19 @@
                                                                    Style="{StaticResource MaterialDesignToolBarPopupBox}"
                                                                    ToolTip="Speed limit">
                                                 <material:PopupBox.ToggleContent>
-                                                    <Border Width="35" Height="35">
-                                                        <material:PackIcon Kind="CarSpeedLimiter" 
-                                                                           Width="21" 
-                                                                           Height="21" 
-                                                                           HorizontalAlignment="Center" 
-                                                                           VerticalAlignment="Center">
-                                                            <material:PackIcon.Style>
-                                                                <Style TargetType="material:PackIcon">
-                                                                    <Style.Triggers>
-                                                                        <DataTrigger Binding="{Binding Value.Settings.SpeedLimitEnabled}" Value="True">
-                                                                            <Setter Property="Foreground" Value="{StaticResource MaterialDesignSuccessBrush}"/>
-                                                                        </DataTrigger>
-                                                                    </Style.Triggers>
-                                                                </Style>
-                                                            </material:PackIcon.Style>
-                                                        </material:PackIcon>
-                                                    </Border>
+                                                    <material:PackIcon Kind="CarSpeedLimiter" 
+                                                                       Width="22" 
+                                                                       Height="22">
+                                                        <material:PackIcon.Style>
+                                                            <Style TargetType="material:PackIcon">
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding Value.Settings.SpeedLimitEnabled}" Value="True">
+                                                                        <Setter Property="Foreground" Value="{StaticResource MaterialDesignSuccessBrush}"/>
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </material:PackIcon.Style>
+                                                    </material:PackIcon>
                                                 </material:PopupBox.ToggleContent>
                                                 <Grid Margin="10">
                                                     <StackPanel Width="200">
@@ -1521,13 +1498,9 @@
                                                                    Style="{StaticResource MaterialDesignToolBarPopupBox}"
                                                                    ToolTip="Interpolation">
                                                 <material:PopupBox.ToggleContent>
-                                                    <Border Width="35" Height="35">
-                                                        <material:PackIcon Kind="ChartBellCurve" 
-                                                                               Width="19" 
-                                                                               Height="19" 
-                                                                               HorizontalAlignment="Center" 
-                                                                               VerticalAlignment="Center"/>
-                                                    </Border>
+                                                    <material:PackIcon Kind="ChartBellCurve" 
+                                                                       Width="20" 
+                                                                       Height="20"/>
                                                 </material:PopupBox.ToggleContent>
                                                 <Grid Margin="10">
                                                     <StackPanel>
@@ -1555,23 +1528,19 @@
                                                                    Style="{StaticResource MaterialDesignToolBarPopupBox}"
                                                                    ToolTip="Auto-home">
                                                 <material:PopupBox.ToggleContent>
-                                                    <Border Width="35" Height="35">
-                                                        <material:PackIcon Kind="Home" 
-                                                                           Width="22" 
-                                                                           Height="22" 
-                                                                           HorizontalAlignment="Center" 
-                                                                           VerticalAlignment="Center">
-                                                            <material:PackIcon.Style>
-                                                                <Style TargetType="material:PackIcon">
-                                                                    <Style.Triggers>
-                                                                        <DataTrigger Binding="{Binding Value.Settings.AutoHomeEnabled}" Value="True">
-                                                                            <Setter Property="Foreground" Value="{StaticResource MaterialDesignSuccessBrush}"/>
-                                                                        </DataTrigger>
-                                                                    </Style.Triggers>
-                                                                </Style>
-                                                            </material:PackIcon.Style>
-                                                        </material:PackIcon>
-                                                    </Border>
+                                                    <material:PackIcon Kind="Home" 
+                                                                       Width="22" 
+                                                                       Height="22">
+                                                        <material:PackIcon.Style>
+                                                            <Style TargetType="material:PackIcon">
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding Value.Settings.AutoHomeEnabled}" Value="True">
+                                                                        <Setter Property="Foreground" Value="{StaticResource MaterialDesignSuccessBrush}"/>
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </material:PackIcon.Style>
+                                                    </material:PackIcon>
                                                 </material:PopupBox.ToggleContent>
                                                 <Grid Width="200" Margin="10">
                                                     <StackPanel>

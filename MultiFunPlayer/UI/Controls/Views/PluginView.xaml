@@ -1,4 +1,4 @@
-﻿<UserControl x:Class="MultiFunPlayer.UI.Controls.Views.PluginView"
+<UserControl x:Class="MultiFunPlayer.UI.Controls.Views.PluginView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:material="http://materialdesigninxaml.net/winfx/xaml/themes"
              xmlns:s="https://github.com/canton7/Stylet"
@@ -44,23 +44,23 @@
             <ItemsControl ItemsSource="{Binding Containers}">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
-                        <material:Card Margin="10" MinWidth="300">
+                        <material:Card Margin="10" MinWidth="400">
                             <DockPanel LastChildFill="False">
-                                <material:ColorZone Width="24"
-                                                    Height="24">
-                                    <material:PackIcon Width="16"
-                                                       Height="16"
+                                <material:ColorZone Width="30"
+                                                    Height="30">
+                                    <material:PackIcon Width="20"
+                                                       Height="20"
                                                        Background="Transparent"
                                                        VerticalAlignment="Center"
                                                        HorizontalAlignment="Center">
                                         <material:PackIcon.Resources>
                                             <Style TargetType="material:PackIcon">
-                                                <Setter Property="Kind" Value="Minus"/>
+                                                <Setter Property="Kind" Value="PowerSleep"/>
                                                 <Setter Property="ToolTip" Value="Idle"/>
 
                                                 <Style.Triggers>
                                                     <DataTrigger Binding="{Binding Value.State}" Value="{x:Static plugin:PluginState.Compiling}">
-                                                        <Setter Property="Kind" Value="Cog"/>
+                                                        <Setter Property="Kind" Value="Wrench"/>
                                                         <Setter Property="ToolTip" Value="Compiling"/>
                                                     </DataTrigger>
 
@@ -107,8 +107,8 @@
                                 <Button DockPanel.Dock="Right"   
                                         Style="{StaticResource MaterialDesignFlatButton}"
                                         ToolTip="Start"
-                                        Height="24" 
-                                        Width="24" 
+                                        Height="30" 
+                                        Width="30" 
                                         Padding="0"
                                         Click="{s:Action Start}"
                                         s:View.ActionTarget="{Binding Value}"
@@ -118,8 +118,8 @@
                                 <Button DockPanel.Dock="Right"   
                                         Style="{StaticResource MaterialDesignFlatButton}"
                                         ToolTip="Stop"
-                                        Height="24" 
-                                        Width="24" 
+                                        Height="30"
+                                        Width="30" 
                                         Padding="0"
                                         Click="{s:Action Stop}"
                                         s:View.ActionTarget="{Binding Value}"
@@ -129,8 +129,8 @@
                                 <Button DockPanel.Dock="Right"   
                                         Style="{StaticResource MaterialDesignFlatButton}"
                                         ToolTip="Compile"
-                                        Height="24" 
-                                        Width="24" 
+                                        Height="30" 
+                                        Width="30" 
                                         Padding="0"
                                         Click="{s:Action Compile}"
                                         s:View.ActionTarget="{Binding Value}"

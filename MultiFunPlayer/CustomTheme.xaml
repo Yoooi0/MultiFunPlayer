@@ -14,8 +14,8 @@
         <Setter Property="Background" Value="Transparent"/>
         <Setter Property="BorderBrush" Value="Transparent"/>
         <Setter Property="BorderThickness" Value="1"/>
-        <Setter Property="Height" Value="35"/>
-        <Setter Property="Width" Value="35"/>
+        <Setter Property="Height" Value="36"/>
+        <Setter Property="Width" Value="36"/>
         <Setter Property="Cursor" Value="Hand"/>
         <Setter Property="HorizontalContentAlignment" Value="Center"/>
         <Setter Property="VerticalContentAlignment" Value="Center"/>
@@ -87,11 +87,14 @@
     <Style x:Key="MaterialDesignToolBarPopupBox" TargetType="material:PopupBox" BasedOn="{StaticResource MaterialDesignPopupBox}">
         <Setter Property="ToggleContent" Value="{StaticResource MaterialDesignPopupBoxToggleContent}" />
         <Setter Property="material:RippleAssist.Feedback" Value="{DynamicResource MaterialDesignFlatButtonRipple}" />
-        <Setter Property="HorizontalAlignment" Value="Left" />
+        <Setter Property="HorizontalContentAlignment" Value="Center" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
         <Setter Property="PopupHorizontalOffset" Value="5"/>
         <Setter Property="PopupVerticalOffset" Value="5"/>
         <Setter Property="material:ShadowAssist.ShadowDepth" Value="Depth1" />
         <Setter Property="TextElement.FontWeight" Value="Normal" />
+        <Setter Property="Width" Value="36" />
+        <Setter Property="Height" Value="36" />
         <Setter Property="Padding" Value="0 8 0 8" />
         <Setter Property="Focusable" Value="True" />
         <Setter Property="ToolTipService.IsEnabled" Value="{Binding IsPopupOpen, RelativeSource={RelativeSource Self}, Converter={StaticResource NotConverter}}"/>
@@ -105,13 +108,13 @@
                                 <Setter.Value>
                                     <ControlTemplate TargetType="ToggleButton">
                                         <material:Ripple Content="{TemplateBinding Content}" 
-                                                            ContentTemplate="{TemplateBinding ContentTemplate}" 
-                                                            Focusable="False"
-                                                            ContentStringFormat="{TemplateBinding ContentStringFormat}"
-                                                            HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
-                                                            VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}"
-                                                            Padding="{TemplateBinding Padding}"
-                                                            SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}">
+                                                         ContentTemplate="{TemplateBinding ContentTemplate}" 
+                                                         Focusable="False"
+                                                         ContentStringFormat="{TemplateBinding ContentStringFormat}"
+                                                         HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                                         VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}"
+                                                         Padding="{TemplateBinding Padding}"
+                                                         SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}">
                                             <material:Ripple.Clip>
                                                 <MultiBinding Converter="{StaticResource BorderClipConverter}">
                                                     <Binding ElementName="border" Path="ActualWidth" />
@@ -137,14 +140,16 @@
                         <ToggleButton x:Name="PART_Toggle" 
                                       Style="{StaticResource ToggleButtonStyle}" 
                                       IsChecked="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=IsPopupOpen, Mode=TwoWay}"
-                                      Content="{TemplateBinding ToggleContent}" 
-                                      ContentTemplate="{TemplateBinding ToggleContentTemplate}"
                                       Cursor="Hand" 
                                       TabIndex="{TemplateBinding TabIndex}" 
-                                      VerticalAlignment="Center" 
-                                      IsTabStop="{TemplateBinding IsTabStop}"
                                       HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}" 
-                                      VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}"/>
+                                      VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}"
+                                      Width="{TemplateBinding Width}" 
+                                      Height="{TemplateBinding Height}"
+                                      IsTabStop="{TemplateBinding IsTabStop}">
+                            <ContentPresenter Content="{TemplateBinding ToggleContent}" 
+                                              ContentTemplate="{TemplateBinding ToggleContentTemplate}"/>
+                        </ToggleButton>
                         <material:PopupEx x:Name="PART_Popup" 
                                             IsOpen="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=IsPopupOpen, Mode=TwoWay}"
                                             CustomPopupPlacementCallback="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=PopupPlacementMethod}"
@@ -191,8 +196,8 @@
         <Setter Property="Background" Value="Transparent"/>
         <Setter Property="BorderBrush" Value="Transparent"/>
         <Setter Property="BorderThickness" Value="1"/>
-        <Setter Property="Height" Value="35"/>
-        <Setter Property="Width" Value="35"/>
+        <Setter Property="Height" Value="36"/>
+        <Setter Property="Width" Value="36"/>
         <Setter Property="Cursor" Value="Hand"/>
         <Setter Property="HorizontalContentAlignment" Value="Center"/>
         <Setter Property="VerticalContentAlignment" Value="Center"/>
@@ -258,8 +263,8 @@
         <Setter Property="Background" Value="Transparent"/>
         <Setter Property="BorderBrush" Value="Transparent"/>
         <Setter Property="BorderThickness" Value="1"/>
-        <Setter Property="Height" Value="35"/>
-        <Setter Property="Width" Value="35"/>
+        <Setter Property="Height" Value="36"/>
+        <Setter Property="Width" Value="36"/>
         <Setter Property="Cursor" Value="Hand"/>
         <Setter Property="HorizontalContentAlignment" Value="Center"/>
         <Setter Property="VerticalContentAlignment" Value="Center"/>
@@ -503,7 +508,7 @@
         <Setter Property="Background" Value="{DynamicResource PrimaryHueMidBrush}"/>
         <Setter Property="BorderBrush" Value="{DynamicResource PrimaryHueMidBrush}"/>
         <Setter Property="Padding" Value="0"/>
-        <Setter Property="Height" Value="35" />
+        <Setter Property="Height" Value="36" />
         <Setter Property="Cursor" Value="Hand"/>
         <Setter Property="material:RippleAssist.Feedback" Value="{DynamicResource MaterialDesignFlatButtonRipple}" />
         <Setter Property="Template">
@@ -580,8 +585,8 @@
     <Style TargetType="{x:Type MenuItem}" x:Key="MaterialDesignToolBarMenuItem" BasedOn="{x:Null}">
         <Setter Property="OverridesDefaultStyle" Value="True"/>
         <Setter Property="Padding" Value="0"/>
-        <Setter Property="Width" Value="35"/>
-        <Setter Property="Height" Value="35"/>
+        <Setter Property="Width" Value="36"/>
+        <Setter Property="Height" Value="36"/>
         <Setter Property="Background" Value="{DynamicResource MaterialDesignToolBarBackground}"/>
         <Setter Property="Template">
             <Setter.Value>
@@ -796,7 +801,7 @@
                                                             <Grid>
                                                                 <Grid.ColumnDefinitions>
                                                                     <ColumnDefinition Width="*"/>
-                                                                    <ColumnDefinition Width="35"/>
+                                                                    <ColumnDefinition Width="36"/>
                                                                 </Grid.ColumnDefinitions>
 
                                                                 <ContentPresenter Grid.Column="0"
@@ -811,7 +816,7 @@
                                                                               VerticalAlignment="Center"
                                                                               RenderTransformOrigin="0.5 0.5"
                                                                               HorizontalAlignment="Center"
-                                                                              Height="35"
+                                                                              Height="36"
                                                                               Foreground="{TemplateBinding Foreground}"
                                                                               IsChecked="{Binding Path=IsChecked, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}">
                                                                     <ToggleButton.Style>
@@ -819,12 +824,12 @@
                                                                             <Setter Property="Content">
                                                                                 <Setter.Value>
                                                                                     <material:PackIcon x:Name="ExpandPath" 
-                                                                                                               Kind="ChevronDown"
-                                                                                                               Opacity="0.38" Height="35" Width="24"
-                                                                                                               VerticalAlignment="Center"
-                                                                                                               HorizontalAlignment="Center"
-                                                                                                               Foreground="{Binding RelativeSource={RelativeSource AncestorType={x:Type FrameworkElement}}, Path=(TextElement.Foreground)}"
-                                                                                                               RenderTransformOrigin="0.5 0.5">
+                                                                                                       Kind="ChevronDown"
+                                                                                                       Opacity="0.38" Height="36" Width="24"
+                                                                                                       VerticalAlignment="Center"
+                                                                                                       HorizontalAlignment="Center"
+                                                                                                       Foreground="{Binding RelativeSource={RelativeSource AncestorType={x:Type FrameworkElement}}, Path=(TextElement.Foreground)}"
+                                                                                                       RenderTransformOrigin="0.5 0.5">
                                                                                         <material:PackIcon.RenderTransform>
                                                                                             <RotateTransform x:Name="ExpandPathRotateTransform"/>
                                                                                         </material:PackIcon.RenderTransform>
