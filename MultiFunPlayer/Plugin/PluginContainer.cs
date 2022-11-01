@@ -87,15 +87,9 @@ public class PluginContainer : PropertyChangedBase, IDisposable
             }
             else if (_plugin is AsyncPluginBase asyncPlugin)
             {
-                var handle = new ManualResetEvent(false);
-                var task = Task.Factory.StartNew(async () => {
-                    try { await asyncPlugin.ExecuteAsync(token); }
-                    catch (Exception e) { e.Throw(); }
-                    finally { handle.Set(); }
-                }).Unwrap();
-
-                handle.WaitOne();
-                task.ThrowIfFaulted();
+                //TODO: handle this better
+                var task = asyncPlugin.ExecuteAsync(token);
+                task.Wait();
             }
 
             State = PluginState.RanToCompletion;
