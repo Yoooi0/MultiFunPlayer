@@ -18,6 +18,7 @@ public abstract class PluginBase : PropertyChangedBase
     [Inject] internal IDeviceAxisValueProvider DeviceAxisValueProvider { get; set; }
     [Inject] internal IEventAggregator EventAggregator { get; set; }
     [Inject] internal IShortcutManager ShortcutManager { get; set; }
+    [Inject] internal IShortcutBinder ShortcutBinder { get; set; }
 
     public virtual string Name => GetType().Name;
     protected Logger Logger { get; }
@@ -68,6 +69,18 @@ public abstract class PluginBase : PropertyChangedBase
         => ShortcutManager.RegisterAction(name, settings0, settings1, settings2, settings3, action);
 
     protected void UnregisterAction(string name) => ShortcutManager.UnregisterAction(name);
+    #endregion
+
+    #region Binding
+    protected IShortcutActionConfiguration BindAction(IInputGestureDescriptor gestureDescriptor, string actionName, params object[] values)
+        => ShortcutBinder.BindActionWithSettings(gestureDescriptor, actionName, values);
+    protected void UnbindAction(IInputGestureDescriptor gestureDescriptor, IShortcutActionConfiguration action)
+        => ShortcutBinder.UnbindAction(gestureDescriptor, action);
+
+    protected void RegisterGesture(IInputGestureDescriptor gestureDescriptor)
+        => ShortcutBinder.RegisterGesture(gestureDescriptor);
+    protected void UnregisterGesture(IInputGestureDescriptor gestureDescriptor)
+        => ShortcutBinder.UnregisterGesture(gestureDescriptor);
     #endregion
 
     #region Message
