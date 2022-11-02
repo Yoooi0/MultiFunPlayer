@@ -31,6 +31,7 @@ public class PluginContainer : PropertyChangedBase, IDisposable
     public Exception Exception { get; private set; }
     public PluginState State { get; private set; } = PluginState.Idle;
 
+    public string Name => Path.GetFileNameWithoutExtension(PluginFile.Name);
     public UIElement View => _compilationResult?.View;
 
     public bool CanStart => State == PluginState.Idle || State == PluginState.RanToCompletion;
@@ -76,7 +77,7 @@ public class PluginContainer : PropertyChangedBase, IDisposable
     {
         try
         {
-            Logger.Info($"Starting \"{_plugin.Name}\"");
+            Logger.Info($"Starting \"{Name}\"");
 
             State = PluginState.Running;
 
@@ -94,11 +95,11 @@ public class PluginContainer : PropertyChangedBase, IDisposable
 
             State = PluginState.RanToCompletion;
 
-            Logger.Debug($"\"{_plugin.Name}\" ran to completion");
+            Logger.Debug($"\"{Name}\" ran to completion");
         }
         catch (Exception e)
         {
-            Logger.Error(e, $"{_plugin.Name} failed with exception");
+            Logger.Error(e, $"{Name} failed with exception");
 
             State = PluginState.Faulted;
             Exception = e;
@@ -116,7 +117,7 @@ public class PluginContainer : PropertyChangedBase, IDisposable
             _cancellationSource?.Cancel();
 
             if (_thread?.Join(TimeSpan.FromSeconds(10)) == false)
-                Logger.Warn($"{_plugin.Name} failed to stop in allotted time");
+                Logger.Warn($"{Name} failed to stop in allotted time");
 
             _cancellationSource?.Dispose();
 

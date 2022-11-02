@@ -20,7 +20,6 @@ public abstract class PluginBase : PropertyChangedBase
     [Inject] internal IShortcutManager ShortcutManager { get; set; }
     [Inject] internal IShortcutBinder ShortcutBinder { get; set; }
 
-    public virtual string Name => GetType().Name;
     protected Logger Logger { get; }
 
     protected PluginBase()
