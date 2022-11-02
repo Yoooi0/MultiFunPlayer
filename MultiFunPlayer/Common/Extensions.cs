@@ -17,9 +17,6 @@ public static class ConnectableExtensions
         => connectable.WaitForStatus(new[] { ConnectionStatus.Connected, ConnectionStatus.Disconnected }, token);
     public static Task WaitForDisconnect(this IConnectable connectable, CancellationToken token)
         => connectable.WaitForStatus(new[] { ConnectionStatus.Disconnected }, token);
-
-    public static Task WaitForIdle(this IConnectable connectable) => connectable.WaitForIdle(CancellationToken.None);
-    public static Task WaitForDisconnect(this IConnectable connectable) => connectable.WaitForDisconnect(CancellationToken.None);
 }
 
 public static class JsonExtensions

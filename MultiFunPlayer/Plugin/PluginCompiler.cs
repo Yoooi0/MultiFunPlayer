@@ -54,7 +54,7 @@ public class PluginCompilationResult : IDisposable
 public static class PluginCompiler
 {
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
-    private static Regex ReferenceRegex { get; } = new Regex("^#r\\s+\\\"(?<type>name|file):(?<value>.+?)\\\"", RegexOptions.Compiled | RegexOptions.Multiline);
+    private static Regex ReferenceRegex { get; } = new Regex(@"^#r\s+""(?<type>name|file):(?<value>.+?)""$", RegexOptions.Compiled | RegexOptions.Multiline);
 
     private static IContainer Container { get; set; }
     private static IViewManager ViewManager { get; set; }

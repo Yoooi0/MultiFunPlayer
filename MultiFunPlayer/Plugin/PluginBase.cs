@@ -1,4 +1,4 @@
-﻿using MultiFunPlayer.Common;
+using MultiFunPlayer.Common;
 using MultiFunPlayer.Input;
 using Newtonsoft.Json.Linq;
 using NLog;
@@ -13,7 +13,7 @@ namespace MultiFunPlayer.Plugin;
 
 public abstract class PluginBase : PropertyChangedBase
 {
-    internal readonly MessageProxy _messageProxy;
+    private readonly MessageProxy _messageProxy;
 
     [Inject] internal IDeviceAxisValueProvider DeviceAxisValueProvider { get; set; }
     [Inject] internal IEventAggregator EventAggregator { get; set; }
