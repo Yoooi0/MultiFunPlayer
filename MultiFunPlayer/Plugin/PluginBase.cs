@@ -39,7 +39,7 @@ public abstract class PluginBase : PropertyChangedBase
         return CreateViewFromStream(stream);
     }
 
-    protected void GetAxisValue(DeviceAxis axis)
+    protected double GetAxisValue(DeviceAxis axis)
         => DeviceAxisValueProvider.GetValue(axis);
 
     protected void InvokeAction(string name, params object[] arguments)
