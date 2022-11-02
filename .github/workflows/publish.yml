@@ -52,12 +52,12 @@ jobs:
       run: 7z a MultiFunPlayer-${{ steps.gitversion.outputs.semVer }}-SelfContained.${{ steps.dotnet-version.outputs.version }}.zip .\MultiFunPlayer\bin\Release\win-x64\publish\self-contained\*
     - name: Create Release
       id: create-release
-      uses: softprops/action-gh-release@v1
+      uses: ncipollo/release-action@v1
       with:
         draft: false
         prerelease: false
-        fail_on_unmatched_files: true
+        artifactErrorsFailBuild: true
         name: MultiFunPlayer v${{ steps.gitversion.outputs.semVer }}
-        files: |
+        artifacts: |
           MultiFunPlayer-${{ steps.gitversion.outputs.semVer }}.zip
           MultiFunPlayer-${{ steps.gitversion.outputs.semVer }}-SelfContained.${{ steps.dotnet-version.outputs.version }}.zip
