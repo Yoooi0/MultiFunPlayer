@@ -1,4 +1,5 @@
 ﻿using MultiFunPlayer.Common;
+using MultiFunPlayer.Input;
 using MultiFunPlayer.Plugin;
 using Stylet;
 using System.IO;
@@ -7,13 +8,15 @@ namespace MultiFunPlayer.UI.Controls.ViewModels;
 
 public class PluginViewModel : Screen, IHandle<SettingsMessage>, IDisposable
 {
+    private readonly IShortcutManager _shortcutManager;
     private FileSystemWatcher _watcher;
 
     public ObservableConcurrentDictionary<FileInfo, PluginContainer> Containers { get; }
 
-    public PluginViewModel(IEventAggregator eventAggregator)
+    public PluginViewModel(IEventAggregator eventAggregator, IShortcutManager shortcutManager)
     {
         eventAggregator.Subscribe(this);
+        _shortcutManager = shortcutManager;
 
         Directory.CreateDirectory("Plugins");
 
@@ -53,8 +56,11 @@ public class PluginViewModel : Screen, IHandle<SettingsMessage>, IDisposable
         if (!Containers.ContainsKey(fileInfo))
             return;
 
-        Containers[fileInfo].Dispose();
+        var container = Containers[fileInfo];
+        container.Dispose();
         Containers.Remove(fileInfo);
+
+        UnregisterActions(_shortcutManager, container);
     }
 
     private void AddContainer(FileInfo fileInfo)
@@ -65,6 +71,20 @@ public class PluginViewModel : Screen, IHandle<SettingsMessage>, IDisposable
         var container = new PluginContainer(fileInfo);
         Containers.Add(fileInfo, container);
         container.Compile();
+
+        RegisterActions(_shortcutManager, container);
+    }
+
+    private void RegisterActions(IShortcutManager s, PluginContainer container)
+    {
+        s.RegisterAction($"Plugin::{container.Name}::Start", () => container.Start());
+        s.RegisterAction($"Plugin::{container.Name}::Stop", () => container.Stop());
+    }
+
+    private void UnregisterActions(IShortcutManager s, PluginContainer container)
+    {
+        s.UnregisterAction($"Plugin::{container.Name}::Start");
+        s.UnregisterAction($"Plugin::{container.Name}::Stop");
     }
 
     public void Handle(SettingsMessage message)
