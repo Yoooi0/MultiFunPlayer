@@ -79,7 +79,6 @@ public static class PluginCompiler
     {
         try
         {
-            var assemblyPath = Path.GetDirectoryName(typeof(object).Assembly.Location);
             var references = new List<MetadataReference>
             {
                 MetadataReference.CreateFromFile(typeof(object).Assembly.Location),
@@ -89,10 +88,10 @@ public static class PluginCompiler
             references.AddRange(ReflectionUtils.Assembly.GetReferencedAssemblies().Select(a => MetadataReference.CreateFromFile(Assembly.Load(a).Location)));
 
             var pluginSource = File.ReadAllText(pluginFile.FullName);
-            pluginSource = ReferenceRegex.Replace(pluginSource, m =>
+            foreach(var match in ReferenceRegex.Matches(pluginSource).NotNull())
             {
-                var type = m.Groups["type"].Value;
-                var value = m.Groups["value"].Value;
+                var type = match.Groups["type"].Value;
+                var value = match.Groups["value"].Value;
 
                 var reference = type switch
                 {
@@ -103,9 +102,7 @@ public static class PluginCompiler
 
                 if (reference != null)
                     references.Add(reference);
-
-                return m.Value;
-            });
+            }
 
             var validPluginBaseClasses = new List<string>()
             {
@@ -140,9 +137,7 @@ public static class PluginCompiler
             if (pluginClasses.Count > 1)
                 return PluginCompilationResult.FromFailure(new Exception("Found more than one base Plugin class"));
 
-            var pluginClass = pluginClasses[0];
-            var assemblyName = $"Plugin_{pluginClass.Identifier.Text}";
-
+            var assemblyName = $"Plugin_{Path.GetFileNameWithoutExtension(pluginFile.Name)}";
             var encoded = CSharpSyntaxTree.Create(
                 syntaxTree.GetRoot() as CSharpSyntaxNode,
                 null,
