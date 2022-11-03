@@ -27,12 +27,16 @@ public class PluginCompilationResult : IDisposable
 
     public bool Success => Exception == null && Instance != null;
 
+    private PluginCompilationResult() { }
+
     public static PluginCompilationResult FromFailure(Exception e) => new() { Exception = e };
     public static PluginCompilationResult FromSuccess(PluginBase instance, AssemblyLoadContext context, UIElement view) => new() { Instance = instance, Context = context, View = view };
 
     protected virtual void Dispose(bool disposing)
     {
-        Instance?.Dispose();
+        try { Instance?.Dispose(); }
+        catch { }
+
         Instance = null;
         View = null;
 
