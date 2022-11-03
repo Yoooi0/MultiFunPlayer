@@ -1,4 +1,4 @@
-﻿using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using MultiFunPlayer.Common;
@@ -30,18 +30,8 @@ public class PluginCompilationResult : IDisposable
         if (Instance == null)
             return;
 
-        if (Context != null)
-        {
-            var reference = new WeakReference(Context);
-            Context.Unload();
-            Context = null;
-
-            for (var i = 0; reference.IsAlive && i < 10; i++)
-            {
-                GC.Collect();
-                GC.WaitForPendingFinalizers();
-            }
-        }
+        Context?.Unload();
+        Context = null;
     }
 
     public void Dispose()
