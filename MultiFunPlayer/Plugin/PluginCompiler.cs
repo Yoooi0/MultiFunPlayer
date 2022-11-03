@@ -20,8 +20,8 @@ namespace MultiFunPlayer.Plugin;
 
 public class PluginCompilationResult : IDisposable
 {
-    public PluginBase Instance { get; init; }
-    public Exception Exception { get; init; }
+    public PluginBase Instance { get; private set; }
+    public Exception Exception { get; private set; }
     public AssemblyLoadContext Context { get; private set; }
     public UIElement View { get; private set; }
 
@@ -32,8 +32,9 @@ public class PluginCompilationResult : IDisposable
 
     protected virtual void Dispose(bool disposing)
     {
-        if (Instance == null)
-            return;
+        Instance?.Dispose();
+        Instance = null;
+        View = null;
 
         Context?.Unload();
         Context = null;

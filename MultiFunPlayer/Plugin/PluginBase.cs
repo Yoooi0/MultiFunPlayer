@@ -11,7 +11,7 @@ using System.Windows.Markup;
 
 namespace MultiFunPlayer.Plugin;
 
-public abstract class PluginBase : PropertyChangedBase
+public abstract class PluginBase : PropertyChangedBase, IDisposable
 {
     private readonly MessageProxy _messageProxy;
 
@@ -30,6 +30,7 @@ public abstract class PluginBase : PropertyChangedBase
 
     public virtual UIElement CreateView() => null;
     public virtual void HandleSettings(JObject settings, SettingsAction action) { }
+    protected virtual void Dispose(bool disposing) { }
 
     protected UIElement CreateViewFromStream(Stream stream) => XamlReader.Load(stream) as UIElement;
     protected UIElement CreateViewFromFile(string path) => CreateViewFromStream(File.OpenRead(path));
@@ -127,6 +128,12 @@ public abstract class PluginBase : PropertyChangedBase
         public void Handle(object message) => _callback(message);
     }
     #endregion
+
+    public void Dispose()
+    {
+        Dispose(disposing: true);
+        GC.SuppressFinalize(this);
+    }
 }
 
 public abstract class SyncPluginBase : PluginBase
