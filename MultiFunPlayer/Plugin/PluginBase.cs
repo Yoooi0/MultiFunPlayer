@@ -103,8 +103,11 @@ public abstract class PluginBase : PropertyChangedBase
     protected virtual void HandleMessage(ScriptLoadMessage message) { }
     protected virtual void HandleMessage(SyncRequestMessage message) { }
 
-    internal void OnEventAggregatorChanged() => EventAggregator.Subscribe(_messageProxy);
-    internal void HandleMessageInternal(object e)
+#pragma warning disable IDE0051, RCS1213 // Remove unused private members
+    private void OnEventAggregatorChanged() => EventAggregator.Subscribe(_messageProxy);
+#pragma warning restore IDE0051, RCS1213 // Remove unused private members
+
+    private void HandleMessageInternal(object e)
     {
         if (e is MediaSpeedChangedMessage mediaSpeedChangedMessage) HandleMessage(mediaSpeedChangedMessage);
         else if (e is MediaPositionChangedMessage mediaPositionChangedMessage) HandleMessage(mediaPositionChangedMessage);
@@ -117,7 +120,7 @@ public abstract class PluginBase : PropertyChangedBase
         else if (e is SyncRequestMessage syncRequestMessage) HandleMessage(syncRequestMessage);
     }
 
-    internal class MessageProxy : IHandle<object>
+    private class MessageProxy : IHandle<object>
     {
         private readonly Action<object> _callback;
         public MessageProxy(Action<object> callback) => _callback = callback;
