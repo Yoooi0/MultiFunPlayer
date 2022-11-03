@@ -1,13 +1,18 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.CodeAnalysis.Emit;
+using Microsoft.CodeAnalysis.Text;
 using MultiFunPlayer.Common;
 using NLog;
 using Stylet;
 using StyletIoC;
+using System.Diagnostics;
 using System.IO;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Runtime.Loader;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows;
 
@@ -44,21 +49,21 @@ public class PluginCompilationResult : IDisposable
 public static class PluginCompiler
 {
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
-    private static Regex ReferenceRegex { get; } = new Regex(@"^#r\s+""(?<type>name|file):(?<value>.+?)""", RegexOptions.Compiled | RegexOptions.Multiline);
+    private static Regex ReferenceRegex { get; } = new Regex(@"^//#r\s+""(?<type>name|file):(?<value>.+?)""", RegexOptions.Compiled | RegexOptions.Multiline);
 
     private static IContainer Container { get; set; }
     private static IViewManager ViewManager { get; set; }
 
-    public static void QueueCompile(string pluginSource, Action<PluginCompilationResult> callback)
+    public static void QueueCompile(FileInfo pluginFile, Action<PluginCompilationResult> callback)
     {
         ThreadPool.QueueUserWorkItem(_ =>
         {
-            var result = Compile(pluginSource);
+            var result = Compile(pluginFile);
             callback(result);
         });
     }
 
-    public static PluginCompilationResult Compile(string pluginSource)
+    public static PluginCompilationResult Compile(FileInfo pluginFile)
     {
         try
         {
@@ -69,6 +74,9 @@ public static class PluginCompiler
                 MetadataReference.CreateFromFile(typeof(PluginBase).Assembly.Location)
             };
 
+            references.AddRange(ReflectionUtils.Assembly.GetReferencedAssemblies().Select(a => MetadataReference.CreateFromFile(Assembly.Load(a).Location)));
+
+            var pluginSource = File.ReadAllText(pluginFile.FullName);
             pluginSource = ReferenceRegex.Replace(pluginSource, m =>
             {
                 var type = m.Groups["type"].Value;
@@ -81,21 +89,11 @@ public static class PluginCompiler
                     _ => null
                 };
 
-                if (reference == null)
-                    return m.Value;
+                if (reference != null)
+                    references.Add(reference);
 
-                references.Add(reference);
-                return $"//{m.Value}";
+                return m.Value;
             });
-
-            references.AddRange(ReflectionUtils.Assembly.GetReferencedAssemblies().Select(a => MetadataReference.CreateFromFile(Assembly.Load(a).Location)));
-
-            var compilationOptions = new CSharpCompilationOptions(
-                outputKind: OutputKind.DynamicallyLinkedLibrary,
-                optimizationLevel: OptimizationLevel.Release,
-                warningLevel: 4,
-                deterministic: true
-            );
 
             var validPluginBaseClasses = new List<string>()
             {
@@ -103,7 +101,22 @@ public static class PluginCompiler
                 nameof(AsyncPluginBase)
             };
 
-            var syntaxTree = CSharpSyntaxTree.ParseText(pluginSource);
+            var sourcePath = pluginFile.FullName;
+            var pdbPath = Path.ChangeExtension(sourcePath, ".pdb");
+
+            var sourceBuffer = Encoding.UTF8.GetBytes(pluginSource);
+            var sourceText = SourceText.From(
+                sourceBuffer,
+                sourceBuffer.Length,
+                Encoding.UTF8,
+                canBeEmbedded: true
+            );
+
+            var syntaxTree = CSharpSyntaxTree.ParseText(
+                sourceText,
+                path: sourcePath
+            );
+
             var pluginClasses = syntaxTree.GetRoot()
                                           .DescendantNodes()
                                           .OfType<ClassDeclarationSyntax>()
@@ -117,15 +130,47 @@ public static class PluginCompiler
 
             var pluginClass = pluginClasses[0];
             var assemblyName = $"Plugin_{pluginClass.Identifier.Text}";
+
+            var encoded = CSharpSyntaxTree.Create(
+                syntaxTree.GetRoot() as CSharpSyntaxNode,
+                null,
+                sourcePath,
+                Encoding.UTF8
+            );
+
+            var compilationOptions = new CSharpCompilationOptions(
+                outputKind: OutputKind.DynamicallyLinkedLibrary,
+                optimizationLevel: Debugger.IsAttached ? OptimizationLevel.Debug : OptimizationLevel.Release,
+                warningLevel: 4,
+                deterministic: true
+            );
+
             var compilation = CSharpCompilation.Create(
                 assemblyName,
-                syntaxTrees: new[] { syntaxTree },
+                syntaxTrees: new[] { encoded },
                 references: references,
                 options: compilationOptions
             );
 
-            using var stream = new MemoryStream();
-            var emitResult = compilation.Emit(stream);
+            var emitOptions = new EmitOptions(
+                debugInformationFormat: DebugInformationFormat.PortablePdb,
+                pdbFilePath: pdbPath
+            );
+
+            var embeddedTexts = new List<EmbeddedText>
+            {
+                EmbeddedText.FromSource(sourcePath, sourceText)
+            };
+
+            using var peStream = new MemoryStream();
+            using var pdbStream = new MemoryStream();
+
+            var emitResult = compilation.Emit(
+                peStream: peStream,
+                pdbStream: pdbStream,
+                options: emitOptions,
+                embeddedTexts: embeddedTexts
+            );
 
             if (!emitResult.Success)
             {
@@ -133,9 +178,11 @@ public static class PluginCompiler
                 return PluginCompilationResult.FromFailure(new PluginCompileException("Plugin failed to compile due to errors", diagnostics));
             }
 
-            stream.Seek(0, SeekOrigin.Begin);
+            peStream.Seek(0, SeekOrigin.Begin);
+            pdbStream.Seek(0, SeekOrigin.Begin);
+
             var context = new CollectibleAssemblyLoadContext();
-            var assembly = context.LoadFromStream(stream);
+            var assembly = context.LoadFromStream(peStream, pdbStream);
             var pluginType = Array.Find(assembly.GetExportedTypes(), t => t.IsAssignableTo(typeof(PluginBase)));
 
             if (Activator.CreateInstance(pluginType) is not PluginBase instance)

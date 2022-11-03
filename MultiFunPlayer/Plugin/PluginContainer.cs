@@ -1,4 +1,4 @@
-using MultiFunPlayer.Common;
+﻿using MultiFunPlayer.Common;
 using MultiFunPlayer.Settings;
 using NLog;
 using Stylet;
@@ -152,7 +152,7 @@ public class PluginContainer : PropertyChangedBase, IDisposable
         State = PluginState.Compiling;
 
         var contents = File.ReadAllText(PluginFile.FullName);
-        PluginCompiler.QueueCompile(contents, x => {
+        PluginCompiler.QueueCompile(PluginFile, x => {
             OnCompile(x);
             callback?.Invoke();
         });
