@@ -1,4 +1,4 @@
-﻿using MultiFunPlayer.Common;
+using MultiFunPlayer.Common;
 using MultiFunPlayer.Settings;
 using NLog;
 using Stylet;
@@ -162,22 +162,22 @@ public class PluginContainer : PropertyChangedBase, IDisposable
             if (_plugin != null)
                 Stop();
 
+            _plugin = null;
             _compilationResult?.Dispose();
             _compilationResult = result;
+
             if (_compilationResult.Success)
             {
                 State = PluginState.Idle;
-
                 Exception = null;
+
                 _plugin = _compilationResult.Instance;
                 HandleSettings(SettingsAction.Loading);
             }
             else
             {
                 State = PluginState.Faulted;
-
                 Exception = _compilationResult.Exception;
-                _plugin = null;
             }
 
             NotifyOfPropertyChange(nameof(View));
