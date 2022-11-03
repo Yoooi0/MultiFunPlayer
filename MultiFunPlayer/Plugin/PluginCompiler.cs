@@ -54,15 +54,22 @@ public static class PluginCompiler
     private static IContainer Container { get; set; }
     private static IViewManager ViewManager { get; set; }
 
+    [MethodImpl(MethodImplOptions.NoInlining)]
     public static void QueueCompile(FileInfo pluginFile, Action<PluginCompilationResult> callback)
     {
         ThreadPool.QueueUserWorkItem(_ =>
         {
             var result = Compile(pluginFile);
+
+            //TODO: for some reason compilation leaks a lot of unmanaged memory
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+
             callback(result);
         });
     }
 
+    [MethodImpl(MethodImplOptions.NoInlining)]
     public static PluginCompilationResult Compile(FileInfo pluginFile)
     {
         try
