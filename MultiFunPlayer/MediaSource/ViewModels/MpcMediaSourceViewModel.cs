@@ -13,7 +13,7 @@ using System.Threading.Channels;
 namespace MultiFunPlayer.MediaSource.ViewModels;
 
 [DisplayName("MPC-HC")]
-public class MpcMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlayPauseMessage>, IHandle<MediaSeekMessage>
+internal class MpcMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlayPauseMessage>, IHandle<MediaSeekMessage>
 {
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 

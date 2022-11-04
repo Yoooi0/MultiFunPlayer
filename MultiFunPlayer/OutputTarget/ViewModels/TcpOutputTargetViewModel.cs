@@ -13,7 +13,7 @@ using System.Text;
 namespace MultiFunPlayer.OutputTarget.ViewModels;
 
 [DisplayName("TCP")]
-public class TcpOutputTargetViewModel : ThreadAbstractOutputTarget
+internal class TcpOutputTargetViewModel : ThreadAbstractOutputTarget
 {
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 

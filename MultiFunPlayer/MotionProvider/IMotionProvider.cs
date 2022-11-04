@@ -1,6 +1,6 @@
 ﻿namespace MultiFunPlayer.MotionProvider;
 
-public interface IMotionProvider
+internal interface IMotionProvider
 {
     string Name { get; }
     double Value { get; }

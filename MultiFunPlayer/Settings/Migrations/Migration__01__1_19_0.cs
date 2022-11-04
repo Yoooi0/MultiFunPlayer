@@ -7,7 +7,7 @@ using System.Text.RegularExpressions;
 
 namespace MultiFunPlayer.Settings.Migrations;
 
-public class Migration__01__1_19_0 : AbstractConfigMigration
+internal class Migration__01__1_19_0 : AbstractConfigMigration
 {
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 

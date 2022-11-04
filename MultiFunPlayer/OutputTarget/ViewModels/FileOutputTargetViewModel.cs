@@ -10,7 +10,7 @@ using System.IO;
 namespace MultiFunPlayer.OutputTarget.ViewModels;
 
 [DisplayName("File")]
-public class FileOutputTargetViewModel : ThreadAbstractOutputTarget
+internal class FileOutputTargetViewModel : ThreadAbstractOutputTarget
 {
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 

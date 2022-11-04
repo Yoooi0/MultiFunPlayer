@@ -4,12 +4,12 @@ using Stylet;
 
 namespace MultiFunPlayer.OutputTarget;
 
-public interface IOutputTargetFactory
+internal interface IOutputTargetFactory
 {
     IOutputTarget CreateOutputTarget(Type type, int index);
 }
 
-public class OutputTargetFactory : IOutputTargetFactory
+internal class OutputTargetFactory : IOutputTargetFactory
 {
     private readonly IEventAggregator _eventAggregator;
     private readonly IDeviceAxisValueProvider _valueProvider;

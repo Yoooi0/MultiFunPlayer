@@ -10,7 +10,7 @@ using System.Windows.Input;
 
 namespace MultiFunPlayer;
 
-public class RootViewModel : Conductor<IScreen>.Collection.AllActive, IHandle<SettingsMessage>
+internal class RootViewModel : Conductor<IScreen>.Collection.AllActive, IHandle<SettingsMessage>
 {
     [Inject] public ScriptViewModel Script { get; set; }
     [Inject] public MediaSourceViewModel MediaSource { get; set; }

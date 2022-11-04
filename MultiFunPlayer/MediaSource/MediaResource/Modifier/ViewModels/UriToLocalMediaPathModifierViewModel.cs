@@ -11,7 +11,7 @@ namespace MultiFunPlayer.MediaSource.MediaResource.Modifier.ViewModels;
 
 [DisplayName("Uri To Local")]
 [JsonObject(MemberSerialization = MemberSerialization.OptIn)]
-public class UriToLocalMediaPathModifierViewModel : AbstractMediaPathModifier
+internal class UriToLocalMediaPathModifierViewModel : AbstractMediaPathModifier
 {
     private readonly Dictionary<string, string> _mediaPathCache;
     private readonly Dictionary<long, FileInfo> _mediaSizeCache;

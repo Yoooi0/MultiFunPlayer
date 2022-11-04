@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json.Linq;
+using Newtonsoft.Json.Linq;
 
 namespace MultiFunPlayer.Common;
 
@@ -8,8 +8,8 @@ public enum SettingsAction
     Loading
 }
 
-public record SettingsMessage(JObject Settings, SettingsAction Action);
-public record WindowCreatedMessage();
+internal record SettingsMessage(JObject Settings, SettingsAction Action);
+internal record WindowCreatedMessage();
 
 public record MediaSpeedChangedMessage(double Speed);
 public record MediaSeekMessage(TimeSpan? Position);

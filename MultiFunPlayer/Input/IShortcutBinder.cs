@@ -4,7 +4,7 @@ using NLog;
 
 namespace MultiFunPlayer.Input;
 
-public interface IShortcutBinder : IDisposable
+internal interface IShortcutBinder : IDisposable
 {
     bool HandleGestures { get; set; }
 
@@ -27,7 +27,7 @@ public interface IShortcutBinder : IDisposable
     void UnregisterGesture(IInputGestureDescriptor gestureDescriptor);
 }
 
-public class ShortcutBinder : IShortcutBinder
+internal class ShortcutBinder : IShortcutBinder
 {
     protected static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 

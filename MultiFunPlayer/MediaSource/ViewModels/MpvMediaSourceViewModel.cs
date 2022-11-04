@@ -16,7 +16,7 @@ using System.Threading.Channels;
 namespace MultiFunPlayer.MediaSource.ViewModels;
 
 [DisplayName("MPV")]
-public class MpvMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlayPauseMessage>, IHandle<MediaSeekMessage>
+internal class MpvMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlayPauseMessage>, IHandle<MediaSeekMessage>
 {
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 

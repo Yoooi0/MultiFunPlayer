@@ -7,7 +7,7 @@ using System.Windows;
 
 namespace MultiFunPlayer.UI.Controls.ViewModels;
 
-public class DeviceSettingsViewModel : Screen, IHandle<SettingsMessage>
+internal class DeviceSettingsViewModel : Screen, IHandle<SettingsMessage>
 {
     public DeviceSettingsModel SelectedDevice { get; set; } = null;
     public ObservableConcurrentCollection<DeviceSettingsModel> Devices { get; set; } = new(DefaultDevices);
@@ -143,7 +143,7 @@ public class DeviceSettingsViewModel : Screen, IHandle<SettingsMessage>
 }
 
 [JsonObject(MemberSerialization = MemberSerialization.OptIn)]
-public class DeviceSettingsModel : PropertyChangedBase
+internal class DeviceSettingsModel : PropertyChangedBase
 {
     [JsonProperty] public string Name { get; set; } = null;
     [JsonProperty] public bool Default { get; set; } = false;
@@ -160,7 +160,7 @@ public class DeviceSettingsModel : PropertyChangedBase
 }
 
 [JsonObject(MemberSerialization = MemberSerialization.OptIn)]
-public class DeviceAxisSettingsModel : PropertyChangedBase
+internal class DeviceAxisSettingsModel : PropertyChangedBase
 {
     [JsonProperty] public string Name { get; set; } = null;
     [JsonProperty] public string FriendlyName { get; set; } = null;

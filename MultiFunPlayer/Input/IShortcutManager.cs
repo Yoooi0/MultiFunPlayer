@@ -3,7 +3,7 @@ using NLog;
 
 namespace MultiFunPlayer.Input;
 
-public class GestureEventArgs : EventArgs
+internal class GestureEventArgs : EventArgs
 {
     public GestureEventArgs(IInputGesture gesture) => Gesture = gesture;
 
@@ -11,7 +11,7 @@ public class GestureEventArgs : EventArgs
     public IInputGesture Gesture { get; }
 }
 
-public interface IShortcutManager : IDisposable
+internal interface IShortcutManager : IDisposable
 {
     event EventHandler<IShortcutActionDescriptor> ActionRegistered;
     event EventHandler<IShortcutActionDescriptor> ActionUnregistered;
@@ -42,7 +42,7 @@ public interface IShortcutManager : IDisposable
     void Invoke(string name, params object[] arguments) => Invoke(new ShortcutActionDescriptor(name), arguments);
 }
 
-public class ShortcutManager : IShortcutManager
+internal class ShortcutManager : IShortcutManager
 {
     protected static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 

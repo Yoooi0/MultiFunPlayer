@@ -3,7 +3,7 @@ using StyletIoC;
 
 namespace MultiFunPlayer.UI.Controls.ViewModels;
 
-public class SettingsViewModel : Conductor<IScreen>.Collection.OneActive
+internal class SettingsViewModel : Conductor<IScreen>.Collection.OneActive
 {
     [Inject] public GeneralSettingsViewModel General { get; set; }
     [Inject] public DeviceSettingsViewModel Device { get; set; }

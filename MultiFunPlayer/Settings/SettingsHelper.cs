@@ -4,7 +4,7 @@ using System.IO;
 
 namespace MultiFunPlayer.Settings;
 
-public static class SettingsHelper
+internal static class SettingsHelper
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 

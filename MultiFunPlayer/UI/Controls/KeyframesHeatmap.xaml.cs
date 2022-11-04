@@ -12,7 +12,7 @@ namespace MultiFunPlayer.UI.Controls;
 /// <summary>
 /// Interaction logic for KeyframesHeatmap.xaml
 /// </summary>
-public partial class KeyframesHeatmap : UserControl, INotifyPropertyChanged
+internal partial class KeyframesHeatmap : UserControl, INotifyPropertyChanged
 {
     public static int MaxBucketCount => 500;
 

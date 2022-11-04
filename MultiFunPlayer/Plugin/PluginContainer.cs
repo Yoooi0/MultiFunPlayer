@@ -7,7 +7,7 @@ using System.Windows;
 
 namespace MultiFunPlayer.Plugin;
 
-public enum PluginState
+internal enum PluginState
 {
     Idle,
     Compiling,
@@ -18,7 +18,7 @@ public enum PluginState
     RanToCompletion,
 }
 
-public class PluginContainer : PropertyChangedBase, IDisposable
+internal class PluginContainer : PropertyChangedBase, IDisposable
 {
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 

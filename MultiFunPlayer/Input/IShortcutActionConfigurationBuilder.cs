@@ -1,11 +1,11 @@
 ﻿namespace MultiFunPlayer.Input;
 
-public interface IShortcutActionConfigurationBuilder
+internal interface IShortcutActionConfigurationBuilder
 {
     IShortcutActionConfiguration Build();
 }
 
-public class ShortcutActionConfigurationBuilder : IShortcutActionConfigurationBuilder
+internal class ShortcutActionConfigurationBuilder : IShortcutActionConfigurationBuilder
 {
     private readonly IShortcutActionDescriptor _descriptor;
     private readonly List<IShortcutSettingBuilder> _builders;

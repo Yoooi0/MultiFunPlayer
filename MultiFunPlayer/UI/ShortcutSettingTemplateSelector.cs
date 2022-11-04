@@ -4,7 +4,7 @@ using System.Windows.Controls;
 
 namespace MultiFunPlayer.UI;
 
-public class ShortcutSettingTemplateSelector : DataTemplateSelector
+internal class ShortcutSettingTemplateSelector : DataTemplateSelector
 {
     public override DataTemplate SelectTemplate(object item, DependencyObject container)
     {

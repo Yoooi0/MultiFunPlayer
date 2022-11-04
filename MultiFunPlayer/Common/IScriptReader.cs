@@ -5,13 +5,13 @@ using System.Text;
 
 namespace MultiFunPlayer.Common;
 
-public enum ScriptType
+internal enum ScriptType
 {
     Funscript,
     Csv
 }
 
-public interface IScriptReader
+internal interface IScriptReader
 {
     KeyframeCollection Read(Stream stream);
 
@@ -23,7 +23,7 @@ public interface IScriptReader
     }
 }
 
-public static class ScriptReader
+internal static class ScriptReader
 {
     private static readonly Dictionary<ScriptType, IScriptReader> _scriptReaders = new()
     {
@@ -36,7 +36,7 @@ public static class ScriptReader
     public static KeyframeCollection Read(ScriptType scriptType, Stream stream) => _scriptReaders[scriptType].Read(stream);
 }
 
-public class FunscriptReader : IScriptReader
+internal class FunscriptReader : IScriptReader
 {
     public static readonly FunscriptReader Default = new();
 
@@ -74,7 +74,7 @@ public class FunscriptReader : IScriptReader
     private record Action(double At, double Pos);
 }
 
-public class CsvReader : IScriptReader
+internal class CsvReader : IScriptReader
 {
     public static readonly CsvReader Default = new();
 

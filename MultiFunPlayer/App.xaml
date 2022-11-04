@@ -3,7 +3,8 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:s="https://github.com/canton7/Stylet"
              xmlns:po="http://schemas.microsoft.com/winfx/2006/xaml/presentation/options"
-             xmlns:local="clr-namespace:MultiFunPlayer">
+             xmlns:local="clr-namespace:MultiFunPlayer"
+             x:ClassModifier="internal">
     <Application.Resources>
         <ResourceDictionary>            
             <ResourceDictionary.MergedDictionaries>

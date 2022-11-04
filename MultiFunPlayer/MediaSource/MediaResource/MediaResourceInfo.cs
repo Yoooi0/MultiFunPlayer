@@ -1,6 +1,6 @@
 ﻿namespace MultiFunPlayer.MediaSource.MediaResource;
 
-public class MediaResourceInfo
+internal class MediaResourceInfo
 {
     public bool IsPath { get; init; }
     public bool IsUrl { get; init; }

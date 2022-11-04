@@ -6,7 +6,7 @@ using System.IO;
 
 namespace MultiFunPlayer.UI.Controls.ViewModels;
 
-public class PluginViewModel : Screen, IHandle<SettingsMessage>, IDisposable
+internal class PluginViewModel : Screen, IHandle<SettingsMessage>, IDisposable
 {
     private readonly IShortcutManager _shortcutManager;
     private FileSystemWatcher _watcher;

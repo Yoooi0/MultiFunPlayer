@@ -3,14 +3,14 @@ using System.Collections.Concurrent;
 
 namespace MultiFunPlayer.UI;
 
-public interface IStyletLogger : Stylet.Logging.ILogger
+internal interface IStyletLogger : Stylet.Logging.ILogger
 {
     void SuspendLogging();
     void ResumeLogging();
     bool IsLoggingEnabled();
 }
 
-public interface IStyletLoggerManager
+internal interface IStyletLoggerManager
 {
     IStyletLogger GetLogger(string name);
 
@@ -19,7 +19,7 @@ public interface IStyletLoggerManager
     bool IsLoggingEnabled();
 }
 
-public class StyletLoggerManager : IStyletLoggerManager
+internal class StyletLoggerManager : IStyletLoggerManager
 {
     private readonly ConcurrentDictionary<string, IStyletLogger> _loggers;
     private bool _enabled;

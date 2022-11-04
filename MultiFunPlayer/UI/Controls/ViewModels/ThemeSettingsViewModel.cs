@@ -7,7 +7,7 @@ using System.Windows.Media;
 
 namespace MultiFunPlayer.UI.Controls.ViewModels;
 
-public class ThemeSettingsViewModel : Screen, IHandle<SettingsMessage>
+internal class ThemeSettingsViewModel : Screen, IHandle<SettingsMessage>
 {
     private readonly PaletteHelper _paletteHelper;
 

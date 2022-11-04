@@ -18,7 +18,7 @@ using System.Windows;
 
 namespace MultiFunPlayer.Plugin;
 
-public class PluginCompilationResult : IDisposable
+internal class PluginCompilationResult : IDisposable
 {
     public PluginBase Instance { get; private set; }
     public Exception Exception { get; private set; }
@@ -51,7 +51,7 @@ public class PluginCompilationResult : IDisposable
     }
 }
 
-public static class PluginCompiler
+internal static class PluginCompiler
 {
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
     private static Regex ReferenceRegex { get; } = new Regex(@"^//#r\s+""(?<type>name|file):(?<value>.+?)""", RegexOptions.Compiled | RegexOptions.Multiline);

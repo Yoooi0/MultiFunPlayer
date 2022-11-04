@@ -1,6 +1,6 @@
 ﻿namespace MultiFunPlayer.UI.Dialogs.ViewModels;
 
-public class TextInputMessageDialogViewModel
+internal class TextInputMessageDialogViewModel
 {
     public string Label { get; }
     public string Value { get; set; }

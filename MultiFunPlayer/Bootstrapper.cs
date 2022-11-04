@@ -32,7 +32,7 @@ using System.Windows.Interop;
 
 namespace MultiFunPlayer;
 
-public class Bootstrapper : Bootstrapper<RootViewModel>
+internal class Bootstrapper : Bootstrapper<RootViewModel>
 {
     static Bootstrapper()
     {

@@ -4,7 +4,7 @@ using System.Windows.Input;
 
 namespace MultiFunPlayer.UI.Behaviours;
 
-public static class InputAssist
+internal static class InputAssist
 {
     public static readonly DependencyProperty UpdateSourceOnEnterProperty =
         DependencyProperty.RegisterAttached("UpdateSourceOnEnter",

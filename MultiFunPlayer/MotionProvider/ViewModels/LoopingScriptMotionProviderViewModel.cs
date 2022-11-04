@@ -9,7 +9,7 @@ namespace MultiFunPlayer.MotionProvider.ViewModels;
 
 [DisplayName("Looping Script")]
 [JsonObject(MemberSerialization = MemberSerialization.OptIn)]
-public class LoopingScriptMotionProviderViewModel : AbstractMotionProvider
+internal class LoopingScriptMotionProviderViewModel : AbstractMotionProvider
 {
     private double _time;
 

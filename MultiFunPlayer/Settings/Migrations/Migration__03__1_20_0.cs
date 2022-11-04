@@ -4,7 +4,7 @@ using NLog;
 
 namespace MultiFunPlayer.Settings.Migrations;
 
-public class Migration__03__1_20_0 : AbstractConfigMigration
+internal class Migration__03__1_20_0 : AbstractConfigMigration
 {
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 

@@ -4,7 +4,7 @@ using System.Reflection;
 
 namespace MultiFunPlayer.MediaSource.MediaResource.Modifier;
 
-public abstract class AbstractMediaPathModifier : PropertyChangedBase, IMediaPathModifier
+internal abstract class AbstractMediaPathModifier : PropertyChangedBase, IMediaPathModifier
 {
     public string Name => GetType().GetCustomAttribute<DisplayNameAttribute>(inherit: false).DisplayName;
     public abstract string Description { get; }

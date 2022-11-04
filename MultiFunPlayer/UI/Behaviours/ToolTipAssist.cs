@@ -4,7 +4,7 @@ using System.Windows.Input;
 
 namespace MultiFunPlayer.UI.Behaviours;
 
-public static class ToolTipAssist
+internal static class ToolTipAssist
 {
     public static readonly DependencyProperty ForceCloseOnMouseLeaveProperty =
         DependencyProperty.RegisterAttached("ForceCloseOnMouseLeave",

@@ -8,7 +8,7 @@ using System.Windows.Input;
 
 namespace MultiFunPlayer.UI.Behaviours;
 
-public static class ListBoxAssist
+internal static class ListBoxAssist
 {
     private static readonly ConcurrentDictionary<ListBox, bool> _locks = new();
 

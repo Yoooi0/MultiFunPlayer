@@ -10,7 +10,7 @@ using System.Windows.Media;
 
 namespace MultiFunPlayer.OutputTarget;
 
-public abstract class AbstractOutputTarget : Screen, IOutputTarget
+internal abstract class AbstractOutputTarget : Screen, IOutputTarget
 {
     private readonly IDeviceAxisValueProvider _valueProvider;
     private readonly AsyncManualResetEvent _statusEvent;
@@ -304,7 +304,7 @@ public abstract class AbstractOutputTarget : Screen, IOutputTarget
     }
 }
 
-public abstract class ThreadAbstractOutputTarget : AbstractOutputTarget
+internal abstract class ThreadAbstractOutputTarget : AbstractOutputTarget
 {
     private CancellationTokenSource _cancellationSource;
     private Thread _thread;
@@ -425,7 +425,7 @@ public abstract class ThreadAbstractOutputTarget : AbstractOutputTarget
     }
 }
 
-public abstract class AsyncAbstractOutputTarget : AbstractOutputTarget
+internal abstract class AsyncAbstractOutputTarget : AbstractOutputTarget
 {
     private CancellationTokenSource _cancellationSource;
     private Task _task;

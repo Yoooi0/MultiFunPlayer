@@ -2,7 +2,7 @@
 
 namespace MultiFunPlayer.Settings;
 
-public interface IConfigMigration
+internal interface IConfigMigration
 {
     int TargetVersion { get; }
     void Migrate(JObject settings);

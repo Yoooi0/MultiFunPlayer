@@ -5,7 +5,7 @@ using System.ComponentModel;
 
 namespace MultiFunPlayer.MotionProvider.ViewModels;
 
-public enum PatternType
+internal enum PatternType
 {
     Triangle,
     Sine,
@@ -17,7 +17,7 @@ public enum PatternType
 
 [DisplayName("Pattern")]
 [JsonObject(MemberSerialization = MemberSerialization.OptIn)]
-public class PatternMotionProviderViewModel : AbstractMotionProvider
+internal class PatternMotionProviderViewModel : AbstractMotionProvider
 {
     private double _time;
 

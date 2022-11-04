@@ -3,7 +3,7 @@ using Newtonsoft.Json.Linq;
 
 namespace MultiFunPlayer.MediaSource;
 
-public interface IMediaSource : IConnectable, IDisposable
+internal interface IMediaSource : IConnectable, IDisposable
 {
     string Name { get; }
 

@@ -2,7 +2,7 @@
 
 namespace MultiFunPlayer.Settings;
 
-public abstract class AbstractConfigMigration : IConfigMigration
+internal abstract class AbstractConfigMigration : IConfigMigration
 {
     public int TargetVersion { get; }
 

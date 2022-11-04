@@ -16,7 +16,7 @@ using System.Windows.Data;
 namespace MultiFunPlayer.UI.Controls.ViewModels;
 
 [JsonObject(MemberSerialization = MemberSerialization.OptIn)]
-public class ShortcutSettingsViewModel : Screen, IHandle<SettingsMessage>, IDisposable
+internal class ShortcutSettingsViewModel : Screen, IHandle<SettingsMessage>, IDisposable
 {
     protected static readonly Logger Logger = LogManager.GetCurrentClassLogger();
     private readonly IShortcutManager _manager;
@@ -299,7 +299,7 @@ public class ShortcutSettingsViewModel : Screen, IHandle<SettingsMessage>, IDisp
     }
 }
 
-public class BindingSettingsModel
+internal class BindingSettingsModel
 {
     [JsonProperty(TypeNameHandling = TypeNameHandling.Objects)]
     public IInputGestureDescriptor Gesture { get; init; }
@@ -317,7 +317,7 @@ public class BindingSettingsModel
         };
 }
 
-public class ActionSettingsModel
+internal class ActionSettingsModel
 {
     public string Descriptor { get; init; }
 

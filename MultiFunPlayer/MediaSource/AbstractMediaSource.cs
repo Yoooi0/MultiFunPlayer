@@ -8,7 +8,7 @@ using System.Reflection;
 
 namespace MultiFunPlayer.MediaSource;
 
-public abstract class AbstractMediaSource : Screen, IMediaSource
+internal abstract class AbstractMediaSource : Screen, IMediaSource
 {
     private readonly AsyncManualResetEvent _statusEvent;
     private CancellationTokenSource _cancellationSource;

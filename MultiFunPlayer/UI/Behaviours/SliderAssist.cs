@@ -4,7 +4,7 @@ using System.Windows.Input;
 
 namespace MultiFunPlayer.UI.Behaviours;
 
-public static class SliderAssist
+internal static class SliderAssist
 {
     public static readonly DependencyProperty DefaultValueOnDoubleClickProperty =
         DependencyProperty.RegisterAttached("DefaultValueOnDoubleClick",

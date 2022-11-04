@@ -4,7 +4,7 @@ using System.IO;
 
 namespace MultiFunPlayer.Settings.Converters;
 
-public class FileSystemInfoConverter : JsonConverter
+internal class FileSystemInfoConverter : JsonConverter
 {
     public override bool CanConvert(Type objectType)
         => typeof(FileSystemInfo).IsAssignableFrom(objectType);

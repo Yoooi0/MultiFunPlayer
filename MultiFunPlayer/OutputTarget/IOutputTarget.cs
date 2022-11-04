@@ -4,7 +4,7 @@ using Newtonsoft.Json.Linq;
 
 namespace MultiFunPlayer.OutputTarget;
 
-public interface IOutputTarget : IConnectable, IDisposable
+internal interface IOutputTarget : IConnectable, IDisposable
 {
     string Name { get; }
     string Identifier { get; }

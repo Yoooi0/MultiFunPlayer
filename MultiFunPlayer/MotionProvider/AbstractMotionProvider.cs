@@ -6,7 +6,7 @@ using System.Reflection;
 
 namespace MultiFunPlayer.MotionProvider;
 
-public abstract class AbstractMotionProvider : Screen, IMotionProvider
+internal abstract class AbstractMotionProvider : Screen, IMotionProvider
 {
     private readonly DeviceAxis _target;
     private readonly IEventAggregator _eventAggregator;

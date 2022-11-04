@@ -11,7 +11,7 @@ namespace MultiFunPlayer.UI.Controls;
 /// <summary>
 /// Interaction logic for SmartLimitPreview.xaml
 /// </summary>
-public partial class SmartLimitPreview : UserControl, INotifyPropertyChanged
+internal partial class SmartLimitPreview : UserControl, INotifyPropertyChanged
 {
     public PointCollection LinePoints { get; set; }
 

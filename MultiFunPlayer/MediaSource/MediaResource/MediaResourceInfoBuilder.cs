@@ -1,6 +1,6 @@
 ﻿namespace MultiFunPlayer.MediaSource.MediaResource;
 
-public interface IMediaResourceInfoBuilder
+internal interface IMediaResourceInfoBuilder
 {
     IMediaResourceInfoBuilder WithOriginalPath(string originalPath);
     IMediaResourceInfoBuilder WithSourceAndName(string source, string name);
@@ -12,7 +12,7 @@ public interface IMediaResourceInfoBuilder
     MediaResourceInfo Build();
 }
 
-public class MediaResourceInfoBuilder : IMediaResourceInfoBuilder
+internal class MediaResourceInfoBuilder : IMediaResourceInfoBuilder
 {
     [Flags]
     private enum BuilderFlags

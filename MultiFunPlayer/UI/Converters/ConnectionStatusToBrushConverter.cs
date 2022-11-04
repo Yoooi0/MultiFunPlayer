@@ -6,7 +6,7 @@ using System.Windows.Media;
 
 namespace MultiFunPlayer.UI.Converters;
 
-public class ConnectionStatusToBrushConverter : IValueConverter
+internal class ConnectionStatusToBrushConverter : IValueConverter
 {
     public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         => value switch

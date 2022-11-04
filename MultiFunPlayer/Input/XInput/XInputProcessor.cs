@@ -5,7 +5,7 @@ using Vortice.XInput;
 
 namespace MultiFunPlayer.Input.XInput;
 
-public class XInputProcessor : IInputProcessor
+internal class XInputProcessor : IInputProcessor
 {
     protected static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 

@@ -1,6 +1,6 @@
 ﻿namespace MultiFunPlayer.Input;
 
-public interface IInputProcessor : IDisposable
+internal interface IInputProcessor : IDisposable
 {
     event EventHandler<IInputGesture> OnGesture;
 }

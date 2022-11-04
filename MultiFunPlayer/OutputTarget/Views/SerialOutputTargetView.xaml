@@ -10,7 +10,8 @@
              xmlns:ui="clr-namespace:MultiFunPlayer.UI"
              xmlns:ports="clr-namespace:System.IO.Ports;assembly=System"
              mc:Ignorable="d" 
-             d:DesignHeight="450" d:DesignWidth="800">
+             d:DesignHeight="450" d:DesignWidth="800"
+             x:ClassModifier="internal">
     <UserControl.Resources>
         <converters:MsToHzConverter x:Key="MsToHzConverter"/>
     </UserControl.Resources>

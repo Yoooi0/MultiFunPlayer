@@ -11,7 +11,7 @@ using System.Runtime.ExceptionServices;
 
 namespace MultiFunPlayer.Common;
 
-public static class ConnectableExtensions
+internal static class ConnectableExtensions
 {
     public static Task WaitForIdle(this IConnectable connectable, CancellationToken token)
         => connectable.WaitForStatus(new[] { ConnectionStatus.Connected, ConnectionStatus.Disconnected }, token);

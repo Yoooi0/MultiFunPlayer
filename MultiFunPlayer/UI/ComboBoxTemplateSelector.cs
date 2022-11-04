@@ -4,7 +4,7 @@ using System.Windows.Media;
 
 namespace MultiFunPlayer.UI;
 
-public class ComboBoxTemplateSelector : DataTemplateSelector
+internal class ComboBoxTemplateSelector : DataTemplateSelector
 {
     public DataTemplate SelectedItemTemplate { get; set; }
     public DataTemplateSelector SelectedItemTemplateSelector { get; set; }

@@ -5,7 +5,7 @@ using System.Globalization;
 
 namespace MultiFunPlayer.UI.Converters;
 
-public class ItemIndexInContainerConverter : IValueConverter
+internal class ItemIndexInContainerConverter : IValueConverter
 {
     public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
     {

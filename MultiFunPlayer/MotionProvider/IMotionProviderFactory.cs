@@ -3,13 +3,13 @@ using Stylet;
 
 namespace MultiFunPlayer.MotionProvider;
 
-public interface IMotionProviderFactory
+internal interface IMotionProviderFactory
 {
     IMotionProvider CreateMotionProvider(Type type, DeviceAxis target);
     IEnumerable<IMotionProvider> CreateMotionProviderCollection(DeviceAxis target);
 }
 
-public class MotionProviderFactory : IMotionProviderFactory
+internal class MotionProviderFactory : IMotionProviderFactory
 {
     private readonly IEventAggregator _eventAggregator;
 

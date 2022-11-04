@@ -17,7 +17,7 @@ using System.Threading.Channels;
 namespace MultiFunPlayer.MediaSource.ViewModels;
 
 [DisplayName("HereSphere")]
-public class HereSphereMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlayPauseMessage>, IHandle<MediaSeekMessage>
+internal class HereSphereMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlayPauseMessage>, IHandle<MediaSeekMessage>
 {
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 

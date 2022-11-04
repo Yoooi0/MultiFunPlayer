@@ -4,7 +4,7 @@ using System.Windows.Input;
 
 namespace MultiFunPlayer.UI.Converters;
 
-public class KeyToStringConverter : IValueConverter
+internal class KeyToStringConverter : IValueConverter
 {
     public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
     {

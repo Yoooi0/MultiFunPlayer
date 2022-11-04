@@ -7,7 +7,7 @@ namespace MultiFunPlayer.MotionProvider.ViewModels;
 
 [DisplayName("Random")]
 [JsonObject(MemberSerialization = MemberSerialization.OptIn)]
-public class RandomMotionProviderViewModel : AbstractMotionProvider
+internal class RandomMotionProviderViewModel : AbstractMotionProvider
 {
     private readonly OpenSimplex _noise;
     private double _time;

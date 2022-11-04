@@ -14,7 +14,7 @@ using System.Text.RegularExpressions;
 namespace MultiFunPlayer.OutputTarget.ViewModels;
 
 [DisplayName("Serial")]
-public class SerialOutputTargetViewModel : ThreadAbstractOutputTarget
+internal class SerialOutputTargetViewModel : ThreadAbstractOutputTarget
 {
     private SemaphoreSlim _refreshSemaphore;
     private CancellationTokenSource _refreshCancellationSource;

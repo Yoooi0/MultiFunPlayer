@@ -15,7 +15,7 @@ using System.Text.RegularExpressions;
 namespace MultiFunPlayer.MediaSource.ViewModels;
 
 [DisplayName("Whirligig")]
-public class WhirligigMediaSourceViewModel : AbstractMediaSource
+internal class WhirligigMediaSourceViewModel : AbstractMediaSource
 {
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 

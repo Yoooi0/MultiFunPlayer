@@ -6,7 +6,7 @@ using System.Windows.Navigation;
 
 namespace MultiFunPlayer.UI.Dialogs.ViewModels;
 
-public class InformationMessageDialogViewModel : Screen
+internal class InformationMessageDialogViewModel : Screen
 {
     public string VersionText => $"v{ReflectionUtils.AssemblyVersion}";
     public bool ShowCheckbox { get; }

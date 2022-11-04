@@ -1,12 +1,12 @@
 ﻿namespace MultiFunPlayer.Input;
 
-public interface IShortcutAction
+internal interface IShortcutAction
 {
     IShortcutActionDescriptor Descriptor { get; }
     void Invoke(params object[] arguments);
 }
 
-public abstract class AbstractShortcutAction : IShortcutAction
+internal abstract class AbstractShortcutAction : IShortcutAction
 {
     public IShortcutActionDescriptor Descriptor { get; }
 
@@ -27,7 +27,7 @@ public abstract class AbstractShortcutAction : IShortcutAction
     }
 }
 
-public class ShortcutAction : AbstractShortcutAction
+internal class ShortcutAction : AbstractShortcutAction
 {
     private readonly Action _action;
 
@@ -41,7 +41,7 @@ public class ShortcutAction : AbstractShortcutAction
     }
 }
 
-public class ShortcutAction<T0> : AbstractShortcutAction
+internal class ShortcutAction<T0> : AbstractShortcutAction
 {
     private readonly Action<T0> _action;
 
@@ -55,7 +55,7 @@ public class ShortcutAction<T0> : AbstractShortcutAction
     }
 }
 
-public class ShortcutAction<T0, T1> : AbstractShortcutAction
+internal class ShortcutAction<T0, T1> : AbstractShortcutAction
 {
     private readonly Action<T0, T1> _action;
 
@@ -69,7 +69,7 @@ public class ShortcutAction<T0, T1> : AbstractShortcutAction
     }
 }
 
-public class ShortcutAction<T0, T1, T2> : AbstractShortcutAction
+internal class ShortcutAction<T0, T1, T2> : AbstractShortcutAction
 {
     private readonly Action<T0, T1, T2> _action;
 
@@ -83,7 +83,7 @@ public class ShortcutAction<T0, T1, T2> : AbstractShortcutAction
     }
 }
 
-public class ShortcutAction<T0, T1, T2, T3> : AbstractShortcutAction
+internal class ShortcutAction<T0, T1, T2, T3> : AbstractShortcutAction
 {
     private readonly Action<T0, T1, T2, T3> _action;
 
@@ -97,7 +97,7 @@ public class ShortcutAction<T0, T1, T2, T3> : AbstractShortcutAction
     }
 }
 
-public class ShortcutAction<T0, T1, T2, T3, T4> : AbstractShortcutAction
+internal class ShortcutAction<T0, T1, T2, T3, T4> : AbstractShortcutAction
 {
     private readonly Action<T0, T1, T2, T3, T4> _action;
 

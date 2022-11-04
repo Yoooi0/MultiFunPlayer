@@ -14,7 +14,7 @@ using System.Windows;
 namespace MultiFunPlayer.MediaSource.ViewModels;
 
 [DisplayName("Internal")]
-public class InternalMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlayPauseMessage>, IHandle<MediaSeekMessage>
+internal class InternalMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlayPauseMessage>, IHandle<MediaSeekMessage>
 {
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
@@ -364,7 +364,7 @@ public class InternalMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPl
     private record PlayScriptAtIndexMessage(int Index);
     private record PlayScriptWithOffsetMessage(int Offset);
 
-    public class Playlist : IReadOnlyList<FileInfo>
+    internal class Playlist : IReadOnlyList<FileInfo>
     {
         private readonly List<FileInfo> _files;
 

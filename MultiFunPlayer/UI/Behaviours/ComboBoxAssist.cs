@@ -6,7 +6,7 @@ using System.Windows.Input;
 
 namespace MultiFunPlayer.UI.Behaviours;
 
-public static class ComboBoxAssist
+internal static class ComboBoxAssist
 {
     private static CommandAction _previewSelectionChangedHandler;
 

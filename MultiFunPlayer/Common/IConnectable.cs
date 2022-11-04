@@ -1,6 +1,6 @@
 ﻿namespace MultiFunPlayer.Common;
 
-public enum ConnectionStatus
+internal enum ConnectionStatus
 {
     Disconnected,
     Disconnecting,
@@ -8,7 +8,7 @@ public enum ConnectionStatus
     Connected
 }
 
-public interface IConnectable
+internal interface IConnectable
 {
     ConnectionStatus Status { get; }
     bool AutoConnectEnabled { get; }

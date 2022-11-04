@@ -4,7 +4,7 @@ using System.Text;
 
 namespace MultiFunPlayer.Common;
 
-public interface IScriptWriter : IDisposable
+internal interface IScriptWriter : IDisposable
 {
     void Write(double position, double value);
     void Write(Keyframe keyframe) => Write(keyframe.Position, keyframe.Value);
@@ -15,7 +15,7 @@ public interface IScriptWriter : IDisposable
     }
 }
 
-public class FunscriptWriter : IScriptWriter
+internal class FunscriptWriter : IScriptWriter
 {
     private readonly Stream _stream;
     private bool _isFirst;
@@ -59,7 +59,7 @@ public class FunscriptWriter : IScriptWriter
     }
 }
 
-public class CsvWriter : IScriptWriter
+internal class CsvWriter : IScriptWriter
 {
     private readonly Stream _stream;
 

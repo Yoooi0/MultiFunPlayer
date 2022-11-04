@@ -25,7 +25,7 @@ using System.Collections.Concurrent;
 namespace MultiFunPlayer.UI.Controls.ViewModels;
 
 [JsonObject(MemberSerialization = MemberSerialization.OptIn)]
-public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
+internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
     IHandle<MediaPositionChangedMessage>, IHandle<MediaPlayingChangedMessage>, IHandle<MediaPathChangedMessage>, IHandle<MediaDurationChangedMessage>,
     IHandle<MediaSpeedChangedMessage>, IHandle<SettingsMessage>, IHandle<SyncRequestMessage>, IHandle<ScriptLoadMessage>
 {
@@ -1602,14 +1602,14 @@ public class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
     }
 }
 
-public class AxisModel : PropertyChangedBase
+internal class AxisModel : PropertyChangedBase
 {
     public AxisState State { get; } = new AxisState();
     public AxisSettings Settings { get; } = new AxisSettings();
     public IScriptResource Script { get; set; } = null;
 }
 
-public class AxisState : INotifyPropertyChanged
+internal class AxisState : INotifyPropertyChanged
 {
     [DoNotNotify] public double Value { get; set; } = double.NaN;
     [DoNotNotify] public double ScriptValue { get; set; } = double.NaN;
@@ -1644,7 +1644,7 @@ public class AxisState : INotifyPropertyChanged
     }
 }
 
-public ref struct AxisStateUpdateContext
+internal ref struct AxisStateUpdateContext
 {
     private readonly AxisState _state;
 
@@ -1704,7 +1704,7 @@ public ref struct AxisStateUpdateContext
 }
 
 [JsonObject(MemberSerialization.OptIn)]
-public class AxisSettings : PropertyChangedBase
+internal class AxisSettings : PropertyChangedBase
 {
     [JsonProperty] public bool LinkAxisHasPriority { get; set; } = false;
     [JsonProperty] public DeviceAxis LinkAxis { get; set; } = null;
@@ -1735,14 +1735,14 @@ public class AxisSettings : PropertyChangedBase
     [JsonProperty] public double MaximumSecondsPerStroke { get; set; } = 0.1;
 }
 
-public enum SmartLimitMode
+internal enum SmartLimitMode
 {
     Value,
     Speed
 }
 
 [JsonObject(MemberSerialization.OptIn)]
-public class SyncSettings : PropertyChangedBase
+internal class SyncSettings : PropertyChangedBase
 {
     [JsonProperty] public double Duration { get; set; } = 4;
     [JsonProperty] public bool SyncOnMediaResourceChanged { get; set; } = true;
@@ -1751,7 +1751,7 @@ public class SyncSettings : PropertyChangedBase
 }
 
 [JsonObject(MemberSerialization.OptIn)]
-public class ScriptLibrary : PropertyChangedBase
+internal class ScriptLibrary : PropertyChangedBase
 {
     public ScriptLibrary(DirectoryInfo directory)
     {

@@ -11,7 +11,7 @@ using System.Reflection;
 
 namespace MultiFunPlayer.MotionProvider;
 
-public interface IMotionProviderManager : IDeviceAxisValueProvider
+internal interface IMotionProviderManager : IDeviceAxisValueProvider
 {
     IEnumerable<string> MotionProviderNames { get; }
 
@@ -20,7 +20,7 @@ public interface IMotionProviderManager : IDeviceAxisValueProvider
     void RegisterActions(IShortcutManager shortcutManager);
 }
 
-public class MotionProviderManager : IMotionProviderManager, IHandle<SettingsMessage>
+internal class MotionProviderManager : IMotionProviderManager, IHandle<SettingsMessage>
 {
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 

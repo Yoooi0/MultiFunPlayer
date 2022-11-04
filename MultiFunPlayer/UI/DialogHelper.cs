@@ -6,7 +6,7 @@ using System.Windows;
 
 namespace MultiFunPlayer.UI;
 
-public static class DialogHelper
+internal static class DialogHelper
 {
     private static SettingsViewModel Settings { get; set; }
     private static IViewManager ViewManager { get; set; }

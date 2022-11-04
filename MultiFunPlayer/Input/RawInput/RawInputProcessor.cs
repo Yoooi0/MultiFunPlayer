@@ -8,7 +8,7 @@ using System.Windows.Interop;
 
 namespace MultiFunPlayer.Input.RawInput;
 
-public class RawInputProcessor : IInputProcessor
+internal class RawInputProcessor : IInputProcessor
 {
     protected static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 

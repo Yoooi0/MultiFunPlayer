@@ -3,7 +3,7 @@ using Stylet;
 
 namespace MultiFunPlayer.UI.Dialogs.ViewModels;
 
-public class ShortcutActionConfigurationDialogViewModel : Screen
+internal class ShortcutActionConfigurationDialogViewModel : Screen
 {
     public IShortcutActionConfiguration Configuration { get; }
     public IEnumerable<IShortcutSetting> Settings => Configuration.Settings;

@@ -6,13 +6,13 @@ using System.Text;
 
 namespace MultiFunPlayer.MediaSource.MediaResource;
 
-public interface IMediaResourceFactory
+internal interface IMediaResourceFactory
 {
     ObservableConcurrentCollection<IMediaPathModifier> PathModifiers { get; }
     MediaResourceInfo CreateFromPath(string path);
 }
 
-public class MediaResourceFactory : IMediaResourceFactory
+internal class MediaResourceFactory : IMediaResourceFactory
 {
     public ObservableConcurrentCollection<IMediaPathModifier> PathModifiers { get; }
 

@@ -13,7 +13,7 @@ namespace MultiFunPlayer.UI.Controls;
 /// Interaction logic for KeyframesHeatmapToolTip.xaml
 /// </summary>
 [AddINotifyPropertyChangedInterface]
-public partial class KeyframesHeatmapToolTip : UserControl
+internal partial class KeyframesHeatmapToolTip : UserControl
 {
     public PointCollection Points { get; set; }
     public double? ScrubberPosition { get; set; }

@@ -15,7 +15,7 @@ using System.Windows;
 namespace MultiFunPlayer.OutputTarget.ViewModels;
 
 [DisplayName("Buttplug.io")]
-public class ButtplugOutputTargetViewModel : AsyncAbstractOutputTarget
+internal class ButtplugOutputTargetViewModel : AsyncAbstractOutputTarget
 {
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
@@ -448,7 +448,7 @@ public class ButtplugOutputTargetViewModel : AsyncAbstractOutputTarget
 }
 
 [JsonObject(MemberSerialization.OptIn)]
-public class ButtplugClientDeviceSettings : PropertyChangedBase
+internal class ButtplugClientDeviceSettings : PropertyChangedBase
 {
     [JsonProperty] public string DeviceName { get; set; }
     [JsonProperty] public uint DeviceIndex { get; set; }

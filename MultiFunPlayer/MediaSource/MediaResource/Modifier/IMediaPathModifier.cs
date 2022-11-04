@@ -1,6 +1,6 @@
 ﻿namespace MultiFunPlayer.MediaSource.MediaResource.Modifier;
 
-public interface IMediaPathModifier
+internal interface IMediaPathModifier
 {
     string Name { get; }
     string Description { get; }
