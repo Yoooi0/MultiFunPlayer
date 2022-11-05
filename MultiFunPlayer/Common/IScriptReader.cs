@@ -50,7 +50,7 @@ internal class FunscriptReader : IScriptReader<FunscriptReaderSettings>
             if (position < 0)
                 continue;
 
-            var value = action.Pos / 100;
+            var value = MathUtils.Clamp01(action.Pos / 100);
             keyframes.Add(new Keyframe(position, value));
         }
 
@@ -92,6 +92,10 @@ internal class CsvReader : IScriptReader<CsvReaderSettings>
              || !double.TryParse(items[1].Replace(',', '.'), NumberStyles.Any, NumberFormatInfo.InvariantInfo, out var value))
                 continue;
 
+            if (position < 0)
+                continue;
+
+            value = MathUtils.Clamp01(value);
             keyframes.Add(new Keyframe(position, value));
         }
 
