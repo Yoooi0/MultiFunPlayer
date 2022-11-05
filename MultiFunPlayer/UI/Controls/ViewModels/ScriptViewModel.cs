@@ -187,7 +187,7 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                     if (shouldSearch)
                     {
                         Logger.Debug("Searching for valid index [Axis: {0}]", axis);
-                        state.Index = keyframes.BinarySearch(axisPosition);
+                        state.Index = keyframes.SearchForIndexBefore(axisPosition);
                     }
 
                     if (state.AfterScript)

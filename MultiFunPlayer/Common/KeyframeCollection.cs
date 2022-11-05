@@ -1,21 +1,43 @@
+using System.Collections;
+
 namespace MultiFunPlayer.Common;
 
-public class KeyframeCollection : List<Keyframe>
+public class KeyframeCollection : IList<Keyframe>, IReadOnlyList<Keyframe>, IList, ICollection
 {
+    private readonly List<Keyframe> _items;
+
+    public KeyframeCollection() => _items = new List<Keyframe>();
+    public KeyframeCollection(int capacity) => _items = new List<Keyframe>(capacity);
+
+    public KeyframeCollection(IEnumerable<Keyframe> collection)
+    {
+        _items = new List<Keyframe>();
+        AddRange(collection);
+    }
+
     public bool IsRawCollection { get; init; }
 
-    public KeyframeCollection() : base() { }
-    public KeyframeCollection(IEnumerable<Keyframe> collection) : base(collection) { }
-    public KeyframeCollection(int capacity) : base(capacity) { }
-
-    public int BinarySearch(double position)
+    public void AddRange(IEnumerable<Keyframe> items)
     {
-        var bestIndex = BinarySearch(new Keyframe(position, double.NaN), KeyframePositionComparer.Default);
+        foreach (var item in items)
+            Add(item);
+    }
+
+    public int SearchForIndexBefore(double position) => SearchForIndexAfter(position) - 1;
+    public int SearchForIndexAfter(double position)
+    {
+        if (_items.Count == 0 || position < _items[0].Position)
+            return 0;
+
+        if (position > _items[^1].Position)
+            return Count;
+
+        var bestIndex = _items.BinarySearch(new Keyframe(position, double.NaN), KeyframePositionComparer.Default);
         if (bestIndex >= 0)
             return bestIndex;
 
         bestIndex = ~bestIndex;
-        return bestIndex == Count ? Count : bestIndex - 1;
+        return bestIndex == Count ? Count : bestIndex;
     }
 
     public int AdvanceIndex(int index, double position)
@@ -27,7 +49,7 @@ public class KeyframeCollection : List<Keyframe>
 
     public double Interpolate(double position, InterpolationType interpolationType, out int index)
     {
-        index = BinarySearch(position);
+        index = SearchForIndexBefore(position);
         if (index <= 0 || index >= Count)
             return double.NaN;
 
@@ -119,4 +141,51 @@ public class KeyframeCollection : List<Keyframe>
 
         return ady < 0.001 || adx < 0.001;
     }
+
+    #region IList<T>
+    public int Count => _items.Count;
+    public bool IsReadOnly => false;
+    public Keyframe this[int index] { get => _items[index]; set => _items[index] = value; }
+
+    public int IndexOf(Keyframe item) => _items.IndexOf(item);
+    public void RemoveAt(int index) => _items.RemoveAt(index);
+    public void Add(Keyframe item) => _items.Insert(SearchForIndexAfter(item.Position), item);
+    public void Clear() => _items.Clear();
+    public bool Contains(Keyframe item) => _items.Contains(item);
+    public void CopyTo(Keyframe[] array, int arrayIndex) => _items.CopyTo(array, arrayIndex);
+    public bool Remove(Keyframe item) => _items.Remove(item);
+
+    void IList<Keyframe>.Insert(int index, Keyframe item) => Add(item);
+    #endregion
+
+    #region IList
+    bool IList.IsFixedSize => false;
+    object IList.this[int index] { get => _items[index]; set => _items[index] = (Keyframe)value; }
+
+    int IList.Add(object value)
+    {
+        var item = (Keyframe)value;
+        var index = SearchForIndexAfter(item.Position);
+
+        _items.Insert(index, item);
+        return index;
+    }
+
+    bool IList.Contains(object value) => Contains((Keyframe)value);
+    int IList.IndexOf(object value) => IndexOf((Keyframe)value);
+    void IList.Insert(int index, object value) => Add((Keyframe)value);
+    void IList.Remove(object value) => Remove((Keyframe)value);
+
+    #endregion
+
+    #region IEnumerable
+    public IEnumerator<Keyframe> GetEnumerator() => _items.GetEnumerator();
+    IEnumerator IEnumerable.GetEnumerator() => _items.GetEnumerator();
+    #endregion
+
+    #region ICollection
+    bool ICollection.IsSynchronized => false;
+    public object SyncRoot => this;
+    void ICollection.CopyTo(Array array, int index) => ((IList)_items).CopyTo(array, index);
+    #endregion
 }
