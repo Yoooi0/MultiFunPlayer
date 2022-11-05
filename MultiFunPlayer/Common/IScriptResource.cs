@@ -44,7 +44,7 @@ public class ScriptResource : IScriptResource
         var origin = userLoaded ? ScriptResourceOrigin.User : ScriptResourceOrigin.Automatic;
 
         using var stream = new FileStream(path, FileMode.Open, FileAccess.Read);
-        var keyframes = ScriptReader.Read(ScriptType.Funscript, stream);
+        var keyframes = FunscriptReader.Default.Read(stream);
         return new ScriptResource(Path.GetFileName(path), Path.GetDirectoryName(path), keyframes, origin);
     }
 
@@ -53,13 +53,14 @@ public class ScriptResource : IScriptResource
         using var stream = entry.Open();
 
         var origin = userLoaded ? ScriptResourceOrigin.User : ScriptResourceOrigin.Automatic;
-        var keyframes = ScriptReader.Read(ScriptType.Funscript, stream);
+        var keyframes = FunscriptReader.Default.Read(stream);
         return new ScriptResource(entry.Name, archivePath, keyframes, origin);
     }
 
     public static IScriptResource FromBytes(string name, string source, IEnumerable<byte> bytes, ScriptResourceOrigin origin)
     {
-        var keyframes = ScriptReader.Read(ScriptType.Funscript, bytes);
+        using var stream = new MemoryStream(bytes.ToArray());
+        var keyframes = FunscriptReader.Default.Read(stream);
         return new ScriptResource(name, source, keyframes, origin);
     }
 
