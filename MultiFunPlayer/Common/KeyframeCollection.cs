@@ -47,15 +47,6 @@ public class KeyframeCollection : IList<Keyframe>, IReadOnlyList<Keyframe>, ILis
         return index;
     }
 
-    public double Interpolate(double position, InterpolationType interpolationType, out int index)
-    {
-        index = SearchForIndexBefore(position);
-        if (index <= 0 || index >= Count)
-            return double.NaN;
-
-        return Interpolate(index, position, interpolationType);
-    }
-
     public double Interpolate(int index, double position, InterpolationType interpolationType)
     {
         static double Distance(Keyframe p0, Keyframe p1)

@@ -192,17 +192,11 @@ internal partial class KeyframesHeatmapToolTip : UserControl
             var t = i / (double)300;
             var position = MathUtils.Lerp(startPosition, endPosition, t);
 
-            var value = double.NaN;
-            if (index == -1)
-            {
-                value = MathUtils.Clamp01(keyframes.Interpolate(position, interpolationType, out index));
-            }
-            else
-            {
-                index = keyframes.AdvanceIndex(index, position);
-                if (keyframes.ValidateIndex(index) && keyframes.ValidateIndex(index + 1))
-                    value = MathUtils.Clamp01(keyframes.Interpolate(index, position, interpolationType));
-            }
+            index = index == -1 ? keyframes.SearchForIndexBefore(position) : keyframes.AdvanceIndex(index, position);
+
+            var value = keyframes.ValidateIndex(index) && keyframes.ValidateIndex(index + 1)
+                ? MathUtils.Clamp01(keyframes.Interpolate(index, position, interpolationType))
+                : double.NaN;
 
             if (!double.IsFinite(value))
                 continue;
