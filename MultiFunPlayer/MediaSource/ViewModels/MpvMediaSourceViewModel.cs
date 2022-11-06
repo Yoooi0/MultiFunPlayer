@@ -182,7 +182,7 @@ internal class MpvMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlayP
 
                 var messageString = message switch
                 {
-                    MediaPlayPauseMessage playPauseMessage => CreateMessage("set_property", "pause", (!playPauseMessage.State).ToString().ToLower()),
+                    MediaPlayPauseMessage playPauseMessage => CreateMessage("set_property", "pause", !playPauseMessage.State ? "yes" : "no"),
                     MediaSeekMessage seekMessage when seekMessage.Position.HasValue => CreateMessage("set_property", "time-pos", seekMessage.Position.Value.TotalSeconds.ToString("F4").Replace(',', '.')),
                     MediaChangePathMessage changePathMessage => CreateMessage("loadfile", changePathMessage.Path.Replace(@"\", "/")),
                     _ => null
