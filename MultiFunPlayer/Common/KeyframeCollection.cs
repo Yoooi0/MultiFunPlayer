@@ -136,7 +136,8 @@ public class KeyframeCollection : IList<Keyframe>, IReadOnlyList<Keyframe>, ILis
     #region IList<T>
     public int Count => _items.Count;
     public bool IsReadOnly => false;
-    public Keyframe this[int index] { get => _items[index]; set => _items[index] = value; }
+    public Keyframe this[int index] { get => _items[index]; }
+    Keyframe IList<Keyframe>.this[int index] { get => _items[index]; set => Add(value); }
 
     public int IndexOf(Keyframe item) => _items.IndexOf(item);
     public void RemoveAt(int index) => _items.RemoveAt(index);
@@ -151,7 +152,7 @@ public class KeyframeCollection : IList<Keyframe>, IReadOnlyList<Keyframe>, ILis
 
     #region IList
     bool IList.IsFixedSize => false;
-    object IList.this[int index] { get => _items[index]; set => _items[index] = (Keyframe)value; }
+    object IList.this[int index] { get => _items[index]; set => Add((Keyframe)value); }
 
     int IList.Add(object value)
     {
