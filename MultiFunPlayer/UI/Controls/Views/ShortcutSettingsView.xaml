@@ -461,6 +461,7 @@
                                     </Button>
 
                                     <TextBlock Text="{Binding DisplayName}"
+                                               VerticalAlignment="Center"
                                                DockPanel.Dock="Left"
                                                Margin="0"/>
                                 </DockPanel>
