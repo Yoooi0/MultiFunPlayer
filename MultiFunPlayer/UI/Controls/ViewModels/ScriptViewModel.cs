@@ -1322,6 +1322,10 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         s.RegisterAction("Media::PlayPause::Toggle", () => OnPlayPauseClick());
         #endregion
 
+        #region Media::Path
+        s.RegisterAction<string>("Media::Path::Set", s => s.WithLabel("Media path"), path => _eventAggregator.Publish(new MediaChangePathMessage(path)));
+        #endregion
+
         #region Media::ScriptOffset
         s.RegisterAction<double>("Media::ScriptOffset::Offset",
             s => s.WithLabel("Value offset").WithStringFormat("{}{0}s"), offset => GlobalOffset += offset);

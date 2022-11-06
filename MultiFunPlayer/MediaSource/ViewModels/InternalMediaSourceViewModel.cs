@@ -14,7 +14,7 @@ using System.Windows;
 namespace MultiFunPlayer.MediaSource.ViewModels;
 
 [DisplayName("Internal")]
-internal class InternalMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlayPauseMessage>, IHandle<MediaSeekMessage>
+internal class InternalMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlayPauseMessage>, IHandle<MediaSeekMessage>, IHandle<MediaChangePathMessage>
 {
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
@@ -77,6 +77,16 @@ internal class InternalMediaSourceViewModel : AbstractMediaSource, IHandle<Media
                     {
                         if (message is MediaPlayPauseMessage playPauseMessage) { SetIsPlaying(playPauseMessage.State); }
                         else if (message is MediaSeekMessage seekMessage && _scriptInfo != null) { SetPosition(seekMessage.Position?.TotalSeconds ?? double.NaN); }
+                        else if (message is MediaChangePathMessage mediaChangePath)
+                        {
+                            var path = mediaChangePath.Path;
+                            var playlistIndex = ScriptPlaylist?.FindIndex(path);
+
+                            if (playlistIndex >= 0)
+                                PlayByIndex(playlistIndex.Value);
+                            else
+                                SetPlaylist(CreatePlaylist(path));
+                        }
                         else if (message is PlayScriptAtIndexMessage playIndexMessage) { PlayByIndex(playIndexMessage.Index); }
                         else if (message is PlayScriptWithOffsetMessage playOffsetMessage)
                         {
@@ -173,6 +183,15 @@ internal class InternalMediaSourceViewModel : AbstractMediaSource, IHandle<Media
     public bool CanClearPlaylist => IsConnected && ScriptPlaylist != null;
     public void ClearPlaylist() => SetPlaylist(null);
 
+    private Playlist CreatePlaylist(params string[] paths)
+    {
+        if (paths == null)
+            return null;
+
+        var isPlaylistFile = paths.Length == 1 && Path.GetExtension(paths[0]) == ".txt";
+        return isPlaylistFile ? new Playlist(paths[0]) : new Playlist(paths);
+    }
+
     private void SetPlaylist(Playlist playlist)
     {
         lock (_playlistLock)
@@ -236,9 +255,7 @@ internal class InternalMediaSourceViewModel : AbstractMediaSource, IHandle<Media
         if (drop is not string[] paths)
             return;
 
-        var isPlaylistFile = paths.Length == 1 && Path.GetExtension(paths[0]) == ".txt";
-        var playlist = isPlaylistFile ? new Playlist(paths[0]) : new Playlist(paths);
-        SetPlaylist(playlist);
+        SetPlaylist(CreatePlaylist(paths));
     }
 
     public void OnPreviewDragOver(object sender, DragEventArgs e)
@@ -313,8 +330,7 @@ internal class InternalMediaSourceViewModel : AbstractMediaSource, IHandle<Media
             if (playlist == null)
                 return;
 
-            var index = playlist.FindIndex(f => string.Equals(name, f.Name, StringComparison.OrdinalIgnoreCase)
-                                             || string.Equals(name, f.FullName, StringComparison.OrdinalIgnoreCase));
+            var index = playlist.FindIndex(name);
             if (index >= 0)
                 _messageChannel.Writer.TryWrite(new PlayScriptAtIndexMessage(index));
         }));
@@ -333,6 +349,12 @@ internal class InternalMediaSourceViewModel : AbstractMediaSource, IHandle<Media
             _messageChannel.Writer.TryWrite(message);
     }
 
+    public void Handle(MediaChangePathMessage message)
+    {
+        if (Status == ConnectionStatus.Connected)
+            _messageChannel.Writer.TryWrite(message);
+    }
+
     public void OnPlayScript(object sender, EventArgs e)
     {
         if (sender is not FrameworkElement element || element.DataContext is not FileInfo scriptInfo)
@@ -342,7 +364,7 @@ internal class InternalMediaSourceViewModel : AbstractMediaSource, IHandle<Media
         if (playlist == null)
             return;
 
-        var index = playlist.IndexOf(scriptInfo);
+        var index = playlist.FindIndex(scriptInfo);
         if (index < 0)
             return;
 
@@ -396,6 +418,9 @@ internal class InternalMediaSourceViewModel : AbstractMediaSource, IHandle<Media
         IEnumerator IEnumerable.GetEnumerator() => _files.GetEnumerator();
 
         public int FindIndex(Predicate<FileInfo> match) => _files.FindIndex(match);
-        public int IndexOf(FileInfo file) => _files.IndexOf(file);
+        public int FindIndex(FileInfo file) => FindIndex(f => string.Equals(f.Name, file.Name, StringComparison.OrdinalIgnoreCase)
+                                                           || string.Equals(f.FullName, file.FullName, StringComparison.OrdinalIgnoreCase));
+        public int FindIndex(string path) => FindIndex(f => string.Equals(f.Name, path, StringComparison.OrdinalIgnoreCase)
+                                                         || string.Equals(f.FullName, path, StringComparison.OrdinalIgnoreCase));
     }
 }

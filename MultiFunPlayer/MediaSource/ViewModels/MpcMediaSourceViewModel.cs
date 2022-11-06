@@ -13,7 +13,7 @@ using System.Threading.Channels;
 namespace MultiFunPlayer.MediaSource.ViewModels;
 
 [DisplayName("MPC-HC")]
-internal class MpcMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlayPauseMessage>, IHandle<MediaSeekMessage>
+internal class MpcMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlayPauseMessage>, IHandle<MediaSeekMessage>, IHandle<MediaChangePathMessage>
 {
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
@@ -139,7 +139,7 @@ internal class MpcMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlayP
 
     private async Task WriteAsync(HttpClient client, CancellationToken token)
     {
-        var commandUriBase = $"http://{Endpoint.ToUriString()}/command.html?wm_command=";
+        var uriBase = $"http://{Endpoint.ToUriString()}/";
 
         try
         {
@@ -148,17 +148,24 @@ internal class MpcMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlayP
                 await _writeMessageChannel.Reader.WaitToReadAsync(token);
                 var message = await _writeMessageChannel.Reader.ReadAsync(token);
 
-                var commandString = message switch
+                var uriFile = message switch
+                {
+                    MediaChangePathMessage _ => "browser.html?path=",
+                    _ => "command.html?wm_command="
+                };
+
+                var uriArguments = message switch
                 {
                     MediaPlayPauseMessage playPauseMessage => $"{(int)(playPauseMessage.State ? MpcCommand.Play : MpcCommand.Pause)}",
                     MediaSeekMessage seekMessage when seekMessage.Position.HasValue => $"{(int)MpcCommand.Seek}&position={seekMessage.Position?.ToString(@"hh\:mm\:ss")}",
+                    MediaChangePathMessage changePathMessage => string.IsNullOrWhiteSpace(changePathMessage.Path) ? null : $"{Uri.EscapeDataString(changePathMessage.Path)}",
                     _ => null
                 };
 
-                var commandUri = new Uri($"{commandUriBase}{commandString}");
-                Logger.Trace("Sending \"{0}\" to \"{1}\"", commandString, Name);
+                var requestUri = new Uri($"{uriBase}{uriFile}{uriArguments}");
+                Logger.Trace("Sending \"{0}{1}\" to \"{2}\"", uriFile, uriArguments, Name);
 
-                var response = await UnwrapTimeout(() => client.GetAsync(commandUri, token));
+                var response = await UnwrapTimeout(() => client.GetAsync(requestUri, token));
                 response.EnsureSuccessStatusCode();
             }
         }
@@ -246,6 +253,12 @@ internal class MpcMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlayP
     }
 
     public async void Handle(MediaPlayPauseMessage message)
+    {
+        if (Status == ConnectionStatus.Connected)
+            await _writeMessageChannel.Writer.WriteAsync(message);
+    }
+
+    public async void Handle(MediaChangePathMessage message)
     {
         if (Status == ConnectionStatus.Connected)
             await _writeMessageChannel.Writer.WriteAsync(message);

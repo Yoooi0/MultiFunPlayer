@@ -16,7 +16,7 @@ using System.Threading.Channels;
 namespace MultiFunPlayer.MediaSource.ViewModels;
 
 [DisplayName("MPV")]
-internal class MpvMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlayPauseMessage>, IHandle<MediaSeekMessage>
+internal class MpvMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlayPauseMessage>, IHandle<MediaSeekMessage>, IHandle<MediaChangePathMessage>
 {
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
@@ -167,6 +167,12 @@ internal class MpvMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlayP
 
     private async Task WriteAsync(NamedPipeClientStream client, StreamWriter writer, CancellationToken token)
     {
+        static string CreateMessage(params string[] arguments)
+        {
+            var argumentsString = string.Join(", ", arguments.Select(s => $"\"{s}\""));
+            return $"{{ \"command\": [{argumentsString}] }}";
+        }
+
         try
         {
             while (!token.IsCancellationRequested && client.IsConnected)
@@ -176,8 +182,9 @@ internal class MpvMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlayP
 
                 var messageString = message switch
                 {
-                    MediaPlayPauseMessage playPauseMessage => $"{{ \"command\": [\"set_property\", \"pause\", {(playPauseMessage.State ? "false" : "true")}] }}",
-                    MediaSeekMessage seekMessage when seekMessage.Position.HasValue => $"{{ \"command\": [\"set_property\", \"time-pos\", {seekMessage.Position.Value.TotalSeconds.ToString("F4").Replace(',', '.')}] }}",
+                    MediaPlayPauseMessage playPauseMessage => CreateMessage("set_property", "pause", (!playPauseMessage.State).ToString().ToLower()),
+                    MediaSeekMessage seekMessage when seekMessage.Position.HasValue => CreateMessage("set_property", "time-pos", seekMessage.Position.Value.TotalSeconds.ToString("F4").Replace(',', '.')),
+                    MediaChangePathMessage changePathMessage => CreateMessage("loadfile", changePathMessage.Path.Replace(@"\", "/")),
                     _ => null
                 };
 
@@ -305,6 +312,12 @@ internal class MpvMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlayP
     }
 
     public async void Handle(MediaPlayPauseMessage message)
+    {
+        if (Status == ConnectionStatus.Connected)
+            await _writeMessageChannel.Writer.WriteAsync(message);
+    }
+
+    public async void Handle(MediaChangePathMessage message)
     {
         if (Status == ConnectionStatus.Connected)
             await _writeMessageChannel.Writer.WriteAsync(message);

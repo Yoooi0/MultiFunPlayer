@@ -17,7 +17,7 @@ using System.Threading.Channels;
 namespace MultiFunPlayer.MediaSource.ViewModels;
 
 [DisplayName("HereSphere")]
-internal class HereSphereMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlayPauseMessage>, IHandle<MediaSeekMessage>
+internal class HereSphereMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlayPauseMessage>, IHandle<MediaSeekMessage>, IHandle<MediaChangePathMessage>
 {
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
@@ -187,6 +187,8 @@ internal class HereSphereMediaSourceViewModel : AbstractMediaSource, IHandle<Med
                         sendState.State = playPauseMessage.State ? 0 : 1;
                     else if (message is MediaSeekMessage seekMessage && seekMessage.Position.HasValue)
                         sendState.Position = seekMessage.Position.Value.TotalSeconds;
+                    else if (message is MediaChangePathMessage changePathMessage)
+                        sendState.Path = changePathMessage.Path;
 
                     var messageString = JsonConvert.SerializeObject(sendState);
 
@@ -277,6 +279,12 @@ internal class HereSphereMediaSourceViewModel : AbstractMediaSource, IHandle<Med
     }
 
     public async void Handle(MediaPlayPauseMessage message)
+    {
+        if (Status == ConnectionStatus.Connected)
+            await _writeMessageChannel.Writer.WriteAsync(message);
+    }
+
+    public async void Handle(MediaChangePathMessage message)
     {
         if (Status == ConnectionStatus.Connected)
             await _writeMessageChannel.Writer.WriteAsync(message);

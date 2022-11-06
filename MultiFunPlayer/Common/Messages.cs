@@ -12,12 +12,14 @@ internal record SettingsMessage(JObject Settings, SettingsAction Action);
 internal record WindowCreatedMessage();
 
 public record MediaSpeedChangedMessage(double Speed);
-public record MediaSeekMessage(TimeSpan? Position);
 public record MediaPositionChangedMessage(TimeSpan? Position, bool ForceSeek = false);
-public record MediaPlayPauseMessage(bool State);
 public record MediaPlayingChangedMessage(bool IsPlaying);
 public record MediaPathChangedMessage(string Path);
 public record MediaDurationChangedMessage(TimeSpan? Duration);
+
+public record MediaSeekMessage(TimeSpan? Position);
+public record MediaPlayPauseMessage(bool State);
+public record MediaChangePathMessage(string Path);
 
 public class ScriptLoadMessage
 {
