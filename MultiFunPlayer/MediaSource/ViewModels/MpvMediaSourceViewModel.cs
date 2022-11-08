@@ -114,7 +114,7 @@ internal class MpvMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlayP
         {
             while (!token.IsCancellationRequested && client.IsConnected)
             {
-                var message = await reader.ReadLineAsync().WithCancellation(token);
+                var message = await reader.ReadLineAsync(token);
                 if (message == null)
                     continue;
 

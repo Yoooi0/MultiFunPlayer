@@ -54,7 +54,7 @@ internal class WhirligigMediaSourceViewModel : AbstractMediaSource
             Status = ConnectionStatus.Connected;
             while (!token.IsCancellationRequested && client.Connected && !reader.EndOfStream)
             {
-                var message = await reader.ReadLineAsync().WithCancellation(token);
+                var message = await reader.ReadLineAsync(token);
                 if (string.IsNullOrWhiteSpace(message))
                     continue;
 

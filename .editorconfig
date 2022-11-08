@@ -23,3 +23,6 @@ dotnet_diagnostic.IDE0060.severity = silent
 
 # RCS1202: Avoid NullReferenceException.
 dotnet_diagnostic.RCS1202.severity = silent
+
+# SYSLIB1045: Convert to 'GeneratedRegexAttribute'.
+dotnet_diagnostic.SYSLIB1045.severity = silent
