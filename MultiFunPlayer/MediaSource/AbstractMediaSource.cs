@@ -45,6 +45,12 @@ internal abstract class AbstractMediaSource : Screen, IMediaSource
             return;
 
         Status = ConnectionStatus.Connecting;
+        if (!await OnConnectingAsync())
+            await DisconnectAsync();
+    }
+
+    protected virtual async Task<bool> OnConnectingAsync()
+    {
         _cancellationSource = new CancellationTokenSource();
         _task = Task.Factory.StartNew(() => RunAsync(_cancellationSource.Token),
             _cancellationSource.Token,
@@ -53,7 +59,7 @@ internal abstract class AbstractMediaSource : Screen, IMediaSource
             .Unwrap();
         _ = _task.ContinueWith(_ => DisconnectAsync()).Unwrap();
 
-        await Task.CompletedTask;
+        return await Task.FromResult(true);
     }
 
     public async virtual Task DisconnectAsync()
@@ -62,7 +68,12 @@ internal abstract class AbstractMediaSource : Screen, IMediaSource
             return;
 
         Status = ConnectionStatus.Disconnecting;
+        await OnDisconnectingAsync();
+        Status = ConnectionStatus.Disconnected;
+    }
 
+    protected virtual async Task OnDisconnectingAsync()
+    {
         _cancellationSource?.Cancel();
 
         if (_task != null)
@@ -73,8 +84,6 @@ internal abstract class AbstractMediaSource : Screen, IMediaSource
 
         _cancellationSource = null;
         _task = null;
-
-        Status = ConnectionStatus.Disconnected;
     }
 
     public async virtual ValueTask<bool> CanConnectAsync(CancellationToken token) => await ValueTask.FromResult(false);

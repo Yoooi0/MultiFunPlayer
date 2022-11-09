@@ -323,7 +323,7 @@ internal abstract class ThreadAbstractOutputTarget : AbstractOutputTarget
 
         Status = ConnectionStatus.Connecting;
         if (!await OnConnectingAsync())
-            _ = Execute.OnUIThreadAsync(async () => await DisconnectAsync().ConfigureAwait(true));
+            await DisconnectAsync();
     }
 
     protected override async Task<bool> OnConnectingAsync()
@@ -332,7 +332,7 @@ internal abstract class ThreadAbstractOutputTarget : AbstractOutputTarget
         _thread = new Thread(() =>
         {
             Run(_cancellationSource.Token);
-            _ = Execute.OnUIThreadAsync(async () => await DisconnectAsync().ConfigureAwait(true));
+            _ = DisconnectAsync();
         })
         {
             IsBackground = true
@@ -348,7 +348,7 @@ internal abstract class ThreadAbstractOutputTarget : AbstractOutputTarget
             return;
 
         Status = ConnectionStatus.Disconnecting;
-        await OnDisconnectingAsync().ConfigureAwait(true);
+        await OnDisconnectingAsync();
         Status = ConnectionStatus.Disconnected;
     }
 
@@ -442,7 +442,7 @@ internal abstract class AsyncAbstractOutputTarget : AbstractOutputTarget
 
         Status = ConnectionStatus.Connecting;
         if (!await OnConnectingAsync())
-            _ = Execute.OnUIThreadAsync(async () => await DisconnectAsync().ConfigureAwait(true));
+            await DisconnectAsync();
     }
 
     protected override async Task<bool> OnConnectingAsync()
@@ -453,7 +453,7 @@ internal abstract class AsyncAbstractOutputTarget : AbstractOutputTarget
             TaskCreationOptions.LongRunning,
             TaskScheduler.Default)
             .Unwrap();
-        _ = _task.ContinueWith(_ => Execute.OnUIThreadAsync(async () => await DisconnectAsync().ConfigureAwait(true))).Unwrap();
+        _ = _task.ContinueWith(_ => DisconnectAsync()).Unwrap();
 
         return await Task.FromResult(true);
     }
@@ -464,7 +464,7 @@ internal abstract class AsyncAbstractOutputTarget : AbstractOutputTarget
             return;
 
         Status = ConnectionStatus.Disconnecting;
-        await OnDisconnectingAsync().ConfigureAwait(true);
+        await OnDisconnectingAsync();
         Status = ConnectionStatus.Disconnected;
     }
 
