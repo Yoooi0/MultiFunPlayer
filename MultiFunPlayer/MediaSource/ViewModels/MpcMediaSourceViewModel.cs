@@ -229,7 +229,8 @@ internal class MpcMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlayP
                 operationCanceledException.Throw();
             }
 
-            throw;
+            e.Throw();
+            return null;
         }
     }
 

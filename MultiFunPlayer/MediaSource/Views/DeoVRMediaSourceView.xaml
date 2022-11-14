@@ -68,7 +68,7 @@
         </Expander.Header>
 
         <StackPanel Margin="20">
-            <DockPanel LastChildFill="True" Margin="0 -10 0 0">
+            <DockPanel LastChildFill="True">
                 <TextBlock Text="Endpoint:"
                            DockPanel.Dock="Left"
                            Margin="0 0 10 0"
