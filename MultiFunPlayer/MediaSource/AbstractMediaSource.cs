@@ -5,12 +5,12 @@ using PropertyChanged;
 using Stylet;
 using System.ComponentModel;
 using System.Reflection;
+using System.Threading.Channels;
 
 namespace MultiFunPlayer.MediaSource;
 
 internal abstract class AbstractMediaSource : Screen, IMediaSource
 {
-    private readonly AsyncManualResetEvent _statusEvent;
     private CancellationTokenSource _cancellationSource;
     private Task _task;
 
@@ -25,14 +25,6 @@ internal abstract class AbstractMediaSource : Screen, IMediaSource
         EventAggregator = eventAggregator;
         if (this is IHandle handler)
             EventAggregator.Subscribe(handler);
-
-        _statusEvent = new AsyncManualResetEvent();
-
-        PropertyChanged += (s, e) =>
-        {
-            if (string.Equals(e.PropertyName, "Status", StringComparison.OrdinalIgnoreCase))
-                _statusEvent.Reset();
-        };
 
         RegisterActions(shortcutManager);
     }
@@ -102,8 +94,25 @@ internal abstract class AbstractMediaSource : Screen, IMediaSource
 
     public async Task WaitForStatus(IEnumerable<ConnectionStatus> statuses, CancellationToken token)
     {
-        while (!statuses.Contains(Status))
-            await _statusEvent.WaitAsync(token);
+        var channel = Channel.CreateUnbounded<ConnectionStatus>(new UnboundedChannelOptions()
+        {
+            SingleReader = true,
+            SingleWriter = true
+        });
+
+        PropertyChanged += OnPropertyChanged;
+
+        while (true)
+            if (statuses.Contains(Status) || statuses.Contains(await channel.Reader.ReadAsync(token)))
+                break;
+
+        PropertyChanged -= OnPropertyChanged;
+
+        void OnPropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            if (string.Equals(e.PropertyName, "Status", StringComparison.OrdinalIgnoreCase))
+                channel.Writer.TryWrite(Status);
+        }
     }
 
     public virtual void HandleSettings(JObject settings, SettingsAction action)

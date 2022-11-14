@@ -6,6 +6,7 @@ using Stylet;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Reflection;
+using System.Threading.Channels;
 using System.Windows.Media;
 
 namespace MultiFunPlayer.OutputTarget;
@@ -13,7 +14,6 @@ namespace MultiFunPlayer.OutputTarget;
 internal abstract class AbstractOutputTarget : Screen, IOutputTarget
 {
     private readonly IDeviceAxisValueProvider _valueProvider;
-    private readonly AsyncManualResetEvent _statusEvent;
     private double _statsTime;
     private int _statsCount;
     private int _statsJitter = int.MinValue;
@@ -53,16 +53,9 @@ internal abstract class AbstractOutputTarget : Screen, IOutputTarget
         EventAggregator = eventAggregator;
         _valueProvider = valueProvider;
 
-        _statusEvent = new AsyncManualResetEvent();
         Values = DeviceAxis.All.ToDictionary(a => a, _ => double.NaN);
         AxisSettings = new ObservableConcurrentDictionary<DeviceAxis, DeviceAxisSettings>(DeviceAxis.All.ToDictionary(a => a, _ => new DeviceAxisSettings()));
         UpdateInterval = 10;
-
-        PropertyChanged += (s, e) =>
-        {
-            if (string.Equals(e.PropertyName, "Status", StringComparison.OrdinalIgnoreCase))
-                _statusEvent.Reset();
-        };
     }
 
     public abstract Task ConnectAsync();
@@ -87,8 +80,25 @@ internal abstract class AbstractOutputTarget : Screen, IOutputTarget
 
     public async Task WaitForStatus(IEnumerable<ConnectionStatus> statuses, CancellationToken token)
     {
-        while (!statuses.Contains(Status))
-            await _statusEvent.WaitAsync(token);
+        var channel = Channel.CreateUnbounded<ConnectionStatus>(new UnboundedChannelOptions()
+        {
+            SingleReader = true,
+            SingleWriter = true
+        });
+
+        PropertyChanged += OnPropertyChanged;
+
+        while (true)
+            if (statuses.Contains(Status) || statuses.Contains(await channel.Reader.ReadAsync(token)))
+                break;
+
+        PropertyChanged -= OnPropertyChanged;
+
+        void OnPropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            if (string.Equals(e.PropertyName, "Status", StringComparison.OrdinalIgnoreCase))
+                channel.Writer.TryWrite(Status);
+        }
     }
 
     protected virtual double CoerceProviderValue(DeviceAxis axis, double value)
