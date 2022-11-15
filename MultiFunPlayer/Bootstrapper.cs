@@ -66,6 +66,8 @@ internal class Bootstrapper : Bootstrapper<RootViewModel>
         Directory.SetCurrentDirectory(workingDirectory);
 
         ConfigureJson();
+
+        SettingsHelper.Initialize(Container.GetAll<IConfigMigration>());
         var settings = SettingsHelper.ReadOrEmpty();
         var dirty = ConfigureLoging(settings);
 
@@ -78,7 +80,7 @@ internal class Bootstrapper : Bootstrapper<RootViewModel>
                 LogManager.Shutdown();
         };
 
-        dirty |= MigrateSettings(settings);
+        dirty |= SettingsHelper.Migrate(settings);
         dirty |= ConfigureDevice(settings);
 
         if (dirty)
@@ -191,26 +193,6 @@ internal class Bootstrapper : Bootstrapper<RootViewModel>
 
             return settings;
         };
-    }
-
-    private bool MigrateSettings(JObject settings)
-    {
-        var logger = LogManager.GetLogger(nameof(MultiFunPlayer));
-        var dirty = false;
-
-        var settingsVersion = settings.TryGetValue<int>("ConfigVersion", out var version) ? version : -1;
-        var pendingMigrations = Container.GetAll<IConfigMigration>()
-                                         .Where(m => m.TargetVersion > settingsVersion)
-                                         .OrderBy(m => m.TargetVersion);
-
-        foreach (var migration in pendingMigrations)
-        {
-            logger.Info("Migrating settings to version {0}", migration.TargetVersion);
-            migration.Migrate(settings);
-            dirty = true;
-        }
-
-        return dirty;
     }
 
     private bool ConfigureDevice(JObject settings)
