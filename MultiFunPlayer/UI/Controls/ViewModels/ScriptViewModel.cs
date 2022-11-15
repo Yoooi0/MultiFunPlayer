@@ -369,18 +369,24 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                             return false;
                         }
 
-                        if (settings.AutoHomeDuration < 0.0001)
+                        state.AutoHomeTime += deltaTime;
+                        var t = (settings.AutoHomeDelay, settings.AutoHomeDuration) switch
+                        {
+                            (< 0.001, < 0.001) => 1,
+                            (< 0.001, _) => state.AutoHomeTime / settings.AutoHomeDuration,
+                            (_, < 0.001) => state.AutoHomeTime <= settings.AutoHomeDelay ? 0 : 1,
+                            (_, _) => (state.AutoHomeTime - settings.AutoHomeDelay) / settings.AutoHomeDuration
+                        };
+
+                        if (t < 0) return false;
+                        if (t == 0) return true;
+                        if (t >= 1)
                         {
                             context.Value = axis.DefaultValue;
-                            return false;
+                            return true;
                         }
 
-                        state.AutoHomeTime += deltaTime;
-                        var t = (state.AutoHomeTime - settings.AutoHomeDelay) / settings.AutoHomeDuration;
-                        if (t < 0) return false;
-                        if (t > 1) return true;
-
-                        context.Value = MathUtils.Clamp01(MathUtils.Lerp(context.Value, axis.DefaultValue, Math.Pow(2, 10 * (t - 1))));
+                        context.Value = MathUtils.Clamp01(MathUtils.Lerp(context.Value, axis.DefaultValue, t * Math.Pow(2, 8 * (t - 1))));
                         return true;
                     }
 
