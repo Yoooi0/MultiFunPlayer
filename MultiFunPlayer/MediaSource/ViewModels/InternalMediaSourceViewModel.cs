@@ -197,6 +197,7 @@ internal class InternalMediaSourceViewModel : AbstractMediaSource, IHandle<Media
         lock (_playlistLock)
         {
             ScriptPlaylist = playlist;
+            PlaylistIndex = 0;
 
             SetScriptInfo(null);
             SetDuration(double.NaN);
