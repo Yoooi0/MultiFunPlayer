@@ -47,11 +47,15 @@ internal class PlexMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlay
 
         Clients = new ObservableConcurrentCollection<PlexClient>();
         SelectedClient = null;
-
-        _ = RefreshClients();
     }
 
     public void OnSelectedClientChanged() => SelectedClientMachineIdentifier = SelectedClient?.MachineIdentifier;
+
+    protected override void OnInitialActivate()
+    {
+        base.OnInitialActivate();
+        _ = RefreshClients();
+    }
 
     public bool CanChangeClient => !IsConnected && !IsConnectBusy;
     public bool IsConnected => Status == ConnectionStatus.Connected;

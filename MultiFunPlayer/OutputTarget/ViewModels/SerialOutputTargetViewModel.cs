@@ -50,7 +50,11 @@ internal class SerialOutputTargetViewModel : ThreadAbstractOutputTarget
 
         _refreshSemaphore = new SemaphoreSlim(1, 1);
         _refreshCancellationSource = new CancellationTokenSource();
+    }
 
+    protected override void OnInitialActivate()
+    {
+        base.OnInitialActivate();
         _ = RefreshPorts();
     }
 
