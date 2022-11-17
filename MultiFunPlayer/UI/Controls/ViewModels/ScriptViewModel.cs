@@ -711,6 +711,15 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
     #endregion
 
     #region Script
+    private IScriptReader GetScriptReader(DeviceAxis axis)
+    {
+        var settings = AxisSettings[axis];
+        return new FunscriptReader(new FunscriptReaderSettings()
+        {
+            PreferRawActions = settings.PreferRawActions
+        });
+    }
+
     private List<DeviceAxis> SearchForScripts(IEnumerable<DeviceAxis> axes = null)
     {
         axes ??= DeviceAxis.All;
@@ -720,7 +729,7 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
             return updated;
 
         Logger.Debug("Maching files to axes [Axes: {list}]", axes);
-        bool TryMatchFile(string fileName, Func<IScriptResource> generator)
+        bool TryMatchFile(string fileName, Func<DeviceAxis, IScriptResource> generator)
         {
             var mediaWithoutExtension = Path.GetFileNameWithoutExtension(MediaResource.Name);
             var funscriptWithoutExtension = Path.GetFileNameWithoutExtension(fileName);
@@ -731,7 +740,7 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
             {
                 if ((isUnnamedScript && axis.LoadUnnamedScript) || axis.FunscriptNames.Any(n => funscriptWithoutExtension.EndsWith(n, StringComparison.OrdinalIgnoreCase)))
                 {
-                    SetScript(axis, generator());
+                    SetScript(axis, generator(axis));
                     updated.Add(axis);
 
                     Logger.Debug("Matched {0} script to \"{1}\"", axis, fileName);
@@ -749,7 +758,7 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                 Logger.Info("Matching zip file \"{0}\"", path);
                 using var zip = ZipFile.OpenRead(path);
                 foreach (var entry in zip.Entries.Where(e => string.Equals(Path.GetExtension(e.FullName), ".funscript", StringComparison.OrdinalIgnoreCase)))
-                    TryMatchFile(entry.Name, () => ScriptResource.FromZipArchiveEntry(path, entry));
+                    TryMatchFile(entry.Name, axis => ScriptResource.FromZipArchiveEntry(GetScriptReader(axis), path, entry));
 
                 return true;
             }
@@ -765,7 +774,7 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                 TryMatchArchive(zipFile.FullName);
 
             foreach (var funscriptFile in library.EnumerateFiles($"{mediaWithoutExtension}*.funscript"))
-                TryMatchFile(funscriptFile.Name, () => ScriptResource.FromFileInfo(funscriptFile));
+                TryMatchFile(funscriptFile.Name, axis => ScriptResource.FromFileInfo(GetScriptReader(axis), funscriptFile));
         }
 
         if (Directory.Exists(MediaResource.Source))
@@ -775,7 +784,7 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
             TryMatchArchive(Path.Join(sourceDirectory.FullName, $"{mediaWithoutExtension}.zip"));
 
             foreach (var funscriptFile in sourceDirectory.EnumerateFiles($"{mediaWithoutExtension}*.funscript"))
-                TryMatchFile(funscriptFile.Name, () => ScriptResource.FromFileInfo(funscriptFile));
+                TryMatchFile(funscriptFile.Name, axis => ScriptResource.FromFileInfo(GetScriptReader(axis), funscriptFile));
         }
 
         return updated;
@@ -1041,7 +1050,7 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                 return;
 
             ResetSync(true, axis);
-            SetScript(axis, ScriptResource.FromPath(path, userLoaded: true));
+            SetScript(axis, ScriptResource.FromPath(GetScriptReader(axis), path, userLoaded: true));
         }
     }
 
@@ -1078,7 +1087,7 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
             return;
 
         ResetSync(true, axis);
-        SetScript(axis, ScriptResource.FromFileInfo(new FileInfo(dialog.FileName), userLoaded: true));
+        SetScript(axis, ScriptResource.FromFileInfo(GetScriptReader(axis), new FileInfo(dialog.FileName), userLoaded: true));
     }
 
     public void OnAxisClear(DeviceAxis axis) => ResetAxes(axis);
