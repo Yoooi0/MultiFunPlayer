@@ -1212,6 +1212,16 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
     }
 
     [SuppressPropertyChangedWarnings]
+    public void OnPreferRawActionsChanged(object sender, RoutedEventArgs e)
+    {
+        if (sender is not FrameworkElement element || element.DataContext is not KeyValuePair<DeviceAxis, AxisModel> pair)
+            return;
+        
+        var (axis, _) = pair;
+        ReloadAxes(axis);
+    }
+
+    [SuppressPropertyChangedWarnings]
     public void OnScriptScaleSliderValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
     {
         if (sender is not FrameworkElement element || element.DataContext is not KeyValuePair<DeviceAxis, AxisModel> pair)
@@ -1752,6 +1762,7 @@ internal class AxisSettings : PropertyChangedBase
     [JsonProperty] public string SelectedMotionProvider { get; set; } = null;
     [JsonProperty] public bool SpeedLimitEnabled { get; set; } = false;
     [JsonProperty] public double MaximumSecondsPerStroke { get; set; } = 0.1;
+    [JsonProperty] public bool PreferRawActions { get; set; } = true;
 }
 
 internal enum SmartLimitMode
