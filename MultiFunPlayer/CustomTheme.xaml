@@ -382,13 +382,13 @@
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type Thumb}">
                     <Border x:Name="border" 
-                            Background="{DynamicResource PrimaryHueLightBrush}"
+                            Background="{DynamicResource MaterialDesignLightForeground}"
                             VerticalAlignment="Top"
                             Width="{TemplateBinding Width}"
                             SnapsToDevicePixels="True" 
                             BorderThickness="0"
-                            Height="2"
-                            CornerRadius="0"/>
+                            Height="4"
+                            CornerRadius="1"/>
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
@@ -402,9 +402,9 @@
         <Setter Property="Foreground" Value="{DynamicResource MaterialDesignSelection}"/>
         <Setter Property="Width" Value="Auto"/>
         <Setter Property="MinWidth" Value="0"/>
-        <Setter Property="Height" Value="{DynamicResource {x:Static SystemParameters.HorizontalScrollBarHeightKey}}"/>
-        <Setter Property="MinHeight" Value="{DynamicResource {x:Static SystemParameters.HorizontalScrollBarHeightKey}}"/>
-        <Setter Property="BorderThickness" Value="0,1"/>
+        <Setter Property="Height" Value="4"/>
+        <Setter Property="MinHeight" Value="4"/>
+        <Setter Property="BorderThickness" Value="0"/>
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type ScrollBar}">
@@ -443,22 +443,46 @@
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
                         <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto"/>
                             <RowDefinition Height="*"/>
+                            <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
 
                         <ScrollContentPresenter Grid.ColumnSpan="2" Grid.RowSpan="2"/>
                         <ScrollBar Name="PART_HorizontalScrollBar"
                                    Style="{StaticResource NonReloadingTabControlScrollBar}"
+                                   Opacity="0.36"
                                    VerticalAlignment="Top"
                                    Orientation="Horizontal"
                                    Grid.Row="1"
-                                   IsHitTestVisible="False"
-                                   ViewportSize="20"
+                                   IsHitTestVisible="True"
+                                   ViewportSize="{TemplateBinding ScrollableWidth, Converter={StaticResource DivisionMathConverter}, ConverterParameter=3}"
                                    Value="{TemplateBinding HorizontalOffset}"
                                    Maximum="{TemplateBinding ScrollableWidth}"
                                    Visibility="{TemplateBinding ComputedHorizontalScrollBarVisibility}"/>
                     </Grid>
+
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Trigger.EnterActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Duration="0:0:0.15" 
+                                                         Storyboard.TargetName="PART_HorizontalScrollBar"
+                                                         Storyboard.TargetProperty="Opacity" To="0.36" />
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.EnterActions>
+                            <Trigger.ExitActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Duration="0:0:0.15" 
+                                                         Storyboard.TargetName="PART_HorizontalScrollBar"
+                                                         Storyboard.TargetProperty="Opacity" To="0" />
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.ExitActions>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
@@ -484,9 +508,10 @@
                                               DockPanel.Dock="Right"/>
 
                             <ScrollViewer x:Name="PART_ScrollViewer"
-                                          HorizontalScrollBarVisibility="Hidden" 
+                                          HorizontalScrollBarVisibility="Auto"
                                           VerticalScrollBarVisibility="Hidden"
-                                          HorizontalAlignment="Left">
+                                          HorizontalAlignment="Left"
+                                          Style="{StaticResource NonReloadingTabControlScrollViewer}">
                                 <TabPanel x:Name="PART_TabPanel"
                                           IsItemsHost="True"
                                           DockPanel.Dock="Left"
