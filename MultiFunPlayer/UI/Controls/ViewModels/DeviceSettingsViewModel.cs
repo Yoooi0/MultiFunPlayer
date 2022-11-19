@@ -18,7 +18,7 @@ internal class DeviceSettingsViewModel : Screen, IHandle<SettingsMessage>
         eventAggregator.Subscribe(this);
     }
 
-    public bool CanRemoveSelectedDevice => SelectedDevice != null && !SelectedDevice.Default;
+    public bool CanRemoveSelectedDevice => SelectedDevice != null && !SelectedDevice.IsDefault;
     public void OnRemoveSelectedDevice()
     {
         if (!CanRemoveSelectedDevice)
@@ -29,7 +29,7 @@ internal class DeviceSettingsViewModel : Screen, IHandle<SettingsMessage>
         SelectedDevice = Devices[MathUtils.Clamp(index, 0, Devices.Count - 1)];
     }
 
-    public bool CanRenameSelectedDevice => SelectedDevice != null && !SelectedDevice.Default;
+    public bool CanRenameSelectedDevice => SelectedDevice != null && !SelectedDevice.IsDefault;
     public async void OnRenameSelectedDevice()
     {
         if (!CanRenameSelectedDevice) 
@@ -109,7 +109,7 @@ internal class DeviceSettingsViewModel : Screen, IHandle<SettingsMessage>
         {
             Name = "TCode-0.2",
             OutputPrecision = 3,
-            Default = true,
+            IsDefault = true,
             Axes = new()
             {
                 new() { Name = "L0", FriendlyName = "Up/Down", FunscriptNames = new() { "stroke", "L0", "up" }, LoadUnnamedScript = true, Enabled = true, DefaultValue = 0.5, },
@@ -127,7 +127,7 @@ internal class DeviceSettingsViewModel : Screen, IHandle<SettingsMessage>
         {
             Name = "TCode-0.3",
             OutputPrecision = 4,
-            Default = true,
+            IsDefault = true,
             Axes = new()
             {
                 new() { Name = "L0", FriendlyName = "Up/Down", FunscriptNames = new() { "stroke", "L0", "up" }, LoadUnnamedScript = true, Enabled = true, DefaultValue = 0.5, },
@@ -150,14 +150,14 @@ internal class DeviceSettingsViewModel : Screen, IHandle<SettingsMessage>
 internal class DeviceSettingsModel : PropertyChangedBase
 {
     [JsonProperty] public string Name { get; set; } = null;
-    [JsonProperty] public bool Default { get; set; } = false;
+    [JsonProperty] public bool IsDefault { get; set; } = false;
     [JsonProperty] public int OutputPrecision { get; set; } = 3;
     [JsonProperty] public ObservableConcurrentCollection<DeviceAxisSettingsModel> Axes { get; set; } = new();
 
     public DeviceSettingsModel Clone(string name) => new()
     {
         Name = name,
-        Default = false,
+        IsDefault = false,
         OutputPrecision = OutputPrecision,
         Axes = new(Axes.Select(a => a.Clone()))
     };

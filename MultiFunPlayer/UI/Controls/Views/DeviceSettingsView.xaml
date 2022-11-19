@@ -90,7 +90,7 @@
                                     <TextBlock.Resources>
                                         <Style TargetType="{x:Type TextBlock}" BasedOn="{StaticResource MaterialDesignTextBlock}">
                                             <Style.Triggers>
-                                                <DataTrigger Binding="{Binding Default}" Value="True">
+                                                <DataTrigger Binding="{Binding IsDefault}" Value="True">
                                                     <DataTrigger.Setters>
                                                         <Setter Property="FontWeight" Value="Bold"/>
                                                     </DataTrigger.Setters>
@@ -103,7 +103,7 @@
                                 <TextBlock Text=" (default)"
                                            VerticalAlignment="Center" 
                                            FontWeight="Bold"
-                                           Visibility="{Binding Default, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                                           Visibility="{Binding IsDefault, Converter={StaticResource BooleanToVisibilityConverter}}"/>
                             </StackPanel>
                         </DataTemplate>
                     </ComboBox.ItemTemplate>
@@ -113,7 +113,7 @@
             <material:Card DockPanel.Dock="Top"
                            material:ShadowAssist.ShadowDepth="Depth1"
                            Margin="0 0 0 10"
-                           Visibility="{Binding SelectedDevice.Default, Converter={StaticResource BooleanToVisibilityConverter}}">
+                           Visibility="{Binding SelectedDevice.IsDefault, Converter={StaticResource BooleanToVisibilityConverter}}">
                 <DockPanel Margin="5">
                     <material:PackIcon Kind="Alert"
                                        DockPanel.Dock="Left"
@@ -135,7 +135,7 @@
             <material:Card material:ShadowAssist.ShadowDepth="Depth1"
                            DockPanel.Dock="Top"
                            Margin="0 0 0 10"
-                           IsEnabled="{Binding SelectedDevice.Default, Converter={StaticResource NotConverter}}">
+                           IsEnabled="{Binding SelectedDevice.IsDefault, Converter={StaticResource NotConverter}}">
                 <DockPanel DockPanel.Dock="Top"
                                LastChildFill="False"
                                Margin="10">
@@ -159,7 +159,7 @@
 
             <material:Card material:ShadowAssist.ShadowDepth="Depth1"
                            DockPanel.Dock="Top"
-                           IsEnabled="{Binding SelectedDevice.Default, Converter={StaticResource NotConverter}}">
+                           IsEnabled="{Binding SelectedDevice.IsDefault, Converter={StaticResource NotConverter}}">
                 <DockPanel LastChildFill="True">
                     <Button DockPanel.Dock="Bottom"
                             Style="{StaticResource MaterialDesignFloatingActionMiniLightButton}"

@@ -211,7 +211,7 @@ internal class Bootstrapper : Bootstrapper<RootViewModel>
             devices = defaultDevices;
         }
 
-        var loadedDefaultDevices = devices.Children<JObject>().Where(t => t["Default"].ToObject<bool>()).ToList();
+        var loadedDefaultDevices = devices.Children<JObject>().Where(t => t[nameof(DeviceSettingsModel.IsDefault)].ToObject<bool>()).ToList();
         if (!JToken.DeepEquals(new JArray(loadedDefaultDevices), defaultDevices))
         {
             logger.Info("Updating changes in default devices");
@@ -225,19 +225,19 @@ internal class Bootstrapper : Bootstrapper<RootViewModel>
                 devices.Insert(insertIndex++, deviceToken);
         }
 
-        if (!settings.TryGetValue<string>("SelectedDevice", serializer, out var selectedDevice) || string.IsNullOrWhiteSpace(selectedDevice))
+        if (!settings.TryGetValue<string>(nameof(DeviceSettingsViewModel.SelectedDevice), serializer, out var selectedDevice) || string.IsNullOrWhiteSpace(selectedDevice))
         {
-            selectedDevice = devices.Last["Name"].ToString();
-            settings["SelectedDevice"] = selectedDevice;
+            selectedDevice = devices.Last[nameof(DeviceSettingsModel.Name)].ToString();
+            settings[nameof(DeviceSettingsViewModel.SelectedDevice)] = selectedDevice;
             dirty = true;
         }
 
-        var device = devices.FirstOrDefault(d => string.Equals(d["Name"].ToString(), selectedDevice, StringComparison.OrdinalIgnoreCase));
+        var device = devices.FirstOrDefault(d => string.Equals(d[nameof(DeviceSettingsModel.Name)].ToString(), selectedDevice, StringComparison.OrdinalIgnoreCase));
         if (device == null)
         {
             logger.Warn("Unable to find device! [SelectedDevice: \"{0}\"]", selectedDevice);
             device = devices.Last;
-            settings["SelectedDevice"] = device["Name"].ToString();
+            settings[nameof(DeviceSettingsViewModel.SelectedDevice)] = device[nameof(DeviceSettingsModel.Name)].ToString();
             dirty = true;
         }
 
