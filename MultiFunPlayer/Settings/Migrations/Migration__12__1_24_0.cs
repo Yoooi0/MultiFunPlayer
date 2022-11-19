@@ -18,10 +18,12 @@ internal class Migration__12__1_24_0 : AbstractConfigMigration
 
     private void MigrateFloatActionSettings(JObject settings)
     {
-        foreach(var token in settings.SelectTokens("$.Bindings[*].Actions[*].Settings[?(@.$type == 'System.Single, System.Private.CoreLib')]"))
+        Logger.Info("Migrating action settings");
+
+        foreach (var token in settings.SelectTokens("$.Bindings[*].Actions[*].Settings[?(@.$type == 'System.Single, System.Private.CoreLib')]"))
         {
             token["$type"] = "System.Double, System.Private.CoreLib";
-            Logger.Info("Migrated from \"System.Single\" to \"System.Double\"");
+            Logger.Info("Migrated setting type from \"System.Single\" to \"System.Double\"");
         }
     }
 }
