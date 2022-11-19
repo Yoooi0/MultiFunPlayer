@@ -64,7 +64,8 @@
                         Height="24" 
                         Width="24" 
                         Padding="0"
-                        Click="{s:Action OnRenameSelectedDevice}">
+                        Click="{s:Action OnRenameSelectedDevice}"
+                        IsEnabled="{Binding CanRenameSelectedDevice}">
                     <material:PackIcon Kind="Pencil"/>
                 </Button>
                 <Button DockPanel.Dock="Right"   
