@@ -42,10 +42,11 @@
                 </Grid>
             </material:ColorZone>
 
-            <ItemsControl ItemsSource="{Binding Containers}">
+            <ItemsControl ItemsSource="{Binding Containers}"
+                          Margin="0 5 0 5">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
-                        <material:Card Margin="10" MinWidth="400">
+                        <material:Card Margin="10 5 10 5" MinWidth="400">
                             <DockPanel LastChildFill="False">
                                 <material:ColorZone Width="30"
                                                     Height="30">
