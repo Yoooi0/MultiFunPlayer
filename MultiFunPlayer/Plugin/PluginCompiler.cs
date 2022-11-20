@@ -32,6 +32,16 @@ internal class PluginCompilationResult : IDisposable
     private PluginCompilationResult() { }
 
     public static PluginCompilationResult FromFailure(Exception e) => new() { Exception = e };
+    public static PluginCompilationResult FromFailure(AssemblyLoadContext context, Exception e)
+    {
+#pragma warning disable IDE0059 // Unnecessary assignment of a value
+        context?.Unload();
+        context = null;
+#pragma warning restore IDE0059 // Unnecessary assignment of a value
+
+        return new() { Exception = e };
+    }
+
     public static PluginCompilationResult FromSuccess(AssemblyLoadContext context, Func<PluginBase> pluginFactory) 
         => new() { Context = context, PluginFactory = pluginFactory };
     public static PluginCompilationResult FromSuccess(AssemblyLoadContext context, Func<PluginBase> pluginFactory, PluginSettingsBase settings, UIElement settingsView)
@@ -82,6 +92,7 @@ internal static class PluginCompiler
     [MethodImpl(MethodImplOptions.NoInlining)]
     public static PluginCompilationResult Compile(FileInfo pluginFile)
     {
+        var context = default(CollectibleAssemblyLoadContext);
         try
         {
             var references = new List<MetadataReference>
@@ -193,24 +204,24 @@ internal static class PluginCompiler
             peStream.Seek(0, SeekOrigin.Begin);
             pdbStream.Seek(0, SeekOrigin.Begin);
 
-            var context = new CollectibleAssemblyLoadContext();
+            context = new CollectibleAssemblyLoadContext();
             var assembly = context.LoadFromStream(peStream, pdbStream);
             var pluginType = Array.Find(assembly.GetExportedTypes(), t => t.IsAssignableTo(typeof(PluginBase)));
 
             if (pluginType == null)
-                return PluginCompilationResult.FromFailure(new PluginCompileException("Unable to find exported Plugin type"));
+                return PluginCompilationResult.FromFailure(context, new PluginCompileException("Unable to find exported Plugin type"));
 
             var pluginConstructors = pluginType.GetConstructors();
             if (pluginConstructors.Length != 1)
-                return PluginCompilationResult.FromFailure(new PluginCompileException("Plugin can only have one constructor"));
+                return PluginCompilationResult.FromFailure(context, new PluginCompileException("Plugin can only have one constructor"));
 
             var constructorParameters = pluginConstructors[0].GetParameters();
             if (constructorParameters.Length > 1)
-                return PluginCompilationResult.FromFailure(new PluginCompileException("Plugin constructor can only have zero or one parameters"));
+                return PluginCompilationResult.FromFailure(context, new PluginCompileException("Plugin constructor can only have zero or one parameters"));
 
             var settingsType = constructorParameters.FirstOrDefault()?.ParameterType;
             if (settingsType != null && !settingsType.IsAssignableTo(typeof(PluginSettingsBase)))
-                return PluginCompilationResult.FromFailure(new PluginCompileException($"Plugin constructor parameter must extend \"{nameof(PluginSettingsBase)}\""));
+                return PluginCompilationResult.FromFailure(context, new PluginCompileException($"Plugin constructor parameter must extend \"{nameof(PluginSettingsBase)}\""));
 
             if (settingsType == null)
             {
@@ -227,7 +238,7 @@ internal static class PluginCompiler
             {
                 var settings = settingsType != null ? Activator.CreateInstance(settingsType) as PluginSettingsBase : null;
                 if (settingsType != null && settings == null)
-                    return PluginCompilationResult.FromFailure(new PluginCompileException($"Unable to create settings instance"));
+                    return PluginCompilationResult.FromFailure(context, new PluginCompileException($"Unable to create settings instance"));
 
                 var settingsView = default(UIElement);
                 Execute.OnUIThreadSync(() =>
@@ -251,7 +262,7 @@ internal static class PluginCompiler
         catch (Exception e)
         {
             Logger.Error(e, "Plugin compiler failed with exception");
-            return PluginCompilationResult.FromFailure(new PluginCompileException("Plugin compiler failed with exception", e));
+            return PluginCompilationResult.FromFailure(context, new PluginCompileException("Plugin compiler failed with exception", e));
         }
     }
 
