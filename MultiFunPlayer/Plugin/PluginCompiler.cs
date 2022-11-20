@@ -279,18 +279,18 @@ internal static class PluginCompiler
 
         protected override Assembly Load(AssemblyName assemblyName) => null;
     }
+}
 
-    private class PluginCompileException : Exception
-    {
-        public PluginCompileException() { }
+internal class PluginCompileException : Exception
+{
+    public PluginCompileException() { }
 
-        public PluginCompileException(string message)
-            : base(message) { }
+    public PluginCompileException(string message)
+        : base(message) { }
 
-        public PluginCompileException(string message, Exception innerException)
-            : base(message, innerException) { }
+    public PluginCompileException(string message, Exception innerException)
+        : base(message, innerException) { }
 
-        public PluginCompileException(string message, IEnumerable<Diagnostic> diagnostics)
-            : this($"{message}\n{string.Join("\n", diagnostics.Select(d => d.ToString()))}") { }
-    }
+    public PluginCompileException(string message, IEnumerable<Diagnostic> diagnostics)
+        : this($"{message}\n{string.Join("\n", diagnostics.Select(d => d.ToString()))}") { }
 }

@@ -33,7 +33,7 @@ internal class PluginContainer : PropertyChangedBase, IDisposable
     public string Name => Path.GetFileNameWithoutExtension(PluginFile.Name);
     public UIElement SettingsView => _compilationResult?.SettingsView;
 
-    public bool CanStart => State == PluginState.Idle || State == PluginState.RanToCompletion;
+    public bool CanStart => State == PluginState.Idle || State == PluginState.RanToCompletion || (State == PluginState.Faulted && Exception is not PluginCompileException);
     public bool CanStop => State == PluginState.Running;
     public bool CanCompile => State == PluginState.Idle || State == PluginState.Faulted || State == PluginState.RanToCompletion;
     public bool IsBusy => State != PluginState.Idle && State != PluginState.RanToCompletion && State != PluginState.Running;
