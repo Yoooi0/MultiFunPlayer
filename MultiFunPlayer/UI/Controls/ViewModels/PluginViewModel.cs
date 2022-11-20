@@ -6,16 +6,15 @@ using System.IO;
 
 namespace MultiFunPlayer.UI.Controls.ViewModels;
 
-internal class PluginViewModel : Screen, IHandle<SettingsMessage>, IDisposable
+internal class PluginViewModel : Screen, IDisposable
 {
     private readonly IShortcutManager _shortcutManager;
     private FileSystemWatcher _watcher;
 
     public ObservableConcurrentDictionary<FileInfo, PluginContainer> Containers { get; }
 
-    public PluginViewModel(IEventAggregator eventAggregator, IShortcutManager shortcutManager)
+    public PluginViewModel(IShortcutManager shortcutManager)
     {
-        eventAggregator.Subscribe(this);
         _shortcutManager = shortcutManager;
 
         Directory.CreateDirectory("Plugins");
@@ -85,12 +84,6 @@ internal class PluginViewModel : Screen, IHandle<SettingsMessage>, IDisposable
     {
         s.UnregisterAction($"Plugin::{container.Name}::Start");
         s.UnregisterAction($"Plugin::{container.Name}::Stop");
-    }
-
-    public void Handle(SettingsMessage message)
-    {
-        foreach (var (_, container) in Containers)
-            container.HandleSettings(message.Action);
     }
 
     protected virtual void Dispose(bool disposing)

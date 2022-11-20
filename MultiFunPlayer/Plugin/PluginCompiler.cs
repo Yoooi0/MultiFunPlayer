@@ -20,25 +20,30 @@ namespace MultiFunPlayer.Plugin;
 
 internal class PluginCompilationResult : IDisposable
 {
-    public PluginBase Instance { get; private set; }
     public Exception Exception { get; private set; }
     public AssemblyLoadContext Context { get; private set; }
-    public UIElement View { get; private set; }
+    public PluginSettingsBase Settings { get; private set; }
+    public UIElement SettingsView { get; private set; }
 
-    public bool Success => Exception == null && Instance != null;
+    private Func<PluginBase> PluginFactory { get; set; }
+
+    public bool Success => Exception == null;
 
     private PluginCompilationResult() { }
 
     public static PluginCompilationResult FromFailure(Exception e) => new() { Exception = e };
-    public static PluginCompilationResult FromSuccess(PluginBase instance, AssemblyLoadContext context, UIElement view) => new() { Instance = instance, Context = context, View = view };
+    public static PluginCompilationResult FromSuccess(AssemblyLoadContext context, Func<PluginBase> pluginFactory) 
+        => new() { Context = context, PluginFactory = pluginFactory };
+    public static PluginCompilationResult FromSuccess(AssemblyLoadContext context, Func<PluginBase> pluginFactory, PluginSettingsBase settings, UIElement settingsView)
+        => new() { Context = context, PluginFactory = pluginFactory, Settings = settings, SettingsView = settingsView };
+
+    public PluginBase CreatePluginInstance() => PluginFactory?.Invoke();
 
     protected virtual void Dispose(bool disposing)
     {
-        try { Instance?.Dispose(); }
-        catch { }
-
-        Instance = null;
-        View = null;
+        PluginFactory = null;
+        SettingsView = null;
+        Settings = null;
 
         Context?.Unload();
         Context = null;
@@ -192,20 +197,56 @@ internal static class PluginCompiler
             var assembly = context.LoadFromStream(peStream, pdbStream);
             var pluginType = Array.Find(assembly.GetExportedTypes(), t => t.IsAssignableTo(typeof(PluginBase)));
 
-            if (Activator.CreateInstance(pluginType) is not PluginBase instance)
-                return PluginCompilationResult.FromFailure(new PluginCompileException("Failed to instantiate Plugin instance"));
+            if (pluginType == null)
+                return PluginCompilationResult.FromFailure(new PluginCompileException("Unable to find exported Plugin type"));
 
-            Container.BuildUp(instance);
+            var pluginConstructors = pluginType.GetConstructors();
+            if (pluginConstructors.Length != 1)
+                return PluginCompilationResult.FromFailure(new PluginCompileException("Plugin can only have one constructor"));
 
-            var view = default(UIElement);
-            Execute.OnUIThreadSync(() => {
-                view = instance.CreateView();
+            var constructorParameters = pluginConstructors[0].GetParameters();
+            if (constructorParameters.Length > 1)
+                return PluginCompilationResult.FromFailure(new PluginCompileException("Plugin constructor can only have zero or one parameters"));
 
-                if (view != null)
-                    ViewManager.BindViewToModel(view, instance);
-            });
+            var settingsType = constructorParameters.FirstOrDefault()?.ParameterType;
+            if (settingsType != null && !settingsType.IsAssignableTo(typeof(PluginSettingsBase)))
+                return PluginCompilationResult.FromFailure(new PluginCompileException($"Plugin constructor parameter must extend \"{nameof(PluginSettingsBase)}\""));
 
-            return PluginCompilationResult.FromSuccess(instance, context, view);
+            if (settingsType == null)
+            {
+                var pluginFactory = () =>
+                {
+                    var instance = Activator.CreateInstance(pluginType) as PluginBase;
+                    Container.BuildUp(instance);
+                    return instance;
+                };
+
+                return PluginCompilationResult.FromSuccess(context, pluginFactory);
+            }
+            else
+            {
+                var settings = settingsType != null ? Activator.CreateInstance(settingsType) as PluginSettingsBase : null;
+                if (settingsType != null && settings == null)
+                    return PluginCompilationResult.FromFailure(new PluginCompileException($"Unable to create settings instance"));
+
+                var settingsView = default(UIElement);
+                Execute.OnUIThreadSync(() =>
+                {
+                    settingsView = settings.CreateView();
+
+                    if (settingsView != null)
+                        ViewManager.BindViewToModel(settingsView, settings);
+                });
+
+                var pluginFactory = () =>
+                {
+                    var instance = Activator.CreateInstance(pluginType, new[] { settings }) as PluginBase;
+                    Container.BuildUp(instance);
+                    return instance;
+                };
+
+                return PluginCompilationResult.FromSuccess(context, pluginFactory, settings, settingsView);
+            }
         }
         catch (Exception e)
         {

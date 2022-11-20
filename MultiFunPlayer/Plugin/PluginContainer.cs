@@ -25,14 +25,13 @@ internal class PluginContainer : PropertyChangedBase, IDisposable
     private PluginCompilationResult _compilationResult;
     private CancellationTokenSource _cancellationSource;
     private Thread _thread;
-    private PluginBase _plugin;
 
     public FileInfo PluginFile { get; }
     public Exception Exception { get; private set; }
     public PluginState State { get; private set; } = PluginState.Idle;
 
     public string Name => Path.GetFileNameWithoutExtension(PluginFile.Name);
-    public UIElement View => _compilationResult?.View;
+    public UIElement SettingsView => _compilationResult?.SettingsView;
 
     public bool CanStart => State == PluginState.Idle || State == PluginState.RanToCompletion;
     public bool CanStop => State == PluginState.Running;
@@ -49,10 +48,10 @@ internal class PluginContainer : PropertyChangedBase, IDisposable
         if (!CanStart)
             return;
 
-        if (_plugin == null)
+        if (_compilationResult == null || !_compilationResult.Success)
         {
             QueueCompile(() => {
-                if (_plugin != null)
+                if (_compilationResult != null && _compilationResult.Success)
                     Start();
             });
             return;
@@ -65,34 +64,30 @@ internal class PluginContainer : PropertyChangedBase, IDisposable
         _thread.Start();
     }
 
-    public void Compile()
-    {
-        if (!CanCompile)
-            return;
-
-        QueueCompile();
-    }
-
     private void Execute()
     {
         try
         {
             Logger.Info($"Starting \"{Name}\"");
 
-            State = PluginState.Running;
-
             var token = _cancellationSource.Token;
-            if (_plugin is SyncPluginBase syncPlugin)
+            var plugin = _compilationResult.CreatePluginInstance();
+            plugin.InternalInitialize();
+
+            State = PluginState.Running;
+            if (plugin is SyncPluginBase syncPlugin)
             {
                 syncPlugin.Execute(token);
             }
-            else if (_plugin is AsyncPluginBase asyncPlugin)
+            else if (plugin is AsyncPluginBase asyncPlugin)
             {
                 // https://stackoverflow.com/a/9343733 ¯\_(ツ)_/¯
                 var task = asyncPlugin.ExecuteAsync(token);
                 task.GetAwaiter().GetResult();
             }
 
+            State = PluginState.Stopping;
+            plugin.InternalDispose();
             State = PluginState.RanToCompletion;
 
             Logger.Debug($"\"{Name}\" ran to completion");
@@ -119,29 +114,22 @@ internal class PluginContainer : PropertyChangedBase, IDisposable
             if (_thread?.Join(TimeSpan.FromSeconds(10)) == false)
                 Logger.Warn($"{Name} failed to stop in allotted time");
 
-            _cancellationSource?.Dispose();
-
             HandleSettings(SettingsAction.Saving);
+            _cancellationSource?.Dispose();
 
             _thread = null;
             _cancellationSource = null;
-            _plugin = null;
 
             State = PluginState.Idle;
         });
     }
 
-    public void HandleSettings(SettingsAction action)
+    public void Compile()
     {
-        if (_plugin == null)
+        if (!CanCompile)
             return;
 
-        var settingsPath = $"Plugins\\{Path.GetFileNameWithoutExtension(PluginFile.Name)}.config.json";
-        var settings = SettingsHelper.ReadOrEmpty(settingsPath);
-        _plugin.HandleSettings(settings, action);
-
-        if (action == SettingsAction.Saving && settings.HasValues)
-            SettingsHelper.Write(settings, settingsPath);
+        QueueCompile();
     }
 
     private void QueueCompile(Action callback = null)
@@ -159,10 +147,9 @@ internal class PluginContainer : PropertyChangedBase, IDisposable
 
         void OnCompile(PluginCompilationResult result)
         {
-            if (_plugin != null)
+            if (_compilationResult != null)
                 Stop();
 
-            _plugin = null;
             _compilationResult?.Dispose();
             _compilationResult = result;
 
@@ -170,9 +157,6 @@ internal class PluginContainer : PropertyChangedBase, IDisposable
             {
                 State = PluginState.Idle;
                 Exception = null;
-
-                _plugin = _compilationResult.Instance;
-                HandleSettings(SettingsAction.Loading);
             }
             else
             {
@@ -180,8 +164,22 @@ internal class PluginContainer : PropertyChangedBase, IDisposable
                 Exception = _compilationResult.Exception;
             }
 
-            NotifyOfPropertyChange(nameof(View));
+            HandleSettings(SettingsAction.Loading);
+            NotifyOfPropertyChange(nameof(SettingsView));
         }
+    }
+
+    public void HandleSettings(SettingsAction action)
+    {
+        if (_compilationResult == null || _compilationResult.Settings == null)
+            return;
+
+        var settingsPath = $"Plugins\\{Path.GetFileNameWithoutExtension(PluginFile.Name)}.config.json";
+        var settings = SettingsHelper.ReadOrEmpty(settingsPath);
+        _compilationResult.Settings.HandleSettings(settings, action);
+
+        if (action == SettingsAction.Saving && settings.HasValues)
+            SettingsHelper.Write(settings, settingsPath);
     }
 
     protected virtual void Dispose(bool disposing) => Stop();

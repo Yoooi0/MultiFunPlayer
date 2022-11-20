@@ -145,7 +145,7 @@
                                         Height="30" 
                                         Width="30" 
                                         Padding="0"
-                                        Visibility="{Binding Value.View, Converter={StaticResource notNullToVisibileConverter}}"
+                                        Visibility="{Binding Value.SettingsView, Converter={StaticResource notNullToVisibileConverter}}"
                                         Command="{x:Static material:DialogHost.OpenDialogCommand}">
                                     <material:PackIcon Kind="Cog"/>
 
@@ -168,7 +168,7 @@
                                                                    Width="20"/>
                                             </Button>
 
-                                            <ContentPresenter Content="{Binding Value.View}"/>
+                                            <ContentPresenter Content="{Binding Value.SettingsView}"/>
                                         </Grid>
                                     </Button.CommandParameter>
                                 </Button>

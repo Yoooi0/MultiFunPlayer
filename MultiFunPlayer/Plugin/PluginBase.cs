@@ -1,9 +1,10 @@
-﻿using MultiFunPlayer.Common;
+using MultiFunPlayer.Common;
 using MultiFunPlayer.Input;
 using Newtonsoft.Json.Linq;
 using NLog;
 using Stylet;
 using StyletIoC;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Text;
 using System.Windows;
@@ -11,7 +12,7 @@ using System.Windows.Markup;
 
 namespace MultiFunPlayer.Plugin;
 
-public abstract class PluginBase : PropertyChangedBase, IDisposable
+public abstract class PluginBase : PropertyChangedBase
 {
     private readonly MessageProxy _messageProxy;
 
@@ -28,20 +29,10 @@ public abstract class PluginBase : PropertyChangedBase, IDisposable
         Logger = LogManager.GetLogger(GetType().FullName);
     }
 
-    public virtual UIElement CreateView() => null;
-    public virtual void HandleSettings(JObject settings, SettingsAction action) { }
-    protected virtual void Dispose(bool disposing) { }
-
-    protected UIElement CreateViewFromStream(Stream stream) => XamlReader.Load(stream) as UIElement;
-    protected UIElement CreateViewFromFile(string path) => CreateViewFromStream(File.OpenRead(path));
-    protected UIElement CreateViewFromString(string xamlContent)
-    {
-        using var stream = new MemoryStream(Encoding.UTF8.GetBytes(xamlContent));
-        return CreateViewFromStream(stream);
-    }
-
+    #region DeviceAxis
     protected double GetAxisValue(DeviceAxis axis)
         => DeviceAxisValueProvider.GetValue(axis);
+    #endregion
 
     #region Shortcut
     protected void InvokeAction(string name, params object[] arguments)
@@ -106,10 +97,6 @@ public abstract class PluginBase : PropertyChangedBase, IDisposable
     protected virtual void HandleMessage(ScriptLoadMessage message) { }
     protected virtual void HandleMessage(SyncRequestMessage message) { }
 
-#pragma warning disable IDE0051, RCS1213 // Remove unused private members
-    private void OnEventAggregatorChanged() => EventAggregator.Subscribe(_messageProxy);
-#pragma warning restore IDE0051, RCS1213 // Remove unused private members
-
     private void HandleMessageInternal(object e)
     {
         if (e is MediaSpeedChangedMessage mediaSpeedChangedMessage) HandleMessage(mediaSpeedChangedMessage);
@@ -132,8 +119,17 @@ public abstract class PluginBase : PropertyChangedBase, IDisposable
     }
     #endregion
 
-    public void Dispose()
+    internal void InternalInitialize()
     {
+        EventAggregator.Subscribe(_messageProxy);
+    }
+
+    protected virtual void Dispose(bool disposing) { }
+
+    [SuppressMessage("Usage", "CA1816:Dispose methods should call SuppressFinalize", Justification = "Internal dispose")]
+    internal void InternalDispose()
+    {
+        EventAggregator.Unsubscribe(_messageProxy);
         Dispose(disposing: true);
         GC.SuppressFinalize(this);
     }
