@@ -1,4 +1,4 @@
-using MultiFunPlayer.Common;
+﻿using MultiFunPlayer.Common;
 using MultiFunPlayer.Input;
 using Newtonsoft.Json.Linq;
 using NLog;
@@ -137,10 +137,28 @@ public abstract class PluginBase : PropertyChangedBase
 
 public abstract class SyncPluginBase : PluginBase
 {
-    public abstract void Execute(CancellationToken cancellationToken);
+    public virtual void Execute(CancellationToken cancellationToken)
+    {
+        try { cancellationToken.WaitHandle.WaitOne(); }
+        catch { }
+    }
 }
 
 public abstract class AsyncPluginBase : PluginBase
 {
-    public abstract Task ExecuteAsync(CancellationToken cancellationToken);
+    public virtual async Task ExecuteAsync(CancellationToken cancellationToken)
+    {
+        if (cancellationToken.IsCancellationRequested)
+        {
+            await Task.FromCanceled(cancellationToken);
+            return;
+        }
+
+        var taskCompletionSource = new TaskCompletionSource();
+        using var registration = cancellationToken.Register(() => taskCompletionSource.TrySetCanceled(cancellationToken), useSynchronizationContext: false);
+
+        try { await taskCompletionSource.Task; }
+        catch (OperationCanceledException) { }
+        finally { await registration.DisposeAsync(); }
+    }
 }
