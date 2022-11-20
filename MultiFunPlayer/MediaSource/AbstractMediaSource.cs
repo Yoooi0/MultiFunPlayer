@@ -64,8 +64,12 @@ internal abstract class AbstractMediaSource : Screen, IMediaSource
         Status = ConnectionStatus.Disconnected;
     }
 
+    private int _isDisconnectingFlag;
     protected virtual async Task OnDisconnectingAsync()
     {
+        if (Interlocked.CompareExchange(ref _isDisconnectingFlag, 1, 0) != 0)
+            return;
+
         _cancellationSource?.Cancel();
 
         if (_task != null)
@@ -76,6 +80,8 @@ internal abstract class AbstractMediaSource : Screen, IMediaSource
 
         _cancellationSource = null;
         _task = null;
+
+        Interlocked.Decrement(ref _isDisconnectingFlag);
     }
 
     public async virtual ValueTask<bool> CanConnectAsync(CancellationToken token) => await ValueTask.FromResult(false);
@@ -136,9 +142,9 @@ internal abstract class AbstractMediaSource : Screen, IMediaSource
         #endregion
     }
 
-    protected async virtual void Dispose(bool disposing)
+    protected virtual void Dispose(bool disposing)
     {
-        await DisconnectAsync();
+        OnDisconnectingAsync().GetAwaiter().GetResult();
     }
 
     public void Dispose()

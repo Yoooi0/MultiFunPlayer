@@ -1,4 +1,4 @@
-﻿using MultiFunPlayer.Common;
+using MultiFunPlayer.Common;
 using MultiFunPlayer.Input;
 using Newtonsoft.Json.Linq;
 using PropertyChanged;
@@ -59,7 +59,15 @@ internal abstract class AbstractOutputTarget : Screen, IOutputTarget
     }
 
     public abstract Task ConnectAsync();
-    public abstract Task DisconnectAsync();
+    public async Task DisconnectAsync()
+    {
+        if (Status == ConnectionStatus.Disconnected || Status == ConnectionStatus.Disconnecting)
+            return;
+
+        Status = ConnectionStatus.Disconnecting;
+        await OnDisconnectingAsync();
+        Status = ConnectionStatus.Disconnected;
+    }
 
     protected abstract Task<bool> OnConnectingAsync();
     protected abstract Task OnDisconnectingAsync();
@@ -305,7 +313,10 @@ internal abstract class AbstractOutputTarget : Screen, IOutputTarget
         s.UnregisterAction($"{Identifier}::Axis::Range::Size::Drive");
     }
 
-    protected virtual void Dispose(bool disposing) { }
+    protected virtual void Dispose(bool disposing)
+    {
+        OnDisconnectingAsync().GetAwaiter().GetResult();
+    }
 
     public void Dispose()
     {
@@ -352,18 +363,12 @@ internal abstract class ThreadAbstractOutputTarget : AbstractOutputTarget
         return await Task.FromResult(true);
     }
 
-    public override async Task DisconnectAsync()
-    {
-        if (Status == ConnectionStatus.Disconnected || Status == ConnectionStatus.Disconnecting)
-            return;
-
-        Status = ConnectionStatus.Disconnecting;
-        await OnDisconnectingAsync();
-        Status = ConnectionStatus.Disconnected;
-    }
-
+    private int _isDisconnectingFlag;
     protected override async Task OnDisconnectingAsync()
     {
+        if (Interlocked.CompareExchange(ref _isDisconnectingFlag, 1, 0) != 0)
+            return;
+
         _cancellationSource?.Cancel();
         _thread?.Join();
 
@@ -372,6 +377,8 @@ internal abstract class ThreadAbstractOutputTarget : AbstractOutputTarget
 
         _cancellationSource = null;
         _thread = null;
+
+        Interlocked.Decrement(ref _isDisconnectingFlag);
     }
 
     public override void HandleSettings(JObject settings, SettingsAction action)
@@ -427,12 +434,6 @@ internal abstract class ThreadAbstractOutputTarget : AbstractOutputTarget
                 SleepPrecise(stopwatch, UpdateInterval);
         }
     }
-
-    protected override async void Dispose(bool disposing)
-    {
-        base.Dispose(disposing);
-        await DisconnectAsync();
-    }
 }
 
 internal abstract class AsyncAbstractOutputTarget : AbstractOutputTarget
@@ -468,18 +469,12 @@ internal abstract class AsyncAbstractOutputTarget : AbstractOutputTarget
         return await Task.FromResult(true);
     }
 
-    public override async Task DisconnectAsync()
-    {
-        if (Status == ConnectionStatus.Disconnected || Status == ConnectionStatus.Disconnecting)
-            return;
-
-        Status = ConnectionStatus.Disconnecting;
-        await OnDisconnectingAsync();
-        Status = ConnectionStatus.Disconnected;
-    }
-
+    private int _isDisconnectingFlag;
     protected override async Task OnDisconnectingAsync()
     {
+        if (Interlocked.CompareExchange(ref _isDisconnectingFlag, 1, 0) != 0)
+            return;
+
         _cancellationSource?.Cancel();
 
         if (_task != null)
@@ -490,6 +485,8 @@ internal abstract class AsyncAbstractOutputTarget : AbstractOutputTarget
 
         _cancellationSource = null;
         _task = null;
+
+        Interlocked.Decrement(ref _isDisconnectingFlag);
     }
 
     protected async Task FixedUpdateAsync(Func<bool> condition, Func<double, Task> body, CancellationToken token)
@@ -517,11 +514,5 @@ internal abstract class AsyncAbstractOutputTarget : AbstractOutputTarget
         }
 
         timer.Dispose();
-    }
-
-    protected override async void Dispose(bool disposing)
-    {
-        base.Dispose(disposing);
-        await DisconnectAsync();
     }
 }
