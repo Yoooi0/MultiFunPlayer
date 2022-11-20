@@ -30,6 +30,8 @@ internal class RootViewModel : Conductor<IScreen>.Collection.AllActive, IHandle<
         Items.Add(Script);
         Items.Add(MediaSource);
         Items.Add(OutputTarget);
+        Items.Add(Settings);
+        Items.Add(Plugin);
 
         ActivateAndSetParent(Items);
         base.OnActivate();
