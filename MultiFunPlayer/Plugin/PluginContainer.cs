@@ -138,11 +138,13 @@ internal class PluginContainer : PropertyChangedBase, IDisposable
         void OnCompile(PluginCompilationResult result)
         {
             if (_compilationResult != null)
-                Stop();
+            {
+                State = PluginState.Stopping;
+                Dispose();
+                State = PluginState.Idle;
+            }
 
-            _compilationResult?.Dispose();
             _compilationResult = result;
-
             if (_compilationResult.Success)
             {
                 State = PluginState.Idle;
