@@ -1,4 +1,4 @@
-﻿using MultiFunPlayer.Common;
+using MultiFunPlayer.Common;
 using MultiFunPlayer.Settings;
 using NLog;
 using Stylet;
@@ -109,17 +109,7 @@ internal class PluginContainer : PropertyChangedBase, IDisposable
         State = PluginState.Stopping;
         ThreadPool.QueueUserWorkItem(_ =>
         {
-            _cancellationSource?.Cancel();
-
-            if (_thread?.Join(TimeSpan.FromSeconds(10)) == false)
-                Logger.Warn($"{Name} failed to stop in allotted time");
-
-            HandleSettings(SettingsAction.Saving);
-            _cancellationSource?.Dispose();
-
-            _thread = null;
-            _cancellationSource = null;
-
+            Dispose();
             State = PluginState.Idle;
         });
     }
@@ -182,7 +172,22 @@ internal class PluginContainer : PropertyChangedBase, IDisposable
             SettingsHelper.Write(settings, settingsPath);
     }
 
-    protected virtual void Dispose(bool disposing) => Stop();
+    protected virtual void Dispose(bool disposing)
+    {
+        _cancellationSource?.Cancel();
+
+        if (_thread?.Join(TimeSpan.FromSeconds(10)) == false)
+            Logger.Warn($"{Name} failed to stop in allotted time"); //TODO: this leaves stuck plugins loaded
+
+        HandleSettings(SettingsAction.Saving);
+        _cancellationSource?.Dispose();
+
+        _compilationResult?.Dispose();
+
+        _thread = null;
+        _cancellationSource = null;
+        _compilationResult = null;
+    }
 
     public void Dispose()
     {
