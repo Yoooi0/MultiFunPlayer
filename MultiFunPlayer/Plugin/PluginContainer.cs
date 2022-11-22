@@ -181,8 +181,7 @@ internal class PluginContainer : PropertyChangedBase, IDisposable
     {
         _cancellationSource?.Cancel();
 
-        if (_thread?.Join(TimeSpan.FromSeconds(10)) == false)
-            Logger.Warn($"{Name} failed to stop in allotted time"); //TODO: this leaves stuck plugins loaded
+        _thread?.Join();
 
         HandleSettings(SettingsAction.Saving);
         _cancellationSource?.Dispose();
