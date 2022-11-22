@@ -116,7 +116,7 @@ internal class PluginContainer : PropertyChangedBase, IDisposable
         if (!CanStop)
             return;
 
-        ThreadPool.QueueUserWorkItem(_ =>
+        _ = Task.Run(() =>
         {
             State = PluginState.Stopping;
             Dispose();

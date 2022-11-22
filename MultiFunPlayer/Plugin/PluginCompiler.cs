@@ -77,20 +77,27 @@ internal static class PluginCompiler
     [MethodImpl(MethodImplOptions.NoInlining)]
     public static void QueueCompile(FileInfo pluginFile, Action<PluginCompilationResult> callback)
     {
-        ThreadPool.QueueUserWorkItem(_ =>
+        _ = Task.Run(() =>
         {
             var result = Compile(pluginFile);
-
-            //TODO: for some reason compilation leaks a lot of unmanaged memory
-            GC.Collect();
-            GC.WaitForPendingFinalizers();
-
             callback(result);
         });
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
     public static PluginCompilationResult Compile(FileInfo pluginFile)
+    {
+        var result = InternalCompile(pluginFile);
+
+        //TODO: for some reason compilation leaks a lot of unmanaged memory
+        GC.Collect();
+        GC.WaitForPendingFinalizers();
+
+        return result;
+    }
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private static PluginCompilationResult InternalCompile(FileInfo pluginFile)
     {
         var context = default(CollectibleAssemblyLoadContext);
         try
