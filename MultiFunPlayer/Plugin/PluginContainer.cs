@@ -72,20 +72,27 @@ internal class PluginContainer : PropertyChangedBase, IDisposable
             Logger.Info($"Starting \"{Name}\"");
 
             var token = _cancellationSource.Token;
+            token.Register(() => plugin?.InternalDispose());
+
             plugin = _compilationResult.CreatePluginInstance();
             plugin.InternalInitialize();
 
             State = PluginState.Running;
-            if (plugin is SyncPluginBase syncPlugin)
+
+            try
             {
-                syncPlugin.Execute(token);
+                if (plugin is SyncPluginBase syncPlugin)
+                {
+                    syncPlugin.Execute(token);
+                }
+                else if (plugin is AsyncPluginBase asyncPlugin)
+                {
+                    // https://stackoverflow.com/a/9343733 ¯\_(ツ)_/¯
+                    var task = asyncPlugin.ExecuteAsync(token);
+                    task.GetAwaiter().GetResult();
+                }
             }
-            else if (plugin is AsyncPluginBase asyncPlugin)
-            {
-                // https://stackoverflow.com/a/9343733 ¯\_(ツ)_/¯
-                var task = asyncPlugin.ExecuteAsync(token);
-                task.GetAwaiter().GetResult();
-            }
+            catch (OperationCanceledException) { }
 
             State = PluginState.Stopping;
             plugin.InternalDispose();
@@ -109,11 +116,10 @@ internal class PluginContainer : PropertyChangedBase, IDisposable
         if (!CanStop)
             return;
 
-        State = PluginState.Stopping;
         ThreadPool.QueueUserWorkItem(_ =>
         {
+            State = PluginState.Stopping;
             Dispose();
-            State = PluginState.Idle;
         });
     }
 
