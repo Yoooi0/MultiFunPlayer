@@ -66,12 +66,13 @@ internal class PluginContainer : PropertyChangedBase, IDisposable
 
     private void Execute()
     {
+        var plugin = default(PluginBase);
         try
         {
             Logger.Info($"Starting \"{Name}\"");
 
             var token = _cancellationSource.Token;
-            var plugin = _compilationResult.CreatePluginInstance();
+            plugin = _compilationResult.CreatePluginInstance();
             plugin.InternalInitialize();
 
             State = PluginState.Running;
@@ -96,6 +97,8 @@ internal class PluginContainer : PropertyChangedBase, IDisposable
         {
             Logger.Error(e, $"{Name} failed with exception");
 
+            State = PluginState.Stopping;
+            plugin?.InternalDispose();
             State = PluginState.Faulted;
             Exception = e;
         }
