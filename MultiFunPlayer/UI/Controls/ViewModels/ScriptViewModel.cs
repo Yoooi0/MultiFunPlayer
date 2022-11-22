@@ -1740,7 +1740,7 @@ internal class AxisSettings : PropertyChangedBase
 
     [JsonProperty] public DeviceAxis SmartLimitInputAxis { get; set; } = null;
     [JsonProperty(ObjectCreationHandling = ObjectCreationHandling.Replace)]
-    public ObservableConcurrentCollection<Point> SmartLimitPoints { get; set; } = new() { new Point(20, 80), new Point(80, 20) };
+    public ObservableConcurrentCollection<Point> SmartLimitPoints { get; set; } = new() { new Point(25, 100), new Point(90, 0) };
     [JsonProperty] public SmartLimitMode SmartLimitMode { get; set; } = SmartLimitMode.Value;
     [JsonProperty] public double SmartLimitTargetValue { get; set; } = 0.5;
 
