@@ -63,6 +63,10 @@
             <SolidColorBrush x:Key="MahApps.Metro.Brushes.ToggleSwitchButton.OnSwitchBrush.Win10" Color="{DynamicResource Primary500}" />
             <SolidColorBrush x:Key="MahApps.Metro.Brushes.ToggleSwitchButton.OnSwitchMouseOverBrush.Win10" Color="{DynamicResource Primary400}" />
             <SolidColorBrush x:Key="MahApps.Metro.Brushes.ToggleSwitchButton.ThumbIndicatorCheckedBrush.Win10" Color="{DynamicResource Primary500Foreground}" />
+
+            <Style x:Key="{x:Static SystemParameters.FocusVisualStyleKey}" TargetType="Control">
+                <Setter Property="Control.Template" Value="{x:Null}"/>
+            </Style>
         </ResourceDictionary>
     </Application.Resources>
 </Application>

@@ -9,6 +9,7 @@
     <material:NotConverter x:Key="NotConverter"/>
 
     <Style TargetType="{x:Type ButtonBase}" x:Key="MaterialDesignProgressToolBarButton">
+        <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
         <Setter Property="Padding" Value="0"/>
         <Setter Property="Foreground" Value="{DynamicResource MaterialDesignBody}"/>
         <Setter Property="Background" Value="Transparent"/>
@@ -83,8 +84,9 @@
             </Setter.Value>
         </Setter>
     </Style>
-    
+
     <Style x:Key="MaterialDesignToolBarPopupBox" TargetType="material:PopupBox" BasedOn="{StaticResource MaterialDesignPopupBox}">
+        <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
         <Setter Property="ToggleContent" Value="{StaticResource MaterialDesignPopupBoxToggleContent}" />
         <Setter Property="material:RippleAssist.Feedback" Value="{DynamicResource MaterialDesignFlatButtonRipple}" />
         <Setter Property="HorizontalContentAlignment" Value="Center" />
@@ -139,6 +141,7 @@
                         </AdornerDecorator>
                         <ToggleButton x:Name="PART_Toggle" 
                                       Style="{StaticResource ToggleButtonStyle}" 
+                                      FocusVisualStyle="{x:Null}"
                                       IsChecked="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=IsPopupOpen, Mode=TwoWay}"
                                       Cursor="Hand" 
                                       TabIndex="{TemplateBinding TabIndex}" 
@@ -187,10 +190,12 @@
     </Style>
 
     <Style x:Key="MaterialDesignToolBarButton" BasedOn="{StaticResource {x:Static ToolBar.ButtonStyleKey}}" TargetType="{x:Type Button}">
+        <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
         <Setter Property="Cursor" Value="Hand"/>
     </Style>
 
     <Style x:Key="MaterialDesignToolBarToggleButton" TargetType="{x:Type ToggleButton}">
+        <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
         <Setter Property="Padding" Value="0"/>
         <Setter Property="Foreground" Value="{DynamicResource MaterialDesignBody}"/>
         <Setter Property="Background" Value="Transparent"/>
@@ -258,6 +263,7 @@
     </Style>
 
     <Style x:Key="MaterialDesignToolBarRotatingToggleButton" TargetType="{x:Type ToggleButton}">
+        <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
         <Setter Property="Padding" Value="0"/>
         <Setter Property="Foreground" Value="{DynamicResource MaterialDesignBody}"/>
         <Setter Property="Background" Value="Transparent"/>
@@ -528,8 +534,9 @@
             </Setter.Value>
         </Setter>
     </Style>
-    
+
     <Style TargetType="{x:Type TabItem}">
+        <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
         <Setter Property="Background" Value="{DynamicResource PrimaryHueMidBrush}"/>
         <Setter Property="BorderBrush" Value="{DynamicResource PrimaryHueMidBrush}"/>
         <Setter Property="Padding" Value="0"/>
@@ -608,6 +615,7 @@
     </Style>
 
     <Style TargetType="{x:Type MenuItem}" x:Key="MaterialDesignToolBarMenuItem" BasedOn="{x:Null}">
+        <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
         <Setter Property="OverridesDefaultStyle" Value="True"/>
         <Setter Property="Padding" Value="0"/>
         <Setter Property="Width" Value="36"/>

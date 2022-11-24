@@ -28,6 +28,7 @@ using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
+using System.Windows.Input;
 using System.Windows.Interop;
 
 namespace MultiFunPlayer;
@@ -39,6 +40,11 @@ internal class Bootstrapper : Bootstrapper<RootViewModel>
         ToolTipService.ShowDurationProperty.OverrideMetadata(typeof(FrameworkElement), new FrameworkPropertyMetadata(int.MaxValue));
         ToolTipService.InitialShowDelayProperty.OverrideMetadata(typeof(FrameworkElement), new FrameworkPropertyMetadata(0));
         ToolTipService.PlacementProperty.OverrideMetadata(typeof(FrameworkElement), new FrameworkPropertyMetadata(PlacementMode.Top));
+
+        UIElement.FocusableProperty.OverrideMetadata(typeof(FrameworkElement), new FrameworkPropertyMetadata(false));
+        Control.IsTabStopProperty.OverrideMetadata(typeof(FrameworkElement), new FrameworkPropertyMetadata(false));
+        KeyboardNavigation.ControlTabNavigationProperty.OverrideMetadata(typeof(FrameworkElement), new FrameworkPropertyMetadata(KeyboardNavigationMode.None));
+        KeyboardNavigation.DirectionalNavigationProperty.OverrideMetadata(typeof(FrameworkElement), new FrameworkPropertyMetadata(KeyboardNavigationMode.None));
     }
 
     protected override void ConfigureIoC(IStyletIoCBuilder builder)
