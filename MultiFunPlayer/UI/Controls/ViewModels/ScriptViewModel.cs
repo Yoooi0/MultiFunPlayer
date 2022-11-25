@@ -356,11 +356,11 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                 {
                     bool UpdateAutoHomeInternal(ref AxisStateUpdateContext context)
                     {
-                        if (!double.IsFinite(context.Value))
+                        if (!double.IsFinite(context.Value) || !settings.AutoHomeEnabled)
+                        {
+                            state.AutoHomeTime = 0;
                             return false;
-
-                        if (!settings.AutoHomeEnabled)
-                            return false;
+                        }
 
                         var isDirty = context.IsScriptDirty || context.IsMotionProviderDirty || context.IsOverrideDirty;
                         if (isDirty || (!settings.AutoHomeInsideScript && state.InsideScript && IsPlaying))
