@@ -312,15 +312,11 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
 
                 var willAutoHome = CheckAutoHomeState(ref context);
                 if (!willAutoHome)
-                {
                     ApplyValues(ref context);
-                    UpdateSync(ref context);
-                }
                 else
-                {
                     UpdateAutoHome(ref context);
-                }
 
+                UpdateSync(ref context);
                 UpdateSmartLimit(ref context);
                 SpeedLimit(ref context);
 
