@@ -1440,6 +1440,13 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
             s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All), axis => { if (axis != null) OnAxisReload(axis); });
         #endregion
 
+        #region Axis::InterpolationType
+        s.RegisterAction<DeviceAxis, InterpolationType>("Axis::InterpolationType::Set",
+            s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All),
+            s => s.WithLabel("Interpolation").WithItemsSource(EnumUtils.GetValues<InterpolationType>()),
+            (axis, type) => UpdateSettings(axis, s => s.InterpolationType = type));
+        #endregion
+
         #region Axis::Inverted
         s.RegisterAction<DeviceAxis, bool>("Axis::InvertScript::Set",
             s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All),
@@ -1472,6 +1479,25 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                 ResetSync(true, source);
                 AxisSettings[source].SmartLimitInputAxis = input;
             });
+        #endregion
+
+        #region Axis::SmartLimitMode
+        s.RegisterAction<DeviceAxis, SmartLimitMode>("Axis::SmartLimitMode::Set",
+            s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All),
+            s => s.WithLabel("Smart limit mode").WithItemsSource(EnumUtils.GetValues<SmartLimitMode>()),
+            (axis, mode) => UpdateSettings(axis, s => s.SmartLimitMode = mode));
+        #endregion
+
+        #region Axis::SmartLimitTargetValue
+        s.RegisterAction<DeviceAxis, double>("Axis::SmartLimitTargetValue::Offset",
+            s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All),
+            s => s.WithLabel("Value offset").WithStringFormat("{}{0:P0}"),
+            (axis, offset) => UpdateSettings(axis, s => s.SmartLimitTargetValue = MathUtils.Clamp01(s.SmartLimitTargetValue + offset)));
+
+        s.RegisterAction<DeviceAxis, double>("Axis::SmartLimitTargetValue::Set",
+            s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All),
+            s => s.WithLabel("Value").WithStringFormat("{}{0:P0}"),
+            (axis, value) => UpdateSettings(axis, s => s.SmartLimitTargetValue = MathUtils.Clamp01(value)));
         #endregion
 
         #region Axis::LinkAxis
@@ -1532,6 +1558,16 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
             (axis, value) => UpdateSettings(axis, s => s.AutoHomeDelay = Math.Max(0, value)));
         #endregion
 
+        #region Axis::AutoHomeInsideScript
+        s.RegisterAction<DeviceAxis, bool>("Axis::AutoHomeInsideScript::Set",
+            s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All),
+            s => s.WithLabel("Auto home inside script"),
+            (axis, enabled) => UpdateSettings(axis, s => s.AutoHomeInsideScript = enabled));
+
+        s.RegisterAction<DeviceAxis>("Axis::AutoHomeInsideScript::Toggle",
+            s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All), axis => UpdateSettings(axis, s => s.AutoHomeInsideScript = !s.AutoHomeInsideScript));
+        #endregion
+
         #region Axis::AutoHomeDuration
         s.RegisterAction<DeviceAxis, double>("Axis::AutoHomeDuration::Offset",
             s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All),
@@ -1544,15 +1580,27 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
             (axis, value) => UpdateSettings(axis, s => s.AutoHomeDuration = Math.Max(0, value)));
         #endregion
 
+        #region Axis::AutoHomeTargetValue
+        s.RegisterAction<DeviceAxis, double>("Axis::AutoHomeTargetValue::Offset",
+            s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All),
+            s => s.WithLabel("Value offset").WithStringFormat("{}{0:P0}"),
+            (axis, offset) => UpdateSettings(axis, s => s.AutoHomeTargetValue = MathUtils.Clamp01(s.AutoHomeTargetValue + offset)));
+
+        s.RegisterAction<DeviceAxis, double>("Axis::AutoHomeTargetValue::Set",
+            s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All),
+            s => s.WithLabel("Value").WithStringFormat("{}{0:P0}"),
+            (axis, value) => UpdateSettings(axis, s => s.AutoHomeTargetValue = MathUtils.Clamp01(value)));
+        #endregion
+
         #region Axis::ScriptOffset
         s.RegisterAction<DeviceAxis, double>("Axis::ScriptOffset::Offset",
             s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All),
-            s => s.WithLabel("Value offset").WithStringFormat("{}{0}s"),
+            s => s.WithLabel("Value offset").WithStringFormat("{}{0:0.00}s"),
             (axis, offset) => UpdateSettings(axis, s => s.Offset += offset));
 
         s.RegisterAction<DeviceAxis, double>("Axis::ScriptOffset::Set",
             s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All),
-            s => s.WithLabel("Value").WithStringFormat("{}{0}s"),
+            s => s.WithLabel("Value").WithStringFormat("{}{0:0.00}s"),
             (axis, value) => UpdateSettings(axis, s => s.Offset = value));
         #endregion
 
@@ -1594,6 +1642,42 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
             (gesture, axis) => UpdateSettings(axis, s => s.MotionProviderBlend = MathUtils.Clamp(s.MotionProviderBlend + gesture.Delta * 100, 0, 100)));
         #endregion
 
+        #region Axis::MotionProviderFillGaps
+        s.RegisterAction<DeviceAxis, bool>("Axis::MotionProviderFillGaps::Set",
+            s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All),
+            s => s.WithLabel("Fill gaps"),
+            (axis, enabled) => UpdateSettings(axis, s => s.MotionProviderFillGaps = enabled));
+
+        s.RegisterAction<DeviceAxis>("Axis::MotionProviderFillGaps::Toggle",
+            s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All), axis => UpdateSettings(axis, s => s.MotionProviderFillGaps = !s.MotionProviderFillGaps));
+        #endregion
+
+        #region Axis::MotionProviderMinimumGapDuration
+        s.RegisterAction<DeviceAxis, double>("Axis::MotionProviderMinimumGapDuration::Offset",
+            s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All),
+            s => s.WithLabel("Value offset").WithStringFormat("{}{0:0.00}s"),
+            (axis, offset) => UpdateSettings(axis, s => s.MotionProviderMinimumGapDuration = Math.Max(0, s.MotionProviderMinimumGapDuration + offset)));
+
+        s.RegisterAction<DeviceAxis, double>("Axis::MotionProviderMinimumGapDuration::Set",
+            s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All),
+            s => s.WithLabel("Value").WithStringFormat("{}{0:0.00}s"),
+            (axis, value) => UpdateSettings(axis, s => s.MotionProviderMinimumGapDuration = Math.Max(0, value)));
+        #endregion
+
+        #region Axis::UpdateMotionProviderWithAxis
+        s.RegisterAction<DeviceAxis, DeviceAxis>("Axis::UpdateMotionProviderWithAxis::Set",
+            s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All),
+            s => s.WithLabel("Input axis").WithItemsSource(DeviceAxis.All),
+            (source, input) =>
+            {
+                if (source == null || source == input)
+                    return;
+
+                ResetSync(true, source);
+                AxisSettings[source].UpdateMotionProviderWithAxis = input;
+            });
+        #endregion
+
         #region Axis::UpdateMotionProviderWhenPaused
         s.RegisterAction<DeviceAxis, bool>("Axis::UpdateMotionProviderWhenPaused::Set",
             s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All),
@@ -1612,6 +1696,16 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
 
         s.RegisterAction<DeviceAxis>("Axis::UpdateMotionProviderWithoutScript::Toggle",
             s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All), axis => UpdateSettings(axis, s => s.UpdateMotionProviderWithoutScript = !s.UpdateMotionProviderWithoutScript));
+        #endregion
+
+        #region Axis::PreferRawActions
+        s.RegisterAction<DeviceAxis, bool>("Axis::PreferRawActions::Set",
+            s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All),
+            s => s.WithLabel("Prefer raw actions"),
+            (axis, enabled) => UpdateSettings(axis, s => s.PreferRawActions = enabled));
+
+        s.RegisterAction<DeviceAxis>("Axis::PreferRawActions::Toggle",
+            s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All), axis => UpdateSettings(axis, s => s.PreferRawActions = !s.PreferRawActions));
         #endregion
     }
     #endregion
