@@ -255,6 +255,10 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                             MotionProviderManager.Update(axis, settings.SelectedMotionProvider, deltaTime);
 
                         providerValue = MotionProviderManager.GetValue(axis);
+
+                        var blendT = state.InsideScript ? MathUtils.Clamp01(settings.MotionProviderBlend / 100) : 1;
+                        var blendFrom = double.IsFinite(context.ScriptValue) ? context.ScriptValue : axis.DefaultValue;
+                        providerValue = MathUtils.Clamp01(MathUtils.Lerp(blendFrom, providerValue, blendT));
                     }
                     else
                     {
@@ -296,6 +300,7 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                     if (!double.IsFinite(overrideValue))
                         return false;
 
+                    _axisOverrideValues[axis] = double.NaN;
                     context.OverrideValue = overrideValue;
                     return context.IsOverrideDirty;
                 }
@@ -305,37 +310,35 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
             {
                 context.Value = context.LastValue;
 
-                if (!context.IsAutoHoming)
+                var willAutoHome = CheckAutoHomeState(ref context);
+                if (!willAutoHome)
+                {
+                    ApplyValues(ref context);
+                    UpdateSync(ref context);
+                }
+                else
+                {
+                    UpdateAutoHome(ref context);
+                }
+
+                UpdateSmartLimit(ref context);
+                SpeedLimit(ref context);
+
+                return context.IsDirty;
+
+                void ApplyValues(ref AxisStateUpdateContext context)
                 {
                     if (double.IsFinite(context.ScriptValue))
                         context.Value = context.ScriptValue;
 
                     if (double.IsFinite(context.MotionProviderValue))
-                    {
-                        if (!settings.MotionProviderFillGaps)
-                        {
-                            var blendT = state.InsideScript ? MathUtils.Clamp01(settings.MotionProviderBlend / 100) : 1;
-                            var blendFrom = double.IsFinite(context.ScriptValue) ? context.ScriptValue : axis.DefaultValue;
-                            context.Value = MathUtils.Clamp01(MathUtils.Lerp(blendFrom, context.MotionProviderValue, blendT));
-                        }
-                        else
-                        {
-                            context.Value = context.MotionProviderValue;
-                        }
-                    }
+                        context.Value = context.MotionProviderValue;
 
-                    if(double.IsFinite(context.OverrideValue))
+                    if (double.IsFinite(context.OverrideValue))
                         if (!IsPlaying || state.AfterScript)
                             if (!context.IsScriptDirty && !context.IsMotionProviderDirty)
                                 context.Value = context.OverrideValue;
                 }
-
-                UpdateSync(ref context);
-                UpdateAutoHome(ref context);
-                UpdateSmartLimit(ref context);
-                SpeedLimit(ref context);
-
-                return context.IsDirty;
 
                 void UpdateSync(ref AxisStateUpdateContext context)
                 {
@@ -352,23 +355,24 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                     context.Value = MathUtils.Clamp01(MathUtils.Lerp(from, context.Value, t));
                 }
 
+                bool CheckAutoHomeState(ref AxisStateUpdateContext context)
+                {
+                    var isDirty = context.IsScriptDirty || context.IsMotionProviderDirty || context.IsOverrideDirty;
+                    if (!double.IsFinite(context.Value) || !settings.AutoHomeEnabled
+                        || isDirty || (!settings.AutoHomeInsideScript && state.InsideScript && IsPlaying))
+                    {
+                        state.AutoHomeTime = 0;
+                        context.IsAutoHoming = false;
+                        return false;
+                    }
+
+                    return true;
+                }
+
                 void UpdateAutoHome(ref AxisStateUpdateContext context)
                 {
                     bool UpdateAutoHomeInternal(ref AxisStateUpdateContext context)
                     {
-                        if (!double.IsFinite(context.Value) || !settings.AutoHomeEnabled)
-                        {
-                            state.AutoHomeTime = 0;
-                            return false;
-                        }
-
-                        var isDirty = context.IsScriptDirty || context.IsMotionProviderDirty || context.IsOverrideDirty;
-                        if (isDirty || (!settings.AutoHomeInsideScript && state.InsideScript && IsPlaying))
-                        {
-                            state.AutoHomeTime = 0;
-                            return false;
-                        }
-
                         state.AutoHomeTime += deltaTime;
                         var t = (settings.AutoHomeDelay, settings.AutoHomeDuration) switch
                         {
