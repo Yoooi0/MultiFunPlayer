@@ -1567,52 +1567,41 @@
                                                                       DockPanel.Dock="Left"/>
                                                         </DockPanel>
 
-                                                        <DockPanel Margin="0 0 0 10">
+                                                        <DockPanel>
                                                             <TextBlock Text="Delay:" 
-                                                                           DockPanel.Dock="Left"
-                                                                           Width="50"
-                                                                           Margin="0 0 10 0"
-                                                                           VerticalAlignment="Center"/>
-
-                                                            <TextBlock Text="{Binding Value.Settings.AutoHomeDelay, StringFormat={}{0:0}s}" 
-                                                                       VerticalAlignment="Center"
-                                                                       DockPanel.Dock="Right" 
-                                                                       Width="50"
-                                                                       TextAlignment="Right"/>
-
-                                                            <Slider DockPanel.Dock="Left"
-                                                                        Value="{Binding Value.Settings.AutoHomeDelay}"
-                                                                        Minimum="0" 
-                                                                        Maximum="60"
-                                                                        TickFrequency="1"
-                                                                        VerticalAlignment="Center"
-                                                                        IsSnapToTickEnabled="True"
-                                                                        behaviours:SliderAssist.DefaultValueOnDoubleClick="0"
-                                                                        material:SliderAssist.OnlyShowFocusVisualWhileDragging="True"/>
+                                                                       DockPanel.Dock="Left"
+                                                                       Margin="0 0 10 0"
+                                                                       VerticalAlignment="Center"/>
+                                                            
+                                                            <metro:NumericUpDown Value="{Binding Value.Settings.AutoHomeDelay}"
+                                                                                 Minimum="0"
+                                                                                 Interval="0.5"
+                                                                                 StringFormat="{}{0:0.00}s"/>
                                                         </DockPanel>
 
                                                         <DockPanel>
                                                             <TextBlock Text="Duration:" 
-                                                                           DockPanel.Dock="Left"
-                                                                           Width="50"
-                                                                           Margin="0 0 10 0"
-                                                                           VerticalAlignment="Center"/>
+                                                                       DockPanel.Dock="Left"
+                                                                       Margin="0 0 10 0"
+                                                                       VerticalAlignment="Center"/>
+                                                            
+                                                            <metro:NumericUpDown Value="{Binding Value.Settings.AutoHomeDuration}"
+                                                                                 Minimum="0"
+                                                                                 Interval="0.5"
+                                                                                 StringFormat="{}{0:0.00}s"/>
+                                                        </DockPanel>
 
-                                                            <TextBlock Text="{Binding Value.Settings.AutoHomeDuration, StringFormat={}{0:0.00}s}" 
-                                                                       VerticalAlignment="Center"
-                                                                       DockPanel.Dock="Right" 
-                                                                       Width="50"
-                                                                       TextAlignment="Right"/>
+                                                        <DockPanel>
+                                                            <TextBlock Text="Target value:" 
+                                                                       DockPanel.Dock="Left"
+                                                                       Margin="0 0 10 0"
+                                                                       VerticalAlignment="Center"/>
 
-                                                            <Slider DockPanel.Dock="Left"
-                                                                        Value="{Binding Value.Settings.AutoHomeDuration}"    
-                                                                        Minimum="0" 
-                                                                        Maximum="10"
-                                                                        TickFrequency="0.25"
-                                                                        VerticalAlignment="Center"
-                                                                        IsSnapToTickEnabled="True"
-                                                                        behaviours:SliderAssist.DefaultValueOnDoubleClick="0"
-                                                                        material:SliderAssist.OnlyShowFocusVisualWhileDragging="True"/>
+                                                            <metro:NumericUpDown Value="{Binding Value.Settings.AutoHomeTargetValue}"
+                                                                                 Minimum="0"
+                                                                                 Maximum="1"
+                                                                                 Interval="0.01"
+                                                                                 StringFormat="P0"/>
                                                         </DockPanel>
                                                     </StackPanel>
                                                 </Grid>

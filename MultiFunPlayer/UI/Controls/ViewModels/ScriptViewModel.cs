@@ -81,7 +81,7 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         MotionProviderManager = motionProviderManager;
         _mediaResourceFactory = mediaResourceFactory;
 
-        AxisModels = new ObservableConcurrentDictionary<DeviceAxis, AxisModel>(DeviceAxis.All.ToDictionary(a => a, _ => new AxisModel()));
+        AxisModels = new ObservableConcurrentDictionary<DeviceAxis, AxisModel>(DeviceAxis.All.ToDictionary(a => a, a => new AxisModel(a)));
         MediaPathModifierTypes = ReflectionUtils.FindImplementations<IMediaPathModifier>()
                                                 .ToDictionary(t => t.GetCustomAttribute<DisplayNameAttribute>(inherit: false).DisplayName, t => t);
 
@@ -382,11 +382,11 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                         if (t == 0) return true;
                         if (t >= 1)
                         {
-                            context.Value = axis.DefaultValue;
+                            context.Value = settings.AutoHomeTargetValue;
                             return true;
                         }
 
-                        context.Value = MathUtils.Clamp01(MathUtils.Lerp(context.Value, axis.DefaultValue, t * Math.Pow(2, 8 * (t - 1))));
+                        context.Value = MathUtils.Clamp01(MathUtils.Lerp(context.Value, settings.AutoHomeTargetValue, t * Math.Pow(2, 8 * (t - 1))));
                         return true;
                     }
 
@@ -1029,6 +1029,8 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
             case nameof(ViewModels.AxisSettings.UpdateMotionProviderWithoutScript):
             case nameof(ViewModels.AxisSettings.InvertScript):
             case nameof(ViewModels.AxisSettings.Bypass):
+            case nameof(ViewModels.AxisSettings.AutoHomeEnabled):
+            case nameof(ViewModels.AxisSettings.AutoHomeTargetValue):
                 var (axis, _) = AxisSettings.FirstOrDefault(x => x.Value == settings);
                 if (axis != null)
                     ResetSync(true, axis);
@@ -1633,9 +1635,16 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
 
 internal class AxisModel : PropertyChangedBase
 {
-    public AxisState State { get; } = new AxisState();
-    public AxisSettings Settings { get; } = new AxisSettings();
-    public IScriptResource Script { get; set; } = null;
+    public AxisState State { get; }
+    public AxisSettings Settings { get; }
+    public IScriptResource Script { get; set; }
+
+    public AxisModel(DeviceAxis axis)
+    {
+        State = new AxisState();
+        Settings = new AxisSettings(axis);
+        Script = null;
+    }
 }
 
 internal class AxisState : INotifyPropertyChanged
@@ -1742,12 +1751,13 @@ internal class AxisSettings : PropertyChangedBase
     [JsonProperty(ObjectCreationHandling = ObjectCreationHandling.Replace)]
     public ObservableConcurrentCollection<Point> SmartLimitPoints { get; set; } = new() { new Point(25, 100), new Point(90, 0) };
     [JsonProperty] public SmartLimitMode SmartLimitMode { get; set; } = SmartLimitMode.Value;
-    [JsonProperty] public double SmartLimitTargetValue { get; set; } = 0.5;
+    [JsonProperty] public double SmartLimitTargetValue { get; set; }
 
     [JsonProperty] public InterpolationType InterpolationType { get; set; } = InterpolationType.Pchip;
     [JsonProperty] public bool AutoHomeEnabled { get; set; } = false;
     [JsonProperty] public double AutoHomeDelay { get; set; } = 5;
     [JsonProperty] public double AutoHomeDuration { get; set; } = 3;
+    [JsonProperty] public double AutoHomeTargetValue { get; set; }
     [JsonProperty] public bool AutoHomeInsideScript { get; set; } = false;
     [JsonProperty] public bool InvertScript { get; set; } = false;
     [JsonProperty] public double Offset { get; set; } = 0;
@@ -1763,6 +1773,12 @@ internal class AxisSettings : PropertyChangedBase
     [JsonProperty] public bool SpeedLimitEnabled { get; set; } = false;
     [JsonProperty] public double MaximumSecondsPerStroke { get; set; } = 0.1;
     [JsonProperty] public bool PreferRawActions { get; set; } = true;
+
+    public AxisSettings(DeviceAxis axis)
+    {
+        SmartLimitTargetValue = axis.DefaultValue;
+        AutoHomeTargetValue = axis.DefaultValue;
+    }
 }
 
 internal enum SmartLimitMode
