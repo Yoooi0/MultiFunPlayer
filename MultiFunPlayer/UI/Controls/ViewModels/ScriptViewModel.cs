@@ -33,7 +33,6 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
 
     private readonly IEventAggregator _eventAggregator;
     private readonly IMediaResourceFactory _mediaResourceFactory;
-    private readonly ConcurrentDictionary<DeviceAxis, double> _axisOverrideValues;
     private Thread _updateThread;
     private CancellationTokenSource _cancellationSource;
     private double _internalMediaPosition;
@@ -99,7 +98,6 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         foreach (var (_, settings) in AxisSettings)
             settings.PropertyChanged += OnAxisSettingsPropertyChanged;
 
-        _axisOverrideValues = new ConcurrentDictionary<DeviceAxis, double>(DeviceAxis.All.ToDictionary(a => a, _ => double.NaN));
         _cancellationSource = new CancellationTokenSource();
         _updateThread = new Thread(() => UpdateThread(_cancellationSource.Token)) { IsBackground = true };
         _updateThread.Start();
@@ -163,7 +161,7 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                 {
                     dirty |= UpdateScript(ref context);
                     dirty |= UpdateMotionProvider(ref context);
-                    dirty |= UpdateOverrideValue(ref context);
+                    dirty |= UpdateTransition(ref context);
                 }
 
                 return dirty;
@@ -294,15 +292,15 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                     return context.IsMotionProviderDirty;
                 }
 
-                bool UpdateOverrideValue(ref AxisStateUpdateContext context)
+                bool UpdateTransition(ref AxisStateUpdateContext context)
                 {
-                    var overrideValue = _axisOverrideValues[axis];
-                    if (!double.IsFinite(overrideValue))
+                    if (state.ExternalTransition.Completed)
                         return false;
 
-                    _axisOverrideValues[axis] = double.NaN;
-                    context.OverrideValue = overrideValue;
-                    return context.IsOverrideDirty;
+                    var value = state.ExternalTransition.Value;
+                    state.ExternalTransition.Update(deltaTime);
+                    context.TransitionValue = value;
+                    return context.IsTransitionDirty;
                 }
             }
 
@@ -330,10 +328,10 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                     if (double.IsFinite(context.MotionProviderValue))
                         context.Value = context.MotionProviderValue;
 
-                    if (double.IsFinite(context.OverrideValue))
+                    if (double.IsFinite(context.TransitionValue))
                         if (!IsPlaying || state.AfterScript)
                             if (!context.IsScriptDirty && !context.IsMotionProviderDirty)
-                                context.Value = context.OverrideValue;
+                                context.Value = context.TransitionValue;
                 }
 
                 void UpdateSync(ref AxisStateUpdateContext context)
@@ -353,7 +351,7 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
 
                 bool CheckAutoHomeState(ref AxisStateUpdateContext context)
                 {
-                    var isDirty = context.IsScriptDirty || context.IsMotionProviderDirty || context.IsOverrideDirty;
+                    var isDirty = context.IsScriptDirty || context.IsMotionProviderDirty || context.IsTransitionDirty;
                     if (!double.IsFinite(context.Value) || !settings.AutoHomeEnabled
                         || isDirty || (!settings.AutoHomeInsideScript && state.InsideScript && IsPlaying))
                     {
@@ -1095,15 +1093,18 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
     public void OnAxisClear(DeviceAxis axis) => ResetAxes(axis);
     public void OnAxisReload(DeviceAxis axis) => ReloadAxes(axis);
 
-    public void SetAxisOverrideValue(DeviceAxis axis, double value, bool offset = false)
+    public void SetAxisTransition(DeviceAxis axis, double value, double duration, bool offset = false)
     {
         if (axis == null)
             return;
 
         var state = AxisStates[axis];
         lock (state)
-            _axisOverrideValues[axis] = offset ? MathUtils.Clamp01((double.IsFinite(state.Value) ? state.Value : axis.DefaultValue) + value)
-                                               : value;
+        {
+            var fromValue = double.IsFinite(state.Value) ? state.Value : axis.DefaultValue;
+            var toValue = offset ? fromValue + value : value;
+            state.ExternalTransition.Reset(fromValue, toValue, duration);
+        }
     }
 
     private bool MoveScript(DeviceAxis axis, DirectoryInfo directory)
@@ -1398,19 +1399,21 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         #endregion
 
         #region Axis::Value
-        s.RegisterAction<DeviceAxis, double>("Axis::Value::Offset",
+        s.RegisterAction<DeviceAxis, double, double>("Axis::Value::Offset",
             s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All),
             s => s.WithLabel("Value offset").WithStringFormat("{}{0:P0}"),
-            (axis, offset) => SetAxisOverrideValue(axis, offset, offset: true));
+            s => s.WithLabel("Duration").WithStringFormat("{}{0:0.00}s"),
+            (axis, offset, duration) => SetAxisTransition(axis, offset, duration, offset: true));
 
-        s.RegisterAction<DeviceAxis, double>("Axis::Value::Set",
+        s.RegisterAction<DeviceAxis, double, double>("Axis::Value::Set",
             s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All),
             s => s.WithLabel("Value").WithStringFormat("{}{0:P0}"),
-            (axis, value) => SetAxisOverrideValue(axis, value));
+            s => s.WithLabel("Duration").WithStringFormat("{}{0:0.00}s"),
+            (axis, value, duration) => SetAxisTransition(axis, value, duration));
 
         s.RegisterAction<IAxisInputGesture, DeviceAxis>("Axis::Value::Drive",
             s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All),
-            (gesture, axis) => SetAxisOverrideValue(axis, gesture.Delta, offset: true));
+            (gesture, axis) => SetAxisTransition(axis, gesture.Delta, duration: 0, offset: true));
         #endregion
 
         #region Axis::Sync
@@ -1745,8 +1748,10 @@ internal class AxisState : INotifyPropertyChanged
 {
     [DoNotNotify] public double Value { get; set; } = double.NaN;
     [DoNotNotify] public double ScriptValue { get; set; } = double.NaN;
-    [DoNotNotify] public double OverrideValue { get; set; } = double.NaN;
+    [DoNotNotify] public double TransitionValue { get; set; } = double.NaN;
     [DoNotNotify] public double MotionProviderValue { get; set; } = double.NaN;
+
+    [DoNotNotify] public AxisValueTransition ExternalTransition { get; } = new AxisValueTransition();
 
     [DoNotNotify] public int Index { get; set; } = int.MinValue;
     [DoNotNotify] public bool Invalid => Index == int.MinValue;
@@ -1776,6 +1781,30 @@ internal class AxisState : INotifyPropertyChanged
     }
 }
 
+internal class AxisValueTransition
+{
+    private bool _initialized;
+    private double _fromValue;
+    private double _toValue;
+    private double _duration;
+    private double _time;
+
+    public double Value => _duration > 0.00001 ? MathUtils.Lerp(_fromValue, _toValue, MathUtils.Clamp01(_time / _duration)) : _toValue;
+    public bool Completed => !_initialized || (_time >= 0 && _time >= _duration);
+
+    public AxisValueTransition() => _initialized = false;
+
+    public void Update(double deltaTime) => _time = _time < 0 ? deltaTime : _time + deltaTime;
+    public void Reset(double fromValue, double toValue, double duration)
+    {
+        _initialized = true;
+        _fromValue = fromValue;
+        _toValue = toValue;
+        _duration = duration;
+        _time = -1;
+    }
+}
+
 internal ref struct AxisStateUpdateContext
 {
     private readonly AxisState _state;
@@ -1783,12 +1812,12 @@ internal ref struct AxisStateUpdateContext
     public double LastValue { get; }
     public double LastScriptValue { get; }
     public double LastMotionProviderValue { get; }
-    public double LastOverrideValue { get; }
+    public double LastTransitionValue { get; }
 
     public bool IsDirty => ValueChanged(LastValue, Value, 0.000001);
     public bool IsScriptDirty => ValueChanged(LastScriptValue, ScriptValue, 0.000001);
     public bool IsMotionProviderDirty => ValueChanged(LastMotionProviderValue, MotionProviderValue, 0.000001);
-    public bool IsOverrideDirty => ValueChanged(LastOverrideValue, OverrideValue, 0.000001);
+    public bool IsTransitionDirty => ValueChanged(LastTransitionValue, TransitionValue, 0.000001);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static bool ValueChanged(double last, double current, double epsilon)
@@ -1796,7 +1825,7 @@ internal ref struct AxisStateUpdateContext
 
     public double Value { get; set; } = double.NaN;
     public double ScriptValue { get; set; } = double.NaN;
-    public double OverrideValue { get; set; } = double.NaN;
+    public double TransitionValue { get; set; } = double.NaN;
     public double MotionProviderValue { get; set; } = double.NaN;
 
     public bool InsideGap { get; set; } = false;
@@ -1811,7 +1840,7 @@ internal ref struct AxisStateUpdateContext
         LastValue = state.Value;
         LastScriptValue = state.ScriptValue;
         LastMotionProviderValue = state.MotionProviderValue;
-        LastOverrideValue = state.OverrideValue;
+        LastTransitionValue = state.TransitionValue;
 
         InsideGap = state.InsideGap;
         IsAutoHoming = state.IsAutoHoming;
@@ -1825,7 +1854,7 @@ internal ref struct AxisStateUpdateContext
 
         _state.Value = Value;
         _state.ScriptValue = ScriptValue;
-        _state.OverrideValue = OverrideValue;
+        _state.TransitionValue = TransitionValue;
         _state.MotionProviderValue = MotionProviderValue;
 
         _state.InsideGap = InsideGap;
