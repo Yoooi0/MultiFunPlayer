@@ -18,6 +18,7 @@ internal abstract class AbstractMediaSource : Screen, IMediaSource
     [SuppressPropertyChangedWarnings] public abstract ConnectionStatus Status { get; protected set; }
     public bool AutoConnectEnabled { get; set; } = false;
 
+    protected bool IsDisposing { get; private set; }
     protected IEventAggregator EventAggregator { get; }
 
     protected AbstractMediaSource(IShortcutManager shortcutManager, IEventAggregator eventAggregator)
@@ -149,6 +150,7 @@ internal abstract class AbstractMediaSource : Screen, IMediaSource
 
     public void Dispose()
     {
+        IsDisposing = true;
         Dispose(disposing: true);
         GC.SuppressFinalize(this);
     }

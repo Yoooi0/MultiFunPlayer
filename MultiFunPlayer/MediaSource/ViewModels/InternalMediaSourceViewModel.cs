@@ -139,6 +139,9 @@ internal class InternalMediaSourceViewModel : AbstractMediaSource, IHandle<Media
             _ = DialogHelper.ShowErrorAsync(e, $"{Name} failed with exception", "RootDialog");
         }
 
+        if (IsDisposing)
+            return;
+
         SetScriptInfo(null);
         SetDuration(double.NaN);
         SetPosition(double.NaN);

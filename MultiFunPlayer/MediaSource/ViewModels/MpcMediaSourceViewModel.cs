@@ -68,6 +68,9 @@ internal class MpcMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlayP
             _ = DialogHelper.ShowErrorAsync(e, $"{Name} failed with exception", "RootDialog");
         }
 
+        if (IsDisposing)
+            return;
+
         EventAggregator.Publish(new MediaPathChangedMessage(null));
         EventAggregator.Publish(new MediaPlayingChangedMessage(false));
     }
