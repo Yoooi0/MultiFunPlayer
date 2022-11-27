@@ -369,10 +369,11 @@ internal abstract class ThreadAbstractOutputTarget : AbstractOutputTarget
         if (Interlocked.CompareExchange(ref _isDisconnectingFlag, 1, 0) != 0)
             return;
 
+        await Task.Delay(250);
+
         _cancellationSource?.Cancel();
         _thread?.Join();
 
-        await Task.Delay(250);
         _cancellationSource?.Dispose();
 
         _cancellationSource = null;

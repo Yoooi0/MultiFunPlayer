@@ -70,12 +70,12 @@ internal abstract class AbstractMediaSource : Screen, IMediaSource
         if (Interlocked.CompareExchange(ref _isDisconnectingFlag, 1, 0) != 0)
             return;
 
-        _cancellationSource?.Cancel();
+        await Task.Delay(250);
 
+        _cancellationSource?.Cancel();
         if (_task != null)
             await _task;
 
-        await Task.Delay(250);
         _cancellationSource?.Dispose();
 
         _cancellationSource = null;
