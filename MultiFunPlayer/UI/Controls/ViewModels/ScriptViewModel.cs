@@ -310,9 +310,17 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
 
                 var willAutoHome = CheckAutoHomeState(ref context);
                 if (!willAutoHome)
+                {
+                    ResetAutoHome(ref context);
                     ApplyValues(ref context);
+                }
                 else
+                {
                     UpdateAutoHome(ref context);
+                }
+
+                if (context.IsAutoHoming ^ state.IsAutoHoming)
+                    ResetSyncNoLock(state);
 
                 UpdateSync(ref context);
                 UpdateSmartLimit(ref context);
@@ -351,16 +359,22 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
 
                 bool CheckAutoHomeState(ref AxisStateUpdateContext context)
                 {
-                    var isDirty = context.IsScriptDirty || context.IsMotionProviderDirty || context.IsTransitionDirty;
-                    if (!double.IsFinite(context.Value) || !settings.AutoHomeEnabled
-                        || isDirty || (!settings.AutoHomeInsideScript && state.InsideScript && IsPlaying))
-                    {
-                        state.AutoHomeTime = 0;
-                        context.IsAutoHoming = false;
+                    if (!double.IsFinite(context.Value) || !settings.AutoHomeEnabled)
                         return false;
-                    }
+
+                    if (!settings.AutoHomeInsideScript && state.InsideScript && IsPlaying)
+                        return false;
+                    
+                    if (context.IsScriptDirty || context.IsMotionProviderDirty || context.IsTransitionDirty)
+                        return false;
 
                     return true;
+                }
+
+                void ResetAutoHome(ref AxisStateUpdateContext context)
+                {
+                    state.AutoHomeTime = 0;
+                    context.IsAutoHoming = false;
                 }
 
                 void UpdateAutoHome(ref AxisStateUpdateContext context)
@@ -388,11 +402,7 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                         return true;
                     }
 
-                    var isAutoHoming = UpdateAutoHomeInternal(ref context);
-                    if (context.IsAutoHoming && !isAutoHoming)
-                        ResetSyncNoLock(state);
-
-                    context.IsAutoHoming = isAutoHoming;
+                    context.IsAutoHoming = UpdateAutoHomeInternal(ref context);
                 }
 
                 void UpdateSmartLimit(ref AxisStateUpdateContext context)
