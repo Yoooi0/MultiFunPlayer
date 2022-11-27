@@ -337,7 +337,7 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                         context.Value = context.MotionProviderValue;
 
                     if (double.IsFinite(context.TransitionValue))
-                        if (!IsPlaying || state.AfterScript)
+                        if (!IsPlaying && !state.InsideScript)
                             if (!context.IsScriptDirty && !context.IsMotionProviderDirty)
                                 context.Value = context.TransitionValue;
                 }
@@ -361,11 +361,11 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                 {
                     if (!double.IsFinite(context.Value) || !settings.AutoHomeEnabled)
                         return false;
-
                     if (!settings.AutoHomeInsideScript && state.InsideScript && IsPlaying)
                         return false;
-                    
-                    if (context.IsScriptDirty || context.IsMotionProviderDirty || context.IsTransitionDirty)
+                    if (context.IsScriptDirty || context.IsMotionProviderDirty)
+                        return false;
+                    if (context.IsTransitionDirty && !(IsPlaying || state.InsideScript))
                         return false;
 
                     return true;
