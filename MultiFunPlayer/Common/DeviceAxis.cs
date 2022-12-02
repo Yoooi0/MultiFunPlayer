@@ -52,7 +52,7 @@ public sealed class DeviceAxis
     public static bool IsValueDirty(double value, double lastValue, double epsilon)
         => Math.Abs(lastValue - value) >= epsilon || (double.IsFinite(value) ^ double.IsFinite(lastValue));
 
-    public static void LoadSettings(JObject settings, JsonSerializer serializer)
+    internal static void LoadSettings(JObject settings, JsonSerializer serializer)
     {
         var enabledAxes = JArray.FromObject((settings["Axes"] as JArray).Where(x => x["Enabled"].ToObject<bool>()));
         if (!enabledAxes.TryToObject<List<DeviceAxis>>(serializer, out var axes)

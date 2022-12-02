@@ -1,4 +1,4 @@
-﻿using System.Windows;
+using System.Windows;
 
 namespace MultiFunPlayer.UI;
 
@@ -13,7 +13,7 @@ internal class BindingProxy : Freezable
 
     public object DataContext
     {
-        get { return GetValue(DataContextProperty); }
-        set { SetValue(DataContextProperty, value); }
+        get => GetValue(DataContextProperty);
+        set => SetValue(DataContextProperty, value);
     }
 }

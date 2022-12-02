@@ -18,7 +18,7 @@ internal class DeviceSettingsViewModel : Screen, IHandle<SettingsMessage>
         eventAggregator.Subscribe(this);
     }
 
-    public bool CanRemoveSelectedDevice => SelectedDevice != null && !SelectedDevice.IsDefault;
+    public bool CanRemoveSelectedDevice => SelectedDevice?.IsDefault == false;
     public void OnRemoveSelectedDevice()
     {
         if (!CanRemoveSelectedDevice)
@@ -29,10 +29,10 @@ internal class DeviceSettingsViewModel : Screen, IHandle<SettingsMessage>
         SelectedDevice = Devices[MathUtils.Clamp(index, 0, Devices.Count - 1)];
     }
 
-    public bool CanRenameSelectedDevice => SelectedDevice != null && !SelectedDevice.IsDefault;
+    public bool CanRenameSelectedDevice => SelectedDevice?.IsDefault == false;
     public async void OnRenameSelectedDevice()
     {
-        if (!CanRenameSelectedDevice) 
+        if (!CanRenameSelectedDevice)
             return;
 
         var result = await DialogHelper.ShowAsync(new TextInputMessageDialogViewModel("Device name:", SelectedDevice.Name), "SettingsDialog") as string;

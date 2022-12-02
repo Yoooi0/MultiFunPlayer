@@ -42,7 +42,7 @@ internal class PluginCompilationResult : IDisposable
         return new() { Exception = e };
     }
 
-    public static PluginCompilationResult FromSuccess(AssemblyLoadContext context, Func<PluginBase> pluginFactory) 
+    public static PluginCompilationResult FromSuccess(AssemblyLoadContext context, Func<PluginBase> pluginFactory)
         => new() { Context = context, PluginFactory = pluginFactory };
     public static PluginCompilationResult FromSuccess(AssemblyLoadContext context, Func<PluginBase> pluginFactory, PluginSettingsBase settings, UIElement settingsView)
         => new() { Context = context, PluginFactory = pluginFactory, Settings = settings, SettingsView = settingsView };
@@ -227,7 +227,7 @@ internal static class PluginCompiler
                 return PluginCompilationResult.FromFailure(context, new PluginCompileException("Plugin constructor can only have zero or one parameters"));
 
             var settingsType = constructorParameters.FirstOrDefault()?.ParameterType;
-            if (settingsType != null && !settingsType.IsAssignableTo(typeof(PluginSettingsBase)))
+            if (settingsType?.IsAssignableTo(typeof(PluginSettingsBase)) == false)
                 return PluginCompilationResult.FromFailure(context, new PluginCompileException($"Plugin constructor parameter must extend \"{nameof(PluginSettingsBase)}\""));
 
             if (settingsType == null)
@@ -245,7 +245,7 @@ internal static class PluginCompiler
             {
                 var settings = settingsType != null ? Activator.CreateInstance(settingsType) as PluginSettingsBase : null;
                 if (settingsType != null && settings == null)
-                    return PluginCompilationResult.FromFailure(context, new PluginCompileException($"Unable to create settings instance"));
+                    return PluginCompilationResult.FromFailure(context, new PluginCompileException("Unable to create settings instance"));
 
                 var settingsView = default(UIElement);
                 Execute.OnUIThreadSync(() =>

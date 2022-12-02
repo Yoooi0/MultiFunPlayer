@@ -126,39 +126,35 @@ internal class MpvMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlayP
                     Logger.Trace("Received \"{0}\" from \"{1}\"", message, Name);
 
                     var document = JObject.Parse(message);
-                    if (!document.TryGetValue("event", out var eventToken))
+                    if (!document.TryGetValue<string>("event", out var eventType))
                         continue;
 
-                    switch (eventToken.ToObject<string>())
+                    if (!string.Equals(eventType, "property-change", StringComparison.OrdinalIgnoreCase))
+                        continue;
+
+                    if (!document.TryGetValue<string>("name", out var propertyName) || !document.TryGetValue("data", out var dataToken))
+                        continue;
+
+                    switch (propertyName)
                     {
-                        case "property-change":
-                            if (!document.TryGetValue("name", out var nameToken)
-                                || !document.TryGetValue("data", out var dataToken))
-                                continue;
-
-                            switch (nameToken.ToObject<string>())
-                            {
-                                case "path":
-                                    EventAggregator.Publish(new MediaPathChangedMessage(dataToken.TryToObject<string>(out var path) && !string.IsNullOrWhiteSpace(path) ? path : null));
-                                    break;
-                                case "pause":
-                                    if (dataToken.TryToObject<string>(out var paused))
-                                        EventAggregator.Publish(new MediaPlayingChangedMessage(!string.Equals(paused, "yes", StringComparison.OrdinalIgnoreCase)));
-                                    break;
-                                case "duration":
-                                    if (dataToken.TryToObject<double>(out var duration) && duration >= 0)
-                                        EventAggregator.Publish(new MediaDurationChangedMessage(TimeSpan.FromSeconds(duration)));
-                                    break;
-                                case "time-pos":
-                                    if (dataToken.TryToObject<double>(out var position) && position >= 0)
-                                        EventAggregator.Publish(new MediaPositionChangedMessage(TimeSpan.FromSeconds(position)));
-                                    break;
-                                case "speed":
-                                    if (dataToken.TryToObject<double>(out var speed) && speed > 0)
-                                        EventAggregator.Publish(new MediaSpeedChangedMessage(speed));
-                                    break;
-                            }
-
+                        case "path":
+                            EventAggregator.Publish(new MediaPathChangedMessage(dataToken.TryToObject<string>(out var path) && !string.IsNullOrWhiteSpace(path) ? path : null));
+                            break;
+                        case "pause":
+                            if (dataToken.TryToObject<string>(out var paused))
+                                EventAggregator.Publish(new MediaPlayingChangedMessage(!string.Equals(paused, "yes", StringComparison.OrdinalIgnoreCase)));
+                            break;
+                        case "duration":
+                            if (dataToken.TryToObject<double>(out var duration) && duration >= 0)
+                                EventAggregator.Publish(new MediaDurationChangedMessage(TimeSpan.FromSeconds(duration)));
+                            break;
+                        case "time-pos":
+                            if (dataToken.TryToObject<double>(out var position) && position >= 0)
+                                EventAggregator.Publish(new MediaPositionChangedMessage(TimeSpan.FromSeconds(position)));
+                            break;
+                        case "speed":
+                            if (dataToken.TryToObject<double>(out var speed) && speed > 0)
+                                EventAggregator.Publish(new MediaSpeedChangedMessage(speed));
                             break;
                     }
                 }

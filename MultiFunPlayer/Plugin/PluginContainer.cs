@@ -48,10 +48,10 @@ internal class PluginContainer : PropertyChangedBase, IDisposable
         if (!CanStart)
             return;
 
-        if (_compilationResult == null || !_compilationResult.Success)
+        if (_compilationResult?.Success != true)
         {
             QueueCompile(() => {
-                if (_compilationResult != null && _compilationResult.Success)
+                if (_compilationResult?.Success == true)
                     Start();
             });
             return;

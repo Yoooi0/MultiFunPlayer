@@ -268,14 +268,10 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                             if (!AxisKeyframes.TryGetValue(axis, out var keyframes) || keyframes == null || keyframes.Count == 0)
                                 return false;
 
-                            var index = state.Index;
-
-                            var gapStarted = !state.InsideGap && context.InsideGap;
-                            var gapEnded = state.InsideGap && !context.InsideGap;
-                            if (gapStarted || gapEnded)
+                            if (state.InsideGap ^ context.InsideGap)
                                 ResetSyncNoLock(state);
 
-                            return context.InsideGap && keyframes.SegmentDuration(index) >= settings.MotionProviderMinimumGapDuration;
+                            return context.InsideGap && keyframes.SegmentDuration(state.Index) >= settings.MotionProviderMinimumGapDuration;
                         }
 
                         if (!CanMotionProviderFillGap(ref context))
@@ -1229,7 +1225,7 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
     {
         if (sender is not FrameworkElement element || element.DataContext is not KeyValuePair<DeviceAxis, AxisModel> pair)
             return;
-        
+
         var (axis, _) = pair;
         ReloadAxes(axis);
     }
