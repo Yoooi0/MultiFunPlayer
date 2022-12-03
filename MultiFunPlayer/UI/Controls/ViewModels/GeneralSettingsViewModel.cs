@@ -1,4 +1,4 @@
-﻿using MultiFunPlayer.Common;
+using MultiFunPlayer.Common;
 using Newtonsoft.Json.Linq;
 using NLog;
 using Stylet;
@@ -54,6 +54,8 @@ internal class GeneralSettingsViewModel : Screen, IHandle<SettingsMessage>, IHan
 
         var rule = LogManager.Configuration.LoggingRules.FirstOrDefault(r => r.Targets.Any(t => string.Equals(t.Name, "file", StringComparison.OrdinalIgnoreCase)));
         rule?.SetLoggingLevels(SelectedLogLevel, LogLevel.Fatal);
+
+        LogManager.ReconfigExistingLoggers();
     }
 
     public void Handle(SettingsMessage message)
