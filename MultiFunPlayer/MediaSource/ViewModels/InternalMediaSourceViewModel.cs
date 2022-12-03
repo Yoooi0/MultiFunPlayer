@@ -163,7 +163,7 @@ internal class InternalMediaSourceViewModel : AbstractMediaSource, IHandle<Media
 
         if (_scriptInfo != scriptInfo)
         {
-            var script = scriptInfo != null ? ScriptResource.FromFileInfo(FunscriptReader.Default, scriptInfo, userLoaded: true) : null;
+            var script = scriptInfo != null ? ScriptResource.FromFileInfo(FunscriptReader.Default, scriptInfo) : null;
             if (script == null)
                 return;
 

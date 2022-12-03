@@ -793,14 +793,8 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                 continue;
             }
 
-            if (model.Script != null)
-            {
-                if (model.Settings.LinkAxisHasPriority && model.Script.Origin == ScriptResourceOrigin.User)
-                    continue;
-
-                if (!model.Settings.LinkAxisHasPriority && model.Script.Origin != ScriptResourceOrigin.Link)
-                    continue;
-            }
+            if (model.Script != null && !model.Settings.LinkAxisHasPriority && model.Script is not LinkedScriptResource)
+                continue;
 
             Logger.Debug("Linked {0} to {1}", axis, model.Settings.LinkAxis);
 
@@ -1036,7 +1030,7 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                 return;
 
             ResetSync(true, axis);
-            SetScript(axis, ScriptResource.FromPath(FunscriptReader.Default, path, userLoaded: true));
+            SetScript(axis, ScriptResource.FromPath(FunscriptReader.Default, path));
         }
     }
 
@@ -1073,7 +1067,7 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
             return;
 
         ResetSync(true, axis);
-        SetScript(axis, ScriptResource.FromFileInfo(FunscriptReader.Default, new FileInfo(dialog.FileName), userLoaded: true));
+        SetScript(axis, ScriptResource.FromFileInfo(FunscriptReader.Default, new FileInfo(dialog.FileName)));
     }
 
     public void OnAxisClear(DeviceAxis axis) => ResetAxes(axis);
