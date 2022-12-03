@@ -111,7 +111,7 @@ internal class WebSocketOutputTargetViewModel : AsyncAbstractOutputTarget
                     memory.Write(readBuffer, 0, result.Count);
                 } while (!token.IsCancellationRequested && !result.EndOfMessage);
 
-                var message = Encoding.UTF8.GetString(memory.GetBuffer());
+                var message = Encoding.UTF8.GetString(memory.ToArray());
                 Logger.Trace("Received \"{0}\" from \"{1}\"", message, Name);
             }
         }
