@@ -1,7 +1,9 @@
-using MultiFunPlayer.Common;
+﻿using MultiFunPlayer.Common;
 using Newtonsoft.Json.Linq;
 using NLog;
+using NLog.Config;
 using Stylet;
+using System.Diagnostics;
 using System.Windows;
 
 namespace MultiFunPlayer.UI.Controls.ViewModels;
@@ -47,13 +49,17 @@ internal class GeneralSettingsViewModel : Screen, IHandle<SettingsMessage>, IHan
 
     public void OnSelectedLogLevelChanged()
     {
+        static LoggingRule GetRuleWithTarget(string targetName)
+            => LogManager.Configuration.LoggingRules.FirstOrDefault(r => r.Targets.Any(t => string.Equals(t.Name, targetName, StringComparison.OrdinalIgnoreCase)));
+
         if (SelectedLogLevel == null)
             return;
 
         Logger.Info("Changing log level to \"{0}\"", SelectedLogLevel.Name);
 
-        var rule = LogManager.Configuration.LoggingRules.FirstOrDefault(r => r.Targets.Any(t => string.Equals(t.Name, "file", StringComparison.OrdinalIgnoreCase)));
-        rule?.SetLoggingLevels(SelectedLogLevel, LogLevel.Fatal);
+        GetRuleWithTarget("file")?.SetLoggingLevels(SelectedLogLevel, LogLevel.Fatal);
+        if (Debugger.IsAttached)
+            GetRuleWithTarget("debug")?.SetLoggingLevels(LogLevel.FromOrdinal(Math.Min(SelectedLogLevel.Ordinal, 1)), LogLevel.Fatal);
 
         LogManager.ReconfigExistingLoggers();
     }

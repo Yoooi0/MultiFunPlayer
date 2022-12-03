@@ -297,7 +297,11 @@ internal class Bootstrapper : Bootstrapper<RootViewModel>
         }
 
         if (Debugger.IsAttached)
-            config.AddRule(LogLevel.Debug, LogLevel.Fatal, new DebugSystemTarget("debug"));
+        {
+            var debugMinLevel = minLevel != null ? LogLevel.FromOrdinal(Math.Min(minLevel.Ordinal, 1)) : LogLevel.Debug;
+            config.AddRule(debugMinLevel, LogLevel.Fatal, new DebugSystemTarget("debug"));
+        }
+
         LogManager.Configuration = config;
 
         var styletLoggerManager = Container.Get<IStyletLoggerManager>();
