@@ -21,12 +21,11 @@ public record MediaSeekMessage(TimeSpan? Position);
 public record MediaPlayPauseMessage(bool State);
 public record MediaChangePathMessage(string Path);
 
-public class ScriptLoadMessage
+public class ScriptChangedMessage
 {
     public Dictionary<DeviceAxis, IScriptResource> Scripts { get; }
-    public ScriptLoadMessage(Dictionary<DeviceAxis, IScriptResource> scripts) => Scripts = scripts;
-    public ScriptLoadMessage(DeviceAxis axis, IScriptResource script)
-        => Scripts = new Dictionary<DeviceAxis, IScriptResource>() { [axis] = script };
+    public ScriptChangedMessage(Dictionary<DeviceAxis, IScriptResource> scripts) => Scripts = scripts;
+    public ScriptChangedMessage(DeviceAxis axis, IScriptResource script) => Scripts = new () { [axis] = script };
 }
 
 public class SyncRequestMessage
