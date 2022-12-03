@@ -301,7 +301,7 @@ internal class Bootstrapper : Bootstrapper<RootViewModel>
         LogManager.Configuration = config;
 
         var styletLoggerManager = Container.Get<IStyletLoggerManager>();
-        Stylet.Logging.LogManager.LoggerFactory = name => styletLoggerManager.GetLogger(name);
+        Stylet.Logging.LogManager.LoggerFactory = styletLoggerManager.GetLogger;
         Stylet.Logging.LogManager.Enabled = true;
 
         return dirty;
