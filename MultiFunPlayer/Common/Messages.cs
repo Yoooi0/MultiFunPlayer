@@ -14,7 +14,7 @@ internal record WindowCreatedMessage();
 public record MediaSpeedChangedMessage(double Speed);
 public record MediaPositionChangedMessage(TimeSpan? Position, bool ForceSeek = false);
 public record MediaPlayingChangedMessage(bool IsPlaying);
-public record MediaPathChangedMessage(string Path);
+public record MediaPathChangedMessage(string Path, bool ReloadScripts = true);
 public record MediaDurationChangedMessage(TimeSpan? Duration);
 
 public record MediaSeekMessage(TimeSpan? Position);

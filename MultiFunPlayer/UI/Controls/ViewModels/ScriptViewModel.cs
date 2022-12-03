@@ -498,7 +498,8 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
             ResetSync(isSyncing: MediaResource != null);
 
         ResetAxes(null);
-        ReloadAxes(null);
+        if (message.ReloadScripts)
+            ReloadAxes(null);
 
         if (MediaResource == null)
             InvalidateMediaState();
