@@ -15,8 +15,6 @@ public class KeyframeCollection : IList<Keyframe>, IReadOnlyList<Keyframe>, ILis
         AddRange(collection);
     }
 
-    public bool IsRawCollection { get; init; }
-
     public void AddRange(IEnumerable<Keyframe> items)
     {
         foreach (var item in items)
@@ -57,9 +55,6 @@ public class KeyframeCollection : IList<Keyframe>, IReadOnlyList<Keyframe>, ILis
 
         Keyframe TakeOrExtrapolateLeft(int index, Keyframe next1, Keyframe next0)
             => index >= 0 ? this[index] : new Keyframe(next1.Position - Distance(next1, next0) * 2, next1.Value);
-
-        if (IsRawCollection)
-            interpolationType = InterpolationType.Linear;
 
         var p0 = this[index + 0];
         var p1 = this[index + 1];

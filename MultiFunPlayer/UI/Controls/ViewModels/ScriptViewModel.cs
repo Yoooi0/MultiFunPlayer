@@ -715,15 +715,6 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
     #endregion
 
     #region Script
-    private IScriptReader GetScriptReader(DeviceAxis axis)
-    {
-        var settings = AxisSettings[axis];
-        return new FunscriptReader(new FunscriptReaderSettings()
-        {
-            PreferRawActions = settings.PreferRawActions
-        });
-    }
-
     private List<DeviceAxis> SearchForScripts(IEnumerable<DeviceAxis> axes = null)
     {
         axes ??= DeviceAxis.All;
@@ -751,7 +742,7 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                 Logger.Info("Matching zip file \"{0}\"", path);
                 using var zip = ZipFile.OpenRead(path);
                 foreach (var entry in zip.Entries.Where(e => string.Equals(Path.GetExtension(e.FullName), ".funscript", StringComparison.OrdinalIgnoreCase)))
-                    TryMatchName(entry.Name, axis => ScriptResource.FromZipArchiveEntry(GetScriptReader(axis), path, entry));
+                    TryMatchName(entry.Name, axis => ScriptResource.FromZipArchiveEntry(FunscriptReader.Default, path, entry));
 
                 return true;
             }
@@ -767,7 +758,7 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                 TryMatchArchive(zipFile.FullName);
 
             foreach (var funscriptFile in library.EnumerateFiles($"{mediaWithoutExtension}*.funscript"))
-                TryMatchName(funscriptFile.Name, axis => ScriptResource.FromFileInfo(GetScriptReader(axis), funscriptFile));
+                TryMatchName(funscriptFile.Name, axis => ScriptResource.FromFileInfo(FunscriptReader.Default, funscriptFile));
         }
 
         if (Directory.Exists(MediaResource.Source))
@@ -777,7 +768,7 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
             TryMatchArchive(Path.Join(sourceDirectory.FullName, $"{mediaWithoutExtension}.zip"));
 
             foreach (var funscriptFile in sourceDirectory.EnumerateFiles($"{mediaWithoutExtension}*.funscript"))
-                TryMatchName(funscriptFile.Name, axis => ScriptResource.FromFileInfo(GetScriptReader(axis), funscriptFile));
+                TryMatchName(funscriptFile.Name, axis => ScriptResource.FromFileInfo(FunscriptReader.Default, funscriptFile));
         }
 
         return updated;
@@ -1045,7 +1036,7 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                 return;
 
             ResetSync(true, axis);
-            SetScript(axis, ScriptResource.FromPath(GetScriptReader(axis), path, userLoaded: true));
+            SetScript(axis, ScriptResource.FromPath(FunscriptReader.Default, path, userLoaded: true));
         }
     }
 
@@ -1082,7 +1073,7 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
             return;
 
         ResetSync(true, axis);
-        SetScript(axis, ScriptResource.FromFileInfo(GetScriptReader(axis), new FileInfo(dialog.FileName), userLoaded: true));
+        SetScript(axis, ScriptResource.FromFileInfo(FunscriptReader.Default, new FileInfo(dialog.FileName), userLoaded: true));
     }
 
     public void OnAxisClear(DeviceAxis axis) => ResetAxes(axis);
@@ -1207,16 +1198,6 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
 
         var (axis, _) = pair;
         ResetSync(true, axis);
-    }
-
-    [SuppressPropertyChangedWarnings]
-    public void OnPreferRawActionsChanged(object sender, RoutedEventArgs e)
-    {
-        if (sender is not FrameworkElement element || element.DataContext is not KeyValuePair<DeviceAxis, AxisModel> pair)
-            return;
-
-        var (axis, _) = pair;
-        ReloadAxes(axis);
     }
 
     [SuppressPropertyChangedWarnings]
@@ -1695,16 +1676,6 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         s.RegisterAction<DeviceAxis>("Axis::UpdateMotionProviderWithoutScript::Toggle",
             s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All), axis => UpdateSettings(axis, s => s.UpdateMotionProviderWithoutScript = !s.UpdateMotionProviderWithoutScript));
         #endregion
-
-        #region Axis::PreferRawActions
-        s.RegisterAction<DeviceAxis, bool>("Axis::PreferRawActions::Set",
-            s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All),
-            s => s.WithLabel("Prefer raw actions"),
-            (axis, enabled) => UpdateSettings(axis, s => s.PreferRawActions = enabled));
-
-        s.RegisterAction<DeviceAxis>("Axis::PreferRawActions::Toggle",
-            s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All), axis => UpdateSettings(axis, s => s.PreferRawActions = !s.PreferRawActions));
-        #endregion
     }
     #endregion
 
@@ -1890,7 +1861,6 @@ internal class AxisSettings : PropertyChangedBase
     [JsonProperty] public string SelectedMotionProvider { get; set; } = null;
     [JsonProperty] public bool SpeedLimitEnabled { get; set; } = false;
     [JsonProperty] public double MaximumSecondsPerStroke { get; set; } = 0.1;
-    [JsonProperty] public bool PreferRawActions { get; set; } = true;
 
     public AxisSettings(DeviceAxis axis)
     {

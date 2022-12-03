@@ -16,19 +16,14 @@ public interface IScriptReader
     KeyframeCollection Read(Stream stream);
 }
 
-public class FunscriptReaderSettings
-{
-    public bool PreferRawActions { get; init; } = true;
-}
+public class FunscriptReaderSettings { }
 
 public class FunscriptReader : IScriptReader
 {
-    private readonly FunscriptReaderSettings _settings;
-
     public static FunscriptReader Default { get; } = new FunscriptReader();
 
     public FunscriptReader() : this(new FunscriptReaderSettings()) { }
-    public FunscriptReader(FunscriptReaderSettings settings) => _settings = settings ?? throw new ArgumentNullException(nameof(settings));
+    public FunscriptReader(FunscriptReaderSettings settings) { }
 
     public KeyframeCollection Read(Stream stream)
     {
@@ -37,17 +32,11 @@ public class FunscriptReader : IScriptReader
         var serializer = JsonSerializer.CreateDefault();
 
         var script = serializer.Deserialize<Script>(jsonReader);
-        if (script.RawActions == null && script.Actions == null)
+        if (script.Actions == null)
             return null;
 
-        var isRaw = _settings.PreferRawActions && script.RawActions?.Count > script.Actions?.Count;
-        var actions = isRaw ? script.RawActions : script.Actions;
-        var keyframes = new KeyframeCollection(actions.Count)
-        {
-            IsRawCollection = isRaw
-        };
-
-        foreach (var action in actions)
+        var keyframes = new KeyframeCollection(script.Actions.Count);
+        foreach (var action in script.Actions)
         {
             var position = action.At / 1000;
             if (position < 0)
@@ -60,32 +49,24 @@ public class FunscriptReader : IScriptReader
         return keyframes;
     }
 
-    private record Script(List<Action> RawActions, List<Action> Actions);
+    private record Script(List<Action> Actions);
     private record Action(double At, double Pos);
 }
 
-public class CsvReaderSettings
-{
-    public bool CreateRawCollection { get; init; } = true;
-}
+public class CsvReaderSettings { }
 
 public class CsvReader : IScriptReader
 {
-    private readonly CsvReaderSettings _settings;
-
     public static CsvReader Default { get; } = new CsvReader();
 
     public CsvReader() : this(new CsvReaderSettings()) { }
-    public CsvReader(CsvReaderSettings settings) => _settings = settings ?? throw new ArgumentNullException(nameof(settings));
+    public CsvReader(CsvReaderSettings settings) { }
 
     public KeyframeCollection Read(Stream stream)
     {
         using var streamReader = new StreamReader(stream, Encoding.UTF8);
 
-        var keyframes = new KeyframeCollection()
-        {
-            IsRawCollection = _settings.CreateRawCollection
-        };
+        var keyframes = new KeyframeCollection();
 
         var line = default(string);
         while ((line = streamReader.ReadLine()) != null)
