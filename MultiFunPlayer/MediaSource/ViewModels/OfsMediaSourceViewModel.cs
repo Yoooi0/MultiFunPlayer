@@ -1,4 +1,3 @@
-using Microsoft.WindowsAPICodePack.Dialogs;
 using MultiFunPlayer.Common;
 using MultiFunPlayer.Input;
 using MultiFunPlayer.UI;
@@ -8,7 +7,6 @@ using NLog;
 using Stylet;
 using System.ComponentModel;
 using System.IO;
-using System.Net.Http;
 using System.Net.WebSockets;
 using System.Text;
 

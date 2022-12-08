@@ -20,7 +20,6 @@ using System.Reflection;
 using MultiFunPlayer.MediaSource.MediaResource;
 using MultiFunPlayer.MediaSource.MediaResource.Modifier;
 using MultiFunPlayer.MediaSource.MediaResource.Modifier.ViewModels;
-using System.Collections.Concurrent;
 
 namespace MultiFunPlayer.UI.Controls.ViewModels;
 

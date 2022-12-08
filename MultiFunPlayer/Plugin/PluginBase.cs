@@ -1,14 +1,9 @@
 ﻿using MultiFunPlayer.Common;
 using MultiFunPlayer.Input;
-using Newtonsoft.Json.Linq;
 using NLog;
 using Stylet;
 using StyletIoC;
 using System.Diagnostics.CodeAnalysis;
-using System.IO;
-using System.Text;
-using System.Windows;
-using System.Windows.Markup;
 
 namespace MultiFunPlayer.Plugin;
 
