@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System.Collections;
 using System.IO;
@@ -242,6 +242,9 @@ public static class CollectionExtensions
     public static bool ValidateIndex<T>(this ICollection<T> collection, int index)
         => index >= 0 && index < collection.Count;
 
+    public static bool ValidateIndex<T>(this IReadOnlyCollection<T> collection, int index)
+        => index >= 0 && index < collection.Count;
+
     public static bool TryGet<T>(this IList list, int index, out T value)
     {
         value = default;
@@ -259,7 +262,7 @@ public static class CollectionExtensions
         return true;
     }
 
-    public static bool TryGet<T>(this IList<T> list, int index, out T value)
+    public static bool TryGet<T>(this IReadOnlyList<T> list, int index, out T value)
     {
         value = default;
         if (!list.ValidateIndex(index))

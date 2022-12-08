@@ -2,24 +2,15 @@ using System.Collections;
 
 namespace MultiFunPlayer.Common;
 
-public class KeyframeCollection : IList<Keyframe>, IReadOnlyList<Keyframe>, IList, ICollection
+public class KeyframeCollection : IReadOnlyList<Keyframe>
 {
     private readonly List<Keyframe> _items;
 
     public KeyframeCollection() => _items = new List<Keyframe>();
     public KeyframeCollection(int capacity) => _items = new List<Keyframe>(capacity);
 
-    public KeyframeCollection(IEnumerable<Keyframe> collection)
-    {
-        _items = new List<Keyframe>();
-        AddRange(collection);
-    }
-
-    public void AddRange(IEnumerable<Keyframe> items)
-    {
-        foreach (var item in items)
-            Add(item);
-    }
+    public void Add(double position, double value)
+        => _items.Add(new Keyframe(position, value));
 
     public int SearchForIndexBefore(double position) => SearchForIndexAfter(position) - 1;
     public int SearchForIndexAfter(double position)
@@ -128,51 +119,16 @@ public class KeyframeCollection : IList<Keyframe>, IReadOnlyList<Keyframe>, ILis
         return ady < 0.001 || adx < 0.001;
     }
 
-    #region IList<T>
-    public int Count => _items.Count;
-    public bool IsReadOnly => false;
-    public Keyframe this[int index] { get => _items[index]; }
-    Keyframe IList<Keyframe>.this[int index] { get => _items[index]; set => Add(value); }
-
-    public int IndexOf(Keyframe item) => _items.IndexOf(item);
-    public void RemoveAt(int index) => _items.RemoveAt(index);
-    public void Add(Keyframe item) => _items.Insert(SearchForIndexAfter(item.Position), item);
-    public void Clear() => _items.Clear();
-    public bool Contains(Keyframe item) => _items.Contains(item);
-    public void CopyTo(Keyframe[] array, int arrayIndex) => _items.CopyTo(array, arrayIndex);
-    public bool Remove(Keyframe item) => _items.Remove(item);
-
-    void IList<Keyframe>.Insert(int index, Keyframe item) => Add(item);
+    #region IReadOnlyList
+    public Keyframe this[int index] => _items[index];
     #endregion
 
-    #region IList
-    bool IList.IsFixedSize => false;
-    object IList.this[int index] { get => _items[index]; set => Add((Keyframe)value); }
-
-    int IList.Add(object value)
-    {
-        var item = (Keyframe)value;
-        var index = SearchForIndexAfter(item.Position);
-
-        _items.Insert(index, item);
-        return index;
-    }
-
-    bool IList.Contains(object value) => Contains((Keyframe)value);
-    int IList.IndexOf(object value) => IndexOf((Keyframe)value);
-    void IList.Insert(int index, object value) => Add((Keyframe)value);
-    void IList.Remove(object value) => Remove((Keyframe)value);
-
+    #region IReadOnlyCollection
+    public int Count => _items.Count;
     #endregion
 
     #region IEnumerable
     public IEnumerator<Keyframe> GetEnumerator() => _items.GetEnumerator();
     IEnumerator IEnumerable.GetEnumerator() => _items.GetEnumerator();
-    #endregion
-
-    #region ICollection
-    bool ICollection.IsSynchronized => false;
-    public object SyncRoot => this;
-    void ICollection.CopyTo(Array array, int index) => ((IList)_items).CopyTo(array, index);
     #endregion
 }

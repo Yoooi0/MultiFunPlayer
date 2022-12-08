@@ -72,7 +72,7 @@ public class FunscriptReader : AbstractScriptReader
                 continue;
 
             var value = MathUtils.Clamp01(action.Pos / 100);
-            keyframes.Add(new Keyframe(position, value));
+            keyframes.Add(position, value);
         }
 
         var metadata = script.Metadata;
@@ -140,7 +140,7 @@ public class CsvReader : AbstractScriptReader
                 continue;
 
             value = MathUtils.Clamp01(value);
-            keyframes.Add(new Keyframe(position, value));
+            keyframes.Add(position, value);
         }
 
         return new ScriptResource()

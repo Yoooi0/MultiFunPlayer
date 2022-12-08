@@ -75,7 +75,7 @@ internal partial class InterpolationPreview : UserControl, INotifyPropertyChange
         void AddKeyframe(double x, double y)
         {
             Points.Add(new Point(ActualWidth * x, ActualHeight * y));
-            _keyframes.Add(new Keyframe(x, y));
+            _keyframes.Add(x, y);
         }
 
         Points = new ObservableCollection<Point>();
@@ -85,7 +85,7 @@ internal partial class InterpolationPreview : UserControl, INotifyPropertyChange
         while (_keyframes.Count < PointCount - 1)
         {
             var y = MathUtils.Clamp01((int)Math.Round(Random.Shared.NextDouble() * 5) / 5d);
-            if (y == _keyframes.Last().Value)
+            if (y == _keyframes[^1].Value)
                 continue;
 
             var count = Random.Shared.Next(1, 4);

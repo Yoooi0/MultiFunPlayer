@@ -170,7 +170,7 @@ internal class InternalMediaSourceViewModel : AbstractMediaSource, IHandle<Media
             PlaylistIndex = index;
 
             SetScriptInfo(scriptInfo);
-            SetDuration(script?.Keyframes.Last().Position ?? double.NaN);
+            SetDuration(script?.Keyframes?[^1].Position ?? double.NaN);
             SetPosition(script != null ? 0 : double.NaN, forceSeek: true);
         }
         else if (_scriptInfo != null)

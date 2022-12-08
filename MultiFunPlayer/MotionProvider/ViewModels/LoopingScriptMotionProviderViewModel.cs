@@ -29,8 +29,8 @@ internal class LoopingScriptMotionProviderViewModel : AbstractMotionProvider
     {
         Script = FunscriptReader.Default.FromFileInfo(SourceFile);
         _scriptIndex = 0;
-        _scriptStart = Script?.Keyframes?.First().Position ?? double.NaN;
-        _scriptEnd = Script?.Keyframes?.Last().Position ?? double.NaN;
+        _scriptStart = Script?.Keyframes?[0].Position ?? double.NaN;
+        _scriptEnd = Script?.Keyframes?[^1].Position ?? double.NaN;
         _time = 0;
     }
 
