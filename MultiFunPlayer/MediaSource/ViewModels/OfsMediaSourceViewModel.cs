@@ -125,7 +125,7 @@ internal class OfsMediaSourceViewModel : AbstractMediaSource
                                 if (!axes.Any())
                                     break;
 
-                                var script = ScriptResource.FromBytes(FunscriptReader.Default, name, Uri.ToString(), Encoding.UTF8.GetBytes(funscriptToken.ToString()));
+                                var script = FunscriptReader.Default.FromBytes(name, Uri.ToString(), Encoding.UTF8.GetBytes(funscriptToken.ToString()));
                                 EventAggregator.Publish(new ScriptChangedMessage(axes.ToDictionary(a => a, _ => script)));
                             }
 

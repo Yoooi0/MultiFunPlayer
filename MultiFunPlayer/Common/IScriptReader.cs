@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using System.Globalization;
 using System.IO;
+using System.IO.Compression;
 using System.Text;
 
 namespace MultiFunPlayer.Common;
@@ -13,19 +14,47 @@ public enum ScriptType
 
 public interface IScriptReader
 {
-    KeyframeCollection Read(Stream stream);
+    IScriptResource FromStream(string name, string source, Stream stream);
+}
+
+public abstract class AbstractScriptReader : IScriptReader
+{
+    public abstract IScriptResource FromStream(string name, string source, Stream stream);
+
+    public IScriptResource FromPath(string path) => FromFileInfo(new FileInfo(path));
+    public IScriptResource FromFileInfo(FileInfo file)
+    {
+        if (!file.Exists)
+            return null;
+
+        var path = file.FullName;
+        using var stream = new FileStream(path, FileMode.Open, FileAccess.Read);
+        return FromStream(Path.GetFileName(path), Path.GetDirectoryName(path), stream);
+    }
+
+    public IScriptResource FromZipArchiveEntry(string archivePath, ZipArchiveEntry entry)
+    {
+        using var stream = entry.Open();
+        return FromStream(entry.Name, archivePath, stream);
+    }
+
+    public IScriptResource FromBytes(string name, string source, IEnumerable<byte> bytes)
+    {
+        using var stream = new MemoryStream(bytes.ToArray());
+        return FromStream(name, source, stream);
+    }
 }
 
 public class FunscriptReaderSettings { }
 
-public class FunscriptReader : IScriptReader
+public class FunscriptReader : AbstractScriptReader
 {
     public static FunscriptReader Default { get; } = new FunscriptReader();
 
     public FunscriptReader() : this(new FunscriptReaderSettings()) { }
     public FunscriptReader(FunscriptReaderSettings settings) { }
 
-    public KeyframeCollection Read(Stream stream)
+    public override IScriptResource FromStream(string name, string source, Stream stream)
     {
         using var streamReader = new StreamReader(stream, Encoding.UTF8);
         using var jsonReader = new JsonTextReader(streamReader);
@@ -46,7 +75,12 @@ public class FunscriptReader : IScriptReader
             keyframes.Add(new Keyframe(position, value));
         }
 
-        return keyframes;
+        return new ScriptResource()
+        {
+            Name = name,
+            Source = source,
+            Keyframes = keyframes
+        };
     }
 
     private record Script(List<Action> Actions);
@@ -55,14 +89,14 @@ public class FunscriptReader : IScriptReader
 
 public class CsvReaderSettings { }
 
-public class CsvReader : IScriptReader
+public class CsvReader : AbstractScriptReader
 {
     public static CsvReader Default { get; } = new CsvReader();
 
     public CsvReader() : this(new CsvReaderSettings()) { }
     public CsvReader(CsvReaderSettings settings) { }
 
-    public KeyframeCollection Read(Stream stream)
+    public override IScriptResource FromStream(string name, string source, Stream stream)
     {
         using var streamReader = new StreamReader(stream, Encoding.UTF8);
 
@@ -86,6 +120,11 @@ public class CsvReader : IScriptReader
             keyframes.Add(new Keyframe(position, value));
         }
 
-        return keyframes;
+        return new ScriptResource()
+        {
+            Name = name,
+            Source = source,
+            Keyframes = keyframes
+        };
     }
 }
