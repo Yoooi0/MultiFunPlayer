@@ -75,16 +75,39 @@ public class FunscriptReader : AbstractScriptReader
             keyframes.Add(new Keyframe(position, value));
         }
 
+        var metadata = script.Metadata;
+        var chapters = default(ChapterCollection);
+        var bookmarks = default(BookmarkCollection);
+
+        if (metadata?.Chapters?.Count > 0)
+        {
+            chapters = new ChapterCollection(metadata.Chapters.Count);
+            foreach (var chapter in metadata.Chapters)
+                chapters.Add(chapter.Name, chapter.StartTime, chapter.EndTime);
+        }
+
+        if (metadata?.Bookmarks?.Count > 0)
+        {
+            bookmarks = new BookmarkCollection(metadata.Bookmarks.Count);
+            foreach (var bookmark in metadata.Bookmarks)
+                bookmarks.Add(bookmark.Name, bookmark.Time);
+        }
+
         return new ScriptResource()
         {
             Name = name,
             Source = source,
-            Keyframes = keyframes
+            Keyframes = keyframes,
+            Chapters = chapters,
+            Bookmarks = bookmarks
         };
     }
 
-    private record Script(List<Action> Actions);
+    private record Script(List<Action> Actions, Metadata Metadata);
     private record Action(double At, double Pos);
+    private record Metadata(List<Chapter> Chapters, List<Bookmark> Bookmarks);
+    private record Chapter(string Name, TimeSpan StartTime, TimeSpan EndTime);
+    private record Bookmark(string Name, TimeSpan Time);
 }
 
 public class CsvReaderSettings { }
