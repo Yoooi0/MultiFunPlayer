@@ -2,5 +2,5 @@
 
 namespace MultiFunPlayer.Common;
 
-[DebuggerDisplay("[{Name}: {Position}]")]
-public record Bookmark(string Name, TimeSpan Position);
+[DebuggerDisplay("[{Name}: {Position}s]")]
+public record Bookmark(string Name, double Position);

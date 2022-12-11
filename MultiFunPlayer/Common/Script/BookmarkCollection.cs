@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 
 namespace MultiFunPlayer.Common;
 
@@ -9,7 +9,8 @@ public class BookmarkCollection : IReadOnlyList<Bookmark>
     public BookmarkCollection() => _items = new List<Bookmark>();
     public BookmarkCollection(int capacity) => _items = new List<Bookmark>(capacity);
 
-    public void Add(string name, TimeSpan position) => _items.Add(new Bookmark(name, position));
+    public void Add(string name, TimeSpan position) => Add(name, position.TotalSeconds);
+    public void Add(string name, double position) => _items.Add(new Bookmark(name, position));
 
     #region IReadOnlyList
     public Bookmark this[int index] => _items[index];

@@ -154,16 +154,16 @@ public partial class MarkersPreview : UserControl, INotifyPropertyChanged
         var items = new List<ChapterModel>(chapters.Count);
         foreach (var chapter in chapters)
         {
-            if (chapter.EndPosition < TimeSpan.Zero)
+            if (chapter.EndPosition < 0)
                 continue;
-            if (chapter.StartPosition.TotalSeconds > Duration)
+            if (chapter.StartPosition > Duration)
                 continue;
 
             items.Add(new()
             {
                 Name = chapter.Name,
-                StartPosition = chapter.StartPosition < TimeSpan.Zero ? TimeSpan.Zero : chapter.StartPosition,
-                EndPosition = chapter.EndPosition.TotalSeconds > Duration ? TimeSpan.FromSeconds(Duration) : chapter.EndPosition,
+                StartPosition = chapter.StartPosition < 0 ? 0 : chapter.StartPosition,
+                EndPosition = chapter.EndPosition > Duration ? Duration : chapter.EndPosition,
                 Color = _colors[items.Count % _colors.Length],
                 CanvasMultiplier = ActualWidth / Duration,
             });
@@ -185,9 +185,9 @@ public partial class MarkersPreview : UserControl, INotifyPropertyChanged
         var models = new List<BookmarkModel>(bookmarks.Count);
         foreach (var bookmark in bookmarks)
         {
-            if (bookmark.Position < TimeSpan.Zero)
+            if (bookmark.Position < 0)
                 continue;
-            if (bookmark.Position.TotalSeconds > Duration)
+            if (bookmark.Position > Duration)
                 continue;
 
             models.Add(new()
@@ -206,7 +206,7 @@ public partial class MarkersPreview : UserControl, INotifyPropertyChanged
         if (sender is not FrameworkElement element || element.DataContext is not ChapterModel model)
             return;
 
-        MarkerClick?.Invoke(this, new MarkerClickEventArgs(model.StartPosition));
+        MarkerClick?.Invoke(this, new MarkerClickEventArgs(TimeSpan.FromSeconds(model.StartPosition)));
     }
 
     public void OnChapterEndClick(object sender, RoutedEventArgs e)
@@ -214,7 +214,7 @@ public partial class MarkersPreview : UserControl, INotifyPropertyChanged
         if (sender is not FrameworkElement element || element.DataContext is not ChapterModel model)
             return;
 
-        MarkerClick?.Invoke(this, new MarkerClickEventArgs(model.EndPosition));
+        MarkerClick?.Invoke(this, new MarkerClickEventArgs(TimeSpan.FromSeconds(model.EndPosition)));
     }
 
     public void OnBookmarkClick(object sender, EventArgs e)
@@ -222,7 +222,7 @@ public partial class MarkersPreview : UserControl, INotifyPropertyChanged
         if (sender is not FrameworkElement element || element.DataContext is not BookmarkModel model)
             return;
 
-        MarkerClick?.Invoke(this, new MarkerClickEventArgs(model.Position));
+        MarkerClick?.Invoke(this, new MarkerClickEventArgs(TimeSpan.FromSeconds(model.Position)));
     }
 
     [SuppressPropertyChangedWarnings]
@@ -238,23 +238,23 @@ public partial class MarkersPreview : UserControl, INotifyPropertyChanged
 public class ChapterModel
 {
     public string Name { get; init; }
-    public TimeSpan StartPosition { get; init; }
-    public TimeSpan EndPosition { get; init; }
+    public double StartPosition { get; init; }
+    public double EndPosition { get; init; }
     public Color Color { get; init; }
 
     public double CanvasMultiplier { get; init; }
-    public double CanvasLeft => Math.Floor(StartPosition.TotalSeconds * CanvasMultiplier);
-    public double CanvasRight => Math.Floor(EndPosition.TotalSeconds * CanvasMultiplier);
+    public double CanvasLeft => Math.Floor(StartPosition * CanvasMultiplier);
+    public double CanvasRight => Math.Floor(EndPosition * CanvasMultiplier);
     public double CanvasLength => CanvasRight - CanvasLeft;
 }
 
 public class BookmarkModel
 {
     public string Name { get; init; }
-    public TimeSpan Position { get; init; }
+    public double Position { get; init; }
 
     public double CanvasMultiplier { get; init; }
-    public double CanvasLeft => Math.Floor(Position.TotalSeconds * CanvasMultiplier);
+    public double CanvasLeft => Math.Floor(Position * CanvasMultiplier);
 }
 
 public class MarkerClickEventArgs : EventArgs

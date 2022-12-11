@@ -9,6 +9,7 @@ public class KeyframeCollection : IReadOnlyList<Keyframe>
     public KeyframeCollection() => _items = new List<Keyframe>();
     public KeyframeCollection(int capacity) => _items = new List<Keyframe>(capacity);
 
+    public void Add(TimeSpan position, double value) => Add(position.TotalSeconds, value);
     public void Add(double position, double value)
     {
         var index = SearchForIndexAfter(position);

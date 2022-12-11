@@ -2,5 +2,5 @@
 
 namespace MultiFunPlayer.Common;
 
-[DebuggerDisplay("[{Name}: {StartPosition} -> {EndPosition}]")]
-public record Chapter(string Name, TimeSpan StartPosition, TimeSpan EndPosition);
+[DebuggerDisplay("[{Name}: {StartPosition}s -> {EndPosition}s]")]
+public record Chapter(string Name, double StartPosition, double EndPosition);

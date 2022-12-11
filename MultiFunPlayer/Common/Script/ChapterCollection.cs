@@ -9,7 +9,8 @@ public class ChapterCollection : IReadOnlyList<Chapter>
     public ChapterCollection() => _items = new List<Chapter>();
     public ChapterCollection(int capacity) => _items = new List<Chapter>(capacity);
 
-    public bool Add(string name, TimeSpan startPosition, TimeSpan endPosition)
+    public bool Add(string name, TimeSpan startPosition, TimeSpan endPosition) => Add(name, startPosition.TotalSeconds, endPosition.TotalSeconds);
+    public bool Add(string name, double startPosition, double endPosition)
     {
         if (startPosition > endPosition)
             (startPosition, endPosition) = (endPosition, startPosition);
@@ -18,8 +19,8 @@ public class ChapterCollection : IReadOnlyList<Chapter>
             if (chapter.StartPosition >= startPosition && chapter.EndPosition <= endPosition)
                 return false;
 
-        var startIntersect = Find(startPosition);
-        var endIntersect = Find(endPosition);
+        var startIntersect = FindIntersecting(startPosition);
+        var endIntersect = FindIntersecting(endPosition);
         if (startIntersect == endIntersect && startIntersect != null)
             return false;
 
@@ -33,7 +34,7 @@ public class ChapterCollection : IReadOnlyList<Chapter>
         return true;
     }
 
-    public Chapter Find(TimeSpan position)
+    public Chapter FindIntersecting(double position)
     {
         if (_items.Count == 0)
             return null;
