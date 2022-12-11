@@ -19,8 +19,8 @@ public class ChapterCollection : IReadOnlyList<Chapter>
             if (chapter.StartPosition >= startPosition && chapter.EndPosition <= endPosition)
                 return false;
 
-        var startIntersect = FindIntersecting(startPosition);
-        var endIntersect = FindIntersecting(endPosition);
+        _ = TryFindIntersecting(startPosition, out var startIntersect);
+        _ = TryFindIntersecting(endPosition, out var endIntersect);
         if (startIntersect == endIntersect && startIntersect != null)
             return false;
 
@@ -34,16 +34,33 @@ public class ChapterCollection : IReadOnlyList<Chapter>
         return true;
     }
 
-    public Chapter FindIntersecting(double position)
+    public bool TryFindIntersecting(double position, out Chapter chapter)
     {
-        if (_items.Count == 0)
-            return null;
+        chapter = _items.Find(x => position >= x.StartPosition && position <= x.EndPosition);
+        return chapter != null;
+    }
 
-        foreach(var chapter in _items)
-            if (position >= chapter.StartPosition && position <= chapter.EndPosition)
-                return chapter;
+    public bool TryFindByName(string name, out Chapter chapter)
+    {
+        chapter = _items.Find(x => string.Equals(x.Name, name, StringComparison.OrdinalIgnoreCase));
+        return chapter != null;
+    }
 
-        return null;
+    public int SearchForIndexBefore(double position) => SearchForIndexAfter(position) - 1;
+    public int SearchForIndexAfter(double position)
+    {
+        if (_items.Count == 0 || position < _items[0].StartPosition)
+            return 0;
+
+        if (position > _items[^1].StartPosition)
+            return Count;
+
+        var bestIndex = _items.BinarySearch(new Chapter(null, position, position), ChapterStartPositionComparer.Default);
+        if (bestIndex >= 0)
+            return bestIndex;
+
+        bestIndex = ~bestIndex;
+        return bestIndex == Count ? Count : bestIndex;
     }
 
     #region IReadOnlyList

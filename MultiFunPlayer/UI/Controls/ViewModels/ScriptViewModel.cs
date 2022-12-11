@@ -1344,7 +1344,7 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         s.RegisterAction<double>("Media::Position::Time::Set",
             s => s.WithLabel("Value").WithStringFormat("{}{0}s"), value => SeekMediaToTime(value));
 
-        s.RegisterAction<double>( "Media::Position::Percent::Offset",
+        s.RegisterAction<double>("Media::Position::Percent::Offset",
             s => s.WithLabel("Value offset").WithStringFormat("{}{0}%"),
             offset => SeekMediaToPercent(MediaPosition / MediaDuration + offset / 100));
         s.RegisterAction<double>("Media::Position::Percent::Set",
@@ -1366,6 +1366,86 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         #region Media::AutoSkipToScriptStartOffset
         s.RegisterAction<double>("Media::AutoSkipToScriptStartOffset::Set",
             s => s.WithLabel("Script start auto-skip offset").WithStringFormat("{}{0}s"), offset => AutoSkipToScriptStartOffset = offset);
+        #endregion
+
+        #region Media::Bookmark
+        BookmarkCollection GetFirstBookmarks()
+        {
+            var (_, bookmarks) = AxisBookmarks.FirstOrDefault(x => x.Value != null);
+            return bookmarks;
+        }
+
+        s.RegisterAction<string>("Media::Bookmark::SeekToByName",
+            s => s.WithLabel("Bookmark name"), name =>
+            {
+                var bookmarks = GetFirstBookmarks();
+                if (bookmarks?.TryFindByName(name, out var bookmark) == true)
+                    SeekMediaToTime(bookmark.Position);
+            });
+
+        s.RegisterAction<int>("Media::Bookmark::SeekToByIndex",
+            s => s.WithLabel("Bookmark index"), index =>
+            {
+                var bookmarks = GetFirstBookmarks();
+                if (bookmarks?.ValidateIndex(index) == true)
+                    SeekMediaToTime(bookmarks[index].Position);
+            });
+
+        s.RegisterAction("Media::Bookmark::SeekToNext", () =>
+            {
+                var bookmarks = GetFirstBookmarks();
+                var index = bookmarks.SearchForIndexAfter(MediaPosition + 1.5);
+                if (bookmarks?.ValidateIndex(index) == true)
+                    SeekMediaToTime(bookmarks[index].Position);
+            });
+
+        s.RegisterAction("Media::Bookmark::SeekToPrev", () =>
+        {
+            var bookmarks = GetFirstBookmarks();
+            var index = bookmarks.SearchForIndexBefore(MediaPosition - 1.5);
+            if (bookmarks?.ValidateIndex(index) == true)
+                SeekMediaToTime(bookmarks[index].Position);
+        });
+        #endregion
+
+        #region Media::Chapter
+        ChapterCollection GetFirstChapters()
+        {
+            var (_, chapters) = AxisChapters.FirstOrDefault(x => x.Value != null);
+            return chapters;
+        }
+
+        s.RegisterAction<string>("Media::Chapter::SeekToByName",
+            s => s.WithLabel("Chapter name"), name =>
+            {
+                var chapters = GetFirstChapters();
+                if (chapters?.TryFindByName(name, out var chapter) == true)
+                    SeekMediaToTime(chapter.StartPosition);
+            });
+
+        s.RegisterAction<int>("Media::Chapter::SeekToByIndex",
+            s => s.WithLabel("Chapter index"), index =>
+            {
+                var chapters = GetFirstChapters();
+                if (chapters?.ValidateIndex(index) == true)
+                    SeekMediaToTime(chapters[index].StartPosition);
+            });
+
+        s.RegisterAction("Media::Chapter::SeekToNext", () =>
+        {
+            var chapters = GetFirstChapters();
+            var index = chapters.SearchForIndexAfter(MediaPosition + 1.5);
+            if (chapters?.ValidateIndex(index) == true)
+                SeekMediaToTime(chapters[index].StartPosition);
+        });
+
+        s.RegisterAction("Media::Chapter::SeekToPrev", () =>
+        {
+            var chapters = GetFirstChapters();
+            var index = chapters.SearchForIndexBefore(MediaPosition - 1.5);
+            if (chapters?.ValidateIndex(index) == true)
+                SeekMediaToTime(chapters[index].StartPosition);
+        });
         #endregion
 
         #region Script::SkipGap

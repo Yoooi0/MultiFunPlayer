@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 
 namespace MultiFunPlayer.Common;
 
@@ -11,6 +11,29 @@ public class BookmarkCollection : IReadOnlyList<Bookmark>
 
     public void Add(string name, TimeSpan position) => Add(name, position.TotalSeconds);
     public void Add(string name, double position) => _items.Add(new Bookmark(name, position));
+
+    public bool TryFindByName(string name, out Bookmark bookmark)
+    {
+        bookmark = _items.Find(x => string.Equals(x.Name, name, StringComparison.OrdinalIgnoreCase));
+        return bookmark != null;
+    }
+
+    public int SearchForIndexBefore(double position) => SearchForIndexAfter(position) - 1;
+    public int SearchForIndexAfter(double position)
+    {
+        if (_items.Count == 0 || position < _items[0].Position)
+            return 0;
+
+        if (position > _items[^1].Position)
+            return Count;
+
+        var bestIndex = _items.BinarySearch(new Bookmark(null, position), BookmarkPositionComparer.Default);
+        if (bestIndex >= 0)
+            return bestIndex;
+
+        bestIndex = ~bestIndex;
+        return bestIndex == Count ? Count : bestIndex;
+    }
 
     #region IReadOnlyList
     public Bookmark this[int index] => _items[index];
