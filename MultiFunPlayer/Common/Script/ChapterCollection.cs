@@ -30,7 +30,8 @@ public class ChapterCollection : IReadOnlyList<Chapter>
         if (endIntersect != null)
             endPosition = endIntersect.StartPosition;
 
-        _items.Add(new Chapter(name, startPosition, endPosition));
+        var index = SearchForIndexAfter(startPosition);
+        _items.Insert(index, new Chapter(name, startPosition, endPosition));
         return true;
     }
 

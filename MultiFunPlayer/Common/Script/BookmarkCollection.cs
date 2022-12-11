@@ -10,7 +10,11 @@ public class BookmarkCollection : IReadOnlyList<Bookmark>
     public BookmarkCollection(int capacity) => _items = new List<Bookmark>(capacity);
 
     public void Add(string name, TimeSpan position) => Add(name, position.TotalSeconds);
-    public void Add(string name, double position) => _items.Add(new Bookmark(name, position));
+    public void Add(string name, double position)
+    {
+        var index = SearchForIndexAfter(position);
+        _items.Insert(index, new Bookmark(name, position));
+    }
 
     public bool TryFindByName(string name, out Bookmark bookmark)
     {
