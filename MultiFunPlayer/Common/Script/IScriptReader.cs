@@ -87,14 +87,16 @@ public class FunscriptReader : AbstractScriptReader
         {
             chapters = new ChapterCollection(metadata.Chapters.Count);
             foreach (var chapter in metadata.Chapters)
-                chapters.Add(chapter.Name, chapter.StartTime, chapter.EndTime);
+                if (chapter.StartTime >= TimeSpan.Zero)
+                    chapters.Add(chapter.Name, chapter.StartTime, chapter.EndTime);
         }
 
         if (metadata?.Bookmarks?.Count > 0)
         {
             bookmarks = new BookmarkCollection(metadata.Bookmarks.Count);
             foreach (var bookmark in metadata.Bookmarks)
-                bookmarks.Add(bookmark.Name, bookmark.Time);
+                if (bookmark.Time >= TimeSpan.Zero)
+                    bookmarks.Add(bookmark.Name, bookmark.Time);
         }
 
         return new ScriptResource()
