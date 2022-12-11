@@ -10,7 +10,10 @@ public class KeyframeCollection : IReadOnlyList<Keyframe>
     public KeyframeCollection(int capacity) => _items = new List<Keyframe>(capacity);
 
     public void Add(double position, double value)
-        => _items.Add(new Keyframe(position, value));
+    {
+        var index = SearchForIndexAfter(position);
+        _items.Insert(index, new Keyframe(position, value));
+    }
 
     public int SearchForIndexBefore(double position) => SearchForIndexAfter(position) - 1;
     public int SearchForIndexAfter(double position)
