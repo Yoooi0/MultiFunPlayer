@@ -547,7 +547,7 @@
         </material:Card>
 
         <controls:KeyframesHeatmap Height="36"
-                                   Margin="0 0 0 20"
+                                   Margin="0 0 0 4"
                                    Cursor="Hand"
                                    MouseUp="{s:Action OnKeyframesHeatmapMouseUp}"
                                    Keyframes="{Binding AxisKeyframes, Mode=OneWay}"
@@ -614,6 +614,19 @@
                 </ContextMenu>
             </controls:KeyframesHeatmap.ContextMenu>
         </controls:KeyframesHeatmap>
+
+        <controls:MarkersPreview Height="18"
+                                 Margin="0 0 0 20"
+                                 Chapters="{Binding AxisChapters, Mode=OneWay}"
+                                 Bookmarks="{Binding AxisBookmarks, Mode=OneWay}"
+                                 Duration="{Binding MediaDuration, Mode=OneWay}"
+                                 Position="{Binding MediaPosition, Mode=OneWay}"
+                                 MarkerClick="{s:Action OnMarkerkClick}"
+                                 Panel.ZIndex="-1"
+                                 ToolTipService.InitialShowDelay="500"
+                                 ToolTipService.Placement="Center"
+                                 ToolTipService.VerticalOffset="-40"
+                                 ToolTipService.IsEnabled="{Binding HeatmapEnablePreview}"/>
 
         <material:Card material:ShadowAssist.ShadowDepth="Depth1" Margin="0 0 0 10">
             <controls:NonReloadingTabControl ItemsSource="{Binding AxisModels}">

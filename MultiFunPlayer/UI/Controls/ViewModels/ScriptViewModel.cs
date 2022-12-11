@@ -46,6 +46,8 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
     public ObservableConcurrentDictionary<DeviceAxis, AxisModel> AxisModels { get; set; }
     public ObservableConcurrentDictionaryView<DeviceAxis, AxisModel, AxisState> AxisStates { get; }
     public ObservableConcurrentDictionaryView<DeviceAxis, AxisModel, KeyframeCollection> AxisKeyframes { get; }
+    public ObservableConcurrentDictionaryView<DeviceAxis, AxisModel, ChapterCollection> AxisChapters { get; }
+    public ObservableConcurrentDictionaryView<DeviceAxis, AxisModel, BookmarkCollection> AxisBookmarks { get; }
 
     public Dictionary<string, Type> MediaPathModifierTypes { get; }
     public IMotionProviderManager MotionProviderManager { get; }
@@ -93,6 +95,8 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         AxisStates = AxisModels.CreateView(model => model.State);
         AxisSettings = AxisModels.CreateView(model => model.Settings);
         AxisKeyframes = AxisModels.CreateView(model => model.Script?.Keyframes, "Script");
+        AxisChapters = AxisModels.CreateView(model => model.Script?.Chapters, "Script");
+        AxisBookmarks = AxisModels.CreateView(model => model.Script?.Bookmarks, "Script");
 
         foreach (var (_, settings) in AxisSettings)
             settings.PropertyChanged += OnAxisSettingsPropertyChanged;
@@ -923,6 +927,9 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
 
         SeekMediaToPercent(e.GetPosition(element).X / element.ActualWidth);
     }
+
+    public void OnMarkerkClick(object sender, MarkerClickEventArgs e)
+        => SeekMediaToTime(e.Position.TotalSeconds);
 
     private void InvalidateMediaState()
     {
