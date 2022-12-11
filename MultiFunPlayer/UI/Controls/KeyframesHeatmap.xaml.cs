@@ -168,11 +168,11 @@ internal partial class KeyframesHeatmap : UserControl, INotifyPropertyChanged
         _buckets = new HeatmapBucket[MaxBucketCount];
         _colors = new Color[]
         {
-                Color.FromRgb(0x24, 0x4b, 0x5c),
-                Color.FromRgb(0x75, 0xb9, 0xd1),
-                Color.FromRgb(0xef, 0xce, 0x62),
-                Color.FromRgb(0xf3, 0x99, 0x44),
-                Color.FromRgb(0xf5, 0x3e, 0x2e),
+            (Color)ColorConverter.ConvertFromString("#244b5c"),
+            (Color)ColorConverter.ConvertFromString("#75b9d1"),
+            (Color)ColorConverter.ConvertFromString("#efce62"),
+            (Color)ColorConverter.ConvertFromString("#f39944"),
+            (Color)ColorConverter.ConvertFromString("#f53e2e"),
         };
 
         InitializeComponent();

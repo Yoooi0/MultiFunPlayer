@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using System.Globalization;
 using System.IO;
 using System.IO.Compression;
@@ -15,6 +15,10 @@ public enum ScriptType
 public interface IScriptReader
 {
     IScriptResource FromStream(string name, string source, Stream stream);
+    IScriptResource FromPath(string path);
+    IScriptResource FromFileInfo(FileInfo file);
+    IScriptResource FromZipArchiveEntry(string archivePath, ZipArchiveEntry entry);
+    IScriptResource FromBytes(string name, string source, IEnumerable<byte> bytes);
 }
 
 public abstract class AbstractScriptReader : IScriptReader
