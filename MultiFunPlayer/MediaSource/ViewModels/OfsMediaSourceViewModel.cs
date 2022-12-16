@@ -9,20 +9,30 @@ using System.ComponentModel;
 using System.IO;
 using System.Net.WebSockets;
 using System.Text;
+using System.Threading.Channels;
 
 namespace MultiFunPlayer.MediaSource.ViewModels;
 
 [DisplayName("OFS")]
-internal class OfsMediaSourceViewModel : AbstractMediaSource
+internal class OfsMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlayPauseMessage>, IHandle<MediaSeekMessage>
 {
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
+
+    private readonly Channel<object> _writeMessageChannel;
 
     public override ConnectionStatus Status { get; protected set; }
 
     public Uri Uri { get; set; } = new Uri("ws://127.0.0.1:8080/ofs");
 
     public OfsMediaSourceViewModel(IShortcutManager shortcutManager, IEventAggregator eventAggregator)
-        : base(shortcutManager, eventAggregator) { }
+        : base(shortcutManager, eventAggregator)
+    {
+        _writeMessageChannel = Channel.CreateUnbounded<object>(new UnboundedChannelOptions()
+        {
+            SingleReader = true,
+            SingleWriter = true,
+        });
+    }
 
     public bool IsConnected => Status == ConnectionStatus.Connected;
     public bool IsConnectBusy => Status == ConnectionStatus.Connecting || Status == ConnectionStatus.Disconnecting;
@@ -41,7 +51,7 @@ internal class OfsMediaSourceViewModel : AbstractMediaSource
             Status = ConnectionStatus.Connected;
 
             using var cancellationSource = CancellationTokenSource.CreateLinkedTokenSource(token);
-            var task = await Task.WhenAny(ReadAsync(client, cancellationSource.Token) /*, WriteAsync(client, cancellationSource.Token)*/);
+            var task = await Task.WhenAny(ReadAsync(client, cancellationSource.Token), WriteAsync(client, cancellationSource.Token));
             cancellationSource.Cancel();
 
             task.ThrowIfFaulted();
@@ -153,6 +163,34 @@ internal class OfsMediaSourceViewModel : AbstractMediaSource
         catch (OperationCanceledException) { }
     }
 
+    private async Task WriteAsync(ClientWebSocket client, CancellationToken token)
+    {
+        static string CreateMessage(string commandName, string dataName, string dataValue)
+            => @$"{{ ""type"": ""command"", ""name"": ""{commandName}"", ""data"": {{ ""{dataName}"": {dataValue} }} }}";
+
+        try
+        {
+            while (!token.IsCancellationRequested && client.State == WebSocketState.Open)
+            {
+                await _writeMessageChannel.Reader.WaitToReadAsync(token);
+                var message = await _writeMessageChannel.Reader.ReadAsync(token);
+
+                var messageString = message switch
+                {
+                    MediaPlayPauseMessage playPauseMessage => CreateMessage("change_play", "playing", playPauseMessage.State.ToString().ToLower()),
+                    MediaSeekMessage seekMessage when seekMessage.Position.HasValue => CreateMessage("change_time", "time", seekMessage.Position.Value.TotalSeconds.ToString("F4").Replace(',', '.')),
+                    _ => null
+                };
+
+                if (string.IsNullOrWhiteSpace(messageString))
+                    continue;
+
+                Logger.Trace("Sending \"{0}\" to \"{1}\"", messageString, Name);
+                await client.SendAsync(Encoding.UTF8.GetBytes(messageString), WebSocketMessageType.Text, true, token);
+            }
+        }
+        catch (OperationCanceledException) { }
+    }
     public override void HandleSettings(JObject settings, SettingsAction action)
     {
         base.HandleSettings(settings, action);
@@ -199,5 +237,17 @@ internal class OfsMediaSourceViewModel : AbstractMediaSource
                 Uri = uri;
         });
         #endregion
+    }
+
+    public async void Handle(MediaSeekMessage message)
+    {
+        if (Status == ConnectionStatus.Connected)
+            await _writeMessageChannel.Writer.WriteAsync(message);
+    }
+
+    public async void Handle(MediaPlayPauseMessage message)
+    {
+        if (Status == ConnectionStatus.Connected)
+            await _writeMessageChannel.Writer.WriteAsync(message);
     }
 }
