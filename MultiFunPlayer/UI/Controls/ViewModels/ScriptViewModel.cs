@@ -26,7 +26,7 @@ namespace MultiFunPlayer.UI.Controls.ViewModels;
 [JsonObject(MemberSerialization = MemberSerialization.OptIn)]
 internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
     IHandle<MediaPositionChangedMessage>, IHandle<MediaPlayingChangedMessage>, IHandle<MediaPathChangedMessage>, IHandle<MediaDurationChangedMessage>,
-    IHandle<MediaSpeedChangedMessage>, IHandle<SettingsMessage>, IHandle<SyncRequestMessage>, IHandle<ScriptChangedMessage>
+    IHandle<MediaSpeedChangedMessage>, IHandle<SettingsMessage>, IHandle<SyncRequestMessage>, IHandle<ChangeScriptMessage>
 {
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
@@ -639,12 +639,12 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
 
     public void Handle(SyncRequestMessage message) => ResetSync(true, message.Axes);
 
-    public void Handle(ScriptChangedMessage message)
+    public void Handle(ChangeScriptMessage message)
     {
         if (message.Scripts == null || message.Scripts.Count == 0)
             return;
 
-        Logger.Info("Received {0} [Axes: {list}]", nameof(ScriptChangedMessage), message.Scripts.Keys);
+        Logger.Info("Received {0} [Axes: {list}]", nameof(ChangeScriptMessage), message.Scripts.Keys);
         ResetSync(true, message.Scripts.Keys);
 
         foreach (var (axis, script) in message.Scripts)

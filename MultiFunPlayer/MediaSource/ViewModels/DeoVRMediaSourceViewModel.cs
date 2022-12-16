@@ -187,7 +187,7 @@ internal class DeoVRMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPla
                     var sendState = new PlayerState();
 
                     if (message is MediaPlayPauseMessage playPauseMessage)
-                        sendState.State = playPauseMessage.State ? 0 : 1;
+                        sendState.State = playPauseMessage.ShouldBePlaying ? 0 : 1;
                     else if (message is MediaSeekMessage seekMessage && seekMessage.Position.HasValue)
                         sendState.Position = seekMessage.Position.Value.TotalSeconds;
                     else if (message is MediaChangePathMessage changePathMessage)

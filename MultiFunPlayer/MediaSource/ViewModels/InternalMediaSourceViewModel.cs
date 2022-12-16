@@ -75,11 +75,11 @@ internal class InternalMediaSourceViewModel : AbstractMediaSource, IHandle<Media
 
                     while (_messageChannel.Reader.TryRead(out var message))
                     {
-                        if (message is MediaPlayPauseMessage playPauseMessage) { SetIsPlaying(playPauseMessage.State); }
+                        if (message is MediaPlayPauseMessage playPauseMessage) { SetIsPlaying(playPauseMessage.ShouldBePlaying); }
                         else if (message is MediaSeekMessage seekMessage && _scriptInfo != null) { SetPosition(seekMessage.Position?.TotalSeconds ?? double.NaN); }
-                        else if (message is MediaChangePathMessage mediaChangePath)
+                        else if (message is MediaChangePathMessage changePathMessage)
                         {
-                            var path = mediaChangePath.Path;
+                            var path = changePathMessage.Path;
                             var playlistIndex = ScriptPlaylist?.FindIndex(path);
 
                             if (playlistIndex >= 0)
@@ -214,7 +214,7 @@ internal class InternalMediaSourceViewModel : AbstractMediaSource, IHandle<Media
     private void SetScriptInfo(FileInfo scriptInfo)
     {
         _scriptInfo = scriptInfo;
-        EventAggregator.Publish(new ScriptChangedMessage(DeviceAxis.All, null));
+        EventAggregator.Publish(new ChangeScriptMessage(DeviceAxis.All, null));
 
         if (scriptInfo != null)
         {
@@ -222,7 +222,7 @@ internal class InternalMediaSourceViewModel : AbstractMediaSource, IHandle<Media
             if (DeviceAxis.TryParse("L0", out var strokeAxis))
                 axes = axes.Append(strokeAxis).Distinct();
 
-            EventAggregator.Publish(new ScriptChangedMessage(axes, FunscriptReader.Default.FromFileInfo(scriptInfo)));
+            EventAggregator.Publish(new ChangeScriptMessage(axes, FunscriptReader.Default.FromFileInfo(scriptInfo)));
         }
     }
 

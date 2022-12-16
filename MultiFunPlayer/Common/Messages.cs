@@ -17,17 +17,17 @@ public record MediaPlayingChangedMessage(bool IsPlaying);
 public record MediaPathChangedMessage(string Path, bool ReloadScripts = true);
 public record MediaDurationChangedMessage(TimeSpan? Duration);
 
-public record MediaSeekMessage(TimeSpan? Position);
-public record MediaPlayPauseMessage(bool State);
-public record MediaChangePathMessage(string Path);
-
-public class ScriptChangedMessage
+public class ChangeScriptMessage
 {
     public Dictionary<DeviceAxis, IScriptResource> Scripts { get; }
-    public ScriptChangedMessage(Dictionary<DeviceAxis, IScriptResource> scripts) => Scripts = scripts;
-    public ScriptChangedMessage(DeviceAxis axis, IScriptResource script) => Scripts = new () { [axis] = script };
-    public ScriptChangedMessage(IEnumerable<DeviceAxis> axes, IScriptResource scriptResource) => Scripts = axes.ToDictionary(a => a, _ => scriptResource);
+    public ChangeScriptMessage(Dictionary<DeviceAxis, IScriptResource> scripts) => Scripts = scripts;
+    public ChangeScriptMessage(DeviceAxis axis, IScriptResource script) => Scripts = new() { [axis] = script };
+    public ChangeScriptMessage(IEnumerable<DeviceAxis> axes, IScriptResource scriptResource) => Scripts = axes.ToDictionary(a => a, _ => scriptResource);
 }
+
+public record MediaSeekMessage(TimeSpan? Position);
+public record MediaPlayPauseMessage(bool ShouldBePlaying);
+public record MediaChangePathMessage(string Path);
 
 public class SyncRequestMessage
 {

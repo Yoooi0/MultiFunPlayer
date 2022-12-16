@@ -134,7 +134,7 @@ internal class OfsMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlayP
                                     break;
 
                                 var script = FunscriptReader.Default.FromBytes(name, Uri.ToString(), Encoding.UTF8.GetBytes(funscriptToken.ToString()));
-                                EventAggregator.Publish(new ScriptChangedMessage(axes.ToDictionary(a => a, _ => script)));
+                                EventAggregator.Publish(new ChangeScriptMessage(axes.ToDictionary(a => a, _ => script)));
                             }
 
                             break;
@@ -147,7 +147,7 @@ internal class OfsMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlayP
                                 if (!axes.Any())
                                     break;
 
-                                EventAggregator.Publish(new ScriptChangedMessage(axes.ToDictionary(a => a, _ => default(IScriptResource))));
+                                EventAggregator.Publish(new ChangeScriptMessage(axes.ToDictionary(a => a, _ => default(IScriptResource))));
                             }
 
                             break;
@@ -177,7 +177,7 @@ internal class OfsMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlayP
 
                 var messageString = message switch
                 {
-                    MediaPlayPauseMessage playPauseMessage => CreateMessage("change_play", "playing", playPauseMessage.State.ToString().ToLower()),
+                    MediaPlayPauseMessage playPauseMessage => CreateMessage("change_play", "playing", playPauseMessage.ShouldBePlaying.ToString().ToLower()),
                     MediaSeekMessage seekMessage when seekMessage.Position.HasValue => CreateMessage("change_time", "time", seekMessage.Position.Value.TotalSeconds.ToString("F4").Replace(',', '.')),
                     _ => null
                 };

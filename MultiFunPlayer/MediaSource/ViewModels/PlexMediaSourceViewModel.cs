@@ -267,7 +267,7 @@ internal class PlexMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlay
                 var commonArguments = $"type={mtype}&commandID={Interlocked.Increment(ref _commandId)}";
                 var messageUriPath = message switch
                 {
-                    MediaPlayPauseMessage playPauseMessage => playPauseMessage.State ? $"/player/playback/play?{commonArguments}" : $"/player/playback/pause?{commonArguments}",
+                    MediaPlayPauseMessage playPauseMessage => playPauseMessage.ShouldBePlaying ? $"/player/playback/play?{commonArguments}" : $"/player/playback/pause?{commonArguments}",
                     MediaSeekMessage seekMessage when seekMessage.Position.HasValue => $"/player/playback/seekTo?{commonArguments}&offset={(int)seekMessage.Position.Value.TotalMilliseconds}",
                     _ => null
                 };
