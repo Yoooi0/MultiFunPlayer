@@ -836,6 +836,8 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         if (script != null)
             Logger.Info("Set {0} script to \"{1}\" from \"{2}\"", axis, script.Name, script.Source);
 
+        _eventAggregator.Publish(new ScriptChangedMessage(axis, script));
+
         UpdateLinkedScriptsTo(axis);
     }
 

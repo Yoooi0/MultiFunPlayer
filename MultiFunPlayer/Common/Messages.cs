@@ -17,6 +17,7 @@ public record MediaPlayingChangedMessage(bool IsPlaying);
 public record MediaPathChangedMessage(string Path, bool ReloadScripts = true);
 public record MediaDurationChangedMessage(TimeSpan? Duration);
 
+public record ScriptChangedMessage(DeviceAxis Axis, IScriptResource Script);
 public class ChangeScriptMessage
 {
     public Dictionary<DeviceAxis, IScriptResource> Scripts { get; }

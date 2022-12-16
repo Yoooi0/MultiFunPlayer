@@ -89,7 +89,7 @@ public abstract class PluginBase : PropertyChangedBase
     protected virtual void HandleMessage(MediaSeekMessage message) { }
     protected virtual void HandleMessage(MediaPlayingChangedMessage message) { }
     protected virtual void HandleMessage(MediaChangePathMessage message) { }
-    protected virtual void HandleMessage(ChangeScriptMessage message) { }
+    protected virtual void HandleMessage(ScriptChangedMessage message) { }
     protected virtual void HandleMessage(SyncRequestMessage message) { }
 
     private void HandleMessageInternal(object e)
@@ -102,7 +102,7 @@ public abstract class PluginBase : PropertyChangedBase
         else if (e is MediaSeekMessage mediaSeekMessage) HandleMessage(mediaSeekMessage);
         else if (e is MediaPlayPauseMessage mediaPlayPauseMessage) HandleMessage(mediaPlayPauseMessage);
         else if (e is MediaChangePathMessage mediaChangePathMessage) HandleMessage(mediaChangePathMessage);
-        else if (e is ChangeScriptMessage changeScriptMessage) HandleMessage(changeScriptMessage);
+        else if (e is ScriptChangedMessage scriptChangedMessage) HandleMessage(scriptChangedMessage);
         else if (e is SyncRequestMessage syncRequestMessage) HandleMessage(syncRequestMessage);
     }
 
