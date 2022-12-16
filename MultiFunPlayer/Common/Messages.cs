@@ -26,6 +26,7 @@ public class ScriptChangedMessage
     public Dictionary<DeviceAxis, IScriptResource> Scripts { get; }
     public ScriptChangedMessage(Dictionary<DeviceAxis, IScriptResource> scripts) => Scripts = scripts;
     public ScriptChangedMessage(DeviceAxis axis, IScriptResource script) => Scripts = new () { [axis] = script };
+    public ScriptChangedMessage(IEnumerable<DeviceAxis> axes, IScriptResource scriptResource) => Scripts = axes.ToDictionary(a => a, _ => scriptResource);
 }
 
 public class SyncRequestMessage

@@ -213,26 +213,17 @@ internal class InternalMediaSourceViewModel : AbstractMediaSource, IHandle<Media
 
     private void SetScriptInfo(FileInfo scriptInfo)
     {
-        static string GetFakeMediaPath(FileInfo scriptInfo)
-        {
-            const string mediaExtension = "mp4";
-            var scriptPath = scriptInfo.FullName;
-            var basePath = Path.ChangeExtension(scriptPath, null);
-            var basePathExtension = Path.GetExtension(basePath);
-
-            if (string.IsNullOrWhiteSpace(basePathExtension))
-                return $"{basePath}.{mediaExtension}";
-
-            foreach (var axis in DeviceAxis.All)
-                foreach (var funscriptName in axis.FunscriptNames)
-                    if (string.Equals(basePathExtension, $".{funscriptName}", StringComparison.OrdinalIgnoreCase))
-                        return $"{Path.ChangeExtension(basePath, null)}.{mediaExtension}";
-
-            return $"{basePath}.{mediaExtension}";
-        }
-
-        EventAggregator.Publish(new MediaPathChangedMessage(scriptInfo != null ? GetFakeMediaPath(scriptInfo) : null));
         _scriptInfo = scriptInfo;
+        EventAggregator.Publish(new ScriptChangedMessage(DeviceAxis.All, null));
+
+        if (scriptInfo != null)
+        {
+            var axes = DeviceAxisUtils.FindAxesMatchingName(scriptInfo.Name);
+            if (DeviceAxis.TryParse("L0", out var strokeAxis))
+                axes = axes.Append(strokeAxis).Distinct();
+
+            EventAggregator.Publish(new ScriptChangedMessage(axes, FunscriptReader.Default.FromFileInfo(scriptInfo)));
+        }
     }
 
     private void SetDuration(double duration)
