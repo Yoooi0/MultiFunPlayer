@@ -1,4 +1,4 @@
-﻿using System.IO;
+using System.IO;
 
 namespace MultiFunPlayer.Common;
 
@@ -28,7 +28,8 @@ public static class DeviceAxisUtils
         var scriptWithoutExtension = Path.GetFileNameWithoutExtension(scriptName);
         foreach (var axis in axes)
         {
-            if (isUnnamedScript && axis.LoadUnnamedScript)
+            if (isUnnamedScript)
+                if (axis.LoadUnnamedScript)
                 yield return axis;
             else if (axis.FunscriptNames.Any(n => scriptWithoutExtension.EndsWith(n, StringComparison.OrdinalIgnoreCase)))
                 yield return axis;
