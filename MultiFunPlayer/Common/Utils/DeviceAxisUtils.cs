@@ -14,7 +14,9 @@ public static class DeviceAxisUtils
     public static IEnumerable<DeviceAxis> FindAxesMatchingName(IEnumerable<DeviceAxis> axes, string scriptName)
     {
         var scriptWithoutExtension = Path.GetFileNameWithoutExtension(scriptName);
-        var isUnnamedScript = !KnownFunscriptNames.Any(n => scriptWithoutExtension.EndsWith(n, StringComparison.OrdinalIgnoreCase));
+
+        var funscriptNames = KnownFunscriptNames.Union(DeviceAxis.All.SelectMany(d => d.FunscriptNames));
+        var isUnnamedScript = !funscriptNames.Any(n => scriptWithoutExtension.EndsWith(n, StringComparison.OrdinalIgnoreCase));
         return FindAxesMatchingName(axes, scriptName, isUnnamedScript);
     }
 
