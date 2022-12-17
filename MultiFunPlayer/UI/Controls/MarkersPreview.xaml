@@ -8,7 +8,8 @@
              xmlns:s="https://github.com/canton7/Stylet"
              SizeChanged="OnSizeChanged"
              mc:Ignorable="d" 
-             d:DesignHeight="450" d:DesignWidth="800">
+             d:DesignHeight="450" d:DesignWidth="800"
+             x:ClassModifier="internal">
     <material:Card UniformCornerRadius="3" 
                    material:ShadowAssist.ShadowDepth="Depth1"
                    ClipContent="True"

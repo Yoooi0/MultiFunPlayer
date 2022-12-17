@@ -11,7 +11,7 @@ namespace MultiFunPlayer.UI.Controls;
 /// <summary>
 /// Interaction logic for MarkersPreview.xaml
 /// </summary>
-public partial class MarkersPreview : UserControl, INotifyPropertyChanged
+internal partial class MarkersPreview : UserControl, INotifyPropertyChanged
 {
     private readonly Color[] _colors;
 
@@ -235,7 +235,7 @@ public partial class MarkersPreview : UserControl, INotifyPropertyChanged
     public event PropertyChangedEventHandler PropertyChanged;
 }
 
-public class ChapterModel
+internal class ChapterModel
 {
     public string Name { get; init; }
     public double StartPosition { get; init; }
@@ -248,7 +248,7 @@ public class ChapterModel
     public double CanvasLength => CanvasRight - CanvasLeft;
 }
 
-public class BookmarkModel
+internal class BookmarkModel
 {
     public string Name { get; init; }
     public double Position { get; init; }
@@ -257,7 +257,7 @@ public class BookmarkModel
     public double CanvasLeft => Math.Floor(Position * CanvasMultiplier);
 }
 
-public class MarkerClickEventArgs : EventArgs
+internal class MarkerClickEventArgs : EventArgs
 {
     public TimeSpan Position { get; }
 
