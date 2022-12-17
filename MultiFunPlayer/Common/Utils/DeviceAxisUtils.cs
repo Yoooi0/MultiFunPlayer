@@ -33,10 +33,9 @@ public static class DeviceAxisUtils
         var scriptWithoutExtension = Path.GetFileNameWithoutExtension(scriptName);
         foreach (var axis in axes)
         {
-            if (isUnnamedScript)
-                if (axis.LoadUnnamedScript)
-                    yield return axis;
-            else if (axis.FunscriptNames.Any(n => scriptWithoutExtension.EndsWith(n, StringComparison.OrdinalIgnoreCase)))
+            if (isUnnamedScript && axis.LoadUnnamedScript)
+                yield return axis;
+            else if (!isUnnamedScript && axis.FunscriptNames.Any(n => scriptWithoutExtension.EndsWith(n, StringComparison.OrdinalIgnoreCase)))
                 yield return axis;
         }
     }
