@@ -11,6 +11,8 @@ public abstract class PluginBase : PropertyChangedBase
 {
     private readonly MessageProxy _messageProxy;
 
+    internal event EventHandler<Exception> OnInternalException;
+
     [Inject] internal IDeviceAxisValueProvider DeviceAxisValueProvider { get; set; }
     [Inject] internal IEventAggregator EventAggregator { get; set; }
     [Inject] internal IShortcutManager ShortcutManager { get; set; }
@@ -94,16 +96,23 @@ public abstract class PluginBase : PropertyChangedBase
 
     private void HandleMessageInternal(object e)
     {
-        if (e is MediaSpeedChangedMessage mediaSpeedChangedMessage) HandleMessage(mediaSpeedChangedMessage);
-        else if (e is MediaPositionChangedMessage mediaPositionChangedMessage) HandleMessage(mediaPositionChangedMessage);
-        else if (e is MediaPlayingChangedMessage mediaPlayingChangedMessage) HandleMessage(mediaPlayingChangedMessage);
-        else if (e is MediaPathChangedMessage mediaPathChangedMessage) HandleMessage(mediaPathChangedMessage);
-        else if (e is MediaDurationChangedMessage mediaDurationChangedMessage) HandleMessage(mediaDurationChangedMessage);
-        else if (e is MediaSeekMessage mediaSeekMessage) HandleMessage(mediaSeekMessage);
-        else if (e is MediaPlayPauseMessage mediaPlayPauseMessage) HandleMessage(mediaPlayPauseMessage);
-        else if (e is MediaChangePathMessage mediaChangePathMessage) HandleMessage(mediaChangePathMessage);
-        else if (e is ScriptChangedMessage scriptChangedMessage) HandleMessage(scriptChangedMessage);
-        else if (e is SyncRequestMessage syncRequestMessage) HandleMessage(syncRequestMessage);
+        try
+        {
+            if (e is MediaSpeedChangedMessage mediaSpeedChangedMessage) HandleMessage(mediaSpeedChangedMessage);
+            else if (e is MediaPositionChangedMessage mediaPositionChangedMessage) HandleMessage(mediaPositionChangedMessage);
+            else if (e is MediaPlayingChangedMessage mediaPlayingChangedMessage) HandleMessage(mediaPlayingChangedMessage);
+            else if (e is MediaPathChangedMessage mediaPathChangedMessage) HandleMessage(mediaPathChangedMessage);
+            else if (e is MediaDurationChangedMessage mediaDurationChangedMessage) HandleMessage(mediaDurationChangedMessage);
+            else if (e is MediaSeekMessage mediaSeekMessage) HandleMessage(mediaSeekMessage);
+            else if (e is MediaPlayPauseMessage mediaPlayPauseMessage) HandleMessage(mediaPlayPauseMessage);
+            else if (e is MediaChangePathMessage mediaChangePathMessage) HandleMessage(mediaChangePathMessage);
+            else if (e is ScriptChangedMessage scriptChangedMessage) HandleMessage(scriptChangedMessage);
+            else if (e is SyncRequestMessage syncRequestMessage) HandleMessage(syncRequestMessage);
+        }
+        catch (Exception exception)
+        {
+            OnInternalException?.Invoke(this, exception);
+        }
     }
 
     private class MessageProxy : IHandle<object>
@@ -132,16 +141,36 @@ public abstract class PluginBase : PropertyChangedBase
 
 public abstract class SyncPluginBase : PluginBase
 {
-    public virtual void Execute(CancellationToken cancellationToken)
+    protected virtual void Execute(CancellationToken cancellationToken)
     {
         try { cancellationToken.WaitHandle.WaitOne(); }
         catch { }
+
+        throw new OperationCanceledException();
+    }
+
+    internal void InternalExecute(CancellationToken cancellationToken)
+    {
+        using var cancellationSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        var internalException = default(Exception);
+        OnInternalException += (_, e) =>
+        {
+            internalException = e;
+            cancellationSource.Cancel();
+        };
+
+        try
+        {
+            Execute(cancellationSource.Token);
+        }
+        catch (OperationCanceledException) when (internalException != null) { internalException.Throw(); }
+        catch (Exception e) when (internalException != null) { throw new AggregateException(internalException, e); }
     }
 }
 
 public abstract class AsyncPluginBase : PluginBase
 {
-    public virtual async Task ExecuteAsync(CancellationToken cancellationToken)
+    protected virtual async Task ExecuteAsync(CancellationToken cancellationToken)
     {
         if (cancellationToken.IsCancellationRequested)
         {
@@ -153,7 +182,24 @@ public abstract class AsyncPluginBase : PluginBase
         using var registration = cancellationToken.Register(() => taskCompletionSource.TrySetCanceled(cancellationToken), useSynchronizationContext: false);
 
         try { await taskCompletionSource.Task; }
-        catch (OperationCanceledException) { }
         finally { await registration.DisposeAsync(); }
+    }
+
+    internal async Task InternalExecuteAsync(CancellationToken cancellationToken)
+    {
+        using var cancellationSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        var internalException = default(Exception);
+        OnInternalException += (_, e) =>
+        {
+            internalException = e;
+            cancellationSource.Cancel();
+        };
+
+        try
+        {
+            await ExecuteAsync(cancellationSource.Token);
+        }
+        catch (OperationCanceledException) when (internalException != null) { internalException.Throw(); }
+        catch (Exception e) when (internalException != null) { throw new AggregateException(internalException, e); }
     }
 }

@@ -83,12 +83,12 @@ internal class PluginContainer : PropertyChangedBase, IDisposable
             {
                 if (plugin is SyncPluginBase syncPlugin)
                 {
-                    syncPlugin.Execute(token);
+                    syncPlugin.InternalExecute(token);
                 }
                 else if (plugin is AsyncPluginBase asyncPlugin)
                 {
                     // https://stackoverflow.com/a/9343733 ¯\_(ツ)_/¯
-                    var task = asyncPlugin.ExecuteAsync(token);
+                    var task = asyncPlugin.InternalExecuteAsync(token);
                     task.GetAwaiter().GetResult();
                 }
             }
