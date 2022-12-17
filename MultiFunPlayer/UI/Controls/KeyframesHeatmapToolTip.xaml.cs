@@ -164,7 +164,7 @@ internal partial class KeyframesHeatmapToolTip : UserControl
         if (keyframes == null)
             return;
 
-        const double duration = 4;
+        const double duration = 8;
         var startPosition = Offset - duration / 2;
         var endPosition = Offset + duration / 2;
 
@@ -186,10 +186,12 @@ internal partial class KeyframesHeatmapToolTip : UserControl
 
     private void RefreshPoints(double startPosition, double endPosition, double duration, KeyframeCollection keyframes, InterpolationType interpolationType)
     {
+        const int pointCount = 300;
+
         var index = -1;
-        for (var i = 0; i < 300; i++)
+        for (var i = 0; i < pointCount; i++)
         {
-            var t = i / (double)300;
+            var t = i / (double)pointCount;
             var position = MathUtils.Lerp(startPosition, endPosition, t);
 
             index = index == -1 ? keyframes.SearchForIndexBefore(position) : keyframes.AdvanceIndex(index, position);

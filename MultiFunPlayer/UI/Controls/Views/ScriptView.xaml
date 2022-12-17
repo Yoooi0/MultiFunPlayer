@@ -579,7 +579,7 @@
                 <controls:KeyframesHeatmapToolTip Keyframes="{Binding AxisKeyframes, Mode=OneWay}"
                                                   Settings="{Binding AxisSettings, Mode=OneWay}"
                                                   Position="{Binding MediaPosition, Mode=OneWay}"
-                                                  Height="60" Width="200"/>
+                                                  Height="50" Width="200"/>
             </controls:KeyframesHeatmap.ToolTip>
             
             <controls:KeyframesHeatmap.ContextMenu>
