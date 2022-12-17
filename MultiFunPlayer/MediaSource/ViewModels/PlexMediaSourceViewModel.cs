@@ -394,6 +394,33 @@ internal class PlexMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlay
         }
     }
 
+    protected override void RegisterActions(IShortcutManager s)
+    {
+        base.RegisterActions(s);
+
+        #region ServerEndpoint
+        s.RegisterAction<string>($"{Name}::Endpoint::Set", s => s.WithLabel("Endpoint").WithDescription("ip/host:port"), endpointString =>
+        {
+            if (NetUtils.TryParseEndpoint(endpointString, out var endpoint))
+                ServerEndpoint = endpoint;
+        });
+        #endregion
+
+        #region PlexToken
+        s.RegisterAction<string>($"{Name}::PlexToken::Set", s => s.WithLabel("Token"), token => PlexToken = token);
+        #endregion
+
+        #region SelectedClient
+        s.RegisterAction<string>($"{Name}::Client::SetByName", s => s.WithLabel("Name"), name => {
+            var client = Clients.FirstOrDefault(p => string.Equals(p.Name, name, StringComparison.Ordinal));
+            if (client == null)
+                return;
+
+            SelectClientByMachineIdentifier(client.MachineIdentifier);
+        });
+        #endregion
+    }
+
     private void AddDefaultHeaders(HttpRequestHeaders headers)
     {
         headers.TryAddWithoutValidation("X-Plex-Platform", "Windows");
