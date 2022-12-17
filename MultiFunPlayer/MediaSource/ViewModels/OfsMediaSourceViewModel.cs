@@ -104,7 +104,7 @@ internal class OfsMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlayP
                     switch (eventName)
                     {
                         case "media_change":
-                                EventAggregator.Publish(new MediaPathChangedMessage(dataToken.TryGetValue<string>("path", out var path) && !string.IsNullOrWhiteSpace(path) ? path : null, ReloadScripts: false));
+                            EventAggregator.Publish(new MediaPathChangedMessage(dataToken.TryGetValue<string>("path", out var path) && !string.IsNullOrWhiteSpace(path) ? path : null, ReloadScripts: false));
                             break;
                         case "play_change":
                             if (dataToken.TryGetValue<bool>("playing", out var isPlaying))
@@ -128,6 +128,8 @@ internal class OfsMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlayP
                                     break;
                                 if (!dataToken.TryGetValue<string>("name", out var name) || string.IsNullOrWhiteSpace(name))
                                     break;
+                                if (!Path.HasExtension(name) || !string.Equals(Path.GetExtension(name), ".funscript", StringComparison.OrdinalIgnoreCase))
+                                    name += ".funscript";
 
                                 var axes = DeviceAxisUtils.FindAxesMatchingName(name);
                                 if (!axes.Any())
@@ -142,6 +144,8 @@ internal class OfsMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlayP
                             {
                                 if (!dataToken.TryGetValue<string>("name", out var name) || string.IsNullOrWhiteSpace(name))
                                     break;
+                                if (!Path.HasExtension(name) || !string.Equals(Path.GetExtension(name), ".funscript", StringComparison.OrdinalIgnoreCase))
+                                    name += ".funscript";
 
                                 var axes = DeviceAxisUtils.FindAxesMatchingName(name);
                                 if (!axes.Any())
