@@ -221,10 +221,7 @@ internal class InternalMediaSourceViewModel : AbstractMediaSource, IHandle<Media
 
         if (scriptInfo != null)
         {
-            var axes = DeviceAxisUtils.FindAxesMatchingName(scriptInfo.Name);
-            if (DeviceAxis.TryParse("L0", out var strokeAxis))
-                axes = axes.Append(strokeAxis).Distinct();
-
+            var axes = DeviceAxisUtils.FindAxesMatchingName(scriptInfo.Name, true);
             EventAggregator.Publish(new ChangeScriptMessage(axes, FunscriptReader.Default.FromFileInfo(scriptInfo)));
         }
     }

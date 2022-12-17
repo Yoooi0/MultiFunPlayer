@@ -23,7 +23,8 @@ public static class DeviceAxisUtils
         return FindAxesMatchingName(axes, scriptName, isUnnamedScript);
     }
 
-    private static IEnumerable<DeviceAxis> FindAxesMatchingName(IEnumerable<DeviceAxis> axes, string scriptName, bool isUnnamedScript)
+    public static IEnumerable<DeviceAxis> FindAxesMatchingName(string scriptName, bool isUnnamedScript) => FindAxesMatchingName(DeviceAxis.All, scriptName, isUnnamedScript);
+    public static IEnumerable<DeviceAxis> FindAxesMatchingName(IEnumerable<DeviceAxis> axes, string scriptName, bool isUnnamedScript)
     {
         var scriptWithoutExtension = Path.GetFileNameWithoutExtension(scriptName);
         foreach (var axis in axes)
