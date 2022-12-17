@@ -13,6 +13,7 @@
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
     </UserControl.Resources>
     <material:Card UniformCornerRadius="3" 
+                   ClipContent="True"
                    material:ShadowAssist.ShadowDepth="Depth1">
         <material:Card.Background>
             <DrawingBrush Stretch="None" TileMode="Tile" Viewport="4 8 20 20" ViewportUnits="Absolute">
