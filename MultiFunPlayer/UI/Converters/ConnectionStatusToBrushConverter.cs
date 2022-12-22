@@ -1,4 +1,5 @@
 ﻿using MultiFunPlayer.Common;
+using System.Diagnostics;
 using System.Globalization;
 using System.Windows;
 using System.Windows.Data;
@@ -9,13 +10,28 @@ namespace MultiFunPlayer.UI.Converters;
 internal class ConnectionStatusToBrushConverter : IValueConverter
 {
     public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
-        => value switch
+        => (SolidColorBrush)Application.Current.Resources[value switch
         {
-            ConnectionStatus.Connected => (SolidColorBrush)Application.Current.Resources["MaterialDesignSuccessBrush"],
-            ConnectionStatus.Disconnected => (SolidColorBrush)Application.Current.Resources["MaterialDesignErrorBrush"],
-            ConnectionStatus.Connecting or ConnectionStatus.Disconnecting => new SolidColorBrush(Color.FromRgb(0xb3, 0x9c, 0x09)),
-            _ => null
-        };
+            ConnectionStatus.Connected => "MaterialDesignSuccessBrush",
+            ConnectionStatus.Disconnected => "MaterialDesignErrorBrush",
+            ConnectionStatus.Connecting or ConnectionStatus.Disconnecting => "MaterialDesignPendingBrush",
+            _ => throw new UnreachableException()
+        }];
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        => throw new NotSupportedException();
+}
+
+internal class ConnectionStatusToLightBrushConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        => (SolidColorBrush)Application.Current.Resources[value switch
+        {
+            ConnectionStatus.Connected => "MaterialDesignLightSuccessBrush",
+            ConnectionStatus.Disconnected => "MaterialDesignLightErrorBrush",
+            ConnectionStatus.Connecting or ConnectionStatus.Disconnecting => "MaterialDesignLightPendingBrush",
+            _ => throw new UnreachableException()
+        }];
 
     public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
         => throw new NotSupportedException();

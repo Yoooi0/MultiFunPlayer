@@ -31,16 +31,20 @@
                 </s:ApplicationLoader>
             </ResourceDictionary.MergedDictionaries>
             <Color x:Key="MaterialDesignErrorColor">#F00018</Color>
+            <Color x:Key="MaterialDesignPendingColor">#D6810B</Color>
             <Color x:Key="MaterialDesignWarningColor">#FFD300</Color>
             <Color x:Key="MaterialDesignSuccessColor">#008C1A</Color>
             <SolidColorBrush x:Key="MaterialDesignErrorBrush" Color="{StaticResource MaterialDesignErrorColor}" po:Freeze="True" />
+            <SolidColorBrush x:Key="MaterialDesignPendingBrush" Color="{StaticResource MaterialDesignPendingColor}" po:Freeze="True" />
             <SolidColorBrush x:Key="MaterialDesignWarningBrush" Color="{StaticResource MaterialDesignWarningColor}" po:Freeze="True" />
             <SolidColorBrush x:Key="MaterialDesignSuccessBrush" Color="{StaticResource MaterialDesignSuccessColor}" po:Freeze="True" />
 
             <Color x:Key="MaterialDesignLightErrorColor">#FF4F52</Color>
+            <Color x:Key="MaterialDesignLightPendingColor">#FFAF59</Color>
             <Color x:Key="MaterialDesignLightWarningColor">#FFD957</Color>
             <Color x:Key="MaterialDesignLightSuccessColor">#6ECC52</Color>
             <SolidColorBrush x:Key="MaterialDesignLightErrorBrush" Color="{StaticResource MaterialDesignLightErrorColor}" po:Freeze="True" />
+            <SolidColorBrush x:Key="MaterialDesignLightPendingBrush" Color="{StaticResource MaterialDesignLightPendingColor}" po:Freeze="True" />
             <SolidColorBrush x:Key="MaterialDesignLightWarningBrush" Color="{StaticResource MaterialDesignLightWarningColor}" po:Freeze="True" />
             <SolidColorBrush x:Key="MaterialDesignLightSuccessBrush" Color="{StaticResource MaterialDesignLightSuccessColor}" po:Freeze="True" />
 
