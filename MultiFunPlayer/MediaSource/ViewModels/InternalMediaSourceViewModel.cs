@@ -214,7 +214,7 @@ internal class InternalMediaSourceViewModel : AbstractMediaSource, IHandle<Media
     private void SetScriptInfo(FileInfo scriptInfo)
     {
         _scriptInfo = scriptInfo;
-        if (Status != ConnectionStatus.Connected)
+        if (Status != ConnectionStatus.Connected && Status != ConnectionStatus.Disconnecting)
             return;
 
         EventAggregator.Publish(new ChangeScriptMessage(DeviceAxis.All, null));
@@ -229,21 +229,21 @@ internal class InternalMediaSourceViewModel : AbstractMediaSource, IHandle<Media
     private void SetDuration(double duration)
     {
         _duration = duration;
-        if (Status == ConnectionStatus.Connected)
+        if (Status == ConnectionStatus.Connected || Status == ConnectionStatus.Disconnecting)
             EventAggregator.Publish(new MediaDurationChangedMessage(double.IsFinite(duration) ? TimeSpan.FromSeconds(duration) : null));
     }
 
     private void SetPosition(double position, bool forceSeek = false)
     {
         _position = position;
-        if (Status == ConnectionStatus.Connected)
+        if (Status == ConnectionStatus.Connected || Status == ConnectionStatus.Disconnecting)
             EventAggregator.Publish(new MediaPositionChangedMessage(double.IsFinite(position) ? TimeSpan.FromSeconds(position) : null, forceSeek));
     }
 
     private void SetIsPlaying(bool isPlaying)
     {
         _isPlaying = isPlaying;
-        if (Status == ConnectionStatus.Connected)
+        if (Status == ConnectionStatus.Connected || Status == ConnectionStatus.Disconnecting)
             EventAggregator.Publish(new MediaPlayingChangedMessage(isPlaying));
     }
 
