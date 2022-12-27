@@ -153,18 +153,21 @@ public abstract class SyncPluginBase : PluginBase
     {
         using var cancellationSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         var internalException = default(Exception);
-        OnInternalException += (_, e) =>
+
+        void HandleInternalException(object _, Exception e)
         {
-            internalException = e;
-            cancellationSource.Cancel();
-        };
+            if (Interlocked.CompareExchange(ref internalException, e, null) == null)
+                cancellationSource.Cancel();
+        }
 
         try
         {
+            OnInternalException += HandleInternalException;
             Execute(cancellationSource.Token);
         }
         catch (OperationCanceledException) when (internalException != null) { internalException.Throw(); }
         catch (Exception e) when (internalException != null) { throw new AggregateException(internalException, e); }
+        finally { OnInternalException -= HandleInternalException; }
     }
 }
 
@@ -189,17 +192,20 @@ public abstract class AsyncPluginBase : PluginBase
     {
         using var cancellationSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         var internalException = default(Exception);
-        OnInternalException += (_, e) =>
+
+        void HandleInternalException(object _, Exception e)
         {
-            internalException = e;
-            cancellationSource.Cancel();
-        };
+            if (Interlocked.CompareExchange(ref internalException, e, null) == null)
+                cancellationSource.Cancel();
+        }
 
         try
         {
+            OnInternalException += HandleInternalException;
             await ExecuteAsync(cancellationSource.Token);
         }
         catch (OperationCanceledException) when (internalException != null) { internalException.Throw(); }
         catch (Exception e) when (internalException != null) { throw new AggregateException(internalException, e); }
+        finally { OnInternalException -= HandleInternalException; }
     }
 }
