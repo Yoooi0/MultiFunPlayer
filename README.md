@@ -63,8 +63,8 @@ Once your video player and output are connected, the funscripts can be loaded in
 | Axis | Description | Valid file names |
 |-|-|-|
 | L0 | Up/Down | **`<video name>.funscript`** |
-| L1 | Forward/Backward | **`<video name>.sway.funscript`**  |
-| L2 | Left/Right | **`<video name>.surge.funscript`** |
+| L1 | Forward/Backward | **`<video name>.surge.funscript`**  |
+| L2 | Left/Right | **`<video name>.sway.funscript`** |
 | R0 | Twist | **`<video name>.twist.funscript`** |
 | R1 | Roll | **`<video name>.roll.funscript`** |
 | R2 | Pitch | **`<video name>.pitch.funscript`** |
