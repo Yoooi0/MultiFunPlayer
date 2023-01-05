@@ -119,7 +119,7 @@ internal class TheHandyOutputTargetViewModel : AsyncAbstractOutputTarget
                 var currentValue = Values[SourceAxis];
                 if (!double.IsFinite(lastSentValue) || Math.Abs(lastSentValue - currentValue) >= 0.005)
                 {
-                    var position = MathUtils.Clamp(currentValue * 100, 0, 100);
+                    var position = Math.Clamp(currentValue * 100, 0, 100);
                     var duration = (int)Math.Floor(elapsed * 1000 + 0.75);
                     var content = $"{{ \"immediateResponse\": true, \"stopOnTarget\": true, \"duration\": {duration}, \"position\": {position.ToString(CultureInfo.InvariantCulture)} }}";
 

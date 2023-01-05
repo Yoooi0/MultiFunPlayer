@@ -91,7 +91,7 @@ internal class OutputTargetViewModel : Conductor<IOutputTarget>.Collection.OneAc
         semaphore.Dispose();
         target.Dispose();
 
-        ActiveItem = Items.Count > 0 ? Items[MathUtils.Clamp(index, 0, Items.Count - 1)] : null;
+        ActiveItem = Items.Count > 0 ? Items[Math.Clamp(index, 0, Items.Count - 1)] : null;
     }
 
     protected override void OnViewLoaded()

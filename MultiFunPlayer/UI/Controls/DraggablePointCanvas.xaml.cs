@@ -165,8 +165,8 @@ public partial class DraggablePointCanvas : Canvas, INotifyPropertyChanged
             return;
 
         var position = e.GetPosition(this) - _captureOffset;
-        position.X = MathUtils.Clamp(position.X, 0, ActualWidth);
-        position.Y = MathUtils.Clamp(position.Y, 0, ActualHeight);
+        position.X = Math.Clamp(position.X, 0, ActualWidth);
+        position.Y = Math.Clamp(position.Y, 0, ActualHeight);
 
         point.Position = position;
         SynchronizePopup(position);

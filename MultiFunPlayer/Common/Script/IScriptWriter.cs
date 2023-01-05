@@ -36,7 +36,7 @@ internal class FunscriptWriter : IScriptWriter
             Write(",");
 
         var at = (int)Math.Round(position * 1000);
-        var pos = MathUtils.Clamp(value * 100, 0, 100);
+        var pos = Math.Clamp(value * 100, 0, 100);
         Write($"{{\"at\":{at.ToString(CultureInfo.InvariantCulture)},\"pos\":{pos.ToString(CultureInfo.InvariantCulture)}}}");
 
         _isFirst = false;

@@ -20,7 +20,7 @@ public class PortToStringConverter : IValueConverter
             return 0;
 
         if (match.Groups.Count == 2 && int.TryParse(match.Groups[1].Value, out var port))
-            return MathUtils.Clamp(port, 0, 65535);
+            return Math.Clamp(port, 0, 65535);
 
         return 0;
     }

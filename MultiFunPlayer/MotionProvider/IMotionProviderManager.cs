@@ -137,32 +137,32 @@ internal class MotionProviderManager : IMotionProviderManager, IHandle<SettingsM
             s.RegisterAction<DeviceAxis, double>($"MotionProvider::{name}::Minimum::Offset",
                 s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All),
                 s => s.WithLabel("Value offset").WithStringFormat("{}{0}%"),
-                (axis, offset) => UpdateProperty(GetMotionProvider(axis, name), p => p.Minimum = MathUtils.Clamp(p.Minimum + offset, 0, 100)));
+                (axis, offset) => UpdateProperty(GetMotionProvider(axis, name), p => p.Minimum = Math.Clamp(p.Minimum + offset, 0, 100)));
 
             s.RegisterAction<DeviceAxis, double>($"MotionProvider::{name}::Minimum::Set",
                 s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All),
                 s => s.WithLabel("Value").WithStringFormat("{}{0}%"),
-                (axis, value) => UpdateProperty(GetMotionProvider(axis, name), p => p.Minimum = MathUtils.Clamp(value, 0, 100)));
+                (axis, value) => UpdateProperty(GetMotionProvider(axis, name), p => p.Minimum = Math.Clamp(value, 0, 100)));
 
             s.RegisterAction<IAxisInputGesture, DeviceAxis>($"MotionProvider::{name}::Minimum::Drive",
                 s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All),
-                (gesture, axis) => UpdateProperty(GetMotionProvider(axis, name), p => p.Minimum = MathUtils.Clamp(p.Minimum + gesture.Delta, 0, 100)));
+                (gesture, axis) => UpdateProperty(GetMotionProvider(axis, name), p => p.Minimum = Math.Clamp(p.Minimum + gesture.Delta, 0, 100)));
             #endregion
 
             #region MotionProvider::Maximum
             s.RegisterAction<DeviceAxis, double>($"MotionProvider::{name}::Maximum::Offset",
                 s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All),
                 s => s.WithLabel("Value offset").WithStringFormat("{}{0}%"),
-                (axis, offset) => UpdateProperty(GetMotionProvider(axis, name), p => p.Maximum = MathUtils.Clamp(p.Maximum + offset, 0, 100)));
+                (axis, offset) => UpdateProperty(GetMotionProvider(axis, name), p => p.Maximum = Math.Clamp(p.Maximum + offset, 0, 100)));
 
             s.RegisterAction<DeviceAxis, double>($"MotionProvider::{name}::Maximum::Set",
                 s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All),
                 s => s.WithLabel("Value").WithStringFormat("{}{0}%"),
-                (axis, value) => UpdateProperty(GetMotionProvider(axis, name), p => p.Maximum = MathUtils.Clamp(value, 0, 100)));
+                (axis, value) => UpdateProperty(GetMotionProvider(axis, name), p => p.Maximum = Math.Clamp(value, 0, 100)));
 
             s.RegisterAction<IAxisInputGesture, DeviceAxis>($"MotionProvider::{name}::Maximum::Drive",
                 s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All),
-                (gesture, axis) => UpdateProperty(GetMotionProvider(axis, name), p => p.Maximum = MathUtils.Clamp(p.Maximum + gesture.Delta, 0, 100)));
+                (gesture, axis) => UpdateProperty(GetMotionProvider(axis, name), p => p.Maximum = Math.Clamp(p.Maximum + gesture.Delta, 0, 100)));
             #endregion
 
             #region PatternMotionProvider

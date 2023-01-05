@@ -26,7 +26,7 @@ internal class DeviceSettingsViewModel : Screen, IHandle<SettingsMessage>
 
         var index = Devices.IndexOf(SelectedDevice);
         Devices.Remove(SelectedDevice);
-        SelectedDevice = Devices[MathUtils.Clamp(index, 0, Devices.Count - 1)];
+        SelectedDevice = Devices[Math.Clamp(index, 0, Devices.Count - 1)];
     }
 
     public bool CanRenameSelectedDevice => SelectedDevice?.IsDefault == false;

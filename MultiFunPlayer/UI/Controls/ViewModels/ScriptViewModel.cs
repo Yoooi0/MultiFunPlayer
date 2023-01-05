@@ -133,7 +133,7 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                 _internalMediaPosition += deltaTime * PlaybackSpeed;
 
                 var error = _internalMediaPosition - MediaPosition;
-                MediaPosition += MathUtils.Clamp(error, deltaTime * PlaybackSpeed * 0.9, deltaTime * PlaybackSpeed * 1.1);
+                MediaPosition += Math.Clamp(error, deltaTime * PlaybackSpeed * 0.9, deltaTime * PlaybackSpeed * 1.1);
             }
 
             var dirty = false;
@@ -965,7 +965,7 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         if (!double.IsFinite(MediaDuration) || !double.IsFinite(time))
             return;
 
-        _eventAggregator.Publish(new MediaSeekMessage(TimeSpan.FromSeconds(MathUtils.Clamp(time, 0, MediaDuration))));
+        _eventAggregator.Publish(new MediaSeekMessage(TimeSpan.FromSeconds(Math.Clamp(time, 0, MediaDuration))));
     }
 
     private Task _autoSkipToScriptStartTask = Task.CompletedTask;
@@ -1597,12 +1597,12 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         s.RegisterAction<DeviceAxis, double>("Axis::SpeedLimitSecondsPerStroke::Offset",
             s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All),
             s => s.WithLabel("Value offset").WithStringFormat("{}{0:F3}s/stroke"),
-            (axis, offset) => UpdateSettings(axis, s => s.MaximumSecondsPerStroke = MathUtils.Clamp(s.MaximumSecondsPerStroke + offset, 0.001, 10)));
+            (axis, offset) => UpdateSettings(axis, s => s.MaximumSecondsPerStroke = Math.Clamp(s.MaximumSecondsPerStroke + offset, 0.001, 10)));
 
         s.RegisterAction<DeviceAxis, double>("Axis::SpeedLimitSecondsPerStroke::Set",
             s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All),
             s => s.WithLabel("Value").WithStringFormat("{}{0:F3}s/stroke"),
-            (axis, value) => UpdateSettings(axis, s => s.MaximumSecondsPerStroke = MathUtils.Clamp(value, 0.001, 10)));
+            (axis, value) => UpdateSettings(axis, s => s.MaximumSecondsPerStroke = Math.Clamp(value, 0.001, 10)));
         #endregion
 
         #region Axis::AutoHomeEnabled
@@ -1677,12 +1677,12 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         s.RegisterAction<DeviceAxis, double>("Axis::ScriptScale::Offset",
             s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All),
             s => s.WithLabel("Value offset").WithStringFormat("{}{0}%"),
-            (axis, offset) => UpdateSettings(axis, s => s.ScriptScale = MathUtils.Clamp(s.ScriptScale + offset, 1, 400)));
+            (axis, offset) => UpdateSettings(axis, s => s.ScriptScale = Math.Clamp(s.ScriptScale + offset, 1, 400)));
 
         s.RegisterAction<DeviceAxis, double>("Axis::ScriptScale::Set",
             s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All),
             s => s.WithLabel("Value").WithStringFormat("{}{0}%"),
-            (axis, value) => UpdateSettings(axis, s => s.ScriptScale = MathUtils.Clamp(value, 1, 400)));
+            (axis, value) => UpdateSettings(axis, s => s.ScriptScale = Math.Clamp(value, 1, 400)));
         #endregion
 
         #region Axis::MotionProvider
@@ -1699,16 +1699,16 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         s.RegisterAction<DeviceAxis, double>("Axis::MotionProviderBlend::Offset",
             s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All),
             s => s.WithLabel("Value offset"),
-            (axis, offset) => UpdateSettings(axis, s => s.MotionProviderBlend = MathUtils.Clamp(s.MotionProviderBlend + offset, 0, 100)));
+            (axis, offset) => UpdateSettings(axis, s => s.MotionProviderBlend = Math.Clamp(s.MotionProviderBlend + offset, 0, 100)));
 
         s.RegisterAction<DeviceAxis, double>("Axis::MotionProviderBlend::Set",
             s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All),
             s => s.WithLabel("Value").WithStringFormat("{}{0}%"),
-            (axis, value) => UpdateSettings(axis, s => s.MotionProviderBlend = MathUtils.Clamp(value, 0, 100)));
+            (axis, value) => UpdateSettings(axis, s => s.MotionProviderBlend = Math.Clamp(value, 0, 100)));
 
         s.RegisterAction<IAxisInputGesture, DeviceAxis>("Axis::MotionProviderBlend::Drive",
             s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All),
-            (gesture, axis) => UpdateSettings(axis, s => s.MotionProviderBlend = MathUtils.Clamp(s.MotionProviderBlend + gesture.Delta * 100, 0, 100)));
+            (gesture, axis) => UpdateSettings(axis, s => s.MotionProviderBlend = Math.Clamp(s.MotionProviderBlend + gesture.Delta * 100, 0, 100)));
         #endregion
 
         #region Axis::MotionProviderFillGaps

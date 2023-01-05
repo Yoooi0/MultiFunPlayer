@@ -174,8 +174,8 @@ internal abstract class AbstractOutputTarget : Screen, IOutputTarget
                 callback(AxisSettings[axis]);
         }
 
-        static void SetMinimum(DeviceAxisSettings settings, double value, double minimumLimit) => settings.Minimum = MathUtils.Clamp(value, minimumLimit, settings.Maximum - 1);
-        static void SetMaximum(DeviceAxisSettings settings, double value, double maximumLimit) => settings.Maximum = MathUtils.Clamp(value, settings.Minimum + 1, maximumLimit);
+        static void SetMinimum(DeviceAxisSettings settings, double value, double minimumLimit) => settings.Minimum = Math.Clamp(value, minimumLimit, settings.Maximum - 1);
+        static void SetMaximum(DeviceAxisSettings settings, double value, double maximumLimit) => settings.Maximum = Math.Clamp(value, settings.Minimum + 1, maximumLimit);
 
         static void OffsetMiddle(DeviceAxisSettings settings, double offset, double minimumLimit, double maximumLimit)
         {
@@ -184,14 +184,14 @@ internal abstract class AbstractOutputTarget : Screen, IOutputTarget
             else if (offset < 0 && settings.Minimum + offset < minimumLimit)
                 offset = Math.Max(offset, minimumLimit - settings.Minimum);
 
-            settings.Minimum = MathUtils.Clamp(settings.Minimum + offset, minimumLimit, maximumLimit - 1);
-            settings.Maximum = MathUtils.Clamp(settings.Maximum + offset, minimumLimit + 1, maximumLimit);
+            settings.Minimum = Math.Clamp(settings.Minimum + offset, minimumLimit, maximumLimit - 1);
+            settings.Maximum = Math.Clamp(settings.Maximum + offset, minimumLimit + 1, maximumLimit);
         }
 
         static void OffsetSize(DeviceAxisSettings settings, double offset, double minimumLimit, double maximumLimit)
         {
             var middle = (settings.Maximum + settings.Minimum) / 2d;
-            var newRange = MathUtils.Clamp(settings.Maximum - settings.Minimum + offset, 1, maximumLimit - minimumLimit);
+            var newRange = Math.Clamp(settings.Maximum - settings.Minimum + offset, 1, maximumLimit - minimumLimit);
             var newMaximum = middle + newRange / 2;
             var newMinimum = middle - newRange / 2;
 
@@ -200,8 +200,8 @@ internal abstract class AbstractOutputTarget : Screen, IOutputTarget
             if (newMinimum < minimumLimit)
                 newMaximum += minimumLimit - newMinimum;
 
-            settings.Minimum = MathUtils.Clamp(newMinimum, minimumLimit, maximumLimit - 1);
-            settings.Maximum = MathUtils.Clamp(newMaximum, minimumLimit + 1, maximumLimit);
+            settings.Minimum = Math.Clamp(newMinimum, minimumLimit, maximumLimit - 1);
+            settings.Maximum = Math.Clamp(newMaximum, minimumLimit + 1, maximumLimit);
         }
 
         #region UpdateRate

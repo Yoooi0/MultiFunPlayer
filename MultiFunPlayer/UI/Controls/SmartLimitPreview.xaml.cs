@@ -109,7 +109,7 @@ internal partial class SmartLimitPreview : UserControl, INotifyPropertyChanged
         if (Points == null || Points.Count == 0)
             return;
 
-        var x = MathUtils.Clamp(Input, 0, 100);
+        var x = Math.Clamp(Input, 0, 100);
         var y = Interpolation.Linear(Points, p => p.X, p => p.Y, x);
 
         Output = y;
