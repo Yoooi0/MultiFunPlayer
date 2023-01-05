@@ -307,8 +307,8 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
             {
                 context.Value = context.LastValue;
 
-                var willAutoHome = CheckAutoHomeState(ref context);
-                if (!willAutoHome)
+                var autoHomeAllowed = CheckIfAutoHomeAllowed(ref context);
+                if (!autoHomeAllowed)
                 {
                     ResetAutoHome(ref context);
                     ApplyValues(ref context);
@@ -318,7 +318,7 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                     UpdateAutoHome(ref context);
                 }
 
-                if (context.IsAutoHoming ^ state.IsAutoHoming)
+                if (state.IsAutoHoming && !context.IsAutoHoming)
                     ResetSyncNoLock(state);
 
                 UpdateSync(ref context);
@@ -347,16 +347,19 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                         return;
 
                     var t = GetSyncProgress(state.SyncTime, SyncSettings.Duration);
-                    state.SyncTime -= deltaTime;
+                    if (context.IsAutoHoming)
+                        state.SyncTime -= deltaTime;
+                    else if (!double.IsFinite(context.Value) || context.IsDirty)
+                        state.SyncTime -= deltaTime;
 
-                    if (!double.IsFinite(context.Value))
+                    if (context.IsAutoHoming || !double.IsFinite(context.Value))
                         return;
 
                     var from = !double.IsFinite(context.LastValue) ? axis.DefaultValue : context.LastValue;
                     context.Value = MathUtils.Clamp01(MathUtils.Lerp(from, context.Value, t));
                 }
 
-                bool CheckAutoHomeState(ref AxisStateUpdateContext context)
+                bool CheckIfAutoHomeAllowed(ref AxisStateUpdateContext context)
                 {
                     if (!double.IsFinite(context.Value) || !settings.AutoHomeEnabled)
                         return false;
@@ -391,7 +394,7 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
 
                         if (t < 0) return false;
                         if (t == 0) return true;
-                        if (t >= 1)
+                        if (t >= 1 && Math.Abs(context.Value - settings.AutoHomeTargetValue) < 0.00001)
                         {
                             context.Value = settings.AutoHomeTargetValue;
                             return true;
