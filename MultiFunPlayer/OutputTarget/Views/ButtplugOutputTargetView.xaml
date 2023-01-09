@@ -319,7 +319,7 @@
                                             </DataTemplate>
                                         </GridViewColumn.CellTemplate>
                                     </GridViewColumn>
-                                    <GridViewColumn Header="Message Type"
+                                    <GridViewColumn Header="Actuator Type"
                                                     Width="140"
                                                     DisplayMemberBinding="{Binding ActuatorType}"/>
                                     <GridViewColumn Header="Index"
@@ -377,7 +377,7 @@
                             <ComboBox Margin="0 0 10 0" 
                                       Width="130"
                                       material:TextFieldAssist.HasClearButton="True"
-                                      material:HintAssist.HelperText="Message types"
+                                      material:HintAssist.HelperText="Actuator types"
                                       ItemsSource="{Binding AvailableActuatorTypes}" 
                                       SelectedItem="{Binding SelectedActuatorType}"
                                       IsEnabled="{Binding SelectedDevice, Converter={StaticResource notNullBooleanConverter}}"/>
