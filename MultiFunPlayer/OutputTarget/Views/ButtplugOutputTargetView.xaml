@@ -14,7 +14,7 @@
              x:ClassModifier="internal">
     <UserControl.Resources>
         <converters:MsToHzConverter x:Key="MsToHzConverter"/>
-        <converters:ButtplugClientDeviceConnectedConverter x:Key="ButtplugClientDeviceConnectedConverter"/>
+        <converters:ButtplugDeviceConnectedConverter x:Key="ButtplugDeviceConnectedConverter"/>
     </UserControl.Resources>
     <Expander material:ExpanderAssist.HorizontalHeaderPadding="0 0 6 0"
               Style="{StaticResource MaterialDesignToolBarExpander}"
@@ -267,10 +267,10 @@
                                     </GridView.ColumnHeaderContainerStyle>
 
                                     <GridViewColumn Header="Axis"
-                                                        Width="60"
-                                                        DisplayMemberBinding="{Binding SourceAxis}"/>
+                                                    Width="60"
+                                                    DisplayMemberBinding="{Binding SourceAxis}"/>
                                     <GridViewColumn Header="Device Name"
-                                                        Width="225">
+                                                    Width="225">
                                         <GridViewColumn.CellTemplate>
                                             <DataTemplate>
                                                 <material:Badged BadgePlacementMode="TopRight"
@@ -291,7 +291,7 @@
                                                             <Style.Triggers>
                                                                 <DataTrigger Value="True">
                                                                     <DataTrigger.Binding>
-                                                                        <MultiBinding Converter="{StaticResource ButtplugClientDeviceConnectedConverter}">
+                                                                        <MultiBinding Converter="{StaticResource ButtplugDeviceConnectedConverter}">
                                                                             <Binding Path=""/>
                                                                             <Binding Path="DataContext.AvailableDevices" RelativeSource="{RelativeSource AncestorType={x:Type UserControl}}"/>
                                                                         </MultiBinding>
@@ -320,24 +320,24 @@
                                         </GridViewColumn.CellTemplate>
                                     </GridViewColumn>
                                     <GridViewColumn Header="Message Type"
-                                                        Width="140"
-                                                        DisplayMemberBinding="{Binding MessageType}"/>
+                                                    Width="140"
+                                                    DisplayMemberBinding="{Binding ActuatorType}"/>
                                     <GridViewColumn Header="Index"
-                                                        Width="50"
-                                                        DisplayMemberBinding="{Binding FeatureIndex}"/>
+                                                    Width="50"
+                                                    DisplayMemberBinding="{Binding ActuatorIndex}"/>
 
                                     <GridViewColumn Header=""
                                                         Width="50">
                                         <GridViewColumn.CellTemplate>
                                             <DataTemplate>
                                                 <Button Style="{StaticResource MaterialDesignFlatButton}"
-                                                            ToolTip="Remove"
-                                                            material:RippleAssist.Feedback="{StaticResource MaterialDesignErrorBrush}"
-                                                            Foreground="{StaticResource MaterialDesignErrorBrush}"
-                                                            Height="24" 
-                                                            Width="24" 
-                                                            Padding="0"
-                                                            Click="{s:Action OnSettingsDelete}" >
+                                                        ToolTip="Remove"
+                                                        material:RippleAssist.Feedback="{StaticResource MaterialDesignErrorBrush}"
+                                                        Foreground="{StaticResource MaterialDesignErrorBrush}"
+                                                        Height="24" 
+                                                        Width="24" 
+                                                        Padding="0"
+                                                        Click="{s:Action OnSettingsDelete}" >
                                                     <material:PackIcon Kind="Delete"/>
                                                 </Button>
                                             </DataTemplate>
@@ -378,17 +378,17 @@
                                       Width="130"
                                       material:TextFieldAssist.HasClearButton="True"
                                       material:HintAssist.HelperText="Message types"
-                                      ItemsSource="{Binding AvailableMessageTypes}" 
-                                      SelectedItem="{Binding SelectedMessageType}"
+                                      ItemsSource="{Binding AvailableActuatorTypes}" 
+                                      SelectedItem="{Binding SelectedActuatorType}"
                                       IsEnabled="{Binding SelectedDevice, Converter={StaticResource notNullBooleanConverter}}"/>
 
                             <ComboBox Margin="0 0 10 0" 
                                       Width="50"
                                       material:TextFieldAssist.HasClearButton="True"
                                       material:HintAssist.HelperText="Indices"
-                                      ItemsSource="{Binding AvailableFeatureIndices}" 
-                                      SelectedItem="{Binding SelectedFeatureIndex}"
-                                      IsEnabled="{Binding SelectedMessageType, Converter={StaticResource notNullBooleanConverter}}"/>
+                                      ItemsSource="{Binding AvailableActuatorIndices}" 
+                                      SelectedItem="{Binding SelectedActuatorIndex}"
+                                      IsEnabled="{Binding SelectedActuatorType, Converter={StaticResource notNullBooleanConverter}}"/>
 
                             <Button Style="{StaticResource MaterialDesignFlatButton}"
                                     ToolTip="Add"

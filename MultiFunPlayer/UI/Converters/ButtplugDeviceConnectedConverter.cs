@@ -5,13 +5,13 @@ using System.Windows.Data;
 
 namespace MultiFunPlayer.UI.Converters;
 
-internal class ButtplugClientDeviceConnectedConverter : IMultiValueConverter
+internal class ButtplugDeviceConnectedConverter : IMultiValueConverter
 {
     public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
     {
         if (values.Length != 2
-         || values[0] is not ButtplugClientDeviceSettings settings
-         || values[1] is not IList<ButtplugClientDevice> availableDevices)
+         || values[0] is not ButtplugDeviceSettings settings
+         || values[1] is not IList<ButtplugDevice> availableDevices)
             return false;
 
         return availableDevices.Any(d => string.Equals(settings.DeviceName, d.Name, StringComparison.OrdinalIgnoreCase) && settings.DeviceIndex == d.Index);

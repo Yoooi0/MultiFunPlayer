@@ -1,4 +1,5 @@
 using Buttplug;
+using Buttplug.NewtonsoftJson;
 using MultiFunPlayer.Common;
 using MultiFunPlayer.Input;
 using MultiFunPlayer.UI;
@@ -19,12 +20,6 @@ internal class ButtplugOutputTargetViewModel : AsyncAbstractOutputTarget
 {
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
-    private readonly List<ServerMessage.Types.MessageAttributeType> _supportedMessages = new()
-    {
-        ServerMessage.Types.MessageAttributeType.LinearCmd,
-        ServerMessage.Types.MessageAttributeType.RotateCmd,
-        ServerMessage.Types.MessageAttributeType.VibrateCmd
-    };
     private SemaphoreSlim _startScanSemaphore;
     private SemaphoreSlim _endScanSemaphore;
 
@@ -33,23 +28,24 @@ internal class ButtplugOutputTargetViewModel : AsyncAbstractOutputTarget
 
     public override ConnectionStatus Status { get; protected set; }
     public EndPoint Endpoint { get; set; } = new IPEndPoint(IPAddress.Loopback, 12345);
-    public ObservableConcurrentCollection<ButtplugClientDevice> AvailableDevices { get; protected set; }
+    public ObservableConcurrentCollection<ButtplugDevice> AvailableDevices { get; protected set; }
 
     [DependsOn(nameof(SelectedDevice))]
-    public ObservableConcurrentCollection<ServerMessage.Types.MessageAttributeType> AvailableMessageTypes
-        => SelectedDevice != null ? new(SelectedDevice.AllowedMessages.Keys.Join(_supportedMessages, x => x, x => x, (x, _) => x)) : null;
+    public ObservableConcurrentCollection<ActuatorType> AvailableActuatorTypes
+        => SelectedDevice != null ? new(SelectedDevice.SupportedActuatorTypes) : null;
 
-    [DependsOn(nameof(SelectedDevice), nameof(AvailableMessageTypes))]
-    public ObservableConcurrentCollection<uint> AvailableFeatureIndices
+    [DependsOn(nameof(SelectedDevice), nameof(AvailableActuatorTypes))]
+    public ObservableConcurrentCollection<uint> AvailableActuatorIndices
     {
         get
         {
-            if (SelectedDevice == null || SelectedMessageType == null)
+            if (SelectedDevice == null || SelectedActuatorType == null)
                 return null;
 
-            var indices = Enumerable.Range(0, (int)SelectedDevice.AllowedMessages[SelectedMessageType.Value].FeatureCount).Select(x => (uint)x);
-            var usedIndices = DeviceSettings.Where(s => string.Equals(s.DeviceName, SelectedDevice.Name, StringComparison.OrdinalIgnoreCase) && s.MessageType == SelectedMessageType)
-                                            .Select(s => s.FeatureIndex);
+            var actuators = SelectedDevice.GetActuators(SelectedActuatorType.Value);
+            var indices = actuators.Select(a => a.Index);
+            var usedIndices = DeviceSettings.Where(s => string.Equals(s.DeviceName, SelectedDevice.Name, StringComparison.OrdinalIgnoreCase) && s.ActuatorType == SelectedActuatorType.Value)
+                                            .Select(s => s.ActuatorIndex);
             var allowedIndices = indices.Except(usedIndices);
             if (!allowedIndices.Any())
                 return null;
@@ -58,58 +54,22 @@ internal class ButtplugOutputTargetViewModel : AsyncAbstractOutputTarget
         }
     }
 
-    public ButtplugClientDevice SelectedDevice { get; set; }
+    public ButtplugDevice SelectedDevice { get; set; }
     public DeviceAxis SelectedDeviceAxis { get; set; }
-    public ServerMessage.Types.MessageAttributeType? SelectedMessageType { get; set; }
-    public uint? SelectedFeatureIndex { get; set; }
-    public bool CanAddSelected => SelectedDevice != null && SelectedDeviceAxis != null && SelectedMessageType != null && SelectedFeatureIndex != null;
+    public ActuatorType? SelectedActuatorType { get; set; }
+    public uint? SelectedActuatorIndex { get; set; }
+    public bool CanAddSelected => SelectedDevice != null && SelectedDeviceAxis != null && SelectedActuatorType != null && SelectedActuatorIndex != null;
 
-    public ObservableConcurrentCollection<ButtplugClientDeviceSettings> DeviceSettings { get; protected set; }
+    public ObservableConcurrentCollection<ButtplugDeviceSettings> DeviceSettings { get; protected set; }
 
     public ButtplugOutputTargetViewModel(int instanceIndex, IEventAggregator eventAggregator, IDeviceAxisValueProvider valueProvider)
         : base(instanceIndex, eventAggregator, valueProvider)
     {
-        AvailableDevices = new ObservableConcurrentCollection<ButtplugClientDevice>();
-        DeviceSettings = new ObservableConcurrentCollection<ButtplugClientDeviceSettings>();
+        AvailableDevices = new ObservableConcurrentCollection<ButtplugDevice>();
+        DeviceSettings = new ObservableConcurrentCollection<ButtplugDeviceSettings>();
         UpdateInterval = 50;
 
         AvailableDevices.CollectionChanged += (s, e) => DeviceSettings.Refresh();
-
-        var rule = LogManager.Configuration.LoggingRules.FirstOrDefault(r => r.Targets.Any(t => string.Equals(t.Name, "file", StringComparison.OrdinalIgnoreCase)));
-        var logLevel = (rule?.Levels?.Min()?.Ordinal ?? 6) switch
-        {
-            0 => ButtplugLogLevel.Trace,
-            1 => ButtplugLogLevel.Debug,
-            2 => ButtplugLogLevel.Info,
-            3 => ButtplugLogLevel.Warn,
-            4 or 5 => ButtplugLogLevel.Error,
-            6 => ButtplugLogLevel.Off,
-            _ => ButtplugLogLevel.Info
-        };
-
-        ButtplugFFILog.LogMessage += (_, m) =>
-        {
-            var parts = m.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-            var level = parts[1] switch
-            {
-                "TRACE" => LogLevel.Trace,
-                "DEBUG" => LogLevel.Debug,
-                "INFO" => LogLevel.Info,
-                "WARN" => LogLevel.Warn,
-                "ERROR" => LogLevel.Error,
-                "OFF" => LogLevel.Off,
-                _ => LogLevel.Info,
-            };
-
-            Logger.Log(level, string.Join(' ', parts[3..]));
-        };
-
-        try
-        {
-            //TODO: catch until https://github.com/buttplugio/buttplug-rs-ffi/issues/23 is resolved
-            ButtplugFFILog.SetLogOptions(logLevel, false);
-        }
-        catch { }
     }
 
     public bool IsScanBusy { get; set; }
@@ -128,7 +88,7 @@ internal class ButtplugOutputTargetViewModel : AsyncAbstractOutputTarget
 
     protected override async Task RunAsync(CancellationToken token)
     {
-        void OnDeviceRemoved(ButtplugClientDevice device)
+        void OnDeviceRemoved(ButtplugDevice device)
         {
             Logger.Info($"Device removed: \"{device.Name}\"");
 
@@ -137,7 +97,7 @@ internal class ButtplugOutputTargetViewModel : AsyncAbstractOutputTarget
                 SelectedDevice = null;
         }
 
-        void OnDeviceAdded(ButtplugClientDevice device)
+        void OnDeviceAdded(ButtplugDevice device)
         {
             Logger.Info($"Device added: \"{device.Name}\"");
 
@@ -149,13 +109,12 @@ internal class ButtplugOutputTargetViewModel : AsyncAbstractOutputTarget
             EventAggregator.Publish(new SyncRequestMessage(syncAxes));
         }
 
-        using var client = new ButtplugClient(nameof(MultiFunPlayer));
-        using var serverDisconnectSemaphore = new SemaphoreSlim(0, 1);
+        var converter = new ButtplugNewtonsoftJsonConverter();
+        await using var client = new ButtplugClient(nameof(MultiFunPlayer), converter);
 
-        client.DeviceAdded += (_, e) => OnDeviceAdded(e.Device);
-        client.DeviceRemoved += (_, e) => OnDeviceRemoved(e.Device);
-        client.ErrorReceived += (_, e) => Logger.Debug(e.Exception);
-        client.ServerDisconnect += (_, _) => serverDisconnectSemaphore.Release();
+        client.DeviceAdded += (_, device) => OnDeviceAdded(device);
+        client.DeviceRemoved += (_, device) => OnDeviceRemoved(device);
+        client.UnhandledException += (_, exception) => Logger.Debug(exception);
         client.ScanningFinished += (_, _) =>
         {
             if (IsScanBusy && _endScanSemaphore?.CurrentCount == 0)
@@ -165,14 +124,12 @@ internal class ButtplugOutputTargetViewModel : AsyncAbstractOutputTarget
         try
         {
             Logger.Info("Connecting to {0} at \"{1}\"", Identifier, $"ws://{Endpoint}");
-            await client.ConnectAsync(new ButtplugWebsocketConnectorOptions(new Uri($"ws://{Endpoint}"))).WithCancellation(token);
+            await client.ConnectAsync(new Uri($"ws://{Endpoint}"), token);
             Status = ConnectionStatus.Connected;
         }
         catch (Exception e)
         {
             Logger.Error(e, "Error when connecting to server");
-            if (client.Connected)
-                await client.DisconnectAsync();
 
             _ = DialogHelper.ShowErrorAsync(e, "Error when connecting to server", "RootDialog");
             return;
@@ -182,8 +139,8 @@ internal class ButtplugOutputTargetViewModel : AsyncAbstractOutputTarget
         {
             _ = ScanAsync(client, token);
 
-            var lastSentValuesPerDevice = new Dictionary<ButtplugClientDevice, Dictionary<DeviceAxis, double>>();
-            bool CheckDirtyAndUpdate(ButtplugClientDeviceSettings settings)
+            var lastSentValuesPerDevice = new Dictionary<ButtplugDevice, Dictionary<DeviceAxis, double>>();
+            bool CheckDirtyAndUpdate(ButtplugDeviceSettings settings)
             {
                 var device = GetDeviceFromSettings(settings);
                 if (device == null)
@@ -212,16 +169,22 @@ internal class ButtplugOutputTargetViewModel : AsyncAbstractOutputTarget
 
             EventAggregator.Publish(new SyncRequestMessage());
 
-            await FixedUpdateAsync(() => !token.IsCancellationRequested && client.Connected, async elapsed =>
+            await FixedUpdateAsync(() => !token.IsCancellationRequested && client.IsConnected, async elapsed =>
             {
                 Logger.Trace("Begin FixedUpdate [Elapsed: {0}]", elapsed);
                 UpdateValues();
 
-                foreach (var orphanedSettings in lastSentValuesPerDevice.Keys.Except(AvailableDevices))
-                    lastSentValuesPerDevice.Remove(orphanedSettings);
+                foreach (var orphanedDevice in lastSentValuesPerDevice.Keys.Except(AvailableDevices))
+                    lastSentValuesPerDevice.Remove(orphanedDevice);
+
+                foreach (var orphanedDevice in AvailableDevices.Where(d => lastSentValuesPerDevice.ContainsKey(d) && !GetSettingsForDevice(d).Any()))
+                {
+                    await orphanedDevice.StopAsync(token);
+                    lastSentValuesPerDevice.Remove(orphanedDevice);
+                }
 
                 var dirtySettings = DeviceSettings.Where(CheckDirtyAndUpdate);
-                var tasks = GetDeviceTasks(elapsed * 1000, dirtySettings);
+                var tasks = GetDeviceTasks(elapsed * 1000, dirtySettings, token);
 
                 try
                 {
@@ -241,31 +204,14 @@ internal class ButtplugOutputTargetViewModel : AsyncAbstractOutputTarget
             _ = DialogHelper.ShowErrorAsync(e, $"{Identifier} failed with exception", "RootDialog");
         }
 
-        try
-        {
-            if (client.IsScanning)
-                await client.StopScanningAsync();
-            IsScanBusy = false;
-        }
-        catch { }
-
-        try
-        {
-            if (client.Connected)
-                await client.DisconnectAsync();
-
-            await serverDisconnectSemaphore.WaitAsync(CancellationToken.None)
-                                           .WithCancellation(10000);
-        } catch { }
-
         AvailableDevices.Clear();
     }
 
-    private ButtplugClientDevice GetDeviceFromSettings(ButtplugClientDeviceSettings settings)
+    private ButtplugDevice GetDeviceFromSettings(ButtplugDeviceSettings settings)
         => GetDeviceByNameAndIndex(settings.DeviceName, settings.DeviceIndex);
-    private ButtplugClientDevice GetDeviceByNameAndIndex(string deviceName, uint deviceIndex)
+    private ButtplugDevice GetDeviceByNameAndIndex(string deviceName, uint deviceIndex)
         => AvailableDevices.FirstOrDefault(d => string.Equals(deviceName, d.Name, StringComparison.OrdinalIgnoreCase) && deviceIndex == d.Index);
-    private IEnumerable<ButtplugClientDeviceSettings> GetSettingsForDevice(ButtplugClientDevice device)
+    private IEnumerable<ButtplugDeviceSettings> GetSettingsForDevice(ButtplugDevice device)
         => DeviceSettings.Where(s => string.Equals(s.DeviceName, device.Name, StringComparison.OrdinalIgnoreCase) && s.DeviceIndex == device.Index);
 
     protected override double CoerceProviderValue(DeviceAxis axis, double value)
@@ -274,7 +220,7 @@ internal class ButtplugOutputTargetViewModel : AsyncAbstractOutputTarget
         return value < 0.005 ? 0 : value;
     }
 
-    private IEnumerable<Task> GetDeviceTasks(double interval, IEnumerable<ButtplugClientDeviceSettings> settings)
+    private IEnumerable<Task> GetDeviceTasks(double interval, IEnumerable<ButtplugDeviceSettings> settings, CancellationToken token)
     {
         return settings.GroupBy(m => m.DeviceName).SelectMany(deviceGroup =>
         {
@@ -286,37 +232,30 @@ internal class ButtplugOutputTargetViewModel : AsyncAbstractOutputTarget
                 if (device == null)
                     return Enumerable.Empty<Task>();
 
-                return indexGroup.GroupBy(m => m.MessageType).Select(typeGroup =>
+                return indexGroup.GroupBy(m => m.ActuatorType).Select(typeGroup =>
                 {
                     var type = typeGroup.Key;
-                    if (type == ServerMessage.Types.MessageAttributeType.VibrateCmd)
+                    if (type == ActuatorType.Position)
                     {
-                        var cmds = typeGroup.ToDictionary(m => m.FeatureIndex,
-                                                          m => Values[m.SourceAxis]);
-
-                        Logger.Trace("Sending vibrate commands \"{data}\" to \"{name}\"", cmds, device.Name);
-                        return device.SendVibrateCmd(cmds);
-                    }
-
-                    if (type == ServerMessage.Types.MessageAttributeType.LinearCmd)
-                    {
-                        var cmds = typeGroup.ToDictionary(m => m.FeatureIndex,
-                                                          m => ((uint)Math.Floor(interval + 0.75), Values[m.SourceAxis]));
+                        var cmds = typeGroup.Select(m => new LinearCommand(m.ActuatorIndex, (uint)Math.Floor(interval + 0.75), Values[m.SourceAxis]));
 
                         Logger.Trace("Sending linear commands \"{data}\" to \"{name}\"", cmds, device.Name);
-                        return device.SendLinearCmd(cmds);
+                        return device.LinearAsync(cmds, token);
                     }
-
-                    if (type == ServerMessage.Types.MessageAttributeType.RotateCmd)
+                    else if (type == ActuatorType.Rotate)
                     {
-                        var cmds = typeGroup.ToDictionary(m => m.FeatureIndex,
-                                                          m => (Math.Clamp(Math.Abs(Values[m.SourceAxis] - 0.5) / 0.5, 0, 1), Values[m.SourceAxis] > 0.5));
+                        var cmds = typeGroup.Select(m => new RotateCommand(m.ActuatorIndex, Math.Clamp(Math.Abs(Values[m.SourceAxis] - 0.5) / 0.5, 0, 1), Values[m.SourceAxis] > 0.5));
 
                         Logger.Trace("Sending rotate commands \"{data}\" to \"{name}\"", cmds, device.Name);
-                        return device.SendRotateCmd(cmds);
+                        return device.RotateAsync(cmds, token);
                     }
+                    else
+                    {
+                        var cmds = typeGroup.Select(m => new ScalarCommand(m.ActuatorIndex, Values[m.SourceAxis], type));
 
-                    return Task.CompletedTask;
+                        Logger.Trace("Sending scalar commands \"{data}\" to \"{name}\"", cmds, device.Name);
+                        return device.ScalarAsync(cmds, token);
+                    }
                 });
             });
         });
@@ -333,7 +272,7 @@ internal class ButtplugOutputTargetViewModel : AsyncAbstractOutputTarget
             _endScanSemaphore = null;
         }
 
-        try { await client.StopScanningAsync().WithCancellation(token); } catch { }
+        await client.StopScanningAsync(token);
 
         CleanupSemaphores();
         _startScanSemaphore = new SemaphoreSlim(1, 1);
@@ -343,22 +282,22 @@ internal class ButtplugOutputTargetViewModel : AsyncAbstractOutputTarget
         {
             while (!token.IsCancellationRequested)
             {
-                try
-                {
-                    await _startScanSemaphore.WaitAsync(token);
-                    await client.StartScanningAsync().WithCancellation(token);
+                await _startScanSemaphore.WaitAsync(token);
+                await client.StartScanningAsync(token);
 
-                    IsScanBusy = true;
-                    await _endScanSemaphore.WaitAsync(token);
-                    IsScanBusy = false;
+                IsScanBusy = true;
+                await _endScanSemaphore.WaitAsync(token);
+                IsScanBusy = false;
 
-                    if (client.IsScanning)
-                        await client.StopScanningAsync().WithCancellation(token);
-                }
-                catch (ButtplugException) { }
+                if (client.IsScanning)
+                    await client.StopScanningAsync(token);
             }
         }
         catch (OperationCanceledException) { }
+        finally
+        {
+            IsScanBusy = false;
+        }
 
         CleanupSemaphores();
     }
@@ -377,7 +316,7 @@ internal class ButtplugOutputTargetViewModel : AsyncAbstractOutputTarget
             if (settings.TryGetValue<EndPoint>(nameof(Endpoint), out var endpoint))
                 Endpoint = endpoint;
 
-            if (settings.TryGetValue<List<ButtplugClientDeviceSettings>>(nameof(DeviceSettings), out var deviceSettings))
+            if (settings.TryGetValue<List<ButtplugDeviceSettings>>(nameof(DeviceSettings), out var deviceSettings))
             {
                 DeviceSettings.Clear();
                 DeviceSettings.AddRange(deviceSettings);
@@ -427,32 +366,32 @@ internal class ButtplugOutputTargetViewModel : AsyncAbstractOutputTarget
             DeviceName = SelectedDevice.Name,
             DeviceIndex = SelectedDevice.Index,
             SourceAxis = SelectedDeviceAxis,
-            FeatureIndex = SelectedFeatureIndex.Value,
-            MessageType = SelectedMessageType.Value
+            ActuatorIndex = SelectedActuatorIndex.Value,
+            ActuatorType = SelectedActuatorType.Value
         });
 
         SelectedDevice = null;
         SelectedDeviceAxis = null;
-        SelectedFeatureIndex = null;
-        SelectedMessageType = null;
+        SelectedActuatorIndex = null;
+        SelectedActuatorType = null;
     }
 
     public void OnSettingsDelete(object sender, EventArgs e)
     {
-        if (sender is not FrameworkElement element || element.DataContext is not ButtplugClientDeviceSettings settings)
+        if (sender is not FrameworkElement element || element.DataContext is not ButtplugDeviceSettings settings)
             return;
 
         DeviceSettings.Remove(settings);
-        NotifyOfPropertyChange(nameof(AvailableFeatureIndices));
+        NotifyOfPropertyChange(nameof(AvailableActuatorIndices));
     }
 }
 
 [JsonObject(MemberSerialization.OptIn)]
-internal class ButtplugClientDeviceSettings : PropertyChangedBase
+internal class ButtplugDeviceSettings : PropertyChangedBase
 {
     [JsonProperty] public string DeviceName { get; set; }
     [JsonProperty] public uint DeviceIndex { get; set; }
     [JsonProperty] public DeviceAxis SourceAxis { get; set; }
-    [JsonProperty] public ServerMessage.Types.MessageAttributeType MessageType { get; set; }
-    [JsonProperty] public uint FeatureIndex { get; set; }
+    [JsonProperty] public ActuatorType ActuatorType { get; set; }
+    [JsonProperty] public uint ActuatorIndex { get; set; }
 }
