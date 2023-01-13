@@ -20,8 +20,8 @@
   </ItemGroup>
 	
   <ItemGroup>
-    <PackageReference Include="Buttplug.Net" Version="0.1.0-ci0046" />
-	<PackageReference Include="Buttplug.Net.NewtonsoftJson" Version="0.1.0-ci0046" />
+    <PackageReference Include="Buttplug.Net" Version="0.1.0-ci0077" />
+	<PackageReference Include="Buttplug.Net.NewtonsoftJson" Version="0.1.0-ci0077" />
     <PackageReference Include="ConfigureAwait.Fody" Version="3.*">
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
@@ -31,14 +31,14 @@
     </PackageReference>
     <PackageReference Include="MahApps.Metro" Version="2.4.9" />
     <PackageReference Include="MaterialDesignExtensions" Version="4.0.0-a02" />
-    <PackageReference Include="MaterialDesignThemes" Version="4.7.0-ci390" />
-    <PackageReference Include="MaterialDesignThemes.MahApps" Version="0.2.6-ci390" />
+    <PackageReference Include="MaterialDesignThemes" Version="4.7.0" />
+    <PackageReference Include="MaterialDesignThemes.MahApps" Version="0.2.6" />
     <PackageReference Include="Microsoft.CodeAnalysis.Common" Version="4.4.0" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.4.0" />
     <PackageReference Include="NETStandard.Library" Version="2.0.3" />
     <PackageReference Include="Newtonsoft.Json" Version="13.*" />
     <PackageReference Include="NLog" Version="5.*" />
-    <PackageReference Include="PropertyChanged.Fody" Version="3.*">
+    <PackageReference Include="PropertyChanged.Fody" Version="4.*">
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
     <PackageReference Include="RawInput.Sharp" Version="0.0.4" />
@@ -46,6 +46,6 @@
     <PackageReference Include="System.IO.Ports" Version="7.*" />
     <PackageReference Include="Microsoft-WindowsAPICodePack-Shell" Version="1.1.4" />
     <PackageReference Include="System.Management" Version="7.*" />
-    <PackageReference Include="Vortice.XInput" Version="2.1.32" />
+    <PackageReference Include="Vortice.XInput" Version="2.2.0" />
   </ItemGroup>
 </Project>
