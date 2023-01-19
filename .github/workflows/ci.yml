@@ -38,7 +38,7 @@ jobs:
     if: ${{ needs.detect-changes.outputs.docs == 'true' }}
     defaults:
       run:
-        working-directory: .\Docs
+        working-directory: ./Docs
     concurrency:
       group: 'pages'
       cancel-in-progress: true
@@ -56,15 +56,15 @@ jobs:
       uses: actions/setup-node@v3
       with:
         node-version: 18
-        cache: yarn      
+        cache: npm      
     - name: Install dependencies
-      run: yarn install --frozen-lockfile
+      run: npm ci
     - name: Build website
-      run: yarn build
+      run: npm run build
     - name: Upload artifact
       uses: actions/upload-pages-artifact@v1
       with:
-        path: .\build
+        path: ./build
     - name: Deploy to GitHub Pages
       id: deployment
       uses: actions/deploy-pages@v1
