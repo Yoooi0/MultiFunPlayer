@@ -6,8 +6,28 @@ on:
   workflow_dispatch:
 
 jobs:
+  detect-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      source: ${{ steps.changes.outputs.source }}
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+      with:
+          fetch-depth: 0
+    - name: Detect changes
+      uses: dorny/paths-filter@v2
+      id: changes
+      with:
+        filters: |
+          source:
+            - 'Source/**'
+            - 'MultiFunPlayer.sln'
+
   build:
     runs-on: windows-latest
+    needs: [detect-changes]
+    if: ${{ needs.detect-changes.outputs.source == 'true' }}
     strategy:
       matrix:
         build_type: [Release, Debug]
@@ -24,7 +44,7 @@ jobs:
       uses: gittools/actions/gitversion/setup@v0.9.15
       with:
         versionSpec: '5.x'
-    - name: Determine Version
+    - name: Determine version
       id:   gitversion
       uses: gittools/actions/gitversion/execute@v0.9.15
     - name: Install dependencies
