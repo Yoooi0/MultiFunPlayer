@@ -44,7 +44,7 @@ jobs:
   docs:
     runs-on: ubuntu-latest
     needs: [detect-changes]
-    if: ${{ (needs.detect-changes.outputs.docs == 'true') || (inputs.force-docs == 'true') }}
+    if: ${{ (needs.detect-changes.outputs.docs == 'true') || (github.event.inputs.force-docs == 'true') }}
     defaults:
       run:
         working-directory: ./Docs
@@ -81,7 +81,7 @@ jobs:
   build:
     runs-on: windows-latest
     needs: [detect-changes]
-    if: ${{ (needs.detect-changes.outputs.source == 'true') || (inputs.force-build == 'true') }}
+    if: ${{ (needs.detect-changes.outputs.source == 'true') || (github.event.inputs.force-build == 'true') }}
     strategy:
       matrix:
         build_type: [Release, Debug]
