@@ -47,7 +47,7 @@ jobs:
     if: ${{ (needs.detect-changes.outputs.docs == 'true') || (github.event.inputs.force-docs == 'true') }}
     defaults:
       run:
-        working-directory: ./Docs
+        working-directory: Docs
     concurrency:
       group: 'pages'
       cancel-in-progress: true
