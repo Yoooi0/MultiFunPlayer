@@ -32,7 +32,7 @@ internal class ButtplugOutputTargetViewModel : AsyncAbstractOutputTarget
 
     [DependsOn(nameof(SelectedDevice))]
     public ObservableConcurrentCollection<ActuatorType> AvailableActuatorTypes
-        => SelectedDevice != null ? new(SelectedDevice.SupportedActuatorTypes) : null;
+        => SelectedDevice != null ? new(SelectedDevice.Actuators.Select(a => a.ActuatorType).Distinct()) : null;
 
     [DependsOn(nameof(SelectedDevice), nameof(AvailableActuatorTypes))]
     public ObservableConcurrentCollection<uint> AvailableActuatorIndices
@@ -232,31 +232,33 @@ internal class ButtplugOutputTargetViewModel : AsyncAbstractOutputTarget
                 if (device == null)
                     return Enumerable.Empty<Task>();
 
-                return indexGroup.GroupBy(m => m.ActuatorType).Select(typeGroup =>
+                return indexGroup.GroupBy(m => m.ActuatorType).SelectMany(typeGroup => typeGroup.Select(s =>
                 {
-                    var type = typeGroup.Key;
-                    if (type == ActuatorType.Position)
-                    {
-                        var cmds = typeGroup.Select(m => new LinearCommand(m.ActuatorIndex, (uint)Math.Floor(interval + 0.75), Values[m.SourceAxis]));
+                    if (!device.TryGetActuator(s.ActuatorIndex, s.ActuatorType, out var actuator))
+                        return Task.CompletedTask;
 
-                        Logger.Trace("Sending linear commands \"{data}\" to \"{name}\"", cmds, device.Name);
-                        return device.LinearAsync(cmds, token);
-                    }
-                    else if (type == ActuatorType.Rotate)
+                    var value = Values[s.SourceAxis];
+                    if (actuator is ButtplugDeviceLinearActuator linearActuator)
                     {
-                        var cmds = typeGroup.Select(m => new RotateCommand(m.ActuatorIndex, Math.Clamp(Math.Abs(Values[m.SourceAxis] - 0.5) / 0.5, 0, 1), Values[m.SourceAxis] > 0.5));
-
-                        Logger.Trace("Sending rotate commands \"{data}\" to \"{name}\"", cmds, device.Name);
-                        return device.RotateAsync(cmds, token);
+                        var duration = (uint)Math.Floor(interval + 0.75);
+                        Logger.Trace("Sending \"{value} (Duration={duration}\" to \"{actuator}\"", value, duration, actuator);
+                        return linearActuator.LinearAsync(duration, value, token);
                     }
-                    else
+                    else if (actuator is ButtplugDeviceRotateActuator rotateActuator)
                     {
-                        var cmds = typeGroup.Select(m => new ScalarCommand(m.ActuatorIndex, Values[m.SourceAxis], type));
-
-                        Logger.Trace("Sending scalar commands \"{data}\" to \"{name}\"", cmds, device.Name);
-                        return device.ScalarAsync(cmds, token);
+                        var speed = Math.Clamp(Math.Abs(value - 0.5) / 0.5, 0, 1);
+                        var clockwise = value > 0.5;
+                        Logger.Trace("Sending \"{speed} (Clockwise={clockwise})\" to \"{actuator}\"", speed, clockwise, actuator);
+                        return rotateActuator.RotateAsync(speed, clockwise, token);
                     }
-                });
+                    else if (actuator is ButtplugDeviceScalarActuator scalarActuator)
+                    {
+                        Logger.Trace("Sending \"{value}\" to \"{actuator}\"", value, actuator);
+                        return scalarActuator.ScalarAsync(value, token);
+                    }
+
+                    return Task.CompletedTask;
+                }));
             });
         });
     }

@@ -35,4 +35,4 @@ jobs:
       uses: actions/upload-artifact@v3
       with:
         name: MultiFunPlayer-${{ steps.gitversion.outputs.fullSemVer }}.${{ steps.gitversion.outputs.shortSha }}-${{ matrix.build_type }}
-        path: MultiFunPlayer\bin\${{ matrix.build_type }}\win-x64\publish
+        path: Source\MultiFunPlayer\bin\${{ matrix.build_type }}\win-x64\publish

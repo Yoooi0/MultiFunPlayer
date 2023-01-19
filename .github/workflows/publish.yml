@@ -33,9 +33,9 @@ jobs:
     - name: Install Dependencies
       run: dotnet restore
     - name: Build Framework Dependent
-      run: dotnet publish --self-contained false --configuration Release --output .\MultiFunPlayer\bin\Release\win-x64\publish\framework-dependent /p:AssemblyVersion=${{ steps.gitversion.outputs.assemblySemVer }} /p:FileVersion=${{ steps.gitversion.outputs.assemblySemFileVer }} /p:InformationalVersion=${{ steps.gitversion.outputs.fullSemVer }}.${{ steps.gitversion.outputs.shortSha }}
+      run: dotnet publish --self-contained false --configuration Release --output .\Source\MultiFunPlayer\bin\Release\win-x64\publish\framework-dependent /p:AssemblyVersion=${{ steps.gitversion.outputs.assemblySemVer }} /p:FileVersion=${{ steps.gitversion.outputs.assemblySemFileVer }} /p:InformationalVersion=${{ steps.gitversion.outputs.fullSemVer }}.${{ steps.gitversion.outputs.shortSha }}
     - name: Build Self Contained
-      run: dotnet publish --self-contained true --configuration Release --output .\MultiFunPlayer\bin\Release\win-x64\publish\self-contained /p:AssemblyVersion=${{ steps.gitversion.outputs.assemblySemVer }} /p:FileVersion=${{ steps.gitversion.outputs.assemblySemFileVer }} /p:InformationalVersion=${{ steps.gitversion.outputs.fullSemVer }}.${{ steps.gitversion.outputs.shortSha }}
+      run: dotnet publish --self-contained true --configuration Release --output .\Source\MultiFunPlayer\bin\Release\win-x64\publish\self-contained /p:AssemblyVersion=${{ steps.gitversion.outputs.assemblySemVer }} /p:FileVersion=${{ steps.gitversion.outputs.assemblySemFileVer }} /p:InformationalVersion=${{ steps.gitversion.outputs.fullSemVer }}.${{ steps.gitversion.outputs.shortSha }}
     - name: Download NetBeauty
       uses: robinraju/release-downloader@v1.3
       with:
@@ -45,11 +45,11 @@ jobs:
     - name: Unpack NetBeauty
       run: 7z e win-x64.zip
     - name: Run NetBeauty
-      run: .\nbeauty2.exe .\MultiFunPlayer\bin\Release\win-x64\publish\self-contained\ Bin
+      run: .\nbeauty2.exe .\Source\MultiFunPlayer\bin\Release\win-x64\publish\self-contained\ Bin
     - name: Pack Framework Dependent
-      run: 7z a MultiFunPlayer-${{ steps.gitversion.outputs.semVer }}.zip .\MultiFunPlayer\bin\Release\win-x64\publish\framework-dependent\*
+      run: 7z a MultiFunPlayer-${{ steps.gitversion.outputs.semVer }}.zip .\Source\MultiFunPlayer\bin\Release\win-x64\publish\framework-dependent\*
     - name: Pack Self Contained
-      run: 7z a MultiFunPlayer-${{ steps.gitversion.outputs.semVer }}-SelfContained.${{ steps.dotnet-version.outputs.version }}.zip .\MultiFunPlayer\bin\Release\win-x64\publish\self-contained\*
+      run: 7z a MultiFunPlayer-${{ steps.gitversion.outputs.semVer }}-SelfContained.${{ steps.dotnet-version.outputs.version }}.zip .\Source\MultiFunPlayer\bin\Release\win-x64\publish\self-contained\*
     - name: Create Release
       id: create-release
       uses: ncipollo/release-action@v1
