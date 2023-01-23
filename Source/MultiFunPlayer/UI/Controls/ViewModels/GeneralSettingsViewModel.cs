@@ -18,6 +18,7 @@ internal class GeneralSettingsViewModel : Screen, IHandle<SettingsMessage>, IHan
 
     public LogLevel SelectedLogLevel { get; set; } = LogLevel.Info;
     public bool EnableUILogging { get; set; } = false;
+    public bool AllowWindowResize { get; set; } = false;
     public bool AlwaysOnTop { get; set; } = false;
     public bool ShowErrorDialogs { get; set; } = true;
 
@@ -47,6 +48,24 @@ internal class GeneralSettingsViewModel : Screen, IHandle<SettingsMessage>, IHan
             _styletLoggerManager.SuspendLogging();
     }
 
+    public void OnAllowWindowResizeChanged()
+    {
+        var window = Application.Current.MainWindow;
+        if (window == null)
+            return;
+
+        if (AllowWindowResize)
+        {
+            window.ResizeMode = ResizeMode.CanResize;
+            window.SizeToContent = SizeToContent.Manual;
+        }
+        else
+        {
+            window.ResizeMode = ResizeMode.CanMinimize;
+            window.SizeToContent = SizeToContent.Height;
+        }
+    }
+
     public void OnSelectedLogLevelChanged()
     {
         static LoggingRule GetRuleWithTarget(string targetName)
@@ -72,6 +91,7 @@ internal class GeneralSettingsViewModel : Screen, IHandle<SettingsMessage>, IHan
             message.Settings[nameof(ShowErrorDialogs)] = ShowErrorDialogs;
             message.Settings["LogLevel"] = JToken.FromObject(SelectedLogLevel ?? LogLevel.Info);
             message.Settings[nameof(EnableUILogging)] = EnableUILogging;
+            message.Settings[nameof(AllowWindowResize)] = AllowWindowResize;
         }
         else if (message.Action == SettingsAction.Loading)
         {
@@ -83,8 +103,14 @@ internal class GeneralSettingsViewModel : Screen, IHandle<SettingsMessage>, IHan
                 SelectedLogLevel = logLevel;
             if (message.Settings.TryGetValue<bool>(nameof(EnableUILogging), out var enableUILogging))
                 EnableUILogging = enableUILogging;
+            if (message.Settings.TryGetValue<bool>(nameof(AllowWindowResize), out var allowWindowResize))
+                AllowWindowResize = allowWindowResize;
         }
     }
 
-    public void Handle(WindowCreatedMessage message) => OnAlwaysOnTopChanged();
+    public void Handle(WindowCreatedMessage message)
+    {
+        OnAlwaysOnTopChanged();
+        OnAllowWindowResizeChanged();
+    }
 }

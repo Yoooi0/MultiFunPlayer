@@ -21,6 +21,18 @@
                           DockPanel.Dock="Left"
                           Margin="0 0 10 0"/>
             </DockPanel>
+            
+            <DockPanel LastChildFill="False"
+                       DockPanel.Dock="Top">
+                <TextBlock Text="Allow window resize:" 
+                           DockPanel.Dock="Left"
+                           Margin="0 0 10 0" 
+                           VerticalAlignment="Center"/>
+
+                <CheckBox IsChecked="{Binding AllowWindowResize}"
+                          DockPanel.Dock="Left"
+                          Margin="0 0 10 0"/>
+            </DockPanel>
 
             <DockPanel LastChildFill="False"
                        DockPanel.Dock="Top">
