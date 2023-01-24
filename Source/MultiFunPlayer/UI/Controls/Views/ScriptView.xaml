@@ -512,6 +512,42 @@
                                     </StackPanel>
                                 </Grid>
                             </material:PopupBox>
+
+                            <Menu Background="{DynamicResource MaterialDesignPaper}">
+                                <MenuItem Style="{StaticResource MaterialDesignToolBarMenuItem}" ToolTip="Media loop">
+                                    <MenuItem.Icon>
+                                        <TextBlock Text="AB"
+                                                   FontWeight="Bold"
+                                                   FontSize="14"
+                                                   VerticalAlignment="Center"
+                                                   HorizontalAlignment="Center"/>
+                                    </MenuItem.Icon>
+
+                                    <MenuItem Padding="8" Header="Clear" Command="{s:Action ClearMediaLoop}">
+                                        <MenuItem.Icon>
+                                            <material:PackIcon Kind="WindowClose" Width="16" Height="16"/>
+                                        </MenuItem.Icon>
+                                    </MenuItem>
+
+                                    <MenuItem Padding="8" Header="Set start" Command="{s:Action SetMediaLoopStartFromMediaPosition}">
+                                        <MenuItem.Icon>
+                                            <material:PackIcon Kind="ContainStart" Width="16" Height="16"/>
+                                        </MenuItem.Icon>
+                                    </MenuItem>
+
+                                    <MenuItem Padding="8" Header="Set end" Command="{s:Action SetMediaLoopEndFromMediaPosition}">
+                                        <MenuItem.Icon>
+                                            <material:PackIcon Kind="ContainEnd" Width="16" Height="16"/>
+                                        </MenuItem.Icon>
+                                    </MenuItem>
+
+                                    <MenuItem Padding="8" Header="Repeat chapter" Command="{s:Action SetMediaLoopFromCurrentChapter}">
+                                        <MenuItem.Icon>
+                                            <material:PackIcon Kind="Contain" Width="16" Height="16"/>
+                                        </MenuItem.Icon>
+                                    </MenuItem>
+                                </MenuItem>
+                            </Menu>
                         </StackPanel>
                     </DockPanel>
                 </Expander.Header>

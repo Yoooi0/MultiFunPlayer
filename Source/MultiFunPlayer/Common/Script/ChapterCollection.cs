@@ -41,6 +41,13 @@ public class ChapterCollection : IReadOnlyList<Chapter>
         return chapter != null;
     }
 
+    public bool TryFindIntersecting(double position, double epsilon, out Chapter chapter)
+    {
+        chapter = _items.Find(x => position >= x.StartPosition && position <= x.EndPosition)
+               ?? _items.Find(x => position >= x.StartPosition - epsilon && position <= x.EndPosition + epsilon);
+        return chapter != null;
+    }
+
     public bool TryFindByName(string name, out Chapter chapter)
     {
         chapter = _items.Find(x => string.Equals(x.Name, name, StringComparison.OrdinalIgnoreCase));

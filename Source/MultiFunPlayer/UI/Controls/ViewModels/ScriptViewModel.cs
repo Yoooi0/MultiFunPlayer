@@ -50,6 +50,7 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
     public ObservableConcurrentDictionaryView<DeviceAxis, AxisModel, BookmarkCollection> AxisBookmarks { get; }
 
     public Dictionary<string, Type> MediaPathModifierTypes { get; }
+    public MediaLoopSegment MediaLoopSegment { get; }
     public IMotionProviderManager MotionProviderManager { get; }
 
     public MediaResourceInfo MediaResource { get; set; }
@@ -84,6 +85,7 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         AxisModels = new ObservableConcurrentDictionary<DeviceAxis, AxisModel>(DeviceAxis.All.ToDictionary(a => a, a => new AxisModel(a)));
         MediaPathModifierTypes = ReflectionUtils.FindImplementations<IMediaPathModifier>()
                                                 .ToDictionary(t => t.GetCustomAttribute<DisplayNameAttribute>(inherit: false).DisplayName, t => t);
+        MediaLoopSegment = new MediaLoopSegment();
 
         ScriptLibraries = new ObservableConcurrentCollection<ScriptLibrary>();
         SyncSettings = new SyncSettings();
@@ -112,7 +114,10 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
     private void UpdateThread(CancellationToken token)
     {
         const double uiUpdateInterval = 1d / 60d;
+        const double mediaLoopUpdateInterval = 1d / 10d;
+
         var uiUpdateTime = 0d;
+        var mediaLoopUpdateTime = 0d;
         var deltaTime = 0d;
 
         while (!token.IsCancellationRequested)
@@ -121,6 +126,7 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
 
             var dirty = UpdateValues();
             UpdateUi();
+            UpdateMediaLoop();
 
             Thread.Sleep(IsPlaying || dirty ? 2 : 10);
             deltaTime = (Stopwatch.GetTimestamp() - updateStartTicks) / (double)Stopwatch.Frequency;
@@ -484,6 +490,18 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                 NotifyOfPropertyChange(nameof(MediaPosition));
             });
         }
+
+        void UpdateMediaLoop()
+        {
+            mediaLoopUpdateTime += deltaTime;
+            if (mediaLoopUpdateTime < mediaLoopUpdateInterval)
+                return;
+
+            mediaLoopUpdateTime = 0;
+            if (MediaLoopSegment.TryGetPositions(out var startPosition, out var endPosition))
+                if (MediaPosition >= endPosition)
+                    SeekMediaToTime(startPosition);
+        }
     }
 
     #region Events
@@ -584,6 +602,8 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
             if (SyncSettings.SyncOnSeek)
                 ResetSync();
 
+            if (newPosition <= MediaLoopSegment.StartPosition - 1 || newPosition >= MediaLoopSegment.EndPosition + 1)
+                ClearMediaLoop();
             UpdateCurrentPosition(newPosition);
         }
         else
@@ -942,6 +962,7 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         MediaDuration = double.NaN;
         PlaybackSpeed = 1;
         SetMediaPositionInternal(double.NaN);
+        ClearMediaLoop();
     }
 
     private void SetMediaPositionInternal(double position)
@@ -1003,6 +1024,37 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
 
         Logger.Info("Skipping to script start at {0}s", targetMediaTime);
         SeekMediaToTime(targetMediaTime);
+    }
+
+    public void ClearMediaLoop() => MediaLoopSegment.Clear();
+    public void SetMediaLoopStart(double position)
+    {
+        MediaLoopSegment.StartPosition = position;
+        if (MediaLoopSegment.IsValid)
+            SeekMediaToTime(MediaLoopSegment.StartPosition.Value);
+    }
+
+    public void SetMediaLoopEnd(double position)
+    {
+        MediaLoopSegment.EndPosition = position;
+        if (MediaLoopSegment.IsValid)
+            SeekMediaToTime(MediaLoopSegment.StartPosition.Value);
+    }
+
+    public void SetMediaLoopStartFromMediaPosition() => SetMediaLoopStart(MediaPosition);
+    public void SetMediaLoopEndFromMediaPosition() => SetMediaLoopEnd(MediaPosition);
+    public void SetMediaLoopFromCurrentChapter()
+    {
+        var (_, chapters) = AxisChapters.FirstOrDefault(x => x.Value != null);
+        if (chapters == null)
+            return;
+
+        if (!chapters.TryFindIntersecting(MediaPosition, 1, out var chapter))
+            return;
+
+        ClearMediaLoop();
+        SetMediaLoopStart(chapter.StartPosition);
+        SetMediaLoopEnd(chapter.EndPosition);
     }
     #endregion
 
@@ -1986,4 +2038,51 @@ internal class ScriptLibrary : PropertyChangedBase
     [JsonProperty] public bool Recursive { get; set; }
 
     public IEnumerable<FileInfo> EnumerateFiles(string searchPattern) => Directory.SafeEnumerateFiles(searchPattern, IOUtils.CreateEnumerationOptions(Recursive));
+}
+
+internal class MediaLoopSegment : PropertyChangedBase
+{
+    private double? _startPosition;
+    private double? _endPosition;
+
+    public double? StartPosition
+    {
+        get => _startPosition;
+        set
+        {
+            if (value >= _endPosition)
+                EndPosition = null;
+            _startPosition = value;
+        }
+    }
+
+    public double? EndPosition
+    {
+        get => _endPosition;
+        set
+        {
+            if (value <= _startPosition)
+                StartPosition = null;
+            _endPosition = value;
+        }
+    }
+
+    public bool IsValid => StartPosition != null && EndPosition != null;
+
+    public bool TryGetPositions(out double startPosition, out double endPosition)
+    {
+        startPosition = endPosition = double.NaN;
+        if (!IsValid)
+            return false;
+
+        startPosition = _startPosition.Value;
+        endPosition = _endPosition.Value;
+        return true;
+    }
+
+    public void Clear()
+    {
+        StartPosition = null;
+        EndPosition = null;
+    }
 }
