@@ -16,12 +16,12 @@
         Background="{DynamicResource MaterialDesignPaper}"
         FontFamily="{DynamicResource MaterialDesignFont}"
         BorderThickness="1"
-        ResizeMode="CanMinimize"
-        Title="MultiFunPlayer" 
-        SizeToContent="Height"
+        Title="MultiFunPlayer"
+        MinHeight="300"
         Width="600"
         MinWidth="600"
         MaxWidth="600"
+        Height="{Binding WindowHeight, Mode=TwoWay}"
         FadeContentIfInactive="False"
         MouseDown="{s:Action OnMouseDown}">
     <materialExtensions:MaterialWindow.TitleTemplate>

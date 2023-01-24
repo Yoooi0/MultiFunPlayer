@@ -19,6 +19,7 @@ internal class RootViewModel : Conductor<IScreen>.Collection.AllActive, IHandle<
     [Inject] public PluginViewModel Plugin { get; set; }
 
     public bool DisablePopup { get; set; }
+    public int WindowHeight { get; set; }
 
     public RootViewModel(IEventAggregator eventAggregator)
     {
@@ -59,9 +60,13 @@ internal class RootViewModel : Conductor<IScreen>.Collection.AllActive, IHandle<
         if (message.Action == SettingsAction.Saving)
         {
             settings[nameof(DisablePopup)] = DisablePopup;
+            settings[nameof(WindowHeight)] = WindowHeight;
         }
         else if (message.Action == SettingsAction.Loading)
         {
+            if (settings.TryGetValue<int>(nameof(WindowHeight), out var windowHeight))
+                WindowHeight = windowHeight;
+
             DisablePopup = settings.TryGetValue(nameof(DisablePopup), out var disablePopupToken) && disablePopupToken.Value<bool>();
             if (!DisablePopup)
             {
