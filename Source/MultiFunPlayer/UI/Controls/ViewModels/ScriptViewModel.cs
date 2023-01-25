@@ -1041,6 +1041,13 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
             SeekMediaToTime(MediaLoopSegment.StartPosition.Value);
     }
 
+    public void SetMediaLoop(double startPosition, double endPosition)
+    {
+        ClearMediaLoop();
+        SetMediaLoopStart(startPosition);
+        SetMediaLoopEnd(endPosition);
+    }
+
     public void SetMediaLoopStartFromMediaPosition() => SetMediaLoopStart(MediaPosition);
     public void SetMediaLoopEndFromMediaPosition() => SetMediaLoopEnd(MediaPosition);
     public void SetMediaLoopFromCurrentChapter()
@@ -1052,9 +1059,7 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         if (!chapters.TryFindIntersecting(MediaPosition, 1, out var chapter))
             return;
 
-        ClearMediaLoop();
-        SetMediaLoopStart(chapter.StartPosition);
-        SetMediaLoopEnd(chapter.EndPosition);
+        SetMediaLoop(chapter.StartPosition, chapter.EndPosition);
     }
     #endregion
 
@@ -1410,6 +1415,35 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
 
         s.RegisterAction<double>("Media::Position::SkipToScriptStart",
             s => s.WithLabel("Offset").WithStringFormat("{}{0}s"), offset => SeekMediaToScriptStart(offset, onlyWhenBefore: false));
+        #endregion
+
+        #region Media::Loop
+        s.RegisterAction<double, double>("Media::Loop::Set::FromMediaPositionOffset",
+            s => s.WithLabel("Start offset").WithStringFormat("{}{0}s").WithDescription("Seconds before media position"),
+            s => s.WithLabel("End offset").WithStringFormat("{}{0}s").WithDescription("Seconds after media position"),
+            (startOffset, endOffset) => SetMediaLoop(MediaPosition - startOffset, MediaPosition + endOffset));
+
+        s.RegisterAction<double, double>("Media::Loop::Set",
+            s => s.WithLabel("Start position").WithStringFormat("{}{0}s"),
+            s => s.WithLabel("End position").WithStringFormat("{}{0}s"),
+            (startPosition, endPosition) => SetMediaLoop(startPosition, endPosition));
+
+        s.RegisterAction("Media::Loop::CycleSetStartEnd", () =>
+            {
+                if (MediaLoopSegment.IsValid)
+                    ClearMediaLoop();
+                else if (MediaLoopSegment.StartPosition == null)
+                    SetMediaLoopStartFromMediaPosition();
+                else if (MediaLoopSegment.EndPosition == null)
+                    SetMediaLoopEndFromMediaPosition();
+            });
+
+        s.RegisterAction<double>("Media::Loop::Start::Set", s => s.WithLabel("Position").WithStringFormat("{}{0}s"), position => SetMediaLoopStart(position));
+        s.RegisterAction<double>("Media::Loop::End::Set", s => s.WithLabel("Position").WithStringFormat("{}{0}s"), position => SetMediaLoopEnd(position));
+        s.RegisterAction("Media::Loop::Clear", () => ClearMediaLoop());
+        s.RegisterAction("Media::Loop::Set::FromCurrentChapter", () => SetMediaLoopFromCurrentChapter());
+        s.RegisterAction("Media::Loop::Start::Set::FromMediaPosition", () => SetMediaLoopStartFromMediaPosition());
+        s.RegisterAction("Media::Loop::End::Set::FromMediaPosition", () => SetMediaLoopEndFromMediaPosition());
         #endregion
 
         #region Media::AutoSkipToScriptStartEnabled
@@ -2052,7 +2086,12 @@ internal class MediaLoopSegment : PropertyChangedBase
         {
             if (value >= _endPosition)
                 EndPosition = null;
-            _startPosition = value;
+
+            _startPosition = value switch
+            {
+                double position when !double.IsFinite(position) => null,
+                _ => value,
+            };
         }
     }
 
@@ -2063,7 +2102,12 @@ internal class MediaLoopSegment : PropertyChangedBase
         {
             if (value <= _startPosition)
                 StartPosition = null;
-            _endPosition = value;
+
+            _endPosition = value switch
+            {
+                double position when !double.IsFinite(position) => null,
+                _ => value,
+            };
         }
     }
 
