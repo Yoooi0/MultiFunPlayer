@@ -26,7 +26,7 @@ internal class MpvMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlayP
     public override ConnectionStatus Status { get; protected set; }
 
     public FileInfo Executable { get; set; } = null;
-    public string Arguments { get; set; } = "--keep-open=always --pause";
+    public string Arguments { get; set; } = "--keep-open --pause";
     public bool AutoStartEnabled { get; set; } = false;
 
     public MpvMediaSourceViewModel(IShortcutManager shortcutManager, IEventAggregator eventAggregator)
