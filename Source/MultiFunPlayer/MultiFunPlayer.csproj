@@ -9,7 +9,7 @@
     <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>    
     <ApplicationIcon>..\..\Assets\icon.ico</ApplicationIcon>
     <SelfContained>false</SelfContained>
-	<ImplicitUsings>true</ImplicitUsings>
+    <ImplicitUsings>true</ImplicitUsings>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <DebugType>none</DebugType>
@@ -18,10 +18,10 @@
   <ItemGroup>
     <None Include="..\..\.editorconfig" Link=".editorconfig" />
   </ItemGroup>
-	
+    
   <ItemGroup>
     <PackageReference Include="Buttplug.Net" Version="0.1.0-ci0077" />
-	<PackageReference Include="Buttplug.Net.NewtonsoftJson" Version="0.1.0-ci0077" />
+    <PackageReference Include="Buttplug.Net.NewtonsoftJson" Version="0.1.0-ci0077" />
     <PackageReference Include="ConfigureAwait.Fody" Version="3.*">
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
