@@ -324,8 +324,9 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                     UpdateAutoHome(ref context);
                 }
 
-                if (state.IsAutoHoming && !context.IsAutoHoming)
-                    ResetSyncNoLock(state);
+                if (SyncSettings.SyncOnAutoHomeStartEnd)
+                    if (state.IsAutoHoming && !context.IsAutoHoming)
+                        ResetSyncNoLock(state);
 
                 UpdateSync(ref context);
                 UpdateSmartLimit(ref context);
@@ -2058,6 +2059,7 @@ internal class SyncSettings : PropertyChangedBase
     [JsonProperty] public bool SyncOnMediaResourceChanged { get; set; } = true;
     [JsonProperty] public bool SyncOnMediaPlayPause { get; set; } = true;
     [JsonProperty] public bool SyncOnSeek { get; set; } = true;
+    [JsonProperty] public bool SyncOnAutoHomeStartEnd { get; set; } = true;
 }
 
 [JsonObject(MemberSerialization.OptIn)]

@@ -185,6 +185,11 @@
                                             <TextBlock DockPanel.Dock="Left" Text="Seek:"/>
                                             <ToggleButton DockPanel.Dock="Right" IsChecked="{Binding SyncSettings.SyncOnSeek}"/>
                                         </DockPanel>
+
+                                        <DockPanel LastChildFill="False" Margin="0 5 0 0">
+                                            <TextBlock DockPanel.Dock="Left" Text="Auto-home start/end:"/>
+                                            <ToggleButton DockPanel.Dock="Right" IsChecked="{Binding SyncSettings.SyncOnAutoHomeStartEnd}"/>
+                                        </DockPanel>
                                     </StackPanel>
                                 </Grid>
                             </material:PopupBox>
