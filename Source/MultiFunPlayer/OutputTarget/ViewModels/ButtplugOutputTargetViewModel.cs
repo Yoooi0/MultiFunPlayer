@@ -44,8 +44,7 @@ internal class ButtplugOutputTargetViewModel : AsyncAbstractOutputTarget
 
             var actuators = SelectedDevice.GetActuators(SelectedActuatorType.Value);
             var indices = actuators.Select(a => a.Index);
-            var usedIndices = DeviceSettings.Where(s => string.Equals(s.DeviceName, SelectedDevice.Name, StringComparison.OrdinalIgnoreCase) && s.ActuatorType == SelectedActuatorType.Value)
-                                            .Select(s => s.ActuatorIndex);
+            var usedIndices = GetSettingsForDevice(SelectedDevice).Where(s => s.ActuatorType == SelectedActuatorType.Value).Select(s => s.ActuatorIndex);
             var allowedIndices = indices.Except(usedIndices);
             if (!allowedIndices.Any())
                 return null;
