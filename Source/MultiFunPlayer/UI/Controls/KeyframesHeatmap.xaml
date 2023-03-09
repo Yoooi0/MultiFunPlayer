@@ -15,12 +15,11 @@
     </UserControl.Resources>
 
     <Grid>
-        <Popup x:Name="Popup"
-               IsOpen="False"
-               Placement="Relative"
-               PlacementTarget="{Binding RelativeSource={RelativeSource Self}}"
-               AllowsTransparency="True"
-               IsHitTestVisible="False">
+        <local:AutoClosingPopup x:Name="Popup"
+                                IsOpen="False"
+                                Placement="Relative"
+                                PlacementTarget="{Binding RelativeSource={RelativeSource Self}}"
+                                AllowsTransparency="True">
             <material:Card Margin="5"
                            material:ShadowAssist.ShadowDepth="Depth1">
                 <local:KeyframesHeatmapToolTip Keyframes="{Binding ToolTipKeyframes, Mode=OneWay, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}"
@@ -29,7 +28,7 @@
                                                PositionOffset="{Binding ToolTipPositionOffset, Mode=OneWay, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}"
                                                EnablePreview="{Binding EnablePreview, Mode=OneWay, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}"/>
             </material:Card>
-        </Popup>
+        </local:AutoClosingPopup>
 
         <material:Card UniformCornerRadius="3" 
                        ClipContent="True"
