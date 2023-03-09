@@ -1,4 +1,4 @@
-﻿using MultiFunPlayer.Common;
+using MultiFunPlayer.Common;
 using PropertyChanged;
 using System.ComponentModel;
 using System.Windows;
@@ -137,7 +137,7 @@ internal partial class KeyframesHeatmapToolTip : UserControl
         if (Keyframes == null || Keyframes.Count == 0 || ActualWidth < 1 || ActualHeight < 1 || !double.IsFinite(PositionOffset))
             return;
 
-        const double duration = 8;
+        const double duration = 12;
         var startPosition = PositionOffset - duration / 2;
         var endPosition = PositionOffset + duration / 2;
 
