@@ -23,6 +23,7 @@
         <converters:InvertedBooleanToVisibilityConverter x:Key="InvertedBooleanToVisibilityConverter"/>
         <converters:MultiObjectToArrayConverter x:Key="MultiObjectToArrayConverter"/>
         <converters:MultiBooleanToBooleanAndConverter x:Key="MultiBooleanToBooleanAndConverter"/>
+        <converters:MultiBooleanToBooleanOrConverter x:Key="MultiBooleanToBooleanOrConverter"/>
         <converters:MotionProviderSelectorConverter x:Key="MotionProviderSelectorConverter"/>
         <converters:MotionProviderOverridesScriptConverter x:Key="MotionProviderOverridesScriptConverter"/>
         <converters:InvertValueConverter x:Key="InvertValueConverter"/>
@@ -525,10 +526,35 @@
                                                    FontWeight="Bold"
                                                    FontSize="14"
                                                    VerticalAlignment="Center"
-                                                   HorizontalAlignment="Center"/>
+                                                   HorizontalAlignment="Center">
+                                            <TextBlock.Resources>
+                                                <Style TargetType="{x:Type TextBlock}">
+                                                    <Setter Property="Foreground" Value="Black"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Value="True">
+                                                            <DataTrigger.Binding>
+                                                                <MultiBinding Converter="{StaticResource MultiBooleanToBooleanAndConverter}">
+                                                                    <Binding Path="MediaLoopSegment.StartPosition" Converter="{StaticResource notNullBooleanConverter}"/>
+                                                                    <Binding Path="MediaLoopSegment.EndPosition" Converter="{StaticResource notNullBooleanConverter}"/>
+                                                                </MultiBinding>
+                                                            </DataTrigger.Binding>
+                                                            <DataTrigger.Setters>
+                                                                <Setter Property="Foreground" Value="{DynamicResource MaterialDesignSuccessBrush}"/>
+                                                            </DataTrigger.Setters>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Resources>
+                                        </TextBlock>
                                     </MenuItem.Icon>
 
                                     <MenuItem Padding="8" Header="Clear" Command="{s:Action ClearMediaLoop}">
+                                        <MenuItem.IsEnabled>
+                                            <MultiBinding Converter="{StaticResource MultiBooleanToBooleanOrConverter}">
+                                                <Binding Path="MediaLoopSegment.StartPosition" Converter="{StaticResource notNullBooleanConverter}"/>
+                                                <Binding Path="MediaLoopSegment.EndPosition" Converter="{StaticResource notNullBooleanConverter}"/>
+                                            </MultiBinding>
+                                        </MenuItem.IsEnabled>
                                         <MenuItem.Icon>
                                             <material:PackIcon Kind="WindowClose" Width="16" Height="16"/>
                                         </MenuItem.Icon>
