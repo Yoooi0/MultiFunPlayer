@@ -1,4 +1,5 @@
 using MultiFunPlayer.Common;
+using MultiFunPlayer.UI.Controls.ViewModels;
 using PropertyChanged;
 using System.Collections.Specialized;
 using System.ComponentModel;
@@ -21,6 +22,10 @@ internal partial class KeyframesHeatmap : UserControl, INotifyPropertyChanged
 
     public GradientStopCollection Stops { get; set; }
     public PointCollection Points { get; set; }
+
+    public double ToolTipPositionOffset { get; set; }
+    public KeyframeCollection ToolTipKeyframes { get; set; }
+    public InterpolationType ToolTipInterpolationType { get; set; }
 
     public double ScrubberPosition => ShowScrubber ? Position / Duration * ActualWidth : 0;
     public bool ShowScrubber => double.IsFinite(Duration) && Duration > 0;
@@ -53,6 +58,17 @@ internal partial class KeyframesHeatmap : UserControl, INotifyPropertyChanged
 
     [SuppressPropertyChangedWarnings]
     private void OnKeyframesCollectionChanged(object sender, NotifyCollectionChangedEventArgs e) => Refresh();
+
+    [DoNotNotify]
+    public IReadOnlyDictionary<DeviceAxis, AxisSettings> Settings
+    {
+        get => (IReadOnlyDictionary<DeviceAxis, AxisSettings>)GetValue(SettingsProperty);
+        set => SetValue(SettingsProperty, value);
+    }
+
+    public static readonly DependencyProperty SettingsProperty =
+        DependencyProperty.Register(nameof(Settings), typeof(IReadOnlyDictionary<DeviceAxis, AxisSettings>),
+            typeof(KeyframesHeatmap), new FrameworkPropertyMetadata(null));
 
     [DoNotNotify]
     public double Duration
@@ -163,6 +179,17 @@ internal partial class KeyframesHeatmap : UserControl, INotifyPropertyChanged
         @this.PropertyChanged?.Invoke(@this, new PropertyChangedEventArgs(nameof(InvertY)));
     }
 
+    [DoNotNotify]
+    public bool EnablePreview
+    {
+        get => (bool)GetValue(EnablePreviewProperty);
+        set => SetValue(EnablePreviewProperty, value);
+    }
+
+    public static readonly DependencyProperty EnablePreviewProperty =
+       DependencyProperty.Register(nameof(EnablePreview), typeof(bool),
+           typeof(KeyframesHeatmap), new FrameworkPropertyMetadata(false));
+
     public KeyframesHeatmap()
     {
         _buckets = new HeatmapBucket[MaxBucketCount];
@@ -181,24 +208,48 @@ internal partial class KeyframesHeatmap : UserControl, INotifyPropertyChanged
     protected override void OnMouseMove(MouseEventArgs e)
     {
         base.OnMouseMove(e);
-        UpdateToolTipOffset();
+        UpdateToolTipKeyframes();
+        UpdateToolTip(true);
     }
 
     protected override void OnMouseEnter(MouseEventArgs e)
     {
         base.OnMouseEnter(e);
-        UpdateToolTipOffset();
+        UpdateToolTipKeyframes();
+        UpdateToolTip(true);
     }
 
-    private void UpdateToolTipOffset()
+    protected override void OnMouseLeave(MouseEventArgs e)
     {
-        if (Keyframes == null || Keyframes.Count == 0 || !double.IsFinite(Duration) || Duration <= 0 || ActualWidth < 1 || ActualHeight < 1)
+        base.OnMouseLeave(e);
+        UpdateToolTip(false);
+    }
+
+    private void UpdateToolTip(bool open)
+    {
+        if (!double.IsFinite(Duration) || Duration <= 0 || ActualWidth < 1 || ActualHeight < 1)
             return;
 
-        if (ToolTip is not KeyframesHeatmapToolTip toolTip)
-            return;
+        Popup.IsOpen = open;
+        if (open)
+        {
+            var x = Mouse.GetPosition(this).X;
+            var y = Mouse.GetPosition(this).Y;
+            Popup.HorizontalOffset = x - (EnablePreview ? 100 : 40);
+            Popup.VerticalOffset = y - (EnablePreview ? 100 : 40);
+            ToolTipPositionOffset = x / (double)ActualWidth * Duration;
+        }
+    }
 
-        toolTip.Offset = Mouse.GetPosition(this).X / (double)ActualWidth * Duration;
+    private void UpdateToolTipKeyframes()
+    {
+        var axis = DeviceAxis.Parse("L0") ?? Keyframes.Keys.FirstOrDefault();
+        if (Keyframes.TryGetValue(axis, out var keyframes))
+            ToolTipKeyframes = keyframes;
+        else
+            ToolTipKeyframes = null;
+
+        ToolTipInterpolationType = axis != null ? Settings[axis].InterpolationType : InterpolationType.Linear;
     }
 
     private void Refresh()

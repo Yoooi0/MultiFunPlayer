@@ -1,7 +1,5 @@
 ﻿using MultiFunPlayer.Common;
-using MultiFunPlayer.UI.Controls.ViewModels;
 using PropertyChanged;
-using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
@@ -18,15 +16,19 @@ internal partial class KeyframesHeatmapToolTip : UserControl
     public PointCollection Points { get; set; }
     public double? ScrubberPosition { get; set; }
 
+    public double CanvasHeight => 50;
+    public double CanvasWidth => 200;
+    public TimeSpan PositionTime => TimeSpan.FromSeconds(PositionOffset);
+
     [DoNotNotify]
-    public IReadOnlyDictionary<DeviceAxis, KeyframeCollection> Keyframes
+    public KeyframeCollection Keyframes
     {
-        get => (IReadOnlyDictionary<DeviceAxis, KeyframeCollection>)GetValue(KeyframesProperty);
+        get => (KeyframeCollection)GetValue(KeyframesProperty);
         set => SetValue(KeyframesProperty, value);
     }
 
     public static readonly DependencyProperty KeyframesProperty =
-        DependencyProperty.Register(nameof(Keyframes), typeof(IReadOnlyDictionary<DeviceAxis, KeyframeCollection>),
+        DependencyProperty.Register(nameof(Keyframes), typeof(KeyframeCollection),
             typeof(KeyframesHeatmapToolTip), new FrameworkPropertyMetadata(null,
                 new PropertyChangedCallback(OnKeyframesChanged)));
 
@@ -36,62 +38,28 @@ internal partial class KeyframesHeatmapToolTip : UserControl
         if (d is not KeyframesHeatmapToolTip @this)
             return;
 
-        if (e.OldValue is INotifyCollectionChanged oldKeyframes)
-            oldKeyframes.CollectionChanged -= @this.OnKeyframesCollectionChanged;
-        if (e.NewValue is INotifyCollectionChanged newKeyframes)
-            newKeyframes.CollectionChanged += @this.OnKeyframesCollectionChanged;
-
         @this.Refresh(true, false);
     }
 
-    [SuppressPropertyChangedWarnings]
-    private void OnKeyframesCollectionChanged(object sender, NotifyCollectionChangedEventArgs e) => Refresh(true, false);
-
     [DoNotNotify]
-    public IReadOnlyDictionary<DeviceAxis, AxisSettings> Settings
+    public InterpolationType InterpolationType
     {
-        get => (IReadOnlyDictionary<DeviceAxis, AxisSettings>)GetValue(SettingsProperty);
-        set => SetValue(SettingsProperty, value);
+        get => (InterpolationType)GetValue(InterpolationTypeProperty);
+        set => SetValue(InterpolationTypeProperty, value);
     }
 
-    public static readonly DependencyProperty SettingsProperty =
-        DependencyProperty.Register(nameof(Settings), typeof(IReadOnlyDictionary<DeviceAxis, AxisSettings>),
-            typeof(KeyframesHeatmapToolTip), new FrameworkPropertyMetadata(null,
-                new PropertyChangedCallback(OnSettingsChanged)));
+    public static readonly DependencyProperty InterpolationTypeProperty =
+        DependencyProperty.Register(nameof(InterpolationType), typeof(InterpolationType),
+            typeof(KeyframesHeatmapToolTip), new FrameworkPropertyMetadata(InterpolationType.Linear,
+                new PropertyChangedCallback(OnInterpolationTypeChanged)));
 
     [SuppressPropertyChangedWarnings]
-    private static void OnSettingsChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    private static void OnInterpolationTypeChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
         if (d is not KeyframesHeatmapToolTip @this)
             return;
 
-        if (e.OldValue is INotifyCollectionChanged oldKeyframes)
-            oldKeyframes.CollectionChanged -= @this.OnSettingsCollectionChanged;
-        if (e.NewValue is INotifyCollectionChanged newKeyframes)
-            newKeyframes.CollectionChanged += @this.OnSettingsCollectionChanged;
-
         @this.Refresh(true, false);
-    }
-
-    [SuppressPropertyChangedWarnings]
-    private void OnSettingsCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
-    {
-        Refresh(true, false);
-
-        if (e.OldItems != null)
-            foreach(var item in e.OldItems.OfType<AxisSettings>())
-                item.PropertyChanged -= OnSettingsPropertyChanged;
-
-        if (e.NewItems != null)
-            foreach (var item in e.NewItems.OfType<AxisSettings>())
-                item.PropertyChanged += OnSettingsPropertyChanged;
-    }
-
-    [SuppressPropertyChangedWarnings]
-    private void OnSettingsPropertyChanged(object sender, PropertyChangedEventArgs e)
-    {
-        if (e.PropertyName == nameof(AxisSettings.InterpolationType))
-            Refresh(true, false);
     }
 
     [DoNotNotify]
@@ -116,25 +84,37 @@ internal partial class KeyframesHeatmapToolTip : UserControl
     }
 
     [DoNotNotify]
-    public double Offset
+    public double PositionOffset
     {
-        get => (double)GetValue(OffsetProperty);
-        set => SetValue(OffsetProperty, value);
+        get => (double)GetValue(PositionOffsetProperty);
+        set => SetValue(PositionOffsetProperty, value);
     }
 
-    public static readonly DependencyProperty OffsetProperty =
-        DependencyProperty.Register(nameof(Offset), typeof(double),
-            typeof(KeyframesHeatmapToolTip), new FrameworkPropertyMetadata(double.NaN,
-                new PropertyChangedCallback(OnOffsetChanged)));
+    public static readonly DependencyProperty PositionOffsetProperty =
+        DependencyProperty.Register(nameof(PositionOffset), typeof(double),
+            typeof(KeyframesHeatmapToolTip), new FrameworkPropertyMetadata(0.0,
+                new PropertyChangedCallback(OnPositionOffsetChanged)));
 
     [SuppressPropertyChangedWarnings]
-    private static void OnOffsetChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    private static void OnPositionOffsetChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
         if (d is not KeyframesHeatmapToolTip @this)
             return;
 
         @this.Refresh(true, true);
+        @this.PropertyChanged?.Invoke(@this, new PropertyChangedEventArgs(nameof(PositionTime)));
     }
+
+    [DoNotNotify]
+    public bool EnablePreview
+    {
+        get => (bool)GetValue(EnablePreviewProperty);
+        set => SetValue(EnablePreviewProperty, value);
+    }
+
+    public static readonly DependencyProperty EnablePreviewProperty =
+       DependencyProperty.Register(nameof(EnablePreview), typeof(bool),
+           typeof(KeyframesHeatmapToolTip), new FrameworkPropertyMetadata(false));
 
     public KeyframesHeatmapToolTip()
     {
@@ -151,28 +131,18 @@ internal partial class KeyframesHeatmapToolTip : UserControl
         if (refreshScrubber)
             ScrubberPosition = null;
 
-        if (!IsVisible)
+        if (!IsVisible || !EnablePreview)
             return;
 
-        if (Keyframes == null || Keyframes.Count == 0 || ActualWidth < 1 || ActualHeight < 1 || !double.IsFinite(Offset))
-            return;
-
-        if (!DeviceAxis.TryParse("L0", out var axis))
-            return;
-
-        var keyframes = Keyframes[axis];
-        if (keyframes == null)
+        if (Keyframes == null || Keyframes.Count == 0 || ActualWidth < 1 || ActualHeight < 1 || !double.IsFinite(PositionOffset))
             return;
 
         const double duration = 8;
-        var startPosition = Offset - duration / 2;
-        var endPosition = Offset + duration / 2;
+        var startPosition = PositionOffset - duration / 2;
+        var endPosition = PositionOffset + duration / 2;
 
         if (refreshPoints)
-        {
-            var interpolationType = Settings.TryGetValue(axis, out var settings) ? settings.InterpolationType : InterpolationType.Linear;
-            RefreshPoints(startPosition, endPosition, duration, keyframes, interpolationType);
-        }
+            RefreshPoints(startPosition, endPosition, duration, Keyframes, InterpolationType);
 
         if (refreshScrubber)
             RefreshScrubber(duration, startPosition, endPosition);
@@ -181,7 +151,7 @@ internal partial class KeyframesHeatmapToolTip : UserControl
     private void RefreshScrubber(double duration, double startPosition, double endPosition)
     {
         if (Position >= startPosition || Position <= endPosition)
-            ScrubberPosition = (Position - startPosition) / duration * ActualWidth;
+            ScrubberPosition = (Position - startPosition) / duration * CanvasWidth;
     }
 
     private void RefreshPoints(double startPosition, double endPosition, double duration, KeyframeCollection keyframes, InterpolationType interpolationType)
@@ -203,8 +173,8 @@ internal partial class KeyframesHeatmapToolTip : UserControl
             if (!double.IsFinite(value))
                 continue;
 
-            var x = (position - startPosition) / duration * ActualWidth;
-            var y = (1 - value) * ActualHeight;
+            var x = (position - startPosition) / duration * CanvasWidth;
+            var y = (1 - value) * CanvasHeight;
 
             Points.Add(new Point(x, y));
         }
