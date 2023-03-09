@@ -208,14 +208,12 @@ internal partial class KeyframesHeatmap : UserControl, INotifyPropertyChanged
     protected override void OnMouseMove(MouseEventArgs e)
     {
         base.OnMouseMove(e);
-        UpdateToolTipKeyframes();
         UpdateToolTip(true);
     }
 
     protected override void OnMouseEnter(MouseEventArgs e)
     {
         base.OnMouseEnter(e);
-        UpdateToolTipKeyframes();
         UpdateToolTip(true);
     }
 
@@ -229,6 +227,9 @@ internal partial class KeyframesHeatmap : UserControl, INotifyPropertyChanged
     {
         if (!double.IsFinite(Duration) || Duration <= 0 || ActualWidth < 1 || ActualHeight < 1)
             return;
+
+        if (!Popup.IsOpen && open)
+            UpdateToolTipKeyframes();
 
         Popup.IsOpen = open;
         if (open)
