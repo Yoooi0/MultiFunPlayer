@@ -166,12 +166,9 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
             bool UpdateValuesInternal(DeviceAxis axis, AxisState state, AxisSettings settings, ref AxisStateUpdateContext context)
             {
                 var dirty = false;
-                if (!settings.Bypass)
-                {
-                    dirty |= UpdateScript(ref context);
-                    dirty |= UpdateMotionProvider(ref context);
-                    dirty |= UpdateTransition(ref context);
-                }
+                dirty |= UpdateScript(ref context);
+                dirty |= UpdateMotionProvider(ref context);
+                dirty |= UpdateTransition(ref context);
 
                 return dirty;
 
@@ -182,6 +179,9 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                         context.InsideGap = false;
                         return false;
                     }
+
+                    if (settings.BypassScript)
+                        return NoUpdate(ref context);
 
                     if (!AxisKeyframes.TryGetValue(axis, out var keyframes) || keyframes == null || keyframes.Count == 0)
                         return NoUpdate(ref context);
@@ -236,6 +236,9 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                 bool UpdateMotionProvider(ref AxisStateUpdateContext context)
                 {
                     if (settings.SelectedMotionProvider == null)
+                        return false;
+
+                    if (settings.BypassMotionProvider)
                         return false;
 
                     var providerValue = double.NaN;
@@ -299,6 +302,8 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
 
                 bool UpdateTransition(ref AxisStateUpdateContext context)
                 {
+                    if (settings.BypassTransition)
+                        return false;
                     if (state.ExternalTransition.Completed)
                         return false;
 
@@ -1076,7 +1081,9 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
             case nameof(ViewModels.AxisSettings.UpdateMotionProviderWhenPaused):
             case nameof(ViewModels.AxisSettings.UpdateMotionProviderWithoutScript):
             case nameof(ViewModels.AxisSettings.InvertScript):
-            case nameof(ViewModels.AxisSettings.Bypass):
+            case nameof(ViewModels.AxisSettings.BypassScript):
+            case nameof(ViewModels.AxisSettings.BypassMotionProvider):
+            case nameof(ViewModels.AxisSettings.BypassTransition):
             case nameof(ViewModels.AxisSettings.AutoHomeEnabled):
             case nameof(ViewModels.AxisSettings.AutoHomeTargetValue):
                 var (axis, _) = AxisSettings.FirstOrDefault(x => x.Value == settings);
@@ -1576,14 +1583,63 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         s.RegisterAction("Axis::SyncAll", () => ResetSync(true, null));
         #endregion
 
-        #region Axis::Bypass
-        s.RegisterAction<DeviceAxis, bool>("Axis::Bypass::Set",
-             s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All),
-             s => s.WithLabel("Bypass"),
-             (axis, enabled) => UpdateSettings(axis, s => s.Bypass = enabled));
+        #region Axis::Bypass::All
+        s.RegisterAction<DeviceAxis, bool>("Axis::Bypass::All::Set",
+            s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All),
+            s => s.WithLabel("Bypass all"),
+            (axis, enabled) =>
+            {
+                if (axis == null)
+                    return;
 
-        s.RegisterAction<DeviceAxis>("Axis::Bypass::Toggle",
-            s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All), axis => UpdateSettings(axis, s => s.Bypass = !s.Bypass));
+                var settings = AxisSettings[axis];
+                settings.BypassScript = enabled;
+                settings.BypassMotionProvider = enabled;
+                settings.BypassTransition = enabled;
+            });
+
+        s.RegisterAction<DeviceAxis>("Axis::Bypass::All::Toggle",
+            s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All), axis =>
+            {
+                if (axis == null)
+                    return;
+
+                var settings = AxisSettings[axis];
+                var state = settings.BypassScript || settings.BypassMotionProvider || settings.BypassTransition;
+                settings.BypassScript = !state;
+                settings.BypassMotionProvider = !state;
+                settings.BypassTransition = !state;
+            });
+        #endregion
+
+        #region Axis::Bypass::Script
+        s.RegisterAction<DeviceAxis, bool>("Axis::Bypass::Script::Set",
+            s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All),
+            s => s.WithLabel("Bypass script"),
+            (axis, enabled) => UpdateSettings(axis, s => s.BypassScript = enabled));
+
+        s.RegisterAction<DeviceAxis>("Axis::Bypass::Script::Toggle",
+            s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All), axis => UpdateSettings(axis, s => s.BypassScript = !s.BypassScript));
+        #endregion
+
+        #region Axis::Bypass::MotionProvider
+        s.RegisterAction<DeviceAxis, bool>("Axis::Bypass::MotionProvider::Set",
+            s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All),
+            s => s.WithLabel("Bypass motion provider"),
+            (axis, enabled) => UpdateSettings(axis, s => s.BypassMotionProvider = enabled));
+
+        s.RegisterAction<DeviceAxis>("Axis::Bypass::MotionProvider::Toggle",
+            s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All), axis => UpdateSettings(axis, s => s.BypassMotionProvider = !s.BypassMotionProvider));
+        #endregion
+
+        #region Axis::Bypass::Transition
+        s.RegisterAction<DeviceAxis, bool>("Axis::Bypass::Transition::Set",
+            s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All),
+            s => s.WithLabel("Bypass custom transition"),
+            (axis, enabled) => UpdateSettings(axis, s => s.BypassTransition = enabled));
+
+        s.RegisterAction<DeviceAxis>("Axis::Bypass::Transition::Toggle",
+            s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All), axis => UpdateSettings(axis, s => s.BypassTransition = !s.BypassTransition));
         #endregion
 
         #region Axis::ClearScript
@@ -2028,7 +2084,9 @@ internal class AxisSettings : PropertyChangedBase
     [JsonProperty] public bool InvertScript { get; set; } = false;
     [JsonProperty] public double Offset { get; set; } = 0;
     [JsonProperty] public double ScriptScale { get; set; } = 100;
-    [JsonProperty] public bool Bypass { get; set; } = false;
+    [JsonProperty] public bool BypassScript { get; set; } = false;
+    [JsonProperty] public bool BypassMotionProvider { get; set; } = false;
+    [JsonProperty] public bool BypassTransition { get; set; } = false;
     [JsonProperty] public double MotionProviderBlend { get; set; } = 100;
     [JsonProperty] public bool MotionProviderFillGaps { get; set; } = false;
     [JsonProperty] public double MotionProviderMinimumGapDuration { get; set; } = 5;

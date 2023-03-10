@@ -686,7 +686,7 @@
                                             <DataTrigger Binding="{Binding Value.Script, Converter={StaticResource notNullBooleanConverter}}" Value="True">
                                                 <Setter Property="Foreground" Value="{DynamicResource MaterialDesignDarkBackground}"/>
                                             </DataTrigger>
-                                            <DataTrigger Binding="{Binding Value.Settings.Bypass}" Value="True">
+                                            <DataTrigger Binding="{Binding Value.Settings.BypassScript}" Value="True">
                                                 <Setter Property="Foreground" Value="{StaticResource MaterialDesignErrorBrush}"/>
                                             </DataTrigger>
                                         </Style.Triggers>
@@ -749,6 +749,10 @@
                                                                     </DataTrigger.Binding>
                                                                     <Setter Property="Text" Value="Override"/>
                                                                     <Setter Property="Foreground" Value="{StaticResource MaterialDesignLightErrorBrush}"/>
+                                                                </DataTrigger>
+                                                                <DataTrigger Binding="{Binding Value.Settings.BypassMotionProvider}" Value="True">
+                                                                    <Setter Property="Text" Value="Bypass"/>
+                                                                    <Setter Property="Foreground" Value="#ddd"/>
                                                                 </DataTrigger>
                                                             </Style.Triggers>
                                                         </Style>
@@ -836,6 +840,9 @@
                                                                 </MultiBinding>
                                                             </DataTrigger.Binding>
                                                             <Setter Property="Foreground" Value="{StaticResource MaterialDesignErrorBrush}"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding Value.Settings.BypassMotionProvider}" Value="True">
+                                                            <Setter Property="Foreground" Value="#ddd"/>
                                                         </DataTrigger>
                                                     </Style.Triggers>
                                                 </Style>
@@ -1020,15 +1027,65 @@
                                                 </material:ToggleButtonAssist.OnContent>
                                             </ToggleButton>
 
-                                            <ToggleButton IsChecked="{Binding Value.Settings.Bypass}"
-                                                          Style="{StaticResource MaterialDesignToolBarToggleButton}"
-                                                          ToolTip="Bypass">
+                                            <material:PopupBox DockPanel.Dock="Left"
+                                                                   StaysOpen="True" 
+                                                                   Style="{StaticResource MaterialDesignToolBarPopupBox}"
+                                                                   ToolTip="Bypass">
+                                                <material:PopupBox.ToggleContent>
+                                                    <material:PackIcon Kind="MotionPauseOutline" 
+                                                                       Width="21" 
+                                                                       Height="21">
+                                                        <material:PackIcon.Style>
+                                                            <Style TargetType="material:PackIcon">
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Value="True">
+                                                                        <DataTrigger.Binding>
+                                                                            <MultiBinding Converter="{StaticResource booleanOrConverter}">
+                                                                                <Binding Path="Value.Settings.BypassScript"/>
+                                                                                <Binding Path="Value.Settings.BypassMotionProvider"/>
+                                                                                <Binding Path="Value.Settings.BypassTransition"/>
+                                                                            </MultiBinding>
+                                                                        </DataTrigger.Binding>
+                                                                        
+                                                                        <Setter Property="Foreground" Value="{StaticResource MaterialDesignErrorBrush}"/>
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </material:PackIcon.Style>
+                                                    </material:PackIcon>
+                                                </material:PopupBox.ToggleContent>
+                                                <Grid Margin="10">
+                                                    <StackPanel>
+                                                        <DockPanel Margin="0 0 0 5" LastChildFill="True">
+                                                            <ToggleButton IsChecked="{Binding Value.Settings.BypassScript}"
+                                                                          Style="{StaticResource MaterialDesignSwitchToggleButton}"
+                                                                          DockPanel.Dock="Right"/>
+                                                            <TextBlock Text="Bypass script:" 
+                                                                       DockPanel.Dock="Left"
+                                                                       VerticalAlignment="Center"/>
+                                                        </DockPanel>
+                                                        <DockPanel Margin="0 0 0 5" LastChildFill="True">
+                                                            <ToggleButton IsChecked="{Binding Value.Settings.BypassMotionProvider}"
+                                                                          Style="{StaticResource MaterialDesignSwitchToggleButton}"
+                                                                          DockPanel.Dock="Right"/>
+                                                            <TextBlock Text="Bypass motion provider:" 
+                                                                       DockPanel.Dock="Left"
+                                                                       Margin="0 0 10 0" 
+                                                                       VerticalAlignment="Center"/>
+                                                        </DockPanel>
+                                                        <DockPanel Margin="0 0 0 5" LastChildFill="True">
+                                                            <ToggleButton IsChecked="{Binding Value.Settings.BypassTransition}"
+                                                                          Style="{StaticResource MaterialDesignSwitchToggleButton}"
+                                                                          DockPanel.Dock="Right"/>
+                                                            <TextBlock Text="Bypass custom transition:" 
+                                                                       DockPanel.Dock="Left"
+                                                                       Margin="0 0 10 0" 
+                                                                       VerticalAlignment="Center"/>
+                                                        </DockPanel>
+                                                    </StackPanel>
+                                                </Grid>
+                                            </material:PopupBox>
 
-                                                <material:PackIcon Kind="MotionPauseOutline" Opacity=".56" Width="21" Height="21"/>
-                                                <material:ToggleButtonAssist.OnContent>
-                                                    <material:PackIcon Kind="MotionPauseOutline" Width="21" Height="21" Foreground="{StaticResource MaterialDesignErrorBrush}"/>
-                                                </material:ToggleButtonAssist.OnContent>
-                                            </ToggleButton>
 
                                             <material:PopupBox DockPanel.Dock="Left"
                                                                    StaysOpen="True" 
