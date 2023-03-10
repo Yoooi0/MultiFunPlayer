@@ -13,9 +13,7 @@
              d:DesignHeight="450" d:DesignWidth="800"
              x:ClassModifier="internal">
     <UserControl.Resources>
-        <converters:MultiBooleanToBooleanAndConverter x:Key="MultiBooleanToBooleanAndConverter"/>
         <converters:MultiObjectEqualToBooleanConverter x:Key="MultiObjectEqualToBooleanConverter"/>
-        <converters:InvertedNullableToBooleanConverter x:Key="InvertedNullableToBooleanConverter"/>
         <converters:ItemIndexInContainerConverter x:Key="ItemIndexInContainerConverter"/>
 
         <DataTemplate DataType="{x:Type xinput:GamepadButtonGestureDescriptor}">
@@ -232,7 +230,7 @@
                         <Button DockPanel.Dock="Right"
                                 Style="{StaticResource MaterialDesignFlatButton}"
                                 Click="{s:Action AddGesture}"
-                                IsEnabled="{Binding CapturedGesture, Converter={StaticResource InvertedNullableToBooleanConverter}}"
+                                IsEnabled="{Binding CapturedGesture, Converter={StaticResource notNullBooleanConverter}}"
                                 Foreground="{StaticResource MaterialDesignSuccessBrush}"
                                 ToolTip="Add captured gesture"
                                 VerticalAlignment="Center"

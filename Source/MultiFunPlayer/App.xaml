@@ -4,6 +4,7 @@
              xmlns:s="https://github.com/canton7/Stylet"
              xmlns:po="http://schemas.microsoft.com/winfx/2006/xaml/presentation/options"
              xmlns:local="clr-namespace:MultiFunPlayer"
+             xmlns:material="http://materialdesigninxaml.net/winfx/xaml/themes"
              x:ClassModifier="internal">
     <Application.Resources>
         <ResourceDictionary>            
@@ -71,6 +72,10 @@
             <Style x:Key="{x:Static SystemParameters.FocusVisualStyleKey}" TargetType="Control">
                 <Setter Property="Control.Template" Value="{x:Null}"/>
             </Style>
+
+            <material:BooleanToVisibilityConverter x:Key="InvertedBooleanToVisibilityConverter"
+                                                   FalseValue="Visible"
+                                                   TrueValue="Collapsed"/>
         </ResourceDictionary>
     </Application.Resources>
 </Application>
