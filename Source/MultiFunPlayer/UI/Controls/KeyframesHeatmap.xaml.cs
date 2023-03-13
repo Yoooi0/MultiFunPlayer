@@ -24,6 +24,9 @@ internal partial class KeyframesHeatmap : UserControl, INotifyPropertyChanged
     public PointCollection Points { get; set; }
 
     public double ToolTipPositionOffset { get; set; }
+    public bool ToolTipIsOpen { get; set; }
+    public double ToolTipHorizontalOffset { get; set; }
+    public double ToolTipVerticalOffset { get; set; }
     public KeyframeCollection ToolTipKeyframes { get; set; }
     public InterpolationType ToolTipInterpolationType { get; set; }
 
@@ -228,16 +231,16 @@ internal partial class KeyframesHeatmap : UserControl, INotifyPropertyChanged
         if (!double.IsFinite(Duration) || Duration <= 0 || ActualWidth < 1 || ActualHeight < 1)
             return;
 
-        if (!Popup.IsOpen && open)
+        if (!ToolTipIsOpen && open)
             UpdateToolTipKeyframes();
 
-        Popup.IsOpen = open;
+        ToolTipIsOpen = open;
         if (open)
         {
             var x = Mouse.GetPosition(this).X;
             var y = Mouse.GetPosition(this).Y;
-            Popup.HorizontalOffset = x - (EnablePreview ? 100 : 40);
-            Popup.VerticalOffset = y - (EnablePreview ? 100 : 40);
+            ToolTipHorizontalOffset = x - (EnablePreview ? 100 : 40);
+            ToolTipVerticalOffset = y - (EnablePreview ? 100 : 40);
             ToolTipPositionOffset = x / (double)ActualWidth * Duration;
         }
     }
@@ -245,11 +248,8 @@ internal partial class KeyframesHeatmap : UserControl, INotifyPropertyChanged
     private void UpdateToolTipKeyframes()
     {
         var axis = DeviceAxis.Parse("L0") ?? Keyframes.Keys.FirstOrDefault();
-        if (Keyframes.TryGetValue(axis, out var keyframes))
-            ToolTipKeyframes = keyframes;
-        else
-            ToolTipKeyframes = null;
 
+        ToolTipKeyframes = Keyframes.TryGetValue(axis, out var keyframes) ? keyframes : null;
         ToolTipInterpolationType = axis != null ? Settings[axis].InterpolationType : InterpolationType.Linear;
     }
 

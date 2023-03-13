@@ -15,10 +15,10 @@
     </UserControl.Resources>
 
     <Grid>
-        <local:AutoClosingPopup x:Name="Popup"
-                                IsOpen="False"
+        <local:AutoClosingPopup IsOpen="{Binding ToolTipIsOpen, Mode=OneWay, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}"
+                                HorizontalOffset="{Binding ToolTipHorizontalOffset, Mode=OneWay, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}"
+                                VerticalOffset="{Binding ToolTipVerticalOffset, Mode=OneWay, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}"
                                 Placement="Relative"
-                                PlacementTarget="{Binding RelativeSource={RelativeSource Self}}"
                                 AllowsTransparency="True">
             <local:KeyframesHeatmapToolTip Keyframes="{Binding ToolTipKeyframes, Mode=OneWay, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}"
                                            InterpolationType="{Binding ToolTipInterpolationType, Mode=OneWay, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}"
