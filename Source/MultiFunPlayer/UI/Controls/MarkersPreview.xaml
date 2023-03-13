@@ -44,6 +44,46 @@
         </material:Card.Background>
 
         <Grid>
+            <local:AutoClosingPopup IsOpen="{Binding ToolTipIsOpen, Mode=OneWay, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}"
+                                    PlacementTarget="{Binding ToolTipTarget, Mode=OneWay, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}"
+                                    Placement="Center"
+                                    VerticalOffset="-40"
+                                    AllowsTransparency="True">
+                <material:Card UniformCornerRadius="3" 
+                               material:ShadowAssist.ShadowDepth="Depth2"
+                               Padding="5" Margin="10">
+                    <ContentControl Content="{Binding ToolTipContent, Mode=OneWay, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}">
+                        <ContentControl.Resources>
+                            <DataTemplate DataType="{x:Type local:ChapterToolTipModel}">
+                                <StackPanel>
+                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                        <TextBlock Text="Chapter:" Margin="0 0 5 0"/>
+                                        <TextBlock Text="{Binding Name}" FontWeight="Bold"/>
+                                    </StackPanel>
+                                    
+                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                        <TextBlock Text="{Binding StartPosition, StringFormat={}{0:hh\\:mm\\:ss\\.fff}}"/>
+                                        <TextBlock Text="-" Margin="5 0 5 0"/>
+                                        <TextBlock Text="{Binding EndPosition, StringFormat={}{0:hh\\:mm\\:ss\\.fff}}"/>
+                                    </StackPanel>
+                                </StackPanel>
+                            </DataTemplate>
+                            <DataTemplate DataType="{x:Type local:MarkerToolTipModel}">
+                                <StackPanel>
+                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                        <TextBlock Text="{Binding MarkerType}"/>
+                                        <TextBlock Text=":" Margin="0 0 5 0"/>
+                                        <TextBlock Text="{Binding Name}" FontWeight="Bold"/>
+                                    </StackPanel>
+                                    
+                                    <TextBlock Text="{Binding Position, StringFormat={}{0:hh\\:mm\\:ss\\.fff}}" HorizontalAlignment="Center"/>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ContentControl.Resources>
+                    </ContentControl>
+                </material:Card>
+            </local:AutoClosingPopup>
+
             <ItemsControl ItemsSource="{Binding ChapterModels, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}">
                 <ItemsControl.Resources>
                     <Style x:Key="ChapterButton" TargetType="{x:Type ButtonBase}">
@@ -82,26 +122,21 @@
 
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
-                        <Grid ToolTipService.Placement="Center"
-                              ToolTipService.VerticalOffset="-24">
+                        <Grid MouseEnter="{s:Action OnChapterMouseEnter}"
+                              MouseLeave="{s:Action OnChapterMouseLeave}">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="6"/>
                                 <ColumnDefinition Width="{Binding CanvasLength, Converter={StaticResource MathAddConverter}, ConverterParameter=-12}"/>
                                 <ColumnDefinition Width="6"/>
                             </Grid.ColumnDefinitions>
 
-                            <Grid.ToolTip>
-                                <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="Chapter:" Margin="0 0 5 0"/>
-                                    <TextBlock Text="{Binding Name}"/>
-                                </StackPanel>
-                            </Grid.ToolTip>
-
                             <Rectangle Stroke="Black"
                                        StrokeThickness="0.5"
                                        Grid.Column="0" 
                                        Grid.ColumnSpan="3"
-                                       Height="{Binding ActualHeight, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}">
+                                       Height="{Binding ActualHeight, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}"
+                                       MouseEnter="{s:Action OnChapterMiddleMouseEnter}"
+                                       MouseLeave="{s:Action OnChapterMiddleMouseLeave}">
                                 <Rectangle.Fill>
                                     <SolidColorBrush Color="{Binding Color}"/>
                                 </Rectangle.Fill>
@@ -111,13 +146,17 @@
                                     Style="{StaticResource ChapterButton}"
                                     BorderThickness="3 0 0 0"
                                     BorderBrush="Black"
-                                    Click="{s:Action OnChapterStartClick}"/>
+                                    Click="{s:Action OnChapterStartClick}"
+                                    MouseEnter="{s:Action OnChapterStartMouseEnter}"
+                                    MouseLeave="{s:Action OnChapterStartMouseLeave}"/>
 
                             <Button Grid.Column="2"
                                     Style="{StaticResource ChapterButton}"
                                     BorderThickness="0 0 3 0"
                                     BorderBrush="Black"
-                                    Click="{s:Action OnChapterEndClick}"/>
+                                    Click="{s:Action OnChapterEndClick}"
+                                    MouseEnter="{s:Action OnChapterEndMouseEnter}"
+                                    MouseLeave="{s:Action OnChapterEndMouseLeave}"/>
                         </Grid>
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>
@@ -169,17 +208,10 @@
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
                         <Border Height="{Binding ActualHeight, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}"
-                                ToolTipService.Placement="Center"
-                                ToolTipService.VerticalOffset="-24"
                                 Width="7"
-                                SnapsToDevicePixels="True">
-                            <Border.ToolTip>
-                                <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="Bookmark:" Margin="0 0 5 0"/>
-                                    <TextBlock Text="{Binding Name}"/>
-                                </StackPanel>
-                            </Border.ToolTip>
-
+                                SnapsToDevicePixels="True" 
+                                MouseEnter="{s:Action OnBookmarkMouseEnter}"
+                                MouseLeave="{s:Action OnBookmarkMouseLeave}">
                             <Button HorizontalAlignment="Stretch"
                                     Background="Black"
                                     BorderThickness="2 0 2 0"

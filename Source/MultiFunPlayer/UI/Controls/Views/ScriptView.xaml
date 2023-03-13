@@ -659,12 +659,7 @@
                                  Duration="{Binding MediaDuration, Mode=OneWay}"
                                  Position="{Binding MediaPosition, Mode=OneWay}"
                                  SeekRequest="{s:Action OnSeekRequest}"
-                                 Panel.ZIndex="-1"
-                                 ToolTipService.InitialShowDelay="500"
-                                 ToolTipService.Placement="Center"
-                                 ToolTipService.VerticalOffset="-40"
-                                 ToolTipService.IsEnabled="{Binding HeatmapEnablePreview}"/>
-
+                                 Panel.ZIndex="-1"/>
         <material:Card material:ShadowAssist.ShadowDepth="Depth1" Margin="0 0 0 10">
             <controls:NonReloadingTabControl ItemsSource="{Binding AxisModels}">
                 <TabControl.ItemTemplate>

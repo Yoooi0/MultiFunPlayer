@@ -1,10 +1,11 @@
-using MultiFunPlayer.Common;
+﻿using MultiFunPlayer.Common;
 using MultiFunPlayer.UI.Controls.ViewModels;
 using PropertyChanged;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Media;
 
 namespace MultiFunPlayer.UI.Controls;
@@ -18,6 +19,10 @@ internal partial class MarkersPreview : UserControl, INotifyPropertyChanged
 
     public List<ChapterModel> ChapterModels { get; private set; }
     public List<BookmarkModel> BookmarkModels { get; private set; }
+
+    public object ToolTipContent { get; set; }
+    public object ToolTipTarget { get; set; }
+    public bool ToolTipIsOpen { get; set; }
 
     public double ScrubberPosition => ShowScrubber ? Position / Duration * ActualWidth : 0;
     public bool ShowScrubber => double.IsFinite(Duration) && Duration > 0;
@@ -226,6 +231,48 @@ internal partial class MarkersPreview : UserControl, INotifyPropertyChanged
         SeekRequest?.Invoke(this, new SeekRequestEventArgs(TimeSpan.FromSeconds(model.Position)));
     }
 
+    public void OnChapterMouseEnter(object sender, MouseEventArgs e) => UpdateChapterToolTip(true, sender);
+    public void OnChapterMouseLeave(object sender, MouseEventArgs e) => UpdateChapterToolTip(false, sender);
+    public void OnChapterStartMouseLeave(object sender, MouseEventArgs e) => UpdateChapterToolTip(true, sender);
+    public void OnChapterMiddleMouseLeave(object sender, MouseEventArgs e) => UpdateChapterToolTip(true, sender);
+    public void OnChapterEndMouseLeave(object sender, MouseEventArgs e) => UpdateChapterToolTip(true, sender);
+
+    public void OnChapterStartMouseEnter(object sender, MouseEventArgs e)
+        => UpdateChapterToolTip(true, sender, m => new MarkerToolTipModel("Chapter", m.Name, TimeSpan.FromSeconds(m.StartPosition)));
+    public void OnChapterMiddleMouseEnter(object sender, MouseEventArgs e)
+        => UpdateChapterToolTip(true, sender, m => new ChapterToolTipModel(m.Name, TimeSpan.FromSeconds(m.StartPosition), TimeSpan.FromSeconds(m.EndPosition)));
+    public void OnChapterEndMouseEnter(object sender, MouseEventArgs e)
+        => UpdateChapterToolTip(true, sender, m => new MarkerToolTipModel("Chapter", m.Name, TimeSpan.FromSeconds(m.EndPosition)));
+
+    public void OnBookmarkMouseEnter(object sender, MouseEventArgs e)
+        => UpdateBookMarkToolTip(true, sender, b => new MarkerToolTipModel("Bookmark", b.Name, TimeSpan.FromSeconds(b.Position)));
+    public void OnBookmarkMouseLeave(object sender, MouseEventArgs e) => UpdateBookMarkToolTip(false, sender);
+
+    private void UpdateChapterToolTip(bool open, object sender, Func<ChapterModel, object> contentFactory = null)
+    {
+        if (sender is not FrameworkElement element || element.DataContext is not ChapterModel model)
+            return;
+
+        UpdateToolTip(open, sender, contentFactory, model);
+    }
+
+    private void UpdateBookMarkToolTip(bool open, object sender, Func<BookmarkModel, object> contentFactory = null)
+    {
+        if (sender is not FrameworkElement element || element.DataContext is not BookmarkModel model)
+            return;
+
+        UpdateToolTip(open, sender, contentFactory, model);
+    }
+
+    private void UpdateToolTip<T>(bool open, object sender, Func<T, object> contentFactory, T model)
+    {
+        ToolTipTarget = sender;
+        ToolTipIsOpen = open;
+
+        if (open && contentFactory != null)
+            ToolTipContent = contentFactory(model);
+    }
+
     [SuppressPropertyChangedWarnings]
     private void OnSizeChanged(object sender, SizeChangedEventArgs e)
     {
@@ -257,3 +304,6 @@ internal class BookmarkModel
     public double CanvasMultiplier { get; init; }
     public double CanvasLeft => Math.Floor(Position * CanvasMultiplier);
 }
+
+internal record ChapterToolTipModel(string Name, TimeSpan StartPosition, TimeSpan EndPosition);
+internal record MarkerToolTipModel(string MarkerType, string Name, TimeSpan Position);
