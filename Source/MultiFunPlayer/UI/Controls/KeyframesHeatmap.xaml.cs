@@ -33,6 +33,8 @@ internal partial class KeyframesHeatmap : UserControl, INotifyPropertyChanged
     public double ScrubberPosition => ShowScrubber ? Position / Duration * ActualWidth : 0;
     public bool ShowScrubber => double.IsFinite(Duration) && Duration > 0;
 
+    public event EventHandler<SeekRequestEventArgs> SeekRequest;
+
     [DoNotNotify]
     public IReadOnlyDictionary<DeviceAxis, KeyframeCollection> Keyframes
     {
@@ -224,6 +226,17 @@ internal partial class KeyframesHeatmap : UserControl, INotifyPropertyChanged
     {
         base.OnMouseLeave(e);
         UpdateToolTip(false);
+    }
+
+    protected override void OnPreviewMouseDown(MouseButtonEventArgs e)
+    {
+        base.OnPreviewMouseDown(e);
+
+        if (!double.IsFinite(Duration) || Duration <= 0 || ActualWidth < 1 || ActualHeight < 1)
+            return;
+
+        if (e.LeftButton == MouseButtonState.Pressed)
+            SeekRequest?.Invoke(this, new SeekRequestEventArgs(TimeSpan.FromSeconds(e.GetPosition(this).X / ActualWidth * Duration)));
     }
 
     private void UpdateToolTip(bool open)

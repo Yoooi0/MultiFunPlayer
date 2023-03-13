@@ -949,18 +949,7 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         _eventAggregator.Publish(new MediaPlayPauseMessage(!IsPlaying));
     }
 
-    public void OnKeyframesHeatmapMouseUp(object sender, MouseButtonEventArgs e)
-    {
-        if (sender is not FrameworkElement element)
-            return;
-        if (e.ChangedButton != MouseButton.Left)
-            return;
-
-        SeekMediaToPercent(e.GetPosition(element).X / element.ActualWidth);
-    }
-
-    public void OnMarkerkClick(object sender, MarkerClickEventArgs e)
-        => SeekMediaToTime(e.Position.TotalSeconds);
+    public void OnSeekRequest(object sender, SeekRequestEventArgs e) => SeekMediaToTime(e.Position.TotalSeconds);
 
     private void InvalidateMediaState()
     {
@@ -2189,4 +2178,10 @@ internal class MediaLoopSegment : PropertyChangedBase
         StartPosition = null;
         EndPosition = null;
     }
+}
+
+public class SeekRequestEventArgs : EventArgs
+{
+    public TimeSpan Position { get; }
+    public SeekRequestEventArgs(TimeSpan position) => Position = position;
 }

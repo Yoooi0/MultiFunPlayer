@@ -1,4 +1,5 @@
-﻿using MultiFunPlayer.Common;
+using MultiFunPlayer.Common;
+using MultiFunPlayer.UI.Controls.ViewModels;
 using PropertyChanged;
 using System.Collections.Specialized;
 using System.ComponentModel;
@@ -21,7 +22,7 @@ internal partial class MarkersPreview : UserControl, INotifyPropertyChanged
     public double ScrubberPosition => ShowScrubber ? Position / Duration * ActualWidth : 0;
     public bool ShowScrubber => double.IsFinite(Duration) && Duration > 0;
 
-    public event EventHandler<MarkerClickEventArgs> MarkerClick;
+    public event EventHandler<SeekRequestEventArgs> SeekRequest;
 
     [DoNotNotify]
     public IReadOnlyDictionary<DeviceAxis, ChapterCollection> Chapters
@@ -206,7 +207,7 @@ internal partial class MarkersPreview : UserControl, INotifyPropertyChanged
         if (sender is not FrameworkElement element || element.DataContext is not ChapterModel model)
             return;
 
-        MarkerClick?.Invoke(this, new MarkerClickEventArgs(TimeSpan.FromSeconds(model.StartPosition)));
+        SeekRequest?.Invoke(this, new SeekRequestEventArgs(TimeSpan.FromSeconds(model.StartPosition)));
     }
 
     public void OnChapterEndClick(object sender, RoutedEventArgs e)
@@ -214,7 +215,7 @@ internal partial class MarkersPreview : UserControl, INotifyPropertyChanged
         if (sender is not FrameworkElement element || element.DataContext is not ChapterModel model)
             return;
 
-        MarkerClick?.Invoke(this, new MarkerClickEventArgs(TimeSpan.FromSeconds(model.EndPosition)));
+        SeekRequest?.Invoke(this, new SeekRequestEventArgs(TimeSpan.FromSeconds(model.EndPosition)));
     }
 
     public void OnBookmarkClick(object sender, EventArgs e)
@@ -222,7 +223,7 @@ internal partial class MarkersPreview : UserControl, INotifyPropertyChanged
         if (sender is not FrameworkElement element || element.DataContext is not BookmarkModel model)
             return;
 
-        MarkerClick?.Invoke(this, new MarkerClickEventArgs(TimeSpan.FromSeconds(model.Position)));
+        SeekRequest?.Invoke(this, new SeekRequestEventArgs(TimeSpan.FromSeconds(model.Position)));
     }
 
     [SuppressPropertyChangedWarnings]
@@ -255,11 +256,4 @@ internal class BookmarkModel
 
     public double CanvasMultiplier { get; init; }
     public double CanvasLeft => Math.Floor(Position * CanvasMultiplier);
-}
-
-internal class MarkerClickEventArgs : EventArgs
-{
-    public TimeSpan Position { get; }
-
-    public MarkerClickEventArgs(TimeSpan position) => Position = position;
 }
