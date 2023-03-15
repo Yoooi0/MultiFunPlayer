@@ -78,6 +78,7 @@ internal class PlexMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlay
         {
             Logger.Info("Connecting to {0} at \"{1}\"", Name, ServerEndpoint);
             var client = NetUtils.CreateHttpClient();
+            client.Timeout = TimeSpan.FromMilliseconds(5000);
 
             await Task.Delay(250, token);
             Status = ConnectionStatus.Connected;
@@ -320,12 +321,13 @@ internal class PlexMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlay
 
         try
         {
-            using var httpClient = NetUtils.CreateHttpClient();
+            using var client = NetUtils.CreateHttpClient();
+            client.Timeout = TimeSpan.FromMilliseconds(5000);
 
             var message = new HttpRequestMessage(HttpMethod.Get, new Uri($"http://{ServerEndpoint.ToUriString()}/clients"));
             AddDefaultHeaders(message.Headers);
 
-            var response = await httpClient.SendAsync(message, token);
+            var response = await client.SendAsync(message, token);
             var document = new XmlDocument();
             document.Load(await response.Content.ReadAsStreamAsync(token));
 
@@ -441,12 +443,13 @@ internal class PlexMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlay
         if (ServerEndpoint == null)
             return false;
 
-        using var httpClient = NetUtils.CreateHttpClient();
+        using var client = NetUtils.CreateHttpClient();
+        client.Timeout = TimeSpan.FromMilliseconds(5000);
 
         var message = new HttpRequestMessage(HttpMethod.Head, new Uri($"http://{ServerEndpoint.ToUriString()}/clients"));
         AddDefaultHeaders(message.Headers);
 
-        var response = await httpClient.SendAsync(message, token);
+        var response = await client.SendAsync(message, token);
         return response.IsSuccessStatusCode;
     }
 
