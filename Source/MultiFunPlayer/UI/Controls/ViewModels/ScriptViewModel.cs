@@ -20,6 +20,7 @@ using System.Reflection;
 using MultiFunPlayer.MediaSource.MediaResource;
 using MultiFunPlayer.MediaSource.MediaResource.Modifier;
 using MultiFunPlayer.MediaSource.MediaResource.Modifier.ViewModels;
+using MultiFunPlayer.MotionProvider.ViewModels;
 
 namespace MultiFunPlayer.UI.Controls.ViewModels;
 
@@ -2065,7 +2066,7 @@ internal class AxisSettings : PropertyChangedBase
     [JsonProperty] public double SmartLimitTargetValue { get; set; }
 
     [JsonProperty] public InterpolationType InterpolationType { get; set; } = InterpolationType.Pchip;
-    [JsonProperty] public bool AutoHomeEnabled { get; set; } = false;
+    [JsonProperty] public bool AutoHomeEnabled { get; set; } = true;
     [JsonProperty] public double AutoHomeDelay { get; set; } = 5;
     [JsonProperty] public double AutoHomeDuration { get; set; } = 3;
     [JsonProperty] public double AutoHomeTargetValue { get; set; }
@@ -2076,7 +2077,7 @@ internal class AxisSettings : PropertyChangedBase
     [JsonProperty] public bool BypassScript { get; set; } = false;
     [JsonProperty] public bool BypassMotionProvider { get; set; } = false;
     [JsonProperty] public bool BypassTransition { get; set; } = false;
-    [JsonProperty] public double MotionProviderBlend { get; set; } = 100;
+    [JsonProperty] public double MotionProviderBlend { get; set; } = 0;
     [JsonProperty] public bool MotionProviderFillGaps { get; set; } = false;
     [JsonProperty] public double MotionProviderMinimumGapDuration { get; set; } = 5;
     [JsonProperty] public bool UpdateMotionProviderWhenPaused { get; set; } = false;
@@ -2090,6 +2091,16 @@ internal class AxisSettings : PropertyChangedBase
     {
         SmartLimitTargetValue = axis.DefaultValue;
         AutoHomeTargetValue = axis.DefaultValue;
+
+        if (axis == "R0" || axis == "R1" || axis == "R2")
+        {
+            if (DeviceAxis.TryParse("L0", out var strokeAxis))
+                UpdateMotionProviderWithAxis = strokeAxis;
+
+            var providerName = typeof(RandomMotionProviderViewModel).GetCustomAttribute<DisplayNameAttribute>()?.DisplayName;
+            if (providerName != null)
+                SelectedMotionProvider = providerName;
+        }
     }
 }
 
