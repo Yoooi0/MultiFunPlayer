@@ -61,7 +61,7 @@ internal class TcpOutputTargetViewModel : ThreadAbstractOutputTarget
 
                 if (client.Connected && client.Available > 0)
                 {
-                    var message = Encoding.UTF8.GetString(client.GetStream().ReadBytes(client.Available));
+                    var message = Encoding.UTF8.GetString(stream.ReadBytes(client.Available));
                     Logger.Debug("Received \"{0}\" from \"{1}\"", message, $"tcp://{Endpoint}");
                 }
 
