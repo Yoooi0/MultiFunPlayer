@@ -51,7 +51,8 @@ internal class TcpOutputTargetViewModel : ThreadAbstractOutputTarget
         {
             EventAggregator.Publish(new SyncRequestMessage());
 
-            using var stream = new StreamWriter(client.GetStream(), Encoding.UTF8);
+            var buffer = new byte[256];
+            var stream = client.GetStream();
             var lastSentValues = DeviceAxis.All.ToDictionary(a => a, _ => double.NaN);
             FixedUpdate(() => !token.IsCancellationRequested && client.Connected, elapsed =>
             {
@@ -69,7 +70,9 @@ internal class TcpOutputTargetViewModel : ThreadAbstractOutputTarget
                 if (client.Connected && !string.IsNullOrWhiteSpace(commands))
                 {
                     Logger.Trace("Sending \"{0}\" to \"{1}\"", commands.Trim(), $"tcp://{Endpoint}");
-                    stream.WriteLine(commands);
+
+                    var encoded = Encoding.UTF8.GetBytes(commands, buffer);
+                    stream.Write(buffer, 0, encoded);
                     lastSentValues.Merge(values);
                 }
             });
