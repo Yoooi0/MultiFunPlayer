@@ -262,9 +262,17 @@
                                                                 </Style>
                                                             </Button.Style>
 
-                                                            <TextBlock Text="{Binding Name}" 
-                                                                       Margin="5 3 5 3"
-                                                                       FontWeight="Medium"/>
+                                                            <StackPanel Orientation="Horizontal">
+                                                                <TextBlock Text="{Binding StringFormat={}#{0}, RelativeSource={RelativeSource AncestorType={x:Type ContentPresenter}, AncestorLevel=3}, Converter={StaticResource ItemIndexInContainerConverter}, ConverterParameter=1}" 
+                                                                           FontWeight="Medium"
+                                                                           Margin="5 0 5 0"
+                                                                           FontSize="9"
+                                                                           VerticalAlignment="Center"/>
+                                                                <TextBlock Text="{Binding Name}" 
+                                                                           Margin="5 3 5 3"
+                                                                           FontWeight="Medium"
+                                                                           VerticalAlignment="Center"/>
+                                                            </StackPanel>
                                                         </Button>
 
                                                         <DataTemplate.Triggers>

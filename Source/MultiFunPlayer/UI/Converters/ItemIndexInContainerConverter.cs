@@ -12,8 +12,9 @@ internal class ItemIndexInContainerConverter : IValueConverter
         if (value is not DependencyObject item)
             return false;
 
+        var offset = parameter is string s && int.TryParse(s, out var result) ? result : 0;
         var itemsControl = ItemsControl.ItemsControlFromItemContainer(item);
-        return itemsControl.ItemContainerGenerator.IndexFromContainer(item);
+        return itemsControl.ItemContainerGenerator.IndexFromContainer(item) + offset;
     }
 
     public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
