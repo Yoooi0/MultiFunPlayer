@@ -15,7 +15,7 @@
     </UserControl.Resources>
 
     <Grid>
-        <local:AutoClosingPopup IsOpen="{Binding ToolTipIsOpen, Mode=OneWay, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}"
+        <local:AutoClosingPopup IsOpen="{Binding ToolTipIsOpen, Mode=TwoWay, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}"
                                 HorizontalOffset="{Binding ToolTipHorizontalOffset, Mode=OneWay, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}"
                                 VerticalOffset="{Binding ToolTipVerticalOffset, Mode=OneWay, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}"
                                 Placement="Relative"
