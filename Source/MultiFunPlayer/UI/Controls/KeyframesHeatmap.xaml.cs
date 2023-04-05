@@ -362,22 +362,11 @@ internal partial class KeyframesHeatmap : UserControl, INotifyPropertyChanged
             return;
         }
 
-        for (var i = 0; i < keyframes.Count - 1;)
+        for (int i = 0, j = 1; j < keyframes.Count; i = j++)
         {
-            var j = i;
-            var direction = default(int?);
-            for (var k = j + 1; k < keyframes.Count; j = k++)
-            {
-                var currentDirection = Math.Sign(keyframes[k].Value - keyframes[j].Value);
-                if (!direction.HasValue)
-                    direction = currentDirection;
-
-                if (direction.HasValue && direction != currentDirection)
-                    break;
-            }
-
             var prev = keyframes[i];
             var next = keyframes[j];
+            var direction = Math.Sign(keyframes[j].Value - keyframes[i].Value);
 
             var startBucket = (int)Math.Floor(prev.Position / bucketSize);
             var endBucket = (int)Math.Floor(next.Position / bucketSize);
@@ -404,8 +393,6 @@ internal partial class KeyframesHeatmap : UserControl, INotifyPropertyChanged
                     buckets[index].Bottom.Add((valueFrom + valueTo) / 2);
                 }
             }
-
-            i = j;
         }
 
         for (var i = 0; i < buckets.Length; i++)
