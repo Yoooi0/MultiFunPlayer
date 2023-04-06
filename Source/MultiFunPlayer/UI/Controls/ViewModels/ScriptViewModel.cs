@@ -268,6 +268,26 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                             return true;
                         }
 
+                        void SpeedLimitMotionProviderWithAxis()
+                        {
+                            if (settings.UpdateMotionProviderWithAxis == null)
+                                return;
+
+                            var targetState = AxisStates[settings.UpdateMotionProviderWithAxis];
+                            if (!double.IsFinite(targetState.Speed))
+                                return;
+
+                            var step = providerValue - context.LastValue;
+                            if (!double.IsFinite(step))
+                                return;
+
+                            var direction = Math.Sign(step);
+                            var speed = Math.Abs(step / deltaTime);
+                            var maxSpeed = Math.Abs(targetState.Speed);
+                            if (speed > maxSpeed)
+                                providerValue = MathUtils.Clamp01(context.LastValue + maxSpeed * deltaTime * direction);
+                        }
+
                         if (ShouldUpdateMotionProvider())
                             MotionProviderManager.Update(axis, settings.SelectedMotionProvider, deltaTime);
 
@@ -276,6 +296,9 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                         var blendT = state.InsideScript ? MathUtils.Clamp01(settings.MotionProviderBlend / 100) : 1;
                         var blendFrom = double.IsFinite(context.ScriptValue) ? context.ScriptValue : axis.DefaultValue;
                         providerValue = MathUtils.Clamp01(MathUtils.Lerp(blendFrom, providerValue, blendT));
+
+                        if (settings.MotionProviderSpeedLimitWithAxis)
+                            SpeedLimitMotionProviderWithAxis();
                     }
                     else
                     {
@@ -2090,6 +2113,7 @@ internal class AxisSettings : PropertyChangedBase
     [JsonProperty] public double MotionProviderBlend { get; set; } = 0;
     [JsonProperty] public bool MotionProviderFillGaps { get; set; } = false;
     [JsonProperty] public double MotionProviderMinimumGapDuration { get; set; } = 5;
+    [JsonProperty] public bool MotionProviderSpeedLimitWithAxis { get; set; } = true;
     [JsonProperty] public bool UpdateMotionProviderWhenPaused { get; set; } = false;
     [JsonProperty] public bool UpdateMotionProviderWithoutScript { get; set; } = true;
     [JsonProperty] public DeviceAxis UpdateMotionProviderWithAxis { get; set; } = null;
