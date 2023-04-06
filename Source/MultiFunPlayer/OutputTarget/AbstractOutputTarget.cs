@@ -399,27 +399,6 @@ internal abstract class ThreadAbstractOutputTarget : AbstractOutputTarget
 
     protected void FixedUpdate(Func<bool> condition, Action<double> body)
     {
-        static void SleepPrecise(Stopwatch stopwatch, double millisecondsTimeout)
-        {
-            if (millisecondsTimeout < 0)
-                return;
-
-            var frequencyInverse = 1d / Stopwatch.Frequency;
-            while (true)
-            {
-                var elapsed = stopwatch.ElapsedTicks * frequencyInverse * 1000;
-                var diff = millisecondsTimeout - elapsed;
-                if (diff <= 0)
-                    break;
-
-                if (diff < 1) Thread.SpinWait(10);
-                else if (diff < 2) Thread.SpinWait(100);
-                else if (diff < 5) Thread.Sleep(1);
-                else if (diff < 15) Thread.Sleep(5);
-                else Thread.Sleep(10);
-            }
-        }
-
         var stopwatch = Stopwatch.StartNew();
         while (condition())
         {
@@ -432,7 +411,7 @@ internal abstract class ThreadAbstractOutputTarget : AbstractOutputTarget
             if (!UsePreciseSleep)
                 Thread.Sleep((int)Math.Max(1, UpdateInterval - stopwatch.ElapsedTicks / (double)Stopwatch.Frequency * 1000));
             else
-                SleepPrecise(stopwatch, UpdateInterval);
+                stopwatch.SleepPrecise(UpdateInterval);
         }
     }
 }

@@ -1,6 +1,7 @@
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System.Collections;
+using System.Diagnostics;
 using System.IO;
 using System.Linq.Expressions;
 using System.Net;
@@ -405,4 +406,28 @@ public static class NetExtensions
 public static class ExceptionExtensions
 {
     public static void Throw(this Exception e) => ExceptionDispatchInfo.Capture(e).Throw();
+}
+
+public static class StopwatchExtensions
+{
+    public static void SleepPrecise(this Stopwatch stopwatch, double millisecondsTimeout)
+    {
+        if (millisecondsTimeout < 0)
+            return;
+
+        var frequencyInverse = 1d / Stopwatch.Frequency;
+        while (true)
+        {
+            var elapsed = stopwatch.ElapsedTicks * frequencyInverse * 1000;
+            var diff = millisecondsTimeout - elapsed;
+            if (diff <= 0)
+                break;
+
+            if (diff < 1) Thread.SpinWait(10);
+            else if (diff < 2) Thread.SpinWait(100);
+            else if (diff < 5) Thread.Sleep(1);
+            else if (diff < 15) Thread.Sleep(5);
+            else Thread.Sleep(10);
+        }
+    }
 }
