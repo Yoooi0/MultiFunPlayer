@@ -164,7 +164,7 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
 
             foreach (var axis in DeviceAxis.All)
             {
-                contexts[axis].EndUpdate();
+                contexts[axis].EndUpdate(deltaTime);
                 Monitor.Exit(AxisStates[axis]);
             }
 
@@ -1945,6 +1945,7 @@ internal class AxisState : INotifyPropertyChanged
     [DoNotNotify] public double ScriptValue { get; set; } = double.NaN;
     [DoNotNotify] public double TransitionValue { get; set; } = double.NaN;
     [DoNotNotify] public double MotionProviderValue { get; set; } = double.NaN;
+    [DoNotNotify] public double Speed { get; set; } = double.NaN;
 
     [DoNotNotify] public AxisValueTransition ExternalTransition { get; } = new AxisValueTransition();
 
@@ -2043,9 +2044,12 @@ internal class AxisStateUpdateContext
         MotionProviderValue = double.NaN;
     }
 
-    public void EndUpdate()
+    public void EndUpdate(double deltaTime)
     {
         _state.IsDirty = IsDirty;
+
+        if (double.IsFinite(Value) && double.IsFinite(LastValue))
+            _state.Speed = (LastValue - Value) / deltaTime;
 
         _state.Value = Value;
         _state.ScriptValue = ScriptValue;
