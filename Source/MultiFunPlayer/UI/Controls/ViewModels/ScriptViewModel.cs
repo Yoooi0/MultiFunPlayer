@@ -123,16 +123,16 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         var mediaLoopUpdateTime = 0d;
         var deltaTime = 0d;
 
+        var stopwatch = Stopwatch.StartNew();
         while (!token.IsCancellationRequested)
         {
-            var updateStartTicks = Stopwatch.GetTimestamp();
-
             var dirty = UpdateValues();
             UpdateUi();
             UpdateMediaLoop();
 
-            Thread.Sleep(IsPlaying || dirty ? 2 : 10);
-            deltaTime = (Stopwatch.GetTimestamp() - updateStartTicks) / (double)Stopwatch.Frequency;
+            stopwatch.SleepPrecise(IsPlaying || dirty ? 2 : 10);
+            deltaTime = stopwatch.ElapsedTicks / (double)Stopwatch.Frequency;
+            stopwatch.Restart();
         }
 
         bool UpdateValues()
