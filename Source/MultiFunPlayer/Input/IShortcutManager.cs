@@ -16,7 +16,7 @@ internal interface IShortcutManager : IDisposable
     event EventHandler<IShortcutActionDescriptor> ActionRegistered;
     event EventHandler<IShortcutActionDescriptor> ActionUnregistered;
 
-    ObservableConcurrentCollection<IShortcutActionDescriptor> AvailableActions { get; }
+    IReadOnlyConcurrentObservableCollection<IShortcutActionDescriptor> AvailableActions { get; }
 
     void RegisterAction(string name, Action action);
     void RegisterAction<T0>(string name, Func<IShortcutSettingBuilder<T0>, IShortcutSettingBuilder<T0>> settings0, Action<T0> action);
@@ -46,17 +46,18 @@ internal class ShortcutManager : IShortcutManager
 {
     protected static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
+    private readonly ObservableConcurrentCollection<IShortcutActionDescriptor> _availableActions;
     private readonly Dictionary<IShortcutActionDescriptor, IShortcutAction> _actions;
     private readonly Dictionary<IShortcutActionDescriptor, IShortcutActionConfigurationBuilder> _actionConfigurationBuilders;
 
     public event EventHandler<IShortcutActionDescriptor> ActionRegistered;
     public event EventHandler<IShortcutActionDescriptor> ActionUnregistered;
 
-    public ObservableConcurrentCollection<IShortcutActionDescriptor> AvailableActions { get; }
+    public IReadOnlyConcurrentObservableCollection<IShortcutActionDescriptor> AvailableActions => _availableActions;
 
     public ShortcutManager()
     {
-        AvailableActions = new ObservableConcurrentCollection<IShortcutActionDescriptor>();
+        _availableActions = new ObservableConcurrentCollection<IShortcutActionDescriptor>();
 
         _actions = new Dictionary<IShortcutActionDescriptor, IShortcutAction>();
         _actionConfigurationBuilders = new Dictionary<IShortcutActionDescriptor, IShortcutActionConfigurationBuilder>();
@@ -68,7 +69,7 @@ internal class ShortcutManager : IShortcutManager
         _actions.Add(descriptor, new ShortcutAction(descriptor, callback));
         _actionConfigurationBuilders.Add(descriptor, new ShortcutActionConfigurationBuilder(descriptor));
 
-        AvailableActions.Add(descriptor);
+        _availableActions.Add(descriptor);
         ActionRegistered?.Invoke(this, descriptor);
     }
 
@@ -78,7 +79,7 @@ internal class ShortcutManager : IShortcutManager
         _actions.Add(descriptor, new ShortcutAction<T0>(descriptor, callback));
         _actionConfigurationBuilders.Add(descriptor, new ShortcutActionConfigurationBuilder(descriptor, builder0(new ShortcutSettingBuilder<T0>())));
 
-        AvailableActions.Add(descriptor);
+        _availableActions.Add(descriptor);
         ActionRegistered?.Invoke(this, descriptor);
     }
 
@@ -88,7 +89,7 @@ internal class ShortcutManager : IShortcutManager
         _actions.Add(descriptor, new ShortcutAction<T0, T1>(descriptor, callback));
         _actionConfigurationBuilders.Add(descriptor, new ShortcutActionConfigurationBuilder(descriptor, builder0(new ShortcutSettingBuilder<T0>()), builder1(new ShortcutSettingBuilder<T1>())));
 
-        AvailableActions.Add(descriptor);
+        _availableActions.Add(descriptor);
         ActionRegistered?.Invoke(this, descriptor);
     }
 
@@ -98,7 +99,7 @@ internal class ShortcutManager : IShortcutManager
         _actions.Add(descriptor, new ShortcutAction<T0, T1, T2>(descriptor, callback));
         _actionConfigurationBuilders.Add(descriptor, new ShortcutActionConfigurationBuilder(descriptor, builder0(new ShortcutSettingBuilder<T0>()), builder1(new ShortcutSettingBuilder<T1>()), builder2(new ShortcutSettingBuilder<T2>())));
 
-        AvailableActions.Add(descriptor);
+        _availableActions.Add(descriptor);
         ActionRegistered?.Invoke(this, descriptor);
     }
 
@@ -108,7 +109,7 @@ internal class ShortcutManager : IShortcutManager
         _actions.Add(descriptor, new ShortcutAction<T0, T1, T2, T3>(descriptor, callback));
         _actionConfigurationBuilders.Add(descriptor, new ShortcutActionConfigurationBuilder(descriptor, builder0(new ShortcutSettingBuilder<T0>()), builder1(new ShortcutSettingBuilder<T1>()), builder2(new ShortcutSettingBuilder<T2>()), builder3(new ShortcutSettingBuilder<T3>())));
 
-        AvailableActions.Add(descriptor);
+        _availableActions.Add(descriptor);
         ActionRegistered?.Invoke(this, descriptor);
     }
 
@@ -118,7 +119,7 @@ internal class ShortcutManager : IShortcutManager
         _actions.Add(descriptor, new ShortcutAction<T0, T1, T2, T3, T4>(descriptor, callback));
         _actionConfigurationBuilders.Add(descriptor, new ShortcutActionConfigurationBuilder(descriptor, builder0(new ShortcutSettingBuilder<T0>()), builder1(new ShortcutSettingBuilder<T1>()), builder2(new ShortcutSettingBuilder<T2>()), builder3(new ShortcutSettingBuilder<T3>()), builder4(new ShortcutSettingBuilder<T4>())));
 
-        AvailableActions.Add(descriptor);
+        _availableActions.Add(descriptor);
         ActionRegistered?.Invoke(this, descriptor);
     }
 
@@ -128,7 +129,7 @@ internal class ShortcutManager : IShortcutManager
         _actions.Add(descriptor, new ShortcutAction<TG>(descriptor, callback));
         _actionConfigurationBuilders.Add(descriptor, new ShortcutActionConfigurationBuilder(descriptor));
 
-        AvailableActions.Add(descriptor);
+        _availableActions.Add(descriptor);
         ActionRegistered?.Invoke(this, descriptor);
     }
 
@@ -138,7 +139,7 @@ internal class ShortcutManager : IShortcutManager
         _actions.Add(descriptor, new ShortcutAction<TG, T0>(descriptor, callback));
         _actionConfigurationBuilders.Add(descriptor, new ShortcutActionConfigurationBuilder(descriptor, builder0(new ShortcutSettingBuilder<T0>())));
 
-        AvailableActions.Add(descriptor);
+        _availableActions.Add(descriptor);
         ActionRegistered?.Invoke(this, descriptor);
     }
 
@@ -148,7 +149,7 @@ internal class ShortcutManager : IShortcutManager
         _actions.Add(descriptor, new ShortcutAction<TG, T0, T1>(descriptor, callback));
         _actionConfigurationBuilders.Add(descriptor, new ShortcutActionConfigurationBuilder(descriptor, builder0(new ShortcutSettingBuilder<T0>()), builder1(new ShortcutSettingBuilder<T1>())));
 
-        AvailableActions.Add(descriptor);
+        _availableActions.Add(descriptor);
         ActionRegistered?.Invoke(this, descriptor);
     }
 
@@ -158,7 +159,7 @@ internal class ShortcutManager : IShortcutManager
         _actions.Add(descriptor, new ShortcutAction<TG, T0, T1, T2>(descriptor, callback));
         _actionConfigurationBuilders.Add(descriptor, new ShortcutActionConfigurationBuilder(descriptor, builder0(new ShortcutSettingBuilder<T0>()), builder1(new ShortcutSettingBuilder<T1>()), builder2(new ShortcutSettingBuilder<T2>())));
 
-        AvailableActions.Add(descriptor);
+        _availableActions.Add(descriptor);
         ActionRegistered?.Invoke(this, descriptor);
     }
 
@@ -168,7 +169,7 @@ internal class ShortcutManager : IShortcutManager
         _actions.Add(descriptor, new ShortcutAction<TG, T0, T1, T2, T3>(descriptor, callback));
         _actionConfigurationBuilders.Add(descriptor, new ShortcutActionConfigurationBuilder(descriptor, builder0(new ShortcutSettingBuilder<T0>()), builder1(new ShortcutSettingBuilder<T1>()), builder2(new ShortcutSettingBuilder<T2>()), builder3(new ShortcutSettingBuilder<T3>())));
 
-        AvailableActions.Add(descriptor);
+        _availableActions.Add(descriptor);
         ActionRegistered?.Invoke(this, descriptor);
     }
 
@@ -180,7 +181,7 @@ internal class ShortcutManager : IShortcutManager
         _actions.Remove(descriptor);
         _actionConfigurationBuilders.Remove(descriptor);
 
-        AvailableActions.Remove(descriptor);
+        _availableActions.Remove(descriptor);
         ActionUnregistered?.Invoke(this, descriptor);
     }
 

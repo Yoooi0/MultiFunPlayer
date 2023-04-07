@@ -26,12 +26,12 @@ internal class ShortcutSettingsViewModel : Screen, IHandle<SettingsMessage>, IDi
 
     public string ActionsFilter { get; set; }
     public ICollectionView AvailableActionsView { get; }
-    public ObservableConcurrentCollection<IShortcutActionDescriptor> AvailableActions => _manager.AvailableActions;
-    public ObservableConcurrentDictionary<IInputGestureDescriptor, ObservableConcurrentCollection<IShortcutActionConfiguration>> Bindings => _binder.Bindings;
+    public IReadOnlyConcurrentObservableCollection<IShortcutActionDescriptor> AvailableActions => _manager.AvailableActions;
+    public IReadOnlyConcurrentObservableCollection<IShortcutBinding> Bindings => _binder.Bindings;
 
     public bool IsCapturingGesture { get; private set; }
     public IInputGestureDescriptor CapturedGesture { get; set; }
-    public KeyValuePair<IInputGestureDescriptor, ObservableConcurrentCollection<IShortcutActionConfiguration>>? SelectedBinding { get; set; }
+    public IShortcutBinding SelectedBinding { get; set; }
 
     [JsonProperty] public bool IsKeyboardKeysGestureEnabled { get; set; } = true;
     [JsonProperty] public bool IsMouseAxisGestureEnabled { get; set; } = false;
@@ -57,8 +57,7 @@ internal class ShortcutSettingsViewModel : Screen, IHandle<SettingsMessage>, IDi
             if (SelectedBinding == null)
                 return false;
 
-            var (gestureDescriptor, _) = SelectedBinding.Value;
-            if (!_manager.ActionAcceptsGesture(actionDescriptor, gestureDescriptor))
+            if (!_manager.ActionAcceptsGesture(actionDescriptor, SelectedBinding.Gesture))
                 return false;
 
             if (!string.IsNullOrWhiteSpace(ActionsFilter))
@@ -132,19 +131,16 @@ internal class ShortcutSettingsViewModel : Screen, IHandle<SettingsMessage>, IDi
         if (CapturedGesture == null)
             return;
 
-        _binder.RegisterGesture(CapturedGesture);
-        SelectedBinding = KeyValuePair.Create(CapturedGesture, Bindings[CapturedGesture]);
-
+        SelectedBinding = _binder.RegisterGesture(CapturedGesture);
         CapturedGesture = null;
     }
 
     public void RemoveGesture(object sender, RoutedEventArgs e)
     {
-        if (sender is not FrameworkElement element || element.DataContext is not KeyValuePair<IInputGestureDescriptor, ObservableConcurrentCollection<IShortcutActionConfiguration>> pair)
+        if (sender is not FrameworkElement element || element.DataContext is not IShortcutBinding binding)
             return;
 
-        var (gestureDescriptor, _) = pair;
-        _binder.UnregisterGesture(gestureDescriptor);
+        _binder.UnregisterGesture(binding);
     }
 
     public void AssignAction(object sender, RoutedEventArgs e)
@@ -154,8 +150,7 @@ internal class ShortcutSettingsViewModel : Screen, IHandle<SettingsMessage>, IDi
         if (SelectedBinding == null)
             return;
 
-        var binding = SelectedBinding.Value;
-        _binder.BindAction(binding.Key, actionDescriptor);
+        _binder.BindAction(SelectedBinding.Gesture, actionDescriptor);
     }
 
     public void RemoveAssignedAction(object sender, RoutedEventArgs e)
@@ -165,8 +160,7 @@ internal class ShortcutSettingsViewModel : Screen, IHandle<SettingsMessage>, IDi
         if (SelectedBinding == null)
             return;
 
-        var binding = SelectedBinding.Value;
-        _binder.UnbindAction(binding.Key, configuration);
+        _binder.UnbindAction(SelectedBinding.Gesture, configuration);
     }
 
     public void MoveAssignedActionUp(object sender, RoutedEventArgs e)
@@ -176,12 +170,12 @@ internal class ShortcutSettingsViewModel : Screen, IHandle<SettingsMessage>, IDi
         if (SelectedBinding == null)
             return;
 
-        var binding = SelectedBinding.Value;
-        var index = binding.Value.IndexOf(configuration);
+        var configurations = SelectedBinding.Configurations;
+        var index = configurations.IndexOf(configuration);
         if (index == 0)
             return;
 
-        binding.Value.Move(index, index - 1);
+        configurations.Move(index, index - 1);
     }
 
     public void ConfigureAssignedAction(object sender, RoutedEventArgs e)
@@ -199,18 +193,18 @@ internal class ShortcutSettingsViewModel : Screen, IHandle<SettingsMessage>, IDi
         if (SelectedBinding == null)
             return;
 
-        var binding = SelectedBinding.Value;
-        var index = binding.Value.IndexOf(configuration);
-        if (index == binding.Value.Count - 1)
+        var configurations = SelectedBinding.Configurations;
+        var index = configurations.IndexOf(configuration);
+        if (index == configurations.Count - 1)
             return;
 
-        binding.Value.Move(index, index + 1);
+        configurations.Move(index, index + 1);
     }
 
     private async Task TryCaptureGestureAsync(CancellationToken token)
     {
         bool ValidateGesture(IInputGesture gesture)
-            => !_binder.Bindings.ContainsKey(gesture.Descriptor);
+            => !_binder.ContainsBinding(gesture.Descriptor);
 
         var tryCount = 0;
         var gesture = default(IInputGesture);
@@ -263,8 +257,8 @@ internal class ShortcutSettingsViewModel : Screen, IHandle<SettingsMessage>, IDi
 
             if (settings.TryGetValue<List<BindingSettingsModel>>(nameof(Bindings), out var loadedBindings))
             {
-                foreach (var gestureDescriptor in Bindings.Keys.ToList())
-                    _binder.UnregisterGesture(gestureDescriptor);
+                foreach (var gestureDescriptor in Bindings)
+                    _binder.UnregisterGesture(gestureDescriptor.Gesture);
 
                 foreach (var binding in loadedBindings)
                 {
@@ -305,11 +299,11 @@ internal class BindingSettingsModel
     public IInputGestureDescriptor Gesture { get; init; }
     public List<ActionSettingsModel> Actions { get; init; }
 
-    public static BindingSettingsModel FromBinding(KeyValuePair<IInputGestureDescriptor, ObservableConcurrentCollection<IShortcutActionConfiguration>> binding)
+    public static BindingSettingsModel FromBinding(IShortcutBinding binding)
         => new()
         {
-            Gesture = binding.Key,
-            Actions = binding.Value.Select(x => new ActionSettingsModel()
+            Gesture = binding.Gesture,
+            Actions = binding.Configurations.Select(x => new ActionSettingsModel()
             {
                 Descriptor = x.Descriptor.Name,
                 Values = x.Settings.Select(s => new TypedValue(s.GetType().GetGenericArguments()[0], s.Value)).ToList()

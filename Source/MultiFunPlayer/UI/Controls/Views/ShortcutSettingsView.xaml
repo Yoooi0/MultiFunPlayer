@@ -365,14 +365,14 @@
                                             <material:PackIcon Kind="Delete"/>
                                         </Button>
 
-                                        <TextBlock Text="{Binding Value.Count, StringFormat=Actions: {0}}"
+                                        <TextBlock Text="{Binding Configurations.Count, StringFormat=Actions: {0}}"
                                                    DockPanel.Dock="Right"
                                                    VerticalAlignment="Center"
                                                    Margin="5 0 5 0"
                                                    FontWeight="Medium"
                                                    Typography.Capitals="AllPetiteCaps"/>
 
-                                        <ContentControl Content="{Binding Key}"
+                                        <ContentControl Content="{Binding Gesture}"
                                                         VerticalAlignment="Center"/>
                                     </DockPanel>
                                 </Border>
@@ -393,7 +393,7 @@
                                FontWeight="Medium"/>
 
                     <ItemsControl DockPanel.Dock="Top"
-                                  ItemsSource="{Binding SelectedBinding.Value}"
+                                  ItemsSource="{Binding SelectedBinding.Configurations}"
                                   Margin="5 5 0 0"
                                   Height="100"
                                   VirtualizingStackPanel.IsVirtualizing="True"
