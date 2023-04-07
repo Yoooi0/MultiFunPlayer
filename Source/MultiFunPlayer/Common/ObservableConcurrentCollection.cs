@@ -1,4 +1,4 @@
-using PropertyChanged;
+﻿using PropertyChanged;
 using System.Collections;
 using System.Collections.Specialized;
 using System.ComponentModel;
@@ -186,7 +186,7 @@ public class ObservableConcurrentCollection<T> : IList<T>, IReadOnlyConcurrentOb
         return true;
     }
 
-    public int Add(object value)
+    int IList.Add(object value)
     {
         lock (SyncRoot)
         {
@@ -195,10 +195,10 @@ public class ObservableConcurrentCollection<T> : IList<T>, IReadOnlyConcurrentOb
         }
     }
 
-    public bool Contains(object value) => Contains((T)value);
-    public int IndexOf(object value) => IndexOf((T)value);
-    public void Insert(int index, object value) => Insert(index, (T)value);
-    public void Remove(object value) => Remove((T)value);
+    bool IList.Contains(object value) => Contains((T)value);
+    int IList.IndexOf(object value) => IndexOf((T)value);
+    void IList.Insert(int index, object value) => Insert(index, (T)value);
+    void IList.Remove(object value) => Remove((T)value);
 
     void ICollection.CopyTo(Array array, int index)
     {
