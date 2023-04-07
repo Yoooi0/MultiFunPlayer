@@ -13,7 +13,8 @@ namespace MultiFunPlayer.UI.Controls;
 /// <summary>
 /// Interaction logic for MarkersPreview.xaml
 /// </summary>
-internal partial class MarkersPreview : UserControl, INotifyPropertyChanged
+[AddINotifyPropertyChangedInterface]
+internal partial class MarkersPreview : UserControl
 {
     private readonly Color[] _colors;
 
@@ -279,8 +280,6 @@ internal partial class MarkersPreview : UserControl, INotifyPropertyChanged
         RefreshBookmarks();
         RefreshChapters();
     }
-
-    public event PropertyChangedEventHandler PropertyChanged;
 }
 
 internal class ChapterModel

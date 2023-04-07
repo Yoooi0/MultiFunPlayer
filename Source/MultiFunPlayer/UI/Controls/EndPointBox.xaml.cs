@@ -9,9 +9,12 @@ namespace MultiFunPlayer.UI.Controls;
 /// <summary>
 /// Interaction logic for EndpointBox.xaml
 /// </summary>
-public partial class EndPointBox : UserControl, INotifyPropertyChanged
+[AddINotifyPropertyChangedInterface]
+public partial class EndPointBox : UserControl
 {
+    [OnChangedMethod(nameof(UpdateEndPoint))]
     public string HostOrIPAddress { get; set; }
+    [OnChangedMethod(nameof(UpdateEndPoint))]
     public int Port { get; set; }
 
     [DoNotNotify]
@@ -52,11 +55,8 @@ public partial class EndPointBox : UserControl, INotifyPropertyChanged
         InitializeComponent();
     }
 
-    protected void OnPropertyChanged(string propertyName)
+    private void UpdateEndPoint()
     {
-        if (propertyName != nameof(HostOrIPAddress) && propertyName != nameof(Port))
-            return;
-
         var type = Uri.CheckHostName(HostOrIPAddress);
         var endpoint = type switch
         {
@@ -67,6 +67,4 @@ public partial class EndPointBox : UserControl, INotifyPropertyChanged
 
         SetValue(EndPointProperty, endpoint);
     }
-
-    public event PropertyChangedEventHandler PropertyChanged;
 }

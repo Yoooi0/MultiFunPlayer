@@ -1,4 +1,5 @@
 ﻿using MultiFunPlayer.Common;
+using PropertyChanged;
 using System.ComponentModel;
 
 namespace MultiFunPlayer.Input;
@@ -10,7 +11,8 @@ public interface IShortcutBinding
     bool Enabled { get; set; }
 }
 
-public class ShortcutBinding : IShortcutBinding, INotifyPropertyChanged
+[AddINotifyPropertyChangedInterface]
+public partial class ShortcutBinding : IShortcutBinding
 {
     public IInputGestureDescriptor Gesture { get; }
     public ObservableConcurrentCollection<IShortcutActionConfiguration> Configurations { get; }
@@ -22,6 +24,4 @@ public class ShortcutBinding : IShortcutBinding, INotifyPropertyChanged
         Configurations = new ObservableConcurrentCollection<IShortcutActionConfiguration>();
         Enabled = true;
     }
-
-    public event PropertyChangedEventHandler PropertyChanged;
 }

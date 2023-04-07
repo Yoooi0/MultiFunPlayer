@@ -11,7 +11,8 @@ namespace MultiFunPlayer.UI.Controls;
 /// <summary>
 /// Interaction logic for DraggablePointCanvas.xaml
 /// </summary>
-public partial class DraggablePointCanvas : Canvas, INotifyPropertyChanged
+[AddINotifyPropertyChangedInterface]
+public partial class DraggablePointCanvas : Canvas
 {
     private Vector _captureOffset;
 
@@ -262,8 +263,6 @@ public partial class DraggablePointCanvas : Canvas, INotifyPropertyChanged
             PopupText = string.Format(PopupFormat, point.X, point.Y);
         }
     }
-
-    public event PropertyChangedEventHandler PropertyChanged;
 }
 
 public class DraggablePoint : ContentControl

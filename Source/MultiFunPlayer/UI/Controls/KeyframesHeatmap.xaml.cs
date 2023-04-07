@@ -13,7 +13,8 @@ namespace MultiFunPlayer.UI.Controls;
 /// <summary>
 /// Interaction logic for KeyframesHeatmap.xaml
 /// </summary>
-internal partial class KeyframesHeatmap : UserControl, INotifyPropertyChanged
+[AddINotifyPropertyChangedInterface]
+internal partial class KeyframesHeatmap : UserControl
 {
     public static int MaxBucketCount => 500;
 
@@ -403,8 +404,6 @@ internal partial class KeyframesHeatmap : UserControl, INotifyPropertyChanged
 
         AddPointForBucket(0, buckets[0].Top.Count > 0 ? buckets[0].Top.Average : axis.DefaultValue);
     }
-
-    public event PropertyChangedEventHandler PropertyChanged;
 
     private struct HeatmapBucket
     {

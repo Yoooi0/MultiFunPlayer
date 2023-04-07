@@ -11,7 +11,8 @@ namespace MultiFunPlayer.UI.Controls;
 /// <summary>
 /// Interaction logic for OpenSimplexPreview.xaml
 /// </summary>
-internal partial class OpenSimplexPreview : UserControl, INotifyPropertyChanged
+[AddINotifyPropertyChangedInterface]
+internal partial class OpenSimplexPreview : UserControl
 {
     private readonly OpenSimplex _noise;
     private double _seed;
@@ -105,8 +106,6 @@ internal partial class OpenSimplexPreview : UserControl, INotifyPropertyChanged
         for (var x = 0d; x < Length; x += step)
             AddPoint(x, _noise.Calculate2D(x, _seed, Octaves, Persistence, Lacunarity));
     }
-
-    public event PropertyChangedEventHandler PropertyChanged;
 
     private void OnPreviewMouseDown(object sender, MouseButtonEventArgs e)
     {

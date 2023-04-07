@@ -1962,7 +1962,8 @@ internal class AxisModel : PropertyChangedBase
     }
 }
 
-internal class AxisState : INotifyPropertyChanged
+[AddINotifyPropertyChangedInterface]
+internal partial class AxisState
 {
     [DoNotNotify] public double Value { get; set; } = double.NaN;
     [DoNotNotify] public double ScriptValue { get; set; } = double.NaN;
@@ -1988,8 +1989,6 @@ internal class AxisState : INotifyPropertyChanged
 
     public bool IsSpeedLimited { get; set; } = false;
     public bool IsSmartLimited { get; set; } = false;
-
-    public event PropertyChangedEventHandler PropertyChanged;
 
     public void Invalidate(bool end = false) => Index = end ? int.MaxValue : int.MinValue;
 

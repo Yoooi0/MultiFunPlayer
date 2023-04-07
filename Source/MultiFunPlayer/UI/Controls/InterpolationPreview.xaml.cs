@@ -12,7 +12,8 @@ namespace MultiFunPlayer.UI.Controls;
 /// <summary>
 /// Interaction logic for InterpolationPreview.xaml
 /// </summary>
-internal partial class InterpolationPreview : UserControl, INotifyPropertyChanged
+[AddINotifyPropertyChangedInterface]
+internal partial class InterpolationPreview : UserControl
 {
     private KeyframeCollection _keyframes;
 
@@ -111,8 +112,6 @@ internal partial class InterpolationPreview : UserControl, INotifyPropertyChange
             for (var x = _keyframes[i].Position; x < _keyframes[i + 1].Position; x += step)
                 AddPoint(x, MathUtils.Clamp01(_keyframes.Interpolate(i, x, InterpolationType)));
     }
-
-    public event PropertyChangedEventHandler PropertyChanged;
 
     private void OnPreviewMouseDown(object sender, MouseButtonEventArgs e)
     {
