@@ -365,10 +365,25 @@
                                             <material:PackIcon Kind="Delete"/>
                                         </Button>
 
+                                        <ToggleButton IsChecked="{Binding Enabled}"
+                                                      DockPanel.Dock="Right"
+                                                      Height="14">
+                                            <ToggleButton.Resources>
+                                                <Style TargetType="{x:Type ToggleButton}" BasedOn="{StaticResource MaterialDesignSwitchToggleButton}">
+                                                    <Setter Property="ToolTip" Value="Enable"/>
+                                                    <Style.Triggers>
+                                                        <Trigger Property="IsChecked" Value="True">
+                                                            <Setter Property="ToolTip" Value="Disable"/>
+                                                        </Trigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </ToggleButton.Resources>
+                                        </ToggleButton>
+
                                         <TextBlock Text="{Binding Configurations.Count, StringFormat=Actions: {0}}"
                                                    DockPanel.Dock="Right"
                                                    VerticalAlignment="Center"
-                                                   Margin="5 0 5 0"
+                                                   Margin="5 0 10 0"
                                                    FontWeight="Medium"
                                                    Typography.Capitals="AllPetiteCaps"/>
 

@@ -131,7 +131,7 @@ internal class ShortcutSettingsViewModel : Screen, IHandle<SettingsMessage>, IDi
         if (CapturedGesture == null)
             return;
 
-        SelectedBinding = _binder.RegisterGesture(CapturedGesture);
+        SelectedBinding = _binder.GetOrCreateBinding(CapturedGesture);
         CapturedGesture = null;
     }
 
@@ -140,7 +140,7 @@ internal class ShortcutSettingsViewModel : Screen, IHandle<SettingsMessage>, IDi
         if (sender is not FrameworkElement element || element.DataContext is not IShortcutBinding binding)
             return;
 
-        _binder.UnregisterGesture(binding);
+        _binder.RemoveBinding(binding);
     }
 
     public void AssignAction(object sender, RoutedEventArgs e)
@@ -255,26 +255,27 @@ internal class ShortcutSettingsViewModel : Screen, IHandle<SettingsMessage>, IDi
             if (settings.TryGetValue<bool>(nameof(IsGamepadButtonGestureEnabled), out var isHidButtonGestureEnabled))
                 IsGamepadButtonGestureEnabled = isHidButtonGestureEnabled;
 
-            if (settings.TryGetValue<List<BindingSettingsModel>>(nameof(Bindings), out var loadedBindings))
+            if (settings.TryGetValue<List<BindingSettingsModel>>(nameof(Bindings), out var bindingModels))
             {
-                foreach (var gestureDescriptor in Bindings)
-                    _binder.UnregisterGesture(gestureDescriptor.Gesture);
+                foreach (var binding in Bindings.ToList())
+                    _binder.RemoveBinding(binding);
 
-                foreach (var binding in loadedBindings)
+                foreach (var bindingModel in bindingModels)
                 {
-                    var gestureDescriptor = binding.Gesture;
-                    _binder.RegisterGesture(gestureDescriptor);
+                    var gestureDescriptor = bindingModel.Gesture;
+                    var binding = _binder.GetOrCreateBinding(gestureDescriptor);
+                    binding.Enabled = bindingModel.Enabled;
 
-                    if (binding.Actions == null)
+                    if (bindingModel.Actions == null)
                         continue;
 
-                    foreach (var action in binding.Actions)
+                    foreach (var actionModel in bindingModel.Actions)
                     {
-                        var actionDescriptor = AvailableActions.FirstOrDefault(d => string.Equals(d.Name, action.Descriptor, StringComparison.OrdinalIgnoreCase));
+                        var actionDescriptor = AvailableActions.FirstOrDefault(d => string.Equals(d.Name, actionModel.Descriptor, StringComparison.OrdinalIgnoreCase));
                         if (actionDescriptor == null)
-                            Logger.Warn($"Action \"{action.Descriptor}\" not found!");
+                            Logger.Warn($"Action \"{actionModel.Descriptor}\" not found!");
                         else
-                            _binder.BindActionWithSettings(gestureDescriptor, actionDescriptor, action.Values);
+                            _binder.BindActionWithSettings(gestureDescriptor, actionDescriptor, actionModel.Values);
                     }
                 }
             }
@@ -298,6 +299,7 @@ internal class BindingSettingsModel
     [JsonProperty(TypeNameHandling = TypeNameHandling.Objects)]
     public IInputGestureDescriptor Gesture { get; init; }
     public List<ActionSettingsModel> Actions { get; init; }
+    public bool Enabled { get; init; }
 
     public static BindingSettingsModel FromBinding(IShortcutBinding binding)
         => new()
@@ -307,7 +309,8 @@ internal class BindingSettingsModel
             {
                 Descriptor = x.Descriptor.Name,
                 Values = x.Settings.Select(s => new TypedValue(s.GetType().GetGenericArguments()[0], s.Value)).ToList()
-            }).ToList()
+            }).ToList(),
+            Enabled = binding.Enabled
         };
 }
 

@@ -65,10 +65,12 @@ public abstract class PluginBase : PropertyChangedBase
     protected void UnbindAction(IInputGestureDescriptor gestureDescriptor, IShortcutActionConfiguration action)
         => ShortcutBinder.UnbindAction(gestureDescriptor, action);
 
-    protected void RegisterGesture(IInputGestureDescriptor gestureDescriptor)
-        => ShortcutBinder.RegisterGesture(gestureDescriptor);
-    protected void UnregisterGesture(IInputGestureDescriptor gestureDescriptor)
-        => ShortcutBinder.UnregisterGesture(gestureDescriptor);
+    protected IShortcutBinding GetOrCreateBinding(IInputGestureDescriptor gestureDescriptor)
+        => ShortcutBinder.GetOrCreateBinding(gestureDescriptor);
+    protected void RemoveBinding(IShortcutBinding binding)
+        => ShortcutBinder.RemoveBinding(binding);
+    protected void RemoveBinding(IInputGestureDescriptor gestureDescriptor)
+        => ShortcutBinder.RemoveBinding(gestureDescriptor);
     #endregion
 
     #region Message

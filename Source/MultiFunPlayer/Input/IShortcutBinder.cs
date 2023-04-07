@@ -1,4 +1,4 @@
-﻿using MultiFunPlayer.Common;
+using MultiFunPlayer.Common;
 using MultiFunPlayer.Settings;
 using NLog;
 using System.Collections.Concurrent;
@@ -24,9 +24,9 @@ internal interface IShortcutBinder : IDisposable
 
     void UnbindAction(IInputGestureDescriptor gestureDescriptor, IShortcutActionConfiguration action);
 
-    IShortcutBinding RegisterGesture(IInputGestureDescriptor gestureDescriptor);
-    void UnregisterGesture(IShortcutBinding binding);
-    void UnregisterGesture(IInputGestureDescriptor gestureDescriptor);
+    IShortcutBinding GetOrCreateBinding(IInputGestureDescriptor gestureDescriptor);
+    void RemoveBinding(IShortcutBinding binding);
+    void RemoveBinding(IInputGestureDescriptor gestureDescriptor);
 
     bool ContainsBinding(IInputGestureDescriptor gestureDescriptor);
     bool TryGetBinding(IInputGestureDescriptor gestureDescriptor, out IShortcutBinding binding);
@@ -111,7 +111,7 @@ internal class ShortcutBinder : IShortcutBinder
         if (configuration == null)
             return;
 
-        var binding = RegisterGesture(gestureDescriptor);
+        var binding = GetOrCreateBinding(gestureDescriptor);
         var configurations = binding.Configurations;
         configurations.Add(configuration);
     }
@@ -162,7 +162,7 @@ internal class ShortcutBinder : IShortcutBinder
         configurations.Remove(configuration);
     }
 
-    public IShortcutBinding RegisterGesture(IInputGestureDescriptor gestureDescriptor)
+    public IShortcutBinding GetOrCreateBinding(IInputGestureDescriptor gestureDescriptor)
     {
         if (gestureDescriptor == null)
             return null;
@@ -175,8 +175,8 @@ internal class ShortcutBinder : IShortcutBinder
         return binding;
     }
 
-    public void UnregisterGesture(IShortcutBinding binding) => UnregisterGesture(binding?.Gesture);
-    public void UnregisterGesture(IInputGestureDescriptor gestureDescriptor)
+    public void RemoveBinding(IShortcutBinding binding) => RemoveBinding(binding?.Gesture);
+    public void RemoveBinding(IInputGestureDescriptor gestureDescriptor)
     {
         if (gestureDescriptor == null)
             return;
@@ -202,6 +202,8 @@ internal class ShortcutBinder : IShortcutBinder
         if (!_bindingLookup.TryGetValue(gesture.Descriptor, out var binding))
             return;
         if (binding.Configurations.Count == 0)
+            return;
+        if (!binding.Enabled)
             return;
 
         Logger.Trace($"Handling {gesture.Descriptor} gesture");
