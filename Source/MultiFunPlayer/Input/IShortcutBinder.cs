@@ -30,6 +30,7 @@ internal interface IShortcutBinder : IDisposable
 
     bool ContainsBinding(IInputGestureDescriptor gestureDescriptor);
     bool TryGetBinding(IInputGestureDescriptor gestureDescriptor, out IShortcutBinding binding);
+    void Clear();
 }
 
 internal class ShortcutBinder : IShortcutBinder
@@ -189,6 +190,11 @@ internal class ShortcutBinder : IShortcutBinder
 
     public bool ContainsBinding(IInputGestureDescriptor gestureDescriptor) => _bindingLookup.ContainsKey(gestureDescriptor);
     public bool TryGetBinding(IInputGestureDescriptor gestureDescriptor, out IShortcutBinding binding) => _bindingLookup.TryGetValue(gestureDescriptor, out binding);
+    public void Clear()
+    {
+        _bindings.Clear();
+        _bindingLookup.Clear();
+    }
 
     private void HandleGesture(object sender, IInputGesture gesture)
     {

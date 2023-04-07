@@ -257,9 +257,7 @@ internal class ShortcutSettingsViewModel : Screen, IHandle<SettingsMessage>, IDi
 
             if (settings.TryGetValue<List<BindingSettingsModel>>(nameof(Bindings), out var bindingModels))
             {
-                foreach (var binding in Bindings.ToList())
-                    _binder.RemoveBinding(binding);
-
+                _binder.Clear();
                 foreach (var bindingModel in bindingModels)
                 {
                     var gestureDescriptor = bindingModel.Gesture;
