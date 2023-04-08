@@ -34,7 +34,7 @@ public interface IOneOfShortcutSetting<T> : IShortcutSetting<T>, IOneOfShortcutS
     IEnumerable IOneOfShortcutSetting.ItemsSource
     {
         get => ItemsSource;
-        init => ItemsSource = new ObservableConcurrentCollection<T>(value.Cast<T>());
+        init => ItemsSource = value as IEnumerable<T>;
     }
 
     new IEnumerable<T> ItemsSource { get; init; }
