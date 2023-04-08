@@ -239,6 +239,14 @@ public static class CollectionExtensions
         this IReadOnlyObservableConcurrentDictionary<TKey, TValue> dictionary, Func<TValue, TView> selector, string propertyName) where TValue : class
         => new(dictionary, selector, propertyName);
 
+    public static ObservableConcurrentCollectionView<TValue, TView> CreateView<TValue, TView>(
+        this IReadOnlyObservableConcurrentCollection<TValue> collection, Expression<Func<TValue, TView>> selector) where TValue : class
+        => new(collection, selector);
+
+    public static ObservableConcurrentCollectionView<TValue, TView> CreateView<TValue, TView>(
+        this IReadOnlyObservableConcurrentCollection<TValue> collection, Func<TValue, TView> selector, string propertyName) where TValue : class
+        => new(collection, selector, propertyName);
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool ValidateIndex<T>(this ICollection<T> collection, int index)
         => index >= 0 && index < collection.Count;
