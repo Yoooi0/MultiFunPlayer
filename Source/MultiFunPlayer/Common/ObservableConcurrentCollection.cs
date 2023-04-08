@@ -6,7 +6,10 @@ using System.Windows.Data;
 
 namespace MultiFunPlayer.Common;
 
-public interface IReadOnlyObservableConcurrentCollection<T> : IReadOnlyList<T>, INotifyCollectionChanged, INotifyPropertyChanged { }
+public interface IReadOnlyObservableConcurrentCollection<T> : IReadOnlyList<T>, INotifyCollectionChanged, INotifyPropertyChanged
+{
+    public int IndexOf(T item);
+}
 
 [DoNotNotify]
 public class ObservableConcurrentCollection<T> : IList<T>, IReadOnlyObservableConcurrentCollection<T>, IList
@@ -33,16 +36,23 @@ public class ObservableConcurrentCollection<T> : IList<T>, IReadOnlyObservableCo
     public event NotifyCollectionChangedEventHandler CollectionChanged;
     public event PropertyChangedEventHandler PropertyChanged;
 
-    private void NotifyObserversOfChange()
+    private void NotifyObserversOfChange(NotifyCollectionChangedEventArgs collectionChangedEventArgs)
     {
-        _context.Post(_ =>
+        _context.Send(_ =>
         {
-            CollectionChanged?.Invoke(this, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
+            CollectionChanged?.Invoke(this, collectionChangedEventArgs);
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Count)));
         }, null);
     }
 
-    public void Refresh() => NotifyObserversOfChange();
+    private void NotifyObserversOfChange(NotifyCollectionChangedAction action, T value, int index)
+        => NotifyObserversOfChange(new NotifyCollectionChangedEventArgs(action, value, index));
+    private void NotifyObserversOfChange(NotifyCollectionChangedAction action, T value, int index, int oldIndex)
+        => NotifyObserversOfChange(new NotifyCollectionChangedEventArgs(action, value, index, oldIndex));
+    private void NotifyObserversOfChange(NotifyCollectionChangedAction action, T newValue, T oldValue, int index)
+        => NotifyObserversOfChange(new NotifyCollectionChangedEventArgs(action, newValue, oldValue, index));
+
+    public void Refresh() => NotifyObserversOfChange(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
 
     public int Count
     {
@@ -103,18 +113,7 @@ public class ObservableConcurrentCollection<T> : IList<T>, IReadOnlyObservableCo
 
         lock (SyncRoot)
         {
-            if (oldIndex < 0 || oldIndex >= _items.Count)
-                return false;
-
-            if (newIndex < 0 || newIndex > _items.Count)
-                return false;
-
-            T movingItem = _items[oldIndex];
-            TryRemoveItemInternal(oldIndex);
-            TryInsertInternal(newIndex, movingItem);
-            NotifyObserversOfChange();
-
-            return true;
+            return TryMoveInternal(oldIndex, newIndex);
         }
     }
 
@@ -146,14 +145,30 @@ public class ObservableConcurrentCollection<T> : IList<T>, IReadOnlyObservableCo
 
     protected virtual void ClearItems()
     {
+        var items = _items.ToList();
         _items.Clear();
-        NotifyObserversOfChange();
+        NotifyObserversOfChange(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Remove, items));
     }
 
     protected virtual void AddItemInternal(T item)
     {
         _items.Add(item);
-        NotifyObserversOfChange();
+        NotifyObserversOfChange(NotifyCollectionChangedAction.Add, item, _items.Count - 1);
+    }
+
+    protected virtual bool TryMoveInternal(int oldIndex, int newIndex)
+    {
+        if (oldIndex < 0 || oldIndex >= _items.Count)
+            return false;
+
+        if (newIndex < 0 || newIndex > _items.Count)
+            return false;
+
+        T item = _items[oldIndex];
+        _items.RemoveAt(oldIndex);
+        _items.Insert(newIndex, item);
+        NotifyObserversOfChange(NotifyCollectionChangedAction.Move, item, newIndex, oldIndex);
+        return true;
     }
 
     protected virtual bool TryInsertInternal(int index, T item)
@@ -162,7 +177,7 @@ public class ObservableConcurrentCollection<T> : IList<T>, IReadOnlyObservableCo
             return false;
 
         _items.Insert(index, item);
-        NotifyObserversOfChange();
+        NotifyObserversOfChange(NotifyCollectionChangedAction.Add, item, index);
         return true;
     }
 
@@ -171,8 +186,9 @@ public class ObservableConcurrentCollection<T> : IList<T>, IReadOnlyObservableCo
         if (index < 0 || index >= _items.Count)
             return false;
 
+        var item = _items[index];
         _items.RemoveAt(index);
-        NotifyObserversOfChange();
+        NotifyObserversOfChange(NotifyCollectionChangedAction.Remove, item, index);
         return true;
     }
 
@@ -181,8 +197,9 @@ public class ObservableConcurrentCollection<T> : IList<T>, IReadOnlyObservableCo
         if (index < 0 || index >= _items.Count)
             return false;
 
+        var oldItem = _items[index];
         _items[index] = item;
-        NotifyObserversOfChange();
+        NotifyObserversOfChange(NotifyCollectionChangedAction.Replace, item, oldItem, index);
         return true;
     }
 
