@@ -1,6 +1,7 @@
 ﻿using MultiFunPlayer.Settings;
 using NLog;
 using Stylet;
+using System;
 using System.ComponentModel;
 
 namespace MultiFunPlayer.Input;
@@ -41,35 +42,25 @@ public class ShortcutActionConfiguration : PropertyChangedBase, IShortcutActionC
     public void Populate(IEnumerable<object> values)
     {
         foreach (var (setting, value) in Settings.Zip(values))
-        {
-            var settingType = setting.GetType().GetGenericArguments()[0];
-            var typeMatches = value == null ? !settingType.IsValueType || Nullable.GetUnderlyingType(settingType) != null : value.GetType() == settingType;
-
-            if (!typeMatches)
-            {
-                Logger.Warn($"Action \"{Descriptor}\" setting type mismatch! [\"{settingType}\" != \"{value?.GetType()}\"]");
-                continue;
-            }
-
-            setting.Value = value;
-        }
+            Populate(setting, value, value.GetType());
     }
 
     public void Populate(IEnumerable<TypedValue> values)
     {
         foreach (var (setting, value) in Settings.Zip(values))
-        {
-            var settingType = setting.GetType().GetGenericArguments()[0];
-            var valueType = value.Type;
+            Populate(setting, value.Value, value.Type);
+    }
 
-            if (settingType != valueType)
-            {
-                Logger.Warn($"Action \"{Descriptor}\" setting type mismatch! [\"{settingType}\" != \"{valueType}\"]");
-                continue;
-            }
+    private void Populate(IShortcutSetting setting, object value, Type valueType)
+    {
+        var settingType = setting.GetType().GetGenericArguments()[0];
+        var typeMatches = value == null ? !settingType.IsValueType || Nullable.GetUnderlyingType(settingType) != null
+                                        : valueType == settingType || valueType.IsAssignableTo(settingType);
 
-            setting.Value = value.Value;
-        }
+        if (!typeMatches)
+            Logger.Warn($"Action \"{Descriptor}\" setting type mismatch! [\"{settingType}\" != \"{valueType}\"]");
+        else
+            setting.Value = value;
     }
 
     public object[] GetActionParams()

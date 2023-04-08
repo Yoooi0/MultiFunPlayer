@@ -28,7 +28,7 @@ internal class ShortcutActionConfigurationConverter : JsonConverter<IShortcutAct
         var o = new JObject
         {
             [nameof(IShortcutActionConfiguration.Descriptor)] = value.Descriptor.Name,
-            [nameof(IShortcutActionConfiguration.Settings)] = JArray.FromObject(value.Settings.Select(s => new TypedValue(s.GetType().GetGenericArguments()[0], s.Value)))
+            [nameof(IShortcutActionConfiguration.Settings)] = JArray.FromObject(value.Settings.Select(s => new TypedValue(s.Type, s.Value)))
         };
 
         o.WriteTo(writer);
