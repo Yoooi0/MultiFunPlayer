@@ -26,8 +26,8 @@ internal class ShortcutSettingsViewModel : Screen, IHandle<SettingsMessage>, IDi
 
     public string ActionsFilter { get; set; }
     public ICollectionView AvailableActionsView { get; }
-    public IReadOnlyConcurrentObservableCollection<IShortcutActionDescriptor> AvailableActions => _manager.AvailableActions;
-    public IReadOnlyConcurrentObservableCollection<IShortcutBinding> Bindings => _binder.Bindings;
+    public IReadOnlyObservableConcurrentCollection<IShortcutActionDescriptor> AvailableActions => _manager.AvailableActions;
+    public IReadOnlyObservableConcurrentCollection<IShortcutBinding> Bindings => _binder.Bindings;
 
     public bool IsCapturingGesture { get; private set; }
     public IInputGestureDescriptor CapturedGesture { get; set; }

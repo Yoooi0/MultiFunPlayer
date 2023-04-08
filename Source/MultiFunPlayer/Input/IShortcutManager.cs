@@ -16,7 +16,7 @@ internal interface IShortcutManager : IDisposable
     event EventHandler<IShortcutActionDescriptor> ActionRegistered;
     event EventHandler<IShortcutActionDescriptor> ActionUnregistered;
 
-    IReadOnlyConcurrentObservableCollection<IShortcutActionDescriptor> AvailableActions { get; }
+    IReadOnlyObservableConcurrentCollection<IShortcutActionDescriptor> AvailableActions { get; }
 
     void RegisterAction(string name, Action action);
     void RegisterAction<T0>(string name, Func<IShortcutSettingBuilder<T0>, IShortcutSettingBuilder<T0>> settings0, Action<T0> action);
@@ -53,7 +53,7 @@ internal class ShortcutManager : IShortcutManager
     public event EventHandler<IShortcutActionDescriptor> ActionRegistered;
     public event EventHandler<IShortcutActionDescriptor> ActionUnregistered;
 
-    public IReadOnlyConcurrentObservableCollection<IShortcutActionDescriptor> AvailableActions => _availableActions;
+    public IReadOnlyObservableConcurrentCollection<IShortcutActionDescriptor> AvailableActions => _availableActions;
 
     public ShortcutManager()
     {

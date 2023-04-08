@@ -1,4 +1,4 @@
-﻿using PropertyChanged;
+using PropertyChanged;
 using System.Collections;
 using System.Collections.Specialized;
 using System.ComponentModel;
@@ -6,10 +6,10 @@ using System.Windows.Data;
 
 namespace MultiFunPlayer.Common;
 
-public interface IReadOnlyConcurrentObservableCollection<T> : IReadOnlyList<T>, INotifyCollectionChanged, INotifyPropertyChanged { }
+public interface IReadOnlyObservableConcurrentCollection<T> : IReadOnlyList<T>, INotifyCollectionChanged, INotifyPropertyChanged { }
 
 [DoNotNotify]
-public class ObservableConcurrentCollection<T> : IList<T>, IReadOnlyConcurrentObservableCollection<T>, IList
+public class ObservableConcurrentCollection<T> : IList<T>, IReadOnlyObservableConcurrentCollection<T>, IList
 {
     private readonly SynchronizationContext _context;
     private readonly List<T> _items;

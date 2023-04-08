@@ -11,7 +11,7 @@ internal interface IShortcutBinder : IDisposable
 
     event EventHandler<GestureEventArgs> OnGesture;
 
-    IReadOnlyConcurrentObservableCollection<IShortcutBinding> Bindings { get; }
+    IReadOnlyObservableConcurrentCollection<IShortcutBinding> Bindings { get; }
 
     IShortcutActionConfiguration BindAction(IInputGestureDescriptor gestureDescriptor, IShortcutActionDescriptor actionDescriptor);
     IShortcutActionConfiguration BindActionWithSettings(IInputGestureDescriptor gestureDescriptor, IShortcutActionDescriptor actionDescriptor, IEnumerable<TypedValue> values);
@@ -45,7 +45,7 @@ internal class ShortcutBinder : IShortcutBinder
 
     public event EventHandler<GestureEventArgs> OnGesture;
 
-    public IReadOnlyConcurrentObservableCollection<IShortcutBinding> Bindings => _bindings;
+    public IReadOnlyObservableConcurrentCollection<IShortcutBinding> Bindings => _bindings;
 
     public bool HandleGestures { get; set; } = true;
 
