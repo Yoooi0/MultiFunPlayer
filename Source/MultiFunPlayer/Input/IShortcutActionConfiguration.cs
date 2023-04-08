@@ -1,5 +1,4 @@
-﻿using Newtonsoft.Json;
-using Stylet;
+﻿using Stylet;
 using System.ComponentModel;
 
 namespace MultiFunPlayer.Input;
@@ -7,28 +6,25 @@ namespace MultiFunPlayer.Input;
 public interface IShortcutActionConfiguration
 {
     IShortcutActionDescriptor Descriptor { get; }
-    IEnumerable<IShortcutSetting> Settings { get; }
+    IReadOnlyList<IShortcutSetting> Settings { get; }
 
     object[] GetActionParams();
     object[] GetActionParamsWithGesture(IInputGesture gesture);
 }
 
-[JsonObject(MemberSerialization = MemberSerialization.OptIn)]
 public class ShortcutActionConfiguration : PropertyChangedBase, IShortcutActionConfiguration
 {
-    private readonly IReadOnlyList<IShortcutSetting> _settings;
+    private readonly List<IShortcutSetting> _settings;
     private object[] _valuesBuffer;
 
-    [JsonProperty] public IShortcutActionDescriptor Descriptor { get; }
+    public IShortcutActionDescriptor Descriptor { get; }
+    public IReadOnlyList<IShortcutSetting> Settings => _settings;
 
-    [JsonProperty(ItemTypeNameHandling = TypeNameHandling.Objects)]
-    public IEnumerable<IShortcutSetting> Settings => _settings;
-
-    public ShortcutActionConfiguration(IShortcutActionDescriptor descriptor, params IShortcutSetting[] settings)
+    public ShortcutActionConfiguration(IShortcutActionDescriptor descriptor, IEnumerable<IShortcutSetting> settings)
     {
         Descriptor = descriptor;
 
-        _settings = new List<IShortcutSetting>(settings);
+        _settings = settings.ToList();
         foreach (var setting in _settings.OfType<INotifyPropertyChanged>())
             setting.PropertyChanged += (_, _) => NotifyOfPropertyChange(() => DisplayName);
     }

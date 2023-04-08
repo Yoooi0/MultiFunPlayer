@@ -16,5 +16,5 @@ internal class ShortcutActionConfigurationBuilder : IShortcutActionConfiguration
         _builders = new List<IShortcutSettingBuilder>(builders);
     }
 
-    public IShortcutActionConfiguration Build() => new ShortcutActionConfiguration(_descriptor, _builders.Select(b => b.Build()).ToArray());
+    public IShortcutActionConfiguration Build() => new ShortcutActionConfiguration(_descriptor, _builders.Select(b => b.Build()));
 }
