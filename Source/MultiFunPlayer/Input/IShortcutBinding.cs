@@ -1,6 +1,6 @@
-﻿using MultiFunPlayer.Common;
+using MultiFunPlayer.Common;
+using Newtonsoft.Json;
 using PropertyChanged;
-using System.ComponentModel;
 
 namespace MultiFunPlayer.Input;
 
@@ -14,7 +14,10 @@ public interface IShortcutBinding
 [AddINotifyPropertyChangedInterface]
 public partial class ShortcutBinding : IShortcutBinding
 {
+    [JsonProperty(TypeNameHandling = TypeNameHandling.Objects)]
     public IInputGestureDescriptor Gesture { get; }
+
+    [JsonProperty("Actions")]
     public ObservableConcurrentCollection<IShortcutActionConfiguration> Configurations { get; }
     public bool Enabled { get; set; }
 

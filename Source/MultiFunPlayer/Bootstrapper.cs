@@ -49,6 +49,8 @@ internal class Bootstrapper : Bootstrapper<RootViewModel>
 
     protected override void ConfigureIoC(IStyletIoCBuilder builder)
     {
+        builder.Bind<JsonConverter>().ToAllImplementations();
+
         builder.Bind<OutputTargetViewModel>().ToSelf().InSingletonScope();
         builder.Bind<SettingsViewModel>().ToSelf().InSingletonScope();
         builder.Bind<ScriptViewModel>().And<IDeviceAxisValueProvider>().To<ScriptViewModel>().InSingletonScope();
@@ -175,6 +177,7 @@ internal class Bootstrapper : Bootstrapper<RootViewModel>
     private void ConfigureJson()
     {
         var logger = LogManager.GetLogger(nameof(JsonConvert));
+        var converterFactory = Container.Get<Func<IEnumerable<JsonConverter>>>();
         JsonConvert.DefaultSettings = () =>
         {
             var settings = new JsonSerializerSettings
@@ -182,12 +185,10 @@ internal class Bootstrapper : Bootstrapper<RootViewModel>
                 Formatting = Formatting.Indented
             };
 
-            settings.Converters.Add(new LogLevelConverter());
-            settings.Converters.Add(new FileSystemInfoConverter());
             settings.Converters.Add(new StringEnumConverter());
-            settings.Converters.Add(new EndPointConverter());
-            settings.Converters.Add(new DeviceAxisConverter());
-            settings.Converters.Add(new TypedValueConverter());
+            foreach (var converter in converterFactory())
+                settings.Converters.Add(converter);
+
             settings.Error += (s, e) =>
             {
                 if (e.ErrorContext.Error is JsonSerializationException or JsonReaderException)

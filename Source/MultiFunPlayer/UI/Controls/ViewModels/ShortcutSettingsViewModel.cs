@@ -235,7 +235,7 @@ internal class ShortcutSettingsViewModel : Screen, IHandle<SettingsMessage>, IDi
         if (message.Action == SettingsAction.Saving)
         {
             var settings = JObject.FromObject(this);
-            settings[nameof(Bindings)] = JArray.FromObject(Bindings.Select(x => BindingSettingsModel.FromBinding(x)));
+            settings[nameof(Bindings)] = JArray.FromObject(Bindings);
 
             message.Settings["Shortcuts"] = settings;
         }
@@ -255,27 +255,11 @@ internal class ShortcutSettingsViewModel : Screen, IHandle<SettingsMessage>, IDi
             if (settings.TryGetValue<bool>(nameof(IsGamepadButtonGestureEnabled), out var isHidButtonGestureEnabled))
                 IsGamepadButtonGestureEnabled = isHidButtonGestureEnabled;
 
-            if (settings.TryGetValue<List<BindingSettingsModel>>(nameof(Bindings), out var bindingModels))
+            if (settings.TryGetValue<List<ShortcutBinding>>(nameof(Bindings), out var bindings))
             {
                 _binder.Clear();
-                foreach (var bindingModel in bindingModels)
-                {
-                    var gestureDescriptor = bindingModel.Gesture;
-                    var binding = _binder.GetOrCreateBinding(gestureDescriptor);
-                    binding.Enabled = bindingModel.Enabled;
-
-                    if (bindingModel.Actions == null)
-                        continue;
-
-                    foreach (var actionModel in bindingModel.Actions)
-                    {
-                        var actionDescriptor = AvailableActions.FirstOrDefault(d => string.Equals(d.Name, actionModel.Descriptor, StringComparison.OrdinalIgnoreCase));
-                        if (actionDescriptor == null)
-                            Logger.Warn($"Action \"{actionModel.Descriptor}\" not found!");
-                        else
-                            _binder.BindActionWithSettings(gestureDescriptor, actionDescriptor, actionModel.Values);
-                    }
-                }
+                foreach (var binding in bindings)
+                    _binder.AddBinding(binding);
             }
         }
     }
@@ -290,32 +274,4 @@ internal class ShortcutSettingsViewModel : Screen, IHandle<SettingsMessage>, IDi
         Dispose(disposing: true);
         GC.SuppressFinalize(this);
     }
-}
-
-internal class BindingSettingsModel
-{
-    [JsonProperty(TypeNameHandling = TypeNameHandling.Objects)]
-    public IInputGestureDescriptor Gesture { get; init; }
-    public List<ActionSettingsModel> Actions { get; init; }
-    public bool Enabled { get; init; }
-
-    public static BindingSettingsModel FromBinding(IShortcutBinding binding)
-        => new()
-        {
-            Gesture = binding.Gesture,
-            Actions = binding.Configurations.Select(x => new ActionSettingsModel()
-            {
-                Descriptor = x.Descriptor.Name,
-                Values = x.Settings.Select(s => new TypedValue(s.GetType().GetGenericArguments()[0], s.Value)).ToList()
-            }).ToList(),
-            Enabled = binding.Enabled
-        };
-}
-
-internal class ActionSettingsModel
-{
-    public string Descriptor { get; init; }
-
-    [JsonProperty("Settings")]
-    public List<TypedValue> Values { get; init; }
 }

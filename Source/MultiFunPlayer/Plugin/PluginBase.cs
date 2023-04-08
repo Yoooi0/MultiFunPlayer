@@ -67,9 +67,11 @@ public abstract class PluginBase : PropertyChangedBase
 
     protected IShortcutBinding GetOrCreateBinding(IInputGestureDescriptor gestureDescriptor)
         => ShortcutBinder.GetOrCreateBinding(gestureDescriptor);
-    protected void RemoveBinding(IShortcutBinding binding)
+    protected void AddBinding(IShortcutBinding binding)
+        => ShortcutBinder.AddBinding(binding);
+    protected bool RemoveBinding(IShortcutBinding binding)
         => ShortcutBinder.RemoveBinding(binding);
-    protected void RemoveBinding(IInputGestureDescriptor gestureDescriptor)
+    protected bool RemoveBinding(IInputGestureDescriptor gestureDescriptor)
         => ShortcutBinder.RemoveBinding(gestureDescriptor);
     #endregion
 
