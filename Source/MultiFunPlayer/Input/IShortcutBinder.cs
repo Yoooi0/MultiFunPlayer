@@ -25,6 +25,7 @@ internal interface IShortcutBinder : IDisposable
     void UnbindAction(IInputGestureDescriptor gestureDescriptor, IShortcutActionConfiguration action);
 
     IShortcutBinding GetOrCreateBinding(IInputGestureDescriptor gestureDescriptor);
+    IShortcutBinding GetBinding(IInputGestureDescriptor gestureDescriptor);
     void AddBinding(IShortcutBinding binding);
     bool RemoveBinding(IShortcutBinding binding);
     bool RemoveBinding(IInputGestureDescriptor gestureDescriptor);
@@ -133,6 +134,15 @@ internal class ShortcutBinder : IShortcutBinder
         binding = new ShortcutBinding(gestureDescriptor);
         AddBinding(binding);
         return binding;
+    }
+
+    public IShortcutBinding GetBinding(IInputGestureDescriptor gestureDescriptor)
+    {
+        if (gestureDescriptor == null)
+            return null;
+        if (_bindingLookup.TryGetValue(gestureDescriptor, out var binding))
+            return binding;
+        return null;
     }
 
     public void AddBinding(IShortcutBinding binding)

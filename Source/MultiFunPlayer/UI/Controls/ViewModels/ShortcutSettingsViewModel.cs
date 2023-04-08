@@ -83,6 +83,33 @@ internal class ShortcutSettingsViewModel : Screen, IHandle<SettingsMessage>, IDi
             if (e.PropertyName == nameof(ActionsFilter) || e.PropertyName == nameof(SelectedBinding))
                 AvailableActionsView.Refresh();
         };
+
+        RegisterActions(_manager);
+    }
+
+    private void RegisterActions(IShortcutManager s)
+    {
+        #region Shortcut::Enabled
+        var bindingGesturesView = Bindings.CreateView(x => x.Gesture);
+        s.RegisterAction<IInputGestureDescriptor, bool>("Shortcut::Enabled::Set",
+            s => s.WithLabel("Target shortcut").WithItemsSource(bindingGesturesView, true),
+            s => s.WithLabel("Enabled"),
+            (descriptor, enabled) =>
+            {
+                var binding = _binder.GetBinding(descriptor);
+                if (binding != null)
+                    binding.Enabled = enabled;
+            });
+
+        s.RegisterAction<IInputGestureDescriptor>("Shortcut::Enabled::Toggle",
+            s => s.WithLabel("Target shortcut").WithItemsSource(bindingGesturesView, true),
+            descriptor =>
+            {
+                var binding = _binder.GetBinding(descriptor);
+                if (binding != null)
+                    binding.Enabled = !binding.Enabled;
+            });
+        #endregion
     }
 
     protected override void OnActivate() => _binder.HandleGestures = false;
