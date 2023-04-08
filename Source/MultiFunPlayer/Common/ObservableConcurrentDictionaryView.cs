@@ -9,17 +9,20 @@ using System.Linq.Expressions;
 namespace MultiFunPlayer.Common;
 
 [DoNotNotify]
-public class ObservableConcurrentDictionaryView<TKey, TValue, TView> : INotifyCollectionChanged, INotifyPropertyChanged, IReadOnlyDictionary<TKey, TView> where TValue : class
+public class ObservableConcurrentDictionaryView<TKey, TValue, TView> : IReadOnlyObservableConcurrentDictionary<TKey, TView> where TValue : class
 {
-    private readonly ObservableConcurrentDictionary<TKey, TValue> _dictionary;
+    private readonly IReadOnlyObservableConcurrentDictionary<TKey, TValue> _dictionary;
     private readonly Func<TValue, TView> _selector;
     private readonly ObservableConcurrentDictionary<TKey, TView> _view;
     private readonly string _propertyName;
 
-    public ObservableConcurrentDictionaryView(ObservableConcurrentDictionary<TKey, TValue> dictionary, Expression<Func<TValue, TView>> selector)
+    public event NotifyCollectionChangedEventHandler CollectionChanged;
+    public event PropertyChangedEventHandler PropertyChanged;
+
+    public ObservableConcurrentDictionaryView(IReadOnlyObservableConcurrentDictionary<TKey, TValue> dictionary, Expression<Func<TValue, TView>> selector)
         : this(dictionary, selector.Compile(), selector.NameForProperty()) { }
 
-    public ObservableConcurrentDictionaryView(ObservableConcurrentDictionary<TKey, TValue> dictionary, Func<TValue, TView> selector, string propertyName)
+    public ObservableConcurrentDictionaryView(IReadOnlyObservableConcurrentDictionary<TKey, TValue> dictionary, Func<TValue, TView> selector, string propertyName)
     {
         _propertyName = propertyName;
         _selector = selector;
@@ -35,6 +38,7 @@ public class ObservableConcurrentDictionaryView<TKey, TValue, TView> : INotifyCo
         OnSourceCollectionChanged(this, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, _dictionary.ToList()));
     }
 
+    [SuppressPropertyChangedWarnings]
     private void OnSourceItemPropertyChanged(object sender, PropertyChangedEventArgs e)
     {
         if (sender is not TValue target)
@@ -55,6 +59,7 @@ public class ObservableConcurrentDictionaryView<TKey, TValue, TView> : INotifyCo
         throw new KeyNotFoundException();
     }
 
+    [SuppressPropertyChangedWarnings]
     private void OnSourceCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
     {
         void Add(TKey key, TValue value)
@@ -75,9 +80,7 @@ public class ObservableConcurrentDictionaryView<TKey, TValue, TView> : INotifyCo
 
         void Remove(TKey key, TValue value)
         {
-            if (_view.ContainsKey(key))
-                _view.Remove(key);
-
+            _view.Remove(key);
             if (value is INotifyPropertyChanged o)
                 o.PropertyChanged -= OnSourceItemPropertyChanged;
         }
@@ -101,15 +104,6 @@ public class ObservableConcurrentDictionaryView<TKey, TValue, TView> : INotifyCo
             RemoveRange(e.OldItems);
             AddRange(e.NewItems);
         }
-        else if (e.Action == NotifyCollectionChangedAction.Reset)
-        {
-            foreach (var (key, value) in _dictionary)
-                Remove(key, _dictionary[key]);
-
-            _view.Clear();
-        }
-        else if (e.Action == NotifyCollectionChangedAction.Move)
-        { }
     }
 
     #region IReadOnlyDictionary Members
@@ -122,7 +116,4 @@ public class ObservableConcurrentDictionaryView<TKey, TValue, TView> : INotifyCo
     public bool TryGetValue(TKey key, [MaybeNullWhen(false)] out TView value) => _view.TryGetValue(key, out value);
     IEnumerator IEnumerable.GetEnumerator() => (_view as IEnumerable)?.GetEnumerator();
     #endregion
-
-    public event NotifyCollectionChangedEventHandler CollectionChanged;
-    public event PropertyChangedEventHandler PropertyChanged;
 }

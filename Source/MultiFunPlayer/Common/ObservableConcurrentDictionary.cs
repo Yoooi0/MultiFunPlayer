@@ -6,11 +6,16 @@ using System.ComponentModel;
 
 namespace MultiFunPlayer.Common;
 
+public interface IReadOnlyObservableConcurrentDictionary<TKey, TValue> : IReadOnlyDictionary<TKey, TValue>, INotifyCollectionChanged, INotifyPropertyChanged { }
+
 [DoNotNotify]
-public class ObservableConcurrentDictionary<TKey, TValue> : IDictionary<TKey, TValue>, IReadOnlyDictionary<TKey, TValue>, INotifyCollectionChanged, INotifyPropertyChanged
+public class ObservableConcurrentDictionary<TKey, TValue> : IDictionary<TKey, TValue>, IReadOnlyObservableConcurrentDictionary<TKey, TValue>
 {
     private readonly SynchronizationContext _context;
     private readonly ConcurrentDictionary<TKey, TValue> _dictionary;
+
+    public event NotifyCollectionChangedEventHandler CollectionChanged;
+    public event PropertyChangedEventHandler PropertyChanged;
 
     public ObservableConcurrentDictionary()
     {
@@ -23,9 +28,6 @@ public class ObservableConcurrentDictionary<TKey, TValue> : IDictionary<TKey, TV
         _context = AsyncOperationManager.SynchronizationContext;
         _dictionary = new ConcurrentDictionary<TKey, TValue>(collection);
     }
-
-    public event NotifyCollectionChangedEventHandler CollectionChanged;
-    public event PropertyChangedEventHandler PropertyChanged;
 
     private void NotifyObserversOfChange(NotifyCollectionChangedEventArgs collectionChangedArgs)
     {
@@ -100,8 +102,9 @@ public class ObservableConcurrentDictionary<TKey, TValue> : IDictionary<TKey, TV
 
     public void Clear()
     {
+        var items = _dictionary.ToList();
         _dictionary.Clear();
-        NotifyObserversOfChange(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
+        NotifyObserversOfChange(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Remove, items));
     }
 
     public bool Contains(KeyValuePair<TKey, TValue> item) => ((ICollection<KeyValuePair<TKey, TValue>>)_dictionary).Contains(item);

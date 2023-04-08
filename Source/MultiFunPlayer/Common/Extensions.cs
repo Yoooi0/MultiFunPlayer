@@ -232,11 +232,11 @@ public static class IOExtensions
 public static class CollectionExtensions
 {
     public static ObservableConcurrentDictionaryView<TKey, TValue, TView> CreateView<TKey, TValue, TView>(
-        this ObservableConcurrentDictionary<TKey, TValue> dictionary, Expression<Func<TValue, TView>> selector) where TValue : class
+        this IReadOnlyObservableConcurrentDictionary<TKey, TValue> dictionary, Expression<Func<TValue, TView>> selector) where TValue : class
         => new(dictionary, selector);
 
     public static ObservableConcurrentDictionaryView<TKey, TValue, TView> CreateView<TKey, TValue, TView>(
-        this ObservableConcurrentDictionary<TKey, TValue> dictionary, Func<TValue, TView> selector, string propertyName) where TValue : class
+        this IReadOnlyObservableConcurrentDictionary<TKey, TValue> dictionary, Func<TValue, TView> selector, string propertyName) where TValue : class
         => new(dictionary, selector, propertyName);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
