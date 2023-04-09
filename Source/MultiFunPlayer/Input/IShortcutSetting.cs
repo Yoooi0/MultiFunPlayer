@@ -1,5 +1,4 @@
-﻿using MultiFunPlayer.Common;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using PropertyChanged;
 using System.Collections;
 
@@ -43,10 +42,9 @@ public interface IOneOfShortcutSetting<T> : IShortcutSetting<T>, IOneOfShortcutS
 }
 
 [AddINotifyPropertyChangedInterface]
-[JsonObject(MemberSerialization = MemberSerialization.OptIn)]
 public partial class ShortcutSetting<T> : IShortcutSetting<T>
 {
-    [JsonProperty] public T Value { get; set; }
+    public T Value { get; set; }
     public string Label { get; init; }
     public string Description { get; init; }
     public string StringFormat { get; init; }
@@ -55,10 +53,9 @@ public partial class ShortcutSetting<T> : IShortcutSetting<T>
 }
 
 [AddINotifyPropertyChangedInterface]
-[JsonObject(MemberSerialization = MemberSerialization.OptIn)]
 public partial class OneOfShortcutSetting<T> : IOneOfShortcutSetting<T>
 {
-    [JsonProperty] public T Value { get; set; }
+    public T Value { get; set; }
     public string Label { get; init; }
     public string Description { get; init; }
     public IEnumerable<T> ItemsSource { get; init; }

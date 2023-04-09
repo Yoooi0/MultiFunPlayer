@@ -1,6 +1,4 @@
-﻿using MultiFunPlayer.Common;
-
-namespace MultiFunPlayer.Input;
+﻿namespace MultiFunPlayer.Input;
 
 public interface IShortcutSettingBuilder
 {

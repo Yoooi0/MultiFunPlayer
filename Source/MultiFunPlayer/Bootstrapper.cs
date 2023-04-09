@@ -9,7 +9,6 @@ using MultiFunPlayer.MotionProvider;
 using MultiFunPlayer.OutputTarget;
 using MultiFunPlayer.Plugin;
 using MultiFunPlayer.Settings;
-using MultiFunPlayer.Settings.Converters;
 using MultiFunPlayer.UI;
 using MultiFunPlayer.UI.Controls.ViewModels;
 using Newtonsoft.Json;

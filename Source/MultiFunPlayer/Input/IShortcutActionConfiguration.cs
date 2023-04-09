@@ -1,7 +1,6 @@
 ﻿using MultiFunPlayer.Settings;
 using NLog;
 using Stylet;
-using System;
 using System.ComponentModel;
 
 namespace MultiFunPlayer.Input;

@@ -22,6 +22,7 @@ internal static class SettingsHelper
             ["ConfigVersion"] = Migrations.Select(m => m.TargetVersion).DefaultIfEmpty(1).Max()
         };
     }
+
     public static JObject Read(string path = DefaultPath)
     {
         if (!File.Exists(path))
