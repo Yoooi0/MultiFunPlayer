@@ -299,7 +299,7 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                     if (!double.IsFinite(providerValue))
                         return false;
 
-                    if (!isGapFill && settings.MotionProviderSpeedLimitWithAxis)
+                    if (settings.MotionProviderSpeedLimitWithAxis)
                         SpeedLimitMotionProviderWithAxis();
 
                     context.MotionProviderValue = providerValue;
