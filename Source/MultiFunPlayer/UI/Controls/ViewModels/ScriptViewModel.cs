@@ -247,86 +247,83 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                     if (settings.BypassMotionProvider)
                         return false;
 
-                    var providerValue = double.NaN;
-                    if (!settings.MotionProviderFillGaps)
+                    bool ShouldUpdateMotionProvider(bool canFillGap)
                     {
-                        bool ShouldUpdateMotionProvider()
-                        {
-                            if (!settings.UpdateMotionProviderWhenPaused && !IsPlaying)
-                                return false;
-                            if (!settings.UpdateMotionProviderWithoutScript && !state.InsideScript)
-                                return false;
+                        if (!settings.UpdateMotionProviderWhenPaused && !IsPlaying)
+                            return false;
+                        if (!settings.UpdateMotionProviderWithoutScript && !context.InsideScript)
+                            return false;
 
-                            if (settings.UpdateMotionProviderWithAxis != null)
-                            {
-                                var targetState = AxisStates[settings.UpdateMotionProviderWithAxis];
-                                if (!targetState.IsDirty || targetState.IsAutoHoming)
-                                    return false;
-                            }
+                        if (!canFillGap && settings.UpdateMotionProviderWithAxis != null)
+                        {
+                            var targetState = AxisStates[settings.UpdateMotionProviderWithAxis];
+                            if (!targetState.IsDirty || targetState.IsAutoHoming)
+                                return false;
+                        }
+
+                        return true;
+                    }
+
+                    bool CanMotionProviderFillGap()
+                    {
+                        if (!IsPlaying || !context.InsideScript)
+                            return false;
+                        if (!settings.MotionProviderFillGaps)
+                            return false;
+                        if (!AxisKeyframes.TryGetValue(axis, out var keyframes) || keyframes == null || keyframes.Count == 0)
+                            return false;
+
+                        if (context.InsideGap && keyframes.GapDuration(context.Index) >= settings.MotionProviderMinimumGapDuration)
+                        {
+                            if (!context.LastInsideGap)
+                                ResetSyncNoLock(state);
 
                             return true;
                         }
 
-                        void SpeedLimitMotionProviderWithAxis()
-                        {
-                            if (settings.UpdateMotionProviderWithAxis == null)
-                                return;
+                        if (context.LastInsideGap && keyframes.GapDuration(context.LastIndex) >= settings.MotionProviderMinimumGapDuration)
+                            ResetSyncNoLock(state);
 
-                            var targetState = AxisStates[settings.UpdateMotionProviderWithAxis];
-                            if (!double.IsFinite(targetState.Speed))
-                                return;
-
-                            var step = providerValue - context.LastValue;
-                            if (!double.IsFinite(step))
-                                return;
-
-                            var direction = Math.Sign(step);
-                            var speed = Math.Abs(step / deltaTime);
-                            var maxSpeed = Math.Abs(targetState.Speed);
-                            if (speed > maxSpeed)
-                                providerValue = MathUtils.Clamp01(context.LastValue + maxSpeed * deltaTime * direction);
-                        }
-
-                        if (ShouldUpdateMotionProvider())
-                            MotionProviderManager.Update(axis, settings.SelectedMotionProvider, deltaTime);
-
-                        providerValue = MotionProviderManager.GetValue(axis);
-
-                        var blendT = state.InsideScript ? MathUtils.Clamp01(settings.MotionProviderBlend / 100) : 1;
-                        var blendFrom = double.IsFinite(context.ScriptValue) ? context.ScriptValue : axis.DefaultValue;
-                        providerValue = MathUtils.Clamp01(MathUtils.Lerp(blendFrom, providerValue, blendT));
-
-                        if (settings.MotionProviderSpeedLimitWithAxis)
-                            SpeedLimitMotionProviderWithAxis();
+                        return false;
                     }
-                    else
-                    {
-                        bool CanMotionProviderFillGap()
-                        {
-                            if (!IsPlaying || !state.InsideScript)
-                                return false;
 
-                            if (!AxisKeyframes.TryGetValue(axis, out var keyframes) || keyframes == null || keyframes.Count == 0)
-                                return false;
-
-                            if (context.LastInsideGap ^ context.InsideGap)
-                                ResetSyncNoLock(state);
-
-                            return context.InsideGap && keyframes.SegmentDuration(state.Index) >= settings.MotionProviderMinimumGapDuration;
-                        }
-
-                        if (!CanMotionProviderFillGap())
-                            return false;
-
+                    var isGapFill = CanMotionProviderFillGap();
+                    if (ShouldUpdateMotionProvider(isGapFill))
                         MotionProviderManager.Update(axis, settings.SelectedMotionProvider, deltaTime);
-                        providerValue = MotionProviderManager.GetValue(axis);
-                    }
+
+                    var providerValue = MotionProviderManager.GetValue(axis);
+                    var blendT = context.InsideScript && !isGapFill ? MathUtils.Clamp01(settings.MotionProviderBlend / 100) : 1;
+                    var blendFrom = double.IsFinite(context.ScriptValue) ? context.ScriptValue : axis.DefaultValue;
+                    providerValue = MathUtils.Clamp01(MathUtils.Lerp(blendFrom, providerValue, blendT));
 
                     if (!double.IsFinite(providerValue))
                         return false;
 
+                    if (!isGapFill && settings.MotionProviderSpeedLimitWithAxis)
+                        SpeedLimitMotionProviderWithAxis();
+
                     context.MotionProviderValue = providerValue;
                     return context.IsMotionProviderDirty;
+
+                    void SpeedLimitMotionProviderWithAxis()
+                    {
+                        if (settings.UpdateMotionProviderWithAxis == null)
+                            return;
+
+                        var targetState = AxisStates[settings.UpdateMotionProviderWithAxis];
+                        if (!double.IsFinite(targetState.Speed))
+                            return;
+
+                        var step = providerValue - context.LastValue;
+                        if (!double.IsFinite(step))
+                            return;
+
+                        var direction = Math.Sign(step);
+                        var speed = Math.Abs(step / deltaTime);
+                        var maxSpeed = Math.Abs(targetState.Speed);
+                        if (speed > maxSpeed)
+                            providerValue = MathUtils.Clamp01(context.LastValue + maxSpeed * deltaTime * direction);
+                    }
                 }
 
                 bool UpdateTransition()
@@ -1098,6 +1095,7 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         {
             case nameof(ViewModels.AxisSettings.UpdateMotionProviderWhenPaused):
             case nameof(ViewModels.AxisSettings.UpdateMotionProviderWithoutScript):
+            case nameof(ViewModels.AxisSettings.MotionProviderFillGaps):
             case nameof(ViewModels.AxisSettings.InvertScript):
             case nameof(ViewModels.AxisSettings.BypassScript):
             case nameof(ViewModels.AxisSettings.BypassMotionProvider):

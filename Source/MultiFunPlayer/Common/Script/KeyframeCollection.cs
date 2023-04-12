@@ -104,6 +104,15 @@ public class KeyframeCollection : IReadOnlyList<Keyframe>
         return IsGapInternal(index);
     }
 
+    public double GapDuration(int index)
+    {
+        var afterIndex = SkipGap(index);
+        if (!this.ValidateIndex(afterIndex) || afterIndex == index)
+            return -1;
+
+        return this[afterIndex].Position - this[index].Position;
+    }
+
     public double SegmentDuration(int index)
     {
         if (!this.ValidateIndex(index) || !this.ValidateIndex(index + 1))
