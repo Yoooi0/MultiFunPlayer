@@ -1200,8 +1200,7 @@
                                                                     </Expander.Header>
 
                                                                     <StackPanel Margin="10">
-                                                                        <DockPanel DockPanel.Dock="Top"
-                                                                                   Margin="0 0 0 15">
+                                                                        <DockPanel DockPanel.Dock="Top">
 
                                                                             <StackPanel DockPanel.Dock="Top"
                                                                                         Orientation="Horizontal">
@@ -1271,6 +1270,8 @@
                                                                             </DockPanel>
                                                                         </DockPanel>
 
+                                                                        <Separator/>
+
                                                                         <StackPanel DockPanel.Dock="Top"
                                                                                     Orientation="Horizontal">
                                                                             <TextBlock Text="Gap fill" 
@@ -1286,9 +1287,8 @@
                                                                                           VerticalAlignment="Center"
                                                                                           Height="14"/>
                                                                         </StackPanel>
-                                                                        
-                                                                        <DockPanel LastChildFill="False"
-                                                                                   Margin="0 0 0 15">
+
+                                                                        <DockPanel LastChildFill="False">
                                                                             <DockPanel DockPanel.Dock="Left">
                                                                                 <TextBlock Text="Fill atleast" 
                                                                                            DockPanel.Dock="Left"
@@ -1308,9 +1308,11 @@
                                                                             </DockPanel>
                                                                         </DockPanel>
 
+                                                                        <Separator/>
+
                                                                         <DockPanel LastChildFill="False"
                                                                                    Visibility="{Binding Value.Settings.UpdateMotionProviderWithAxis, Converter={StaticResource notNullToVisibilityConverter}}"
-                                                                                   Margin="0 0 0 5">
+                                                                                   Margin="0 0 0 10">
                                                                             <TextBlock Text="{Binding Value.Settings.UpdateMotionProviderWithAxis, StringFormat={}Match {0} speed}" 
                                                                                        DockPanel.Dock="Left"
                                                                                        VerticalAlignment="Center"/>
