@@ -193,45 +193,45 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                         return NoUpdate();
 
                     var axisPosition = GetAxisPosition(axis);
-                    var shouldSearch = state.Invalid
-                                   || (keyframes.ValidateIndex(state.Index) && keyframes[state.Index].Position > axisPosition)
-                                   || (state.AfterScript && keyframes[^1].Position > axisPosition);
+                    var shouldSearch = context.Invalid
+                                   || (keyframes.ValidateIndex(context.Index) && keyframes[context.Index].Position > axisPosition)
+                                   || (context.AfterScript && keyframes[^1].Position > axisPosition);
 
                     if (shouldSearch)
                     {
                         Logger.Debug("Searching for valid index [Axis: {0}]", axis);
-                        state.Index = keyframes.SearchForIndexBefore(axisPosition);
+                        context.Index = keyframes.SearchForIndexBefore(axisPosition);
                     }
 
-                    if (state.AfterScript)
+                    if (context.AfterScript)
                         return NoUpdate();
 
-                    var beforeIndex = state.Index;
-                    state.Index = keyframes.AdvanceIndex(state.Index, axisPosition);
+                    var beforeIndex = context.Index;
+                    context.Index = keyframes.AdvanceIndex(context.Index, axisPosition);
 
-                    if (beforeIndex == -1 && state.Index >= 0)
+                    if (beforeIndex == AxisState.BeforeScriptIndex && context.Index >= 0)
                     {
                         Logger.Debug("Resetting sync on script start [Axis: {0}]", axis);
                         ResetSyncNoLock(state);
                     }
 
-                    if (!keyframes.ValidateIndex(state.Index) || !keyframes.ValidateIndex(state.Index + 1))
+                    if (!keyframes.ValidateIndex(context.Index) || !keyframes.ValidateIndex(context.Index + 1))
                     {
-                        if (state.Index + 1 >= keyframes.Count)
+                        if (context.Index + 1 >= keyframes.Count)
                         {
                             Logger.Debug("Resetting sync on script end [Axis: {0}]", axis);
-                            state.Invalidate(end: true);
+                            context.Index = AxisState.AfterScriptIndex;
                             ResetSyncNoLock(state);
                         }
 
                         return NoUpdate();
                     }
 
-                    if (state.BeforeScript)
+                    if (context.BeforeScript)
                         return NoUpdate();
 
-                    context.InsideGap = keyframes.IsGap(state.Index);
-                    var scriptValue = MathUtils.Clamp01(keyframes.Interpolate(state.Index, axisPosition, settings.InterpolationType));
+                    context.InsideGap = keyframes.IsGap(context.Index);
+                    var scriptValue = MathUtils.Clamp01(keyframes.Interpolate(context.Index, axisPosition, settings.InterpolationType));
                     if (settings.InvertScript)
                         scriptValue = 1 - scriptValue;
 
@@ -377,7 +377,7 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                         context.Value = context.MotionProviderValue;
 
                     if (double.IsFinite(context.TransitionValue))
-                        if (!IsPlaying && !state.InsideScript)
+                        if (!IsPlaying && !context.InsideScript)
                             if (!context.IsScriptDirty && !context.IsMotionProviderDirty)
                                 context.Value = context.TransitionValue;
                 }
@@ -404,11 +404,11 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                 {
                     if (!double.IsFinite(context.Value) || !settings.AutoHomeEnabled)
                         return false;
-                    if (!settings.AutoHomeInsideScript && state.InsideScript && IsPlaying)
+                    if (!settings.AutoHomeInsideScript && context.InsideScript && IsPlaying)
                         return false;
                     if (context.IsScriptDirty || context.IsMotionProviderDirty)
                         return false;
-                    if (context.IsTransitionDirty && !(IsPlaying || state.InsideScript))
+                    if (context.IsTransitionDirty && !(IsPlaying || context.InsideScript))
                         return false;
 
                     return true;
@@ -724,7 +724,7 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         {
             var state = AxisStates[axis];
             lock (state)
-                state.Invalidate();
+                state.Index = AxisState.InvalidIndex;
         }
     }
 
@@ -887,7 +887,7 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         var state = AxisStates[axis];
         lock (state)
         {
-            state.Invalidate();
+            state.Index = AxisState.InvalidIndex;
             model.Script = script;
         }
 
@@ -1964,6 +1964,10 @@ internal class AxisModel : PropertyChangedBase
 [AddINotifyPropertyChangedInterface]
 internal partial class AxisState
 {
+    public static int AfterScriptIndex { get; } = int.MaxValue;
+    public static int BeforeScriptIndex { get; } = -1;
+    public static int InvalidIndex { get; } = int.MinValue;
+
     [DoNotNotify] public double Value { get; set; } = double.NaN;
     [DoNotNotify] public double ScriptValue { get; set; } = double.NaN;
     [DoNotNotify] public double TransitionValue { get; set; } = double.NaN;
@@ -1972,11 +1976,11 @@ internal partial class AxisState
 
     [DoNotNotify] public AxisValueTransition ExternalTransition { get; } = new AxisValueTransition();
 
-    [DoNotNotify] public int Index { get; set; } = int.MinValue;
-    [DoNotNotify] public bool Invalid => Index == int.MinValue;
-    [DoNotNotify] public bool BeforeScript => Index == -1;
-    [DoNotNotify] public bool AfterScript => Index == int.MaxValue;
-    [DoNotNotify] public bool InsideScript => Index >= 0 && Index != int.MaxValue;
+    [DoNotNotify] public int Index { get; set; } = InvalidIndex;
+    [DoNotNotify] public bool Invalid => Index == InvalidIndex;
+    [DoNotNotify] public bool BeforeScript => Index == BeforeScriptIndex;
+    [DoNotNotify] public bool AfterScript => Index == AfterScriptIndex;
+    [DoNotNotify] public bool InsideScript => Index >= 0 && Index != AfterScriptIndex;
 
     [DoNotNotify] public bool InsideGap { get; set; } = false;
 
@@ -1988,8 +1992,6 @@ internal partial class AxisState
 
     public bool IsSpeedLimited { get; set; } = false;
     public bool IsSmartLimited { get; set; } = false;
-
-    public void Invalidate(bool end = false) => Index = end ? int.MaxValue : int.MinValue;
 
     public void NotifyValueChanged()
     {
@@ -2025,6 +2027,18 @@ internal class AxisValueTransition
 internal class AxisStateUpdateContext
 {
     private readonly AxisState _state;
+
+    public int Index { get; set; }
+    public bool Invalid => Index == AxisState.InvalidIndex;
+    public bool BeforeScript => Index == AxisState.BeforeScriptIndex;
+    public bool AfterScript => Index == AxisState.AfterScriptIndex;
+    public bool InsideScript => Index >= 0 && Index != AxisState.AfterScriptIndex;
+
+    public int LastIndex => _state.Index;
+    public bool LastInvalid => _state.Invalid;
+    public bool LastBeforeScript => _state.BeforeScript;
+    public bool LastAfterScript => _state.AfterScript;
+    public bool LastInsideScript => _state.InsideScript;
 
     public double Value { get; set; }
     public double ScriptValue { get; set; }
@@ -2063,6 +2077,8 @@ internal class AxisStateUpdateContext
         ScriptValue = double.NaN;
         TransitionValue = double.NaN;
         MotionProviderValue = double.NaN;
+
+        Index = _state.Index;
     }
 
     public void EndUpdate(double deltaTime)
@@ -2072,6 +2088,7 @@ internal class AxisStateUpdateContext
         if (double.IsFinite(Value) && double.IsFinite(LastValue))
             _state.Speed = (LastValue - Value) / deltaTime;
 
+        _state.Index = Index;
         _state.Value = Value;
         _state.ScriptValue = ScriptValue;
         _state.TransitionValue = TransitionValue;
