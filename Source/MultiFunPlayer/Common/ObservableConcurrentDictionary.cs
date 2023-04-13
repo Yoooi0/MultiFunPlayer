@@ -46,6 +46,9 @@ public class ObservableConcurrentDictionary<TKey, TValue> : IDictionary<TKey, TV
     private void NotifyObserversOfChange(NotifyCollectionChangedAction action, TKey key, TValue oldValue, TValue newValue, int index)
         => NotifyObserversOfChange(new NotifyCollectionChangedEventArgs(action, new KeyValuePair<TKey, TValue>(key, newValue), new KeyValuePair<TKey, TValue>(key, oldValue), index));
 
+    private void NotifyObserversOfChange(NotifyCollectionChangedAction action, IList items, int index)
+        => NotifyObserversOfChange(new NotifyCollectionChangedEventArgs(action, items, index));
+
     private bool TryAddWithNotification(KeyValuePair<TKey, TValue> item) => TryAddWithNotification(item.Key, item.Value);
 
     private bool TryAddWithNotification(TKey key, TValue value)
@@ -104,7 +107,7 @@ public class ObservableConcurrentDictionary<TKey, TValue> : IDictionary<TKey, TV
     {
         var items = _dictionary.ToList();
         _dictionary.Clear();
-        NotifyObserversOfChange(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Remove, items));
+        NotifyObserversOfChange(NotifyCollectionChangedAction.Remove, items, 0);
     }
 
     public bool Contains(KeyValuePair<TKey, TValue> item) => ((ICollection<KeyValuePair<TKey, TValue>>)_dictionary).Contains(item);
