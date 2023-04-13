@@ -2,13 +2,12 @@
 using MultiFunPlayer.Common;
 using Stylet;
 using System.Diagnostics;
-using System.Windows.Navigation;
 
 namespace MultiFunPlayer.UI.Dialogs.ViewModels;
 
 internal class InformationMessageDialogViewModel : Screen
 {
-    public string VersionText => $"v{ReflectionUtils.AssemblyVersion}";
+    public string VersionText => $"v{ReflectionUtils.AssemblyInformationalVersion}";
     public bool ShowCheckbox { get; }
     public bool DontShowAgain { get; set; }
 
@@ -22,14 +21,16 @@ internal class InformationMessageDialogViewModel : Screen
         DialogHost.CloseDialogCommand.Execute(ShowCheckbox ? DontShowAgain : null, null);
     }
 
-    public void OnNavigate(object sender, RequestNavigateEventArgs e)
+    public void OnNavigate(string target)
     {
+        if (!Uri.IsWellFormedUriString(target, UriKind.Absolute))
+            return;
+
         Process.Start(new ProcessStartInfo()
         {
-            FileName = e.Uri.AbsoluteUri,
+            FileName = target,
             UseShellExecute = true
         });
-        e.Handled = true;
     }
 
     public override bool Equals(object obj)
