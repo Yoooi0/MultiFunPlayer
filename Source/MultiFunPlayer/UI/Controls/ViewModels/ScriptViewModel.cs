@@ -2128,7 +2128,7 @@ internal class AxisSettings : PropertyChangedBase
     [JsonProperty] public double MotionProviderMinimumGapDuration { get; set; } = 5;
     [JsonProperty] public bool MotionProviderSpeedLimitWithAxis { get; set; } = true;
     [JsonProperty] public bool UpdateMotionProviderWhenPaused { get; set; } = false;
-    [JsonProperty] public bool UpdateMotionProviderWithoutScript { get; set; } = true;
+    [JsonProperty] public bool UpdateMotionProviderWithoutScript { get; set; } = false;
     [JsonProperty] public DeviceAxis UpdateMotionProviderWithAxis { get; set; } = null;
     [JsonProperty] public string SelectedMotionProvider { get; set; } = null;
     [JsonProperty] public bool SpeedLimitEnabled { get; set; } = false;
@@ -2147,6 +2147,8 @@ internal class AxisSettings : PropertyChangedBase
             var providerName = typeof(RandomMotionProviderViewModel).GetCustomAttribute<DisplayNameAttribute>()?.DisplayName;
             if (providerName != null)
                 SelectedMotionProvider = providerName;
+
+            UpdateMotionProviderWithoutScript = true;
         }
     }
 }
