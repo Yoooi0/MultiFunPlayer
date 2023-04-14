@@ -251,10 +251,10 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                     {
                         if (!settings.UpdateMotionProviderWhenPaused && !IsPlaying)
                             return false;
-                        if (!settings.UpdateMotionProviderWithoutScript && !context.InsideScript)
+                        if (!canFillGap && (!settings.UpdateMotionProviderWithoutScript || !context.Invalid))
                             return false;
 
-                        if (!canFillGap && settings.UpdateMotionProviderWithAxis != null)
+                        if (settings.UpdateMotionProviderWithAxis != null)
                         {
                             var targetState = AxisStates[settings.UpdateMotionProviderWithAxis];
                             if (!targetState.IsDirty || targetState.IsAutoHoming)
