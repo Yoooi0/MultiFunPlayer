@@ -299,31 +299,8 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                     if (!double.IsFinite(providerValue))
                         return false;
 
-                    if (settings.MotionProviderSpeedLimitWithAxis)
-                        SpeedLimitMotionProviderWithAxis();
-
                     context.MotionProviderValue = providerValue;
                     return context.IsMotionProviderDirty;
-
-                    void SpeedLimitMotionProviderWithAxis()
-                    {
-                        if (settings.UpdateMotionProviderWithAxis == null)
-                            return;
-
-                        var targetState = AxisStates[settings.UpdateMotionProviderWithAxis];
-                        if (!double.IsFinite(targetState.Speed))
-                            return;
-
-                        var step = providerValue - context.LastValue;
-                        if (!double.IsFinite(step))
-                            return;
-
-                        var direction = Math.Sign(step);
-                        var speed = Math.Abs(step / deltaTime);
-                        var maxSpeed = Math.Abs(targetState.Speed);
-                        if (speed > maxSpeed)
-                            providerValue = MathUtils.Clamp01(context.LastValue + maxSpeed * deltaTime * direction);
-                    }
                 }
 
                 bool UpdateTransition()
@@ -371,7 +348,35 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                         context.Value = context.ScriptValue;
 
                     if (double.IsFinite(context.MotionProviderValue))
-                        context.Value = context.MotionProviderValue;
+                    {
+                        bool SpeedLimitMotionProviderWithAxis(out double value)
+                        {
+                            value = double.NaN;
+                            if (!settings.MotionProviderSpeedLimitWithAxis)
+                                return false;
+                            if (settings.UpdateMotionProviderWithAxis == null)
+                                return false;
+
+                            var targetState = AxisStates[settings.UpdateMotionProviderWithAxis];
+                            var maxSpeed = Math.Abs(targetState.Speed);
+                            if (!double.IsFinite(maxSpeed))
+                                return false;
+
+                            var step = context.MotionProviderValue - context.LastValue;
+                            if (!double.IsFinite(step))
+                                return false;
+
+                            var direction = Math.Sign(step);
+                            var speed = Math.Abs(step / deltaTime);
+                            if (speed <= maxSpeed)
+                                return false;
+
+                            value = MathUtils.Clamp01(context.LastValue + maxSpeed * deltaTime * direction);
+                            return true;
+                        }
+
+                        context.Value = SpeedLimitMotionProviderWithAxis(out var value) ? value : context.MotionProviderValue;
+                    }
 
                     if (double.IsFinite(context.TransitionValue))
                         if (!IsPlaying && !context.InsideScript)
