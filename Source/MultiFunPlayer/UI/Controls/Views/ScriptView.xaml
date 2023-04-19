@@ -1051,11 +1051,23 @@
                                                 </material:PopupBox.ToggleContent>
                                                 <Grid Margin="10">
                                                     <StackPanel>
+                                                        <Button Content="Bypass all"
+                                                                Click="{s:Action OnBypassAll}"
+                                                                Typography.Capitals="AllSmallCaps"
+                                                                Style="{StaticResource MaterialDesignPaperLightButton}"
+                                                                Margin="0 0 0 15"/>
+                                                        
+                                                        <TextBlock Text="Bypass:"
+                                                                   VerticalAlignment="Center"
+                                                                   FontSize="12"
+                                                                   FontWeight="Bold"
+                                                                   Typography.Capitals="AllSmallCaps"/>
+
                                                         <DockPanel Margin="0 0 0 5" LastChildFill="True">
                                                             <ToggleButton IsChecked="{Binding Value.Settings.BypassScript}"
                                                                           Style="{StaticResource MaterialDesignSwitchToggleButton}"
                                                                           DockPanel.Dock="Right"/>
-                                                            <TextBlock Text="Bypass script:" 
+                                                            <TextBlock Text="Script:" 
                                                                        DockPanel.Dock="Left"
                                                                        VerticalAlignment="Center"/>
                                                         </DockPanel>
@@ -1063,7 +1075,7 @@
                                                             <ToggleButton IsChecked="{Binding Value.Settings.BypassMotionProvider}"
                                                                           Style="{StaticResource MaterialDesignSwitchToggleButton}"
                                                                           DockPanel.Dock="Right"/>
-                                                            <TextBlock Text="Bypass motion provider:" 
+                                                            <TextBlock Text="Motion provider:" 
                                                                        DockPanel.Dock="Left"
                                                                        Margin="0 0 10 0" 
                                                                        VerticalAlignment="Center"/>
@@ -1072,7 +1084,7 @@
                                                             <ToggleButton IsChecked="{Binding Value.Settings.BypassTransition}"
                                                                           Style="{StaticResource MaterialDesignSwitchToggleButton}"
                                                                           DockPanel.Dock="Right"/>
-                                                            <TextBlock Text="Bypass custom transition:" 
+                                                            <TextBlock Text="Custom transition:" 
                                                                        DockPanel.Dock="Left"
                                                                        Margin="0 0 10 0" 
                                                                        VerticalAlignment="Center"/>

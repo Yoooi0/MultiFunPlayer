@@ -1301,6 +1301,18 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         var (axis, _) = pair;
         ResetSync(true, axis);
     }
+
+    public void OnBypassAll(object sender, RoutedEventArgs e)
+    {
+        if (sender is not FrameworkElement element || element.DataContext is not KeyValuePair<DeviceAxis, AxisModel> pair)
+            return;
+
+        var (axis, _) = pair;
+        var settings = AxisSettings[axis];
+        settings.BypassScript = true;
+        settings.BypassMotionProvider = true;
+        settings.BypassTransition = true;
+    }
     #endregion
 
     #region MediaResource
