@@ -25,7 +25,7 @@ public class ObservableConcurrentCollectionView<TValue, TView> : IReadOnlyObserv
     {
         _propertyName = propertyName;
         _selector = selector;
-        
+
         _registeredItems = new List<TValue>();
         _view = new ObservableConcurrentCollection<TView>();
         _view.PropertyChanged += (s, e) => PropertyChanged?.Invoke(s, e);
