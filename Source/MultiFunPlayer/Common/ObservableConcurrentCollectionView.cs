@@ -13,6 +13,7 @@ public class ObservableConcurrentCollectionView<TValue, TView> : IReadOnlyObserv
     private readonly Func<TValue, TView> _selector;
     private readonly ObservableConcurrentCollection<TView> _view;
     private readonly string _propertyName;
+    private readonly List<TValue> _registeredItems;
 
     public event NotifyCollectionChangedEventHandler CollectionChanged;
     public event PropertyChangedEventHandler PropertyChanged;
@@ -24,7 +25,8 @@ public class ObservableConcurrentCollectionView<TValue, TView> : IReadOnlyObserv
     {
         _propertyName = propertyName;
         _selector = selector;
-
+        
+        _registeredItems = new List<TValue>();
         _view = new ObservableConcurrentCollection<TView>();
         _view.PropertyChanged += (s, e) => PropertyChanged?.Invoke(s, e);
         _view.CollectionChanged += (s, e) => CollectionChanged?.Invoke(s, e);
@@ -59,6 +61,7 @@ public class ObservableConcurrentCollectionView<TValue, TView> : IReadOnlyObserv
 
             o.PropertyChanged -= OnSourceItemPropertyChanged;
             o.PropertyChanged += OnSourceItemPropertyChanged;
+            _registeredItems.Add(value);
         }
 
         void UnregisterPropertyChanged(TValue value)
@@ -67,53 +70,22 @@ public class ObservableConcurrentCollectionView<TValue, TView> : IReadOnlyObserv
                 return;
 
             o.PropertyChanged -= OnSourceItemPropertyChanged;
+            _registeredItems.Remove(value);
         }
 
-        void Add(TValue value, int index)
+        lock (_registeredItems)
         {
-            if (index == _view.Count)
-                _view.Add(_selector(value));
-            else
-                _view.Insert(index, _selector(value));
+            var newItems = _collection.ToList();
 
-            RegisterPropertyChanged(value);
+            while(_registeredItems.Count > 0)
+                UnregisterPropertyChanged(_registeredItems[0]);
+
+            _view.Clear();
+            foreach (var item in newItems)
+                RegisterPropertyChanged(item);
+
+            _view.AddRange(newItems.Select(i => _selector(i)));
         }
-
-        void Remove(TValue value, int index)
-        {
-            _view.RemoveAt(index);
-            UnregisterPropertyChanged(value);
-        }
-
-        void Replace(TValue oldValue, TValue newValue, int index)
-        {
-            UnregisterPropertyChanged(oldValue);
-            _view[index] = _selector(newValue);
-            RegisterPropertyChanged(newValue);
-        }
-
-        void Move(int oldIndex, int newIndex) => _view.Move(oldIndex, newIndex);
-
-        void AddRange(IEnumerable enumerable, int index)
-        {
-            foreach (var value in enumerable.OfType<TValue>())
-                Add(value, index++);
-        }
-
-        void RemoveRange(IEnumerable enumerable, int index)
-        {
-            foreach (var value in enumerable.OfType<TValue>())
-                Remove(value, index++);
-        }
-
-        if (e.Action == NotifyCollectionChangedAction.Add)
-            AddRange(e.NewItems, e.NewStartingIndex);
-        else if (e.Action == NotifyCollectionChangedAction.Remove)
-            RemoveRange(e.OldItems, e.OldStartingIndex);
-        else if (e.Action == NotifyCollectionChangedAction.Replace)
-            Replace(e.OldItems[0] as TValue, e.NewItems[0] as TValue, e.NewStartingIndex);
-        else if (e.Action == NotifyCollectionChangedAction.Move)
-            Move(e.OldStartingIndex, e.NewStartingIndex);
     }
 
     public int IndexOf(TView item) => _view.IndexOf(item);
