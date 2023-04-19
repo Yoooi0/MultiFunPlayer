@@ -62,7 +62,7 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
 
     [JsonProperty] public double GlobalOffset { get; set; } = 0;
     [JsonProperty] public bool ValuesContentVisible { get; set; } = false;
-    [JsonProperty] public bool MediaContentVisible { get; set; } = true;
+    [JsonProperty] public bool MediaContentVisible { get; set; } = false;
     [JsonProperty] public bool AxisContentVisible { get; set; } = false;
     [JsonProperty] public bool HeatmapShowStrokeLength { get; set; } = true;
     [JsonProperty] public bool HeatmapEnablePreview { get; set; } = true;
