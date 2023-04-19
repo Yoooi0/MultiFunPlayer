@@ -145,9 +145,11 @@ public class ObservableConcurrentCollection<T> : IList<T>, IReadOnlyObservableCo
 
     protected virtual void ClearItems()
     {
-        var items = _items.ToList();
-        _items.Clear();
-        NotifyObserversOfChange(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Remove, items));
+        lock (SyncRoot)
+        {
+            while (_items.Count > 0)
+                TryRemoveItemInternal(0);
+        }
     }
 
     protected virtual void AddItemInternal(T item)
