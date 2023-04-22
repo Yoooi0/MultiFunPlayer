@@ -44,7 +44,7 @@ internal class AudioOutputTargetViewModel : ThreadAbstractOutputTarget
         foreach (var device in DirectSoundOut.Devices)
             AvailableAudioDevices.Add(new DirectSoundAudioDeviceModel(device));
 
-        var enumerator = new MMDeviceEnumerator();
+        using var enumerator = new MMDeviceEnumerator();
         foreach (var device in enumerator.EnumerateAudioEndPoints(DataFlow.Render, DeviceState.Active))
             AvailableAudioDevices.Add(new WasapiAudioDeviceModel(device));
 
@@ -229,7 +229,7 @@ internal class WasapiAudioDeviceModel : IAudioDeviceModel
 
     public IWavePlayer CreateWavePlayer()
     {
-        var enumerator = new MMDeviceEnumerator();
+        using var enumerator = new MMDeviceEnumerator();
         var device = enumerator.GetDevice(_id);
         return new WasapiOut(device, ShareMode, UseEventSync, DesiredLatency);
     }
@@ -258,13 +258,16 @@ internal class SignalGenerator : ISampleProvider
     public int Read(float[] buffer, int offset, int count)
     {
         var phaseStep = 2 * Frequency / WaveFormat.SampleRate;
+        var balanceLeft = MathUtils.Clamp01(MathUtils.Map(Balance, -1, 1, 2, 0));
+        var balanceRight = MathUtils.Clamp01(MathUtils.Map(Balance, -1, 1, 0, 2));
+
         for (var sampleCount = 0; sampleCount < count; sampleCount += WaveFormat.Channels)
         {
             var sampleValue = GetSampleValue();
-            _phase += phaseStep;
+            buffer[offset + sampleCount + 0] = (float)(Amplitude * sampleValue * balanceLeft);
+            buffer[offset + sampleCount + 1] = (float)(Amplitude * sampleValue * balanceRight);
 
-            buffer[offset + sampleCount + 0] = (float)(sampleValue * MathUtils.Clamp01(MathUtils.Map(Balance, -1, 1, 2, 0)));
-            buffer[offset + sampleCount + 1] = (float)(sampleValue * MathUtils.Clamp01(MathUtils.Map(Balance, -1, 1, 0, 2)));
+            _phase += phaseStep;
         }
 
         return count;
@@ -272,18 +275,23 @@ internal class SignalGenerator : ISampleProvider
         double GetSampleValue()
         {
             if (Type == SignalGeneratorType.Sin)
-                return Amplitude * Math.Sin(Math.PI * _phase);
+            {
+                return Math.Sin(Math.PI * _phase);
+            }
             else if (Type == SignalGeneratorType.Square)
-                return _phase % 2 - 1 >= 0 ? Amplitude : -Amplitude;
+            {
+                return _phase % 2 - 1 >= 0 ? 1 : -1;
+            }
             else if (Type == SignalGeneratorType.SawTooth)
-                return Amplitude * (_phase % 2 - 1);
+            {
+                return _phase % 2 - 1;
+            }
             else if (Type == SignalGeneratorType.Triangle)
             {
                 var value = 2 * (_phase % 2);
                 if (value > 1) value = 2 - value;
                 if (value < -1) value = -2 - value;
-
-                return Amplitude * value;
+                return value;
             }
 
             return 0.0;
