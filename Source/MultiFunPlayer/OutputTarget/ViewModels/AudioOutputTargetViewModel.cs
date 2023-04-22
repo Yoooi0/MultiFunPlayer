@@ -130,8 +130,14 @@ internal partial class DeviceAxisMappedValue
 
     public double Map(IDictionary<DeviceAxis, double> values)
     {
-        Value = Axis != null ? MathUtils.Map(values[Axis], 0, 1, ValueFrom, ValueTo)
-                             : Math.Clamp(Value, ValueFrom, ValueTo);
+        var from = ValueFrom;
+        var to = ValueTo;
+
+        if (from > to)
+            (from, to) = (to, from);
+
+        Value = Axis != null ? MathUtils.Map(values[Axis], 0, 1, from, to)
+                             : Math.Clamp(Value, from, to);
 
         return Value;
     }
