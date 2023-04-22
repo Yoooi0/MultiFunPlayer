@@ -210,13 +210,13 @@
                           ItemsSource="{Binding Source={x:Static common:DeviceAxis.All}}" 
                           SelectedItem="{Binding Frequency.Axis}"/>
 
-                <metro:NumericUpDown Value="{Binding Frequency.ValueFrom}"
+                <metro:NumericUpDown Value="{Binding Frequency.ValueFrom, Delay=500}"
                                      Margin="15 0 0 0"
                                      DockPanel.Dock="Left"
                                      StringFormat="{}{0:F0}Hz"
                                      HideUpDownButtons="True"/>
 
-                <metro:NumericUpDown Value="{Binding Frequency.ValueTo}"
+                <metro:NumericUpDown Value="{Binding Frequency.ValueTo, Delay=500}"
                                      DockPanel.Dock="Right"
                                      StringFormat="{}{0:F0}Hz"
                                      HideUpDownButtons="True"/>

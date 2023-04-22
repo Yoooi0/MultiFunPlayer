@@ -119,13 +119,13 @@ internal partial class DeviceAxisMappedValue
     protected void OnValueFromChanged()
     {
         if (ValueFrom > ValueTo)
-            (ValueTo, ValueFrom) = (ValueFrom, ValueTo);
+            ValueTo = ValueFrom;
     }
 
     protected void OnValueToChanged()
     {
         if (ValueTo < ValueFrom)
-            (ValueTo, ValueFrom) = (ValueFrom, ValueTo);
+            ValueFrom = ValueTo;
     }
 
     public double Map(IDictionary<DeviceAxis, double> values)
