@@ -1,4 +1,4 @@
-﻿using MultiFunPlayer.Common;
+using MultiFunPlayer.Common;
 using MultiFunPlayer.Input;
 using MultiFunPlayer.UI;
 using NAudio.CoreAudioApi;
@@ -22,9 +22,9 @@ internal class AudioOutputTargetViewModel : ThreadAbstractOutputTarget
 
     public int SampleRate { get; set; } = 48000;
     public SignalGeneratorType SignalType { get; set; } = SignalGeneratorType.Sin;
-    public DeviceAxisMappedValue Frequency { get; } = new DeviceAxisMappedValue() { ValueFrom = 100, ValueTo = 440, Value = 200 };
-    public DeviceAxisMappedValue Amplitude { get; } = new DeviceAxisMappedValue() { ValueFrom = 0, ValueTo = 1, Value = 1 };
-    public DeviceAxisMappedValue Balance { get; } = new DeviceAxisMappedValue() { ValueFrom = -1, ValueTo = 1, Value = 0 };
+    public DeviceAxisMappedValue Frequency { get; } = new DeviceAxisMappedValue(valueFrom: 100, valueTo: 440, value: 200);
+    public DeviceAxisMappedValue Amplitude { get; } = new DeviceAxisMappedValue(valueFrom: 0, valueTo: 1, value: 1);
+    public DeviceAxisMappedValue Balance { get; } = new DeviceAxisMappedValue(valueFrom: -1, valueTo: 1, value: 0);
 
     public override ConnectionStatus Status { get; protected set; }
 
@@ -115,6 +115,13 @@ internal partial class DeviceAxisMappedValue
     public double Value { get; set; }
     public double ValueFrom { get; set; }
     public double ValueTo { get; set; }
+
+    public DeviceAxisMappedValue(double valueFrom, double valueTo, double value)
+    {
+        ValueFrom = valueFrom;
+        ValueTo = valueTo;
+        Value = value;
+    }
 
     protected void OnValueFromChanged()
     {
@@ -241,6 +248,14 @@ internal class WasapiAudioDeviceModel : IAudioDeviceModel
     }
 }
 
+internal enum SignalGeneratorType
+{
+    Sin,
+    Square,
+    Triangle,
+    SawTooth,
+}
+
 internal class SignalGenerator : ISampleProvider
 {
     private double _phase;
@@ -303,12 +318,4 @@ internal class SignalGenerator : ISampleProvider
             return 0.0;
         }
     }
-}
-
-public enum SignalGeneratorType
-{
-    Sin,
-    Square,
-    Triangle,
-    SawTooth,
 }
