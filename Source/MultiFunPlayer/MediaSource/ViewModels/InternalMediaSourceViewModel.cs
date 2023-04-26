@@ -55,8 +55,6 @@ internal class InternalMediaSourceViewModel : AbstractMediaSource, IHandle<Media
 
             await Task.Delay(250, token);
             SetScriptInfo(null);
-            SetDuration(double.NaN);
-            SetPosition(double.NaN);
             SetIsPlaying(false);
 
             while (_messageChannel.Reader.TryRead(out var _)) ;
@@ -143,8 +141,6 @@ internal class InternalMediaSourceViewModel : AbstractMediaSource, IHandle<Media
             return;
 
         SetScriptInfo(null);
-        SetDuration(double.NaN);
-        SetPosition(double.NaN);
         SetIsPlaying(false);
 
         while (_messageChannel.Reader.TryRead(out var _));
@@ -163,15 +159,8 @@ internal class InternalMediaSourceViewModel : AbstractMediaSource, IHandle<Media
 
         if (_scriptInfo != scriptInfo)
         {
-            var script = scriptInfo != null ? FunscriptReader.Default.FromFileInfo(scriptInfo) : null;
-            if (script == null)
-                return;
-
             PlaylistIndex = index;
-
             SetScriptInfo(scriptInfo);
-            SetDuration(script?.Keyframes?[^1].Position ?? double.NaN);
-            SetPosition(script != null ? 0 : double.NaN, forceSeek: true);
         }
         else if (_scriptInfo != null)
         {
@@ -203,9 +192,6 @@ internal class InternalMediaSourceViewModel : AbstractMediaSource, IHandle<Media
             PlaylistIndex = 0;
 
             SetScriptInfo(null);
-            SetDuration(double.NaN);
-            SetPosition(double.NaN);
-
             if (playlist == null)
                 SetIsPlaying(false);
         }
@@ -218,12 +204,30 @@ internal class InternalMediaSourceViewModel : AbstractMediaSource, IHandle<Media
             return;
 
         EventAggregator.Publish(new ChangeScriptMessage(DeviceAxis.All, null));
+        var result = FunscriptReader.Default.FromFileInfo(scriptInfo);
+        if (!result.IsSuccess)
+            return;
 
-        if (scriptInfo != null)
+        if (scriptInfo == null)
+        {
+            SetDuration(double.NaN);
+            SetPosition(double.NaN);
+            return;
+        }
+
+        if (result.IsMultiAxis)
+        {
+            EventAggregator.Publish(new ChangeScriptMessage(result.Resources));
+            SetDuration(result.Resources.Values.Max(s => s.Keyframes[^1].Position));
+        }
+        else
         {
             var axes = DeviceAxisUtils.FindAxesMatchingName(scriptInfo.Name, true);
-            EventAggregator.Publish(new ChangeScriptMessage(axes, FunscriptReader.Default.FromFileInfo(scriptInfo)));
+            EventAggregator.Publish(new ChangeScriptMessage(axes, result.Resource));
+            SetDuration(result.Resource.Keyframes[^1].Position);
         }
+
+        SetPosition(0, forceSeek: true);
     }
 
     private void SetDuration(double duration)

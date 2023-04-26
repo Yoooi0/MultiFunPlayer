@@ -788,11 +788,25 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
             return updated;
 
         Logger.Debug("Maching files to axes [Axes: {list}]", axes);
-        void TryMatchName(string scriptName, Func<DeviceAxis, IScriptResource> generator)
+        void TryMatchName(string scriptName, ScriptReaderResult result)
         {
-            foreach (var axis in DeviceAxisUtils.FindAxesMatchingName(axes, scriptName, MediaResource.Name))
+            if (!result.IsSuccess)
+                return;
+
+            if (result.IsMultiAxis)
             {
-                SetScript(axis, generator(axis));
+                foreach (var (axis, resource) in result.Resources)
+                    DoSetScript(axis, resource);
+            }
+            else
+            {
+                foreach (var axis in DeviceAxisUtils.FindAxesMatchingName(axes, scriptName, MediaResource.Name))
+                    DoSetScript(axis, result.Resource);
+            }
+
+            void DoSetScript(DeviceAxis axis, IScriptResource resource)
+            {
+                SetScript(axis, resource);
                 updated.Add(axis);
 
                 Logger.Debug("Matched {0} script to \"{1}\"", axis, scriptName);
@@ -806,7 +820,7 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                 Logger.Info("Matching zip file \"{0}\"", path);
                 using var zip = ZipFile.OpenRead(path);
                 foreach (var entry in zip.Entries.Where(e => string.Equals(Path.GetExtension(e.FullName), ".funscript", StringComparison.OrdinalIgnoreCase)))
-                    TryMatchName(entry.Name, _ => FunscriptReader.Default.FromZipArchiveEntry(path, entry));
+                    TryMatchName(entry.Name, FunscriptReader.Default.FromZipArchiveEntry(path, entry));
 
                 return true;
             }
@@ -822,7 +836,7 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                 TryMatchArchive(zipFile.FullName);
 
             foreach (var funscriptFile in library.EnumerateFiles($"{mediaWithoutExtension}*.funscript"))
-                TryMatchName(funscriptFile.Name, _ => FunscriptReader.Default.FromFileInfo(funscriptFile));
+                TryMatchName(funscriptFile.Name, FunscriptReader.Default.FromFileInfo(funscriptFile));
         }
 
         if (Directory.Exists(MediaResource.Source))
@@ -832,7 +846,7 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
             TryMatchArchive(Path.Join(sourceDirectory.FullName, $"{mediaWithoutExtension}.zip"));
 
             foreach (var funscriptFile in sourceDirectory.EnumerateFiles($"{mediaWithoutExtension}*.funscript"))
-                TryMatchName(funscriptFile.Name, _ => FunscriptReader.Default.FromFileInfo(funscriptFile));
+                TryMatchName(funscriptFile.Name, FunscriptReader.Default.FromFileInfo(funscriptFile));
         }
 
         return updated;
@@ -899,6 +913,24 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         _eventAggregator.Publish(new ScriptChangedMessage(axis, script));
 
         UpdateLinkedScriptsTo(axis);
+    }
+
+    private void SetScriptFromReader(ScriptReaderResult result, DeviceAxis desiredAxis)
+    {
+        if (!result.IsSuccess)
+            return;
+
+        if (result.IsMultiAxis)
+        {
+            ResetSync(true, result.Resources.Keys);
+            foreach (var (resourceAxis, resource) in result.Resources)
+                SetScript(resourceAxis, resource);
+        }
+        else
+        {
+            ResetSync(true, desiredAxis);
+            SetScript(desiredAxis, result.Resource);
+        }
     }
 
     private void ReloadAxes(params DeviceAxis[] axes) => ReloadAxes(axes?.AsEnumerable());
@@ -1121,15 +1153,14 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
 
         var (axis, model) = pair;
         var drop = e.Data.GetData(DataFormats.FileDrop);
-        if (drop is IEnumerable<string> paths)
-        {
-            var path = paths.FirstOrDefault(p => Path.GetExtension(p) == ".funscript");
-            if (path == null)
-                return;
+        if (drop is not IEnumerable<string> paths)
+            return;
 
-            ResetSync(true, axis);
-            SetScript(axis, FunscriptReader.Default.FromPath(path));
-        }
+        var path = paths.FirstOrDefault(p => Path.GetExtension(p) == ".funscript");
+        if (path == null)
+            return;
+
+        SetScriptFromReader(FunscriptReader.Default.FromPath(path), axis);
     }
 
     public void OnPreviewDragOver(object sender, DragEventArgs e)
@@ -1164,8 +1195,7 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         if (dialog.ShowDialog() != CommonFileDialogResult.Ok)
             return;
 
-        ResetSync(true, axis);
-        SetScript(axis, FunscriptReader.Default.FromFileInfo(new FileInfo(dialog.FileName)));
+        SetScriptFromReader(FunscriptReader.Default.FromPath(dialog.FileName), axis);
     }
 
     public void OnAxisClear(DeviceAxis axis) => ResetAxes(axis);

@@ -131,12 +131,20 @@ internal class OfsMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlayP
                                 if (!Path.HasExtension(name) || !string.Equals(Path.GetExtension(name), ".funscript", StringComparison.OrdinalIgnoreCase))
                                     name += ".funscript";
 
-                                var axes = DeviceAxisUtils.FindAxesMatchingName(name);
-                                if (!axes.Any())
+                                var readerResult = FunscriptReader.Default.FromBytes(name, Uri.ToString(), Encoding.UTF8.GetBytes(funscriptToken.ToString()));
+                                if (!readerResult.IsSuccess)
                                     break;
 
-                                var script = FunscriptReader.Default.FromBytes(name, Uri.ToString(), Encoding.UTF8.GetBytes(funscriptToken.ToString()));
-                                EventAggregator.Publish(new ChangeScriptMessage(axes.ToDictionary(a => a, _ => script)));
+                                if (readerResult.IsMultiAxis)
+                                {
+                                    EventAggregator.Publish(new ChangeScriptMessage(readerResult.Resources));
+                                }
+                                else
+                                {
+                                    var axes = DeviceAxisUtils.FindAxesMatchingName(name);
+                                    if (axes.Any())
+                                        EventAggregator.Publish(new ChangeScriptMessage(axes.ToDictionary(a => a, _ => readerResult.Resource)));
+                                }
                             }
 
                             break;

@@ -27,7 +27,9 @@ internal class LoopingScriptMotionProviderViewModel : AbstractMotionProvider
 
     public void OnSourceFileChanged()
     {
-        Script = FunscriptReader.Default.FromFileInfo(SourceFile);
+        var result = FunscriptReader.Default.FromFileInfo(SourceFile);
+        Script = result.IsMultiAxis && result.Resources.TryGetValue("L0", out var resource) ? resource : result.Resource;
+
         _scriptIndex = 0;
         _scriptStart = Script?.Keyframes?[0].Position ?? double.NaN;
         _scriptEnd = Script?.Keyframes?[^1].Position ?? double.NaN;
