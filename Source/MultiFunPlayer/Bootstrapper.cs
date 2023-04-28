@@ -59,7 +59,6 @@ internal class Bootstrapper : Bootstrapper<RootViewModel>
         builder.Bind<IInputProcessor>().ToAllImplementations().InSingletonScope();
 
         builder.Bind<IStyletLoggerManager>().To<StyletLoggerManager>().InSingletonScope();
-        builder.Bind<IMediaResourceFactory>().To<MediaResourceFactory>().InSingletonScope();
         builder.Bind<IOutputTargetFactory>().To<OutputTargetFactory>().InSingletonScope();
         builder.Bind<IShortcutManager>().To<ShortcutManager>().InSingletonScope();
         builder.Bind<IShortcutBinder>().To<ShortcutBinder>().InSingletonScope();

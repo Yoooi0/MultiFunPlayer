@@ -31,7 +31,6 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
     private readonly IEventAggregator _eventAggregator;
-    private readonly IMediaResourceFactory _mediaResourceFactory;
     private Thread _updateThread;
     private CancellationTokenSource _cancellationSource;
     private double _internalMediaPosition;
@@ -56,7 +55,7 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
     public MediaResourceInfo MediaResource { get; set; }
 
     [JsonProperty] public ObservableConcurrentDictionaryView<DeviceAxis, AxisModel, AxisSettings> AxisSettings { get; }
-    [JsonProperty(ItemTypeNameHandling = TypeNameHandling.Objects)] public ObservableConcurrentCollection<IMediaPathModifier> MediaPathModifiers => _mediaResourceFactory.PathModifiers;
+    [JsonProperty(ItemTypeNameHandling = TypeNameHandling.Objects)] public ObservableConcurrentCollection<IMediaPathModifier> MediaPathModifiers { get; }
     [JsonProperty] public ObservableConcurrentCollection<ScriptLibrary> ScriptLibraries { get; }
     [JsonProperty] public SyncSettings SyncSettings { get; set; }
 
@@ -74,15 +73,15 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
     public bool IsSyncing => AxisStates.Values.Any(s => s.SyncTime > 0);
     public double SyncProgress => !IsSyncing ? 100 : GetSyncProgress(AxisStates.Values.Max(s => s.SyncTime), SyncSettings.Duration) * 100;
 
-    public ScriptViewModel(IShortcutManager shortcutManager, IMotionProviderManager motionProviderManager, IMediaResourceFactory mediaResourceFactory, IEventAggregator eventAggregator)
+    public ScriptViewModel(IShortcutManager shortcutManager, IMotionProviderManager motionProviderManager, IEventAggregator eventAggregator)
     {
         _eventAggregator = eventAggregator;
         _eventAggregator.Subscribe(this);
 
         MotionProviderManager = motionProviderManager;
-        _mediaResourceFactory = mediaResourceFactory;
 
         AxisModels = new ObservableConcurrentDictionary<DeviceAxis, AxisModel>(DeviceAxis.All.ToDictionary(a => a, a => new AxisModel(a)));
+        MediaPathModifiers = new ObservableConcurrentCollection<IMediaPathModifier>();
         MediaPathModifierTypes = ReflectionUtils.FindImplementations<IMediaPathModifier>()
                                                 .ToDictionary(t => t.GetCustomAttribute<DisplayNameAttribute>(inherit: false).DisplayName, t => t);
         MediaLoopSegment = new MediaLoopSegment();
@@ -544,7 +543,7 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
     #region Events
     public void Handle(MediaPathChangedMessage message)
     {
-        var resource = _mediaResourceFactory.CreateFromPath(message.Path);
+        var resource = MediaResourceInfo.CreateFromPath(message.Path, MediaPathModifiers);
         if (MediaResource == null && resource == null)
             return;
         if (MediaResource != null && resource != null)
