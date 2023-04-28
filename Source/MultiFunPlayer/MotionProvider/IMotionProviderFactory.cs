@@ -1,5 +1,6 @@
 ﻿using MultiFunPlayer.Common;
 using Stylet;
+using StyletIoC;
 
 namespace MultiFunPlayer.MotionProvider;
 
@@ -11,15 +12,12 @@ internal interface IMotionProviderFactory
 
 internal class MotionProviderFactory : IMotionProviderFactory
 {
-    private readonly IEventAggregator _eventAggregator;
+    private readonly IContainer _container;
 
-    public MotionProviderFactory(IEventAggregator eventAggregator)
-    {
-        _eventAggregator = eventAggregator;
-    }
+    public MotionProviderFactory(IContainer container) => _container = container;
 
     public IMotionProvider CreateMotionProvider(Type type, DeviceAxis target)
-        => (IMotionProvider)Activator.CreateInstance(type, new object[] { target, _eventAggregator });
+        => (IMotionProvider)Activator.CreateInstance(type, new object[] { target, _container.Get<IEventAggregator>() });
 
     public IEnumerable<IMotionProvider> CreateMotionProviderCollection(DeviceAxis target)
         => ReflectionUtils.FindImplementations<IMotionProvider>().Select(t => CreateMotionProvider(t, target));
