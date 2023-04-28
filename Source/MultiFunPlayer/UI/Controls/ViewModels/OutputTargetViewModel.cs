@@ -120,14 +120,7 @@ internal class OutputTargetViewModel : Conductor<IOutputTarget>.Collection.OneAc
             settings[nameof(ScanDelay)] = ScanDelay;
             settings[nameof(ScanInterval)] = ScanInterval;
             settings[nameof(ActiveItem)] = ActiveItem?.Identifier;
-
-            settings[nameof(Items)] = JArray.FromObject(Items.Select(x =>
-            {
-                var o = new JObject() { ["$index"] = x.InstanceIndex };
-                o.AddTypeProperty(x.GetType());
-                x.HandleSettings(o, message.Action);
-                return o;
-            }));
+            settings[nameof(Items)] = JArray.FromObject(Items);
         }
         else if (message.Action == SettingsAction.Loading)
         {
@@ -141,30 +134,18 @@ internal class OutputTargetViewModel : Conductor<IOutputTarget>.Collection.OneAc
             if (settings.TryGetValue<int>(nameof(ScanInterval), out var scanInterval))
                 ScanInterval = scanInterval;
 
-            if (settings.TryGetValue(nameof(Items), out var itemsToken) && itemsToken is JArray items)
+            if (settings.TryGetValue<List<IOutputTarget>>(nameof(Items), out var items))
             {
-                foreach (var item in items.OfType<JObject>())
+                foreach (var item in items)
                 {
-                    var type = item.GetTypeProperty();
-                    var index = item["$index"].ToObject<int>();
-                    item.Remove("$type");
-
-                    var usedIndices = Items.Where(x => x.GetType() == type)
-                                           .Select(x => x.InstanceIndex)
-                                           .ToList();
-
-                    if (usedIndices.Contains(index))
+                    var isDuplicate = Items.Any(x => x.GetType() == item.GetType() && x.InstanceIndex == item.InstanceIndex);
+                    if (isDuplicate)
                     {
-                        Logger.Warn("Index {0} is already used for type {1}", index, type);
+                        Logger.Warn("Index \"{0}\" is already used for type \"{1}\"", item.InstanceIndex, item.GetType());
                         continue;
                     }
 
-                    var instance = _outputTargetFactory.CreateOutputTarget(type, index);
-                    if (instance == null)
-                        continue;
-
-                    instance.HandleSettings(item, message.Action);
-                    AddItem(instance);
+                    AddItem(item);
                 }
             }
 

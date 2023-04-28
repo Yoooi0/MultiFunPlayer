@@ -1,6 +1,7 @@
 ﻿using MultiFunPlayer.Common;
 using MultiFunPlayer.OutputTarget.ViewModels;
 using Stylet;
+using StyletIoC;
 
 namespace MultiFunPlayer.OutputTarget;
 
@@ -11,21 +12,18 @@ internal interface IOutputTargetFactory
 
 internal class OutputTargetFactory : IOutputTargetFactory
 {
-    private readonly IEventAggregator _eventAggregator;
-    private readonly IDeviceAxisValueProvider _valueProvider;
+    private readonly IContainer _container;
 
-    public OutputTargetFactory(IEventAggregator eventAggregator, IDeviceAxisValueProvider valueProvider)
-    {
-        _eventAggregator = eventAggregator;
-        _valueProvider = valueProvider;
-    }
+    public OutputTargetFactory(IContainer container) => _container = container;
 
     public IOutputTarget CreateOutputTarget(Type type, int index)
     {
         if (index > MaxInstanceIndex(type))
             return null;
 
-        return (IOutputTarget)Activator.CreateInstance(type, new object[] { index, _eventAggregator, _valueProvider });
+        var eventAggregator = _container.Get<IEventAggregator>();
+        var valueProvider = _container.Get<IDeviceAxisValueProvider>();
+        return (IOutputTarget)Activator.CreateInstance(type, new object[] { index, eventAggregator, valueProvider });
     }
 
     private int MaxInstanceIndex(Type type)
