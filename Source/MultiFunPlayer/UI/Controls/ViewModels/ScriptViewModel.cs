@@ -2185,7 +2185,7 @@ internal class AxisSettings : PropertyChangedBase
         SmartLimitTargetValue = axis.DefaultValue;
         AutoHomeTargetValue = axis.DefaultValue;
 
-        if (axis == "R0" || axis == "R1" || axis == "R2")
+        if (axis.Name == "R0" || axis.Name == "R1" || axis.Name == "R2")
         {
             if (DeviceAxis.TryParse("L0", out var strokeAxis))
                 UpdateMotionProviderWithAxis = strokeAxis;

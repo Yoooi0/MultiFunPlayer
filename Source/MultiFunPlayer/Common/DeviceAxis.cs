@@ -24,12 +24,6 @@ public sealed class DeviceAxis
     [OnDeserialized]
     internal void OnDeserializedMethod(StreamingContext context) => _id = _count++;
 
-    public static implicit operator DeviceAxis(string name) => TryParse(name, out var axis) ? axis : null;
-
-    public static bool operator !=(DeviceAxis left, DeviceAxis right) => !ReferenceEquals(left, right);
-    public static bool operator ==(DeviceAxis left, DeviceAxis right) => ReferenceEquals(left, right);
-    public override bool Equals(object obj) => obj != null && ReferenceEquals(this, obj);
-
     private static int _count;
     private static int _outputMaximum;
     private static string _outputFormat;
