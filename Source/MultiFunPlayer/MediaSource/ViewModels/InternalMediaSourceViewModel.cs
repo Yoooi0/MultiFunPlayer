@@ -204,11 +204,8 @@ internal class InternalMediaSourceViewModel : AbstractMediaSource, IHandle<Media
             return;
 
         EventAggregator.Publish(new ChangeScriptMessage(DeviceAxis.All, null));
-        var result = FunscriptReader.Default.FromFileInfo(scriptInfo);
-        if (!result.IsSuccess)
-            return;
-
-        if (scriptInfo == null)
+        var result = scriptInfo == null ? null : FunscriptReader.Default.FromFileInfo(scriptInfo);
+        if (result?.IsSuccess != true)
         {
             SetDuration(double.NaN);
             SetPosition(double.NaN);
