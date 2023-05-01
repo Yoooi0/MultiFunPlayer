@@ -30,7 +30,7 @@
 
             <TextBox Text="{Binding Script.Name, Mode=OneWay}"
                      Style="{StaticResource MaterialDesignFloatingHintTextBox}"
-                     material:HintAssist.Hint="{Binding Script.Source.DirectoryName}"
+                     material:HintAssist.Hint="{Binding Script.Source}"
                      IsReadOnly="True"
                      VerticalAlignment="Center"
                      DockPanel.Dock="Right" 
