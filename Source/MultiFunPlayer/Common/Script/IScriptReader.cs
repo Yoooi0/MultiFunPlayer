@@ -1,7 +1,6 @@
 using Newtonsoft.Json;
 using System.Globalization;
 using System.IO;
-using System.IO.Compression;
 using System.Text;
 
 namespace MultiFunPlayer.Common;
@@ -17,8 +16,6 @@ public interface IScriptReader
     ScriptReaderResult FromStream(string name, string source, Stream stream);
     ScriptReaderResult FromPath(string path);
     ScriptReaderResult FromFileInfo(FileInfo file);
-    ScriptReaderResult FromZipArchiveEntry(string archivePath, ZipArchiveEntry entry);
-    ScriptReaderResult FromBytes(string name, string source, IEnumerable<byte> bytes);
 }
 
 public sealed class ScriptReaderResult
@@ -48,32 +45,38 @@ public abstract class AbstractScriptReader : IScriptReader
         if (!file.Exists)
             return ScriptReaderResult.FromFailure();
 
-        var path = file.FullName;
-        using var stream = new FileStream(path, FileMode.Open, FileAccess.Read);
-        return FromStream(Path.GetFileName(path), Path.GetDirectoryName(path), stream);
-    }
-
-    public ScriptReaderResult FromZipArchiveEntry(string archivePath, ZipArchiveEntry entry)
-    {
-        using var stream = entry.Open();
-        return FromStream(entry.Name, archivePath, stream);
-    }
-
-    public ScriptReaderResult FromBytes(string name, string source, IEnumerable<byte> bytes)
-    {
-        using var stream = new MemoryStream(bytes.ToArray());
-        return FromStream(name, source, stream);
+        using var stream = file.OpenRead();
+        return FromStream(file.Name, file.DirectoryName, stream);
     }
 }
 
-public class FunscriptReader : AbstractScriptReader
+public abstract class AbstractTextScriptReader : AbstractScriptReader
 {
-    public static FunscriptReader Default { get; } = new FunscriptReader();
+    public abstract ScriptReaderResult FromStream(string name, string source, TextReader stream);
 
     public override ScriptReaderResult FromStream(string name, string source, Stream stream)
     {
         using var streamReader = new StreamReader(stream, Encoding.UTF8);
-        using var jsonReader = new JsonTextReader(streamReader);
+        return FromStream(name, source, streamReader);
+    }
+
+    public ScriptReaderResult FromBytes(string name, string source, ReadOnlySpan<byte> bytes, Encoding encoding)
+        => FromText(name, source, encoding.GetString(bytes));
+
+    public ScriptReaderResult FromText(string name, string source, string text)
+    {
+        using var stream = new StringReader(text);
+        return FromStream(name, source, stream);
+    }
+}
+
+public class FunscriptReader : AbstractTextScriptReader
+{
+    public static FunscriptReader Default { get; } = new FunscriptReader();
+
+    public override ScriptReaderResult FromStream(string name, string source, TextReader stream)
+    {
+        using var jsonReader = new JsonTextReader(stream);
         var serializer = JsonSerializer.CreateDefault();
 
         var script = serializer.Deserialize<Script>(jsonReader);
@@ -163,18 +166,16 @@ public class FunscriptReader : AbstractScriptReader
     private record Bookmark(string Name, TimeSpan Time);
 }
 
-public class CsvReader : AbstractScriptReader
+public class CsvReader : AbstractTextScriptReader
 {
     public static CsvReader Default { get; } = new CsvReader();
 
-    public override ScriptReaderResult FromStream(string name, string source, Stream stream)
+    public override ScriptReaderResult FromStream(string name, string source, TextReader stream)
     {
-        using var streamReader = new StreamReader(stream, Encoding.UTF8);
-
         var keyframes = new KeyframeCollection();
 
         var line = default(string);
-        while ((line = streamReader.ReadLine()) != null)
+        while ((line = stream.ReadLine()) != null)
         {
             var items = line.Split(';');
             if (items.Length != 2)

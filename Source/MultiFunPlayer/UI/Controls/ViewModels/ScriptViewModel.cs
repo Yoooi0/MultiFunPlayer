@@ -819,7 +819,10 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                 Logger.Info("Matching zip file \"{0}\"", path);
                 using var zip = ZipFile.OpenRead(path);
                 foreach (var entry in zip.Entries.Where(e => string.Equals(Path.GetExtension(e.FullName), ".funscript", StringComparison.OrdinalIgnoreCase)))
-                    TryMatchName(entry.Name, FunscriptReader.Default.FromZipArchiveEntry(path, entry));
+                {
+                    using var stream = entry.Open();
+                    TryMatchName(entry.Name, FunscriptReader.Default.FromStream(entry.Name, path, stream));
+                }
 
                 return true;
             }

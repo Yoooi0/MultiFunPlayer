@@ -131,7 +131,7 @@ internal class OfsMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlayP
                                 if (!Path.HasExtension(name) || !string.Equals(Path.GetExtension(name), ".funscript", StringComparison.OrdinalIgnoreCase))
                                     name += ".funscript";
 
-                                var readerResult = FunscriptReader.Default.FromBytes(name, Uri.ToString(), Encoding.UTF8.GetBytes(funscriptToken.ToString()));
+                                var readerResult = FunscriptReader.Default.FromText(name, Uri.ToString(), funscriptToken.ToString());
                                 if (!readerResult.IsSuccess)
                                     break;
 
