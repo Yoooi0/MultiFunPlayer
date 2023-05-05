@@ -16,7 +16,6 @@ namespace MultiFunPlayer.OutputTarget.ViewModels;
 [DisplayName("Serial")]
 internal class SerialOutputTargetViewModel : ThreadAbstractOutputTarget
 {
-    private SemaphoreSlim _refreshSemaphore;
     private CancellationTokenSource _refreshCancellationSource;
 
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
@@ -48,7 +47,6 @@ internal class SerialOutputTargetViewModel : ThreadAbstractOutputTarget
     {
         SerialPorts = new ObservableConcurrentCollection<SerialPortInfo>();
 
-        _refreshSemaphore = new SemaphoreSlim(1, 1);
         _refreshCancellationSource = new CancellationTokenSource();
     }
 
@@ -61,19 +59,35 @@ internal class SerialOutputTargetViewModel : ThreadAbstractOutputTarget
     public bool CanChangePort => !IsRefreshBusy && !IsConnectBusy && !IsConnected;
     public bool IsRefreshBusy { get; set; }
     public bool CanRefreshPorts => !IsRefreshBusy && !IsConnectBusy && !IsConnected;
+
+    private int _isRefreshingFlag;
     public async Task RefreshPorts()
     {
-        var token = _refreshCancellationSource.Token;
-
-        if (_refreshSemaphore.CurrentCount == 0)
+        if (Interlocked.CompareExchange(ref _isRefreshingFlag, 1, 0) != 0)
             return;
-
-        await _refreshSemaphore.WaitAsync(token);
-        IsRefreshBusy = true;
-        await Task.Delay(250, token).ConfigureAwait(true);
 
         try
         {
+            var token = _refreshCancellationSource.Token;
+            token.ThrowIfCancellationRequested();
+
+            IsRefreshBusy = true;
+            await DoRefreshPorts(token);
+        }
+        catch (Exception e)
+        {
+            Logger.Warn(e, $"{Identifier} port refresh failed with exception");
+        }
+        finally
+        {
+            Interlocked.Decrement(ref _isRefreshingFlag);
+            IsRefreshBusy = false;
+        }
+
+        async Task DoRefreshPorts(CancellationToken token)
+        {
+            await Task.Delay(250, token).ConfigureAwait(true);
+
             var serialPorts = new List<SerialPortInfo>();
             var scope = new ManagementScope("\\\\.\\ROOT\\cimv2");
             var observer = new ManagementOperationObserver();
@@ -100,15 +114,9 @@ internal class SerialOutputTargetViewModel : ThreadAbstractOutputTarget
             SerialPorts.AddRange(serialPorts.Except(SerialPorts).ToList());
 
             SelectSerialPortByDeviceId(lastSelectedDeviceId);
-        }
-        catch (Exception e)
-        {
-            Logger.Warn(e, $"{Identifier} port refresh failed with exception");
-        }
 
-        await Task.Delay(250, token).ConfigureAwait(true);
-        IsRefreshBusy = false;
-        _refreshSemaphore.Release();
+            await Task.Delay(250, token).ConfigureAwait(true);
+        }
     }
 
     private void SelectSerialPortByDeviceId(string deviceId)
@@ -277,9 +285,6 @@ internal class SerialOutputTargetViewModel : ThreadAbstractOutputTarget
         _refreshCancellationSource?.Cancel();
         _refreshCancellationSource?.Dispose();
         _refreshCancellationSource = null;
-
-        _refreshSemaphore?.Dispose();
-        _refreshSemaphore = null;
 
         base.Dispose(disposing);
     }
