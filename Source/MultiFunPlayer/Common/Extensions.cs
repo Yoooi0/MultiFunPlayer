@@ -9,6 +9,7 @@ using System.Net.Http;
 using System.Net.Sockets;
 using System.Runtime.CompilerServices;
 using System.Runtime.ExceptionServices;
+using System.Threading;
 
 namespace MultiFunPlayer.Common;
 
@@ -423,6 +424,7 @@ public static class StopwatchExtensions
         if (millisecondsTimeout < 0)
             return;
 
+        var spinner = new SpinWait();
         var frequencyInverse = 1d / Stopwatch.Frequency;
         while (true)
         {
@@ -431,8 +433,7 @@ public static class StopwatchExtensions
             if (diff <= 0)
                 break;
 
-            if (diff < 1) Thread.SpinWait(10);
-            else if (diff < 2) Thread.SpinWait(100);
+            if (diff <= 2) spinner.SpinOnce(-1);
             else if (diff < 5) Thread.Sleep(1);
             else if (diff < 15) Thread.Sleep(5);
             else Thread.Sleep(10);
