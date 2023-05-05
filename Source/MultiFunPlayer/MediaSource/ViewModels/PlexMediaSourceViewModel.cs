@@ -20,7 +20,6 @@ internal class PlexMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlay
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
     private readonly Channel<object> _writeMessageChannel;
-    private SemaphoreSlim _refreshSemaphore;
     private CancellationTokenSource _refreshCancellationSource;
     private XmlNode _currentTimeline;
     private long _commandId;
@@ -37,7 +36,6 @@ internal class PlexMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlay
     public PlexMediaSourceViewModel(IShortcutManager shortcutManager, IEventAggregator eventAggregator)
         : base(shortcutManager, eventAggregator)
     {
-        _refreshSemaphore = new SemaphoreSlim(1, 1);
         _refreshCancellationSource = new CancellationTokenSource();
         _writeMessageChannel = Channel.CreateUnbounded<object>(new UnboundedChannelOptions()
         {
@@ -306,21 +304,35 @@ internal class PlexMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlay
 
     public bool CanRefreshClients => !IsRefreshBusy && !IsConnected && !IsConnectBusy && ServerEndpoint != null;
     public bool IsRefreshBusy { get; set; }
+
+    private int _isRefreshingFlag;
     public async Task RefreshClients()
     {
-        var token = _refreshCancellationSource.Token;
-
-        if (_refreshSemaphore.CurrentCount == 0)
+        if (Interlocked.CompareExchange(ref _isRefreshingFlag, 1, 0) != 0)
             return;
-        if (ServerEndpoint == null)
-            return;
-
-        await _refreshSemaphore.WaitAsync(token);
-        IsRefreshBusy = true;
-        await Task.Delay(250, token).ConfigureAwait(true);
 
         try
         {
+            var token = _refreshCancellationSource.Token;
+            token.ThrowIfCancellationRequested();
+
+            IsRefreshBusy = true;
+            await DoRefreshClients(token);
+        }
+        catch (Exception e)
+        {
+            Logger.Warn(e, $"{Name} client refresh failed with exception");
+        }
+        finally
+        {
+            Interlocked.Decrement(ref _isRefreshingFlag);
+            IsRefreshBusy = false;
+        }
+
+        async Task DoRefreshClients(CancellationToken token)
+        {
+            await Task.Delay(250, token).ConfigureAwait(true);
+
             using var client = NetUtils.CreateHttpClient();
             client.Timeout = TimeSpan.FromMilliseconds(5000);
 
@@ -354,15 +366,9 @@ internal class PlexMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlay
             Clients.AddRange(currentClients.Except(Clients).ToList());
 
             SelectClientByMachineIdentifier(SelectedClientMachineIdentifier);
-        }
-        catch (Exception e)
-        {
-            Logger.Warn(e, $"{Name} client refresh failed with exception");
-        }
 
-        await Task.Delay(250, token).ConfigureAwait(true);
-        IsRefreshBusy = false;
-        _refreshSemaphore.Release();
+            await Task.Delay(250, token).ConfigureAwait(true);
+        }
     }
 
     private void SelectClientByMachineIdentifier(string machineIdentifier)
@@ -494,9 +500,6 @@ internal class PlexMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlay
         _refreshCancellationSource?.Cancel();
         _refreshCancellationSource?.Dispose();
         _refreshCancellationSource = null;
-
-        _refreshSemaphore?.Dispose();
-        _refreshSemaphore = null;
 
         base.Dispose(disposing);
     }
