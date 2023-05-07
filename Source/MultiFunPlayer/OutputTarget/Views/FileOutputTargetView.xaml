@@ -9,7 +9,6 @@
              xmlns:ui="clr-namespace:MultiFunPlayer.UI"
              xmlns:common="clr-namespace:MultiFunPlayer.Common"
              xmlns:converters="clr-namespace:MultiFunPlayer.UI.Converters"
-             xmlns:behaviours="clr-namespace:MultiFunPlayer.UI.Behaviours"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800"
              x:ClassModifier="internal">
@@ -78,36 +77,8 @@
                     </Style>
                 </StackPanel.Resources>
 
-                <DockPanel LastChildFill="True">
-                    <TextBlock Text="Output directory:"
-                               DockPanel.Dock="Left"
-                               Margin="0 0 10 0"
-                               VerticalAlignment="Center"/>
-                    
-                    <Button Style="{StaticResource MaterialDesignFloatingActionMiniLightButton}"
-                            Click="{s:Action OnSetOutputDirectory}"
-                            DockPanel.Dock="Right"
-                            ToolTip="Set output directory"
-                            Width="20"
-                            Height="20">
-                        <material:PackIcon Kind="Folder"
-                                           Width="14"
-                                           Height="14"
-                                           HorizontalAlignment="Center"
-                                           VerticalAlignment="Center"/>
-                    </Button>
-
-                    <TextBox IsReadOnly="True"
-                             Text="{Binding OutputDirectory, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource FileSystemInfoToStringConverter}}"
-                             material:TextFieldAssist.HasClearButton="True"
-                             DockPanel.Dock="Left"
-                             Margin="0 0 10 0"
-                             VerticalAlignment="Center"/>
-                </DockPanel>
-
                 <DockPanel>
-                    <DockPanel LastChildFill="False"
-                           Margin="0 10 0 0">
+                    <DockPanel LastChildFill="False">
                         <TextBlock Text="Output format:"
                                    DockPanel.Dock="Left"
                                    Margin="0 0 10 0"
@@ -119,14 +90,13 @@
                                   Width="150"/>
                     </DockPanel>
 
-                    <DockPanel Margin="0 10 0 0" 
-                               LastChildFill="False">
+                    <DockPanel LastChildFill="False">
                         <StackPanel DockPanel.Dock="Right" 
                                     Orientation="Horizontal" 
                                     HorizontalAlignment="Right"
                                     VerticalAlignment="Center">
-                                    <TextBlock VerticalAlignment="Center" Text="Update rate:" Margin="0 0 10 0"/>
-                                    <Slider Value="{Binding UpdateInterval, Mode=TwoWay}"
+                            <TextBlock VerticalAlignment="Center" Text="Update rate:" Margin="0 0 10 0"/>
+                            <Slider Value="{Binding UpdateInterval, Mode=TwoWay}"
                                     Style="{StaticResource MaterialDesignReversedSlider}"
                                     HorizontalAlignment="Stretch"
                                     VerticalAlignment="Top"
@@ -218,31 +188,32 @@
                     </DockPanel>
                 </DockPanel>
 
-                <DockPanel Margin="0 10 0 0"
-                           LastChildFill="True">
-                    <TextBlock Text="Enabled axes:"
+                <DockPanel LastChildFill="True"
+                           Margin="0 5 0 0">
+                    <TextBlock Text="Output directory:"
                                DockPanel.Dock="Left"
                                Margin="0 0 10 0"
                                VerticalAlignment="Center"/>
 
-                    <material:ColorZone material:ShadowAssist.ShadowDepth="Depth1">
-                        <ListBox ItemsSource="{Binding Source={x:Static common:DeviceAxis.All}}"
-                                 ItemContainerStyle="{StaticResource MaterialDesignToolToggleListBoxItem}"
-                                 behaviours:ListBoxAssist.CanHorizontalScroll="True"
-                                 behaviours:ListBoxAssist.SelectedItems="{Binding EnabledAxes}"
-                                 material:ListBoxAssist.IsToggle="True"
-                                 material:ThemeAssist.Theme="Light"
-                                 ScrollViewer.HorizontalScrollBarVisibility="Hidden"
-                                 ScrollViewer.VerticalScrollBarVisibility="Hidden"
-                                 SelectionMode="Multiple"
-                                 DockPanel.Dock="Left">
-                            <ListBox.ItemsPanel>
-                                <ItemsPanelTemplate>
-                                    <StackPanel Orientation="Horizontal"/>
-                                </ItemsPanelTemplate>
-                            </ListBox.ItemsPanel>
-                        </ListBox>
-                    </material:ColorZone>
+                    <Button Style="{StaticResource MaterialDesignFloatingActionMiniLightButton}"
+                            Click="{s:Action OnSetOutputDirectory}"
+                            DockPanel.Dock="Right"
+                            ToolTip="Set output directory"
+                            Width="20"
+                            Height="20">
+                        <material:PackIcon Kind="Folder"
+                                           Width="14"
+                                           Height="14"
+                                           HorizontalAlignment="Center"
+                                           VerticalAlignment="Center"/>
+                    </Button>
+
+                    <TextBox IsReadOnly="True"
+                             Text="{Binding OutputDirectory, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource FileSystemInfoToStringConverter}}"
+                             material:TextFieldAssist.HasClearButton="True"
+                             DockPanel.Dock="Left"
+                             Margin="0 0 10 0"
+                             VerticalAlignment="Center"/>
                 </DockPanel>
             </StackPanel>
 
@@ -259,15 +230,35 @@
                 </ItemsControl.ItemsPanel>
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
-                        <DockPanel LastChildFill="True">
-                            <TextBlock DockPanel.Dock="Left" 
-                                       VerticalAlignment="Center" 
-                                       Text="{Binding Key}"
-                                       Width="16"/>
+                        <DockPanel LastChildFill="True"
+                                   Margin="0 0 20 1">
+                            <ToggleButton DockPanel.Dock="Left" 
+                                          VerticalAlignment="Center"
+                                          IsChecked="{Binding Value.Enabled}"
+                                          IsEnabled="{Binding DataContext.IsConnected, Converter={StaticResource NotConverter}, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}"
+                                          Height="14"
+                                          Width="20"
+                                          Padding="0">
+                                <ToggleButton.Resources>
+                                    <Style TargetType="{x:Type ToggleButton}" BasedOn="{StaticResource MaterialDesignPaperButton}">
+                                        <Setter Property="material:ElevationAssist.Elevation" Value="Dp0"/>
+                                        <Style.Triggers>
+                                            <Trigger Property="IsChecked" Value="True">
+                                                <Setter Property="Background" Value="{DynamicResource PrimaryHueMidBrush}"/>
+                                                <Setter Property="Foreground" Value="{DynamicResource PrimaryHueMidForegroundBrush}"/>
+                                                <Setter Property="material:RippleAssist.Feedback" Value="{DynamicResource PrimaryHueMidForegroundBrush}" />
+                                            </Trigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </ToggleButton.Resources>
+
+                                <TextBlock Text="{Binding Key}"
+                                           FontSize="10"
+                                           FontWeight="Bold"/>
+                            </ToggleButton>
 
                             <Canvas DockPanel.Dock="Right" 
-                                    HorizontalAlignment="Stretch"
-                                    Margin="0 0 20 0">
+                                    HorizontalAlignment="Stretch">
                                 <metro:RangeSlider Style="{StaticResource MaterialDesignCompactRangeSlider}" 
                                                    Width="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType={x:Type Canvas}}}"
                                                    Minimum="0" 
@@ -277,7 +268,8 @@
                                                    AutoToolTipPlacement="TopLeft" 
                                                    UseLayoutRounding="False"
                                                    LowerValue="{Binding Value.Minimum, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
-                                                   UpperValue="{Binding Value.Maximum, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                                                   UpperValue="{Binding Value.Maximum, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                   IsEnabled="{Binding Value.Enabled}">
                                     <metro:RangeSlider.AutoToolTipLowerValueTemplate>
                                         <DataTemplate>
                                             <TextBlock HorizontalAlignment="Right" Text="{Binding StringFormat='{}{0:D}%'}" />

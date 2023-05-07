@@ -160,9 +160,9 @@ internal abstract class AbstractOutputTarget : Screen, IOutputTarget
             if (settings.TryGetValue<bool>(nameof(AutoConnectEnabled), out var autoConnectEnabled))
                 AutoConnectEnabled = autoConnectEnabled;
 
-            if (settings.TryGetValue<Dictionary<DeviceAxis, DeviceAxisSettings>>(nameof(AxisSettings), out var axisSettingsMap))
-                foreach (var (axis, axisSettings) in axisSettingsMap)
-                    AxisSettings[axis] = axisSettings;
+            if (settings.TryGetValue<Dictionary<DeviceAxis, JObject>>(nameof(AxisSettings), out var axisSettingsMap))
+                foreach (var (axis, axisSettingsToken) in axisSettingsMap)
+                    axisSettingsToken.Populate(AxisSettings[axis]);
         }
     }
 

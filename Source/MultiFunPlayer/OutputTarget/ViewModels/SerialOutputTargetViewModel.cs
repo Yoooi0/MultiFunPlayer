@@ -180,6 +180,8 @@ internal class SerialOutputTargetViewModel : ThreadAbstractOutputTarget
                     Logger.Debug("Received \"{0}\" from \"{1}\"", serialPort.ReadExisting(), SelectedSerialPortDeviceId);
 
                 var values = SendDirtyValuesOnly ? Values.Where(x => DeviceAxis.IsValueDirty(x.Value, lastSentValues[x.Key])) : Values;
+                values = values.Where(x => AxisSettings[x.Key].Enabled);
+
                 var commands = OffloadElapsedTime ? DeviceAxis.ToString(values) : DeviceAxis.ToString(values, elapsed * 1000);
                 if (serialPort.IsOpen && !string.IsNullOrWhiteSpace(commands))
                 {

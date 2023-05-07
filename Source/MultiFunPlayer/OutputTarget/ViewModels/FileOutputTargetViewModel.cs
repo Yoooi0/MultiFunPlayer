@@ -18,24 +18,16 @@ internal class FileOutputTargetViewModel : ThreadAbstractOutputTarget
 
     public DirectoryInfo OutputDirectory { get; set; } = null;
     public ScriptType ScriptType { get; set; } = ScriptType.Funscript;
-    public ObservableConcurrentCollection<DeviceAxis> EnabledAxes { get; set; }
 
     public FileOutputTargetViewModel(int instanceIndex, IEventAggregator eventAggregator, IDeviceAxisValueProvider valueProvider)
         : base(instanceIndex, eventAggregator, valueProvider)
     {
-        EnabledAxes = new ObservableConcurrentCollection<DeviceAxis>();
-        EnabledAxes.PropertyChanged += (s, e) =>
-        {
-            if (e.PropertyName == "Count")
-                NotifyOfPropertyChange(nameof(CanToggleConnect));
-        };
-
         UpdateInterval = 20;
     }
 
     public bool IsConnected => Status == ConnectionStatus.Connected;
     public bool IsConnectBusy => Status == ConnectionStatus.Connecting || Status == ConnectionStatus.Disconnecting;
-    public bool CanToggleConnect => !IsConnectBusy && EnabledAxes.Count > 0;
+    public bool CanToggleConnect => !IsConnectBusy;
 
     protected override void Run(CancellationToken token)
     {
@@ -44,14 +36,14 @@ internal class FileOutputTargetViewModel : ThreadAbstractOutputTarget
         try
         {
             Logger.Info("Connecting to {0}", Identifier);
-            if (EnabledAxes.Count == 0)
+            if (!AxisSettings.Values.Any(x => x.Enabled))
                 throw new Exception("At least one axis must be enabled");
 
             if (OutputDirectory?.AsRefreshed().Exists != true)
                 throw new DirectoryNotFoundException("Output directory does not exist");
 
             var baseFileName = $"MultiFunPlayer_{DateTime.Now:yyyyMMddTHHmmss}";
-            foreach (var axis in EnabledAxes)
+            foreach (var axis in AxisSettings.Where(x => x.Value.Enabled).Select(x => x.Key))
             {
                 writers[axis] = ScriptType switch
                 {
@@ -80,10 +72,14 @@ internal class FileOutputTargetViewModel : ThreadAbstractOutputTarget
                 UpdateValues();
 
                 currentTime += elapsed;
-                foreach (var axis in EnabledAxes.Where(x => DeviceAxis.IsValueDirty(Values[x], lastSavedValues[x], 1E-10)))
+
+                var values = Values.Where(x => DeviceAxis.IsValueDirty(x.Value, lastSavedValues[x.Key], 1E-10));
+                values = values.Where(x => AxisSettings[x.Key].Enabled);
+
+                foreach (var (axis, value) in values)
                 {
-                    writers[axis].Write(currentTime, Values[axis]);
-                    lastSavedValues[axis] = Values[axis];
+                    writers[axis].Write(currentTime, value);
+                    lastSavedValues[axis] = value;
                 }
             });
         }
@@ -121,7 +117,6 @@ internal class FileOutputTargetViewModel : ThreadAbstractOutputTarget
         {
             settings[nameof(OutputDirectory)] = OutputDirectory != null ? JToken.FromObject(OutputDirectory) : null;
             settings[nameof(ScriptType)] = new JValue(ScriptType);
-            settings[nameof(EnabledAxes)] = JArray.FromObject(EnabledAxes);
         }
         else if (action == SettingsAction.Loading)
         {
@@ -129,12 +124,6 @@ internal class FileOutputTargetViewModel : ThreadAbstractOutputTarget
                 OutputDirectory = outputDirectory;
             if (settings.TryGetValue<ScriptType>(nameof(ScriptType), out var scriptType))
                 ScriptType = scriptType;
-
-            if (settings.TryGetValue<List<DeviceAxis>>(nameof(EnabledAxes), out var enabledAxes))
-            {
-                EnabledAxes.Clear();
-                EnabledAxes.AddRange(enabledAxes);
-            }
         }
     }
 

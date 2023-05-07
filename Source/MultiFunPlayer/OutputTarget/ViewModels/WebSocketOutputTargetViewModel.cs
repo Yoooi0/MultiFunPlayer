@@ -82,6 +82,8 @@ internal class WebSocketOutputTargetViewModel : AsyncAbstractOutputTarget
                 UpdateValues();
 
                 var values = SendDirtyValuesOnly ? Values.Where(x => DeviceAxis.IsValueDirty(x.Value, lastSentValues[x.Key])) : Values;
+                values = values.Where(x => AxisSettings[x.Key].Enabled);
+
                 var commands = OffloadElapsedTime ? DeviceAxis.ToString(values) : DeviceAxis.ToString(values, elapsed * 1000);
                 if (client.State == WebSocketState.Open && !string.IsNullOrWhiteSpace(commands))
                 {

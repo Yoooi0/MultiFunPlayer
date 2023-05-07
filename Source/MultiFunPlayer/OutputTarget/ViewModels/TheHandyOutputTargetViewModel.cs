@@ -115,6 +115,8 @@ internal class TheHandyOutputTargetViewModel : AsyncAbstractOutputTarget
 
                 if (SourceAxis == null)
                     return;
+                if (!AxisSettings[SourceAxis].Enabled)
+                    return;
 
                 var currentValue = Values[SourceAxis];
                 if (!double.IsFinite(lastSentValue) || Math.Abs(lastSentValue - currentValue) >= 0.005)

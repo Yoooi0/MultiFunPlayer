@@ -155,6 +155,8 @@ internal class ButtplugOutputTargetViewModel : AsyncAbstractOutputTarget
 
                 if (!double.IsFinite(currentValue))
                     return false;
+                if (!AxisSettings[axis].Enabled)
+                    return false;
 
                 var shouldUpdate = !double.IsFinite(lastValue)
                                 || (currentValue == 0 && lastValue != 0)

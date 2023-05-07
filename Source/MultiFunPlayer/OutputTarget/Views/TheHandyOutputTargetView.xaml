@@ -5,8 +5,7 @@
              xmlns:s="https://github.com/canton7/Stylet"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
-             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-             xmlns:local="clr-namespace:MultiFunPlayer.OutputTarget.ViewModels"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:converters="clr-namespace:MultiFunPlayer.UI.Converters"
              xmlns:common="clr-namespace:MultiFunPlayer.Common"
              mc:Ignorable="d" 
@@ -76,30 +75,6 @@
 
         <StackPanel Margin="20">
             <DockPanel LastChildFill="True" Margin="0 0 0 10">
-                <DockPanel DockPanel.Dock="Left"
-                           LastChildFill="True">
-                    <DockPanel.Resources>
-                        <Style TargetType="{x:Type DockPanel}">
-                            <Setter Property="IsEnabled" Value="False" />
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding Status}" Value="Disconnected">
-                                    <Setter Property="IsEnabled" Value="True" />
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </DockPanel.Resources>
-
-                    <TextBox Text="{Binding ConnectionKey}"
-                             material:HintAssist.Hint="connection key"
-                             Style="{StaticResource MaterialDesignFloatingHintTextBox}"
-                             DockPanel.Dock="Left"
-                             Margin="0 -12 0 0"
-                             VerticalAlignment="Center"/>
-                </DockPanel>
-            </DockPanel>
-
-            <DockPanel LastChildFill="True" Margin="0 0 0 20">
-
                 <DockPanel DockPanel.Dock="Left">
                     <TextBlock VerticalAlignment="Center" Text="Source axis:" Margin="0 0 10 0"/>
                     <ComboBox Width="50"
@@ -173,6 +148,29 @@
                     </material:PopupBox>
                 </StackPanel>
             </DockPanel>
+            
+            <DockPanel LastChildFill="True" Margin="0 0 0 20">
+                <DockPanel DockPanel.Dock="Left"
+                           LastChildFill="True">
+                    <DockPanel.Resources>
+                        <Style TargetType="{x:Type DockPanel}">
+                            <Setter Property="IsEnabled" Value="False" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding Status}" Value="Disconnected">
+                                    <Setter Property="IsEnabled" Value="True" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </DockPanel.Resources>
+
+                    <TextBox Text="{Binding ConnectionKey}"
+                             material:HintAssist.Hint="connection key"
+                             Style="{StaticResource MaterialDesignFloatingHintTextBox}"
+                             DockPanel.Dock="Left"
+                             Margin="0 -12 0 0"
+                             VerticalAlignment="Center"/>
+                </DockPanel>
+            </DockPanel>
 
             <TextBlock Text="Output Range"
                        Typography.Capitals="AllSmallCaps"
@@ -187,15 +185,34 @@
                 </ItemsControl.ItemsPanel>
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
-                        <DockPanel LastChildFill="True">
-                            <TextBlock DockPanel.Dock="Left" 
-                                       VerticalAlignment="Center" 
-                                       Text="{Binding Key}"
-                                       Width="16"/>
+                        <DockPanel LastChildFill="True"
+                                   Margin="0 0 20 1">
+                            <ToggleButton DockPanel.Dock="Left" 
+                                          VerticalAlignment="Center" 
+                                          IsChecked="{Binding Value.Enabled}"
+                                          Height="14"
+                                          Width="20"
+                                          Padding="0">
+                                <ToggleButton.Resources>
+                                    <Style TargetType="{x:Type ToggleButton}" BasedOn="{StaticResource MaterialDesignPaperButton}">
+                                        <Setter Property="material:ElevationAssist.Elevation" Value="Dp0"/>
+                                        <Style.Triggers>
+                                            <Trigger Property="IsChecked" Value="True">
+                                                <Setter Property="Background" Value="{DynamicResource PrimaryHueMidBrush}"/>
+                                                <Setter Property="Foreground" Value="{DynamicResource PrimaryHueMidForegroundBrush}"/>
+                                                <Setter Property="material:RippleAssist.Feedback" Value="{DynamicResource PrimaryHueMidForegroundBrush}" />
+                                            </Trigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </ToggleButton.Resources>
+
+                                <TextBlock Text="{Binding Key}"
+                                           FontSize="10"
+                                           FontWeight="Bold"/>
+                            </ToggleButton>
 
                             <Canvas DockPanel.Dock="Right" 
-                                    HorizontalAlignment="Stretch"
-                                    Margin="0 0 20 0">
+                                    HorizontalAlignment="Stretch">
                                 <metro:RangeSlider Style="{StaticResource MaterialDesignCompactRangeSlider}" 
                                                    Width="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType={x:Type Canvas}}}"
                                                    Minimum="0" 
@@ -205,7 +222,8 @@
                                                    AutoToolTipPlacement="TopLeft" 
                                                    UseLayoutRounding="False"
                                                    LowerValue="{Binding Value.Minimum, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
-                                                   UpperValue="{Binding Value.Maximum, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                                                   UpperValue="{Binding Value.Maximum, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                   IsEnabled="{Binding Value.Enabled}">
                                     <metro:RangeSlider.AutoToolTipLowerValueTemplate>
                                         <DataTemplate>
                                             <TextBlock HorizontalAlignment="Right" Text="{Binding StringFormat='{}{0:D}%'}" />
