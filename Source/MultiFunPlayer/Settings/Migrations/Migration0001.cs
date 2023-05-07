@@ -7,9 +7,9 @@ using System.Text.RegularExpressions;
 
 namespace MultiFunPlayer.Settings.Migrations;
 
-internal class Migration__01__1_19_0 : AbstractConfigMigration
+internal class Migration0001 : AbstractConfigMigration
 {
-    private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
+    private readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
     public override void Migrate(JObject settings)
     {
