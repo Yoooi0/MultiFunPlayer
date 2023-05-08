@@ -174,9 +174,12 @@ public class CsvReader : AbstractTextScriptReader
     {
         var keyframes = new KeyframeCollection();
 
-        var line = default(string);
-        while ((line = stream.ReadLine()) != null)
+        while (true)
         {
+            var line = stream.ReadLine();
+            if (line == null)
+                break;
+
             var items = line.Split(';');
             if (items.Length != 2)
                 continue;
