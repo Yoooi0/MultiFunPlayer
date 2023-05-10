@@ -5,6 +5,7 @@ using Newtonsoft.Json.Linq;
 using NLog;
 using Stylet;
 using System.Collections;
+using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
@@ -24,7 +25,7 @@ internal class InternalMediaSourceViewModel : AbstractMediaSource, IHandle<Media
     private bool _isPlaying;
     private double _position;
     private double _duration;
-    private FileInfo _scriptInfo;
+    private PlaylistItem _currentItem;
 
     public override ConnectionStatus Status { get; protected set; }
     public int PlaylistIndex { get; set; } = 0;
@@ -54,7 +55,7 @@ internal class InternalMediaSourceViewModel : AbstractMediaSource, IHandle<Media
             Logger.Info("Connecting to {0}", Name);
 
             await Task.Delay(250, token);
-            SetScriptInfo(null);
+            PlayIndex(-1);
             SetIsPlaying(false);
 
             while (_messageChannel.Reader.TryRead(out var _)) ;
@@ -74,56 +75,58 @@ internal class InternalMediaSourceViewModel : AbstractMediaSource, IHandle<Media
                     while (_messageChannel.Reader.TryRead(out var message))
                     {
                         if (message is MediaPlayPauseMessage playPauseMessage) { SetIsPlaying(playPauseMessage.ShouldBePlaying); }
-                        else if (message is MediaSeekMessage seekMessage && _scriptInfo != null) { SetPosition(seekMessage.Position?.TotalSeconds ?? double.NaN); }
+                        else if (message is MediaSeekMessage seekMessage && _currentItem != null) { SetPosition(seekMessage.Position?.TotalSeconds ?? double.NaN); }
                         else if (message is MediaChangePathMessage changePathMessage)
                         {
                             var path = changePathMessage.Path;
-                            var playlistIndex = ScriptPlaylist?.FindIndex(path);
-
-                            if (playlistIndex >= 0)
-                                PlayByIndex(playlistIndex.Value);
+                            var playlistIndex = ScriptPlaylist?.FindIndex(path) ?? -1;
+                            if (playlistIndex >= 0 && CheckIndexAndRefresh(playlistIndex) == true)
+                                PlayIndex(playlistIndex);
                             else
                                 SetPlaylist(CreatePlaylist(path));
                         }
-                        else if (message is PlayScriptAtIndexMessage playIndexMessage) { PlayByIndex(playIndexMessage.Index); }
+                        else if (message is PlayScriptAtIndexMessage playIndexMessage)
+                        {
+                            var index = playIndexMessage.Index;
+                            if (CheckIndexAndRefresh(index) == true)
+                                PlayIndex(index);
+                        }
                         else if (message is PlayScriptWithOffsetMessage playOffsetMessage)
                         {
                             if (ScriptPlaylist == null)
                                 continue;
 
-                            var desiredIndex = PlaylistIndex + playOffsetMessage.Offset;
-                            var index = IsLooping ? PlaylistIndex
-                                      : IsShuffling ? Random.Shared.Next(0, ScriptPlaylist.Count)
-                                      : desiredIndex < 0 ? 0
-                                      : desiredIndex < ScriptPlaylist.Count ? desiredIndex
-                                      : -1;
-
-                            if (index < 0)
-                                SetPlaylist(null);
+                            if (IsLooping)
+                                PlayIndex(PlaylistIndex);
+                            else if (IsShuffling)
+                                PlayRandom();
                             else
-                                PlayByIndex(index);
+                                PlayWithOffset(playOffsetMessage.Offset);
                         }
                     }
 
                     if (ScriptPlaylist == null)
                         continue;
 
-                    if (_scriptInfo == null)
-                        PlayByIndex(IsShuffling ? Random.Shared.Next(0, ScriptPlaylist.Count) : 0);
+                    if (_currentItem == null)
+                    {
+                        if (IsShuffling)
+                            PlayRandom();
+                        else
+                            PlayIndexOrNext(0);
+                    }
 
                     if (_position > _duration)
                     {
                         if (IsLooping)
                             SetPosition(0);
                         else if (IsShuffling)
-                            PlayByIndex(Random.Shared.Next(0, ScriptPlaylist.Count));
-                        else if (PlaylistIndex < ScriptPlaylist.Count - 1)
-                            PlayByIndex(PlaylistIndex + 1);
+                            PlayRandom();
                         else
-                            SetPlaylist(null);
+                            PlayWithOffset(1);
                     }
 
-                    if (!_isPlaying || _scriptInfo == null)
+                    if (!_isPlaying || _currentItem == null)
                         continue;
 
                     SetPosition(_position + elapsed);
@@ -140,30 +143,86 @@ internal class InternalMediaSourceViewModel : AbstractMediaSource, IHandle<Media
         if (IsDisposing)
             return;
 
-        SetScriptInfo(null);
+        PlayIndex(-1);
         SetIsPlaying(false);
 
         while (_messageChannel.Reader.TryRead(out var _));
     }
 
-    private void PlayByIndex(int index)
+    private bool? CheckIndexAndRefresh(int index)
+    {
+        if (!ScriptPlaylist.ValidateIndex(index))
+            return null;
+
+        var item = ScriptPlaylist[index];
+        return item.AsRefreshed().Exists;
+    }
+
+    private void PlayWithOffset(int offset)
+    {
+        var index = PlaylistIndex + offset;
+        while (CheckIndexAndRefresh(index) == false)
+            index += Math.Sign(offset);
+
+        index = Math.Clamp(index, -1, ScriptPlaylist.Count);
+        if (_currentItem != null && !ScriptPlaylist.ValidateIndex(index))
+        {
+            SetIsPlaying(false);
+            if (index < 0)
+                SetPosition(0, forceSeek: true);
+            else if (index >= ScriptPlaylist.Count)
+                SetPosition(_duration, forceSeek: true);
+        }
+        else
+        {
+            PlayIndex(index);
+        }
+    }
+
+    private void PlayRandom()
+    {
+        ScriptPlaylist.Refresh();
+
+        var existing = ScriptPlaylist.Where(i => i.Exists).ToList();
+        if (existing.Count == 0)
+            return;
+
+        var item = existing[Random.Shared.Next(0, existing.Count)];
+        var index = ScriptPlaylist.FindIndex(item);
+
+        PlayIndex(index);
+    }
+
+    private void PlayIndexOrNext(int index)
+    {
+        while (CheckIndexAndRefresh(index) == false)
+            index++;
+
+        PlayIndex(index);
+    }
+
+    private void PlayIndex(int index)
     {
         if (ScriptPlaylist == null)
+        {
+            PlaylistIndex = -1;
+            SetCurrentItem(null);
             return;
-        if (index < 0 || index >= ScriptPlaylist.Count)
-            return;
+        }
 
-        var scriptInfo = ScriptPlaylist[index];
-        if (scriptInfo?.AsRefreshed().Exists == false)
-            scriptInfo = null;
+        var validIndex = ScriptPlaylist.ValidateIndex(index);
+        var item = validIndex ? ScriptPlaylist[index].AsRefreshed() : null;
+        if (item?.Exists == false)
+            item = null;
 
-        if (_scriptInfo != scriptInfo)
+        if (_currentItem != item)
+        {
+            PlaylistIndex = item != null ? index : -1;
+            SetCurrentItem(item);
+        }
+        else if (_currentItem != null)
         {
             PlaylistIndex = index;
-            SetScriptInfo(scriptInfo);
-        }
-        else if (_scriptInfo != null)
-        {
             SetPosition(0, forceSeek: true);
         }
     }
@@ -172,8 +231,19 @@ internal class InternalMediaSourceViewModel : AbstractMediaSource, IHandle<Media
     public bool CanPlayPrevious => IsConnected && ScriptPlaylist != null;
     public void PlayNext() => _ = _messageChannel.Writer.TryWrite(new PlayScriptWithOffsetMessage(1));
     public void PlayPrevious() => _ = _messageChannel.Writer.TryWrite(new PlayScriptWithOffsetMessage(-1));
+
     public bool CanClearPlaylist => IsConnected && ScriptPlaylist != null;
     public void ClearPlaylist() => SetPlaylist(null);
+
+    public bool CanRefreshPlaylist => IsConnected && ScriptPlaylist != null;
+    public void RefreshPlaylist() => ScriptPlaylist?.Refresh();
+
+    public bool CanCleanupPlaylist => IsConnected && ScriptPlaylist != null;
+    public void CleanupPlaylist()
+    {
+        ScriptPlaylist?.Cleanup();
+        PlayIndex(ScriptPlaylist.FindIndex(_currentItem));
+    }
 
     private Playlist CreatePlaylist(params string[] paths)
     {
@@ -189,22 +259,20 @@ internal class InternalMediaSourceViewModel : AbstractMediaSource, IHandle<Media
         lock (_playlistLock)
         {
             ScriptPlaylist = playlist;
-            PlaylistIndex = 0;
-
-            SetScriptInfo(null);
+            PlayIndex(-1);
             if (playlist == null)
                 SetIsPlaying(false);
         }
     }
 
-    private void SetScriptInfo(FileInfo scriptInfo)
+    private void SetCurrentItem(PlaylistItem item)
     {
-        _scriptInfo = scriptInfo;
+        _currentItem = item;
         if (Status != ConnectionStatus.Connected && Status != ConnectionStatus.Disconnecting)
             return;
 
         EventAggregator.Publish(new ChangeScriptMessage(DeviceAxis.All, null));
-        var result = scriptInfo == null ? null : FunscriptReader.Default.FromFileInfo(scriptInfo);
+        var result = item == null ? null : FunscriptReader.Default.FromFileInfo(item.AsFileInfo());
         if (result?.IsSuccess != true)
         {
             SetDuration(double.NaN);
@@ -219,7 +287,7 @@ internal class InternalMediaSourceViewModel : AbstractMediaSource, IHandle<Media
         }
         else
         {
-            var axes = DeviceAxisUtils.FindAxesMatchingName(scriptInfo.Name, true);
+            var axes = DeviceAxisUtils.FindAxesMatchingName(item.Name, true);
             EventAggregator.Publish(new ChangeScriptMessage(axes, result.Resource));
             SetDuration(result.Resource.Keyframes[^1].Position);
         }
@@ -275,7 +343,7 @@ internal class InternalMediaSourceViewModel : AbstractMediaSource, IHandle<Media
             settings[nameof(ScriptPlaylist)] = ScriptPlaylist switch
             {
                 Playlist { SourceFile: not null } => JToken.FromObject(ScriptPlaylist.SourceFile.FullName),
-                Playlist { Count: > 0 } => JArray.FromObject(ScriptPlaylist),
+                Playlist { Count: > 0 } => JArray.FromObject(ScriptPlaylist.Select(x => x.AsFileInfo())),
                 _ => null,
             };
         }
@@ -356,14 +424,14 @@ internal class InternalMediaSourceViewModel : AbstractMediaSource, IHandle<Media
 
     public void OnPlayScript(object sender, EventArgs e)
     {
-        if (sender is not FrameworkElement element || element.DataContext is not FileInfo scriptInfo)
+        if (sender is not FrameworkElement element || element.DataContext is not PlaylistItem item)
             return;
 
         var playlist = ScriptPlaylist;
         if (playlist == null)
             return;
 
-        var index = playlist.FindIndex(scriptInfo);
+        var index = playlist.FindIndex(item);
         if (index < 0)
             return;
 
@@ -385,9 +453,9 @@ internal class InternalMediaSourceViewModel : AbstractMediaSource, IHandle<Media
     private record PlayScriptAtIndexMessage(int Index);
     private record PlayScriptWithOffsetMessage(int Offset);
 
-    internal class Playlist : IReadOnlyList<FileInfo>
+    internal class Playlist : IReadOnlyList<PlaylistItem>, INotifyCollectionChanged, INotifyPropertyChanged
     {
-        private readonly List<FileInfo> _files;
+        private readonly List<PlaylistItem> _items;
 
         public FileInfo SourceFile { get; }
 
@@ -396,30 +464,74 @@ internal class InternalMediaSourceViewModel : AbstractMediaSource, IHandle<Media
             SourceFile = new FileInfo(sourceFile);
 
             if (SourceFile.Exists)
-                _files = File.ReadAllLines(SourceFile.FullName)
-                             .Select(p => new FileInfo(p))
-                             .Where(f => f.Exists && string.Equals(f.Extension, ".funscript", StringComparison.OrdinalIgnoreCase))
+                _items = File.ReadAllLines(SourceFile.FullName)
+                             .Select(p => { try { return new PlaylistItem(p); } catch { return null; } })
+                             .NotNull()
+                             .Where(f => string.Equals(f.Extension, ".funscript", StringComparison.OrdinalIgnoreCase))
                              .ToList();
 
-            _files ??= new List<FileInfo>();
+            _items ??= new List<PlaylistItem>();
         }
 
         public Playlist(IEnumerable<string> files)
         {
-            _files = files.Select(p => new FileInfo(p))
-                          .Where(f => f.Exists && string.Equals(f.Extension, ".funscript", StringComparison.OrdinalIgnoreCase))
+            _items = files.Select(p => { try { return new PlaylistItem(p); } catch { return null; } })
+                          .NotNull()
+                          .Where(f => string.Equals(f.Extension, ".funscript", StringComparison.OrdinalIgnoreCase))
                           .ToList();
         }
 
-        public FileInfo this[int index] => _files[index];
-        public int Count => _files.Count;
-        public IEnumerator<FileInfo> GetEnumerator() => _files.GetEnumerator();
-        IEnumerator IEnumerable.GetEnumerator() => _files.GetEnumerator();
+        public PlaylistItem this[int index] => _items[index];
+        public int Count => _items.Count;
+        public IEnumerator<PlaylistItem> GetEnumerator() => _items.GetEnumerator();
+        IEnumerator IEnumerable.GetEnumerator() => _items.GetEnumerator();
 
-        public int FindIndex(Predicate<FileInfo> match) => _files.FindIndex(match);
-        public int FindIndex(FileInfo file) => FindIndex(f => string.Equals(f.Name, file.Name, StringComparison.OrdinalIgnoreCase)
-                                                           || string.Equals(f.FullName, file.FullName, StringComparison.OrdinalIgnoreCase));
+        public void Refresh()
+        {
+            foreach (var item in _items)
+                _ = item.AsRefreshed();
+        }
+
+        public void Cleanup()
+        {
+            Refresh();
+            _items.RemoveAll(i => !i.Exists);
+
+            CollectionChanged?.Invoke(this, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Count)));
+        }
+
+        public int FindIndex(Predicate<PlaylistItem> match) => _items.FindIndex(match);
+        public int FindIndex(PlaylistItem item) => item != null ? FindIndex(f => string.Equals(f.Name, item.Name, StringComparison.OrdinalIgnoreCase)
+                                                                              || string.Equals(f.FullName, item.FullName, StringComparison.OrdinalIgnoreCase))
+                                                                : -1;
         public int FindIndex(string path) => FindIndex(f => string.Equals(f.Name, path, StringComparison.OrdinalIgnoreCase)
                                                          || string.Equals(f.FullName, path, StringComparison.OrdinalIgnoreCase));
+
+        public event NotifyCollectionChangedEventHandler CollectionChanged;
+        public event PropertyChangedEventHandler PropertyChanged;
+    }
+
+    internal class PlaylistItem : PropertyChangedBase
+    {
+        private readonly FileInfo _source;
+
+        public string Name => _source.Name;
+        public string FullName => _source.FullName;
+        public string Extension => _source.Extension;
+        public bool Exists => _source.Exists;
+
+        public PlaylistItem(string path)
+            => _source = new FileInfo(path);
+
+        public FileInfo AsFileInfo() => _source;
+        public PlaylistItem AsRefreshed()
+        {
+            var before = _source.Exists;
+            var after = _source.AsRefreshed().Exists;
+            if (before ^ after)
+                NotifyOfPropertyChange(nameof(Exists));
+            return this;
+        }
     }
 }
