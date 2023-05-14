@@ -331,7 +331,7 @@ internal class PlexMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlay
 
         async Task DoRefreshClients(CancellationToken token)
         {
-            await Task.Delay(250, token).ConfigureAwait(true);
+            await Task.Delay(250, token);
 
             using var client = NetUtils.CreateHttpClient();
             client.Timeout = TimeSpan.FromMilliseconds(5000);
@@ -367,7 +367,7 @@ internal class PlexMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlay
 
             SelectClientByMachineIdentifier(SelectedClientMachineIdentifier);
 
-            await Task.Delay(250, token).ConfigureAwait(true);
+            await Task.Delay(250, token);
         }
     }
 

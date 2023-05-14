@@ -119,7 +119,7 @@ internal class ShortcutSettingsViewModel : Screen, IHandle<SettingsMessage>, IDi
             return;
 
         _captureGestureCancellationSource = new CancellationTokenSource();
-        await TryCaptureGestureAsync(_captureGestureCancellationSource.Token).ConfigureAwait(true);
+        await TryCaptureGestureAsync(_captureGestureCancellationSource.Token);
         _captureGestureCancellationSource.Dispose();
         _captureGestureCancellationSource = null;
     }
@@ -218,8 +218,8 @@ internal class ShortcutSettingsViewModel : Screen, IHandle<SettingsMessage>, IDi
         {
             do
             {
-                _ = await _captureGestureChannel.Reader.WaitToReadAsync(token).ConfigureAwait(true);
-                gesture = await _captureGestureChannel.Reader.ReadAsync(token).ConfigureAwait(true);
+                _ = await _captureGestureChannel.Reader.WaitToReadAsync(token);
+                gesture = await _captureGestureChannel.Reader.ReadAsync(token);
             } while (!token.IsCancellationRequested && !ValidateGesture(gesture) && tryCount++ < 5);
         }
         catch (OperationCanceledException) { }

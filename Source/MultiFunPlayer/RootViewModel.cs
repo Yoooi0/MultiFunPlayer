@@ -72,7 +72,7 @@ internal class RootViewModel : Conductor<IScreen>.Collection.AllActive, IHandle<
             {
                 Execute.PostToUIThread(async () =>
                 {
-                    var result = await DialogHelper.ShowAsync(new InformationMessageDialogViewModel(showCheckbox: true), "RootDialog").ConfigureAwait(true);
+                    var result = await DialogHelper.ShowAsync(new InformationMessageDialogViewModel(showCheckbox: true), "RootDialog");
                     if (result is not bool disablePopup)
                         return;
 

@@ -86,7 +86,7 @@ internal class SerialOutputTargetViewModel : ThreadAbstractOutputTarget
 
         async Task DoRefreshPorts(CancellationToken token)
         {
-            await Task.Delay(250, token).ConfigureAwait(true);
+            await Task.Delay(250, token);
 
             var serialPorts = new List<SerialPortInfo>();
             var scope = new ManagementScope("\\\\.\\ROOT\\cimv2");
@@ -107,7 +107,7 @@ internal class SerialOutputTargetViewModel : ThreadAbstractOutputTarget
 
             searcher.Get(observer);
             using (token.Register(() => taskCompletion.TrySetCanceled()))
-                await taskCompletion.Task.WaitAsync(token).ConfigureAwait(true);
+                await taskCompletion.Task.WaitAsync(token);
 
             var lastSelectedDeviceId = SelectedSerialPortDeviceId;
             SerialPorts.RemoveRange(SerialPorts.Except(serialPorts).ToList());
@@ -115,7 +115,7 @@ internal class SerialOutputTargetViewModel : ThreadAbstractOutputTarget
 
             SelectSerialPortByDeviceId(lastSelectedDeviceId);
 
-            await Task.Delay(250, token).ConfigureAwait(true);
+            await Task.Delay(250, token);
         }
     }
 

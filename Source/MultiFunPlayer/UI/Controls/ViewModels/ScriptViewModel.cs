@@ -1353,7 +1353,7 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         if (sender is not FrameworkElement element || element.DataContext is not IMediaPathModifier modifier)
             return;
 
-        _ = await DialogHost.Show(modifier, "MediaPathModifierDialog").ConfigureAwait(true);
+        _ = await DialogHost.Show(modifier, "MediaPathModifierDialog");
 
         if (MediaResource != null)
             Handle(new MediaPathChangedMessage(MediaResource.OriginalPath));

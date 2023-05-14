@@ -40,7 +40,7 @@ internal static class DialogHelper
             DialogHost.Close(dialogName);
 
         (model as IScreenState)?.Activate();
-        var result = await DialogHost.Show(view, dialogName).ConfigureAwait(true);
+        var result = await DialogHost.Show(view, dialogName);
         (model as IScreenState)?.Deactivate();
         return result;
     }
