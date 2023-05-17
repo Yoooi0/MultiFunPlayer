@@ -265,8 +265,6 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
 
                     bool CanMotionProviderFillGap()
                     {
-                        if (!IsPlaying || !context.InsideScript)
-                            return false;
                         if (!settings.MotionProviderFillGaps)
                             return false;
                         if (!AxisKeyframes.TryGetValue(axis, out var keyframes) || keyframes == null || keyframes.Count == 0)
