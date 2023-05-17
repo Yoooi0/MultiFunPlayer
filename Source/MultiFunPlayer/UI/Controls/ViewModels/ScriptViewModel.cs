@@ -250,7 +250,7 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                     {
                         if (!settings.UpdateMotionProviderWhenPaused && !IsPlaying)
                             return false;
-                        if (!canFillGap && (!settings.UpdateMotionProviderWithoutScript || !context.Invalid))
+                        if (!canFillGap && !settings.UpdateMotionProviderWithoutScript && !context.InsideScript)
                             return false;
 
                         if (settings.UpdateMotionProviderWithAxis != null)
