@@ -277,17 +277,38 @@
                                                                 </Style>
                                                             </Button.Style>
 
-                                                            <StackPanel Orientation="Horizontal">
+                                                            <Grid>
+                                                                <Grid.ColumnDefinitions>
+                                                                    <ColumnDefinition Width="Auto"/>
+                                                                    <ColumnDefinition Width="*"/>
+                                                                    <ColumnDefinition Width="Auto"/>
+                                                                </Grid.ColumnDefinitions>
                                                                 <TextBlock Text="{Binding StringFormat={}#{0}, RelativeSource={RelativeSource AncestorType={x:Type ContentPresenter}, AncestorLevel=3}, Converter={StaticResource ItemIndexInContainerConverter}, ConverterParameter=1}" 
+                                                                           Grid.Column="0"
                                                                            FontWeight="Medium"
                                                                            Margin="5 0 5 0"
                                                                            FontSize="9"
                                                                            VerticalAlignment="Center"/>
-                                                                <TextBlock Text="{Binding Name}" 
+
+                                                                <TextBlock Text="{Binding Name}"
+                                                                           Grid.Column="1"
                                                                            Margin="5 3 5 3"
                                                                            FontWeight="Medium"
                                                                            VerticalAlignment="Center"/>
-                                                            </StackPanel>
+
+                                                                <Button Style="{StaticResource MaterialDesignRaisedButton}"
+                                                                        Click="{s:Action OnRemoveItem}"
+                                                                        material:RippleAssist.Feedback="{DynamicResource PrimaryHueMidForegroundBrush}"
+                                                                        x:Name="RemoveButton"
+                                                                        Grid.Column="2"
+                                                                        Margin="0 0 3 0"
+                                                                        ToolTip="Remove from playlist"
+                                                                        Height="16" 
+                                                                        Width="16" 
+                                                                        Padding="0">
+                                                                    <material:PackIcon Kind="TrashCanOutline"/>
+                                                                </Button>
+                                                            </Grid>
                                                         </Button>
 
                                                         <DataTemplate.Triggers>
@@ -332,6 +353,11 @@
                                                                     <Setter Property="Background" TargetName="Button" Value="{DynamicResource PrimaryHueMidBrush}"/>
                                                                     <Setter Property="Foreground" TargetName="Button" Value="{DynamicResource PrimaryHueMidForegroundBrush}"/>
                                                                     <Setter Property="material:RippleAssist.Feedback" TargetName="Button" Value="{DynamicResource PrimaryHueMidForegroundBrush}"/>
+
+                                                                    <Setter Property="Foreground" TargetName="RemoveButton" Value="{DynamicResource PrimaryHueMidBrush}"/>
+                                                                    <Setter Property="Background" TargetName="RemoveButton" Value="{DynamicResource PrimaryHueMidForegroundBrush}"/>
+                                                                    <Setter Property="BorderBrush" TargetName="RemoveButton" Value="{DynamicResource PrimaryHueMidForegroundBrush}"/>
+                                                                    <Setter Property="material:RippleAssist.Feedback" TargetName="RemoveButton" Value="{DynamicResource PrimaryHueMidBrush}"/>
                                                                 </DataTrigger.Setters>
                                                             </DataTrigger>
                                                         </DataTemplate.Triggers>

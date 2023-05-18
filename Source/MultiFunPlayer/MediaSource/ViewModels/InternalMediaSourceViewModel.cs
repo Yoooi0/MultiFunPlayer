@@ -1,4 +1,4 @@
-﻿using MultiFunPlayer.Common;
+using MultiFunPlayer.Common;
 using MultiFunPlayer.Input;
 using MultiFunPlayer.UI;
 using Newtonsoft.Json.Linq;
@@ -113,7 +113,7 @@ internal class InternalMediaSourceViewModel : AbstractMediaSource, IHandle<Media
                         if (IsShuffling)
                             PlayRandom();
                         else
-                            PlayIndexOrNext(0);
+                            PlayIndexOrNextBest(0);
                     }
 
                     if (_position > _duration)
@@ -193,12 +193,20 @@ internal class InternalMediaSourceViewModel : AbstractMediaSource, IHandle<Media
         PlayIndex(index);
     }
 
-    private void PlayIndexOrNext(int index)
+    private void PlayIndexOrNextBest(int index)
     {
-        while (CheckIndexAndRefresh(index) == false)
-            index++;
+        var bestIndex = index;
+        while (CheckIndexAndRefresh(bestIndex) == false)
+            bestIndex++;
 
-        PlayIndex(index);
+        if (!ScriptPlaylist.ValidateIndex(bestIndex))
+        {
+            bestIndex = index - 1;
+            while (CheckIndexAndRefresh(bestIndex) == false)
+                bestIndex--;
+        }
+
+        PlayIndex(bestIndex);
     }
 
     private void PlayIndex(int index)
@@ -438,6 +446,24 @@ internal class InternalMediaSourceViewModel : AbstractMediaSource, IHandle<Media
         _ = _messageChannel.Writer.TryWrite(new PlayScriptAtIndexMessage(index));
     }
 
+    public void OnRemoveItem(object sender, RoutedEventArgs e)
+    {
+        if (sender is not FrameworkElement element || element.DataContext is not PlaylistItem item)
+            return;
+
+        var playlist = ScriptPlaylist;
+        if (playlist == null)
+            return;
+
+        var index = playlist.FindIndex(item);
+        playlist.RemoveItem(item);
+
+        if (index == PlaylistIndex)
+            PlayIndexOrNextBest(PlaylistIndex);
+        else if (index < PlaylistIndex)
+            PlaylistIndex--;
+    }
+
     public void OnIsLoopingChanged()
     {
         if (IsLooping && IsShuffling)
@@ -481,6 +507,12 @@ internal class InternalMediaSourceViewModel : AbstractMediaSource, IHandle<Media
                           .ToList();
         }
 
+        private void NotifyObserversOfChange()
+        {
+            CollectionChanged?.Invoke(this, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Count)));
+        }
+
         public PlaylistItem this[int index] => _items[index];
         public int Count => _items.Count;
         public IEnumerator<PlaylistItem> GetEnumerator() => _items.GetEnumerator();
@@ -495,10 +527,15 @@ internal class InternalMediaSourceViewModel : AbstractMediaSource, IHandle<Media
         public void Cleanup()
         {
             Refresh();
-            _items.RemoveAll(i => !i.Exists);
 
-            CollectionChanged?.Invoke(this, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Count)));
+            _items.RemoveAll(i => !i.Exists);
+            NotifyObserversOfChange();
+        }
+
+        public void RemoveItem(PlaylistItem item)
+        {
+            _items.Remove(item);
+            NotifyObserversOfChange();
         }
 
         public int FindIndex(Predicate<PlaylistItem> match) => _items.FindIndex(match);
