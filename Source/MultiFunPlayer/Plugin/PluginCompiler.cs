@@ -219,6 +219,9 @@ internal static class PluginCompiler
                 return PluginCompilationResult.FromFailure(context, new PluginCompileException("Unable to find exported Plugin type"));
 
             var pluginConstructors = pluginType.GetConstructors();
+            if (pluginConstructors.Length == 0)
+                return PluginCompilationResult.FromFailure(context, new PluginCompileException("No public plugin constructor found"));
+
             if (pluginConstructors.Length != 1)
                 return PluginCompilationResult.FromFailure(context, new PluginCompileException("Plugin can only have one constructor"));
 
