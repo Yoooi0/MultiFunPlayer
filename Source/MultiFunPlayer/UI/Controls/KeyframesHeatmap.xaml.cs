@@ -422,7 +422,7 @@ internal partial class KeyframesHeatmap : UserControl
         {
             public double Total { get; private set; }
             public int Count { get; private set; }
-            public double Average => Total / Count;
+            public readonly double Average => Total / Count;
 
             public void Add(double value)
             {
