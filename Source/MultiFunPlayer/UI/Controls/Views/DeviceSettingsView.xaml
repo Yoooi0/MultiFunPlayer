@@ -70,6 +70,25 @@
                 </Button>
                 <Button DockPanel.Dock="Right"   
                         Style="{StaticResource MaterialDesignFlatButton}"
+                        ToolTip="Export selected to clipboard"
+                        Height="24" 
+                        Width="24" 
+                        Padding="0"
+                        Click="{s:Action OnExportSelectedDevice}"
+                        IsEnabled="{Binding CanExportSelectedDevice}">
+                    <material:PackIcon Kind="Export"/>
+                </Button>
+                <Button DockPanel.Dock="Right"   
+                        Style="{StaticResource MaterialDesignFlatButton}"
+                        ToolTip="Create from clipboard"
+                        Height="24" 
+                        Width="24" 
+                        Padding="0"
+                        Click="{s:Action OnImportDevice}">
+                    <material:PackIcon Kind="Import"/>
+                </Button>
+                <Button DockPanel.Dock="Right"   
+                        Style="{StaticResource MaterialDesignFlatButton}"
                         ToolTip="Clone selected"
                         Height="24" 
                         Width="24" 

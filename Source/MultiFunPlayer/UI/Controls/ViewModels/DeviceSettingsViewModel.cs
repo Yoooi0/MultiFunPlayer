@@ -2,6 +2,7 @@ using MultiFunPlayer.Common;
 using MultiFunPlayer.UI.Dialogs.ViewModels;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using NLog;
 using Stylet;
 using System.Windows;
 
@@ -9,6 +10,8 @@ namespace MultiFunPlayer.UI.Controls.ViewModels;
 
 internal class DeviceSettingsViewModel : Screen, IHandle<SettingsMessage>
 {
+    private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
+
     public DeviceSettingsModel SelectedDevice { get; set; } = null;
     public ObservableConcurrentCollection<DeviceSettingsModel> Devices { get; set; } = new(DefaultDevices);
 
@@ -57,6 +60,48 @@ internal class DeviceSettingsViewModel : Screen, IHandle<SettingsMessage>
         var device = SelectedDevice != null ? SelectedDevice.Clone(result) : new DeviceSettingsModel() { Name = result };
         Devices.Add(device);
         SelectedDevice = device;
+    }
+
+    public bool CanExportSelectedDevice => SelectedDevice?.IsDefault == false;
+    public void OnExportSelectedDevice()
+    {
+        if (SelectedDevice == null)
+            return;
+
+        try
+        {
+            var o = JObject.FromObject(SelectedDevice);
+            o.Remove(nameof(DeviceSettingsModel.IsDefault));
+
+            var json = o.ToString(Formatting.Indented);
+            Clipboard.SetText(json);
+        }
+        catch (Exception e)
+        {
+            Logger.Warn(e, "Device export failed");
+            _ = DialogHelper.ShowErrorAsync(e, "Device export failed", "SettingsDialog");
+        }
+    }
+
+    public void OnImportDevice()
+    {
+        if (!Clipboard.ContainsText())
+            return;
+
+        try
+        {
+            var o = JObject.Parse(Clipboard.GetText());
+            o.Remove(nameof(DeviceSettingsModel.IsDefault));
+
+            var device = o.ToObject<DeviceSettingsModel>();
+            Devices.Add(device);
+            SelectedDevice = device;
+        }
+        catch(Exception e)
+        {
+            Logger.Warn(e, "Device import failed");
+            _ = DialogHelper.ShowErrorAsync(e, "Device import failed", "SettingsDialog");
+        }
     }
 
     public void OnDeleteAxis(object sender, RoutedEventArgs e)
