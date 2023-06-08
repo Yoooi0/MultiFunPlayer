@@ -1,4 +1,4 @@
-using MultiFunPlayer.Common;
+﻿using MultiFunPlayer.Common;
 using MultiFunPlayer.Input;
 using MultiFunPlayer.UI;
 using NLog;
@@ -370,7 +370,7 @@ internal class PlexMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlay
             Clients.RemoveRange(Clients.Except(currentClients).ToList());
             Clients.AddRange(currentClients.Except(Clients).ToList());
 
-            SelectClientByMachineIdentifier(SelectedClientMachineIdentifier);
+            SelectClientByMachineIdentifier(lastSelectedMachineIdentifier);
 
             await Task.Delay(250, token);
         }
