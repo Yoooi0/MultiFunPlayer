@@ -75,7 +75,7 @@ internal class InternalMediaSourceViewModel : AbstractMediaSource, IHandle<Media
                     while (_messageChannel.Reader.TryRead(out var message))
                     {
                         if (message is MediaPlayPauseMessage playPauseMessage) { SetIsPlaying(playPauseMessage.ShouldBePlaying); }
-                        else if (message is MediaSeekMessage seekMessage && _currentItem != null) { SetPosition(seekMessage.Position?.TotalSeconds ?? double.NaN); }
+                        else if (message is MediaSeekMessage seekMessage && _currentItem != null) { SetPosition(seekMessage.Position.TotalSeconds); }
                         else if (message is MediaChangePathMessage changePathMessage)
                         {
                             var path = changePathMessage.Path;

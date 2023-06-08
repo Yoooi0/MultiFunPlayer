@@ -192,7 +192,7 @@ internal class EmbyMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlay
                 var uri = message switch
                 {
                     MediaPlayPauseMessage playPauseMessage => new Uri(baseUri, $"{(playPauseMessage.ShouldBePlaying ? "Unpause" : "Pause")}?api_key={ApiKey}"),
-                    MediaSeekMessage seekMessage => new Uri(baseUri, $"Seek?api_key={ApiKey}&SeekPositionTicks={(long)(seekMessage.Position?.TotalMilliseconds * 10000)}"),
+                    MediaSeekMessage seekMessage => new Uri(baseUri, $"Seek?api_key={ApiKey}&SeekPositionTicks={(long)(seekMessage.Position.TotalMilliseconds * 10000)}"),
                     _ => null
                 };
 

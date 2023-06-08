@@ -160,7 +160,7 @@ internal class MpcMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlayP
                 var uriArguments = message switch
                 {
                     MediaPlayPauseMessage playPauseMessage => $"{(int)(playPauseMessage.ShouldBePlaying ? MpcCommand.Play : MpcCommand.Pause)}",
-                    MediaSeekMessage seekMessage when seekMessage.Position.HasValue => $"{(int)MpcCommand.Seek}&position={seekMessage.Position?.ToString(@"hh\:mm\:ss")}",
+                    MediaSeekMessage seekMessage => $"{(int)MpcCommand.Seek}&position={seekMessage.Position:hh\\:mm\\:ss}",
                     MediaChangePathMessage changePathMessage => string.IsNullOrWhiteSpace(changePathMessage.Path) ? null : $"{Uri.EscapeDataString(changePathMessage.Path)}",
                     _ => null
                 };

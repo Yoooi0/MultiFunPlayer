@@ -188,8 +188,8 @@ internal class HereSphereMediaSourceViewModel : AbstractMediaSource, IHandle<Med
 
                     if (message is MediaPlayPauseMessage playPauseMessage)
                         sendState.State = playPauseMessage.ShouldBePlaying ? 0 : 1;
-                    else if (message is MediaSeekMessage seekMessage && seekMessage.Position.HasValue)
-                        sendState.Position = seekMessage.Position.Value.TotalSeconds;
+                    else if (message is MediaSeekMessage seekMessage)
+                        sendState.Position = seekMessage.Position.TotalSeconds;
                     else if (message is MediaChangePathMessage changePathMessage)
                         sendState.Path = changePathMessage.Path;
 

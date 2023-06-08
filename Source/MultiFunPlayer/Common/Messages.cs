@@ -26,7 +26,7 @@ public class ChangeScriptMessage
     public ChangeScriptMessage(IEnumerable<DeviceAxis> axes, IScriptResource scriptResource) => Scripts = axes.ToDictionary(a => a, _ => scriptResource);
 }
 
-public record MediaSeekMessage(TimeSpan? Position);
+public record MediaSeekMessage(TimeSpan Position);
 public record MediaPlayPauseMessage(bool ShouldBePlaying);
 public record MediaChangePathMessage(string Path);
 

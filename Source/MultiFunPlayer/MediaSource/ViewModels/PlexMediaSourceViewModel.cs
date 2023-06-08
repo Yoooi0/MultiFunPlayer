@@ -272,7 +272,7 @@ internal class PlexMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlay
                 var messageUriPath = message switch
                 {
                     MediaPlayPauseMessage playPauseMessage => playPauseMessage.ShouldBePlaying ? $"/player/playback/play?{commonArguments}" : $"/player/playback/pause?{commonArguments}",
-                    MediaSeekMessage seekMessage when seekMessage.Position.HasValue => $"/player/playback/seekTo?{commonArguments}&offset={(int)seekMessage.Position.Value.TotalMilliseconds}",
+                    MediaSeekMessage seekMessage => $"/player/playback/seekTo?{commonArguments}&offset={(int)seekMessage.Position.TotalMilliseconds}",
                     _ => null
                 };
 

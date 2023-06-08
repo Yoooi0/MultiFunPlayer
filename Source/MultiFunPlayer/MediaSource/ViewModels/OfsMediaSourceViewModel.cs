@@ -190,7 +190,7 @@ internal class OfsMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlayP
                 var messageString = message switch
                 {
                     MediaPlayPauseMessage playPauseMessage => CreateMessage("change_play", "playing", playPauseMessage.ShouldBePlaying.ToString().ToLower()),
-                    MediaSeekMessage seekMessage when seekMessage.Position.HasValue => CreateMessage("change_time", "time", seekMessage.Position.Value.TotalSeconds.ToString("F4").Replace(',', '.')),
+                    MediaSeekMessage seekMessage => CreateMessage("change_time", "time", seekMessage.Position.TotalSeconds.ToString("F4").Replace(',', '.')),
                     _ => null
                 };
 
