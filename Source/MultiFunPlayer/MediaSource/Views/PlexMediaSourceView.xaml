@@ -68,7 +68,8 @@
             </StackPanel>
         </Expander.Header>
 
-        <StackPanel Margin="20">
+        <StackPanel Margin="20"
+                    IsEnabled="{Binding IsConnected, Converter={StaticResource NotConverter}}">
             <DockPanel LastChildFill="True"
                        Margin="0 0 0 20">
                 <DockPanel LastChildFill="True" 
@@ -155,13 +156,13 @@
             <DockPanel LastChildFill="True"
                        HorizontalAlignment="Left">
                 <TextBox Style="{StaticResource MaterialDesignFloatingHintTextBox}"
-                             Text="{Binding PlexToken}"
-                             MinWidth="250"
-                             Margin="0 -10 0 0"
-                             DockPanel.Dock="Left"
-                             HorizontalAlignment="Left"
-                             VerticalAlignment="Center"
-                             material:HintAssist.Hint="plex token"/>
+                         Text="{Binding PlexToken}"
+                         MinWidth="250"
+                         Margin="0 -10 0 0"
+                         DockPanel.Dock="Left"
+                         HorizontalAlignment="Left"
+                         VerticalAlignment="Center"
+                         material:HintAssist.Hint="plex token"/>
             </DockPanel>
         </StackPanel>
     </Expander>

@@ -1,4 +1,4 @@
-﻿using MultiFunPlayer.Common;
+using MultiFunPlayer.Common;
 using MultiFunPlayer.Input;
 using MultiFunPlayer.UI;
 using NLog;
@@ -75,6 +75,11 @@ internal class PlexMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlay
         try
         {
             Logger.Info("Connecting to {0} at \"{1}\"", Name, ServerEndpoint);
+            if (ServerEndpoint == null)
+                throw new Exception("Endpoint cannot be null.");
+            if (string.IsNullOrEmpty(PlexToken))
+                throw new Exception("Plex token cannot be empty.");
+
             var client = NetUtils.CreateHttpClient();
             client.Timeout = TimeSpan.FromMilliseconds(5000);
 
