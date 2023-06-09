@@ -152,7 +152,7 @@ internal class EmbyMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlay
                     {
                         EventAggregator.Publish(new MediaPathChangedMessage(item.Path));
                         EventAggregator.Publish(new MediaDurationChangedMessage(TimeSpan.FromMilliseconds(item.RunTimeTicks / 10000.0)));
-                        EventAggregator.Publish(new MediaPositionChangedMessage(TimeSpan.FromMilliseconds(0), ForceSeek: true));
+                        EventAggregator.Publish(new MediaPositionChangedMessage(TimeSpan.FromMilliseconds(state.PositionTicks / 10000.0), ForceSeek: true));
                         EventAggregator.Publish(new MediaSpeedChangedMessage(state.PlaybackRate));
                         EventAggregator.Publish(new MediaPlayingChangedMessage(!state.IsPaused));
                     }
