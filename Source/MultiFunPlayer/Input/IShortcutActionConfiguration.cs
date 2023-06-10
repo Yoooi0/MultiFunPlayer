@@ -1,5 +1,6 @@
 ﻿using MultiFunPlayer.Settings;
 using NLog;
+using PropertyChanged;
 using Stylet;
 using System.ComponentModel;
 
@@ -35,9 +36,9 @@ public class ShortcutActionConfiguration : PropertyChangedBase, IShortcutActionC
         foreach (var setting in _settings)
         {
             if (setting is INotifyPropertyChanged settingPropertyChanged)
-                settingPropertyChanged.PropertyChanged += (_, _) => NotifyOfPropertyChange(() => DisplayName);
+                settingPropertyChanged.PropertyChanged += OnSettingPropertyChanged;
             if (setting.Value is INotifyPropertyChanged valuePropertyChanged)
-                valuePropertyChanged.PropertyChanged += (_, _) => NotifyOfPropertyChange(() => DisplayName);
+                valuePropertyChanged.PropertyChanged += OnSettingPropertyChanged;
         }
     }
 
@@ -64,7 +65,14 @@ public class ShortcutActionConfiguration : PropertyChangedBase, IShortcutActionC
         if (!typeMatches)
             Logger.Warn($"Action \"{Descriptor}\" setting type mismatch! [\"{settingType}\" != \"{valueType}\"]");
         else
+        {
+            if (setting.Value is INotifyPropertyChanged oldPropertyChanged)
+                oldPropertyChanged.PropertyChanged -= OnSettingPropertyChanged;
+
             setting.Value = value;
+            if (setting.Value is INotifyPropertyChanged newPropertyChanged)
+                newPropertyChanged.PropertyChanged += OnSettingPropertyChanged;
+        }
     }
 
     public object[] GetActionParams()
@@ -93,4 +101,6 @@ public class ShortcutActionConfiguration : PropertyChangedBase, IShortcutActionC
         if (_valuesBuffer == null || _valuesBuffer.Length != length)
             _valuesBuffer = new object[length];
     }
+
+    private void OnSettingPropertyChanged(object sender, PropertyChangedEventArgs e) => NotifyOfPropertyChange(() => DisplayName);
 }
