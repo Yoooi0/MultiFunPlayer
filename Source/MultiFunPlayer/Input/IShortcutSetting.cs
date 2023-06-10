@@ -10,6 +10,7 @@ public interface IShortcutSetting
     string Label { get; init; }
     string Description { get; init; }
     string StringFormat { get; init; }
+    string TemplateName { get; init; }
 
     Type Type { get; }
 }
@@ -48,6 +49,7 @@ public partial class ShortcutSetting<T> : IShortcutSetting<T>
     public string Label { get; init; }
     public string Description { get; init; }
     public string StringFormat { get; init; }
+    public string TemplateName { get; init; }
 
     public Type Type => typeof(T);
 }
@@ -60,6 +62,7 @@ public partial class OneOfShortcutSetting<T> : IOneOfShortcutSetting<T>
     public string Description { get; init; }
     public IEnumerable<T> ItemsSource { get; init; }
     public string StringFormat { get; init; }
+    public string TemplateName { get; init; }
 
     public Type Type => typeof(T).IsValueType ? typeof(T) : Value == null ? typeof(T) : Value.GetType();
 }

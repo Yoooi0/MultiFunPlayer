@@ -13,6 +13,7 @@ public interface IShortcutSettingBuilder<T> : IShortcutSettingBuilder
     public IShortcutSettingBuilder<T> WithDescription(string description);
     public IShortcutSettingBuilder<T> WithItemsSource<TItemsSource>(TItemsSource itemsSource, bool bindsDirectlyToItemsSource = false) where TItemsSource : IEnumerable<T>;
     public IShortcutSettingBuilder<T> WithStringFormat(string stringFormat);
+    public IShortcutSettingBuilder<T> WithTemplateName(string templateName);
 }
 
 public class ShortcutSettingBuilder<T> : IShortcutSettingBuilder<T>
@@ -22,6 +23,7 @@ public class ShortcutSettingBuilder<T> : IShortcutSettingBuilder<T>
     private string _label;
     private IEnumerable<T> _itemsSource;
     private string _stringFormat;
+    private string _templateName;
 
     IShortcutSetting IShortcutSettingBuilder.Build() => Build();
     public IShortcutSetting<T> Build()
@@ -32,6 +34,7 @@ public class ShortcutSettingBuilder<T> : IShortcutSettingBuilder<T>
                 Description = _description,
                 Label = _label,
                 StringFormat = _stringFormat,
+                TemplateName = _templateName,
                 Value = _defaultValue
             };
 
@@ -41,6 +44,7 @@ public class ShortcutSettingBuilder<T> : IShortcutSettingBuilder<T>
             Label = _label,
             ItemsSource = _itemsSource,
             StringFormat = _stringFormat,
+            TemplateName = _templateName,
             Value = _defaultValue
         };
     }
@@ -55,4 +59,5 @@ public class ShortcutSettingBuilder<T> : IShortcutSettingBuilder<T>
     public IShortcutSettingBuilder<T> WithDescription(string description) { _description = description; return this; }
     public IShortcutSettingBuilder<T> WithLabel(string label) { _label = label; return this; }
     public IShortcutSettingBuilder<T> WithStringFormat(string stringFormat) { _stringFormat = stringFormat; return this; }
+    public IShortcutSettingBuilder<T> WithTemplateName(string templateName) { _templateName = templateName; return this; }
 }

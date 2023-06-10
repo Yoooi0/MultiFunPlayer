@@ -1,4 +1,4 @@
-﻿using MultiFunPlayer.Input;
+using MultiFunPlayer.Input;
 using System.Windows;
 using System.Windows.Controls;
 
@@ -10,8 +10,11 @@ internal class ShortcutSettingTemplateSelector : DataTemplateSelector
     {
         if (container is not FrameworkElement element)
             return null;
-        if (element == null || item == null)
+        if (item is not IShortcutSetting setting)
             return null;
+
+        if (setting.TemplateName != null)
+            return element.FindResource(setting.TemplateName) as DataTemplate;
 
         var type = item.GetType().GetGenericArguments()[0];
         var nullableType = Nullable.GetUnderlyingType(type);
