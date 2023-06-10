@@ -38,7 +38,7 @@ internal partial class SmartLimitPreview : UserControl
 
     public static readonly DependencyProperty InputProperty =
         DependencyProperty.Register(nameof(Input), typeof(double),
-            typeof(SmartLimitPreview), new FrameworkPropertyMetadata(50d,
+            typeof(SmartLimitPreview), new FrameworkPropertyMetadata(double.NaN,
                 new PropertyChangedCallback(OnInputPropertyChanged)));
 
     [DoNotNotify]
@@ -107,7 +107,10 @@ internal partial class SmartLimitPreview : UserControl
     {
         if (!IsVisible)
             return;
-        if (Points == null || Points.Count == 0)
+
+        var canRefresh = CanRefresh();
+        Scrubber.Visibility = canRefresh ? Visibility.Visible : Visibility.Collapsed;
+        if (!canRefresh)
             return;
 
         var x = Math.Clamp(Input, 0, 100);
@@ -115,6 +118,15 @@ internal partial class SmartLimitPreview : UserControl
 
         Output = y;
         (Scrubber.Data as EllipseGeometry).Center = Canvas.ToCanvas(new Point(x, y));
+
+        bool CanRefresh()
+        {
+            if (Points == null || Points.Count == 0)
+                return false;
+            if (!double.IsFinite(Input))
+                return false;
+            return true;
+        }
     }
 
     [SuppressPropertyChangedWarnings]
