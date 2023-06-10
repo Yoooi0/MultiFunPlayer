@@ -63,7 +63,9 @@ public class ShortcutActionConfiguration : PropertyChangedBase, IShortcutActionC
                                         : valueType == settingType || valueType.IsAssignableTo(settingType);
 
         if (!typeMatches)
+        {
             Logger.Warn($"Action \"{Descriptor}\" setting type mismatch! [\"{settingType}\" != \"{valueType}\"]");
+        }
         else
         {
             if (setting.Value is INotifyPropertyChanged oldPropertyChanged)
@@ -102,5 +104,6 @@ public class ShortcutActionConfiguration : PropertyChangedBase, IShortcutActionC
             _valuesBuffer = new object[length];
     }
 
+    [SuppressPropertyChangedWarnings]
     private void OnSettingPropertyChanged(object sender, PropertyChangedEventArgs e) => NotifyOfPropertyChange(() => DisplayName);
 }
