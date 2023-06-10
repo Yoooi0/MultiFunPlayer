@@ -115,22 +115,7 @@
                     <local:DraggablePointCanvas x:Name="Canvas" 
                                                 Points="{Binding Points, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}"
                                                 PopupFormat="{}{0:F0}%, {1:F0}%"
-                                                SizeChanged="OnCanvasSizeChanged">
-                        <local:DraggablePointCanvas.ItemTemplate>
-                            <DataTemplate DataType="{x:Type local:DraggablePoint}">
-                                <Path Fill="{DynamicResource PrimaryHueMidBrush}"
-                                      DataContext="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type local:DraggablePoint}}}"
-                                      Cursor="Hand">
-                                    <Path.Data>
-                                        <EllipseGeometry RadiusX="6" RadiusY="6" Center="{Binding Position}"/>
-                                    </Path.Data>
-                                    <Path.Effect>
-                                        <DropShadowEffect BlurRadius="4" Opacity="0.6" ShadowDepth="0" />
-                                    </Path.Effect>
-                                </Path>
-                            </DataTemplate>
-                        </local:DraggablePointCanvas.ItemTemplate>
-                    </local:DraggablePointCanvas>
+                                                SizeChanged="OnCanvasSizeChanged"/>
 
                     <Canvas>
                         <Path x:Name="Scrubber" 

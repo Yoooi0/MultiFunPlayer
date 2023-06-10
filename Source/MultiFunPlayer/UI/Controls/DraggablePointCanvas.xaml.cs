@@ -55,17 +55,6 @@ public partial class DraggablePointCanvas : Canvas
         DependencyProperty.Register(nameof(PopupFormat), typeof(string),
             typeof(DraggablePointCanvas), new PropertyMetadata("X: {0} Y: {1}"));
 
-    [DoNotNotify]
-    public DataTemplate ItemTemplate
-    {
-        get => (DataTemplate)GetValue(ItemTemplateProperty);
-        set => SetValue(ItemTemplateProperty, value);
-    }
-
-    public static readonly DependencyProperty ItemTemplateProperty =
-        DependencyProperty.Register(nameof(ItemTemplate), typeof(DataTemplate),
-                typeof(DraggablePointCanvas), new FrameworkPropertyMetadata(null, null));
-
     [SuppressPropertyChangedWarnings]
     private static void OnPointsPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
@@ -139,8 +128,7 @@ public partial class DraggablePointCanvas : Canvas
     {
         var element = new DraggablePoint()
         {
-            Position = position,
-            ContentTemplate = ItemTemplate
+            Position = position
         };
 
         element.MouseEnter += OnElementMouseEnter;
@@ -263,18 +251,4 @@ public partial class DraggablePointCanvas : Canvas
             PopupText = string.Format(PopupFormat, point.X, point.Y);
         }
     }
-}
-
-public class DraggablePoint : ContentControl
-{
-    public Point Position
-    {
-        get => (Point)GetValue(PositionProperty);
-        set => SetValue(PositionProperty, value);
-    }
-
-    public static readonly DependencyProperty PositionProperty =
-        DependencyProperty.Register(nameof(Position), typeof(Point),
-            typeof(DraggablePoint), new FrameworkPropertyMetadata(default(Point),
-                FrameworkPropertyMetadataOptions.BindsTwoWayByDefault, null));
 }
