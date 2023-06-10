@@ -32,11 +32,16 @@ public class ShortcutActionConfiguration : PropertyChangedBase, IShortcutActionC
         Descriptor = descriptor;
 
         _settings = settings.ToList();
-        foreach (var setting in _settings.OfType<INotifyPropertyChanged>())
-            setting.PropertyChanged += (_, _) => NotifyOfPropertyChange(() => DisplayName);
+        foreach (var setting in _settings)
+        {
+            if (setting is INotifyPropertyChanged settingPropertyChanged)
+                settingPropertyChanged.PropertyChanged += (_, _) => NotifyOfPropertyChange(() => DisplayName);
+            if (setting.Value is INotifyPropertyChanged valuePropertyChanged)
+                valuePropertyChanged.PropertyChanged += (_, _) => NotifyOfPropertyChange(() => DisplayName);
+        }
     }
 
-    public string DisplayName => _settings.Count == 0 ? Descriptor.Name : $"{Descriptor.Name} [{string.Join(", ", Settings.Select(s => s.Value?.ToString() ?? "null"))}]";
+    public string DisplayName => _settings.Count == 0 ? Descriptor.Name : $"{Descriptor.Name} [{string.Join(", ", Settings.Select(s => s.ToString()))}]";
 
     public void Populate(IEnumerable<object> values)
     {

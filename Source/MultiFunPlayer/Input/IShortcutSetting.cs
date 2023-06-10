@@ -29,6 +29,7 @@ public interface IShortcutSetting<T> : IShortcutSetting
     }
 
     new T Value { get; set; }
+    Func<T, string> CustomToString { get; init; }
 }
 
 public interface IOneOfShortcutSetting<T> : IShortcutSetting<T>, IOneOfShortcutSetting
@@ -50,8 +51,11 @@ public partial class ShortcutSetting<T> : IShortcutSetting<T>
     public string Description { get; init; }
     public string StringFormat { get; init; }
     public string TemplateName { get; init; }
+    public Func<T, string> CustomToString { get; init; }
 
     public Type Type => typeof(T);
+
+    public override string ToString() => CustomToString != null ? CustomToString(Value) : Value.ToString();
 }
 
 [AddINotifyPropertyChangedInterface]
@@ -63,6 +67,9 @@ public partial class OneOfShortcutSetting<T> : IOneOfShortcutSetting<T>
     public IEnumerable<T> ItemsSource { get; init; }
     public string StringFormat { get; init; }
     public string TemplateName { get; init; }
+    public Func<T, string> CustomToString { get; init; }
 
     public Type Type => typeof(T).IsValueType ? typeof(T) : Value == null ? typeof(T) : Value.GetType();
+
+    public override string ToString() => CustomToString != null ? CustomToString(Value) : Value.ToString();
 }
