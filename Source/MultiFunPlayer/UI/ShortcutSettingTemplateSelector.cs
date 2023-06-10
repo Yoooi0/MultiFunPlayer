@@ -1,4 +1,5 @@
-using MultiFunPlayer.Input;
+﻿using MultiFunPlayer.Input;
+using System.Collections;
 using System.Windows;
 using System.Windows.Controls;
 
@@ -23,11 +24,17 @@ internal class ShortcutSettingTemplateSelector : DataTemplateSelector
 
         var prefix = item switch
         {
-            IOneOfShortcutSetting _ => "OneOf",
+            IOneOfShortcutSetting => "OneOf",
             _ => ""
         };
 
-        var resource = element.TryFindResource($"{prefix}{type.Name}Template") ?? element.FindResource($"{prefix}DefaultTemplate");
+        var suffix = item switch
+        {
+            IShortcutSetting when type.IsAssignableTo(typeof(IEnumerable)) => "List",
+            _ => ""
+        };
+
+        var resource = element.TryFindResource($"{prefix}{type.Name}{suffix}Template") ?? element.FindResource($"{prefix}Default{suffix}Template");
         return resource as DataTemplate;
     }
 }
