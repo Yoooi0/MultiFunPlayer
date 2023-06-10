@@ -1775,6 +1775,19 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
             (axis, value) => UpdateSettings(axis, s => s.SmartLimitTargetValue = MathUtils.Clamp01(value)));
         #endregion
 
+        #region Axis::SmartLimitPoints
+        s.RegisterAction<DeviceAxis, ObservableConcurrentCollection<Point>>("Axis::SmartLimitPoints::Set",
+            s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All),
+            s => s.WithDefaultValue(new ObservableConcurrentCollection<Point>() { new Point(50, 50) })
+                  .WithTemplateName("SmartLimitPointsTemplate")
+                  .WithCustomToString(x => $"Points({x.Count})"),
+            (axis, points) => UpdateSettings(axis, s =>
+            {
+                s.SmartLimitPoints.Clear();
+                s.SmartLimitPoints.AddRange(points);
+            }));
+        #endregion
+
         #region Axis::LinkAxis
         s.RegisterAction<DeviceAxis, DeviceAxis>("Axis::LinkAxis::Set",
             s => s.WithLabel("Source axis").WithItemsSource(DeviceAxis.All),

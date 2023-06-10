@@ -8,6 +8,7 @@
              xmlns:metro="http://metro.mahapps.com/winfx/xaml/controls" 
              xmlns:ui="clr-namespace:MultiFunPlayer.UI"
              xmlns:input="clr-namespace:MultiFunPlayer.Input"
+             xmlns:controls="clr-namespace:MultiFunPlayer.UI.Controls"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800"
              x:ClassModifier="internal">
@@ -63,6 +64,12 @@
                         <ComboBox SelectedItem="{Binding Value}" 
                                   ItemsSource="{Binding ItemsSource}"
                                   material:TextFieldAssist.HasClearButton="True" />
+                    </DockPanel>
+                </DataTemplate>
+                <DataTemplate x:Key="SmartLimitPointsTemplate" DataType="{x:Type input:IShortcutSetting}">
+                    <DockPanel>
+                        <controls:SmartLimitPreview Points="{Binding Value}"
+                                                    HorizontalAlignment="Center"/>
                     </DockPanel>
                 </DataTemplate>
             </ItemsControl.Resources>
