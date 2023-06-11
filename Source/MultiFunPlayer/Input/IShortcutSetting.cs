@@ -71,5 +71,5 @@ public partial class OneOfShortcutSetting<T> : IOneOfShortcutSetting<T>
 
     public Type Type => typeof(T).IsValueType ? typeof(T) : Value == null ? typeof(T) : Value.GetType();
 
-    public override string ToString() => CustomToString != null ? CustomToString(Value) : Value.ToString();
+    public override string ToString() => CustomToString != null ? CustomToString(Value) : Value?.ToString() ?? "null";
 }
