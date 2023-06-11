@@ -20,6 +20,7 @@ using MultiFunPlayer.MediaSource.MediaResource;
 using MultiFunPlayer.MediaSource.MediaResource.Modifier;
 using MultiFunPlayer.MediaSource.MediaResource.Modifier.ViewModels;
 using MultiFunPlayer.MotionProvider.ViewModels;
+using System.Windows.Controls.Primitives;
 
 namespace MultiFunPlayer.UI.Controls.ViewModels;
 
@@ -231,9 +232,6 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
 
                     context.InsideGap = keyframes.IsGap(context.Index);
                     var scriptValue = MathUtils.Clamp01(keyframes.Interpolate(context.Index, axisPosition, settings.InterpolationType));
-                    if (settings.InvertScript)
-                        scriptValue = 1 - scriptValue;
-
                     context.ScriptValue = MathUtils.Clamp01(axis.DefaultValue + (scriptValue - axis.DefaultValue) * settings.ScriptScale / 100);
                     return context.IsScriptDirty;
                 }
@@ -379,6 +377,9 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                         if (!IsPlaying && !context.InsideScript)
                             if (!context.IsScriptDirty && !context.IsMotionProviderDirty)
                                 context.Value = context.TransitionValue;
+
+                    if (settings.InvertValue)
+                        context.Value = 1 - context.Value;
                 }
 
                 void UpdateSync()
@@ -1133,7 +1134,6 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
             case nameof(ViewModels.AxisSettings.UpdateMotionProviderWhenPaused):
             case nameof(ViewModels.AxisSettings.UpdateMotionProviderWithoutScript):
             case nameof(ViewModels.AxisSettings.MotionProviderFillGaps):
-            case nameof(ViewModels.AxisSettings.InvertScript):
             case nameof(ViewModels.AxisSettings.BypassScript):
             case nameof(ViewModels.AxisSettings.BypassMotionProvider):
             case nameof(ViewModels.AxisSettings.BypassTransition):
@@ -1342,6 +1342,19 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         settings.BypassScript = true;
         settings.BypassMotionProvider = true;
         settings.BypassTransition = true;
+    }
+
+    [SuppressPropertyChangedWarnings]
+    public void OnInvertValueCheckedChanged(object sender, RoutedEventArgs e)
+    {
+        if (sender is not ToggleButton button || button.DataContext is not KeyValuePair<DeviceAxis, AxisModel> pair)
+            return;
+
+        var (axis, _) = pair;
+        var settings = AxisSettings[axis];
+
+        ResetSync(true, axis);
+        settings.InvertValue = button.IsChecked ?? false;
     }
     #endregion
 
@@ -1722,14 +1735,14 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
             (axis, type) => UpdateSettings(axis, s => s.InterpolationType = type));
         #endregion
 
-        #region Axis::Inverted
-        s.RegisterAction<DeviceAxis, bool>("Axis::InvertScript::Set",
+        #region Axis::InvertValue
+        s.RegisterAction<DeviceAxis, bool>("Axis::InvertValue::Set",
             s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All),
             s => s.WithLabel("Invert script"),
-            (axis, enabled) => UpdateSettings(axis, s => s.InvertScript = enabled));
+            (axis, enabled) => UpdateSettings(axis, s => s.InvertValue = enabled));
 
-        s.RegisterAction<DeviceAxis>("Axis::InvertScript::Toggle",
-            s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All), axis => UpdateSettings(axis, s => s.InvertScript = !s.InvertScript));
+        s.RegisterAction<DeviceAxis>("Axis::InvertValue::Toggle",
+            s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All), axis => UpdateSettings(axis, s => s.InvertValue = !s.InvertValue));
         #endregion
 
         #region Axis::LinkPriority
@@ -2177,7 +2190,7 @@ internal class AxisSettings : PropertyChangedBase
     [JsonProperty] public double AutoHomeDuration { get; set; } = 3;
     [JsonProperty] public double AutoHomeTargetValue { get; set; }
     [JsonProperty] public bool AutoHomeInsideScript { get; set; } = false;
-    [JsonProperty] public bool InvertScript { get; set; } = false;
+    [JsonProperty] public bool InvertValue { get; set; } = false;
     [JsonProperty] public double Offset { get; set; } = 0;
     [JsonProperty] public double ScriptScale { get; set; } = 100;
     [JsonProperty] public bool BypassScript { get; set; } = false;

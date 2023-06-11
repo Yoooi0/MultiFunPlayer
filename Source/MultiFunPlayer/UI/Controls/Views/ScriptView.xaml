@@ -1013,9 +1013,11 @@
                                                 </MenuItem>
                                             </Menu>
 
-                                            <ToggleButton IsChecked="{Binding Value.Settings.InvertScript}"
+                                            <ToggleButton IsChecked="{Binding Value.Settings.InvertValue, Mode=OneWay}"
+                                                          Checked="{s:Action OnInvertValueCheckedChanged}"
+                                                          Unchecked="{s:Action OnInvertValueCheckedChanged}"
                                                           Style="{StaticResource MaterialDesignToolBarToggleButton}"
-                                                          ToolTip="Invert script">
+                                                          ToolTip="Invert">
                                                 <material:PackIcon Kind="FlipVertical" Opacity=".56" Width="20" Height="20"/>
                                                 <material:ToggleButtonAssist.OnContent>
                                                     <material:PackIcon Kind="FlipVertical" Width="20" Height="20" Foreground="{StaticResource MaterialDesignSuccessBrush}"/>
