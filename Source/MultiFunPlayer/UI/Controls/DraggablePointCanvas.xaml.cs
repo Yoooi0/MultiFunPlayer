@@ -36,6 +36,18 @@ public partial class DraggablePointCanvas : UserControl
                     new PropertyChangedCallback(OnPointsPropertyChanged)));
 
     [DoNotNotify]
+    public InterpolationType InterpolationType
+    {
+        get => (InterpolationType)GetValue(InterpolationTypeProperty);
+        set => SetValue(InterpolationTypeProperty, value);
+    }
+
+    public static readonly DependencyProperty InterpolationTypeProperty =
+        DependencyProperty.Register(nameof(InterpolationType), typeof(InterpolationType),
+            typeof(DraggablePointCanvas), new FrameworkPropertyMetadata(InterpolationType.Linear,
+                new PropertyChangedCallback(OnInterpolationTypePropertyChanged)));
+
+    [DoNotNotify]
     public Rect Viewport
     {
         get => (Rect)GetValue(ViewportProperty);
@@ -71,6 +83,16 @@ public partial class DraggablePointCanvas : UserControl
             newCollection.CollectionChanged += @this.OnPointsCollectionChanged;
 
         @this.SynchronizeElementsFromPoints();
+        @this.PropertyChanged?.Invoke(@this, new PropertyChangedEventArgs(e.Property.Name));
+    }
+
+    [SuppressPropertyChangedWarnings]
+    private static void OnInterpolationTypePropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        if (d is not DraggablePointCanvas @this)
+            return;
+
+        @this.RefreshLine();
         @this.PropertyChanged?.Invoke(@this, new PropertyChangedEventArgs(e.Property.Name));
     }
 
@@ -236,11 +258,28 @@ public partial class DraggablePointCanvas : UserControl
         if (Points == null || Points.Count == 0 || ActualWidth == 0 || ActualHeight == 0)
             return;
 
-        var newLinePoints = Points.Prepend(new Point(0, Points[0].Y))
-                                  .Append(new Point(100, Points[^1].Y))
-                                  .Select(ToCanvas);
+        var points = Points.Prepend(new Point(Viewport.Left, Points[0].Y))
+                           .Append(new Point(Viewport.Right, Points[^1].Y))
+                           .Select(ToCanvas);
 
-        LinePoints = new PointCollection(newLinePoints);
+        if (InterpolationType == InterpolationType.Linear)
+        {
+            LinePoints = new PointCollection(points);
+        }
+        else
+        {
+            var interpolatedPoints = new List<Point>();
+            var keyframes = new KeyframeCollection(Points.Count + 2);
+            foreach (var point in points)
+                keyframes.Add(point.X, point.Y);
+
+            var step = Viewport.Width / 333d;
+            for (var i = 0; i < keyframes.Count - 1; i++)
+                for (var x = keyframes[i].Position; x < keyframes[i + 1].Position; x += step)
+                    interpolatedPoints.Add(new Point(x, Math.Clamp(keyframes.Interpolate(i, x, InterpolationType), 0, ActualHeight)));
+
+            LinePoints = new PointCollection(interpolatedPoints);
+        }
     }
 
     public Point FromCanvas(Point point) => new(FromCanvasX(point.X), FromCanvasY(point.Y));
