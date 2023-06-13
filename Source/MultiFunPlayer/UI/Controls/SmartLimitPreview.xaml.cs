@@ -14,8 +14,6 @@ namespace MultiFunPlayer.UI.Controls;
 [AddINotifyPropertyChangedInterface]
 internal partial class SmartLimitPreview : UserControl
 {
-    public PointCollection LinePoints { get; set; }
-
     [DoNotNotify]
     public ObservableConcurrentCollection<Point> Points
     {
@@ -63,7 +61,6 @@ internal partial class SmartLimitPreview : UserControl
         if (e.NewValue is INotifyCollectionChanged newCollection)
             newCollection.CollectionChanged += @this.OnPointsCollectionChanged;
 
-        @this.RefreshLine();
         @this.RefreshScrubber();
         @this.PropertyChanged?.Invoke(@this, new PropertyChangedEventArgs(e.Property.Name));
     }
@@ -82,25 +79,7 @@ internal partial class SmartLimitPreview : UserControl
     {
         InitializeComponent();
 
-        IsVisibleChanged += (_, _) =>
-        {
-            RefreshLine();
-            RefreshScrubber();
-        };
-    }
-
-    private void RefreshLine()
-    {
-        if (!IsVisible)
-            return;
-        if (Points == null || Points.Count == 0 || Canvas.ActualWidth == 0 || Canvas.ActualHeight == 0)
-            return;
-
-        var newLinePoints = Points.Prepend(new Point(0, Points[0].Y))
-                                  .Append(new Point(100, Points[^1].Y))
-                                  .Select(p => Canvas.ToCanvas(p));
-
-        LinePoints = new PointCollection(newLinePoints);
+        IsVisibleChanged += (_, _) => RefreshScrubber();
     }
 
     private void RefreshScrubber()
@@ -130,16 +109,8 @@ internal partial class SmartLimitPreview : UserControl
     }
 
     [SuppressPropertyChangedWarnings]
-    private void OnPointsCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
-    {
-        RefreshLine();
-        RefreshScrubber();
-    }
+    private void OnPointsCollectionChanged(object sender, NotifyCollectionChangedEventArgs e) => RefreshScrubber();
 
     [SuppressPropertyChangedWarnings]
-    private void OnCanvasSizeChanged(object sender, SizeChangedEventArgs e)
-    {
-        RefreshLine();
-        RefreshScrubber();
-    }
+    private void OnCanvasSizeChanged(object sender, SizeChangedEventArgs e) => RefreshScrubber();
 }

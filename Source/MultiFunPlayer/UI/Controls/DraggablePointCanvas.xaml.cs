@@ -5,6 +5,7 @@ using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Media;
 
 namespace MultiFunPlayer.UI.Controls;
 
@@ -12,11 +13,14 @@ namespace MultiFunPlayer.UI.Controls;
 /// Interaction logic for DraggablePointCanvas.xaml
 /// </summary>
 [AddINotifyPropertyChangedInterface]
-public partial class DraggablePointCanvas : Canvas
+public partial class DraggablePointCanvas : UserControl
 {
     private Vector _captureOffset;
 
     public string PopupText { get; set; }
+    public PointCollection LinePoints { get; set; }
+
+    public UIElementCollection PointElements => PointCanvas.Children;
 
     [DoNotNotify]
     public ObservableConcurrentCollection<Point> Points
@@ -88,11 +92,6 @@ public partial class DraggablePointCanvas : Canvas
         InitializeComponent();
     }
 
-    private void OnLoaded(object sender, EventArgs e)
-    {
-        Children.Remove(Popup);
-    }
-
     private void OnMouseDown(object sender, MouseButtonEventArgs e)
     {
         if (e.Source is DraggablePoint point)
@@ -103,22 +102,22 @@ public partial class DraggablePointCanvas : Canvas
                 Mouse.Capture(point, CaptureMode.Element);
                 SynchronizePopup(point.Position);
             }
-            else if (e.ClickCount == 2 && Children.Count > 1)
+            else if (e.ClickCount == 2 && PointElements.Count > 1)
             {
                 RemoveElement(point);
                 SynchronizePointsFromElements();
             }
         }
-        else if (e.OriginalSource is DraggablePointCanvas && e.ClickCount == 2)
+        else if (e.Source is Canvas && e.ClickCount == 2)
         {
-            AddElement(e.GetPosition(this));
+            AddElement(e.GetPosition(PointCanvas));
             SynchronizePointsFromElements();
         }
     }
 
     private void RemoveElement(UIElement element)
     {
-        Children.Remove(element);
+        PointElements.Remove(element);
 
         element.MouseEnter -= OnElementMouseEnter;
         element.MouseLeave -= OnElementMouseLeave;
@@ -134,7 +133,7 @@ public partial class DraggablePointCanvas : Canvas
         element.MouseEnter += OnElementMouseEnter;
         element.MouseLeave += OnElementMouseLeave;
 
-        Children.Add(element);
+        PointElements.Add(element);
     }
 
     private void OnMouseUp(object sender, MouseButtonEventArgs e)
@@ -186,19 +185,21 @@ public partial class DraggablePointCanvas : Canvas
         if (ActualWidth == 0 || ActualHeight == 0)
             return;
 
-        while (Children.Count > 0 && (Points == null || Children.Count > Points.Count))
-            RemoveElement(Children[^1]);
+        while (PointElements.Count > 0 && (Points == null || PointElements.Count > Points.Count))
+            RemoveElement(PointElements[^1]);
 
         if (Points == null)
             return;
 
-        while (Children.Count < Points.Count)
+        while (PointElements.Count < Points.Count)
             AddElement(new Point());
 
-        var childrenPoints = Children.OfType<DraggablePoint>().ToList();
+        var childrenPoints = PointElements.OfType<DraggablePoint>().ToList();
         var orderedPoints = Points.OrderBy(p => p.X).ToList();
         for (var i = 0; i < orderedPoints.Count; i++)
             childrenPoints[i].Position = ToCanvas(orderedPoints[i]);
+
+        RefreshLine();
     }
 
     private void SynchronizePointsFromElements()
@@ -208,31 +209,47 @@ public partial class DraggablePointCanvas : Canvas
 
         if (Points != null)
         {
-            while (Points.Count > 0 && Points.Count > Children.Count)
+            while (Points.Count > 0 && Points.Count > PointElements.Count)
                 Points.RemoveAt(Points.Count - 1);
 
-            while (Points.Count < Children.Count)
+            while (Points.Count < PointElements.Count)
                 Points.Add(new Point());
         }
 
-        var childrenPoints = Children.OfType<DraggablePoint>().OrderBy(p => p.Position.X).ToList();
+        var childrenPoints = PointElements.OfType<DraggablePoint>().OrderBy(p => p.Position.X).ToList();
         for (var i = 0; i < childrenPoints.Count; i++)
         {
-            Children.Remove(childrenPoints[i]);
-            Children.Add(childrenPoints[i]);
+            PointElements.Remove(childrenPoints[i]);
+            PointElements.Add(childrenPoints[i]);
 
             if (Points != null)
                 Points[i] = FromCanvas(childrenPoints[i].Position);
         }
+
+        RefreshLine();
+    }
+
+    private void RefreshLine()
+    {
+        if (!IsVisible)
+            return;
+        if (Points == null || Points.Count == 0 || ActualWidth == 0 || ActualHeight == 0)
+            return;
+
+        var newLinePoints = Points.Prepend(new Point(0, Points[0].Y))
+                                  .Append(new Point(100, Points[^1].Y))
+                                  .Select(ToCanvas);
+
+        LinePoints = new PointCollection(newLinePoints);
     }
 
     public Point FromCanvas(Point point) => new(FromCanvasX(point.X), FromCanvasY(point.Y));
     public double FromCanvasX(double x) => MathUtils.Map(x, 0, ActualWidth, Viewport.Left, Viewport.Right);
-    public double FromCanvasY(double y) => MathUtils.Map(y, ActualHeight, 0, Viewport.Bottom, Viewport.Top);
+    public double FromCanvasY(double y) => MathUtils.Map(y, 0, ActualHeight, Viewport.Bottom, Viewport.Top);
 
     public Point ToCanvas(Point point) => new(ToCanvasX(point.X), ToCanvasY(point.Y));
     public double ToCanvasX(double x) => MathUtils.Map(x, Viewport.Left, Viewport.Right, 0, ActualWidth);
-    public double ToCanvasY(double y) => MathUtils.Map(y, Viewport.Bottom, Viewport.Top, ActualHeight, 0);
+    public double ToCanvasY(double y) => MathUtils.Map(y, Viewport.Bottom, Viewport.Top, 0, ActualHeight);
 
     private void SynchronizePopup(Point? position)
     {
@@ -243,8 +260,8 @@ public partial class DraggablePointCanvas : Canvas
         }
         else
         {
-            Popup.HorizontalOffset = position.Value.X + 10;
-            Popup.VerticalOffset = position.Value.Y + 30;
+            Popup.HorizontalOffset = position.Value.X - 10;
+            Popup.VerticalOffset = position.Value.Y - 30;
             Popup.IsOpen = true;
 
             var point = FromCanvas(position.Value);
