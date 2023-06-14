@@ -57,7 +57,6 @@ public partial class DraggablePointCanvas : UserControl
     public static readonly DependencyProperty ViewportProperty =
         DependencyProperty.Register(nameof(Viewport), typeof(Rect),
             typeof(DraggablePointCanvas), new FrameworkPropertyMetadata(new Rect(0, 0, 100, 100),
-                FrameworkPropertyMetadataOptions.BindsTwoWayByDefault,
                     new PropertyChangedCallback(OnViewportPropertyChanged)));
 
     [DoNotNotify]
