@@ -49,9 +49,9 @@ internal class LoopingScriptMotionProviderViewModel : AbstractMotionProvider
         if (keyframes == null || keyframes.Count == 0)
             return;
 
-        if (_time >= _scriptEnd || _scriptIndex >= keyframes.Count)
+        if (_time >= _scriptEnd || _scriptIndex + 1 >= keyframes.Count)
         {
-            _scriptIndex = 0;
+            _scriptIndex = -1;
             _time = _scriptStart;
         }
 
