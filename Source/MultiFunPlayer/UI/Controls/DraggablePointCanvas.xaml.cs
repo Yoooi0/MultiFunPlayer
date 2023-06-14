@@ -101,7 +101,7 @@ public partial class DraggablePointCanvas : UserControl
         if (d is not DraggablePointCanvas @this)
             return;
 
-        @this.SynchronizePointsFromElements();
+        @this.SynchronizeElementsFromPoints();
         @this.PropertyChanged?.Invoke(@this, new PropertyChangedEventArgs(e.Property.Name));
     }
 
