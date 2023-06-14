@@ -38,6 +38,8 @@ public class KeyframeCollection : IReadOnlyList<Keyframe>
 
     public int AdvanceIndex(int index, double position)
     {
+        if (index < 0 && position >= 0)
+            index = 0;
         while (index + 1 >= 0 && index + 1 < Count && this[index + 1].Position < position)
             index++;
         return index;
