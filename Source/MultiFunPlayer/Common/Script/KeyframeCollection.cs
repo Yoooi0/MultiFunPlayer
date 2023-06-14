@@ -13,6 +13,9 @@ public class KeyframeCollection : IReadOnlyList<Keyframe>
     public void Add(double position, double value)
     {
         var index = SearchForIndexAfter(position);
+        if (this.ValidateIndex(index) && _items[index].Position == position)
+            return;
+
         _items.Insert(index, new Keyframe(position, value));
     }
 
