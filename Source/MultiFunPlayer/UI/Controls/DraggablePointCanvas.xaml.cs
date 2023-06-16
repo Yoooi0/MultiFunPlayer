@@ -48,6 +48,18 @@ public partial class DraggablePointCanvas : UserControl
                 new PropertyChangedCallback(OnInterpolationTypePropertyChanged)));
 
     [DoNotNotify]
+    public int InterpolationPointCount
+    {
+        get => (int)GetValue(InterpolationPointCountProperty);
+        set => SetValue(InterpolationPointCountProperty, value);
+    }
+
+    public static readonly DependencyProperty InterpolationPointCountProperty =
+        DependencyProperty.Register(nameof(InterpolationPointCount), typeof(int),
+            typeof(DraggablePointCanvas), new FrameworkPropertyMetadata(100,
+                new PropertyChangedCallback(OnInterpolationPointCountPropertyChanged)));
+
+    [DoNotNotify]
     public Rect Viewport
     {
         get => (Rect)GetValue(ViewportProperty);
@@ -87,6 +99,16 @@ public partial class DraggablePointCanvas : UserControl
 
     [SuppressPropertyChangedWarnings]
     private static void OnInterpolationTypePropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        if (d is not DraggablePointCanvas @this)
+            return;
+
+        @this.RefreshLine();
+        @this.PropertyChanged?.Invoke(@this, new PropertyChangedEventArgs(e.Property.Name));
+    }
+
+    [SuppressPropertyChangedWarnings]
+    private static void OnInterpolationPointCountPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
         if (d is not DraggablePointCanvas @this)
             return;
@@ -272,7 +294,7 @@ public partial class DraggablePointCanvas : UserControl
             foreach (var point in points)
                 keyframes.Add(point.X, point.Y);
 
-            var step = Viewport.Width / 333d;
+            var step = Viewport.Width / InterpolationPointCount;
             for (var i = 0; i < keyframes.Count - 1; i++)
                 for (var x = keyframes[i].Position; x < keyframes[i + 1].Position; x += step)
                     interpolatedPoints.Add(new Point(x, Math.Clamp(keyframes.Interpolate(i, x, InterpolationType), 0, ActualHeight)));
