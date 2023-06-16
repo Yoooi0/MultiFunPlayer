@@ -123,7 +123,7 @@ public partial class DraggablePointCanvas : UserControl
         if (d is not DraggablePointCanvas @this)
             return;
 
-        @this.SynchronizeElementsFromPoints();
+        @this.UpdateViewport((Rect)e.OldValue, (Rect)e.NewValue);
         @this.PropertyChanged?.Invoke(@this, new PropertyChangedEventArgs(e.Property.Name));
     }
 
@@ -221,6 +221,19 @@ public partial class DraggablePointCanvas : UserControl
             return;
 
         SynchronizePopup(point.Position);
+    }
+
+    private void UpdateViewport(Rect oldValue, Rect newValue)
+    {
+        for (var i = 0; i < Points.Count;)
+        {
+            if (!newValue.Contains(Points[i]))
+                Points.RemoveAt(i);
+            else
+                i++;
+        }
+
+        SynchronizeElementsFromPoints();
     }
 
     private void SynchronizeElementsFromPoints()
