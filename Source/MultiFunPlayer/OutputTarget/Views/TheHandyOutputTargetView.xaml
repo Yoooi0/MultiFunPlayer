@@ -74,6 +74,14 @@
         </Expander.Header>
 
         <StackPanel Margin="20">
+            <TextBlock Text="The Handy support is in experimantal state, the device might not behave correctly"
+                       Margin="0 -15 0 10"
+                       FontSize="12"
+                       Foreground="{DynamicResource MaterialDesignErrorBrush}"
+                       Typography.Capitals="AllSmallCaps"
+                       FontWeight="Bold"
+                       HorizontalAlignment="Center"/>
+
             <DockPanel LastChildFill="True" Margin="0 0 0 10">
                 <DockPanel DockPanel.Dock="Left">
                     <TextBlock VerticalAlignment="Center" Text="Source axis:" Margin="0 0 10 0"/>
