@@ -30,7 +30,7 @@ internal class ShortcutSettingTemplateSelector : DataTemplateSelector
 
         var suffix = item switch
         {
-            IShortcutSetting when type.IsAssignableTo(typeof(IEnumerable)) => "List",
+            IShortcutSetting when type.IsAssignableTo(typeof(IEnumerable)) && type != typeof(string) => "List",
             _ => ""
         };
 
