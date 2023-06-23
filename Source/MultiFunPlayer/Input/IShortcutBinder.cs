@@ -187,8 +187,6 @@ internal class ShortcutBinder : IShortcutBinder
         var eventArgs = new GestureEventArgs(gesture);
         OnGesture?.Invoke(this, eventArgs);
 
-        if (eventArgs.Handled)
-            return;
         if (!HandleGestures)
             return;
         if (!_bindingLookup.TryGetValue(gesture.Descriptor, out var binding))
@@ -198,10 +196,10 @@ internal class ShortcutBinder : IShortcutBinder
         if (!binding.Enabled)
             return;
 
-        Logger.Trace($"Handling {gesture.Descriptor} gesture");
+        Logger.Trace("Handling {0} gesture", gesture.Descriptor);
         foreach (var configuration in binding.Configurations)
         {
-            Logger.Trace($"Invoking {configuration.Descriptor} action");
+            Logger.Trace("Invoking {0} action", configuration.Descriptor);
             _shortcutManager.Invoke(configuration, gesture);
         }
     }

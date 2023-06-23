@@ -6,8 +6,6 @@ namespace MultiFunPlayer.Input;
 internal class GestureEventArgs : EventArgs
 {
     public GestureEventArgs(IInputGesture gesture) => Gesture = gesture;
-
-    public bool Handled { get; set; }
     public IInputGesture Gesture { get; }
 }
 
