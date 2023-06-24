@@ -1,7 +1,9 @@
 ﻿using MultiFunPlayer.Common;
+using MultiFunPlayer.Input;
 using Newtonsoft.Json;
 using Stylet;
 using System.ComponentModel;
+using System.Reflection;
 
 namespace MultiFunPlayer.MotionProvider.ViewModels;
 
@@ -55,5 +57,25 @@ internal class PatternMotionProviderViewModel : AbstractMotionProvider
             case PatternType.Square: return t < 0.5 ? 1 : 0;
             default: return 0;
         }
+    }
+
+    public static void RegisterActions(IShortcutManager s, Func<DeviceAxis, PatternMotionProviderViewModel> getInstance)
+    {
+        void UpdateProperty(DeviceAxis axis, Action<PatternMotionProviderViewModel> callback)
+        {
+            var motionProvider = getInstance(axis);
+            if (motionProvider != null)
+                callback(motionProvider);
+        }
+
+        AbstractMotionProvider.RegisterActions(s, getInstance);
+        var name = typeof(PatternMotionProviderViewModel).GetCustomAttribute<DisplayNameAttribute>(inherit: false).DisplayName;
+
+        #region PatternMotionProvider::Pattern
+        s.RegisterAction<DeviceAxis, PatternType>($"MotionProvider::{name}::Pattern::Set",
+            s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All),
+            s => s.WithLabel("Pattern").WithItemsSource(Enum.GetValues<PatternType>()),
+            (axis, pattern) => UpdateProperty(axis, p => p.Pattern = pattern));
+        #endregion
     }
 }

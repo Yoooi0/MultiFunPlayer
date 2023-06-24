@@ -1,9 +1,11 @@
 ﻿using Microsoft.WindowsAPICodePack.Dialogs;
 using MultiFunPlayer.Common;
+using MultiFunPlayer.Input;
 using Newtonsoft.Json;
 using Stylet;
 using System.ComponentModel;
 using System.IO;
+using System.Reflection;
 
 namespace MultiFunPlayer.MotionProvider.ViewModels;
 
@@ -77,5 +79,32 @@ internal class LoopingScriptMotionProviderViewModel : AbstractMotionProvider
             return;
 
         SourceFile = new FileInfo(dialog.FileName);
+    }
+
+    public static void RegisterActions(IShortcutManager s, Func<DeviceAxis, LoopingScriptMotionProviderViewModel> getInstance)
+    {
+        void UpdateProperty(DeviceAxis axis, Action<LoopingScriptMotionProviderViewModel> callback)
+        {
+            var motionProvider = getInstance(axis);
+            if (motionProvider != null)
+                callback(motionProvider);
+        }
+
+        AbstractMotionProvider.RegisterActions(s, getInstance);
+        var name = typeof(LoopingScriptMotionProviderViewModel).GetCustomAttribute<DisplayNameAttribute>(inherit: false).DisplayName;
+
+        #region LoopingMotionProvider::Script
+        s.RegisterAction<DeviceAxis, string>($"MotionProvider::{name}::Script::Set",
+            s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All),
+            s => s.WithLabel("Script path"),
+            (axis, script) => UpdateProperty(axis, p => p.SourceFile = new FileInfo(script)));
+        #endregion
+
+        #region LoopingMotionProvider::Interpolation
+        s.RegisterAction<DeviceAxis, InterpolationType>($"MotionProvider::{name}::Interpolation::Set",
+            s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All),
+            s => s.WithLabel("Interpolation type").WithItemsSource(Enum.GetValues<InterpolationType>()),
+            (axis, interpolation) => UpdateProperty(axis, p => p.InterpolationType = interpolation));
+        #endregion
     }
 }
