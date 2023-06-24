@@ -225,12 +225,15 @@ public partial class DraggablePointCanvas : UserControl
 
     private void UpdateViewport(Rect oldValue, Rect newValue)
     {
-        for (var i = 0; i < Points.Count;)
+        if (Points != null)
         {
-            if (!newValue.Contains(Points[i]))
-                Points.RemoveAt(i);
-            else
-                i++;
+            for (var i = 0; i < Points.Count;)
+            {
+                if (!newValue.Contains(Points[i]))
+                    Points.RemoveAt(i);
+                else
+                    i++;
+            }
         }
 
         SynchronizeElementsFromPoints();
