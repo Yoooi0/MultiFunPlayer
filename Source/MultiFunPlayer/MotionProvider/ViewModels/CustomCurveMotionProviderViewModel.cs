@@ -1,4 +1,4 @@
-﻿using MultiFunPlayer.Common;
+using MultiFunPlayer.Common;
 using Newtonsoft.Json;
 using PropertyChanged;
 using Stylet;
@@ -72,7 +72,8 @@ internal class CustomCurveMotionProviderViewModel : AbstractMotionProvider
         if (!_keyframes.ValidateIndex(_index) || !_keyframes.ValidateIndex(_index + 1))
             return;
 
-        Value = MathUtils.Clamp01(_keyframes.Interpolate(_index, _time, InterpolationType));
+        var newValue = MathUtils.Clamp01(_keyframes.Interpolate(_index, _time, InterpolationType));
+        Value = MathUtils.Map(newValue, 0, 1, Minimum / 100, Maximum / 100);
         _time += Speed * deltaTime;
     }
 }
