@@ -1,5 +1,4 @@
-﻿using Newtonsoft.Json;
-using PropertyChanged;
+﻿using PropertyChanged;
 using System.Collections;
 
 namespace MultiFunPlayer.Input;

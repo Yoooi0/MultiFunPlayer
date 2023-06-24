@@ -4,7 +4,6 @@ using MultiFunPlayer.Input;
 using MultiFunPlayer.Input.RawInput;
 using MultiFunPlayer.Input.XInput;
 using MultiFunPlayer.MediaSource;
-using MultiFunPlayer.MediaSource.MediaResource;
 using MultiFunPlayer.MotionProvider;
 using MultiFunPlayer.OutputTarget;
 using MultiFunPlayer.Plugin;
