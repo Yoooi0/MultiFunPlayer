@@ -9,6 +9,7 @@
              xmlns:ui="clr-namespace:MultiFunPlayer.UI"
              xmlns:input="clr-namespace:MultiFunPlayer.Input"
              xmlns:controls="clr-namespace:MultiFunPlayer.UI.Controls"
+             xmlns:common="clr-namespace:MultiFunPlayer.Common"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800"
              x:ClassModifier="internal">
@@ -71,6 +72,40 @@
                         <controls:SmartLimitPreview Points="{Binding Value}"
                                                     HorizontalAlignment="Center"/>
                     </DockPanel>
+                </DataTemplate>
+                <DataTemplate x:Key="CustomCurveMotionProviderPointsTemplate" DataType="{x:Type input:IShortcutSetting}">
+                    <StackPanel>
+                        <DockPanel LastChildFill="True">
+                            <TextBlock Text="Interpolation type:" 
+                                       DockPanel.Dock="Left"
+                                       Margin="0 0 10 0"
+                                       VerticalAlignment="Center"/>
+
+                            <ComboBox DockPanel.Dock="Left"
+                                      ItemsSource="{Binding Source={ui:EnumBindingSource {x:Type common:InterpolationType}}}" 
+                                      SelectedItem="{Binding Value.InterpolationType}"/>
+                        </DockPanel>
+                        
+                        <DockPanel LastChildFill="True"
+                                   Margin="0 0 0 10">
+                            <TextBlock Text="Duration:" 
+                                       DockPanel.Dock="Left"
+                                       Margin="0 0 10 0"
+                                       VerticalAlignment="Center"/>
+
+                            <metro:NumericUpDown Value="{Binding Value.Duration}"
+                                                 x:Name="CustomCurveMotionProviderPointsTemplateDuration"
+                                                 Minimum="1"
+                                                 Maximum="60"/>
+                        </DockPanel>
+
+                        <controls:DraggablePointCanvas Points="{Binding Value.Points}"
+                                                       Height="150"
+                                                       Width="300"
+                                                       Viewport="{Binding Value.Viewport}"
+                                                       InterpolationType="{Binding Value.InterpolationType}"
+                                                       PopupFormat="{}{0:F1}s, {1:P0}"/>
+                    </StackPanel>
                 </DataTemplate>
             </ItemsControl.Resources>
             <ItemsControl.ItemTemplate>
