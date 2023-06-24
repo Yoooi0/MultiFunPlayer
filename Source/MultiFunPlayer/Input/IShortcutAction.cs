@@ -3,12 +3,24 @@
 internal interface IShortcutAction
 {
     IShortcutActionDescriptor Descriptor { get; }
+    IReadOnlyList<Type> Arguments { get; }
+
     void Invoke(params object[] arguments);
 }
 
 internal abstract class AbstractShortcutAction : IShortcutAction
 {
+    private IReadOnlyList<Type> _arguments;
+
     public IShortcutActionDescriptor Descriptor { get; }
+    public IReadOnlyList<Type> Arguments
+    {
+        get
+        {
+            _arguments ??= GetType().GetGenericArguments().AsReadOnly();
+            return _arguments;
+        }
+    }
 
     protected AbstractShortcutAction(IShortcutActionDescriptor descriptor)
         => Descriptor = descriptor;

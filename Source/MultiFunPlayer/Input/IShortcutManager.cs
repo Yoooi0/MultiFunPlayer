@@ -188,11 +188,10 @@ internal class ShortcutManager : IShortcutManager
         if (!_actions.TryGetValue(actionDescription, out var action))
             return false;
 
-        var genericArguments = action.GetType().GetGenericArguments();
-        if (gestureDescriptor.GetType().IsAssignableTo(typeof(ISimpleInputGestureDescriptor)))
-            return genericArguments == null || genericArguments.Length == 0 || !genericArguments[0].IsAssignableTo(typeof(IInputGesture)) || genericArguments[0] == typeof(ISimpleInputGesture);
-        else if (gestureDescriptor.GetType().IsAssignableTo(typeof(IAxisInputGestureDescriptor)))
-            return genericArguments?.Length > 0 && genericArguments[0] == typeof(IAxisInputGesture);
+        if (gestureDescriptor is ISimpleInputGestureDescriptor)
+            return action.Arguments.Count == 0 || !action.Arguments[0].IsAssignableTo(typeof(IInputGesture)) || typeof(ISimpleInputGesture).IsAssignableTo(action.Arguments[0]);
+        else if (gestureDescriptor is IAxisInputGestureDescriptor)
+            return action.Arguments.Count > 0 && typeof(IAxisInputGesture).IsAssignableTo(action.Arguments[0]);
 
         return false;
     }
@@ -218,10 +217,9 @@ internal class ShortcutManager : IShortcutManager
         if (!_actions.TryGetValue(actionConfiguration.Descriptor, out var action))
             return;
 
-        var genericArguments = action.GetType().GetGenericArguments();
-        if (genericArguments == null || genericArguments.Length == 0)
+        if (action.Arguments.Count == 0)
             action.Invoke();
-        else if (genericArguments[0].IsAssignableTo(typeof(IInputGesture)))
+        else if (action.Arguments[0].IsAssignableTo(typeof(IInputGesture)))
             action.Invoke(actionConfiguration.GetActionParamsWithGesture(gesture));
         else
             action.Invoke(actionConfiguration.GetActionParams());
