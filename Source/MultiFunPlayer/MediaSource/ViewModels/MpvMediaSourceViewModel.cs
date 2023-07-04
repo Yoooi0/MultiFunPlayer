@@ -115,6 +115,7 @@ internal class MpvMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlayP
     {
         try
         {
+            var nextPositionChangedIsSeek = false;
             while (!token.IsCancellationRequested && client.IsConnected)
             {
                 var message = await reader.ReadLineAsync(token);
@@ -129,33 +130,40 @@ internal class MpvMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlayP
                     if (!document.TryGetValue<string>("event", out var eventType))
                         continue;
 
-                    if (!string.Equals(eventType, "property-change", StringComparison.OrdinalIgnoreCase))
-                        continue;
-
-                    if (!document.TryGetValue<string>("name", out var propertyName) || !document.TryGetValue("data", out var dataToken))
-                        continue;
-
-                    switch (propertyName)
+                    if (string.Equals(eventType, "property-change", StringComparison.OrdinalIgnoreCase))
                     {
-                        case "path":
-                            EventAggregator.Publish(new MediaPathChangedMessage(dataToken.TryToObject<string>(out var path) && !string.IsNullOrWhiteSpace(path) ? path : null));
-                            break;
-                        case "pause":
-                            if (dataToken.TryToObject<string>(out var paused))
-                                EventAggregator.Publish(new MediaPlayingChangedMessage(!string.Equals(paused, "yes", StringComparison.OrdinalIgnoreCase)));
-                            break;
-                        case "duration":
-                            if (dataToken.TryToObject<double>(out var duration) && duration >= 0)
-                                EventAggregator.Publish(new MediaDurationChangedMessage(TimeSpan.FromSeconds(duration)));
-                            break;
-                        case "time-pos":
-                            if (dataToken.TryToObject<double>(out var position) && position >= 0)
-                                EventAggregator.Publish(new MediaPositionChangedMessage(TimeSpan.FromSeconds(position)));
-                            break;
-                        case "speed":
-                            if (dataToken.TryToObject<double>(out var speed) && speed > 0)
-                                EventAggregator.Publish(new MediaSpeedChangedMessage(speed));
-                            break;
+                        if (!document.TryGetValue<string>("name", out var propertyName) || !document.TryGetValue("data", out var dataToken))
+                            continue;
+
+                        switch (propertyName)
+                        {
+                            case "path":
+                                EventAggregator.Publish(new MediaPathChangedMessage(dataToken.TryToObject<string>(out var path) && !string.IsNullOrWhiteSpace(path) ? path : null));
+                                break;
+                            case "pause":
+                                if (dataToken.TryToObject<string>(out var paused))
+                                    EventAggregator.Publish(new MediaPlayingChangedMessage(!string.Equals(paused, "yes", StringComparison.OrdinalIgnoreCase)));
+                                break;
+                            case "duration":
+                                if (dataToken.TryToObject<double>(out var duration) && duration >= 0)
+                                    EventAggregator.Publish(new MediaDurationChangedMessage(TimeSpan.FromSeconds(duration)));
+                                break;
+                            case "time-pos":
+                                if (dataToken.TryToObject<double>(out var position) && position >= 0)
+                                {
+                                    EventAggregator.Publish(new MediaPositionChangedMessage(TimeSpan.FromSeconds(position), ForceSeek: nextPositionChangedIsSeek));
+                                    nextPositionChangedIsSeek = false;
+                                }
+                                break;
+                            case "speed":
+                                if (dataToken.TryToObject<double>(out var speed) && speed > 0)
+                                    EventAggregator.Publish(new MediaSpeedChangedMessage(speed));
+                                break;
+                        }
+                    }
+                    else if (string.Equals(eventType, "seek", StringComparison.OrdinalIgnoreCase))
+                    {
+                        nextPositionChangedIsSeek = true;
                     }
                 }
                 catch (JsonException) { }
