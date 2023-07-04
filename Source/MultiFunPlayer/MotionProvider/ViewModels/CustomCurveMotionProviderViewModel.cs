@@ -16,6 +16,7 @@ internal class CustomCurveMotionProviderViewModel : AbstractMotionProvider
     private double _time;
     private int _index;
     private KeyframeCollection _keyframes;
+    private int _pendingRefreshCount;
 
     [JsonProperty(ObjectCreationHandling = ObjectCreationHandling.Replace)]
     public ObservableConcurrentCollection<Point> Points { get; set; }
@@ -30,6 +31,7 @@ internal class CustomCurveMotionProviderViewModel : AbstractMotionProvider
         : base(target, eventAggregator)
     {
         Points = new ObservableConcurrentCollection<Point> { new Point() };
+        _pendingRefreshCount = 1;
     }
 
     protected void OnPointsChanged(ObservableConcurrentCollection<Point> oldValue, ObservableConcurrentCollection<Point> newValue)
@@ -38,20 +40,20 @@ internal class CustomCurveMotionProviderViewModel : AbstractMotionProvider
             oldValue.CollectionChanged -= OnPointsCollectionChanged;
         if (newValue != null)
             newValue.CollectionChanged += OnPointsCollectionChanged;
+
+        Interlocked.Increment(ref _pendingRefreshCount);
     }
 
     [SuppressPropertyChangedWarnings]
     private void OnPointsCollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
-    {
-        Interlocked.Exchange(ref _keyframes, null);
-    }
+        => Interlocked.Increment(ref _pendingRefreshCount);
 
     public override void Update(double deltaTime)
     {
-        if (Points.Count == 0)
+        if (Points == null || Points.Count == 0)
             return;
 
-        if (_keyframes == null)
+        if (_pendingRefreshCount != 0)
         {
             var newKeyframes = new KeyframeCollection(Points.Count + 2);
 
@@ -60,9 +62,14 @@ internal class CustomCurveMotionProviderViewModel : AbstractMotionProvider
             foreach (var point in points)
                 newKeyframes.Add(point.X, point.Y);
 
-            Interlocked.Exchange(ref _keyframes, newKeyframes);
-            _index = newKeyframes.SearchForIndexBefore(_time);
+            _keyframes = newKeyframes;
+            _index = _keyframes.SearchForIndexBefore(_time);
+
+            Interlocked.Decrement(ref _pendingRefreshCount);
         }
+
+        if (_keyframes == null)
+            return;
 
         if (_time >= Duration || _index + 1 >= _keyframes.Count)
         {
