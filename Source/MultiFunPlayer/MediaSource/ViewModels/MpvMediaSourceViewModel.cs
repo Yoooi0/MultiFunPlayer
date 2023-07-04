@@ -154,6 +154,7 @@ internal class MpvMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlayP
                                     EventAggregator.Publish(new MediaPositionChangedMessage(TimeSpan.FromSeconds(position), ForceSeek: nextPositionChangedIsSeek));
                                     nextPositionChangedIsSeek = false;
                                 }
+
                                 break;
                             case "speed":
                                 if (dataToken.TryToObject<double>(out var speed) && speed > 0)

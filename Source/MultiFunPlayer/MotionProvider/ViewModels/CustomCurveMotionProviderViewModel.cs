@@ -64,7 +64,7 @@ internal class CustomCurveMotionProviderViewModel : AbstractMotionProvider
             _index = newKeyframes.SearchForIndexBefore(_time);
         }
 
-        if (_time > Duration || _index + 1 >= _keyframes.Count)
+        if (_time >= Duration || _index + 1 >= _keyframes.Count)
         {
             _time = 0;
             _index = -1;

@@ -36,10 +36,10 @@ internal class LoopingScriptMotionProviderViewModel : AbstractMotionProvider
                 : result.Resources.Values.FirstOrDefault()
             : result.Resource;
 
-        _scriptIndex = 0;
-        _scriptStart = Script?.Keyframes?[0].Position ?? double.NaN;
-        _scriptEnd = Script?.Keyframes?[^1].Position ?? double.NaN;
-        _time = 0;
+        _scriptIndex = -1;
+        _scriptStart = Script?.Keyframes[0].Position ?? double.NaN;
+        _scriptEnd = Script?.Keyframes[^1].Position ?? double.NaN;
+        _time = _scriptStart;
     }
 
     public override void Update(double deltaTime)
@@ -61,7 +61,7 @@ internal class LoopingScriptMotionProviderViewModel : AbstractMotionProvider
         if (!keyframes.ValidateIndex(_scriptIndex) || !keyframes.ValidateIndex(_scriptIndex + 1))
             return;
 
-        var newValue = keyframes.Interpolate(_scriptIndex, _time, InterpolationType);
+        var newValue = MathUtils.Clamp01(keyframes.Interpolate(_scriptIndex, _time, InterpolationType));
         Value = MathUtils.Map(newValue, 0, 1, Minimum / 100, Maximum / 100);
         _time += Speed * deltaTime;
     }
