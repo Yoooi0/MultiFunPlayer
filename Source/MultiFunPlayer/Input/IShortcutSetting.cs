@@ -52,23 +52,13 @@ public partial class ShortcutSetting<T> : IShortcutSetting<T>
     public string TemplateName { get; init; }
     public Func<T, string> CustomToString { get; init; }
 
-    public Type Type => typeof(T);
+    public Type Type => typeof(T).IsValueType || Value == null ? typeof(T) : Value.GetType();
 
-    public override string ToString() => CustomToString != null ? CustomToString(Value) : Value.ToString();
+    public override string ToString() => CustomToString?.Invoke(Value) ?? Value?.ToString() ?? "null";
 }
 
 [AddINotifyPropertyChangedInterface]
-public partial class OneOfShortcutSetting<T> : IOneOfShortcutSetting<T>
+public partial class OneOfShortcutSetting<T> : ShortcutSetting<T>, IOneOfShortcutSetting<T>
 {
-    public T Value { get; set; }
-    public string Label { get; init; }
-    public string Description { get; init; }
     public IEnumerable<T> ItemsSource { get; init; }
-    public string StringFormat { get; init; }
-    public string TemplateName { get; init; }
-    public Func<T, string> CustomToString { get; init; }
-
-    public Type Type => typeof(T).IsValueType ? typeof(T) : Value == null ? typeof(T) : Value.GetType();
-
-    public override string ToString() => CustomToString != null ? CustomToString(Value) : Value?.ToString() ?? "null";
 }
