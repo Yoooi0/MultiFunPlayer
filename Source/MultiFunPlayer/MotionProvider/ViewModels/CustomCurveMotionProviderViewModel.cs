@@ -154,7 +154,7 @@ internal class CustomCurveMotionProviderViewModel : AbstractMotionProvider
         #region CustomCurveMotionProvider::Points
         s.RegisterAction<DeviceAxis, PointsActionSettingsViewModel>($"MotionProvider::{name}::Points::Set",
             s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All),
-            s => s.WithDefaultValue(new(new ObservableConcurrentCollection<Point>() { new Point(0.5, 0.5) }, 1, InterpolationType.Linear))
+            s => s.WithDefaultValue(new PointsActionSettingsViewModel())
                   .WithTemplateName("CustomCurveMotionProviderPointsTemplate")
                   .WithCustomToString(x => $"Points({x.Points.Count})"),
             (axis, vm) => UpdateProperty(axis, p =>
@@ -170,6 +170,10 @@ internal class CustomCurveMotionProviderViewModel : AbstractMotionProvider
     [AddINotifyPropertyChangedInterface]
     private partial record PointsActionSettingsViewModel(ObservableConcurrentCollection<Point> Points, double Duration, InterpolationType InterpolationType)
     {
+        public PointsActionSettingsViewModel()
+            : this(new ObservableConcurrentCollection<Point>() { new Point(0.5, 0.5) }, 1, InterpolationType.Linear)
+        { }
+
         [JsonIgnore]
         [DependsOn(nameof(Duration))]
         public Rect Viewport => new(0, 0, Duration, 1);
