@@ -1,4 +1,4 @@
-﻿using MultiFunPlayer.Common;
+using MultiFunPlayer.Common;
 using MultiFunPlayer.Input;
 using Newtonsoft.Json;
 using PropertyChanged;
@@ -13,6 +13,8 @@ namespace MultiFunPlayer.MotionProvider.ViewModels;
 [JsonObject(MemberSerialization = MemberSerialization.OptIn)]
 internal class CustomCurveMotionProviderViewModel : AbstractMotionProvider
 {
+    private readonly object _stateLock = new();
+
     private double _time;
     private int _index;
     private KeyframeCollection _keyframes;
@@ -23,6 +25,7 @@ internal class CustomCurveMotionProviderViewModel : AbstractMotionProvider
 
     [JsonProperty] public InterpolationType InterpolationType { get; set; }
     [JsonProperty] public double Duration { get; set; } = 10;
+    [JsonProperty] public bool IsLooping { get; set; } = true;
 
     [DependsOn(nameof(Duration))]
     public Rect Viewport => new(0, 0, Duration, 1);
@@ -71,19 +74,33 @@ internal class CustomCurveMotionProviderViewModel : AbstractMotionProvider
         if (_keyframes == null)
             return;
 
-        if (_time >= Duration || _index + 1 >= _keyframes.Count)
+        lock (_stateLock)
+        {
+            if (_time >= Duration || _index + 1 >= _keyframes.Count)
+            {
+                if (!IsLooping)
+                    return;
+
+                ResetState();
+            }
+
+            _index = _keyframes.AdvanceIndex(_index, _time);
+            if (!_keyframes.ValidateIndex(_index) || !_keyframes.ValidateIndex(_index + 1))
+                return;
+
+            var newValue = MathUtils.Clamp01(_keyframes.Interpolate(_index, _time, InterpolationType));
+            Value = MathUtils.Map(newValue, 0, 1, Minimum / 100, Maximum / 100);
+            _time += Speed * deltaTime;
+        }
+    }
+
+    public void ResetState()
+    {
+        lock (_stateLock)
         {
             _time = 0;
             _index = -1;
         }
-
-        _index = _keyframes.AdvanceIndex(_index, _time);
-        if (!_keyframes.ValidateIndex(_index) || !_keyframes.ValidateIndex(_index + 1))
-            return;
-
-        var newValue = MathUtils.Clamp01(_keyframes.Interpolate(_index, _time, InterpolationType));
-        Value = MathUtils.Map(newValue, 0, 1, Minimum / 100, Maximum / 100);
-        _time += Speed * deltaTime;
     }
 
     public static void RegisterActions(IShortcutManager s, Func<DeviceAxis, CustomCurveMotionProviderViewModel> getInstance)
@@ -110,6 +127,28 @@ internal class CustomCurveMotionProviderViewModel : AbstractMotionProvider
             s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All),
             s => s.WithLabel("Duration").WithStringFormat("{}{0}s"),
             (axis, duration) => UpdateProperty(axis, p => p.Duration = duration));
+        #endregion
+
+        #region CustomCurveMotionProvider::IsLooping
+        s.RegisterAction<DeviceAxis, bool>($"MotionProvider::{name}::IsLooping::Set",
+            s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All),
+            s => s.WithLabel("Enable looping"),
+            (axis, enabled) => UpdateProperty(axis, p => p.IsLooping = enabled));
+
+        s.RegisterAction<DeviceAxis>($"MotionProvider::{name}::IsLooping::Toggle",
+            s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All),
+            axis => UpdateProperty(axis, p => p.IsLooping = !p.IsLooping));
+        #endregion
+
+        #region CustomCurveMotionProvider::Reset
+        s.RegisterAction<DeviceAxis, bool>($"MotionProvider::{name}::Reset",
+            s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All),
+            s => s.WithLabel("Request sync").WithDefaultValue(true),
+            (axis, sync) => UpdateProperty(axis, p => {
+                if (sync)
+                    p.RequestSync();
+                p.ResetState();
+            }));
         #endregion
 
         #region CustomCurveMotionProvider::Points
