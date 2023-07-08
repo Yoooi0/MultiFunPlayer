@@ -15,7 +15,6 @@ internal class CustomCurveMotionProviderViewModel : AbstractMotionProvider
 {
     private readonly object _stateLock = new();
 
-    private double _time;
     private int _index;
     private KeyframeCollection _keyframes;
     private int _pendingRefreshCount;
@@ -30,12 +29,17 @@ internal class CustomCurveMotionProviderViewModel : AbstractMotionProvider
     [DependsOn(nameof(Duration))]
     public Rect Viewport => new(0, 0, Duration, 1);
 
+    [DoNotNotify] public double Time { get; private set; }
+
     public CustomCurveMotionProviderViewModel(DeviceAxis target, IEventAggregator eventAggregator)
         : base(target, eventAggregator)
     {
         Points = new ObservableConcurrentCollection<Point> { new Point() };
         _pendingRefreshCount = 1;
     }
+
+    protected override bool ShouldSyncOnPropertyChanged(string propertyName)
+        => propertyName != nameof(Time);
 
     protected void OnPointsChanged(ObservableConcurrentCollection<Point> oldValue, ObservableConcurrentCollection<Point> newValue)
     {
@@ -66,7 +70,7 @@ internal class CustomCurveMotionProviderViewModel : AbstractMotionProvider
                 newKeyframes.Add(point.X, point.Y);
 
             _keyframes = newKeyframes;
-            _index = _keyframes.SearchForIndexBefore(_time);
+            _index = _keyframes.SearchForIndexBefore(Time);
 
             Interlocked.Decrement(ref _pendingRefreshCount);
         }
@@ -76,7 +80,7 @@ internal class CustomCurveMotionProviderViewModel : AbstractMotionProvider
 
         lock (_stateLock)
         {
-            if (_time >= Duration || _index + 1 >= _keyframes.Count)
+            if (Time >= Duration || _index + 1 >= _keyframes.Count)
             {
                 if (!IsLooping)
                     return;
@@ -84,21 +88,23 @@ internal class CustomCurveMotionProviderViewModel : AbstractMotionProvider
                 ResetState();
             }
 
-            _index = _keyframes.AdvanceIndex(_index, _time);
+            _index = _keyframes.AdvanceIndex(_index, Time);
             if (!_keyframes.ValidateIndex(_index) || !_keyframes.ValidateIndex(_index + 1))
                 return;
 
-            var newValue = MathUtils.Clamp01(_keyframes.Interpolate(_index, _time, InterpolationType));
+            var newValue = MathUtils.Clamp01(_keyframes.Interpolate(_index, Time, InterpolationType));
             Value = MathUtils.Map(newValue, 0, 1, Minimum / 100, Maximum / 100);
-            _time += Speed * deltaTime;
+            Time += Speed * deltaTime;
         }
+
+        NotifyOfPropertyChange(nameof(Time));
     }
 
     public void ResetState()
     {
         lock (_stateLock)
         {
-            _time = 0;
+            Time = 0;
             _index = -1;
         }
     }

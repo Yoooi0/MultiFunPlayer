@@ -1,4 +1,4 @@
-﻿using MultiFunPlayer.Common;
+using MultiFunPlayer.Common;
 using PropertyChanged;
 using System.Collections.Specialized;
 using System.ComponentModel;
@@ -16,6 +16,7 @@ namespace MultiFunPlayer.UI.Controls;
 public partial class DraggablePointCanvas : UserControl
 {
     private Vector _captureOffset;
+    private KeyframeCollection _keyframes;
 
     public string PopupText { get; set; }
     public PointCollection LinePoints { get; set; }
@@ -34,6 +35,18 @@ public partial class DraggablePointCanvas : UserControl
             typeof(DraggablePointCanvas), new FrameworkPropertyMetadata(null,
                 FrameworkPropertyMetadataOptions.BindsTwoWayByDefault,
                     new PropertyChangedCallback(OnPointsPropertyChanged)));
+
+    [DoNotNotify]
+    public double ScrubberPosition
+    {
+        get => (double)GetValue(ScrubberPositionProperty);
+        set => SetValue(ScrubberPositionProperty, value);
+    }
+
+    public static readonly DependencyProperty ScrubberPositionProperty =
+        DependencyProperty.Register(nameof(ScrubberPosition), typeof(double),
+            typeof(DraggablePointCanvas), new FrameworkPropertyMetadata(double.NaN,
+                new PropertyChangedCallback(OnScrubberPositionPropertyChanged)));
 
     [DoNotNotify]
     public InterpolationType InterpolationType
@@ -98,6 +111,16 @@ public partial class DraggablePointCanvas : UserControl
     }
 
     [SuppressPropertyChangedWarnings]
+    private static void OnScrubberPositionPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        if (d is not DraggablePointCanvas @this)
+            return;
+
+        @this.RefreshScrubber();
+        @this.PropertyChanged?.Invoke(@this, new PropertyChangedEventArgs(e.Property.Name));
+    }
+
+    [SuppressPropertyChangedWarnings]
     private static void OnInterpolationTypePropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
         if (d is not DraggablePointCanvas @this)
@@ -128,11 +151,17 @@ public partial class DraggablePointCanvas : UserControl
     }
 
     [SuppressPropertyChangedWarnings]
-    private void OnPointsCollectionChanged(object sender, NotifyCollectionChangedEventArgs e) => SynchronizeElementsFromPoints();
+    private void OnPointsCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+    {
+        SynchronizeElementsFromPoints();
+        RefreshScrubber();
+    }
 
     public DraggablePointCanvas()
     {
         InitializeComponent();
+
+        IsVisibleChanged += (_, _) => RefreshScrubber();
     }
 
     private void OnMouseDown(object sender, MouseButtonEventArgs e)
@@ -186,7 +215,7 @@ public partial class DraggablePointCanvas : UserControl
 
         _captureOffset = new Vector();
         Mouse.Capture(null);
-        SynchronizePopup(null);
+        DisablePopup();
         SynchronizePointsFromElements();
     }
 
@@ -205,14 +234,18 @@ public partial class DraggablePointCanvas : UserControl
     }
 
     [SuppressPropertyChangedWarnings]
-    private void OnSizeChanged(object sender, SizeChangedEventArgs e) => SynchronizeElementsFromPoints();
+    private void OnSizeChanged(object sender, SizeChangedEventArgs e)
+    {
+        SynchronizeElementsFromPoints();
+        RefreshScrubber();
+    }
 
     private void OnElementMouseLeave(object sender, MouseEventArgs e)
     {
         if (e.Source is not DraggablePoint)
             return;
 
-        SynchronizePopup(null);
+        DisablePopup();
     }
 
     private void OnElementMouseEnter(object sender, MouseEventArgs e)
@@ -295,27 +328,61 @@ public partial class DraggablePointCanvas : UserControl
         if (Points == null || Points.Count == 0 || ActualWidth == 0 || ActualHeight == 0)
             return;
 
-        var points = Points.Prepend(new Point(Viewport.Left, Points[0].Y))
-                           .Append(new Point(Viewport.Right, Points[^1].Y))
-                           .Select(ToCanvas);
+        _keyframes = new KeyframeCollection(Points.Count + 2)
+        {
+            { ToCanvasX(Viewport.Left), ToCanvasY(Points[0].Y) }
+        };
+
+        foreach (var point in Points)
+            _keyframes.Add(ToCanvasX(point.X), ToCanvasY(point.Y));
+        _keyframes.Add(ToCanvasX(Viewport.Right), ToCanvasY(Points[^1].Y));
 
         if (InterpolationType == InterpolationType.Linear)
         {
-            LinePoints = new PointCollection(points);
+            LinePoints = new PointCollection(_keyframes.Select(k => new Point(k.Position, k.Value)));
         }
         else
         {
-            var interpolatedPoints = new List<Point>();
-            var keyframes = new KeyframeCollection(Points.Count + 2);
-            foreach (var point in points)
-                keyframes.Add(point.X, point.Y);
-
             var step = Viewport.Width / InterpolationPointCount;
-            for (var i = 0; i < keyframes.Count - 1; i++)
-                for (var x = keyframes[i].Position; x < keyframes[i + 1].Position; x += step)
-                    interpolatedPoints.Add(new Point(x, Math.Clamp(keyframes.Interpolate(i, x, InterpolationType), 0, ActualHeight)));
+            var interpolatedPoints = new List<Point>(InterpolationPointCount);
+
+            for (var i = 0; i < _keyframes.Count - 1; i++)
+                for (var x = _keyframes[i].Position; x < _keyframes[i + 1].Position; x += step)
+                    interpolatedPoints.Add(new Point(x, Math.Clamp(_keyframes.Interpolate(i, x, InterpolationType), 0, ActualHeight)));
 
             LinePoints = new PointCollection(interpolatedPoints);
+        }
+
+        RefreshScrubber();
+    }
+
+    private void RefreshScrubber()
+    {
+        if (!IsVisible)
+            return;
+
+        var canRefresh = CanRefresh();
+        Scrubber.Visibility = canRefresh ? Visibility.Visible : Visibility.Collapsed;
+        if (!canRefresh)
+            return;
+
+        var x = ToCanvasX(ScrubberPosition);
+        var index = _keyframes.AdvanceIndex(-1, x);
+        if (!_keyframes.ValidateIndex(index) || !_keyframes.ValidateIndex(index + 1))
+            return;
+
+        var y = _keyframes.Interpolate(index, x, InterpolationType);
+        (Scrubber.Data as EllipseGeometry).Center = new Point(x, y);
+
+        bool CanRefresh()
+        {
+            if (Points == null || Points.Count == 0)
+                return false;
+            if (_keyframes == null || _keyframes.Count == 0)
+                return false;
+            if (!double.IsFinite(ScrubberPosition))
+                return false;
+            return true;
         }
     }
 
@@ -327,21 +394,21 @@ public partial class DraggablePointCanvas : UserControl
     public double ToCanvasX(double x) => MathUtils.Map(x, Viewport.Left, Viewport.Right, 0, ActualWidth);
     public double ToCanvasY(double y) => MathUtils.Map(y, Viewport.Bottom, Viewport.Top, 0, ActualHeight);
 
-    private void SynchronizePopup(Point? position)
+    private void SynchronizePopup(Point position)
     {
-        if (position == null)
-        {
-            Popup.IsOpen = false;
-            PopupText = null;
-        }
-        else
-        {
-            Popup.HorizontalOffset = position.Value.X - 10;
-            Popup.VerticalOffset = position.Value.Y - 30;
-            Popup.IsOpen = true;
+        //TODO: updating offsets prevents ScrubberPosition from getting PropertyChanged events
+        Popup.HorizontalOffset = position.X - 10;
+        Popup.VerticalOffset = position.Y - 30;
 
-            var point = FromCanvas(position.Value);
-            PopupText = string.Format(PopupFormat, point.X, point.Y);
-        }
+        Popup.IsOpen = true;
+
+        var point = FromCanvas(position);
+        PopupText = string.Format(PopupFormat, point.X, point.Y);
+    }
+
+    private void DisablePopup()
+    {
+        Popup.IsOpen = false;
+        PopupText = null;
     }
 }

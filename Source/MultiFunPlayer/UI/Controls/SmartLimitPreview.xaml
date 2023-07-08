@@ -72,24 +72,8 @@
                   Height="125">
                 <local:DraggablePointCanvas x:Name="Canvas" 
                                             Points="{Binding Points, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}"
-                                            PopupFormat="{}{0:F0}%, {1:F0}%"
-                                            SizeChanged="OnCanvasSizeChanged"/>
-
-                <Canvas>
-                    <Path x:Name="Scrubber" 
-                          IsHitTestVisible="False"
-                          Fill="White"
-                          StrokeThickness="1"
-                          Stroke="Black"
-                          Cursor="Hand">
-                        <Path.Data>
-                            <EllipseGeometry RadiusX="3" RadiusY="3"/>
-                        </Path.Data>
-                        <Path.Effect>
-                            <DropShadowEffect BlurRadius="3" Opacity="0.6" ShadowDepth="0" />
-                        </Path.Effect>
-                    </Path>
-                </Canvas>
+                                            ScrubberPosition="{Binding Input, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}"
+                                            PopupFormat="{}{0:F0}%, {1:F0}%"/>
             </Grid>
         </Canvas>
     </DockPanel>

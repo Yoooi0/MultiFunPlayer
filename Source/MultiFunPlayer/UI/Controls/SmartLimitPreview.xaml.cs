@@ -56,12 +56,6 @@ internal partial class SmartLimitPreview : UserControl
         if (d is not SmartLimitPreview @this)
             return;
 
-        if (e.OldValue is INotifyCollectionChanged oldCollection)
-            oldCollection.CollectionChanged -= @this.OnPointsCollectionChanged;
-        if (e.NewValue is INotifyCollectionChanged newCollection)
-            newCollection.CollectionChanged += @this.OnPointsCollectionChanged;
-
-        @this.RefreshScrubber();
         @this.PropertyChanged?.Invoke(@this, new PropertyChangedEventArgs(e.Property.Name));
     }
 
@@ -71,46 +65,23 @@ internal partial class SmartLimitPreview : UserControl
         if (d is not SmartLimitPreview @this)
             return;
 
-        @this.RefreshScrubber();
+        @this.UpdateOutput();
         @this.PropertyChanged?.Invoke(@this, new PropertyChangedEventArgs(e.Property.Name));
     }
 
     public SmartLimitPreview()
     {
         InitializeComponent();
-
-        IsVisibleChanged += (_, _) => RefreshScrubber();
     }
 
-    private void RefreshScrubber()
+    private void UpdateOutput()
     {
-        if (!IsVisible)
+        if (Points == null || Points.Count == 0)
             return;
-
-        var canRefresh = CanRefresh();
-        Scrubber.Visibility = canRefresh ? Visibility.Visible : Visibility.Collapsed;
-        if (!canRefresh)
+        if (!double.IsFinite(Input))
             return;
 
         var x = Math.Clamp(Input, 0, 100);
-        var y = Interpolation.Linear(Points, p => p.X, p => p.Y, x);
-
-        Output = y;
-        (Scrubber.Data as EllipseGeometry).Center = Canvas.ToCanvas(new Point(x, y));
-
-        bool CanRefresh()
-        {
-            if (Points == null || Points.Count == 0)
-                return false;
-            if (!double.IsFinite(Input))
-                return false;
-            return true;
-        }
+        Output = Interpolation.Linear(Points, p => p.X, p => p.Y, x);
     }
-
-    [SuppressPropertyChangedWarnings]
-    private void OnPointsCollectionChanged(object sender, NotifyCollectionChangedEventArgs e) => RefreshScrubber();
-
-    [SuppressPropertyChangedWarnings]
-    private void OnCanvasSizeChanged(object sender, SizeChangedEventArgs e) => RefreshScrubber();
 }
