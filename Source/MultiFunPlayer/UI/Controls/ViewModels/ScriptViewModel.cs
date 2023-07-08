@@ -318,14 +318,11 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
 
                 var autoHomeAllowed = CheckIfAutoHomeAllowed();
                 if (!autoHomeAllowed)
-                {
                     ResetAutoHome();
-                    ApplyValues();
-                }
-                else
-                {
+
+                ApplyValues();
+                if (autoHomeAllowed)
                     UpdateAutoHome();
-                }
 
                 if (SyncSettings.SyncOnAutoHomeStartEnd)
                     if (context.LastIsAutoHoming && !context.IsAutoHoming)
@@ -388,11 +385,8 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                         return;
 
                     var t = GetSyncProgress(state.SyncTime, SyncSettings.Duration);
-                    if (context.IsAutoHoming)
-                        state.SyncTime -= deltaTime;
-                    else if (!double.IsFinite(context.Value) || context.IsDirty)
-                        state.SyncTime -= deltaTime;
 
+                    state.SyncTime -= deltaTime;
                     if (context.IsAutoHoming || !double.IsFinite(context.Value))
                         return;
 
