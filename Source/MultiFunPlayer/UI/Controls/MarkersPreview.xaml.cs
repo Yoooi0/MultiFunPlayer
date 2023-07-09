@@ -150,6 +150,8 @@ internal partial class MarkersPreview : UserControl
 
     private void RefreshChapters()
     {
+        ResetToolTip();
+
         ChapterModels = null;
         if (Chapters == null || Chapters.Count == 0 || !double.IsFinite(Duration) || Duration <= 0 || ActualWidth < 1 || ActualHeight < 1)
             return;
@@ -181,6 +183,8 @@ internal partial class MarkersPreview : UserControl
 
     private void RefreshBookmarks()
     {
+        ResetToolTip();
+
         BookmarkModels = null;
         if (Bookmarks == null || Bookmarks.Count == 0 || !double.IsFinite(Duration) || Duration <= 0 || ActualWidth < 1 || ActualHeight < 1)
             return;
@@ -263,6 +267,13 @@ internal partial class MarkersPreview : UserControl
             return;
 
         UpdateToolTip(open, sender, contentFactory, model);
+    }
+
+    private void ResetToolTip()
+    {
+        ToolTipTarget = null;
+        ToolTipIsOpen = false;
+        ToolTipContent = null;
     }
 
     private void UpdateToolTip<T>(bool open, object sender, Func<T, object> contentFactory, T model)
