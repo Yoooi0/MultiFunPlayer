@@ -49,7 +49,6 @@
                       SelectedItem="{Binding InterpolationType}"/>
         </DockPanel>
 
-
         <DockPanel LastChildFill="True"
                    Margin="0 0 0 10">
             <TextBlock Text="Speed:"
