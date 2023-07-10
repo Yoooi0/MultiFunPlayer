@@ -51,6 +51,9 @@ internal class CustomCurveMotionProviderViewModel : AbstractMotionProvider
         Interlocked.Increment(ref _pendingRefreshCount);
     }
 
+    protected void OnViewportChanged()
+        => Interlocked.Increment(ref _pendingRefreshCount);
+
     [SuppressPropertyChangedWarnings]
     private void OnPointsCollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
         => Interlocked.Increment(ref _pendingRefreshCount);
