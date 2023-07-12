@@ -3,6 +3,7 @@ using MultiFunPlayer.Input;
 using Newtonsoft.Json;
 using PropertyChanged;
 using Stylet;
+using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Reflection;
 using System.Windows;
@@ -17,7 +18,8 @@ internal class CustomCurveMotionProviderViewModel : AbstractMotionProvider
 
     private int _index;
     private KeyframeCollection _keyframes;
-    private int _pendingRefreshCount;
+    private bool _playing;
+    private int _pendingRefreshFlag;
 
     [JsonProperty(ObjectCreationHandling = ObjectCreationHandling.Replace)]
     public ObservableConcurrentCollection<Point> Points { get; set; }
@@ -35,7 +37,9 @@ internal class CustomCurveMotionProviderViewModel : AbstractMotionProvider
         : base(target, eventAggregator)
     {
         Points = new ObservableConcurrentCollection<Point> { new Point() };
-        _pendingRefreshCount = 1;
+        _pendingRefreshFlag = 1;
+
+        ResetState(true);
     }
 
     protected override bool ShouldSyncOnPropertyChanged(string propertyName)
@@ -48,34 +52,40 @@ internal class CustomCurveMotionProviderViewModel : AbstractMotionProvider
         if (newValue != null)
             newValue.CollectionChanged += OnPointsCollectionChanged;
 
-        Interlocked.Increment(ref _pendingRefreshCount);
+        Interlocked.Exchange(ref _pendingRefreshFlag, 1);
     }
 
     protected void OnViewportChanged()
-        => Interlocked.Increment(ref _pendingRefreshCount);
+        => Interlocked.Exchange(ref _pendingRefreshFlag, 1);
+
+    protected void OnIsLoopingChanged()
+    {
+        lock (_stateLock)
+            if (IsLooping)
+                _playing = true;
+    }
 
     [SuppressPropertyChangedWarnings]
-    private void OnPointsCollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
-        => Interlocked.Increment(ref _pendingRefreshCount);
+    private void OnPointsCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+        => Interlocked.Exchange(ref _pendingRefreshFlag, 1);
 
     public override void Update(double deltaTime)
     {
         if (Points == null || Points.Count == 0)
             return;
 
-        if (_pendingRefreshCount != 0)
+        if (Interlocked.CompareExchange(ref _pendingRefreshFlag, 0, 1) == 1)
         {
             var newKeyframes = new KeyframeCollection(Points.Count + 2);
 
             var points = Points.Prepend(new Point(Viewport.Left, Points[0].Y))
-                               .Append(new Point(Viewport.Right, Points[^1].Y));
+                                .Append(new Point(Viewport.Right, Points[^1].Y));
             foreach (var point in points)
                 newKeyframes.Add(point.X, point.Y);
 
             _keyframes = newKeyframes;
-            _index = _keyframes.SearchForIndexBefore(Time);
 
-            Interlocked.Decrement(ref _pendingRefreshCount);
+            ResetState(_playing);
         }
 
         if (_keyframes == null)
@@ -83,13 +93,11 @@ internal class CustomCurveMotionProviderViewModel : AbstractMotionProvider
 
         lock (_stateLock)
         {
-            if (Time >= Duration || _index + 1 >= _keyframes.Count)
-            {
-                if (!IsLooping)
-                    return;
+            if (!_playing)
+                return;
 
-                ResetState();
-            }
+            if (Time >= Duration || _index + 1 >= _keyframes.Count)
+                ResetState(IsLooping);
 
             _index = _keyframes.AdvanceIndex(_index, Time);
             if (!_keyframes.ValidateIndex(_index) || !_keyframes.ValidateIndex(_index + 1))
@@ -103,12 +111,14 @@ internal class CustomCurveMotionProviderViewModel : AbstractMotionProvider
         NotifyOfPropertyChange(nameof(Time));
     }
 
-    public void ResetState()
+    public void Reset() => ResetState(true);
+    private void ResetState(bool playing)
     {
         lock (_stateLock)
         {
             Time = 0;
             _index = -1;
+            _playing = playing;
         }
     }
 
@@ -156,7 +166,7 @@ internal class CustomCurveMotionProviderViewModel : AbstractMotionProvider
             (axis, sync) => UpdateProperty(axis, p => {
                 if (sync)
                     p.RequestSync();
-                p.ResetState();
+                p.ResetState(true);
             }));
         #endregion
 
@@ -168,10 +178,9 @@ internal class CustomCurveMotionProviderViewModel : AbstractMotionProvider
                   .WithCustomToString(x => $"Points({x.Points.Count})"),
             (axis, vm) => UpdateProperty(axis, p =>
             {
-                p.Points.Clear();
                 p.Duration = vm.Duration;
                 p.InterpolationType = vm.InterpolationType;
-                p.Points.AddRange(vm.Points);
+                p.Points.SetFrom(vm.Points);
             }));
         #endregion
     }

@@ -76,6 +76,16 @@ public class ObservableConcurrentCollection<T> : IList<T>, IReadOnlyObservableCo
         }
     }
 
+    public void SetFrom(IEnumerable<T> items)
+    {
+        lock (SyncRoot)
+        {
+            _items.Clear();
+            _items.AddRange(items);
+            NotifyObserversOfChange();
+        }
+    }
+
     public void Clear()
     {
         lock (SyncRoot)
