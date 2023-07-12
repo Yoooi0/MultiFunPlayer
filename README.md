@@ -17,9 +17,9 @@ The player's main feature is the ability to play multiple funscripts at the same
 
 # Main features
 
-* Supports **[DeoVR](https://deovr.com/), [MPV](https://mpv.io/), [MPC-HC/BE](https://github.com/clsid2/mpc-hc), [HereSphere](https://store.steampowered.com/app/1234730/HereSphere/), [OpenFunscripter](https://github.com/OpenFunscripter/OFS), [Whirligig](http://whirligig.xyz/) and [Plex](plex.tv)** video players
+* Supports **[DeoVR](https://deovr.com/), [MPV](https://mpv.io/), [MPC-HC/BE](https://github.com/clsid2/mpc-hc), [HereSphere](https://store.steampowered.com/app/1234730/HereSphere/), [OpenFunscripter](https://github.com/OpenFunscripter/OFS), [Whirligig](http://whirligig.xyz/), [Plex](https://plex.tv), [Emby](https://emby.media/) and [Jellyfin](https://jellyfin.org/)** video players
 * Internal player to **play scripts without video files** 
-* Supports **[buttplug.io](https://buttplug.io), TCP, UDP, websockets, namedpipes, serial, file and The Handy** outputs
+* Supports **[buttplug.io](https://buttplug.io), TCP, UDP, websockets, namedpipes, serial, file and The Handy (experimental)** outputs
 * **C# plugin system** for custom behaviours and integrations
 * Supports **multiple concurrent outputs** of the same type
 * Supports **TCode v0.2 and TCode v0.3** devices with advanced customization
@@ -33,7 +33,7 @@ The player's main feature is the ability to play multiple funscripts at the same
 * **Soft start sync** feature to prevent unwanted motion
 * **Script libraries** to organize funscripts in different folders and load funscripts not located next to the video file
 * Ability to **link unscripted axes** to scripted axes
-* Ability to **generate additional motion** or **fill script gaps** using random, script or pattern motion providers
+* Ability to **generate additional motion** or **fill script gaps** using random, script, pattern or custom curve motion providers
 * Customizable **color theme**
 * Multi **funscript heatmap** with stroke length visualization
 * Supports funscript **bookmarks and chapters**
