@@ -320,10 +320,7 @@ internal class ButtplugOutputTargetViewModel : AsyncAbstractOutputTarget
                 Endpoint = endpoint;
 
             if (settings.TryGetValue<List<ButtplugDeviceSettings>>(nameof(DeviceSettings), out var deviceSettings))
-            {
-                DeviceSettings.Clear();
-                DeviceSettings.AddRange(deviceSettings);
-            }
+                DeviceSettings.SetFrom(deviceSettings);
         }
     }
 

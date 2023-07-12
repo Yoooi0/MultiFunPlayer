@@ -664,16 +664,10 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
             }
 
             if (settings.TryGetValue<List<IMediaPathModifier>>(nameof(MediaPathModifiers), new JsonSerializerSettings() { TypeNameHandling = TypeNameHandling.Objects }, out var mediaPathModifiers))
-            {
-                MediaPathModifiers.Clear();
-                MediaPathModifiers.AddRange(mediaPathModifiers);
-            }
+                MediaPathModifiers.SetFrom(mediaPathModifiers);
 
             if (settings.TryGetValue<List<ScriptLibrary>>(nameof(ScriptLibraries), out var scriptDirectories))
-            {
-                ScriptLibraries.Clear();
-                ScriptLibraries.AddRange(scriptDirectories);
-            }
+                ScriptLibraries.SetFrom(scriptDirectories);
 
             if (settings.TryGetValue<double>(nameof(GlobalOffset), out var globalOffset)) GlobalOffset = globalOffset;
             if (settings.TryGetValue<bool>(nameof(ValuesContentVisible), out var valuesContentVisible)) ValuesContentVisible = valuesContentVisible;
@@ -1788,11 +1782,7 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
             s => s.WithDefaultValue(new ObservableConcurrentCollection<Point>() { new Point(50, 50) })
                   .WithTemplateName("SmartLimitPointsTemplate")
                   .WithCustomToString(x => $"Points({x.Count})"),
-            (axis, points) => UpdateSettings(axis, s =>
-            {
-                s.SmartLimitPoints.Clear();
-                s.SmartLimitPoints.AddRange(points);
-            }));
+            (axis, points) => UpdateSettings(axis, s => s.SmartLimitPoints.SetFrom(points)));
         #endregion
 
         #region Axis::LinkAxis

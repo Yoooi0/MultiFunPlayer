@@ -73,7 +73,7 @@ internal class LoopingScriptMotionProviderViewModel : AbstractMotionProvider
             IsFolderPicker = false,
             EnsureFileExists = true
         };
-        dialog.Filters.Add(new CommonFileDialogFilter("Funscript", "*.funscript"));
+        dialog.Filters.Add(new CommonFileDialogFilter("Funscript files", "*.funscript"));
 
         if (dialog.ShowDialog() != CommonFileDialogResult.Ok)
             return;
