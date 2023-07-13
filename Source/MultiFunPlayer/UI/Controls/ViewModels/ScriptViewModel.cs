@@ -824,7 +824,7 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
             foreach (var zipFile in library.EnumerateFiles($"{mediaWithoutExtension}.zip"))
                 TryMatchArchive(zipFile.FullName);
 
-            foreach (var funscriptFile in library.EnumerateFiles($"{mediaWithoutExtension}*.funscript"))
+            foreach (var funscriptFile in library.EnumerateFiles($"{mediaWithoutExtension}.*funscript"))
                 TryMatchName(funscriptFile.Name, FunscriptReader.Default.FromFileInfo(funscriptFile));
         }
 
@@ -834,7 +834,7 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
             var sourceDirectory = new DirectoryInfo(MediaResource.Source);
             TryMatchArchive(Path.Join(sourceDirectory.FullName, $"{mediaWithoutExtension}.zip"));
 
-            foreach (var funscriptFile in sourceDirectory.EnumerateFiles($"{mediaWithoutExtension}*.funscript"))
+            foreach (var funscriptFile in sourceDirectory.EnumerateFiles($"{mediaWithoutExtension}.*funscript"))
                 TryMatchName(funscriptFile.Name, FunscriptReader.Default.FromFileInfo(funscriptFile));
         }
 
