@@ -22,6 +22,7 @@ internal class RandomMotionProviderViewModel : AbstractMotionProvider
         : base(target, eventAggregator)
     {
         _noise = new OpenSimplex(Random.Shared.NextInt64());
+        Speed = 0.3;
     }
 
     public override void Update(double deltaTime)
