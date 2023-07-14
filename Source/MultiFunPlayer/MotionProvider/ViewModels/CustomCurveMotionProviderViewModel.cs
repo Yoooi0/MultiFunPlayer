@@ -74,7 +74,8 @@ internal class CustomCurveMotionProviderViewModel : AbstractMotionProvider
         if (Points == null || Points.Count == 0)
             return;
 
-        if (Interlocked.CompareExchange(ref _pendingRefreshFlag, 0, 1) == 1)
+        var needsRefresh = Interlocked.CompareExchange(ref _pendingRefreshFlag, 0, 1) == 1;
+        if (needsRefresh)
         {
             var newKeyframes = new KeyframeCollection(Points.Count + 2);
 
@@ -84,8 +85,6 @@ internal class CustomCurveMotionProviderViewModel : AbstractMotionProvider
                 newKeyframes.Add(point.X, point.Y);
 
             _keyframes = newKeyframes;
-
-            ResetState(_playing);
         }
 
         if (_keyframes == null)
@@ -95,6 +94,9 @@ internal class CustomCurveMotionProviderViewModel : AbstractMotionProvider
         {
             if (!_playing)
                 return;
+
+            if (needsRefresh)
+                _index = _keyframes.SearchForIndexBefore(Time);
 
             if (Time >= Duration || _index + 1 >= _keyframes.Count)
                 ResetState(IsLooping);
