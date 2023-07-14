@@ -77,6 +77,16 @@
                                    VerticalAlignment="Center"/>
             </Button>
 
+            <CheckBox DockPanel.Dock="Right"
+                      IsChecked="{Binding SyncOnEnd}"
+                      IsEnabled="{Binding IsLooping, Converter={StaticResource NotConverter}}"
+                      Margin="0 0 10 0"/>
+
+            <TextBlock Text="Sync on end:" 
+                       DockPanel.Dock="Right"
+                       Margin="0 0 10 0"
+                       VerticalAlignment="Center"/>
+
         </DockPanel>
 
         <DockPanel LastChildFill="True">

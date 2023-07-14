@@ -27,11 +27,12 @@ internal class CustomCurveMotionProviderViewModel : AbstractMotionProvider
     [JsonProperty] public InterpolationType InterpolationType { get; set; }
     [JsonProperty] public double Duration { get; set; } = 10;
     [JsonProperty] public bool IsLooping { get; set; } = true;
+    [JsonProperty] public bool SyncOnEnd { get; set; } = true;
 
     [DependsOn(nameof(Duration))]
     public Rect Viewport => new(0, 0, Duration, 1);
 
-    [DoNotNotify] public double Time { get; private set; }
+    public double Time { get; private set; }
 
     public CustomCurveMotionProviderViewModel(DeviceAxis target, IEventAggregator eventAggregator)
         : base(target, eventAggregator)
@@ -99,7 +100,18 @@ internal class CustomCurveMotionProviderViewModel : AbstractMotionProvider
                 _index = _keyframes.SearchForIndexBefore(Time);
 
             if (Time >= Duration || _index + 1 >= _keyframes.Count)
+            {
                 ResetState(IsLooping);
+
+                if (!IsLooping)
+                {
+                    if (SyncOnEnd)
+                        RequestSync();
+
+                    Value = double.NaN;
+                    return;
+                }
+            }
 
             _index = _keyframes.AdvanceIndex(_index, Time);
             if (!_keyframes.ValidateIndex(_index) || !_keyframes.ValidateIndex(_index + 1))
@@ -109,8 +121,6 @@ internal class CustomCurveMotionProviderViewModel : AbstractMotionProvider
             Value = MathUtils.Map(newValue, 0, 1, Minimum / 100, Maximum / 100);
             Time += Speed * deltaTime;
         }
-
-        NotifyOfPropertyChange(nameof(Time));
     }
 
     public void Reset() => ResetState(true);
