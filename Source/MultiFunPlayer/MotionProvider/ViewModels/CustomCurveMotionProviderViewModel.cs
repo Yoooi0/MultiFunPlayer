@@ -78,12 +78,14 @@ internal class CustomCurveMotionProviderViewModel : AbstractMotionProvider
         var needsRefresh = Interlocked.CompareExchange(ref _pendingRefreshFlag, 0, 1) == 1;
         if (needsRefresh)
         {
-            var newKeyframes = new KeyframeCollection(Points.Count + 2);
+            var newKeyframes = new KeyframeCollection(Points.Count + 2)
+            {
+                { Viewport.Left, Points[0].Y }
+            };
 
-            var points = Points.Prepend(new Point(Viewport.Left, Points[0].Y))
-                                .Append(new Point(Viewport.Right, Points[^1].Y));
-            foreach (var point in points)
+            foreach (var point in Points)
                 newKeyframes.Add(point.X, point.Y);
+            newKeyframes.Add(Viewport.Right, Points[^1].Y);
 
             _keyframes = newKeyframes;
         }
