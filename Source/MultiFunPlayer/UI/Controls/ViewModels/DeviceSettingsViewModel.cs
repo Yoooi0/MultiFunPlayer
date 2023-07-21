@@ -50,7 +50,7 @@ internal class DeviceSettingsViewModel : Screen, IHandle<SettingsMessage>
 
     public async void OnCloneDevice()
     {
-        var result = await DialogHelper.ShowAsync(new TextInputMessageDialogViewModel("Device name:", $"{SelectedDevice.Name} (custom)"), "SettingsDialog") as string;
+        var result = await DialogHelper.ShowAsync(new TextInputMessageDialogViewModel("Device name:", $"{SelectedDevice.Name} (custom)"), "SettingsDialog").ConfigureAwait(true) as string;
         if (string.IsNullOrWhiteSpace(result))
             return;
 
