@@ -235,14 +235,14 @@ internal static class PluginCompiler
 
             if (settingsType == null)
             {
-                var pluginFactory = () =>
+                return PluginCompilationResult.FromSuccess(context, CreatePluginInstance);
+
+                PluginBase CreatePluginInstance()
                 {
                     var instance = Activator.CreateInstance(pluginType) as PluginBase;
                     Container.BuildUp(instance);
                     return instance;
-                };
-
-                return PluginCompilationResult.FromSuccess(context, pluginFactory);
+                }
             }
             else
             {
@@ -259,14 +259,14 @@ internal static class PluginCompiler
                         ViewManager.BindViewToModel(settingsView, settings);
                 });
 
-                var pluginFactory = () =>
+                return PluginCompilationResult.FromSuccess(context, CreatePluginInstance, settings, settingsView);
+
+                PluginBase CreatePluginInstance()
                 {
                     var instance = Activator.CreateInstance(pluginType, new[] { settings }) as PluginBase;
                     Container.BuildUp(instance);
                     return instance;
-                };
-
-                return PluginCompilationResult.FromSuccess(context, pluginFactory, settings, settingsView);
+                }
             }
         }
         catch (Exception e)
