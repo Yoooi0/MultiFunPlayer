@@ -116,7 +116,7 @@ internal class OfsMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlayP
                             break;
                         case "time_change":
                             if (dataToken.TryGetValue<double>("time", out var position) && position >= 0)
-                                EventAggregator.Publish(new MediaPositionChangedMessage(TimeSpan.FromSeconds(position)));
+                                EventAggregator.Publish(new MediaPositionChangedMessage(TimeSpan.FromSeconds(position), ForceSeek: true));
                             break;
                         case "playbackspeed_change":
                             if (dataToken.TryGetValue<double>("speed", out var speed) && speed > 0)
