@@ -1,4 +1,4 @@
-using MaterialDesignColors.ColorManipulation;
+﻿using MaterialDesignColors.ColorManipulation;
 using MaterialDesignThemes.Wpf;
 using MultiFunPlayer.Common;
 using Newtonsoft.Json.Linq;
@@ -17,6 +17,7 @@ internal class ThemeSettingsViewModel : Screen, IHandle<SettingsMessage>
     public bool EnableColorAdjustment { get; set; } = false;
     public Contrast Contrast { get; set; } = Contrast.Medium;
     public double ContrastRatio { get; set; } = 4.5;
+    public bool IsDarkTheme { get; set; } = false;
 
     public ThemeSettingsViewModel(IEventAggregator eventAggregator)
     {
@@ -46,7 +47,7 @@ internal class ThemeSettingsViewModel : Screen, IHandle<SettingsMessage>
             return;
 
         if (propertyName is nameof(EnableColorAdjustment) or nameof(PrimaryColor)
-                         or nameof(Contrast) or nameof(ContrastRatio))
+                         or nameof(Contrast) or nameof(ContrastRatio) or nameof(IsDarkTheme))
             ApplyTheme();
     }
 
@@ -54,6 +55,8 @@ internal class ThemeSettingsViewModel : Screen, IHandle<SettingsMessage>
     {
         if (_paletteHelper.GetTheme() is not Theme theme)
             return;
+
+        theme.SetBaseTheme(IsDarkTheme ? Theme.Dark : Theme.Light);
 
         if (EnableColorAdjustment)
             theme.ColorAdjustment ??= new ColorAdjustment();
@@ -82,6 +85,7 @@ internal class ThemeSettingsViewModel : Screen, IHandle<SettingsMessage>
             settings[nameof(PrimaryColor)] = JToken.FromObject(PrimaryColor);
             settings[nameof(Contrast)] = JToken.FromObject(Contrast);
             settings[nameof(ContrastRatio)] = ContrastRatio;
+            settings[nameof(IsDarkTheme)] = IsDarkTheme;
         }
         else if (message.Action == SettingsAction.Loading)
         {
@@ -98,6 +102,8 @@ internal class ThemeSettingsViewModel : Screen, IHandle<SettingsMessage>
                     Contrast = contrast;
                 if (settings.TryGetValue<double>(nameof(ContrastRatio), out var contrastRatio))
                     ContrastRatio = contrastRatio;
+                if (settings.TryGetValue<bool>(nameof(IsDarkTheme), out var isDarkTheme))
+                    IsDarkTheme = isDarkTheme;
             });
             ApplyTheme();
         }
