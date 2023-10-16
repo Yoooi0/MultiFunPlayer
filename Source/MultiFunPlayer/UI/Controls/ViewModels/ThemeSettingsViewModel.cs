@@ -1,4 +1,4 @@
-﻿using MaterialDesignColors.ColorManipulation;
+using MaterialDesignColors.ColorManipulation;
 using MaterialDesignThemes.Wpf;
 using MultiFunPlayer.Common;
 using Newtonsoft.Json.Linq;
@@ -10,6 +10,8 @@ namespace MultiFunPlayer.UI.Controls.ViewModels;
 internal class ThemeSettingsViewModel : Screen, IHandle<SettingsMessage>
 {
     private readonly PaletteHelper _paletteHelper;
+
+    private bool _ignorePropertyChanged;
 
     public Color PrimaryColor { get; set; } = Color.FromRgb(0x71, 0x87, 0x92);
     public bool EnableColorAdjustment { get; set; } = false;
@@ -24,17 +26,24 @@ internal class ThemeSettingsViewModel : Screen, IHandle<SettingsMessage>
 
         if (_paletteHelper.GetTheme() is Theme theme)
         {
-            PrimaryColor = theme.PrimaryDark.Color.Lighten();
+            IgnorePropertyChanged(() =>
+            {
+                PrimaryColor = theme.PrimaryDark.Color.Lighten();
 
-            var colorAdjustment = new ColorAdjustment();
-            Contrast = colorAdjustment.Contrast;
-            ContrastRatio = colorAdjustment.DesiredContrastRatio;
+                var colorAdjustment = new ColorAdjustment();
+                Contrast = colorAdjustment.Contrast;
+                ContrastRatio = colorAdjustment.DesiredContrastRatio;
+            });
+            ApplyTheme();
         }
     }
 
     protected override void OnPropertyChanged(string propertyName)
     {
         base.OnPropertyChanged(propertyName);
+
+        if (_ignorePropertyChanged)
+            return;
 
         if (propertyName is nameof(EnableColorAdjustment) or nameof(PrimaryColor)
                          or nameof(Contrast) or nameof(ContrastRatio))
@@ -79,14 +88,25 @@ internal class ThemeSettingsViewModel : Screen, IHandle<SettingsMessage>
             if (!message.Settings.TryGetObject(out var settings, "Theme"))
                 return;
 
-            if (settings.TryGetValue<bool>(nameof(EnableColorAdjustment), out var enableColorAdjustment))
-                EnableColorAdjustment = enableColorAdjustment;
-            if (settings.TryGetValue<Color>(nameof(PrimaryColor), out var color))
-                PrimaryColor = color;
-            if (settings.TryGetValue<Contrast>(nameof(Contrast), out var contrast))
-                Contrast = contrast;
-            if (settings.TryGetValue<double>(nameof(ContrastRatio), out var contrastRatio))
-                ContrastRatio = contrastRatio;
+            IgnorePropertyChanged(() =>
+            {
+                if (settings.TryGetValue<bool>(nameof(EnableColorAdjustment), out var enableColorAdjustment))
+                    EnableColorAdjustment = enableColorAdjustment;
+                if (settings.TryGetValue<Color>(nameof(PrimaryColor), out var color))
+                    PrimaryColor = color;
+                if (settings.TryGetValue<Contrast>(nameof(Contrast), out var contrast))
+                    Contrast = contrast;
+                if (settings.TryGetValue<double>(nameof(ContrastRatio), out var contrastRatio))
+                    ContrastRatio = contrastRatio;
+            });
+            ApplyTheme();
         }
+    }
+
+    private void IgnorePropertyChanged(Action action)
+    {
+        _ignorePropertyChanged = true;
+        action();
+        _ignorePropertyChanged = false;
     }
 }
