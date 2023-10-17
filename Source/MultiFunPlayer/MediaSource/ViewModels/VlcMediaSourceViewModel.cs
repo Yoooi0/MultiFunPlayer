@@ -17,7 +17,7 @@ using System.Xml.XPath;
 namespace MultiFunPlayer.MediaSource.ViewModels;
 
 [DisplayName("VLC")]
-internal class VlcMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlayPauseMessage>, IHandle<MediaSeekMessage>, IHandle<MediaChangePathMessage>
+internal class VlcMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlayPauseMessage>, IHandle<MediaSeekMessage>, IHandle<MediaChangePathMessage>, IHandle<MediaChangeSpeedMessage>
 {
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
@@ -193,6 +193,7 @@ internal class VlcMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlayP
                     MediaPlayPauseMessage playPauseMessage when isPlaying != playPauseMessage.ShouldBePlaying => "pl_pause",
                     MediaSeekMessage seekMessage => $"seek&val={(int)seekMessage.Position.TotalSeconds}",
                     MediaChangePathMessage changePathMessage => string.IsNullOrWhiteSpace(changePathMessage.Path) ? "pl_stop" : $"in_play&input={Uri.EscapeDataString(changePathMessage.Path)}",
+                    MediaChangeSpeedMessage changeSpeedMessage => $"rate&val={changeSpeedMessage.Speed.ToString("F4").Replace(',', '.')}",
                     _ => null
                 };
 
@@ -326,6 +327,12 @@ internal class VlcMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlayP
     }
 
     public async void Handle(MediaChangePathMessage message)
+    {
+        if (Status == ConnectionStatus.Connected)
+            await _writeMessageChannel.Writer.WriteAsync(message);
+    }
+
+    public async void Handle(MediaChangeSpeedMessage message)
     {
         if (Status == ConnectionStatus.Connected)
             await _writeMessageChannel.Writer.WriteAsync(message);

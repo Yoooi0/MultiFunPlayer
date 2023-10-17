@@ -1465,6 +1465,20 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         s.RegisterAction<string>("Media::Path::Set", s => s.WithLabel("Media path"), path => _eventAggregator.Publish(new MediaChangePathMessage(path)));
         #endregion
 
+        #region Media::Speed
+        s.RegisterAction<double>("Media::Speed::Offset",
+            s => s.WithLabel("Value offset").WithStringFormat("{}{0}%"), offset => _eventAggregator.Publish(new MediaChangeSpeedMessage(CoerceMediaSpeed(PlaybackSpeed + offset / 100))));
+        s.RegisterAction<double>("Media::Speed::Set",
+            s => s.WithLabel("Value").WithStringFormat("{}{0}%"), value => _eventAggregator.Publish(new MediaChangeSpeedMessage(CoerceMediaSpeed(value / 100))));
+
+        static double CoerceMediaSpeed(double speed)
+        {
+            if (Math.Abs(1 - speed) < 0.01)
+                speed = 1;
+            return Math.Max(speed, 0.01);
+        }
+        #endregion
+
         #region Media::ScriptOffset
         s.RegisterAction<double>("Media::ScriptOffset::Offset",
             s => s.WithLabel("Value offset").WithStringFormat("{}{0}s"), offset => GlobalOffset += offset);

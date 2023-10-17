@@ -16,7 +16,7 @@ using System.Threading.Channels;
 namespace MultiFunPlayer.MediaSource.ViewModels;
 
 [DisplayName("MPV")]
-internal class MpvMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlayPauseMessage>, IHandle<MediaSeekMessage>, IHandle<MediaChangePathMessage>
+internal class MpvMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlayPauseMessage>, IHandle<MediaSeekMessage>, IHandle<MediaChangePathMessage>, IHandle<MediaChangeSpeedMessage>
 {
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
@@ -193,6 +193,7 @@ internal class MpvMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlayP
                     MediaPlayPauseMessage playPauseMessage => CreateMessage("set_property", "pause", !playPauseMessage.ShouldBePlaying ? "yes" : "no"),
                     MediaSeekMessage seekMessage => CreateMessage("set_property", "time-pos", seekMessage.Position.TotalSeconds.ToString("F4").Replace(',', '.')),
                     MediaChangePathMessage changePathMessage => CreateMessage("loadfile", changePathMessage.Path.Replace(@"\", "/")),
+                    MediaChangeSpeedMessage changeSpeedMessage => CreateMessage("set_property", "speed", changeSpeedMessage.Speed.ToString("F4").Replace(',', '.')),
                     _ => null
                 };
 
@@ -326,6 +327,12 @@ internal class MpvMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlayP
     }
 
     public async void Handle(MediaChangePathMessage message)
+    {
+        if (Status == ConnectionStatus.Connected)
+            await _writeMessageChannel.Writer.WriteAsync(message);
+    }
+
+    public async void Handle(MediaChangeSpeedMessage message)
     {
         if (Status == ConnectionStatus.Connected)
             await _writeMessageChannel.Writer.WriteAsync(message);

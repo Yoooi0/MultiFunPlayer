@@ -15,7 +15,7 @@ using System.Windows;
 namespace MultiFunPlayer.MediaSource.ViewModels;
 
 [DisplayName("Internal")]
-internal class InternalMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlayPauseMessage>, IHandle<MediaSeekMessage>, IHandle<MediaChangePathMessage>
+internal class InternalMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlayPauseMessage>, IHandle<MediaSeekMessage>, IHandle<MediaChangePathMessage>, IHandle<MediaChangeSpeedMessage>
 {
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
@@ -25,6 +25,7 @@ internal class InternalMediaSourceViewModel : AbstractMediaSource, IHandle<Media
     private bool _isPlaying;
     private double _position;
     private double _duration;
+    private double _speed;
     private PlaylistItem _currentItem;
 
     public override ConnectionStatus Status { get; protected set; }
@@ -57,6 +58,7 @@ internal class InternalMediaSourceViewModel : AbstractMediaSource, IHandle<Media
             await Task.Delay(250, token);
             PlayIndex(-1);
             SetIsPlaying(false);
+            SetSpeed(1);
 
             while (_messageChannel.Reader.TryRead(out var _)) ;
 
@@ -76,6 +78,7 @@ internal class InternalMediaSourceViewModel : AbstractMediaSource, IHandle<Media
                     {
                         if (message is MediaPlayPauseMessage playPauseMessage) { SetIsPlaying(playPauseMessage.ShouldBePlaying); }
                         else if (message is MediaSeekMessage seekMessage && _currentItem != null) { SetPosition(seekMessage.Position.TotalSeconds); }
+                        else if (message is MediaChangeSpeedMessage changeSpeedMessage) { SetSpeed(changeSpeedMessage.Speed); }
                         else if (message is MediaChangePathMessage changePathMessage)
                         {
                             var path = changePathMessage.Path;
@@ -129,7 +132,7 @@ internal class InternalMediaSourceViewModel : AbstractMediaSource, IHandle<Media
                     if (!_isPlaying || _currentItem == null)
                         continue;
 
-                    SetPosition(_position + elapsed);
+                    SetPosition(_position + elapsed * _speed);
                 }
             }
         }
@@ -317,6 +320,13 @@ internal class InternalMediaSourceViewModel : AbstractMediaSource, IHandle<Media
             EventAggregator.Publish(new MediaPositionChangedMessage(double.IsFinite(position) ? TimeSpan.FromSeconds(position) : null, forceSeek));
     }
 
+    private void SetSpeed(double speed)
+    {
+        _speed = speed;
+        if (Status == ConnectionStatus.Connected || Status == ConnectionStatus.Disconnecting)
+            EventAggregator.Publish(new MediaSpeedChangedMessage(speed));
+    }
+
     private void SetIsPlaying(bool isPlaying)
     {
         _isPlaying = isPlaying;
@@ -425,6 +435,12 @@ internal class InternalMediaSourceViewModel : AbstractMediaSource, IHandle<Media
     }
 
     public void Handle(MediaChangePathMessage message)
+    {
+        if (Status == ConnectionStatus.Connected)
+            _messageChannel.Writer.TryWrite(message);
+    }
+
+    public void Handle(MediaChangeSpeedMessage message)
     {
         if (Status == ConnectionStatus.Connected)
             _messageChannel.Writer.TryWrite(message);

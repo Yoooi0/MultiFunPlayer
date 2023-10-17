@@ -14,7 +14,7 @@ using System.Threading.Channels;
 namespace MultiFunPlayer.MediaSource.ViewModels;
 
 [DisplayName("OFS")]
-internal class OfsMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlayPauseMessage>, IHandle<MediaSeekMessage>
+internal class OfsMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlayPauseMessage>, IHandle<MediaSeekMessage>, IHandle<MediaChangeSpeedMessage>
 {
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
@@ -191,6 +191,7 @@ internal class OfsMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlayP
                 {
                     MediaPlayPauseMessage playPauseMessage => CreateMessage("change_play", "playing", playPauseMessage.ShouldBePlaying.ToString().ToLower()),
                     MediaSeekMessage seekMessage => CreateMessage("change_time", "time", seekMessage.Position.TotalSeconds.ToString("F4").Replace(',', '.')),
+                    MediaChangeSpeedMessage changeSpeedMessage => CreateMessage("change_playbackspeed", "speed", changeSpeedMessage.Speed.ToString("F4").Replace(',', '.')),
                     _ => null
                 };
 
@@ -258,6 +259,12 @@ internal class OfsMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlayP
     }
 
     public async void Handle(MediaPlayPauseMessage message)
+    {
+        if (Status == ConnectionStatus.Connected)
+            await _writeMessageChannel.Writer.WriteAsync(message);
+    }
+
+    public async void Handle(MediaChangeSpeedMessage message)
     {
         if (Status == ConnectionStatus.Connected)
             await _writeMessageChannel.Writer.WriteAsync(message);

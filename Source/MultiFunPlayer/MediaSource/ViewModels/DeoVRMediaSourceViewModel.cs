@@ -17,7 +17,7 @@ using System.Threading.Channels;
 namespace MultiFunPlayer.MediaSource.ViewModels;
 
 [DisplayName("DeoVR")]
-internal class DeoVRMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlayPauseMessage>, IHandle<MediaSeekMessage>, IHandle<MediaChangePathMessage>
+internal class DeoVRMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlayPauseMessage>, IHandle<MediaSeekMessage>, IHandle<MediaChangePathMessage>, IHandle<MediaChangeSpeedMessage>
 {
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
@@ -192,6 +192,8 @@ internal class DeoVRMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPla
                         sendState.Position = seekMessage.Position.TotalSeconds;
                     else if (message is MediaChangePathMessage changePathMessage)
                         sendState.Path = changePathMessage.Path;
+                    else if (message is MediaChangeSpeedMessage changeSpeedMessage)
+                        sendState.Speed = changeSpeedMessage.Speed;
 
                     var messageString = JsonConvert.SerializeObject(sendState);
 
@@ -287,6 +289,12 @@ internal class DeoVRMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPla
     }
 
     public async void Handle(MediaChangePathMessage message)
+    {
+        if (Status == ConnectionStatus.Connected)
+            await _writeMessageChannel.Writer.WriteAsync(message);
+    }
+
+    public async void Handle(MediaChangeSpeedMessage message)
     {
         if (Status == ConnectionStatus.Connected)
             await _writeMessageChannel.Writer.WriteAsync(message);

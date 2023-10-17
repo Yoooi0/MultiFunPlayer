@@ -29,6 +29,7 @@ public class ChangeScriptMessage
 public record MediaSeekMessage(TimeSpan Position);
 public record MediaPlayPauseMessage(bool ShouldBePlaying);
 public record MediaChangePathMessage(string Path);
+public record MediaChangeSpeedMessage(double Speed);
 
 public class SyncRequestMessage
 {
