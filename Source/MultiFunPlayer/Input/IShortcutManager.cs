@@ -65,99 +65,99 @@ internal class ShortcutManager : IShortcutManager
         _actionConfigurationBuilders = new Dictionary<string, IShortcutActionConfigurationBuilder>();
     }
 
-    public void RegisterAction(string actionName, Action callback)
+    public void RegisterAction(string actionName, Action action)
     {
-        _actions.Add(actionName, new ShortcutAction(callback));
+        _actions.Add(actionName, new ShortcutAction(action));
         _actionConfigurationBuilders.Add(actionName, new ShortcutActionConfigurationBuilder(actionName));
 
         _availableActions.Add(actionName);
         ActionRegistered?.Invoke(this, actionName);
     }
 
-    public void RegisterAction<T0>(string actionName, Func<IShortcutSettingBuilder<T0>, IShortcutSettingBuilder<T0>> builder0, Action<T0> callback)
+    public void RegisterAction<T0>(string actionName, Func<IShortcutSettingBuilder<T0>, IShortcutSettingBuilder<T0>> builder0, Action<T0> action)
     {
-        _actions.Add(actionName, new ShortcutAction<T0>(callback));
+        _actions.Add(actionName, new ShortcutAction<T0>(action));
         _actionConfigurationBuilders.Add(actionName, new ShortcutActionConfigurationBuilder(actionName, builder0(new ShortcutSettingBuilder<T0>())));
 
         _availableActions.Add(actionName);
         ActionRegistered?.Invoke(this, actionName);
     }
 
-    public void RegisterAction<T0, T1>(string actionName, Func<IShortcutSettingBuilder<T0>, IShortcutSettingBuilder<T0>> builder0, Func<IShortcutSettingBuilder<T1>, IShortcutSettingBuilder<T1>> builder1, Action<T0, T1> callback)
+    public void RegisterAction<T0, T1>(string actionName, Func<IShortcutSettingBuilder<T0>, IShortcutSettingBuilder<T0>> builder0, Func<IShortcutSettingBuilder<T1>, IShortcutSettingBuilder<T1>> builder1, Action<T0, T1> action)
     {
-        _actions.Add(actionName, new ShortcutAction<T0, T1>(callback));
+        _actions.Add(actionName, new ShortcutAction<T0, T1>(action));
         _actionConfigurationBuilders.Add(actionName, new ShortcutActionConfigurationBuilder(actionName, builder0(new ShortcutSettingBuilder<T0>()), builder1(new ShortcutSettingBuilder<T1>())));
 
         _availableActions.Add(actionName);
         ActionRegistered?.Invoke(this, actionName);
     }
 
-    public void RegisterAction<T0, T1, T2>(string actionName, Func<IShortcutSettingBuilder<T0>, IShortcutSettingBuilder<T0>> builder0, Func<IShortcutSettingBuilder<T1>, IShortcutSettingBuilder<T1>> builder1, Func<IShortcutSettingBuilder<T2>, IShortcutSettingBuilder<T2>> builder2, Action<T0, T1, T2> callback)
+    public void RegisterAction<T0, T1, T2>(string actionName, Func<IShortcutSettingBuilder<T0>, IShortcutSettingBuilder<T0>> builder0, Func<IShortcutSettingBuilder<T1>, IShortcutSettingBuilder<T1>> builder1, Func<IShortcutSettingBuilder<T2>, IShortcutSettingBuilder<T2>> builder2, Action<T0, T1, T2> action)
     {
-        _actions.Add(actionName, new ShortcutAction<T0, T1, T2>(callback));
+        _actions.Add(actionName, new ShortcutAction<T0, T1, T2>(action));
         _actionConfigurationBuilders.Add(actionName, new ShortcutActionConfigurationBuilder(actionName, builder0(new ShortcutSettingBuilder<T0>()), builder1(new ShortcutSettingBuilder<T1>()), builder2(new ShortcutSettingBuilder<T2>())));
 
         _availableActions.Add(actionName);
         ActionRegistered?.Invoke(this, actionName);
     }
 
-    public void RegisterAction<T0, T1, T2, T3>(string actionName, Func<IShortcutSettingBuilder<T0>, IShortcutSettingBuilder<T0>> builder0, Func<IShortcutSettingBuilder<T1>, IShortcutSettingBuilder<T1>> builder1, Func<IShortcutSettingBuilder<T2>, IShortcutSettingBuilder<T2>> builder2, Func<IShortcutSettingBuilder<T3>, IShortcutSettingBuilder<T3>> builder3, Action<T0, T1, T2, T3> callback)
+    public void RegisterAction<T0, T1, T2, T3>(string actionName, Func<IShortcutSettingBuilder<T0>, IShortcutSettingBuilder<T0>> builder0, Func<IShortcutSettingBuilder<T1>, IShortcutSettingBuilder<T1>> builder1, Func<IShortcutSettingBuilder<T2>, IShortcutSettingBuilder<T2>> builder2, Func<IShortcutSettingBuilder<T3>, IShortcutSettingBuilder<T3>> builder3, Action<T0, T1, T2, T3> action)
     {
-        _actions.Add(actionName, new ShortcutAction<T0, T1, T2, T3>(callback));
+        _actions.Add(actionName, new ShortcutAction<T0, T1, T2, T3>(action));
         _actionConfigurationBuilders.Add(actionName, new ShortcutActionConfigurationBuilder(actionName, builder0(new ShortcutSettingBuilder<T0>()), builder1(new ShortcutSettingBuilder<T1>()), builder2(new ShortcutSettingBuilder<T2>()), builder3(new ShortcutSettingBuilder<T3>())));
 
         _availableActions.Add(actionName);
         ActionRegistered?.Invoke(this, actionName);
     }
 
-    public void RegisterAction<T0, T1, T2, T3, T4>(string actionName, Func<IShortcutSettingBuilder<T0>, IShortcutSettingBuilder<T0>> builder0, Func<IShortcutSettingBuilder<T1>, IShortcutSettingBuilder<T1>> builder1, Func<IShortcutSettingBuilder<T2>, IShortcutSettingBuilder<T2>> builder2, Func<IShortcutSettingBuilder<T3>, IShortcutSettingBuilder<T3>> builder3, Func<IShortcutSettingBuilder<T4>, IShortcutSettingBuilder<T4>> builder4, Action<T0, T1, T2, T3, T4> callback)
+    public void RegisterAction<T0, T1, T2, T3, T4>(string actionName, Func<IShortcutSettingBuilder<T0>, IShortcutSettingBuilder<T0>> builder0, Func<IShortcutSettingBuilder<T1>, IShortcutSettingBuilder<T1>> builder1, Func<IShortcutSettingBuilder<T2>, IShortcutSettingBuilder<T2>> builder2, Func<IShortcutSettingBuilder<T3>, IShortcutSettingBuilder<T3>> builder3, Func<IShortcutSettingBuilder<T4>, IShortcutSettingBuilder<T4>> builder4, Action<T0, T1, T2, T3, T4> action)
     {
-        _actions.Add(actionName, new ShortcutAction<T0, T1, T2, T3, T4>(callback));
+        _actions.Add(actionName, new ShortcutAction<T0, T1, T2, T3, T4>(action));
         _actionConfigurationBuilders.Add(actionName, new ShortcutActionConfigurationBuilder(actionName, builder0(new ShortcutSettingBuilder<T0>()), builder1(new ShortcutSettingBuilder<T1>()), builder2(new ShortcutSettingBuilder<T2>()), builder3(new ShortcutSettingBuilder<T3>()), builder4(new ShortcutSettingBuilder<T4>())));
 
         _availableActions.Add(actionName);
         ActionRegistered?.Invoke(this, actionName);
     }
 
-    public void RegisterAction<TG>(string actionName, Action<TG> callback) where TG : IInputGesture
+    public void RegisterAction<TG>(string actionName, Action<TG> action) where TG : IInputGesture
     {
-        _actions.Add(actionName, new ShortcutAction<TG>(callback));
+        _actions.Add(actionName, new ShortcutAction<TG>(action));
         _actionConfigurationBuilders.Add(actionName, new ShortcutActionConfigurationBuilder(actionName));
 
         _availableActions.Add(actionName);
         ActionRegistered?.Invoke(this, actionName);
     }
 
-    public void RegisterAction<TG, T0>(string actionName, Func<IShortcutSettingBuilder<T0>, IShortcutSettingBuilder<T0>> builder0, Action<TG, T0> callback) where TG : IInputGesture
+    public void RegisterAction<TG, T0>(string actionName, Func<IShortcutSettingBuilder<T0>, IShortcutSettingBuilder<T0>> builder0, Action<TG, T0> action) where TG : IInputGesture
     {
-        _actions.Add(actionName, new ShortcutAction<TG, T0>(callback));
+        _actions.Add(actionName, new ShortcutAction<TG, T0>(action));
         _actionConfigurationBuilders.Add(actionName, new ShortcutActionConfigurationBuilder(actionName, builder0(new ShortcutSettingBuilder<T0>())));
 
         _availableActions.Add(actionName);
         ActionRegistered?.Invoke(this, actionName);
     }
 
-    public void RegisterAction<TG, T0, T1>(string actionName, Func<IShortcutSettingBuilder<T0>, IShortcutSettingBuilder<T0>> builder0, Func<IShortcutSettingBuilder<T1>, IShortcutSettingBuilder<T1>> builder1, Action<TG, T0, T1> callback) where TG : IInputGesture
+    public void RegisterAction<TG, T0, T1>(string actionName, Func<IShortcutSettingBuilder<T0>, IShortcutSettingBuilder<T0>> builder0, Func<IShortcutSettingBuilder<T1>, IShortcutSettingBuilder<T1>> builder1, Action<TG, T0, T1> action) where TG : IInputGesture
     {
-        _actions.Add(actionName, new ShortcutAction<TG, T0, T1>(callback));
+        _actions.Add(actionName, new ShortcutAction<TG, T0, T1>(action));
         _actionConfigurationBuilders.Add(actionName, new ShortcutActionConfigurationBuilder(actionName, builder0(new ShortcutSettingBuilder<T0>()), builder1(new ShortcutSettingBuilder<T1>())));
 
         _availableActions.Add(actionName);
         ActionRegistered?.Invoke(this, actionName);
     }
 
-    public void RegisterAction<TG, T0, T1, T2>(string actionName, Func<IShortcutSettingBuilder<T0>, IShortcutSettingBuilder<T0>> builder0, Func<IShortcutSettingBuilder<T1>, IShortcutSettingBuilder<T1>> builder1, Func<IShortcutSettingBuilder<T2>, IShortcutSettingBuilder<T2>> builder2, Action<TG, T0, T1, T2> callback) where TG : IInputGesture
+    public void RegisterAction<TG, T0, T1, T2>(string actionName, Func<IShortcutSettingBuilder<T0>, IShortcutSettingBuilder<T0>> builder0, Func<IShortcutSettingBuilder<T1>, IShortcutSettingBuilder<T1>> builder1, Func<IShortcutSettingBuilder<T2>, IShortcutSettingBuilder<T2>> builder2, Action<TG, T0, T1, T2> action) where TG : IInputGesture
     {
-        _actions.Add(actionName, new ShortcutAction<TG, T0, T1, T2>(callback));
+        _actions.Add(actionName, new ShortcutAction<TG, T0, T1, T2>(action));
         _actionConfigurationBuilders.Add(actionName, new ShortcutActionConfigurationBuilder(actionName, builder0(new ShortcutSettingBuilder<T0>()), builder1(new ShortcutSettingBuilder<T1>()), builder2(new ShortcutSettingBuilder<T2>())));
 
         _availableActions.Add(actionName);
         ActionRegistered?.Invoke(this, actionName);
     }
 
-    public void RegisterAction<TG, T0, T1, T2, T3>(string actionName, Func<IShortcutSettingBuilder<T0>, IShortcutSettingBuilder<T0>> builder0, Func<IShortcutSettingBuilder<T1>, IShortcutSettingBuilder<T1>> builder1, Func<IShortcutSettingBuilder<T2>, IShortcutSettingBuilder<T2>> builder2, Func<IShortcutSettingBuilder<T3>, IShortcutSettingBuilder<T3>> builder3, Action<TG, T0, T1, T2, T3> callback) where TG : IInputGesture
+    public void RegisterAction<TG, T0, T1, T2, T3>(string actionName, Func<IShortcutSettingBuilder<T0>, IShortcutSettingBuilder<T0>> builder0, Func<IShortcutSettingBuilder<T1>, IShortcutSettingBuilder<T1>> builder1, Func<IShortcutSettingBuilder<T2>, IShortcutSettingBuilder<T2>> builder2, Func<IShortcutSettingBuilder<T3>, IShortcutSettingBuilder<T3>> builder3, Action<TG, T0, T1, T2, T3> action) where TG : IInputGesture
     {
-        _actions.Add(actionName, new ShortcutAction<TG, T0, T1, T2, T3>(callback));
+        _actions.Add(actionName, new ShortcutAction<TG, T0, T1, T2, T3>(action));
         _actionConfigurationBuilders.Add(actionName, new ShortcutActionConfigurationBuilder(actionName, builder0(new ShortcutSettingBuilder<T0>()), builder1(new ShortcutSettingBuilder<T1>()), builder2(new ShortcutSettingBuilder<T2>()), builder3(new ShortcutSettingBuilder<T3>())));
 
         _availableActions.Add(actionName);
