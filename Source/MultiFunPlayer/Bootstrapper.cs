@@ -7,6 +7,7 @@ using MultiFunPlayer.MediaSource;
 using MultiFunPlayer.MotionProvider;
 using MultiFunPlayer.OutputTarget;
 using MultiFunPlayer.Plugin;
+using MultiFunPlayer.Property;
 using MultiFunPlayer.Settings;
 using MultiFunPlayer.UI;
 using MultiFunPlayer.UI.Controls.ViewModels;
@@ -61,6 +62,7 @@ internal class Bootstrapper : Bootstrapper<RootViewModel>
         builder.Bind<IOutputTargetFactory>().To<OutputTargetFactory>().InSingletonScope();
         builder.Bind<IShortcutManager>().To<ShortcutManager>().InSingletonScope();
         builder.Bind<IShortcutBinder>().To<ShortcutBinder>().InSingletonScope();
+        builder.Bind<IPropertyManager>().To<PropertyManager>().InSingletonScope();
         builder.Bind<IMotionProviderFactory>().To<MotionProviderFactory>().InSingletonScope();
         builder.Bind<IMotionProviderManager>().To<MotionProviderManager>().InSingletonScope();
     }

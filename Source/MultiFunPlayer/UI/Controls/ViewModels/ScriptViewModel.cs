@@ -21,6 +21,7 @@ using MultiFunPlayer.MediaSource.MediaResource.Modifier;
 using MultiFunPlayer.MediaSource.MediaResource.Modifier.ViewModels;
 using MultiFunPlayer.MotionProvider.ViewModels;
 using System.Windows.Controls.Primitives;
+using MultiFunPlayer.Property;
 
 namespace MultiFunPlayer.UI.Controls.ViewModels;
 
@@ -74,7 +75,7 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
     public bool IsSyncing => AxisStates.Values.Any(s => s.SyncTime > 0);
     public double SyncProgress => !IsSyncing ? 100 : GetSyncProgress(AxisStates.Values.Max(s => s.SyncTime), SyncSettings.Duration) * 100;
 
-    public ScriptViewModel(IShortcutManager shortcutManager, IMotionProviderManager motionProviderManager, IEventAggregator eventAggregator)
+    public ScriptViewModel(IShortcutManager shortcutManager, IPropertyManager propertyManager, IMotionProviderManager motionProviderManager, IEventAggregator eventAggregator)
     {
         _eventAggregator = eventAggregator;
         _eventAggregator.Subscribe(this);
@@ -109,6 +110,7 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
 
         ResetSync(false);
         RegisterActions(shortcutManager);
+        RegisterProperties(propertyManager);
     }
 
     private void UpdateThread(CancellationToken token)
@@ -1996,6 +1998,15 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         s.RegisterAction<DeviceAxis>("Axis::UpdateMotionProviderWithoutScript::Toggle",
             s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All), axis => UpdateSettings(axis, s => s.UpdateMotionProviderWithoutScript = !s.UpdateMotionProviderWithoutScript));
         #endregion
+    }
+    #endregion
+
+    #region Properties 
+    private void RegisterProperties(IPropertyManager p)
+    {
+        p.RegisterProperty<DeviceAxis, double>("Axis::Value", GetValue);
+        p.RegisterProperty<DeviceAxis, double>("Axis::Position", GetAxisPosition);
+        p.RegisterProperty<DeviceAxis, IScriptResource>("Axis::Script", axis => AxisModels[axis].Script);
     }
     #endregion
 
