@@ -43,8 +43,10 @@ internal class ShortcutAction : AbstractShortcutAction
     public override void Invoke(params object[] arguments)
     {
         if (arguments == null || arguments.Length == 0)
-            _action?.Invoke();
+            Invoke();
     }
+
+    public void Invoke() => _action.Invoke();
 }
 
 internal class ShortcutAction<T0> : AbstractShortcutAction
@@ -56,8 +58,10 @@ internal class ShortcutAction<T0> : AbstractShortcutAction
     public override void Invoke(params object[] arguments)
     {
         if (arguments?.Length == 1 && GetArgument<T0>(arguments[0], out var arg0))
-            _action?.Invoke(arg0);
+            Invoke(arg0);
     }
+
+    public void Invoke(T0 arg0) => _action.Invoke(arg0);
 }
 
 internal class ShortcutAction<T0, T1> : AbstractShortcutAction
@@ -69,8 +73,10 @@ internal class ShortcutAction<T0, T1> : AbstractShortcutAction
     public override void Invoke(params object[] arguments)
     {
         if (arguments?.Length == 2 && GetArgument<T0>(arguments[0], out var arg0) && GetArgument<T1>(arguments[1], out var arg1))
-            _action?.Invoke(arg0, arg1);
+            Invoke(arg0, arg1);
     }
+
+    public void Invoke(T0 arg0, T1 arg1) => _action.Invoke(arg0, arg1);
 }
 
 internal class ShortcutAction<T0, T1, T2> : AbstractShortcutAction
@@ -82,8 +88,10 @@ internal class ShortcutAction<T0, T1, T2> : AbstractShortcutAction
     public override void Invoke(params object[] arguments)
     {
         if (arguments?.Length == 3 && GetArgument<T0>(arguments[0], out var arg0) && GetArgument<T1>(arguments[1], out var arg1) && GetArgument<T2>(arguments[2], out var arg2))
-            _action?.Invoke(arg0, arg1, arg2);
+            Invoke(arg0, arg1, arg2);
     }
+
+    public void Invoke(T0 arg0, T1 arg1, T2 arg2) => _action.Invoke(arg0, arg1, arg2);
 }
 
 internal class ShortcutAction<T0, T1, T2, T3> : AbstractShortcutAction
@@ -95,8 +103,10 @@ internal class ShortcutAction<T0, T1, T2, T3> : AbstractShortcutAction
     public override void Invoke(params object[] arguments)
     {
         if (arguments?.Length == 4 && GetArgument<T0>(arguments[0], out var arg0) && GetArgument<T1>(arguments[1], out var arg1) && GetArgument<T2>(arguments[2], out var arg2) && GetArgument<T3>(arguments[3], out var arg3))
-            _action?.Invoke(arg0, arg1, arg2, arg3);
+            Invoke(arg0, arg1, arg2, arg3);
     }
+
+    public void Invoke(T0 arg0, T1 arg1, T2 arg2, T3 arg3) => _action.Invoke(arg0, arg1, arg2, arg3);
 }
 
 internal class ShortcutAction<T0, T1, T2, T3, T4> : AbstractShortcutAction
@@ -108,6 +118,8 @@ internal class ShortcutAction<T0, T1, T2, T3, T4> : AbstractShortcutAction
     public override void Invoke(params object[] arguments)
     {
         if (arguments?.Length == 5 && GetArgument<T0>(arguments[0], out var arg0) && GetArgument<T1>(arguments[1], out var arg1) && GetArgument<T2>(arguments[2], out var arg2) && GetArgument<T3>(arguments[3], out var arg3) && GetArgument<T4>(arguments[4], out var arg4))
-            _action?.Invoke(arg0, arg1, arg2, arg3, arg4);
+            Invoke(arg0, arg1, arg2, arg3, arg4);
     }
+
+    public void Invoke(T0 arg0, T1 arg1, T2 arg2, T3 arg3, T4 arg4) => _action.Invoke(arg0, arg1, arg2, arg3, arg4);
 }

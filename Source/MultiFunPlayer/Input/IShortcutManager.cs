@@ -36,6 +36,12 @@ internal interface IShortcutManager : IDisposable
 
     void Invoke(string actionName, params object[] arguments);
     void Invoke(IShortcutActionConfiguration actionConfiguration, IInputGesture gesture);
+    void Invoke(string actionName);
+    void Invoke<T0>(string actionName, T0 arg0);
+    void Invoke<T0, T1>(string actionName, T0 arg0, T1 arg1);
+    void Invoke<T0, T1, T2>(string actionName, T0 arg0, T1 arg1, T2 arg2);
+    void Invoke<T0, T1, T2, T3>(string actionName, T0 arg0, T1 arg1, T2 arg2, T3 arg3);
+    void Invoke<T0, T1, T2, T3, T4>(string actionName, T0 arg0, T1 arg1, T2 arg2, T3 arg3, T4 arg4);
 }
 
 internal class ShortcutManager : IShortcutManager
@@ -193,10 +199,8 @@ internal class ShortcutManager : IShortcutManager
 
     public void Invoke(string actionName, params object[] arguments)
     {
-        if (!_actions.TryGetValue(actionName, out var action))
-            return;
-
-        action.Invoke(arguments);
+        if (_actions.TryGetValue(actionName, out var action))
+            action.Invoke(arguments);
     }
 
     public void Invoke(IShortcutActionConfiguration actionConfiguration, IInputGesture gesture)
@@ -210,6 +214,42 @@ internal class ShortcutManager : IShortcutManager
             action.Invoke(actionConfiguration.GetActionParamsWithGesture(gesture));
         else
             action.Invoke(actionConfiguration.GetActionParams());
+    }
+
+    public void Invoke(string actionName)
+    {
+        if (_actions.TryGetValue(actionName, out var action) && action is ShortcutAction concreteAction)
+            concreteAction.Invoke();
+    }
+
+    public void Invoke<T0>(string actionName, T0 arg0)
+    {
+        if (_actions.TryGetValue(actionName, out var action) && action is ShortcutAction<T0> concreteAction)
+            concreteAction.Invoke(arg0);
+    }
+
+    public void Invoke<T0, T1>(string actionName, T0 arg0, T1 arg1)
+    {
+        if (_actions.TryGetValue(actionName, out var action) && action is ShortcutAction<T0, T1> concreteAction)
+            concreteAction.Invoke(arg0, arg1);
+    }
+
+    public void Invoke<T0, T1, T2>(string actionName, T0 arg0, T1 arg1, T2 arg2)
+    {
+        if (_actions.TryGetValue(actionName, out var action) && action is ShortcutAction<T0, T1, T2> concreteAction)
+            concreteAction.Invoke(arg0, arg1, arg2);
+    }
+
+    public void Invoke<T0, T1, T2, T3>(string actionName, T0 arg0, T1 arg1, T2 arg2, T3 arg3)
+    {
+        if (_actions.TryGetValue(actionName, out var action) && action is ShortcutAction<T0, T1, T2, T3> concreteAction)
+            concreteAction.Invoke(arg0, arg1, arg2, arg3);
+    }
+
+    public void Invoke<T0, T1, T2, T3, T4>(string actionName, T0 arg0, T1 arg1, T2 arg2, T3 arg3, T4 arg4)
+    {
+        if (_actions.TryGetValue(actionName, out var action) && action is ShortcutAction<T0, T1, T2, T3, T4> concreteAction)
+            concreteAction.Invoke(arg0, arg1, arg2, arg3, arg4);
     }
 
     protected virtual void Dispose(bool disposing) { }
