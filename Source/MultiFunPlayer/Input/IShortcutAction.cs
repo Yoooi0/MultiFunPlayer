@@ -2,7 +2,6 @@
 
 internal interface IShortcutAction
 {
-    IShortcutActionDescriptor Descriptor { get; }
     IReadOnlyList<Type> Arguments { get; }
 
     void Invoke(params object[] arguments);
@@ -12,7 +11,6 @@ internal abstract class AbstractShortcutAction : IShortcutAction
 {
     private IReadOnlyList<Type> _arguments;
 
-    public IShortcutActionDescriptor Descriptor { get; }
     public IReadOnlyList<Type> Arguments
     {
         get
@@ -21,9 +19,6 @@ internal abstract class AbstractShortcutAction : IShortcutAction
             return _arguments;
         }
     }
-
-    protected AbstractShortcutAction(IShortcutActionDescriptor descriptor)
-        => Descriptor = descriptor;
 
     public abstract void Invoke(params object[] arguments);
 
@@ -43,8 +38,7 @@ internal class ShortcutAction : AbstractShortcutAction
 {
     private readonly Action _action;
 
-    public ShortcutAction(IShortcutActionDescriptor descriptor, Action action)
-        : base(descriptor) => _action = action;
+    public ShortcutAction(Action action) => _action = action;
 
     public override void Invoke(params object[] arguments)
     {
@@ -57,8 +51,7 @@ internal class ShortcutAction<T0> : AbstractShortcutAction
 {
     private readonly Action<T0> _action;
 
-    public ShortcutAction(IShortcutActionDescriptor descriptor, Action<T0> action)
-        : base(descriptor) => _action = action;
+    public ShortcutAction(Action<T0> action) => _action = action;
 
     public override void Invoke(params object[] arguments)
     {
@@ -71,8 +64,7 @@ internal class ShortcutAction<T0, T1> : AbstractShortcutAction
 {
     private readonly Action<T0, T1> _action;
 
-    public ShortcutAction(IShortcutActionDescriptor descriptor, Action<T0, T1> action)
-        : base(descriptor) => _action = action;
+    public ShortcutAction(Action<T0, T1> action) => _action = action;
 
     public override void Invoke(params object[] arguments)
     {
@@ -85,8 +77,7 @@ internal class ShortcutAction<T0, T1, T2> : AbstractShortcutAction
 {
     private readonly Action<T0, T1, T2> _action;
 
-    public ShortcutAction(IShortcutActionDescriptor descriptor, Action<T0, T1, T2> action)
-        : base(descriptor) => _action = action;
+    public ShortcutAction(Action<T0, T1, T2> action) => _action = action;
 
     public override void Invoke(params object[] arguments)
     {
@@ -99,8 +90,7 @@ internal class ShortcutAction<T0, T1, T2, T3> : AbstractShortcutAction
 {
     private readonly Action<T0, T1, T2, T3> _action;
 
-    public ShortcutAction(IShortcutActionDescriptor descriptor, Action<T0, T1, T2, T3> action)
-        : base(descriptor) => _action = action;
+    public ShortcutAction(Action<T0, T1, T2, T3> action) => _action = action;
 
     public override void Invoke(params object[] arguments)
     {
@@ -113,8 +103,7 @@ internal class ShortcutAction<T0, T1, T2, T3, T4> : AbstractShortcutAction
 {
     private readonly Action<T0, T1, T2, T3, T4> _action;
 
-    public ShortcutAction(IShortcutActionDescriptor descriptor, Action<T0, T1, T2, T3, T4> action)
-        : base(descriptor) => _action = action;
+    public ShortcutAction(Action<T0, T1, T2, T3, T4> action) => _action = action;
 
     public override void Invoke(params object[] arguments)
     {

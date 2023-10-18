@@ -64,7 +64,7 @@ internal class ShortcutManager : IShortcutManager
     public void RegisterAction(string name, Action callback)
     {
         var descriptor = new ShortcutActionDescriptor(name);
-        _actions.Add(descriptor, new ShortcutAction(descriptor, callback));
+        _actions.Add(descriptor, new ShortcutAction(callback));
         _actionConfigurationBuilders.Add(descriptor, new ShortcutActionConfigurationBuilder(descriptor));
 
         _availableActions.Add(descriptor);
@@ -74,7 +74,7 @@ internal class ShortcutManager : IShortcutManager
     public void RegisterAction<T0>(string name, Func<IShortcutSettingBuilder<T0>, IShortcutSettingBuilder<T0>> builder0, Action<T0> callback)
     {
         var descriptor = new ShortcutActionDescriptor(name);
-        _actions.Add(descriptor, new ShortcutAction<T0>(descriptor, callback));
+        _actions.Add(descriptor, new ShortcutAction<T0>(callback));
         _actionConfigurationBuilders.Add(descriptor, new ShortcutActionConfigurationBuilder(descriptor, builder0(new ShortcutSettingBuilder<T0>())));
 
         _availableActions.Add(descriptor);
@@ -84,7 +84,7 @@ internal class ShortcutManager : IShortcutManager
     public void RegisterAction<T0, T1>(string name, Func<IShortcutSettingBuilder<T0>, IShortcutSettingBuilder<T0>> builder0, Func<IShortcutSettingBuilder<T1>, IShortcutSettingBuilder<T1>> builder1, Action<T0, T1> callback)
     {
         var descriptor = new ShortcutActionDescriptor(name);
-        _actions.Add(descriptor, new ShortcutAction<T0, T1>(descriptor, callback));
+        _actions.Add(descriptor, new ShortcutAction<T0, T1>(callback));
         _actionConfigurationBuilders.Add(descriptor, new ShortcutActionConfigurationBuilder(descriptor, builder0(new ShortcutSettingBuilder<T0>()), builder1(new ShortcutSettingBuilder<T1>())));
 
         _availableActions.Add(descriptor);
@@ -94,7 +94,7 @@ internal class ShortcutManager : IShortcutManager
     public void RegisterAction<T0, T1, T2>(string name, Func<IShortcutSettingBuilder<T0>, IShortcutSettingBuilder<T0>> builder0, Func<IShortcutSettingBuilder<T1>, IShortcutSettingBuilder<T1>> builder1, Func<IShortcutSettingBuilder<T2>, IShortcutSettingBuilder<T2>> builder2, Action<T0, T1, T2> callback)
     {
         var descriptor = new ShortcutActionDescriptor(name);
-        _actions.Add(descriptor, new ShortcutAction<T0, T1, T2>(descriptor, callback));
+        _actions.Add(descriptor, new ShortcutAction<T0, T1, T2>(callback));
         _actionConfigurationBuilders.Add(descriptor, new ShortcutActionConfigurationBuilder(descriptor, builder0(new ShortcutSettingBuilder<T0>()), builder1(new ShortcutSettingBuilder<T1>()), builder2(new ShortcutSettingBuilder<T2>())));
 
         _availableActions.Add(descriptor);
@@ -104,7 +104,7 @@ internal class ShortcutManager : IShortcutManager
     public void RegisterAction<T0, T1, T2, T3>(string name, Func<IShortcutSettingBuilder<T0>, IShortcutSettingBuilder<T0>> builder0, Func<IShortcutSettingBuilder<T1>, IShortcutSettingBuilder<T1>> builder1, Func<IShortcutSettingBuilder<T2>, IShortcutSettingBuilder<T2>> builder2, Func<IShortcutSettingBuilder<T3>, IShortcutSettingBuilder<T3>> builder3, Action<T0, T1, T2, T3> callback)
     {
         var descriptor = new ShortcutActionDescriptor(name);
-        _actions.Add(descriptor, new ShortcutAction<T0, T1, T2, T3>(descriptor, callback));
+        _actions.Add(descriptor, new ShortcutAction<T0, T1, T2, T3>(callback));
         _actionConfigurationBuilders.Add(descriptor, new ShortcutActionConfigurationBuilder(descriptor, builder0(new ShortcutSettingBuilder<T0>()), builder1(new ShortcutSettingBuilder<T1>()), builder2(new ShortcutSettingBuilder<T2>()), builder3(new ShortcutSettingBuilder<T3>())));
 
         _availableActions.Add(descriptor);
@@ -114,7 +114,7 @@ internal class ShortcutManager : IShortcutManager
     public void RegisterAction<T0, T1, T2, T3, T4>(string name, Func<IShortcutSettingBuilder<T0>, IShortcutSettingBuilder<T0>> builder0, Func<IShortcutSettingBuilder<T1>, IShortcutSettingBuilder<T1>> builder1, Func<IShortcutSettingBuilder<T2>, IShortcutSettingBuilder<T2>> builder2, Func<IShortcutSettingBuilder<T3>, IShortcutSettingBuilder<T3>> builder3, Func<IShortcutSettingBuilder<T4>, IShortcutSettingBuilder<T4>> builder4, Action<T0, T1, T2, T3, T4> callback)
     {
         var descriptor = new ShortcutActionDescriptor(name);
-        _actions.Add(descriptor, new ShortcutAction<T0, T1, T2, T3, T4>(descriptor, callback));
+        _actions.Add(descriptor, new ShortcutAction<T0, T1, T2, T3, T4>(callback));
         _actionConfigurationBuilders.Add(descriptor, new ShortcutActionConfigurationBuilder(descriptor, builder0(new ShortcutSettingBuilder<T0>()), builder1(new ShortcutSettingBuilder<T1>()), builder2(new ShortcutSettingBuilder<T2>()), builder3(new ShortcutSettingBuilder<T3>()), builder4(new ShortcutSettingBuilder<T4>())));
 
         _availableActions.Add(descriptor);
@@ -124,7 +124,7 @@ internal class ShortcutManager : IShortcutManager
     public void RegisterAction<TG>(string name, Action<TG> callback) where TG : IInputGesture
     {
         var descriptor = new ShortcutActionDescriptor(name);
-        _actions.Add(descriptor, new ShortcutAction<TG>(descriptor, callback));
+        _actions.Add(descriptor, new ShortcutAction<TG>(callback));
         _actionConfigurationBuilders.Add(descriptor, new ShortcutActionConfigurationBuilder(descriptor));
 
         _availableActions.Add(descriptor);
@@ -134,7 +134,7 @@ internal class ShortcutManager : IShortcutManager
     public void RegisterAction<TG, T0>(string name, Func<IShortcutSettingBuilder<T0>, IShortcutSettingBuilder<T0>> builder0, Action<TG, T0> callback) where TG : IInputGesture
     {
         var descriptor = new ShortcutActionDescriptor(name);
-        _actions.Add(descriptor, new ShortcutAction<TG, T0>(descriptor, callback));
+        _actions.Add(descriptor, new ShortcutAction<TG, T0>(callback));
         _actionConfigurationBuilders.Add(descriptor, new ShortcutActionConfigurationBuilder(descriptor, builder0(new ShortcutSettingBuilder<T0>())));
 
         _availableActions.Add(descriptor);
@@ -144,7 +144,7 @@ internal class ShortcutManager : IShortcutManager
     public void RegisterAction<TG, T0, T1>(string name, Func<IShortcutSettingBuilder<T0>, IShortcutSettingBuilder<T0>> builder0, Func<IShortcutSettingBuilder<T1>, IShortcutSettingBuilder<T1>> builder1, Action<TG, T0, T1> callback) where TG : IInputGesture
     {
         var descriptor = new ShortcutActionDescriptor(name);
-        _actions.Add(descriptor, new ShortcutAction<TG, T0, T1>(descriptor, callback));
+        _actions.Add(descriptor, new ShortcutAction<TG, T0, T1>(callback));
         _actionConfigurationBuilders.Add(descriptor, new ShortcutActionConfigurationBuilder(descriptor, builder0(new ShortcutSettingBuilder<T0>()), builder1(new ShortcutSettingBuilder<T1>())));
 
         _availableActions.Add(descriptor);
@@ -154,7 +154,7 @@ internal class ShortcutManager : IShortcutManager
     public void RegisterAction<TG, T0, T1, T2>(string name, Func<IShortcutSettingBuilder<T0>, IShortcutSettingBuilder<T0>> builder0, Func<IShortcutSettingBuilder<T1>, IShortcutSettingBuilder<T1>> builder1, Func<IShortcutSettingBuilder<T2>, IShortcutSettingBuilder<T2>> builder2, Action<TG, T0, T1, T2> callback) where TG : IInputGesture
     {
         var descriptor = new ShortcutActionDescriptor(name);
-        _actions.Add(descriptor, new ShortcutAction<TG, T0, T1, T2>(descriptor, callback));
+        _actions.Add(descriptor, new ShortcutAction<TG, T0, T1, T2>(callback));
         _actionConfigurationBuilders.Add(descriptor, new ShortcutActionConfigurationBuilder(descriptor, builder0(new ShortcutSettingBuilder<T0>()), builder1(new ShortcutSettingBuilder<T1>()), builder2(new ShortcutSettingBuilder<T2>())));
 
         _availableActions.Add(descriptor);
@@ -164,7 +164,7 @@ internal class ShortcutManager : IShortcutManager
     public void RegisterAction<TG, T0, T1, T2, T3>(string name, Func<IShortcutSettingBuilder<T0>, IShortcutSettingBuilder<T0>> builder0, Func<IShortcutSettingBuilder<T1>, IShortcutSettingBuilder<T1>> builder1, Func<IShortcutSettingBuilder<T2>, IShortcutSettingBuilder<T2>> builder2, Func<IShortcutSettingBuilder<T3>, IShortcutSettingBuilder<T3>> builder3, Action<TG, T0, T1, T2, T3> callback) where TG : IInputGesture
     {
         var descriptor = new ShortcutActionDescriptor(name);
-        _actions.Add(descriptor, new ShortcutAction<TG, T0, T1, T2, T3>(descriptor, callback));
+        _actions.Add(descriptor, new ShortcutAction<TG, T0, T1, T2, T3>(callback));
         _actionConfigurationBuilders.Add(descriptor, new ShortcutActionConfigurationBuilder(descriptor, builder0(new ShortcutSettingBuilder<T0>()), builder1(new ShortcutSettingBuilder<T1>()), builder2(new ShortcutSettingBuilder<T2>()), builder3(new ShortcutSettingBuilder<T3>())));
 
         _availableActions.Add(descriptor);
