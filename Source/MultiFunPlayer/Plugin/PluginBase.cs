@@ -1,4 +1,4 @@
-﻿using MultiFunPlayer.Common;
+using MultiFunPlayer.Common;
 using MultiFunPlayer.Input;
 using NLog;
 using Stylet;
@@ -32,31 +32,31 @@ public abstract class PluginBase : PropertyChangedBase
     #endregion
 
     #region Shortcut
-    protected void InvokeAction(string name, params object[] arguments)
-        => ShortcutManager.Invoke(name, arguments);
+    protected void InvokeAction(string actionName, params object[] arguments)
+        => ShortcutManager.Invoke(actionName, arguments);
 
-    protected void RegisterAction<T0>(string name, Func<IShortcutSettingBuilder<T0>, IShortcutSettingBuilder<T0>> settings0, Action<T0> action)
-        => ShortcutManager.RegisterAction(name, settings0, action);
-    protected void RegisterAction<T0, T1>(string name, Func<IShortcutSettingBuilder<T0>, IShortcutSettingBuilder<T0>> settings0, Func<IShortcutSettingBuilder<T1>, IShortcutSettingBuilder<T1>> settings1, Action<T0, T1> action)
-        => ShortcutManager.RegisterAction(name, settings0, settings1, action);
-    protected void RegisterAction<T0, T1, T2>(string name, Func<IShortcutSettingBuilder<T0>, IShortcutSettingBuilder<T0>> settings0, Func<IShortcutSettingBuilder<T1>, IShortcutSettingBuilder<T1>> settings1, Func<IShortcutSettingBuilder<T2>, IShortcutSettingBuilder<T2>> settings2, Action<T0, T1, T2> action)
-        => ShortcutManager.RegisterAction(name, settings0, settings1, settings2, action);
-    protected void RegisterAction<T0, T1, T2, T3>(string name, Func<IShortcutSettingBuilder<T0>, IShortcutSettingBuilder<T0>> settings0, Func<IShortcutSettingBuilder<T1>, IShortcutSettingBuilder<T1>> settings1, Func<IShortcutSettingBuilder<T2>, IShortcutSettingBuilder<T2>> settings2, Func<IShortcutSettingBuilder<T3>, IShortcutSettingBuilder<T3>> settings3, Action<T0, T1, T2, T3> action)
-        => ShortcutManager.RegisterAction(name, settings0, settings1, settings2, settings3, action);
-    protected void RegisterAction<T0, T1, T2, T3, T4>(string name, Func<IShortcutSettingBuilder<T0>, IShortcutSettingBuilder<T0>> settings0, Func<IShortcutSettingBuilder<T1>, IShortcutSettingBuilder<T1>> settings1, Func<IShortcutSettingBuilder<T2>, IShortcutSettingBuilder<T2>> settings2, Func<IShortcutSettingBuilder<T3>, IShortcutSettingBuilder<T3>> settings3, Func<IShortcutSettingBuilder<T4>, IShortcutSettingBuilder<T4>> settings4, Action<T0, T1, T2, T3, T4> action)
-        => ShortcutManager.RegisterAction(name, settings0, settings1, settings2, settings3, settings4, action);
-    protected void RegisterAction<TG>(string name, Action<TG> action) where TG : IInputGesture
-        => ShortcutManager.RegisterAction(name, action);
-    protected void RegisterAction<TG, T0>(string name, Func<IShortcutSettingBuilder<T0>, IShortcutSettingBuilder<T0>> settings0, Action<TG, T0> action) where TG : IInputGesture
-        => ShortcutManager.RegisterAction(name, settings0, action);
-    protected void RegisterAction<TG, T0, T1>(string name, Func<IShortcutSettingBuilder<T0>, IShortcutSettingBuilder<T0>> settings0, Func<IShortcutSettingBuilder<T1>, IShortcutSettingBuilder<T1>> settings1, Action<TG, T0, T1> action) where TG : IInputGesture
-        => ShortcutManager.RegisterAction(name, settings0, settings1, action);
-    protected void RegisterAction<TG, T0, T1, T2>(string name, Func<IShortcutSettingBuilder<T0>, IShortcutSettingBuilder<T0>> settings0, Func<IShortcutSettingBuilder<T1>, IShortcutSettingBuilder<T1>> settings1, Func<IShortcutSettingBuilder<T2>, IShortcutSettingBuilder<T2>> settings2, Action<TG, T0, T1, T2> action) where TG : IInputGesture
-        => ShortcutManager.RegisterAction(name, settings0, settings1, settings2, action);
-    protected void RegisterAction<TG, T0, T1, T2, T3>(string name, Func<IShortcutSettingBuilder<T0>, IShortcutSettingBuilder<T0>> settings0, Func<IShortcutSettingBuilder<T1>, IShortcutSettingBuilder<T1>> settings1, Func<IShortcutSettingBuilder<T2>, IShortcutSettingBuilder<T2>> settings2, Func<IShortcutSettingBuilder<T3>, IShortcutSettingBuilder<T3>> settings3, Action<TG, T0, T1, T2, T3> action) where TG : IInputGesture
-        => ShortcutManager.RegisterAction(name, settings0, settings1, settings2, settings3, action);
+    protected void RegisterAction<T0>(string actionName, Func<IShortcutSettingBuilder<T0>, IShortcutSettingBuilder<T0>> settings0, Action<T0> action)
+        => ShortcutManager.RegisterAction(actionName, settings0, action);
+    protected void RegisterAction<T0, T1>(string actionName, Func<IShortcutSettingBuilder<T0>, IShortcutSettingBuilder<T0>> settings0, Func<IShortcutSettingBuilder<T1>, IShortcutSettingBuilder<T1>> settings1, Action<T0, T1> action)
+        => ShortcutManager.RegisterAction(actionName, settings0, settings1, action);
+    protected void RegisterAction<T0, T1, T2>(string actionName, Func<IShortcutSettingBuilder<T0>, IShortcutSettingBuilder<T0>> settings0, Func<IShortcutSettingBuilder<T1>, IShortcutSettingBuilder<T1>> settings1, Func<IShortcutSettingBuilder<T2>, IShortcutSettingBuilder<T2>> settings2, Action<T0, T1, T2> action)
+        => ShortcutManager.RegisterAction(actionName, settings0, settings1, settings2, action);
+    protected void RegisterAction<T0, T1, T2, T3>(string actionName, Func<IShortcutSettingBuilder<T0>, IShortcutSettingBuilder<T0>> settings0, Func<IShortcutSettingBuilder<T1>, IShortcutSettingBuilder<T1>> settings1, Func<IShortcutSettingBuilder<T2>, IShortcutSettingBuilder<T2>> settings2, Func<IShortcutSettingBuilder<T3>, IShortcutSettingBuilder<T3>> settings3, Action<T0, T1, T2, T3> action)
+        => ShortcutManager.RegisterAction(actionName, settings0, settings1, settings2, settings3, action);
+    protected void RegisterAction<T0, T1, T2, T3, T4>(string actionName, Func<IShortcutSettingBuilder<T0>, IShortcutSettingBuilder<T0>> settings0, Func<IShortcutSettingBuilder<T1>, IShortcutSettingBuilder<T1>> settings1, Func<IShortcutSettingBuilder<T2>, IShortcutSettingBuilder<T2>> settings2, Func<IShortcutSettingBuilder<T3>, IShortcutSettingBuilder<T3>> settings3, Func<IShortcutSettingBuilder<T4>, IShortcutSettingBuilder<T4>> settings4, Action<T0, T1, T2, T3, T4> action)
+        => ShortcutManager.RegisterAction(actionName, settings0, settings1, settings2, settings3, settings4, action);
+    protected void RegisterAction<TG>(string actionName, Action<TG> action) where TG : IInputGesture
+        => ShortcutManager.RegisterAction(actionName, action);
+    protected void RegisterAction<TG, T0>(string actionName, Func<IShortcutSettingBuilder<T0>, IShortcutSettingBuilder<T0>> settings0, Action<TG, T0> action) where TG : IInputGesture
+        => ShortcutManager.RegisterAction(actionName, settings0, action);
+    protected void RegisterAction<TG, T0, T1>(string actionName, Func<IShortcutSettingBuilder<T0>, IShortcutSettingBuilder<T0>> settings0, Func<IShortcutSettingBuilder<T1>, IShortcutSettingBuilder<T1>> settings1, Action<TG, T0, T1> action) where TG : IInputGesture
+        => ShortcutManager.RegisterAction(actionName, settings0, settings1, action);
+    protected void RegisterAction<TG, T0, T1, T2>(string actionName, Func<IShortcutSettingBuilder<T0>, IShortcutSettingBuilder<T0>> settings0, Func<IShortcutSettingBuilder<T1>, IShortcutSettingBuilder<T1>> settings1, Func<IShortcutSettingBuilder<T2>, IShortcutSettingBuilder<T2>> settings2, Action<TG, T0, T1, T2> action) where TG : IInputGesture
+        => ShortcutManager.RegisterAction(actionName, settings0, settings1, settings2, action);
+    protected void RegisterAction<TG, T0, T1, T2, T3>(string actionName, Func<IShortcutSettingBuilder<T0>, IShortcutSettingBuilder<T0>> settings0, Func<IShortcutSettingBuilder<T1>, IShortcutSettingBuilder<T1>> settings1, Func<IShortcutSettingBuilder<T2>, IShortcutSettingBuilder<T2>> settings2, Func<IShortcutSettingBuilder<T3>, IShortcutSettingBuilder<T3>> settings3, Action<TG, T0, T1, T2, T3> action) where TG : IInputGesture
+        => ShortcutManager.RegisterAction(actionName, settings0, settings1, settings2, settings3, action);
 
-    protected void UnregisterAction(string name) => ShortcutManager.UnregisterAction(name);
+    protected void UnregisterAction(string actionName) => ShortcutManager.UnregisterAction(actionName);
     #endregion
 
     #region Binding

@@ -13,14 +13,9 @@ internal interface IShortcutBinder : IDisposable
 
     IReadOnlyObservableConcurrentCollection<IShortcutBinding> Bindings { get; }
 
-    IShortcutActionConfiguration BindAction(IInputGestureDescriptor gestureDescriptor, IShortcutActionDescriptor actionDescriptor);
-    IShortcutActionConfiguration BindActionWithSettings(IInputGestureDescriptor gestureDescriptor, IShortcutActionDescriptor actionDescriptor, IEnumerable<TypedValue> values);
-    IShortcutActionConfiguration BindActionWithSettings(IInputGestureDescriptor gestureDescriptor, IShortcutActionDescriptor actionDescriptor, IEnumerable<object> values);
-
-    IShortcutActionConfiguration BindActionWithSettings(IInputGestureDescriptor gestureDescriptor, string actionName, IEnumerable<TypedValue> values)
-        => BindActionWithSettings(gestureDescriptor, new ShortcutActionDescriptor(actionName), values);
-    IShortcutActionConfiguration BindActionWithSettings(IInputGestureDescriptor gestureDescriptor, string actionName, IEnumerable<object> values)
-        => BindActionWithSettings(gestureDescriptor, new ShortcutActionDescriptor(actionName), values);
+    IShortcutActionConfiguration BindAction(IInputGestureDescriptor gestureDescriptor, string actionName);
+    IShortcutActionConfiguration BindActionWithSettings(IInputGestureDescriptor gestureDescriptor, string actionName, IEnumerable<TypedValue> values);
+    IShortcutActionConfiguration BindActionWithSettings(IInputGestureDescriptor gestureDescriptor, string actionName, IEnumerable<object> values);
 
     void UnbindAction(IInputGestureDescriptor gestureDescriptor, IShortcutActionConfiguration action);
 
@@ -63,40 +58,40 @@ internal class ShortcutBinder : IShortcutBinder
         _shortcutManager.ActionUnregistered += OnActionUnregistered;
     }
 
-    private void OnActionUnregistered(object sender, IShortcutActionDescriptor descriptor)
+    private void OnActionUnregistered(object sender, string actionName)
     {
         foreach (var binding in _bindings)
-            foreach (var configuration in binding.Configurations.Where(a => descriptor.Equals(a.Descriptor)).ToList())
+            foreach (var configuration in binding.Configurations.Where(a => actionName.Equals(a.Name)).ToList())
                 binding.Configurations.Remove(configuration);
     }
 
-    public IShortcutActionConfiguration BindAction(IInputGestureDescriptor gestureDescriptor, IShortcutActionDescriptor actionDescriptor)
+    public IShortcutActionConfiguration BindAction(IInputGestureDescriptor gestureDescriptor, string actionName)
     {
-        if (gestureDescriptor == null || actionDescriptor == null)
+        if (gestureDescriptor == null || actionName == null)
             return null;
 
-        var configuration = _shortcutManager.CreateShortcutActionConfigurationInstance(actionDescriptor);
+        var configuration = _shortcutManager.CreateShortcutActionConfigurationInstance(actionName);
         BindConfiguration(gestureDescriptor, configuration);
         return configuration;
     }
 
-    public IShortcutActionConfiguration BindActionWithSettings(IInputGestureDescriptor gestureDescriptor, IShortcutActionDescriptor actionDescriptor, IEnumerable<TypedValue> values)
+    public IShortcutActionConfiguration BindActionWithSettings(IInputGestureDescriptor gestureDescriptor, string actionName, IEnumerable<TypedValue> values)
     {
-        if (gestureDescriptor == null || actionDescriptor == null)
+        if (gestureDescriptor == null || actionName == null)
             return null;
 
-        var configuration = _shortcutManager.CreateShortcutActionConfigurationInstance(actionDescriptor);
+        var configuration = _shortcutManager.CreateShortcutActionConfigurationInstance(actionName);
         configuration.Populate(values);
         BindConfiguration(gestureDescriptor, configuration);
         return configuration;
     }
 
-    public IShortcutActionConfiguration BindActionWithSettings(IInputGestureDescriptor gestureDescriptor, IShortcutActionDescriptor actionDescriptor, IEnumerable<object> values)
+    public IShortcutActionConfiguration BindActionWithSettings(IInputGestureDescriptor gestureDescriptor, string actionName, IEnumerable<object> values)
     {
-        if (gestureDescriptor == null || actionDescriptor == null)
+        if (gestureDescriptor == null || actionName == null)
             return null;
 
-        var configuration = _shortcutManager.CreateShortcutActionConfigurationInstance(actionDescriptor);
+        var configuration = _shortcutManager.CreateShortcutActionConfigurationInstance(actionName);
         configuration.Populate(values);
         BindConfiguration(gestureDescriptor, configuration);
         return configuration;
@@ -150,11 +145,11 @@ internal class ShortcutBinder : IShortcutBinder
         if (_bindingLookup.ContainsKey(binding.Gesture))
             return;
 
-        var invalidConfigurations = binding.Configurations.Where(c => !_shortcutManager.AvailableActions.Contains(c.Descriptor));
+        var invalidConfigurations = binding.Configurations.Where(c => !_shortcutManager.AvailableActions.Contains(c.Name));
         foreach (var configuration in invalidConfigurations.ToList())
         {
             binding.Configurations.Remove(configuration);
-            Logger.Warn($"Removed \"{configuration.Descriptor}\" missing action from \"{binding.Gesture}\" binding!");
+            Logger.Warn($"Removed \"{configuration.Name}\" missing action from \"{binding.Gesture}\" binding!");
         }
 
         _bindings.Add(binding);
@@ -199,7 +194,7 @@ internal class ShortcutBinder : IShortcutBinder
         Logger.Trace("Handling {0} gesture", gesture.Descriptor);
         foreach (var configuration in binding.Configurations)
         {
-            Logger.Trace("Invoking {0} action", configuration.Descriptor);
+            Logger.Trace("Invoking {0} action", configuration.Name);
             _shortcutManager.Invoke(configuration, gesture);
         }
     }

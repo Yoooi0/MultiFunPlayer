@@ -8,7 +8,7 @@ namespace MultiFunPlayer.Input;
 
 public interface IShortcutActionConfiguration
 {
-    IShortcutActionDescriptor Descriptor { get; }
+    string Name { get; }
     IReadOnlyList<IShortcutSetting> Settings { get; }
 
     void Populate(IEnumerable<object> values);
@@ -25,12 +25,12 @@ public class ShortcutActionConfiguration : PropertyChangedBase, IShortcutActionC
     private readonly List<IShortcutSetting> _settings;
     private object[] _valuesBuffer;
 
-    public IShortcutActionDescriptor Descriptor { get; }
+    public string Name { get; }
     public IReadOnlyList<IShortcutSetting> Settings => _settings;
 
-    public ShortcutActionConfiguration(IShortcutActionDescriptor descriptor, IEnumerable<IShortcutSetting> settings)
+    public ShortcutActionConfiguration(string actionName, IEnumerable<IShortcutSetting> settings)
     {
-        Descriptor = descriptor;
+        Name = actionName;
 
         _settings = settings.ToList();
         foreach (var setting in _settings)
@@ -42,7 +42,7 @@ public class ShortcutActionConfiguration : PropertyChangedBase, IShortcutActionC
         }
     }
 
-    public string DisplayName => _settings.Count == 0 ? Descriptor.Name : $"{Descriptor.Name} [{string.Join(", ", Settings.Select(s => s.ToString()))}]";
+    public string DisplayName => _settings.Count == 0 ? Name : $"{Name} [{string.Join(", ", Settings.Select(s => s.ToString()))}]";
 
     public void Populate(IEnumerable<object> values)
     {
@@ -64,7 +64,7 @@ public class ShortcutActionConfiguration : PropertyChangedBase, IShortcutActionC
 
         if (!typeMatches)
         {
-            Logger.Warn($"Action \"{Descriptor}\" setting type mismatch! [\"{settingType}\" != \"{valueType}\"]");
+            Logger.Warn($"Action \"{Name}\" setting type mismatch! [\"{settingType}\" != \"{valueType}\"]");
         }
         else
         {

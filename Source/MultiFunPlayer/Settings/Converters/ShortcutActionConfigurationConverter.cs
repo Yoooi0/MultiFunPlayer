@@ -13,10 +13,10 @@ internal class ShortcutActionConfigurationConverter : JsonConverter<IShortcutAct
     public override IShortcutActionConfiguration ReadJson(JsonReader reader, Type objectType, IShortcutActionConfiguration existingValue, bool hasExistingValue, JsonSerializer serializer)
     {
         var o = JToken.ReadFrom(reader) as JObject;
-        var descriptor = new ShortcutActionDescriptor(o[nameof(IShortcutActionConfiguration.Descriptor)].ToString());
+        var actionName = o[nameof(IShortcutActionConfiguration.Name)].ToString();
 
-        var configuration = _manager.CreateShortcutActionConfigurationInstance(descriptor)
-            ?? throw new JsonReaderException($"Unable to find \"{descriptor}\" shortcut action");
+        var configuration = _manager.CreateShortcutActionConfigurationInstance(actionName)
+            ?? throw new JsonReaderException($"Unable to find \"{actionName}\" shortcut action");
 
         var settings = o[nameof(IShortcutActionConfiguration.Settings)].ToObject<List<TypedValue>>();
         configuration.Populate(settings);
@@ -27,7 +27,7 @@ internal class ShortcutActionConfigurationConverter : JsonConverter<IShortcutAct
     {
         var o = new JObject
         {
-            [nameof(IShortcutActionConfiguration.Descriptor)] = value.Descriptor.Name,
+            [nameof(IShortcutActionConfiguration.Name)] = value.Name,
             [nameof(IShortcutActionConfiguration.Settings)] = JArray.FromObject(value.Settings.Select(s => new TypedValue(s.Type, s.Value)))
         };
 

@@ -523,7 +523,7 @@
                                         <material:PackIcon Kind="Plus"/>
                                     </Button>
 
-                                    <TextBlock Text="{Binding Name}"
+                                    <TextBlock Text="{Binding}"
                                                DockPanel.Dock="Left"
                                                Margin="0"/>
                                 </DockPanel>

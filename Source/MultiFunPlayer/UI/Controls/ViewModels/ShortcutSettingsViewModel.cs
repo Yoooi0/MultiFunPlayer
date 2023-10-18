@@ -25,7 +25,7 @@ internal class ShortcutSettingsViewModel : Screen, IHandle<SettingsMessage>, IDi
 
     public string ActionsFilter { get; set; }
     public ICollectionView AvailableActionsView { get; }
-    public IReadOnlyObservableConcurrentCollection<IShortcutActionDescriptor> AvailableActions => _manager.AvailableActions;
+    public IReadOnlyObservableConcurrentCollection<string> AvailableActions => _manager.AvailableActions;
     public IReadOnlyObservableConcurrentCollection<IShortcutBinding> Bindings => _binder.Bindings;
 
     public bool IsCapturingGesture { get; private set; }
@@ -51,18 +51,18 @@ internal class ShortcutSettingsViewModel : Screen, IHandle<SettingsMessage>, IDi
         AvailableActionsView = CollectionViewSource.GetDefaultView(AvailableActions);
         AvailableActionsView.Filter = o =>
         {
-            if (o is not IShortcutActionDescriptor actionDescriptor)
+            if (o is not string actionName)
                 return false;
             if (SelectedBinding == null)
                 return false;
 
-            if (!_manager.ActionAcceptsGesture(actionDescriptor, SelectedBinding.Gesture))
+            if (!_manager.ActionAcceptsGesture(actionName, SelectedBinding.Gesture))
                 return false;
 
             if (!string.IsNullOrWhiteSpace(ActionsFilter))
             {
                 var filterWords = ActionsFilter.Split(' ');
-                if (!filterWords.All(w => actionDescriptor.Name.Contains(w, StringComparison.OrdinalIgnoreCase)))
+                if (!filterWords.All(w => actionName.Contains(w, StringComparison.OrdinalIgnoreCase)))
                     return false;
             }
 
@@ -146,12 +146,12 @@ internal class ShortcutSettingsViewModel : Screen, IHandle<SettingsMessage>, IDi
 
     public void AssignAction(object sender, RoutedEventArgs e)
     {
-        if (sender is not FrameworkElement element || element.DataContext is not IShortcutActionDescriptor actionDescriptor)
+        if (sender is not FrameworkElement element || element.DataContext is not string actionName)
             return;
         if (SelectedBinding == null)
             return;
 
-        _binder.BindAction(SelectedBinding.Gesture, actionDescriptor);
+        _binder.BindAction(SelectedBinding.Gesture, actionName);
     }
 
     public void RemoveAssignedAction(object sender, RoutedEventArgs e)
