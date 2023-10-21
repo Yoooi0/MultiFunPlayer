@@ -50,7 +50,7 @@
                 <Polyline Points="{Binding LinePoints, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}"
                           IsHitTestVisible="False"
                           StrokeThickness="1.5" 
-                          Stroke="Black"/>
+                          Stroke="{DynamicResource MaterialDesignBody}"/>
             </Canvas>
 
             <Canvas x:Name="PointCanvas"
@@ -63,9 +63,9 @@
             <Canvas>
                 <Path x:Name="Scrubber" 
                       IsHitTestVisible="False"
-                      Fill="White"
+                      Fill="{DynamicResource MaterialDesignCardBackground}"
                       StrokeThickness="1"
-                      Stroke="Black"
+                      Stroke="{DynamicResource MaterialDesignBody}"
                       Cursor="Hand">
                     <Path.Data>
                         <EllipseGeometry RadiusX="3" RadiusY="3"/>

@@ -42,10 +42,10 @@
                         Height="{Binding CanvasHeight, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}">
                     <Polyline Points="{Binding Points, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}"
                               StrokeThickness="1.5" 
-                              Stroke="Black">
+                              Stroke="{DynamicResource MaterialDesignBody}">
                     </Polyline>
-                    <Border Background="White"
-                            BorderBrush="Black"
+                    <Border Background="{DynamicResource MaterialDesignCardBackground}"
+                            BorderBrush="{DynamicResource MaterialDesignBody}"
                             BorderThickness="1 0 1 0"
                             Width="4"
                             SnapsToDevicePixels="True"

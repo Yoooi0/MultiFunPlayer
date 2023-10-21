@@ -37,7 +37,7 @@
         <Canvas ClipToBounds="True">
             <Polyline Points="{Binding CurvePoints, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}"
                       StrokeThickness="1.5" 
-                      Stroke="Black"/>
+                      Stroke="{DynamicResource MaterialDesignBody}"/>
 
             <ItemsControl ItemsSource="{Binding Points, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}">
                 <ItemsControl.ItemsPanel>
@@ -53,7 +53,7 @@
                 </ItemsControl.ItemContainerStyle>
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
-                        <Ellipse Width="6" Height="6" Fill="White" Stroke="Black" StrokeThickness="1">
+                        <Ellipse Width="6" Height="6" Fill="{DynamicResource MaterialDesignCardBackground}" Stroke="{DynamicResource MaterialDesignBody}" StrokeThickness="1">
                             <Ellipse.RenderTransform>
                                 <TranslateTransform X="-3" Y="-3"/>
                             </Ellipse.RenderTransform>
