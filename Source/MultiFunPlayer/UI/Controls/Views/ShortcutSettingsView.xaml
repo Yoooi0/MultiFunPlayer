@@ -30,18 +30,62 @@
                                        Height="20"
                                        Margin="5"/>
                 </material:ColorZone>
-                
-                <TextBlock Text="Button:"
-                           Margin="5 0 5 0"
+
+                <TextBlock Text="User:"
+                           Margin="5 0 0 0"
                            VerticalAlignment="Center"
                            FontSize="12"
                            Typography.Capitals="AllPetiteCaps"/>
-
-                <TextBlock Text="{Binding Button, StringFormat={}{0}}"
+                    
+                <TextBlock Text="{Binding UserIndex}"
+                           Margin="5 0 0 0"
                            VerticalAlignment="Center"
                            FontSize="12"
                            FontWeight="Bold"
                            Typography.Capitals="AllPetiteCaps"/>
+                
+                <TextBlock Text="Buttons:"
+                           Margin="10 0 0 0"
+                           VerticalAlignment="Center"
+                           FontSize="12"
+                           Typography.Capitals="AllPetiteCaps"/>
+
+                <ItemsControl DockPanel.Dock="Left"
+                              Margin="5 0 0 0"
+                              ItemsSource="{Binding Buttons}"
+                              AlternationCount="{Binding RelativeSource={RelativeSource Self}, Path=Items.Count}"
+                              VerticalAlignment="Center">
+                    <ItemsControl.Resources>
+                        <converters:GamepadKeyToStringConverter x:Key="GamepadKeyToStringConverter"/>
+                    </ItemsControl.Resources>
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <StackPanel Orientation="Horizontal"/>
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock x:Name="Separator" Text=", "
+                                           VerticalAlignment="Center"
+                                           FontSize="12"
+                                           FontWeight="Bold"
+                                           Typography.Capitals="AllPetiteCaps"/>
+                                <TextBlock Text="{Binding Mode=OneWay, Converter={StaticResource GamepadKeyToStringConverter}}"
+                                           VerticalAlignment="Center"
+                                           FontSize="12"
+                                           FontWeight="Bold"
+                                           Typography.Capitals="AllPetiteCaps"/>
+                            </StackPanel>
+
+                            <DataTemplate.Triggers>
+                                <Trigger Property="ItemsControl.AlternationIndex" Value="0">
+                                    <Setter Property="Visibility" TargetName="Separator" Value="Collapsed" />
+                                </Trigger>
+                            </DataTemplate.Triggers>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
             </DockPanel>
         </DataTemplate>
 

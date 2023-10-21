@@ -10,6 +10,7 @@ internal class XInputProcessor : IInputProcessor
     protected static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
     private readonly State[] _states;
+    private readonly HashSet<GamepadVirtualKey> _pressedKeys;
 
     private CancellationTokenSource _cancellationSource;
     private Thread _thread;
@@ -19,6 +20,7 @@ internal class XInputProcessor : IInputProcessor
     public XInputProcessor()
     {
         _states = new State[4];
+        _pressedKeys = new HashSet<GamepadVirtualKey>();
         _cancellationSource = new CancellationTokenSource();
         _thread = new Thread(() => Update(_cancellationSource.Token))
         {
@@ -68,8 +70,17 @@ internal class XInputProcessor : IInputProcessor
     private void ParseKeystrokeGestures(int userIndex, Keystroke keystroke)
     {
         Logger.Trace("User: {0}, Keystroke: {1}, Flags: {2}", userIndex, keystroke.VirtualKey, keystroke.Flags);
-        if (keystroke.Flags == KeyStrokeFlags.KeyUp)
-            HandleGesture(GamepadButtonGesture.Create(userIndex, keystroke.VirtualKey));
+
+        if (keystroke.Flags == KeyStrokeFlags.KeyDown)
+        {
+            _pressedKeys.Add(keystroke.VirtualKey);
+        }
+        else if (keystroke.Flags == KeyStrokeFlags.KeyUp)
+        {
+            if (_pressedKeys.Count > 0)
+                HandleGesture(GamepadButtonGesture.Create(userIndex, _pressedKeys));
+            _pressedKeys.Clear();
+        }
     }
 
     private void ParseStateGestures(int userIndex, ref Gamepad last, ref Gamepad current)
