@@ -25,19 +25,6 @@ internal class ThemeSettingsViewModel : Screen, IHandle<SettingsMessage>
         DisplayName = "Theme";
         eventAggregator.Subscribe(this);
         _paletteHelper = new PaletteHelper();
-
-        if (_paletteHelper.GetTheme() is Theme theme)
-        {
-            IgnorePropertyChanged(() =>
-            {
-                PrimaryColor = theme.PrimaryDark.Color.Lighten();
-
-                var colorAdjustment = new ColorAdjustment();
-                Contrast = colorAdjustment.Contrast;
-                ContrastRatio = colorAdjustment.DesiredContrastRatio;
-            });
-            ApplyTheme();
-        }
     }
 
     protected override void OnPropertyChanged(string propertyName)
