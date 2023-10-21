@@ -8,6 +8,33 @@
     <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
     <material:NotConverter x:Key="NotConverter"/>
 
+    <SolidColorBrush x:Key="MaterialDesignErrorBrush" Color="{DynamicResource MaterialDesignErrorColor}" po:Freeze="True" />
+    <SolidColorBrush x:Key="MaterialDesignPendingBrush" Color="{DynamicResource MaterialDesignPendingColor}" po:Freeze="True" />
+    <SolidColorBrush x:Key="MaterialDesignWarningBrush" Color="{DynamicResource MaterialDesignWarningColor}" po:Freeze="True" />
+    <SolidColorBrush x:Key="MaterialDesignSuccessBrush" Color="{DynamicResource MaterialDesignSuccessColor}" po:Freeze="True" />
+
+    <SolidColorBrush x:Key="MaterialDesignLightErrorBrush" Color="{DynamicResource MaterialDesignLightErrorColor}" po:Freeze="True" />
+    <SolidColorBrush x:Key="MaterialDesignLightPendingBrush" Color="{DynamicResource MaterialDesignLightPendingColor}" po:Freeze="True" />
+    <SolidColorBrush x:Key="MaterialDesignLightWarningBrush" Color="{DynamicResource MaterialDesignLightWarningColor}" po:Freeze="True" />
+    <SolidColorBrush x:Key="MaterialDesignLightSuccessBrush" Color="{DynamicResource MaterialDesignLightSuccessColor}" po:Freeze="True" />
+
+    <Style TargetType="{x:Type TextBlock}" x:Key="ConnectionStatusTextBlock">
+        <Style.Triggers>
+            <DataTrigger Binding="{Binding Status}" Value="Connected">
+                <Setter Property="Foreground" Value="{DynamicResource MaterialDesignSuccessBrush}"/>
+            </DataTrigger>
+            <DataTrigger Binding="{Binding Status}" Value="Disconnected">
+                <Setter Property="Foreground" Value="{DynamicResource MaterialDesignErrorBrush}"/>
+            </DataTrigger>
+            <DataTrigger Binding="{Binding Status}" Value="Connecting">
+                <Setter Property="Foreground" Value="{DynamicResource MaterialDesignPendingBrush}"/>
+            </DataTrigger>
+            <DataTrigger Binding="{Binding Status}" Value="Disconnecting">
+                <Setter Property="Foreground" Value="{DynamicResource MaterialDesignPendingBrush}"/>
+            </DataTrigger>
+        </Style.Triggers>
+    </Style>
+
     <Style TargetType="{x:Type ButtonBase}" x:Key="MaterialDesignProgressToolBarButton">
         <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
         <Setter Property="Padding" Value="0"/>

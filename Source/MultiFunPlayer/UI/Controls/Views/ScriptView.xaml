@@ -53,11 +53,11 @@
                                                    VerticalAlignment="Center">
                                     <material:PackIcon.Style>
                                         <Style TargetType="material:PackIcon">
-                                            <Setter Property="Foreground" Value="{StaticResource MaterialDesignSuccessBrush}"/>
+                                            <Setter Property="Foreground" Value="{DynamicResource MaterialDesignSuccessBrush}"/>
                                             <Setter Property="Kind" Value="Play"/>
                                             <Style.Triggers>
                                                 <DataTrigger Binding="{Binding IsPlaying}" Value="True">
-                                                    <Setter Property="Foreground" Value="{StaticResource MaterialDesignErrorBrush}"/>
+                                                    <Setter Property="Foreground" Value="{DynamicResource MaterialDesignErrorBrush}"/>
                                                     <Setter Property="Kind" Value="Pause"/>
                                                 </DataTrigger>
                                             </Style.Triggers>
@@ -88,7 +88,7 @@
                                                     <Setter Property="Foreground" Value="{DynamicResource PrimaryHueLightBrush}"/>
                                                     <Style.Triggers>
                                                         <DataTrigger Binding="{Binding IsSyncing}" Value="True">
-                                                            <Setter Property="Foreground" Value="{StaticResource MaterialDesignErrorBrush}"/>
+                                                            <Setter Property="Foreground" Value="{DynamicResource MaterialDesignErrorBrush}"/>
                                                         </DataTrigger>
                                                     </Style.Triggers>
                                                 </Style>
@@ -105,7 +105,7 @@
                                                     <Setter Property="Foreground" Value="{DynamicResource PrimaryHueLightBrush}"/>
                                                     <Style.Triggers>
                                                         <DataTrigger Binding="{Binding IsSyncing}" Value="True">
-                                                            <Setter Property="Foreground" Value="{StaticResource MaterialDesignErrorBrush}"/>
+                                                            <Setter Property="Foreground" Value="{DynamicResource MaterialDesignErrorBrush}"/>
                                                         </DataTrigger>
                                                     </Style.Triggers>
                                                 </Style>
@@ -259,8 +259,8 @@
                                                                     <Button DockPanel.Dock="Right"   
                                                                             Style="{StaticResource MaterialDesignFlatButton}"
                                                                             ToolTip="Remove"
-                                                                            material:RippleAssist.Feedback="{StaticResource MaterialDesignErrorBrush}"
-                                                                            Foreground="{StaticResource MaterialDesignErrorBrush}"
+                                                                            material:RippleAssist.Feedback="{DynamicResource MaterialDesignErrorBrush}"
+                                                                            Foreground="{DynamicResource MaterialDesignErrorBrush}"
                                                                             Height="24" 
                                                                             Width="24" 
                                                                             Padding="0"
@@ -384,8 +384,8 @@
                                                                         <Button DockPanel.Dock="Right"   
                                                                                 Style="{StaticResource MaterialDesignFlatButton}"
                                                                                 ToolTip="Remove"
-                                                                                material:RippleAssist.Feedback="{StaticResource MaterialDesignErrorBrush}"
-                                                                                Foreground="{StaticResource MaterialDesignErrorBrush}"
+                                                                                material:RippleAssist.Feedback="{DynamicResource MaterialDesignErrorBrush}"
+                                                                                Foreground="{DynamicResource MaterialDesignErrorBrush}"
                                                                                 Height="24" 
                                                                                 Width="24" 
                                                                                 Padding="0"
@@ -682,7 +682,7 @@
                                                 <Setter Property="Foreground" Value="{DynamicResource MaterialDesignDarkBackground}"/>
                                             </DataTrigger>
                                             <DataTrigger Binding="{Binding Value.Settings.BypassScript}" Value="True">
-                                                <Setter Property="Foreground" Value="{StaticResource MaterialDesignErrorBrush}"/>
+                                                <Setter Property="Foreground" Value="{DynamicResource MaterialDesignErrorBrush}"/>
                                             </DataTrigger>
                                         </Style.Triggers>
                                     </Style>
@@ -710,11 +710,11 @@
                                                             <Style.Triggers>
                                                                 <DataTrigger Binding="{Binding Value.Settings.LinkAxis, Converter={StaticResource notNullBooleanConverter}}" Value="True">
                                                                     <Setter Property="Text" Value="Enabled"/>
-                                                                    <Setter Property="Foreground" Value="{StaticResource MaterialDesignLightSuccessBrush}"/>
+                                                                    <Setter Property="Foreground" Value="{DynamicResource MaterialDesignLightSuccessBrush}"/>
                                                                 </DataTrigger>
                                                                 <DataTrigger Binding="{Binding Value.Settings.LinkAxisHasPriority}" Value="True">
                                                                     <Setter Property="Text" Value="Override"/>
-                                                                    <Setter Property="Foreground" Value="{StaticResource MaterialDesignLightErrorBrush}"/>
+                                                                    <Setter Property="Foreground" Value="{DynamicResource MaterialDesignLightErrorBrush}"/>
                                                                 </DataTrigger>
                                                             </Style.Triggers>
                                                         </Style>
@@ -732,7 +732,7 @@
                                                             <Style.Triggers>
                                                                 <DataTrigger Binding="{Binding Value.Settings.SelectedMotionProvider, Converter={StaticResource notNullBooleanConverter}}" Value="True">
                                                                     <Setter Property="Text" Value="Enabled"/>
-                                                                    <Setter Property="Foreground" Value="{StaticResource MaterialDesignLightSuccessBrush}"/>
+                                                                    <Setter Property="Foreground" Value="{DynamicResource MaterialDesignLightSuccessBrush}"/>
                                                                 </DataTrigger>
                                                                 <DataTrigger Value="True">
                                                                     <DataTrigger.Binding>
@@ -743,7 +743,7 @@
                                                                         </MultiBinding>
                                                                     </DataTrigger.Binding>
                                                                     <Setter Property="Text" Value="Override"/>
-                                                                    <Setter Property="Foreground" Value="{StaticResource MaterialDesignLightErrorBrush}"/>
+                                                                    <Setter Property="Foreground" Value="{DynamicResource MaterialDesignLightErrorBrush}"/>
                                                                 </DataTrigger>
                                                                 <DataTrigger Binding="{Binding Value.Settings.BypassMotionProvider}" Value="True">
                                                                     <Setter Property="Text" Value="Bypass"/>
@@ -765,11 +765,11 @@
                                                             <Style.Triggers>
                                                                 <DataTrigger Binding="{Binding Value.Settings.SpeedLimitEnabled}" Value="True">
                                                             <Setter Property="Text" Value="Enabled"/>
-                                                                    <Setter Property="Foreground" Value="{StaticResource MaterialDesignLightSuccessBrush}"/>
+                                                                    <Setter Property="Foreground" Value="{DynamicResource MaterialDesignLightSuccessBrush}"/>
                                                                 </DataTrigger>
                                                                 <DataTrigger Binding="{Binding Value.State.IsSpeedLimited}" Value="True">
                                                             <Setter Property="Text" Value="Active"/>
-                                                                    <Setter Property="Foreground" Value="{StaticResource MaterialDesignLightErrorBrush}"/>
+                                                                    <Setter Property="Foreground" Value="{DynamicResource MaterialDesignLightErrorBrush}"/>
                                                                 </DataTrigger>
                                                             </Style.Triggers>
                                                         </Style>
@@ -787,11 +787,11 @@
                                                             <Style.Triggers>
                                                                 <DataTrigger Binding="{Binding Value.Settings.SmartLimitInputAxis, Converter={StaticResource notNullBooleanConverter}}" Value="True">
                                                                     <Setter Property="Text" Value="Enabled"/>
-                                                                    <Setter Property="Foreground" Value="{StaticResource MaterialDesignLightSuccessBrush}"/>
+                                                                    <Setter Property="Foreground" Value="{DynamicResource MaterialDesignLightSuccessBrush}"/>
                                                                 </DataTrigger>
                                                                 <DataTrigger Binding="{Binding Value.State.IsSmartLimited}" Value="True">
                                                                     <Setter Property="Text" Value="Active"/>
-                                                                    <Setter Property="Foreground" Value="{StaticResource MaterialDesignLightErrorBrush}"/>
+                                                                    <Setter Property="Foreground" Value="{DynamicResource MaterialDesignLightErrorBrush}"/>
                                                                 </DataTrigger>
                                                             </Style.Triggers>
                                                         </Style>
@@ -808,10 +808,10 @@
                                                     <Setter Property="Foreground" Value="#ddd"/>
                                                     <Style.Triggers>
                                                         <DataTrigger Binding="{Binding Value.Settings.LinkAxis, Converter={StaticResource notNullBooleanConverter}}" Value="True">
-                                                            <Setter Property="Foreground" Value="{StaticResource MaterialDesignSuccessBrush}"/>
+                                                            <Setter Property="Foreground" Value="{DynamicResource MaterialDesignSuccessBrush}"/>
                                                         </DataTrigger>
                                                         <DataTrigger Binding="{Binding Value.Settings.LinkAxisHasPriority}" Value="True">
-                                                            <Setter Property="Foreground" Value="{StaticResource MaterialDesignErrorBrush}"/>
+                                                            <Setter Property="Foreground" Value="{DynamicResource MaterialDesignErrorBrush}"/>
                                                         </DataTrigger>
                                                     </Style.Triggers>
                                                 </Style>
@@ -824,7 +824,7 @@
                                                     <Setter Property="Foreground" Value="#ddd"/>
                                                     <Style.Triggers>
                                                         <DataTrigger Binding="{Binding Value.Settings.SelectedMotionProvider, Converter={StaticResource notNullBooleanConverter}}" Value="True">
-                                                            <Setter Property="Foreground" Value="{StaticResource MaterialDesignSuccessBrush}"/>
+                                                            <Setter Property="Foreground" Value="{DynamicResource MaterialDesignSuccessBrush}"/>
                                                         </DataTrigger>
                                                         <DataTrigger Value="True">
                                                             <DataTrigger.Binding>
@@ -834,7 +834,7 @@
                                                                     <Binding Path="Value.Settings.MotionProviderBlend"/>
                                                                 </MultiBinding>
                                                             </DataTrigger.Binding>
-                                                            <Setter Property="Foreground" Value="{StaticResource MaterialDesignErrorBrush}"/>
+                                                            <Setter Property="Foreground" Value="{DynamicResource MaterialDesignErrorBrush}"/>
                                                         </DataTrigger>
                                                         <DataTrigger Binding="{Binding Value.Settings.BypassMotionProvider}" Value="True">
                                                             <Setter Property="Foreground" Value="#ddd"/>
@@ -850,10 +850,10 @@
                                                     <Setter Property="Foreground" Value="#ddd"/>
                                                     <Style.Triggers>
                                                         <DataTrigger Binding="{Binding Value.Settings.SpeedLimitEnabled}" Value="True">
-                                                            <Setter Property="Foreground" Value="{StaticResource MaterialDesignSuccessBrush}"/>
+                                                            <Setter Property="Foreground" Value="{DynamicResource MaterialDesignSuccessBrush}"/>
                                                         </DataTrigger>
                                                         <DataTrigger Binding="{Binding Value.State.IsSpeedLimited}" Value="True">
-                                                            <Setter Property="Foreground" Value="{StaticResource MaterialDesignErrorBrush}"/>
+                                                            <Setter Property="Foreground" Value="{DynamicResource MaterialDesignErrorBrush}"/>
                                                         </DataTrigger>
                                                     </Style.Triggers>
                                                 </Style>
@@ -866,10 +866,10 @@
                                                     <Setter Property="Foreground" Value="#ddd"/>
                                                     <Style.Triggers>
                                                         <DataTrigger Binding="{Binding Value.Settings.SmartLimitInputAxis, Converter={StaticResource notNullBooleanConverter}}" Value="True">
-                                                            <Setter Property="Foreground" Value="{StaticResource MaterialDesignSuccessBrush}"/>
+                                                            <Setter Property="Foreground" Value="{DynamicResource MaterialDesignSuccessBrush}"/>
                                                         </DataTrigger>
                                                         <DataTrigger Binding="{Binding Value.State.IsSmartLimited}" Value="True">
-                                                            <Setter Property="Foreground" Value="{StaticResource MaterialDesignErrorBrush}"/>
+                                                            <Setter Property="Foreground" Value="{DynamicResource MaterialDesignErrorBrush}"/>
                                                         </DataTrigger>
                                                     </Style.Triggers>
                                                 </Style>
@@ -1020,7 +1020,7 @@
                                                           ToolTip="Invert">
                                                 <material:PackIcon Kind="FlipVertical" Opacity=".56" Width="20" Height="20"/>
                                                 <material:ToggleButtonAssist.OnContent>
-                                                    <material:PackIcon Kind="FlipVertical" Width="20" Height="20" Foreground="{StaticResource MaterialDesignSuccessBrush}"/>
+                                                    <material:PackIcon Kind="FlipVertical" Width="20" Height="20" Foreground="{DynamicResource MaterialDesignSuccessBrush}"/>
                                                 </material:ToggleButtonAssist.OnContent>
                                             </ToggleButton>
 
@@ -1044,7 +1044,7 @@
                                                                             </MultiBinding>
                                                                         </DataTrigger.Binding>
                                                                         
-                                                                        <Setter Property="Foreground" Value="{StaticResource MaterialDesignErrorBrush}"/>
+                                                                        <Setter Property="Foreground" Value="{DynamicResource MaterialDesignErrorBrush}"/>
                                                                     </DataTrigger>
                                                                 </Style.Triggers>
                                                             </Style>
@@ -1108,10 +1108,10 @@
                                                             <Style TargetType="material:PackIcon">
                                                                 <Style.Triggers>
                                                                     <DataTrigger Binding="{Binding Value.Settings.LinkAxis, Converter={StaticResource notNullBooleanConverter}}" Value="True">
-                                                                        <Setter Property="Foreground" Value="{StaticResource MaterialDesignSuccessBrush}"/>
+                                                                        <Setter Property="Foreground" Value="{DynamicResource MaterialDesignSuccessBrush}"/>
                                                                     </DataTrigger>
                                                                     <DataTrigger Binding="{Binding Value.Settings.LinkAxisHasPriority}" Value="True">
-                                                                        <Setter Property="Foreground" Value="{StaticResource MaterialDesignSuccessBrush}"/>
+                                                                        <Setter Property="Foreground" Value="{DynamicResource MaterialDesignSuccessBrush}"/>
                                                                     </DataTrigger>
                                                                 </Style.Triggers>
                                                             </Style>
@@ -1177,7 +1177,7 @@
                                                             <Style TargetType="material:PackIcon">
                                                                 <Style.Triggers>
                                                                     <DataTrigger Binding="{Binding Value.Settings.SelectedMotionProvider, Converter={StaticResource notNullBooleanConverter}}" Value="True">
-                                                                        <Setter Property="Foreground" Value="{StaticResource MaterialDesignSuccessBrush}"/>
+                                                                        <Setter Property="Foreground" Value="{DynamicResource MaterialDesignSuccessBrush}"/>
                                                                     </DataTrigger>
                                                                 </Style.Triggers>
                                                             </Style>
@@ -1409,7 +1409,7 @@
                                                             <Style TargetType="material:PackIcon">
                                                                 <Style.Triggers>
                                                                     <DataTrigger Binding="{Binding Value.Settings.SmartLimitInputAxis, Converter={StaticResource notNullBooleanConverter}}" Value="True">
-                                                                        <Setter Property="Foreground" Value="{StaticResource MaterialDesignSuccessBrush}"/>
+                                                                        <Setter Property="Foreground" Value="{DynamicResource MaterialDesignSuccessBrush}"/>
                                                                     </DataTrigger>
                                                                 </Style.Triggers>
                                                             </Style>
@@ -1593,7 +1593,7 @@
                                                             <Style TargetType="material:PackIcon">
                                                                 <Style.Triggers>
                                                                     <DataTrigger Binding="{Binding Value.Settings.SpeedLimitEnabled}" Value="True">
-                                                                        <Setter Property="Foreground" Value="{StaticResource MaterialDesignSuccessBrush}"/>
+                                                                        <Setter Property="Foreground" Value="{DynamicResource MaterialDesignSuccessBrush}"/>
                                                                     </DataTrigger>
                                                                 </Style.Triggers>
                                                             </Style>
@@ -1670,7 +1670,7 @@
                                                             <Style TargetType="material:PackIcon">
                                                                 <Style.Triggers>
                                                                     <DataTrigger Binding="{Binding Value.Settings.AutoHomeEnabled}" Value="True">
-                                                                        <Setter Property="Foreground" Value="{StaticResource MaterialDesignSuccessBrush}"/>
+                                                                        <Setter Property="Foreground" Value="{DynamicResource MaterialDesignSuccessBrush}"/>
                                                                     </DataTrigger>
                                                                 </Style.Triggers>
                                                             </Style>

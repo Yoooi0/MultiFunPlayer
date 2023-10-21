@@ -7,7 +7,7 @@
              xmlns:material="http://materialdesigninxaml.net/winfx/xaml/themes"
              x:ClassModifier="internal">
     <Application.Resources>
-        <ResourceDictionary>            
+        <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Controls.xaml" />
                 <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Fonts.xaml" />
@@ -23,6 +23,7 @@
 
                 <ResourceDictionary Source="pack://application:,,,/MaterialDesignExtensions;component/Themes/Generic.xaml" />
                 <ResourceDictionary Source="pack://application:,,,/MaterialDesignExtensions;component/Themes/MaterialDesignLightTheme.xaml" />
+                <ResourceDictionary Source="pack://application:,,,/CustomTheme.Light.xaml" />
                 <ResourceDictionary Source="pack://application:,,,/CustomTheme.xaml" />
 
                 <s:ApplicationLoader>
@@ -31,23 +32,6 @@
                     </s:ApplicationLoader.Bootstrapper>
                 </s:ApplicationLoader>
             </ResourceDictionary.MergedDictionaries>
-            <Color x:Key="MaterialDesignErrorColor">#F00018</Color>
-            <Color x:Key="MaterialDesignPendingColor">#D6810B</Color>
-            <Color x:Key="MaterialDesignWarningColor">#FFD300</Color>
-            <Color x:Key="MaterialDesignSuccessColor">#008C1A</Color>
-            <SolidColorBrush x:Key="MaterialDesignErrorBrush" Color="{StaticResource MaterialDesignErrorColor}" po:Freeze="True" />
-            <SolidColorBrush x:Key="MaterialDesignPendingBrush" Color="{StaticResource MaterialDesignPendingColor}" po:Freeze="True" />
-            <SolidColorBrush x:Key="MaterialDesignWarningBrush" Color="{StaticResource MaterialDesignWarningColor}" po:Freeze="True" />
-            <SolidColorBrush x:Key="MaterialDesignSuccessBrush" Color="{StaticResource MaterialDesignSuccessColor}" po:Freeze="True" />
-
-            <Color x:Key="MaterialDesignLightErrorColor">#FF4F52</Color>
-            <Color x:Key="MaterialDesignLightPendingColor">#FFAF59</Color>
-            <Color x:Key="MaterialDesignLightWarningColor">#FFD957</Color>
-            <Color x:Key="MaterialDesignLightSuccessColor">#6ECC52</Color>
-            <SolidColorBrush x:Key="MaterialDesignLightErrorBrush" Color="{StaticResource MaterialDesignLightErrorColor}" po:Freeze="True" />
-            <SolidColorBrush x:Key="MaterialDesignLightPendingBrush" Color="{StaticResource MaterialDesignLightPendingColor}" po:Freeze="True" />
-            <SolidColorBrush x:Key="MaterialDesignLightWarningBrush" Color="{StaticResource MaterialDesignLightWarningColor}" po:Freeze="True" />
-            <SolidColorBrush x:Key="MaterialDesignLightSuccessBrush" Color="{StaticResource MaterialDesignLightSuccessColor}" po:Freeze="True" />
 
             <SolidColorBrush x:Key="HighlightBrush" Color="{DynamicResource Primary700}"/>
             <SolidColorBrush x:Key="AccentBaseColorBrush" Color="{DynamicResource Primary600}" />

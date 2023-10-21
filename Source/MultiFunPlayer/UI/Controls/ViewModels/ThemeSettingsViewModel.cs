@@ -3,6 +3,7 @@ using MaterialDesignThemes.Wpf;
 using MultiFunPlayer.Common;
 using Newtonsoft.Json.Linq;
 using Stylet;
+using System.Windows;
 using System.Windows.Media;
 
 namespace MultiFunPlayer.UI.Controls.ViewModels;
@@ -71,6 +72,27 @@ internal class ThemeSettingsViewModel : Screen, IHandle<SettingsMessage>
 
         theme.SetPrimaryColor(PrimaryColor);
         _paletteHelper.SetTheme(theme);
+
+        var customThemeSource = $"pack://application:,,,/CustomTheme.{(IsDarkTheme ? "Dark" : "Light")}.xaml";
+        var customThemeResource = new ResourceDictionary { Source = new Uri(customThemeSource) };
+
+        UpdateSolidColorBrush("MaterialDesignErrorBrush");
+        UpdateSolidColorBrush("MaterialDesignPendingBrush");
+        UpdateSolidColorBrush("MaterialDesignWarningBrush");
+        UpdateSolidColorBrush("MaterialDesignSuccessBrush");
+
+        UpdateSolidColorBrush("MaterialDesignLightErrorBrush");
+        UpdateSolidColorBrush("MaterialDesignLightPendingBrush");
+        UpdateSolidColorBrush("MaterialDesignLightWarningBrush");
+        UpdateSolidColorBrush("MaterialDesignLightSuccessBrush");
+
+        void UpdateSolidColorBrush(string brushName)
+        {
+            var color = (Color)customThemeResource[brushName.Replace("Brush", "Color")];
+            var brush = new SolidColorBrush(color);
+            brush.Freeze();
+            Application.Current.Resources[brushName] = brush;
+        }
     }
 
     public void Handle(SettingsMessage message)
