@@ -113,8 +113,8 @@
                                                    Typography.Capitals="AllSmallCaps"/>
 
                                             <Button Style="{StaticResource MaterialDesignFlatButton}"
-                                                material:RippleAssist.Feedback="Black"
-                                                Foreground="Black"
+                                                material:RippleAssist.Feedback="{DynamicResource MaterialDesignBody}"
+                                                Foreground="{DynamicResource MaterialDesignBody}"
                                                 Height="24"
                                                 Width="24"
                                                 Padding="0"

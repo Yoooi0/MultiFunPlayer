@@ -214,8 +214,8 @@
 
                                         <Button DockPanel.Dock="Top"
                                                 Style="{StaticResource MaterialDesignFlatButton}"
-                                                material:RippleAssist.Feedback="Black"
-                                                Foreground="Black"
+                                                material:RippleAssist.Feedback="{DynamicResource MaterialDesignBody}"
+                                                Foreground="{DynamicResource MaterialDesignBody}"
                                                 Height="24"
                                                 Width="24"
                                                 Padding="0"
@@ -314,8 +314,8 @@
 
                                             <Button DockPanel.Dock="Top"
                                                     Style="{StaticResource MaterialDesignFlatButton}"
-                                                    material:RippleAssist.Feedback="Black"
-                                                    Foreground="Black"
+                                                    material:RippleAssist.Feedback="{DynamicResource MaterialDesignBody}"
+                                                    Foreground="{DynamicResource MaterialDesignBody}"
                                                     Height="24"
                                                     Width="24"
                                                     Padding="0"
@@ -425,8 +425,8 @@
                                                 <DockPanel Margin="20" Width="475">
                                                     <Button DockPanel.Dock="Top"
                                                     Style="{StaticResource MaterialDesignFlatButton}"
-                                                    material:RippleAssist.Feedback="Black"
-                                                    Foreground="Black"
+                                                    material:RippleAssist.Feedback="{DynamicResource MaterialDesignBody}"
+                                                    Foreground="{DynamicResource MaterialDesignBody}"
                                                     Height="24"
                                                     Width="24"
                                                     Padding="0"
@@ -522,7 +522,7 @@
                                                    HorizontalAlignment="Center">
                                             <TextBlock.Resources>
                                                 <Style TargetType="{x:Type TextBlock}">
-                                                    <Setter Property="Foreground" Value="Black"/>
+                                                    <Setter Property="Foreground" Value="{DynamicResource MaterialDesignBody}"/>
                                                     <Style.Triggers>
                                                         <DataTrigger Value="True">
                                                             <DataTrigger.Binding>
@@ -1325,7 +1325,7 @@
                                                                         <Separator/>
 
                                                                         <DockPanel LastChildFill="False"
-                                                                                   Visibility="{Binding Value.Settings.UpdateMotionProviderWithAxis, Converter={StaticResource notNullToVisibilityConverter}}"
+                                                                                   Visibility="{Binding Value.Settings.UpdateMotionProviderWithAxis, Converter={StaticResource InvertedNullVisibilityConverter}}"
                                                                                    Margin="0 0 0 10">
                                                                             <TextBlock Text="{Binding Value.Settings.UpdateMotionProviderWithAxis, StringFormat={}Match {0} speed}" 
                                                                                        DockPanel.Dock="Left"

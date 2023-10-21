@@ -26,8 +26,8 @@
                         <Grid>
                             <Button Style="{StaticResource MaterialDesignFlatButton}"
                                     Visibility="{Binding IsSelected, Converter={StaticResource BooleanToVisibilityConverter}, RelativeSource={RelativeSource AncestorType={x:Type TabItem}}}"
-                                    material:RippleAssist.Feedback="Black"
-                                    Foreground="Black"
+                                    material:RippleAssist.Feedback="{DynamicResource MaterialDesignBody}"
+                                    Foreground="{DynamicResource MaterialDesignBody}"
                                     Height="12"
                                     Width="12"
                                     Padding="0"
@@ -125,8 +125,8 @@
                                                    Typography.Capitals="AllSmallCaps"/>
 
                                         <Button Style="{StaticResource MaterialDesignFlatButton}"
-                                                material:RippleAssist.Feedback="Black"
-                                                Foreground="Black"
+                                                material:RippleAssist.Feedback="{DynamicResource MaterialDesignBody}"
+                                                Foreground="{DynamicResource MaterialDesignBody}"
                                                 Height="24"
                                                 Width="24"
                                                 Padding="0"
