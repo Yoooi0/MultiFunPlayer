@@ -12,7 +12,7 @@ internal class RawInputProcessor : IInputProcessor
 {
     protected static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-    private readonly Dictionary<Key, bool> _keyboardState;
+    private readonly HashSet<Key> _pressedKeys;
     private HwndSource _source;
 
     private long _lastMouseAxisTimestamp;
@@ -24,7 +24,7 @@ internal class RawInputProcessor : IInputProcessor
 
     public RawInputProcessor()
     {
-        _keyboardState = new Dictionary<Key, bool>();
+        _pressedKeys = new HashSet<Key>();
         _lastMouseAxisTimestamp = 0;
         _mouseXAxis = _mouseYAxis = 0.5;
         _lastMouseXAxis = _lastMouseYAxis = 0.5;
@@ -74,16 +74,13 @@ internal class RawInputProcessor : IInputProcessor
 
         if (pressed)
         {
-            _keyboardState[key] = true;
+            _pressedKeys.Add(key);
         }
         else
         {
-            var pressedKeys = _keyboardState.Where(x => x.Value).Select(x => x.Key).ToList();
-            if (pressedKeys.Count > 0)
-                HandleGesture(KeyboardGesture.Create(pressedKeys));
-
-            foreach (var pressedKey in pressedKeys)
-                _keyboardState[pressedKey] = false;
+            if (_pressedKeys.Count > 0)
+                HandleGesture(KeyboardGesture.Create(_pressedKeys));
+            _pressedKeys.Clear();
         }
     }
 
