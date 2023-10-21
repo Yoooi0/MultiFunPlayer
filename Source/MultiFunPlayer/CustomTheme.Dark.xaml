@@ -9,4 +9,7 @@
     <Color x:Key="MaterialDesignLightPendingColor">#D6810B</Color>
     <Color x:Key="MaterialDesignLightWarningColor">#FFD300</Color>
     <Color x:Key="MaterialDesignLightSuccessColor">#008C1A</Color>
+    
+    <Color x:Key="MaterialDesignPrimaryCheckerboxColor">#000</Color>
+    <Color x:Key="MaterialDesignSecondaryCheckerboxColor">#101010</Color>
 </ResourceDictionary>

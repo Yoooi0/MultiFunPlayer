@@ -18,6 +18,9 @@
     <SolidColorBrush x:Key="MaterialDesignLightWarningBrush" Color="{DynamicResource MaterialDesignLightWarningColor}" po:Freeze="True" />
     <SolidColorBrush x:Key="MaterialDesignLightSuccessBrush" Color="{DynamicResource MaterialDesignLightSuccessColor}" po:Freeze="True" />
 
+    <SolidColorBrush x:Key="MaterialDesignPrimaryCheckerboxBrush" Color="{DynamicResource MaterialDesignPrimaryCheckerboxColor}" po:Freeze="True" />
+    <SolidColorBrush x:Key="MaterialDesignSecondaryCheckerboxBrush" Color="{DynamicResource MaterialDesignSecondaryCheckerboxColor}" po:Freeze="True" />
+
     <Style TargetType="{x:Type TextBlock}" x:Key="ConnectionStatusTextBlock">
         <Style.Triggers>
             <DataTrigger Binding="{Binding Status}" Value="Connected">

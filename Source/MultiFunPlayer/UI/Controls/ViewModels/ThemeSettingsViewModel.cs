@@ -73,6 +73,9 @@ internal class ThemeSettingsViewModel : Screen, IHandle<SettingsMessage>
         UpdateSolidColorBrush("MaterialDesignLightWarningBrush");
         UpdateSolidColorBrush("MaterialDesignLightSuccessBrush");
 
+        UpdateSolidColorBrush("MaterialDesignPrimaryCheckerboxBrush");
+        UpdateSolidColorBrush("MaterialDesignSecondaryCheckerboxBrush");
+
         void UpdateSolidColorBrush(string brushName)
         {
             var color = (Color)customThemeResource[brushName.Replace("Brush", "Color")];
