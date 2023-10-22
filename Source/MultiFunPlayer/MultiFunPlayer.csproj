@@ -21,7 +21,7 @@
     
   <ItemGroup>
     <PackageReference Include="Buttplug.Net" Version="0.1.0-ci0081" />
-    <PackageReference Include="Buttplug.Net.NewtonsoftJson" Version="0.1.0-ci0077" />
+    <PackageReference Include="Buttplug.Net.NewtonsoftJson" Version="0.1.0-ci0081" />
     <PackageReference Include="ConfigureAwait.Fody" Version="3.*">
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
@@ -33,19 +33,19 @@
     <PackageReference Include="MaterialDesignExtensions" Version="4.0.0-a02" />
     <PackageReference Include="MaterialDesignThemes" Version="4.7.0" />
     <PackageReference Include="MaterialDesignThemes.MahApps" Version="0.2.6" />
-    <PackageReference Include="Microsoft.CodeAnalysis.Common" Version="4.4.0" />
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.4.0" />
+    <PackageReference Include="Microsoft.CodeAnalysis.Common" Version="4.7.0" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.7.0" />
     <PackageReference Include="NETStandard.Library" Version="2.0.3" />
     <PackageReference Include="Newtonsoft.Json" Version="13.*" />
     <PackageReference Include="NLog" Version="5.*" />
     <PackageReference Include="PropertyChanged.Fody" Version="4.*">
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="RawInput.Sharp" Version="0.0.4" />
+    <PackageReference Include="RawInput.Sharp" Version="0.1.1" />
     <PackageReference Include="Stylet" Version="1.*" />
     <PackageReference Include="System.IO.Ports" Version="7.*" />
-    <PackageReference Include="Microsoft-WindowsAPICodePack-Shell" Version="1.1.4" />
+    <PackageReference Include="Microsoft-WindowsAPICodePack-Shell" Version="1.1.5" />
     <PackageReference Include="System.Management" Version="7.*" />
-    <PackageReference Include="Vortice.XInput" Version="2.2.0" />
+    <PackageReference Include="Vortice.XInput" Version="3.3.4" />
   </ItemGroup>
 </Project>
