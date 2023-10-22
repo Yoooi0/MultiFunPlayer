@@ -8,18 +8,30 @@
     <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
     <material:NotConverter x:Key="NotConverter"/>
 
-    <SolidColorBrush x:Key="MaterialDesignErrorBrush" Color="{DynamicResource MaterialDesignErrorColor}" po:Freeze="True" />
-    <SolidColorBrush x:Key="MaterialDesignPendingBrush" Color="{DynamicResource MaterialDesignPendingColor}" po:Freeze="True" />
-    <SolidColorBrush x:Key="MaterialDesignWarningBrush" Color="{DynamicResource MaterialDesignWarningColor}" po:Freeze="True" />
-    <SolidColorBrush x:Key="MaterialDesignSuccessBrush" Color="{DynamicResource MaterialDesignSuccessColor}" po:Freeze="True" />
+    <Color x:Key="Accent100">#cfd8dc</Color>
+    <Color x:Key="Accent100Foreground">#DD000000</Color>
+    <Color x:Key="Accent200">#b0bec5</Color>
+    <Color x:Key="Accent200Foreground">#DD000000</Color>
+    <Color x:Key="Accent400">#78909c</Color>
+    <Color x:Key="Accent400Foreground">#FFFFFFFF</Color>
+    <Color x:Key="Accent700">#455a64</Color>
+    <Color x:Key="Accent700Foreground">#DDFFFFFF</Color>
 
-    <SolidColorBrush x:Key="MaterialDesignLightErrorBrush" Color="{DynamicResource MaterialDesignLightErrorColor}" po:Freeze="True" />
-    <SolidColorBrush x:Key="MaterialDesignLightPendingBrush" Color="{DynamicResource MaterialDesignLightPendingColor}" po:Freeze="True" />
-    <SolidColorBrush x:Key="MaterialDesignLightWarningBrush" Color="{DynamicResource MaterialDesignLightWarningColor}" po:Freeze="True" />
-    <SolidColorBrush x:Key="MaterialDesignLightSuccessBrush" Color="{DynamicResource MaterialDesignLightSuccessColor}" po:Freeze="True" />
+    <SolidColorBrush x:Key="SecondaryHueMidBrush" Color="{StaticResource Accent700}" po:Freeze="True" />
+    <SolidColorBrush x:Key="SecondaryHueMidForegroundBrush" Color="{StaticResource Accent700Foreground}" po:Freeze="True" />
 
-    <SolidColorBrush x:Key="MaterialDesignPrimaryCheckerboxBrush" Color="{DynamicResource MaterialDesignPrimaryCheckerboxColor}" po:Freeze="True" />
-    <SolidColorBrush x:Key="MaterialDesignSecondaryCheckerboxBrush" Color="{DynamicResource MaterialDesignSecondaryCheckerboxColor}" po:Freeze="True" />
+    <SolidColorBrush x:Key="MaterialDesignErrorBrush" Color="{StaticResource MaterialDesignErrorColor}" po:Freeze="True" />
+    <SolidColorBrush x:Key="MaterialDesignPendingBrush" Color="{StaticResource MaterialDesignPendingColor}" po:Freeze="True" />
+    <SolidColorBrush x:Key="MaterialDesignWarningBrush" Color="{StaticResource MaterialDesignWarningColor}" po:Freeze="True" />
+    <SolidColorBrush x:Key="MaterialDesignSuccessBrush" Color="{StaticResource MaterialDesignSuccessColor}" po:Freeze="True" />
+
+    <SolidColorBrush x:Key="MaterialDesignLightErrorBrush" Color="{StaticResource MaterialDesignLightErrorColor}" po:Freeze="True" />
+    <SolidColorBrush x:Key="MaterialDesignLightPendingBrush" Color="{StaticResource MaterialDesignLightPendingColor}" po:Freeze="True" />
+    <SolidColorBrush x:Key="MaterialDesignLightWarningBrush" Color="{StaticResource MaterialDesignLightWarningColor}" po:Freeze="True" />
+    <SolidColorBrush x:Key="MaterialDesignLightSuccessBrush" Color="{StaticResource MaterialDesignLightSuccessColor}" po:Freeze="True" />
+
+    <SolidColorBrush x:Key="MaterialDesignPrimaryCheckerboxBrush" Color="{StaticResource MaterialDesignPrimaryCheckerboxColor}" po:Freeze="True" />
+    <SolidColorBrush x:Key="MaterialDesignSecondaryCheckerboxBrush" Color="{StaticResource MaterialDesignSecondaryCheckerboxColor}" po:Freeze="True" />
 
     <Style TargetType="{x:Type TextBlock}" x:Key="ConnectionStatusTextBlock">
         <Style.Triggers>
