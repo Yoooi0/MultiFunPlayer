@@ -2004,9 +2004,27 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
     #region Properties 
     private void RegisterProperties(IPropertyManager p)
     {
-        p.RegisterProperty<DeviceAxis, double>("Axis::Value", GetValue);
-        p.RegisterProperty<DeviceAxis, double>("Axis::Position", GetAxisPosition);
         p.RegisterProperty<DeviceAxis, IScriptResource>("Axis::Script", axis => AxisModels[axis].Script);
+        p.RegisterProperty<DeviceAxis, double>("Axis::Position", GetAxisPosition);
+
+        p.RegisterProperty<DeviceAxis, int>("Axis::Index", axis => AxisStates[axis].Index);
+        p.RegisterProperty<DeviceAxis, double>("Axis::Value", axis => AxisStates[axis].Value);
+        p.RegisterProperty<DeviceAxis, double>("Axis::ScriptValue", axis => AxisStates[axis].ScriptValue);
+        p.RegisterProperty<DeviceAxis, double>("Axis::TransitionValue", axis => AxisStates[axis].TransitionValue);
+        p.RegisterProperty<DeviceAxis, double>("Axis::MotionProviderValue", axis => AxisStates[axis].MotionProviderValue);
+        p.RegisterProperty<DeviceAxis, double>("Axis::Speed", axis => AxisStates[axis].Speed);
+
+        p.RegisterProperty<DeviceAxis, InterpolationType>("Axis::InterpolationType", axis => AxisSettings[axis].InterpolationType);
+        p.RegisterProperty<DeviceAxis, double>("Axis::Offset", axis => AxisSettings[axis].Offset);
+        p.RegisterProperty<DeviceAxis, double>("Axis::ScriptScale", axis => AxisSettings[axis].ScriptScale);
+        p.RegisterProperty<DeviceAxis, bool>("Axis::BypassScript", axis => AxisSettings[axis].BypassScript);
+        p.RegisterProperty<DeviceAxis, bool>("Axis::BypassMotionProvider", axis => AxisSettings[axis].BypassMotionProvider);
+        p.RegisterProperty<DeviceAxis, bool>("Axis::BypassTransition", axis => AxisSettings[axis].BypassTransition);
+
+        p.RegisterProperty("Media::IsPlaying", () => IsPlaying);
+        p.RegisterProperty("Media::Speed", () => PlaybackSpeed);
+        p.RegisterProperty("Media::Duration", () => MediaDuration);
+        p.RegisterProperty("Media::Position", () => MediaPosition);
     }
     #endregion
 
