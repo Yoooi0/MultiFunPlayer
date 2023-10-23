@@ -23,6 +23,7 @@
                                     HorizontalAlignment="Stretch"
                                     CornerRadius="2 0 0 2">
                     <material:PackIcon DockPanel.Dock="Left"
+                                       Foreground="Black"
                                        Kind="MicrosoftXboxController"
                                        VerticalAlignment="Center"
                                        HorizontalAlignment="Center"
@@ -52,6 +53,7 @@
                                     HorizontalAlignment="Stretch"
                                     CornerRadius="2 0 0 2">
                     <material:PackIcon DockPanel.Dock="Left"
+                                       Foreground="Black"
                                        Kind="MicrosoftXboxController"
                                        VerticalAlignment="Center"
                                        HorizontalAlignment="Center"
@@ -81,6 +83,7 @@
                                     HorizontalAlignment="Stretch"
                                     CornerRadius="2 0 0 2">
                     <material:PackIcon DockPanel.Dock="Left"
+                                       Foreground="Black"
                                        Kind="Mouse"
                                        VerticalAlignment="Center"
                                        HorizontalAlignment="Center"
@@ -110,6 +113,7 @@
                                     HorizontalAlignment="Stretch"
                                     CornerRadius="2 0 0 2">
                     <material:PackIcon DockPanel.Dock="Left"
+                                       Foreground="Black"
                                        Kind="MouseMoveVertical"
                                        VerticalAlignment="Center"
                                        HorizontalAlignment="Center"
@@ -139,6 +143,7 @@
                                     HorizontalAlignment="Stretch"
                                     CornerRadius="2 0 0 2">
                     <material:PackIcon DockPanel.Dock="Left"
+                                       Foreground="Black"
                                        Kind="KeyboardOutline"
                                        VerticalAlignment="Center"
                                        HorizontalAlignment="Center"
@@ -284,7 +289,8 @@
                                         <ControlTemplate TargetType="ListBoxItem">
                                             <material:Card Name="Container"
                                                            Margin="8 8 8 0"
-                                                           material:ShadowAssist.ShadowDepth="Depth1">
+                                                           material:ShadowAssist.ShadowDepth="Depth1"
+                                                           Foreground="{DynamicResource MaterialDesignBody}">
                                                 <ContentPresenter/>
                                             </material:Card>
 
@@ -306,21 +312,13 @@
                                                         <Setter Property="Margin" TargetName="Container" Value="8 8 8 8"/>
                                                     </DataTrigger.Setters>
                                                 </DataTrigger>
-                                                
+
                                                 <Trigger Property="UIElement.IsMouseOver" Value="True">
-                                                    <Setter Property="Panel.Background" TargetName="Container">
-                                                        <Setter.Value>
-                                                            <SolidColorBrush>#f5f5f5</SolidColorBrush>
-                                                        </Setter.Value>
-                                                    </Setter>
+                                                    <Setter Property="Panel.Background" TargetName="Container" Value="{DynamicResource MaterialDesignCardBackgroundHover}"/>
                                                 </Trigger>
                                                 <Trigger Property="IsSelected" Value="True">
+                                                    <Setter Property="Background" TargetName="Container" Value="{DynamicResource MaterialDesignCardBackgroundSelected}"/>
                                                     <Setter Property="material:ShadowAssist.ShadowDepth" TargetName="Container" Value="Depth2"/>
-                                                    <Setter Property="Background" TargetName="Container">
-                                                        <Setter.Value>
-                                                            <SolidColorBrush>#f0f0f0</SolidColorBrush>
-                                                        </Setter.Value>
-                                                    </Setter>
                                                 </Trigger>
                                             </ControlTemplate.Triggers>
                                         </ControlTemplate>

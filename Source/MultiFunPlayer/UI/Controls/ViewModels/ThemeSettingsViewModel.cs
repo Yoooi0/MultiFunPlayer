@@ -83,6 +83,9 @@ internal class ThemeSettingsViewModel : Screen, IHandle<SettingsMessage>
 
         AutoUpdateSolidColorBrush("MaterialDesignBodyDisabled");
 
+        AutoUpdateSolidColorBrush("MaterialDesignCardBackgroundHover");
+        AutoUpdateSolidColorBrush("MaterialDesignCardBackgroundSelected");
+
         var invertedLight = IsDarkTheme ? theme.PrimaryDark : theme.PrimaryLight;
         var invertedDark = IsDarkTheme ? theme.PrimaryLight : theme.PrimaryDark;
         UpdateSolidColorBrush("InvertedPrimaryHueLightBrush", invertedLight.Color);

@@ -40,6 +40,9 @@
 
     <SolidColorBrush x:Key="MaterialDesignBodyDisabled" Color="{StaticResource MaterialDesignBodyDisabled}" po:Freeze="True" />
 
+    <SolidColorBrush x:Key="MaterialDesignCardBackgroundHover" Color="{StaticResource MaterialDesignCardBackgroundHover}" po:Freeze="True" />
+    <SolidColorBrush x:Key="MaterialDesignCardBackgroundSelected" Color="{StaticResource MaterialDesignCardBackgroundSelected}" po:Freeze="True" />
+
     <Style TargetType="{x:Type TextBlock}" x:Key="ConnectionStatusTextBlock">
         <Style.Triggers>
             <DataTrigger Binding="{Binding Status}" Value="Connected">
