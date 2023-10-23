@@ -56,6 +56,17 @@
 
             <DockPanel LastChildFill="False"
                        Margin="0 0 0 10">
+                <TextBlock Text="Dark mode:"
+                           DockPanel.Dock="Left"
+                           VerticalAlignment="Center"
+                           Margin="0 0 10 0"/>
+
+                <ToggleButton IsChecked="{Binding IsDarkTheme}"
+                              DockPanel.Dock="Left"/>
+            </DockPanel>
+            
+            <DockPanel LastChildFill="False"
+                       Margin="0 0 0 10">
                 <TextBlock Text="Color adjustments:"
                            DockPanel.Dock="Left"
                            VerticalAlignment="Center"

@@ -299,7 +299,7 @@
                                                         <Style TargetType="{x:Type material:Badged}">
                                                             <Setter Property="BadgeBackground">
                                                                 <Setter.Value>
-                                                                    <SolidColorBrush Color="{StaticResource MaterialDesignErrorColor}" Opacity="0.7"/>
+                                                                    <SolidColorBrush Color="{DynamicResource MaterialDesignErrorColor}" Opacity="0.7"/>
                                                                 </Setter.Value>
                                                             </Setter>
                                                             <Setter Property="Badge">
@@ -318,7 +318,7 @@
                                                                     </DataTrigger.Binding>
                                                                     <Setter Property="BadgeBackground">
                                                                         <Setter.Value>
-                                                                            <SolidColorBrush Color="{StaticResource MaterialDesignSuccessColor}" Opacity="0.5"/>
+                                                                            <SolidColorBrush Color="{DynamicResource MaterialDesignSuccessColor}" Opacity="0.5"/>
                                                                         </Setter.Value>
                                                                     </Setter>
                                                                     <Setter Property="Badge">
@@ -352,8 +352,8 @@
                                             <DataTemplate>
                                                 <Button Style="{StaticResource MaterialDesignFlatButton}"
                                                         ToolTip="Remove"
-                                                        material:RippleAssist.Feedback="{StaticResource MaterialDesignErrorBrush}"
-                                                        Foreground="{StaticResource MaterialDesignErrorBrush}"
+                                                        material:RippleAssist.Feedback="{DynamicResource MaterialDesignErrorBrush}"
+                                                        Foreground="{DynamicResource MaterialDesignErrorBrush}"
                                                         Height="24" 
                                                         Width="24" 
                                                         Padding="0"
@@ -412,8 +412,8 @@
 
                             <Button Style="{StaticResource MaterialDesignFlatButton}"
                                     ToolTip="Add"
-                                    material:RippleAssist.Feedback="{StaticResource MaterialDesignSuccessBrush}"
-                                    Foreground="{StaticResource MaterialDesignSuccessBrush}"
+                                    material:RippleAssist.Feedback="{DynamicResource MaterialDesignSuccessBrush}"
+                                    Foreground="{DynamicResource MaterialDesignSuccessBrush}"
                                     Height="24" 
                                     Width="24" 
                                     Padding="0"

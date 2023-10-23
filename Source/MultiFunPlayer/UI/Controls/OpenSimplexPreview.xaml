@@ -16,19 +16,13 @@
             <DrawingBrush Stretch="None" TileMode="Tile" Viewport="4 8 20 20" ViewportUnits="Absolute">
                 <DrawingBrush.Drawing>
                     <DrawingGroup>
-                        <GeometryDrawing>
-                            <GeometryDrawing.Brush>
-                                <SolidColorBrush Color="#FFF"/>
-                            </GeometryDrawing.Brush>
+                        <GeometryDrawing Brush="{DynamicResource MaterialDesignPrimaryCheckerboxBrush}">
                             <GeometryDrawing.Geometry>
                                 <RectangleGeometry Rect="0 0 20 20" />
                             </GeometryDrawing.Geometry>
                         </GeometryDrawing>
 
-                        <GeometryDrawing>
-                            <GeometryDrawing.Brush>
-                                <SolidColorBrush Color="#f8f8f8"/>
-                            </GeometryDrawing.Brush>
+                        <GeometryDrawing Brush="{DynamicResource MaterialDesignSecondaryCheckerboxBrush}">
                             <GeometryDrawing.Geometry>
                                 <GeometryGroup>
                                     <RectangleGeometry Rect="0 0 10 10" />

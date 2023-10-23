@@ -136,7 +136,7 @@
                     MaxHeight="240">
             <StackPanel Orientation="Horizontal"
                         Margin="12 10 0 5"
-                        Visibility="{Binding ScriptPlaylist, Converter={StaticResource notNullToVisibileConverter}}">
+                        Visibility="{Binding ScriptPlaylist, Converter={StaticResource InvertedNullVisibilityConverter}}">
                 <TextBlock Text="Playlist" 
                            VerticalAlignment="Center"
                            Margin="0 0 15 0"

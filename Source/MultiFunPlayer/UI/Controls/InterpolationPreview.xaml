@@ -16,19 +16,13 @@
             <DrawingBrush Stretch="None" TileMode="Tile" Viewport="4 8 20 20" ViewportUnits="Absolute">
                 <DrawingBrush.Drawing>
                     <DrawingGroup>
-                        <GeometryDrawing>
-                            <GeometryDrawing.Brush>
-                                <SolidColorBrush Color="#FFF"/>
-                            </GeometryDrawing.Brush>
+                        <GeometryDrawing Brush="{DynamicResource MaterialDesignPrimaryCheckerboxBrush}">
                             <GeometryDrawing.Geometry>
                                 <RectangleGeometry Rect="0 0 20 20" />
                             </GeometryDrawing.Geometry>
                         </GeometryDrawing>
 
-                        <GeometryDrawing>
-                            <GeometryDrawing.Brush>
-                                <SolidColorBrush Color="#f8f8f8"/>
-                            </GeometryDrawing.Brush>
+                        <GeometryDrawing Brush="{DynamicResource MaterialDesignSecondaryCheckerboxBrush}">
                             <GeometryDrawing.Geometry>
                                 <GeometryGroup>
                                     <RectangleGeometry Rect="0 0 10 10" />
@@ -43,7 +37,7 @@
         <Canvas ClipToBounds="True">
             <Polyline Points="{Binding CurvePoints, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}"
                       StrokeThickness="1.5" 
-                      Stroke="Black"/>
+                      Stroke="{DynamicResource MaterialDesignBody}"/>
 
             <ItemsControl ItemsSource="{Binding Points, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}">
                 <ItemsControl.ItemsPanel>
@@ -59,7 +53,7 @@
                 </ItemsControl.ItemContainerStyle>
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
-                        <Ellipse Width="6" Height="6" Fill="White" Stroke="Black" StrokeThickness="1">
+                        <Ellipse Width="6" Height="6" Fill="{DynamicResource MaterialDesignCardBackground}" Stroke="{DynamicResource MaterialDesignBody}" StrokeThickness="1">
                             <Ellipse.RenderTransform>
                                 <TranslateTransform X="-3" Y="-3"/>
                             </Ellipse.RenderTransform>

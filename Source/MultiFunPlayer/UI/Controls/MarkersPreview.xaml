@@ -18,19 +18,13 @@
             <DrawingBrush Stretch="None" TileMode="Tile" Viewport="4 0 20 20" ViewportUnits="Absolute">
                 <DrawingBrush.Drawing>
                     <DrawingGroup>
-                        <GeometryDrawing>
-                            <GeometryDrawing.Brush>
-                                <SolidColorBrush Color="#FFF"/>
-                            </GeometryDrawing.Brush>
+                        <GeometryDrawing Brush="{DynamicResource MaterialDesignPrimaryCheckerboxBrush}">
                             <GeometryDrawing.Geometry>
                                 <RectangleGeometry Rect="0 0 20 20" />
                             </GeometryDrawing.Geometry>
                         </GeometryDrawing>
 
-                        <GeometryDrawing>
-                            <GeometryDrawing.Brush>
-                                <SolidColorBrush Color="#f8f8f8"/>
-                            </GeometryDrawing.Brush>
+                        <GeometryDrawing Brush="{DynamicResource MaterialDesignSecondaryCheckerboxBrush}">
                             <GeometryDrawing.Geometry>
                                 <GeometryGroup>
                                     <RectangleGeometry Rect="0 0 10 10" />
@@ -131,7 +125,7 @@
                                 <ColumnDefinition Width="6"/>
                             </Grid.ColumnDefinitions>
 
-                            <Rectangle Stroke="Black"
+                            <Rectangle Stroke="{DynamicResource MaterialDesignBody}"
                                        StrokeThickness="0.5"
                                        Grid.Column="0" 
                                        Grid.ColumnSpan="3"
@@ -146,7 +140,7 @@
                             <Button Grid.Column="0"
                                     Style="{StaticResource ChapterButton}"
                                     BorderThickness="3 0 0 0"
-                                    BorderBrush="Black"
+                                    BorderBrush="{DynamicResource MaterialDesignBody}"
                                     Click="{s:Action OnChapterStartClick}"
                                     MouseEnter="{s:Action OnChapterStartMouseEnter}"
                                     MouseLeave="{s:Action OnChapterStartMouseLeave}"/>
@@ -154,7 +148,7 @@
                             <Button Grid.Column="2"
                                     Style="{StaticResource ChapterButton}"
                                     BorderThickness="0 0 3 0"
-                                    BorderBrush="Black"
+                                    BorderBrush="{DynamicResource MaterialDesignBody}"
                                     Click="{s:Action OnChapterEndClick}"
                                     MouseEnter="{s:Action OnChapterEndMouseEnter}"
                                     MouseLeave="{s:Action OnChapterEndMouseLeave}"/>
@@ -215,7 +209,7 @@
                                 MouseLeave="{s:Action OnBookmarkMouseLeave}"
                                 s:View.ActionTarget="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}">
                             <Button HorizontalAlignment="Stretch"
-                                    Background="Black"
+                                    Background="{DynamicResource MaterialDesignBody}"
                                     BorderThickness="2 0 2 0"
                                     BorderBrush="Transparent"
                                     Style="{StaticResource BookmarkButton}"
@@ -237,8 +231,8 @@
 
             <Canvas ClipToBounds="True"
                     IsHitTestVisible="False">
-                <Border Background="White"
-                        BorderBrush="Black"
+                <Border Background="{DynamicResource MaterialDesignCardBackground}"
+                        BorderBrush="{DynamicResource MaterialDesignBody}"
                         BorderThickness="1 0 1 0"
                         Width="4"
                         SnapsToDevicePixels="True"

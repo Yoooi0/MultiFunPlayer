@@ -1,8 +1,11 @@
-using MaterialDesignColors.ColorManipulation;
+﻿using MaterialDesignColors.ColorManipulation;
+using MaterialDesignThemes.MahApps;
 using MaterialDesignThemes.Wpf;
 using MultiFunPlayer.Common;
 using Newtonsoft.Json.Linq;
 using Stylet;
+using System.Windows;
+using System.Windows.Input;
 using System.Windows.Media;
 
 namespace MultiFunPlayer.UI.Controls.ViewModels;
@@ -17,25 +20,13 @@ internal class ThemeSettingsViewModel : Screen, IHandle<SettingsMessage>
     public bool EnableColorAdjustment { get; set; } = false;
     public Contrast Contrast { get; set; } = Contrast.Medium;
     public double ContrastRatio { get; set; } = 4.5;
+    public bool IsDarkTheme { get; set; } = false;
 
     public ThemeSettingsViewModel(IEventAggregator eventAggregator)
     {
         DisplayName = "Theme";
         eventAggregator.Subscribe(this);
         _paletteHelper = new PaletteHelper();
-
-        if (_paletteHelper.GetTheme() is Theme theme)
-        {
-            IgnorePropertyChanged(() =>
-            {
-                PrimaryColor = theme.PrimaryDark.Color.Lighten();
-
-                var colorAdjustment = new ColorAdjustment();
-                Contrast = colorAdjustment.Contrast;
-                ContrastRatio = colorAdjustment.DesiredContrastRatio;
-            });
-            ApplyTheme();
-        }
     }
 
     protected override void OnPropertyChanged(string propertyName)
@@ -46,7 +37,7 @@ internal class ThemeSettingsViewModel : Screen, IHandle<SettingsMessage>
             return;
 
         if (propertyName is nameof(EnableColorAdjustment) or nameof(PrimaryColor)
-                         or nameof(Contrast) or nameof(ContrastRatio))
+                         or nameof(Contrast) or nameof(ContrastRatio) or nameof(IsDarkTheme))
             ApplyTheme();
     }
 
@@ -54,6 +45,8 @@ internal class ThemeSettingsViewModel : Screen, IHandle<SettingsMessage>
     {
         if (_paletteHelper.GetTheme() is not Theme theme)
             return;
+
+        theme.SetBaseTheme(IsDarkTheme ? Theme.Dark : Theme.Light);
 
         if (EnableColorAdjustment)
             theme.ColorAdjustment ??= new ColorAdjustment();
@@ -67,7 +60,51 @@ internal class ThemeSettingsViewModel : Screen, IHandle<SettingsMessage>
         }
 
         theme.SetPrimaryColor(PrimaryColor);
+        theme.SetSecondaryColor(PrimaryColor);
+
         _paletteHelper.SetTheme(theme);
+        Application.Current.Resources.SetMahApps(theme, IsDarkTheme ? BaseTheme.Dark : BaseTheme.Light);
+
+        var customThemeSource = $"pack://application:,,,/CustomTheme.{(IsDarkTheme ? "Dark" : "Light")}.xaml";
+        var customThemeResource = new ResourceDictionary { Source = new Uri(customThemeSource) };
+
+        AutoUpdateSolidColorBrush("MaterialDesignErrorBrush");
+        AutoUpdateSolidColorBrush("MaterialDesignPendingBrush");
+        AutoUpdateSolidColorBrush("MaterialDesignWarningBrush");
+        AutoUpdateSolidColorBrush("MaterialDesignSuccessBrush");
+
+        AutoUpdateSolidColorBrush("MaterialDesignLightErrorBrush");
+        AutoUpdateSolidColorBrush("MaterialDesignLightPendingBrush");
+        AutoUpdateSolidColorBrush("MaterialDesignLightWarningBrush");
+        AutoUpdateSolidColorBrush("MaterialDesignLightSuccessBrush");
+
+        AutoUpdateSolidColorBrush("MaterialDesignPrimaryCheckerboxBrush");
+        AutoUpdateSolidColorBrush("MaterialDesignSecondaryCheckerboxBrush");
+
+        AutoUpdateSolidColorBrush("MaterialDesignBodyDisabled");
+
+        AutoUpdateSolidColorBrush("MaterialDesignCardBackgroundHover");
+        AutoUpdateSolidColorBrush("MaterialDesignCardBackgroundSelected");
+
+        var invertedLight = IsDarkTheme ? theme.PrimaryDark : theme.PrimaryLight;
+        var invertedDark = IsDarkTheme ? theme.PrimaryLight : theme.PrimaryDark;
+        UpdateSolidColorBrush("InvertedPrimaryHueLightBrush", invertedLight.Color);
+        UpdateSolidColorBrush("InvertedPrimaryHueLightForegroundBrush", invertedLight.ForegroundColor ?? invertedLight.Color.ContrastingForegroundColor());
+        UpdateSolidColorBrush("InvertedPrimaryHueDarkBrush", invertedDark.Color);
+        UpdateSolidColorBrush("InvertedPrimaryHueDarkForegroundBrush", invertedDark.ForegroundColor ?? invertedDark.Color.ContrastingForegroundColor());
+
+        void AutoUpdateSolidColorBrush(string brushName)
+        {
+            var color = (Color)customThemeResource[brushName.Replace("Brush", "Color")];
+            UpdateSolidColorBrush(brushName, color);
+        }
+
+        void UpdateSolidColorBrush(string brushName, Color color)
+        {
+            var brush = new SolidColorBrush(color);
+            brush.Freeze();
+            Application.Current.Resources[brushName] = brush;
+        }
     }
 
     public void Handle(SettingsMessage message)
@@ -82,6 +119,7 @@ internal class ThemeSettingsViewModel : Screen, IHandle<SettingsMessage>
             settings[nameof(PrimaryColor)] = JToken.FromObject(PrimaryColor);
             settings[nameof(Contrast)] = JToken.FromObject(Contrast);
             settings[nameof(ContrastRatio)] = ContrastRatio;
+            settings[nameof(IsDarkTheme)] = IsDarkTheme;
         }
         else if (message.Action == SettingsAction.Loading)
         {
@@ -98,6 +136,8 @@ internal class ThemeSettingsViewModel : Screen, IHandle<SettingsMessage>
                     Contrast = contrast;
                 if (settings.TryGetValue<double>(nameof(ContrastRatio), out var contrastRatio))
                     ContrastRatio = contrastRatio;
+                if (settings.TryGetValue<bool>(nameof(IsDarkTheme), out var isDarkTheme))
+                    IsDarkTheme = isDarkTheme;
             });
             ApplyTheme();
         }

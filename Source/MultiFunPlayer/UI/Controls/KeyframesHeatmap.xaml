@@ -35,19 +35,13 @@
                 <DrawingBrush Stretch="None" TileMode="Tile" Viewport="4 8 20 20" ViewportUnits="Absolute">
                     <DrawingBrush.Drawing>
                         <DrawingGroup>
-                            <GeometryDrawing>
-                                <GeometryDrawing.Brush>
-                                    <SolidColorBrush Color="#FFF"/>
-                                </GeometryDrawing.Brush>
+                            <GeometryDrawing Brush="{DynamicResource MaterialDesignPrimaryCheckerboxBrush}">
                                 <GeometryDrawing.Geometry>
                                     <RectangleGeometry Rect="0 0 20 20" />
                                 </GeometryDrawing.Geometry>
                             </GeometryDrawing>
 
-                            <GeometryDrawing>
-                                <GeometryDrawing.Brush>
-                                    <SolidColorBrush Color="#f8f8f8"/>
-                                </GeometryDrawing.Brush>
+                            <GeometryDrawing Brush="{DynamicResource MaterialDesignSecondaryCheckerboxBrush}">
                                 <GeometryDrawing.Geometry>
                                     <GeometryGroup>
                                         <RectangleGeometry Rect="0 0 10 10" />
@@ -63,7 +57,7 @@
                 <Polygon Points="{Binding Points, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}"
                          Visibility="{Binding ShowStrokeLength, Converter={StaticResource BooleanToVisibilityConverter}, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}"
                          StrokeThickness="0.5"
-                         Stroke="Black">
+                         Stroke="{DynamicResource MaterialDesignBody}">
                     <Polygon.Fill>
                         <LinearGradientBrush StartPoint="0,0" EndPoint="1,0"
                                              GradientStops="{Binding Stops, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}"/>
@@ -80,8 +74,8 @@
                                              GradientStops="{Binding Stops, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}"/>
                     </Rectangle.Fill>
                 </Rectangle>
-                <Border Background="White"
-                        BorderBrush="Black"
+                <Border Background="{DynamicResource MaterialDesignCardBackground}"
+                        BorderBrush="{DynamicResource MaterialDesignBody}"
                         BorderThickness="1 0 1 0"
                         Width="4"
                         SnapsToDevicePixels="True"

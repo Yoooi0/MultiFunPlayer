@@ -8,6 +8,58 @@
     <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
     <material:NotConverter x:Key="NotConverter"/>
 
+    <Color x:Key="Accent100">#cfd8dc</Color>
+    <Color x:Key="Accent100Foreground">#DD000000</Color>
+    <Color x:Key="Accent200">#b0bec5</Color>
+    <Color x:Key="Accent200Foreground">#DD000000</Color>
+    <Color x:Key="Accent400">#78909c</Color>
+    <Color x:Key="Accent400Foreground">#FFFFFFFF</Color>
+    <Color x:Key="Accent700">#455a64</Color>
+    <Color x:Key="Accent700Foreground">#DDFFFFFF</Color>
+
+    <SolidColorBrush x:Key="InvertedPrimaryHueLightBrush" Color="{StaticResource Primary200}" po:Freeze="True" />
+    <SolidColorBrush x:Key="InvertedPrimaryHueLightForegroundBrush" Color="{StaticResource Primary200Foreground}" po:Freeze="True" />
+    <SolidColorBrush x:Key="InvertedPrimaryHueDarkBrush" Color="{StaticResource Primary700}" po:Freeze="True" />
+    <SolidColorBrush x:Key="InvertedPrimaryHueDarkForegroundBrush" Color="{StaticResource Primary700Foreground}" po:Freeze="True" />
+
+    <SolidColorBrush x:Key="SecondaryHueMidBrush" Color="{StaticResource Accent700}" po:Freeze="True" />
+    <SolidColorBrush x:Key="SecondaryHueMidForegroundBrush" Color="{StaticResource Accent700Foreground}" po:Freeze="True" />
+
+    <SolidColorBrush x:Key="MaterialDesignErrorBrush" Color="{StaticResource MaterialDesignErrorColor}" po:Freeze="True" />
+    <SolidColorBrush x:Key="MaterialDesignPendingBrush" Color="{StaticResource MaterialDesignPendingColor}" po:Freeze="True" />
+    <SolidColorBrush x:Key="MaterialDesignWarningBrush" Color="{StaticResource MaterialDesignWarningColor}" po:Freeze="True" />
+    <SolidColorBrush x:Key="MaterialDesignSuccessBrush" Color="{StaticResource MaterialDesignSuccessColor}" po:Freeze="True" />
+
+    <SolidColorBrush x:Key="MaterialDesignLightErrorBrush" Color="{StaticResource MaterialDesignLightErrorColor}" po:Freeze="True" />
+    <SolidColorBrush x:Key="MaterialDesignLightPendingBrush" Color="{StaticResource MaterialDesignLightPendingColor}" po:Freeze="True" />
+    <SolidColorBrush x:Key="MaterialDesignLightWarningBrush" Color="{StaticResource MaterialDesignLightWarningColor}" po:Freeze="True" />
+    <SolidColorBrush x:Key="MaterialDesignLightSuccessBrush" Color="{StaticResource MaterialDesignLightSuccessColor}" po:Freeze="True" />
+
+    <SolidColorBrush x:Key="MaterialDesignPrimaryCheckerboxBrush" Color="{StaticResource MaterialDesignPrimaryCheckerboxColor}" po:Freeze="True" />
+    <SolidColorBrush x:Key="MaterialDesignSecondaryCheckerboxBrush" Color="{StaticResource MaterialDesignSecondaryCheckerboxColor}" po:Freeze="True" />
+
+    <SolidColorBrush x:Key="MaterialDesignBodyDisabled" Color="{StaticResource MaterialDesignBodyDisabled}" po:Freeze="True" />
+
+    <SolidColorBrush x:Key="MaterialDesignCardBackgroundHover" Color="{StaticResource MaterialDesignCardBackgroundHover}" po:Freeze="True" />
+    <SolidColorBrush x:Key="MaterialDesignCardBackgroundSelected" Color="{StaticResource MaterialDesignCardBackgroundSelected}" po:Freeze="True" />
+
+    <Style TargetType="{x:Type TextBlock}" x:Key="ConnectionStatusTextBlock">
+        <Style.Triggers>
+            <DataTrigger Binding="{Binding Status}" Value="Connected">
+                <Setter Property="Foreground" Value="{DynamicResource MaterialDesignSuccessBrush}"/>
+            </DataTrigger>
+            <DataTrigger Binding="{Binding Status}" Value="Disconnected">
+                <Setter Property="Foreground" Value="{DynamicResource MaterialDesignErrorBrush}"/>
+            </DataTrigger>
+            <DataTrigger Binding="{Binding Status}" Value="Connecting">
+                <Setter Property="Foreground" Value="{DynamicResource MaterialDesignPendingBrush}"/>
+            </DataTrigger>
+            <DataTrigger Binding="{Binding Status}" Value="Disconnecting">
+                <Setter Property="Foreground" Value="{DynamicResource MaterialDesignPendingBrush}"/>
+            </DataTrigger>
+        </Style.Triggers>
+    </Style>
+
     <Style TargetType="{x:Type ButtonBase}" x:Key="MaterialDesignProgressToolBarButton">
         <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
         <Setter Property="Padding" Value="0"/>
@@ -141,6 +193,7 @@
                         </AdornerDecorator>
                         <ToggleButton x:Name="PART_Toggle" 
                                       Style="{StaticResource ToggleButtonStyle}" 
+                                      Foreground="{DynamicResource MaterialDesignBody}"
                                       FocusVisualStyle="{x:Null}"
                                       IsChecked="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=IsPopupOpen, Mode=TwoWay}"
                                       Cursor="Hand" 
@@ -570,6 +623,11 @@
     </Style>
 
     <Style TargetType="{x:Type controls:NonReloadingTabControl}">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Foreground" Value="{Binding RelativeSource={RelativeSource AncestorType={x:Type FrameworkElement}}, Path=(TextElement.Foreground)}" />
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+        <Setter Property="VerticalContentAlignment" Value="Stretch" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type controls:NonReloadingTabControl}">
@@ -984,7 +1042,7 @@
                                       HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
                                       VerticalAlignment="{TemplateBinding VerticalContentAlignment}">
 
-                                    <Border Background="{DynamicResource MaterialDesignBackground}"
+                                    <Border Background="{DynamicResource MaterialDesignCardBackground}"
                                             BorderThickness="0 1 0 0"
                                             BorderBrush="{DynamicResource PrimaryHueLightBrush}">
                                         <ContentPresenter Name="PART_Content" Focusable="False"

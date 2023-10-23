@@ -146,7 +146,7 @@
                                         Height="30" 
                                         Width="30" 
                                         Padding="0"
-                                        Visibility="{Binding Value.SettingsView, Converter={StaticResource notNullToVisibileConverter}}"
+                                        Visibility="{Binding Value.SettingsView, Converter={StaticResource InvertedNullVisibilityConverter}}"
                                         Command="{x:Static material:DialogHost.OpenDialogCommand}">
                                     <material:PackIcon Kind="Cog"/>
 
@@ -155,8 +155,8 @@
                                               s:View.ActionTarget="{Binding Value}">
                                             <Button DockPanel.Dock="Top"
                                                     Style="{StaticResource MaterialDesignFlatButton}"
-                                                    material:RippleAssist.Feedback="Black"
-                                                    Foreground="Black"
+                                                    material:RippleAssist.Feedback="{DynamicResource MaterialDesignBody}"
+                                                    Foreground="{DynamicResource MaterialDesignBody}"
                                                     Height="24"
                                                     Width="24"
                                                     Padding="0"
