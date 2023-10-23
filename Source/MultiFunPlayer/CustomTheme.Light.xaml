@@ -12,4 +12,6 @@
 
     <Color x:Key="MaterialDesignPrimaryCheckerboxColor">#FFF</Color>
     <Color x:Key="MaterialDesignSecondaryCheckerboxColor">#F8F8F8</Color>
+
+    <Color x:Key="MaterialDesignBodyDisabled">#80000000</Color>
 </ResourceDictionary>

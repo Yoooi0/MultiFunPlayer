@@ -17,6 +17,11 @@
     <Color x:Key="Accent700">#455a64</Color>
     <Color x:Key="Accent700Foreground">#DDFFFFFF</Color>
 
+    <SolidColorBrush x:Key="InvertedPrimaryHueLightBrush" Color="{StaticResource Primary200}" po:Freeze="True" />
+    <SolidColorBrush x:Key="InvertedPrimaryHueLightForegroundBrush" Color="{StaticResource Primary200Foreground}" po:Freeze="True" />
+    <SolidColorBrush x:Key="InvertedPrimaryHueDarkBrush" Color="{StaticResource Primary700}" po:Freeze="True" />
+    <SolidColorBrush x:Key="InvertedPrimaryHueDarkForegroundBrush" Color="{StaticResource Primary700Foreground}" po:Freeze="True" />
+
     <SolidColorBrush x:Key="SecondaryHueMidBrush" Color="{StaticResource Accent700}" po:Freeze="True" />
     <SolidColorBrush x:Key="SecondaryHueMidForegroundBrush" Color="{StaticResource Accent700Foreground}" po:Freeze="True" />
 
@@ -32,6 +37,8 @@
 
     <SolidColorBrush x:Key="MaterialDesignPrimaryCheckerboxBrush" Color="{StaticResource MaterialDesignPrimaryCheckerboxColor}" po:Freeze="True" />
     <SolidColorBrush x:Key="MaterialDesignSecondaryCheckerboxBrush" Color="{StaticResource MaterialDesignSecondaryCheckerboxColor}" po:Freeze="True" />
+
+    <SolidColorBrush x:Key="MaterialDesignBodyDisabled" Color="{StaticResource MaterialDesignBodyDisabled}" po:Freeze="True" />
 
     <Style TargetType="{x:Type TextBlock}" x:Key="ConnectionStatusTextBlock">
         <Style.Triggers>

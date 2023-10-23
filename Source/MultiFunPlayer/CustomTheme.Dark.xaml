@@ -12,4 +12,6 @@
     
     <Color x:Key="MaterialDesignPrimaryCheckerboxColor">#282828</Color>
     <Color x:Key="MaterialDesignSecondaryCheckerboxColor">#202020</Color>
+    
+    <Color x:Key="MaterialDesignBodyDisabled">#60FFFFFF</Color>
 </ResourceDictionary>

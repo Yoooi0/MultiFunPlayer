@@ -5,6 +5,7 @@ using MultiFunPlayer.Common;
 using Newtonsoft.Json.Linq;
 using Stylet;
 using System.Windows;
+using System.Windows.Input;
 using System.Windows.Media;
 
 namespace MultiFunPlayer.UI.Controls.ViewModels;
@@ -67,22 +68,36 @@ internal class ThemeSettingsViewModel : Screen, IHandle<SettingsMessage>
         var customThemeSource = $"pack://application:,,,/CustomTheme.{(IsDarkTheme ? "Dark" : "Light")}.xaml";
         var customThemeResource = new ResourceDictionary { Source = new Uri(customThemeSource) };
 
-        UpdateSolidColorBrush("MaterialDesignErrorBrush");
-        UpdateSolidColorBrush("MaterialDesignPendingBrush");
-        UpdateSolidColorBrush("MaterialDesignWarningBrush");
-        UpdateSolidColorBrush("MaterialDesignSuccessBrush");
+        AutoUpdateSolidColorBrush("MaterialDesignErrorBrush");
+        AutoUpdateSolidColorBrush("MaterialDesignPendingBrush");
+        AutoUpdateSolidColorBrush("MaterialDesignWarningBrush");
+        AutoUpdateSolidColorBrush("MaterialDesignSuccessBrush");
 
-        UpdateSolidColorBrush("MaterialDesignLightErrorBrush");
-        UpdateSolidColorBrush("MaterialDesignLightPendingBrush");
-        UpdateSolidColorBrush("MaterialDesignLightWarningBrush");
-        UpdateSolidColorBrush("MaterialDesignLightSuccessBrush");
+        AutoUpdateSolidColorBrush("MaterialDesignLightErrorBrush");
+        AutoUpdateSolidColorBrush("MaterialDesignLightPendingBrush");
+        AutoUpdateSolidColorBrush("MaterialDesignLightWarningBrush");
+        AutoUpdateSolidColorBrush("MaterialDesignLightSuccessBrush");
 
-        UpdateSolidColorBrush("MaterialDesignPrimaryCheckerboxBrush");
-        UpdateSolidColorBrush("MaterialDesignSecondaryCheckerboxBrush");
+        AutoUpdateSolidColorBrush("MaterialDesignPrimaryCheckerboxBrush");
+        AutoUpdateSolidColorBrush("MaterialDesignSecondaryCheckerboxBrush");
 
-        void UpdateSolidColorBrush(string brushName)
+        AutoUpdateSolidColorBrush("MaterialDesignBodyDisabled");
+
+        var invertedLight = IsDarkTheme ? theme.PrimaryDark : theme.PrimaryLight;
+        var invertedDark = IsDarkTheme ? theme.PrimaryLight : theme.PrimaryDark;
+        UpdateSolidColorBrush("InvertedPrimaryHueLightBrush", invertedLight.Color);
+        UpdateSolidColorBrush("InvertedPrimaryHueLightForegroundBrush", invertedLight.ForegroundColor ?? invertedLight.Color.ContrastingForegroundColor());
+        UpdateSolidColorBrush("InvertedPrimaryHueDarkBrush", invertedDark.Color);
+        UpdateSolidColorBrush("InvertedPrimaryHueDarkForegroundBrush", invertedDark.ForegroundColor ?? invertedDark.Color.ContrastingForegroundColor());
+
+        void AutoUpdateSolidColorBrush(string brushName)
         {
             var color = (Color)customThemeResource[brushName.Replace("Brush", "Color")];
+            UpdateSolidColorBrush(brushName, color);
+        }
+
+        void UpdateSolidColorBrush(string brushName, Color color)
+        {
             var brush = new SolidColorBrush(color);
             brush.Freeze();
             Application.Current.Resources[brushName] = brush;

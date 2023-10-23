@@ -670,19 +670,16 @@
                                        VerticalAlignment="Center">
                                 <TextBlock.Resources>
                                     <Style TargetType="TextBlock">
-                                        <Setter Property="Foreground" Value="{DynamicResource PrimaryHueLightBrush}"/>
+                                        <Setter Property="Foreground" Value="{DynamicResource MaterialDesignBodyDisabled}"/>
+                                        <Setter Property="FontWeight" Value="Medium"/>
                                         <Style.Triggers>
-                                            <DataTrigger Binding="{Binding Value.Settings.LinkAxis, Converter={StaticResource notNullBooleanConverter}}" Value="True">
-                                                <Setter Property="Foreground" Value="{DynamicResource PrimaryHueMidBrush}"/>
-                                            </DataTrigger>
-                                            <DataTrigger Binding="{Binding Value.Settings.SelectedMotionProvider, Converter={StaticResource notNullBooleanConverter}}" Value="True">
-                                                <Setter Property="Foreground" Value="{DynamicResource PrimaryHueMidBrush}"/>
-                                            </DataTrigger>
                                             <DataTrigger Binding="{Binding Value.Script, Converter={StaticResource notNullBooleanConverter}}" Value="True">
-                                                <Setter Property="Foreground" Value="{DynamicResource MaterialDesignDarkBackground}"/>
+                                                <Setter Property="Foreground" Value="{DynamicResource InvertedPrimaryHueDarkBrush}"/>
+                                                <Setter Property="FontWeight" Value="Black"/>
                                             </DataTrigger>
                                             <DataTrigger Binding="{Binding Value.Settings.BypassScript}" Value="True">
                                                 <Setter Property="Foreground" Value="{DynamicResource MaterialDesignErrorBrush}"/>
+                                                <Setter Property="FontWeight" Value="Black"/>
                                             </DataTrigger>
                                         </Style.Triggers>
                                     </Style>
