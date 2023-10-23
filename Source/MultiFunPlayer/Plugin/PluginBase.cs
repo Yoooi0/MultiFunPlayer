@@ -1,5 +1,6 @@
-using MultiFunPlayer.Common;
+﻿using MultiFunPlayer.Common;
 using MultiFunPlayer.Input;
+using MultiFunPlayer.Property;
 using NLog;
 using Stylet;
 using StyletIoC;
@@ -17,6 +18,7 @@ public abstract class PluginBase : PropertyChangedBase
     [Inject] internal IEventAggregator EventAggregator { get; set; }
     [Inject] internal IShortcutManager ShortcutManager { get; set; }
     [Inject] internal IShortcutBinder ShortcutBinder { get; set; }
+    [Inject] internal IPropertyManager PropertyManager { get; set; }
 
     protected Logger Logger { get; }
 
@@ -86,6 +88,13 @@ public abstract class PluginBase : PropertyChangedBase
         => ShortcutBinder.RemoveBinding(binding);
     protected bool RemoveBinding(IInputGestureDescriptor gestureDescriptor)
         => ShortcutBinder.RemoveBinding(gestureDescriptor);
+    #endregion
+
+    #region Property
+    protected TOut ReadProperty<TOut>(string propertyName, params object[] arguments) => PropertyManager.GetValue<TOut>(propertyName, arguments);
+    protected TOut ReadProperty<TOut>(string propertyName) => PropertyManager.GetValue<TOut>(propertyName);
+    protected TOut ReadProperty<T0, TOut>(string propertyName, T0 arg0) => PropertyManager.GetValue<T0, TOut>(propertyName, arg0);
+    protected TOut ReadProperty<T0, T1, TOut>(string propertyName, T0 arg0, T1 arg1) => PropertyManager.GetValue<T0, T1, TOut>(propertyName, arg0, arg1);
     #endregion
 
     #region Message
