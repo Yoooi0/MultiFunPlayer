@@ -706,7 +706,7 @@
                                                     <Run.Resources>
                                                         <Style TargetType="{x:Type Run}">
                                                             <Setter Property="Text" Value="Disabled"/>
-                                                            <Setter Property="Foreground" Value="#ddd"/>
+                                                            <Setter Property="Foreground" Value="{DynamicResource MaterialDesignPaper}"/>
                                                             <Style.Triggers>
                                                                 <DataTrigger Binding="{Binding Value.Settings.LinkAxis, Converter={StaticResource notNullBooleanConverter}}" Value="True">
                                                                     <Setter Property="Text" Value="Enabled"/>
@@ -728,7 +728,7 @@
                                                     <Run.Resources>
                                                         <Style TargetType="{x:Type Run}">
                                                             <Setter Property="Text" Value="Disabled"/>
-                                                            <Setter Property="Foreground" Value="#ddd"/>
+                                                            <Setter Property="Foreground" Value="{DynamicResource MaterialDesignPaper}"/>
                                                             <Style.Triggers>
                                                                 <DataTrigger Binding="{Binding Value.Settings.SelectedMotionProvider, Converter={StaticResource notNullBooleanConverter}}" Value="True">
                                                                     <Setter Property="Text" Value="Enabled"/>
@@ -747,7 +747,7 @@
                                                                 </DataTrigger>
                                                                 <DataTrigger Binding="{Binding Value.Settings.BypassMotionProvider}" Value="True">
                                                                     <Setter Property="Text" Value="Bypass"/>
-                                                                    <Setter Property="Foreground" Value="#ddd"/>
+                                                                    <Setter Property="Foreground" Value="{DynamicResource MaterialDesignPaper}"/>
                                                                 </DataTrigger>
                                                             </Style.Triggers>
                                                         </Style>
@@ -761,7 +761,7 @@
                                                     <Run.Resources>
                                                         <Style TargetType="{x:Type Run}">
                                                             <Setter Property="Text" Value="Disabled"/>
-                                                            <Setter Property="Foreground" Value="#ddd"/>
+                                                            <Setter Property="Foreground" Value="{DynamicResource MaterialDesignPaper}"/>
                                                             <Style.Triggers>
                                                                 <DataTrigger Binding="{Binding Value.Settings.SpeedLimitEnabled}" Value="True">
                                                             <Setter Property="Text" Value="Enabled"/>
@@ -783,7 +783,7 @@
                                                     <Run.Resources>
                                                         <Style TargetType="{x:Type Run}">
                                                             <Setter Property="Text" Value="Disabled"/>
-                                                            <Setter Property="Foreground" Value="#ddd"/>
+                                                            <Setter Property="Foreground" Value="{DynamicResource MaterialDesignPaper}"/>
                                                             <Style.Triggers>
                                                                 <DataTrigger Binding="{Binding Value.Settings.SmartLimitInputAxis, Converter={StaticResource notNullBooleanConverter}}" Value="True">
                                                                     <Setter Property="Text" Value="Enabled"/>
@@ -805,7 +805,7 @@
                                         <material:PackIcon HorizontalAlignment="Center" VerticalAlignment="Center" Kind="Circle" Width="6" Height="6">
                                             <material:PackIcon.Resources>
                                                 <Style TargetType="material:PackIcon">
-                                                    <Setter Property="Foreground" Value="#ddd"/>
+                                                    <Setter Property="Foreground" Value="{DynamicResource MaterialDesignDivider}"/>
                                                     <Style.Triggers>
                                                         <DataTrigger Binding="{Binding Value.Settings.LinkAxis, Converter={StaticResource notNullBooleanConverter}}" Value="True">
                                                             <Setter Property="Foreground" Value="{DynamicResource MaterialDesignSuccessBrush}"/>
@@ -821,7 +821,7 @@
                                         <material:PackIcon HorizontalAlignment="Center" VerticalAlignment="Center" Kind="Circle" Width="6" Height="6">
                                             <material:PackIcon.Resources>
                                                 <Style TargetType="material:PackIcon">
-                                                    <Setter Property="Foreground" Value="#ddd"/>
+                                                    <Setter Property="Foreground" Value="{DynamicResource MaterialDesignDivider}"/>
                                                     <Style.Triggers>
                                                         <DataTrigger Binding="{Binding Value.Settings.SelectedMotionProvider, Converter={StaticResource notNullBooleanConverter}}" Value="True">
                                                             <Setter Property="Foreground" Value="{DynamicResource MaterialDesignSuccessBrush}"/>
@@ -837,7 +837,7 @@
                                                             <Setter Property="Foreground" Value="{DynamicResource MaterialDesignErrorBrush}"/>
                                                         </DataTrigger>
                                                         <DataTrigger Binding="{Binding Value.Settings.BypassMotionProvider}" Value="True">
-                                                            <Setter Property="Foreground" Value="#ddd"/>
+                                                            <Setter Property="Foreground" Value="{DynamicResource MaterialDesignDivider}"/>
                                                         </DataTrigger>
                                                     </Style.Triggers>
                                                 </Style>
@@ -847,7 +847,7 @@
                                         <material:PackIcon HorizontalAlignment="Center" VerticalAlignment="Center" Kind="Circle" Width="6" Height="6">
                                             <material:PackIcon.Resources>
                                                 <Style TargetType="material:PackIcon">
-                                                    <Setter Property="Foreground" Value="#ddd"/>
+                                                    <Setter Property="Foreground" Value="{DynamicResource MaterialDesignDivider}"/>
                                                     <Style.Triggers>
                                                         <DataTrigger Binding="{Binding Value.Settings.SpeedLimitEnabled}" Value="True">
                                                             <Setter Property="Foreground" Value="{DynamicResource MaterialDesignSuccessBrush}"/>
@@ -863,7 +863,7 @@
                                         <material:PackIcon HorizontalAlignment="Center" VerticalAlignment="Center" Kind="Circle" Width="6" Height="6">
                                             <material:PackIcon.Resources>
                                                 <Style TargetType="material:PackIcon">
-                                                    <Setter Property="Foreground" Value="#ddd"/>
+                                                    <Setter Property="Foreground" Value="{DynamicResource MaterialDesignDivider}"/>
                                                     <Style.Triggers>
                                                         <DataTrigger Binding="{Binding Value.Settings.SmartLimitInputAxis, Converter={StaticResource notNullBooleanConverter}}" Value="True">
                                                             <Setter Property="Foreground" Value="{DynamicResource MaterialDesignSuccessBrush}"/>
