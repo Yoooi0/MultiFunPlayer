@@ -408,32 +408,7 @@
             </Setter.Value>
         </Setter>
     </Style>
-
-    <Style TargetType="{x:Type TabControl}">
-        <Setter Property="Template">
-            <Setter.Value>
-                <ControlTemplate TargetType="TabControl">
-                    <Grid ClipToBounds="True">
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="*" />
-                        </Grid.RowDefinitions>
-                        <TabPanel IsItemsHost="True"
-                                  Grid.Row="0"
-                                  Panel.ZIndex="100" 
-                                  Background="{DynamicResource MaterialDesignToolBarBackground}">
-                            <TabPanel.Effect>
-                                <DropShadowEffect ShadowDepth="0" Direction="270" po:Freeze="True"/>
-                            </TabPanel.Effect>
-                        </TabPanel>
-                        
-                        <ContentPresenter Panel.ZIndex="0" Grid.Row="1" ContentSource="SelectedContent" />
-                    </Grid>
-                </ControlTemplate>
-            </Setter.Value>
-        </Setter>
-    </Style>
-
+    
     <Style x:Key="ScrollBarThumb" TargetType="{x:Type Thumb}">
         <Setter Property="OverridesDefaultStyle" Value="true"/>
         <Setter Property="IsTabStop" Value="false"/>
@@ -530,7 +505,7 @@
         </Setter>
     </Style>
 
-    <Style x:Key="NonReloadingTabControlScrollViewer" TargetType="{x:Type ScrollViewer}">
+    <Style x:Key="TabControlScrollViewer" TargetType="{x:Type ScrollViewer}">
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type ScrollViewer}">
@@ -582,6 +557,54 @@
                             </Trigger.ExitActions>
                         </Trigger>
                     </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style TargetType="{x:Type TabControl}">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Foreground" Value="{Binding RelativeSource={RelativeSource AncestorType={x:Type FrameworkElement}}, Path=(TextElement.Foreground)}" />
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+        <Setter Property="VerticalContentAlignment" Value="Stretch" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type TabControl}">
+                    <Grid ClipToBounds="True">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+                        <DockPanel Grid.Row="0"
+                                   Panel.ZIndex="100"
+                                   Background="{DynamicResource MaterialDesignToolBarBackground}">
+                            <DockPanel.Effect>
+                                <DropShadowEffect ShadowDepth="0" Direction="270" po:Freeze="True"/>
+                            </DockPanel.Effect>
+
+                            <ScrollViewer x:Name="PART_ScrollViewer"
+                                          HorizontalScrollBarVisibility="Auto"
+                                          VerticalScrollBarVisibility="Hidden"
+                                          HorizontalAlignment="Left"
+                                          Style="{StaticResource TabControlScrollViewer}">
+                                <TabPanel x:Name="PART_TabPanel"
+                                          IsItemsHost="True"
+                                          DockPanel.Dock="Left"
+                                          HorizontalAlignment="Left"/>
+                            </ScrollViewer>
+                        </DockPanel>
+
+                        <ContentPresenter x:Name="PART_SelectedContentHost"
+                                          Grid.Row="1"
+                                          Margin="{TemplateBinding Padding}"
+                                          ContentSource="SelectedContent"
+                                          ContentStringFormat="{TemplateBinding SelectedContentStringFormat}"
+                                          ContentTemplate="{TemplateBinding SelectedContentTemplate}"
+                                          ContentTemplateSelector="{TemplateBinding SelectedContentTemplateSelector}"
+                                          Focusable="False"
+                                          SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" />
+                    </Grid>
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
@@ -650,7 +673,7 @@
                                           HorizontalScrollBarVisibility="Auto"
                                           VerticalScrollBarVisibility="Hidden"
                                           HorizontalAlignment="Left"
-                                          Style="{StaticResource NonReloadingTabControlScrollViewer}">
+                                          Style="{StaticResource TabControlScrollViewer}">
                                 <TabPanel x:Name="PART_TabPanel"
                                           IsItemsHost="True"
                                           DockPanel.Dock="Left"

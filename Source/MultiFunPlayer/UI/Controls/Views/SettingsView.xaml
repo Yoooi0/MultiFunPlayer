@@ -41,9 +41,9 @@
                 </Grid>
             </material:ColorZone>
 
-            <ui:NonReloadingTabControl ItemsSource="{Binding Items}" 
-                                       SelectedItem="{Binding ActiveItem}"
-                                       DockPanel.Dock="Bottom">
+            <TabControl ItemsSource="{Binding Items}" 
+                        SelectedItem="{Binding ActiveItem}"
+                        DockPanel.Dock="Bottom">
                 <TabControl.ItemTemplate>
                     <DataTemplate>
                         <Grid>
@@ -61,7 +61,7 @@
                         <ContentControl s:View.Model="{Binding}"/>
                     </DataTemplate>
                 </TabControl.ContentTemplate>
-            </ui:NonReloadingTabControl>
+            </TabControl>
         </DockPanel>
     </material:DialogHost>
 </UserControl>
