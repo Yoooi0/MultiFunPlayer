@@ -692,7 +692,7 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         if (message.Scripts == null || message.Scripts.Count == 0)
             return;
 
-        Logger.Info("Received {name} [Axes: {list}]", nameof(ChangeScriptMessage), message.Scripts.Keys);
+        Logger.Info("Received {name:l} [Axes: {list}]", nameof(ChangeScriptMessage), message.Scripts.Keys);
         ResetSync(true, message.Scripts.Keys);
 
         foreach (var (axis, script) in message.Scripts)
