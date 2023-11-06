@@ -1,4 +1,4 @@
-using MultiFunPlayer.OutputTarget.ViewModels;
+﻿using MultiFunPlayer.OutputTarget.ViewModels;
 using StyletIoC;
 
 namespace MultiFunPlayer.OutputTarget;
@@ -19,9 +19,14 @@ internal class OutputTargetFactory : IOutputTargetFactory
         if (index > MaxInstanceIndex(type))
             return null;
 
-        var eventAggregator = _container.Get<IEventAggregator>();
-        var valueProvider = _container.Get<IDeviceAxisValueProvider>();
-        return (IOutputTarget)Activator.CreateInstance(type, new object[] { index, eventAggregator, valueProvider });
+        var arguments = type.GetConstructors()[0]
+                            .GetParameters()
+                            .Skip(1)
+                            .Select(p => _container.GetTypeOrAll(p.ParameterType))
+                            .Prepend(index)
+                            .ToArray();
+
+        return (IOutputTarget)Activator.CreateInstance(type, arguments);
     }
 
     private int MaxInstanceIndex(Type type)
