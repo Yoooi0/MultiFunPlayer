@@ -1,10 +1,8 @@
 ﻿using MultiFunPlayer.Common;
 using PropertyChanged;
-using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Media;
 
 namespace MultiFunPlayer.UI.Controls;
 

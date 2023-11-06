@@ -19,12 +19,11 @@ public class GamepadAxisGesture : IAxisInputGesture
 {
     private readonly GamepadAxisGestureDescriptor _descriptor;
 
-    public int UserIndex => _descriptor.UserIndex;
-    public GamepadAxis Axis => _descriptor.Axis;
-
     public double Value { get; }
     public double Delta { get; }
 
+    public int UserIndex => _descriptor.UserIndex;
+    public GamepadAxis Axis => _descriptor.Axis;
     public IInputGestureDescriptor Descriptor => _descriptor;
 
     public GamepadAxisGesture(GamepadAxisGestureDescriptor descriptor, double value, double delta)

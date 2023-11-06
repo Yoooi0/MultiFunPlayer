@@ -27,9 +27,9 @@ public class GamepadButtonGesture : ISimpleInputGesture
 {
     private readonly GamepadButtonGestureDescriptor _descriptor;
 
-    public IInputGestureDescriptor Descriptor => _descriptor;
     public int UserIndex => _descriptor.UserIndex;
     public IEnumerable<GamepadVirtualKey> Buttons => _descriptor.Buttons;
+    public IInputGestureDescriptor Descriptor => _descriptor;
 
     public GamepadButtonGesture(GamepadButtonGestureDescriptor descriptor) => _descriptor = descriptor;
 
