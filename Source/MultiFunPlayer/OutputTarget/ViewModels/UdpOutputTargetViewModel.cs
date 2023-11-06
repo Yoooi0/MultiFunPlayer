@@ -1,5 +1,6 @@
 ﻿using MultiFunPlayer.Common;
 using MultiFunPlayer.Input;
+using MultiFunPlayer.Input.TCode;
 using MultiFunPlayer.UI;
 using Newtonsoft.Json.Linq;
 using NLog;
@@ -16,14 +17,19 @@ internal class UdpOutputTargetViewModel : ThreadAbstractOutputTarget
 {
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
+    private readonly TCodeInputProcessor _tcodeInputProcessor;
+
     public override ConnectionStatus Status { get; protected set; }
 
     public bool OffloadElapsedTime { get; set; } = true;
     public bool SendDirtyValuesOnly { get; set; } = false;
     public EndPoint Endpoint { get; set; } = new IPEndPoint(IPAddress.Loopback, 8080);
 
-    public UdpOutputTargetViewModel(int instanceIndex, IEventAggregator eventAggregator, IDeviceAxisValueProvider valueProvider)
-        : base(instanceIndex, eventAggregator, valueProvider) { }
+    public UdpOutputTargetViewModel(int instanceIndex, IEventAggregator eventAggregator, IDeviceAxisValueProvider valueProvider, IEnumerable<IInputProcessor> processors)
+        : base(instanceIndex, eventAggregator, valueProvider)
+    {
+        _tcodeInputProcessor = processors.OfType<TCodeInputProcessor>().First();
+    }
 
     public bool IsConnected => Status == ConnectionStatus.Connected;
     public bool IsConnectBusy => Status == ConnectionStatus.Connecting || Status == ConnectionStatus.Disconnecting;
@@ -55,6 +61,7 @@ internal class UdpOutputTargetViewModel : ThreadAbstractOutputTarget
             EventAggregator.Publish(new SyncRequestMessage());
 
             var buffer = new byte[256];
+            var receiveBuffer = new SplittingStringBuffer('\n');
             var lastSentValues = DeviceAxis.All.ToDictionary(a => a, _ => double.NaN);
             FixedUpdate(() => !token.IsCancellationRequested, elapsed =>
             {
@@ -66,6 +73,10 @@ internal class UdpOutputTargetViewModel : ThreadAbstractOutputTarget
                     var endpoint = new IPEndPoint(IPAddress.Any, 0);
                     var message = Encoding.UTF8.GetString(client.Receive(ref endpoint));
                     Logger.Debug("Received \"{0}\" from \"{1}\"", message, $"udp://{endpoint}");
+
+                    receiveBuffer.Push(message);
+                    foreach (var command in receiveBuffer.Consume())
+                        _tcodeInputProcessor.Parse(command);
                 }
 
                 var values = SendDirtyValuesOnly ? Values.Where(x => DeviceAxis.IsValueDirty(x.Value, lastSentValues[x.Key])) : Values;

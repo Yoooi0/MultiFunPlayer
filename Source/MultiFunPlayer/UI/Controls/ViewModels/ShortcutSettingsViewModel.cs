@@ -1,6 +1,7 @@
 using MultiFunPlayer.Common;
 using MultiFunPlayer.Input;
 using MultiFunPlayer.Input.RawInput;
+using MultiFunPlayer.Input.TCode;
 using MultiFunPlayer.Input.XInput;
 using MultiFunPlayer.UI.Dialogs.ViewModels;
 using Newtonsoft.Json;
@@ -37,6 +38,7 @@ internal class ShortcutSettingsViewModel : Screen, IHandle<SettingsMessage>, IDi
     [JsonProperty] public bool IsMouseButtonGestureEnabled { get; set; } = false;
     [JsonProperty] public bool IsGamepadAxisGestureEnabled { get; set; } = true;
     [JsonProperty] public bool IsGamepadButtonGestureEnabled { get; set; } = true;
+    [JsonProperty] public bool IsTCodeButtonGestureEnabled { get; set; } = true;
 
     public ShortcutSettingsViewModel(IShortcutManager manager, IShortcutBinder binder, IEventAggregator eventAggregator)
     {
@@ -101,6 +103,7 @@ internal class ShortcutSettingsViewModel : Screen, IHandle<SettingsMessage>, IDi
             case MouseButtonGesture when !IsMouseButtonGestureEnabled:
             case GamepadAxisGesture when !IsGamepadAxisGestureEnabled:
             case GamepadButtonGesture when !IsGamepadButtonGestureEnabled:
+            case TCodeButtonGesture when !IsTCodeButtonGestureEnabled:
             case IAxisInputGesture axisGesture when Math.Abs(axisGesture.Delta) < 0.01:
                 return;
         }
@@ -115,7 +118,7 @@ internal class ShortcutSettingsViewModel : Screen, IHandle<SettingsMessage>, IDi
 
         if (!IsKeyboardKeysGestureEnabled && !IsMouseAxisGestureEnabled
         && !IsMouseButtonGestureEnabled && !IsGamepadAxisGestureEnabled
-        && !IsGamepadButtonGestureEnabled)
+        && !IsGamepadButtonGestureEnabled && !IsTCodeButtonGestureEnabled)
             return;
 
         _captureGestureCancellationSource = new CancellationTokenSource();
