@@ -11,7 +11,7 @@ public class MouseButtonGesture : ISimpleInputGesture
 {
     private readonly MouseButtonGestureDescriptor _descriptor;
 
-    public MouseButton Button { get; }
+    public MouseButton Button => _descriptor.Button;
     public IInputGestureDescriptor Descriptor => _descriptor;
 
     public MouseButtonGesture(MouseButtonGestureDescriptor descriptor) => _descriptor = descriptor;
