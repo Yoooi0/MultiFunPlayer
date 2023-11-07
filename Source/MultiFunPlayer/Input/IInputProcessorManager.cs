@@ -1,4 +1,4 @@
-﻿namespace MultiFunPlayer.Input;
+namespace MultiFunPlayer.Input;
 
 internal interface IInputProcessorManager : IDisposable
 {
@@ -63,7 +63,7 @@ internal class InputProcessorManager : IInputProcessorManager
 
     protected virtual void Dispose(bool disposing)
     {
-        foreach (var processor in _processors)
+        foreach (var processor in _processors.ToList())
             RemoveProcessor(processor);
     }
 
