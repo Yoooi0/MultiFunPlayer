@@ -254,10 +254,12 @@ internal class ShortcutSettingsViewModel : Screen, IHandle<SettingsMessage>, IDi
                 IsMouseAxisGestureEnabled = isMouseAxisGestureEnabled;
             if (settings.TryGetValue<bool>(nameof(IsMouseButtonGestureEnabled), out var isMouseButtonGestureEnabled))
                 IsMouseButtonGestureEnabled = isMouseButtonGestureEnabled;
-            if (settings.TryGetValue<bool>(nameof(IsGamepadAxisGestureEnabled), out var isHidAxisGestureEnabled))
-                IsGamepadAxisGestureEnabled = isHidAxisGestureEnabled;
-            if (settings.TryGetValue<bool>(nameof(IsGamepadButtonGestureEnabled), out var isHidButtonGestureEnabled))
-                IsGamepadButtonGestureEnabled = isHidButtonGestureEnabled;
+            if (settings.TryGetValue<bool>(nameof(IsGamepadAxisGestureEnabled), out var isGamepadAxisGestureEnabled))
+                IsGamepadAxisGestureEnabled = isGamepadAxisGestureEnabled;
+            if (settings.TryGetValue<bool>(nameof(IsGamepadButtonGestureEnabled), out var isGamepadButtonGestureEnabled))
+                IsGamepadButtonGestureEnabled = isGamepadButtonGestureEnabled;
+            if (settings.TryGetValue<bool>(nameof(IsTCodeButtonGestureEnabled), out var isTCodeButtonGestureEnabled))
+                IsTCodeButtonGestureEnabled = isTCodeButtonGestureEnabled;
 
             if (settings.TryGetValue<List<ShortcutBinding>>(nameof(Bindings), out var bindings))
             {
