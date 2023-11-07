@@ -17,7 +17,7 @@ internal class UdpOutputTargetViewModel : ThreadAbstractOutputTarget
 {
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
-    private readonly TCodeInputProcessor _tcodeInputProcessor;
+    private readonly IInputProcessorManager _inputManager;
 
     public override ConnectionStatus Status { get; protected set; }
 
@@ -25,10 +25,10 @@ internal class UdpOutputTargetViewModel : ThreadAbstractOutputTarget
     public bool SendDirtyValuesOnly { get; set; } = false;
     public EndPoint Endpoint { get; set; } = new IPEndPoint(IPAddress.Loopback, 8080);
 
-    public UdpOutputTargetViewModel(int instanceIndex, IEventAggregator eventAggregator, IDeviceAxisValueProvider valueProvider, IEnumerable<IInputProcessor> processors)
+    public UdpOutputTargetViewModel(int instanceIndex, IEventAggregator eventAggregator, IDeviceAxisValueProvider valueProvider, IInputProcessorManager inputManager)
         : base(instanceIndex, eventAggregator, valueProvider)
     {
-        _tcodeInputProcessor = processors.OfType<TCodeInputProcessor>().First();
+        _inputManager = inputManager;
     }
 
     public bool IsConnected => Status == ConnectionStatus.Connected;
@@ -60,6 +60,8 @@ internal class UdpOutputTargetViewModel : ThreadAbstractOutputTarget
         {
             EventAggregator.Publish(new SyncRequestMessage());
 
+            using var _ = _inputManager.Register<TCodeInputProcessor>(out var tcodeInputProcessor);
+
             var buffer = new byte[256];
             var receiveBuffer = new SplittingStringBuffer('\n');
             var lastSentValues = DeviceAxis.All.ToDictionary(a => a, _ => double.NaN);
@@ -76,7 +78,7 @@ internal class UdpOutputTargetViewModel : ThreadAbstractOutputTarget
 
                     receiveBuffer.Push(message);
                     foreach (var command in receiveBuffer.Consume())
-                        _tcodeInputProcessor.Parse(command);
+                        tcodeInputProcessor.Parse(command);
                 }
 
                 var values = SendDirtyValuesOnly ? Values.Where(x => DeviceAxis.IsValueDirty(x.Value, lastSentValues[x.Key])) : Values;

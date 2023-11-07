@@ -3,12 +3,6 @@ using NLog;
 
 namespace MultiFunPlayer.Input;
 
-internal class GestureEventArgs : EventArgs
-{
-    public GestureEventArgs(IInputGesture gesture) => Gesture = gesture;
-    public IInputGesture Gesture { get; }
-}
-
 internal interface IShortcutManager : IDisposable
 {
     event EventHandler<string> ActionRegistered;
