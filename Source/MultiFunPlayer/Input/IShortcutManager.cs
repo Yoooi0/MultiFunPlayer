@@ -175,12 +175,7 @@ internal class ShortcutManager : IShortcutManager
         if (!_actions.TryGetValue(actionName, out var action))
             return false;
 
-        if (gestureDescriptor is ISimpleInputGestureDescriptor)
-            return action.Arguments.Count == 0 || !action.Arguments[0].IsAssignableTo(typeof(IInputGesture)) || typeof(ISimpleInputGesture).IsAssignableTo(action.Arguments[0]);
-        else if (gestureDescriptor is IAxisInputGestureDescriptor)
-            return action.Arguments.Count > 0 && typeof(IAxisInputGesture).IsAssignableTo(action.Arguments[0]);
-
-        return false;
+        return action.AcceptsGesture(gestureDescriptor);
     }
 
     public IShortcutActionConfiguration CreateShortcutActionConfigurationInstance(string actionName)
@@ -202,12 +197,7 @@ internal class ShortcutManager : IShortcutManager
         if (!_actions.TryGetValue(actionConfiguration.Name, out var action))
             return;
 
-        if (action.Arguments.Count == 0)
-            action.Invoke();
-        else if (action.Arguments[0].IsAssignableTo(typeof(IInputGesture)))
-            action.Invoke(actionConfiguration.GetActionParams(gesture));
-        else
-            action.Invoke(actionConfiguration.GetActionParams());
+        action.Invoke(actionConfiguration, gesture);
     }
 
     public void Invoke(string actionName)

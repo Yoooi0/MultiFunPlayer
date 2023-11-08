@@ -1,26 +1,44 @@
-﻿namespace MultiFunPlayer.Input;
+﻿using System;
+
+namespace MultiFunPlayer.Input;
 
 internal interface IShortcutAction
 {
-    IReadOnlyList<Type> Arguments { get; }
-
     void Invoke(params object[] arguments);
+    void Invoke(IShortcutActionConfiguration actionConfiguration, IInputGesture gesture);
+    bool AcceptsGesture(IInputGestureDescriptor gestureDescriptor);
 }
 
 internal abstract class AbstractShortcutAction : IShortcutAction
 {
-    private IReadOnlyList<Type> _arguments;
+    private readonly IReadOnlyList<Type> _arguments;
 
-    public IReadOnlyList<Type> Arguments
+    protected AbstractShortcutAction()
     {
-        get
-        {
-            _arguments ??= GetType().GetGenericArguments().AsReadOnly();
-            return _arguments;
-        }
+        _arguments ??= GetType().GetGenericArguments().AsReadOnly();
     }
 
     public abstract void Invoke(params object[] arguments);
+
+    public void Invoke(IShortcutActionConfiguration actionConfiguration, IInputGesture gesture)
+    {
+        if (_arguments.Count == 0)
+            Invoke();
+        else if (_arguments[0].IsAssignableTo(typeof(IInputGesture)))
+            Invoke(actionConfiguration.GetActionParams(gesture));
+        else
+            Invoke(actionConfiguration.GetActionParams());
+    }
+
+    public bool AcceptsGesture(IInputGestureDescriptor gestureDescriptor)
+    {
+        if (gestureDescriptor is ISimpleInputGestureDescriptor)
+            return _arguments.Count == 0 || !_arguments[0].IsAssignableTo(typeof(IInputGesture)) || typeof(ISimpleInputGesture).IsAssignableTo(_arguments[0]);
+        else if (gestureDescriptor is IAxisInputGestureDescriptor)
+            return _arguments.Count > 0 && typeof(IAxisInputGesture).IsAssignableTo(_arguments[0]);
+
+        return false;
+    }
 
     protected bool GetArgument<T>(object argument, out T value)
     {
