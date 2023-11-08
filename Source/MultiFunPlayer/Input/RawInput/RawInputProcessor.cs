@@ -17,7 +17,7 @@ internal class RawInputProcessor : IInputProcessor
 
     private long _lastMouseAxisTimestamp;
     private double _mouseXAxis, _mouseYAxis;
-    private double _lastMouseXAxis, _lastMouseYAxis;
+    private double _mouseDeltaXAccum, _mouseDeltaYAccum;
     private double _mouseWheelAxis, _mouseHorizontalWheelAxis;
 
     public event EventHandler<IInputGesture> OnGesture;
@@ -27,7 +27,6 @@ internal class RawInputProcessor : IInputProcessor
         _pressedKeys = new HashSet<Key>();
         _lastMouseAxisTimestamp = 0;
         _mouseXAxis = _mouseYAxis = 0.5;
-        _lastMouseXAxis = _lastMouseYAxis = 0.5;
         _mouseWheelAxis = _mouseHorizontalWheelAxis = 0.5;
     }
 
@@ -109,27 +108,27 @@ internal class RawInputProcessor : IInputProcessor
             }
         }
 
-        _mouseXAxis = MathUtils.Clamp01(_mouseXAxis + data.Mouse.LastX / 500d);
-        _mouseYAxis = MathUtils.Clamp01(_mouseYAxis + data.Mouse.LastY / 500d);
+        var deltaX = data.Mouse.LastX / 500d;
+        var deltaY = data.Mouse.LastY / 500d;
+
+        _mouseDeltaXAccum += deltaX;
+        _mouseDeltaYAccum += deltaY;
+        _mouseXAxis = MathUtils.Clamp01(_mouseXAxis + deltaX);
+        _mouseYAxis = MathUtils.Clamp01(_mouseYAxis + deltaY);
 
         var timestamp = Stopwatch.GetTimestamp();
         if ((timestamp - _lastMouseAxisTimestamp) / (double)Stopwatch.Frequency >= 0.01)
         {
             _lastMouseAxisTimestamp = timestamp;
 
-            var deltaX = _mouseXAxis - _lastMouseXAxis;
-            var deltaY = _mouseYAxis - _lastMouseYAxis;
-            if (Math.Abs(deltaX) > 0.000001)
-            {
-                HandleGesture(MouseAxisGesture.Create(MouseAxis.X, _mouseXAxis, deltaX));
-                _lastMouseXAxis = _mouseXAxis;
-            }
+            if (Math.Abs(_mouseDeltaXAccum) > 0.000001)
+                HandleGesture(MouseAxisGesture.Create(MouseAxis.X, _mouseXAxis, _mouseDeltaXAccum));
 
-            if (Math.Abs(deltaY) > 0.000001)
-            {
-                HandleGesture(MouseAxisGesture.Create(MouseAxis.Y, _mouseYAxis, deltaY));
-                _lastMouseYAxis = _mouseYAxis;
-            }
+            if (Math.Abs(_mouseDeltaYAccum) > 0.000001)
+                HandleGesture(MouseAxisGesture.Create(MouseAxis.Y, _mouseYAxis, _mouseDeltaYAccum));
+
+            _mouseDeltaXAccum = 0;
+            _mouseDeltaYAccum = 0;
         }
     }
 
