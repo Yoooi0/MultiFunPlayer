@@ -8,12 +8,12 @@ internal interface IShortcutActionConfigurationBuilder
 internal class ShortcutActionConfigurationBuilder : IShortcutActionConfigurationBuilder
 {
     private readonly string _actionName;
-    private readonly List<IShortcutSettingBuilder> _builders;
+    private readonly IShortcutSettingBuilder[] _builders;
 
     public ShortcutActionConfigurationBuilder(string actionName, params IShortcutSettingBuilder[] builders)
     {
         _actionName = actionName;
-        _builders = new List<IShortcutSettingBuilder>(builders);
+        _builders = builders;
     }
 
     public IShortcutActionConfiguration Build() => new ShortcutActionConfiguration(_actionName, _builders.Select(b => b.Build()));

@@ -16,5 +16,5 @@ public class TCodeButtonGesture : ISimpleInputGesture
 
     public override string ToString() => $"[TCode Button: {Button}]";
 
-    public static TCodeButtonGesture Create(string button, bool state) => new(new(button));
+    public static TCodeButtonGesture Create(string button) => new(new(button));
 }

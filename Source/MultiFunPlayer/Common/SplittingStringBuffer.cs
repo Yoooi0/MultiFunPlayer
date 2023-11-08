@@ -30,8 +30,8 @@ internal class SplittingStringBuffer
         if (_index == 0)
             yield break;
 
+        int endIndex;
         var startIndex = 0;
-        var endIndex = -1;
         while ((endIndex = Array.IndexOf(_buffer, _separator, startIndex)) >= 0)
         {
             yield return new string(_buffer.AsSpan(new Range(startIndex, endIndex)));

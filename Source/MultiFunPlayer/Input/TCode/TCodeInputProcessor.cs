@@ -22,8 +22,8 @@ internal class TCodeInputProcessor : IInputProcessor
         {
             var button = buttonMatch.Groups[1].Value;
             var state = int.Parse(buttonMatch.Groups[2].Value) == 1;
-            if (_buttonStates.ContainsKey(button) && !state && _buttonStates[button])
-                HandleGesture(TCodeButtonGesture.Create(button, state));
+            if (!state && _buttonStates.TryGetValue(button, out var lastState) && lastState)
+                HandleGesture(TCodeButtonGesture.Create(button));
 
             _buttonStates[button] = state;
         }
