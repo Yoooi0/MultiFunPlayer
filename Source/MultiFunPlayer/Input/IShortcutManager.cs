@@ -205,7 +205,7 @@ internal class ShortcutManager : IShortcutManager
         if (action.Arguments.Count == 0)
             action.Invoke();
         else if (action.Arguments[0].IsAssignableTo(typeof(IInputGesture)))
-            action.Invoke(actionConfiguration.GetActionParamsWithGesture(gesture));
+            action.Invoke(actionConfiguration.GetActionParams(gesture));
         else
             action.Invoke(actionConfiguration.GetActionParams());
     }
