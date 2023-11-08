@@ -1200,7 +1200,7 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         lock (state)
         {
             var fromValue = double.IsFinite(state.Value) ? state.Value : axis.DefaultValue;
-            var toValue = offset ? fromValue + value : value;
+            var toValue = MathUtils.Clamp01(offset ? fromValue + value : value);
             state.ExternalTransition.Reset(fromValue, toValue, duration);
         }
     }
