@@ -13,4 +13,5 @@ public interface IAxisInputGesture : IInputGesture
 {
     double Value { get; }
     double Delta { get; }
+    double DeltaTime { get; }
 }

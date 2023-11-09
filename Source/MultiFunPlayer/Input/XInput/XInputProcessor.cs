@@ -1,6 +1,7 @@
 using MultiFunPlayer.Common;
 using Newtonsoft.Json;
 using NLog;
+using System.Diagnostics;
 using Vortice.XInput;
 
 namespace MultiFunPlayer.Input.XInput;
@@ -44,8 +45,12 @@ internal class XInputProcessor : IInputProcessor
             Logger.Debug("User: {0}, Capabilities: {1}", i, JsonConvert.SerializeObject(capabilities, Formatting.None));
         }
 
+        var stopwatch = Stopwatch.StartNew();
         while (!token.IsCancellationRequested)
         {
+            var elapsed = stopwatch.ElapsedTicks / (double)Stopwatch.Frequency;
+            stopwatch.Restart();
+
             for (var i = 0; i < _states.Length; i++)
             {
                 if (!Vortice.XInput.XInput.GetState(i, out var state))
@@ -59,7 +64,7 @@ internal class XInputProcessor : IInputProcessor
                 if (lastState.PacketNumber == state.PacketNumber)
                     continue;
 
-                ParseStateGestures(i, ref lastState.Gamepad, ref state.Gamepad);
+                ParseStateGestures(i, ref lastState.Gamepad, ref state.Gamepad, elapsed);
                 _states[i] = state;
             }
 
@@ -83,20 +88,20 @@ internal class XInputProcessor : IInputProcessor
         }
     }
 
-    private void ParseStateGestures(int userIndex, ref Gamepad last, ref Gamepad current)
+    private void ParseStateGestures(int userIndex, ref Gamepad last, ref Gamepad current, double elapsed)
     {
         void CreateAxisGestureShort(short last, short current, GamepadAxis axis)
         {
             var delta = (double)(current - last) / ushort.MaxValue;
             var value = MathUtils.Map(current, short.MinValue, short.MaxValue, 0, 1);
-            HandleGesture(GamepadAxisGesture.Create(userIndex, axis, value, delta));
+            HandleGesture(GamepadAxisGesture.Create(userIndex, axis, value, delta, elapsed));
         }
 
         void CreateAxisGestureByte(byte last, byte current, GamepadAxis axis)
         {
             var delta = (double)(current - last) / byte.MaxValue;
             var value = MathUtils.Map(current, byte.MinValue, byte.MaxValue, 0, 1);
-            HandleGesture(GamepadAxisGesture.Create(userIndex, axis, value, delta));
+            HandleGesture(GamepadAxisGesture.Create(userIndex, axis, value, delta, elapsed));
         }
 
         if (current.RightThumbX != last.RightThumbX) CreateAxisGestureShort(last.RightThumbX, current.RightThumbX, GamepadAxis.RightThumbX);

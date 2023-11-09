@@ -19,19 +19,21 @@ public class MouseAxisGesture : IAxisInputGesture
 
     public double Value { get; }
     public double Delta { get; }
+    public double DeltaTime { get; }
     public MouseAxis Axis => _descriptor.Axis;
 
     public IInputGestureDescriptor Descriptor => _descriptor;
 
-    public MouseAxisGesture(MouseAxisGestureDescriptor descriptor, double value, double delta)
+    public MouseAxisGesture(MouseAxisGestureDescriptor descriptor, double value, double delta, double deltaTime)
     {
         _descriptor = descriptor;
 
         Value = value;
         Delta = delta;
+        DeltaTime = deltaTime;
     }
 
     public override string ToString() => $"[Mouse Axis: {Axis}, Value: {Value}, Delta: {Delta}]";
 
-    public static MouseAxisGesture Create(MouseAxis axis, double value, double delta) => new(new(axis), value, delta);
+    public static MouseAxisGesture Create(MouseAxis axis, double value, double delta, double deltaTime) => new(new(axis), value, delta, deltaTime);
 }

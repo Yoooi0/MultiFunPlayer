@@ -1653,7 +1653,7 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
 
         s.RegisterAction<IAxisInputGesture, DeviceAxis>("Axis::Value::Drive",
             s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All),
-            (gesture, axis) => SetAxisTransition(axis, gesture.Delta, duration: 0, offset: true));
+            (gesture, axis) => SetAxisTransition(axis, gesture.Delta, gesture.DeltaTime, offset: true));
         #endregion
 
         #region Axis::Sync

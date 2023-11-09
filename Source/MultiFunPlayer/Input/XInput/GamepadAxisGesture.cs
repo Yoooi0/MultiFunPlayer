@@ -21,20 +21,22 @@ public class GamepadAxisGesture : IAxisInputGesture
 
     public double Value { get; }
     public double Delta { get; }
+    public double DeltaTime { get; }
 
     public int UserIndex => _descriptor.UserIndex;
     public GamepadAxis Axis => _descriptor.Axis;
     public IInputGestureDescriptor Descriptor => _descriptor;
 
-    public GamepadAxisGesture(GamepadAxisGestureDescriptor descriptor, double value, double delta)
+    public GamepadAxisGesture(GamepadAxisGestureDescriptor descriptor, double value, double delta, double deltaTime)
     {
         _descriptor = descriptor;
 
         Value = value;
         Delta = delta;
+        DeltaTime = deltaTime;
     }
 
     public override string ToString() => $"[Gamepad Axis: {UserIndex}/{Axis}, Value: {Value}, Delta: {Delta}]";
 
-    public static GamepadAxisGesture Create(int userIndex, GamepadAxis axis, double value, double delta) => new(new(userIndex, axis), value, delta);
+    public static GamepadAxisGesture Create(int userIndex, GamepadAxis axis, double value, double delta, double deltaTime) => new(new(userIndex, axis), value, delta, deltaTime);
 }
