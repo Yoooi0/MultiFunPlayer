@@ -119,6 +119,8 @@ internal class XInputProcessor : IInputProcessor
 
     protected virtual void Dispose(bool disposing)
     {
+        Vortice.XInput.XInput.SetReporting(false);
+
         _cancellationSource?.Cancel();
         _thread?.Join();
         _cancellationSource?.Dispose();
