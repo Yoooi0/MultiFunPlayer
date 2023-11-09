@@ -304,12 +304,10 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                 {
                     if (settings.BypassTransition)
                         return false;
-                    if (state.ExternalTransition.Completed)
+                    if (!state.ExternalTransition.Update(deltaTime))
                         return false;
 
-                    var value = state.ExternalTransition.Value;
-                    state.ExternalTransition.Update(deltaTime);
-                    context.TransitionValue = value;
+                    context.TransitionValue = state.ExternalTransition.GetValue();
                     return context.IsTransitionDirty;
                 }
             }
@@ -2106,12 +2104,28 @@ internal class AxisValueTransition
     private double _duration;
     private double _time;
 
-    public double Value => _duration > 0.00001 ? MathUtils.Lerp(_fromValue, _toValue, MathUtils.Clamp01(_time / _duration)) : _toValue;
-    public bool Completed => !_initialized || (_time >= 0 && _time >= _duration);
-
     public AxisValueTransition() => _initialized = false;
 
-    public void Update(double deltaTime) => _time = _time < 0 ? deltaTime : _time + deltaTime;
+    public bool Update(double deltaTime)
+    {
+        if (!_initialized)
+            return false;
+        if (_time >= 0 && _time >= _duration)
+            return false;
+
+        _time = _time < 0 ? deltaTime : _time + deltaTime;
+        return true;
+    }
+
+    public double GetValue()
+    {
+        if (_duration < 0.00001)
+            return _toValue;
+
+        var t = MathUtils.Clamp01(_time / _duration);
+        return MathUtils.Lerp(_fromValue, _toValue, t);
+    }
+
     public void Reset(double fromValue, double toValue, double duration)
     {
         _initialized = true;
