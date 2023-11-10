@@ -84,6 +84,17 @@
 
             <DockPanel LastChildFill="True" Margin="0 0 0 10">
                 <DockPanel DockPanel.Dock="Left">
+                    <DockPanel.Resources>
+                        <Style TargetType="{x:Type DockPanel}">
+                            <Setter Property="IsEnabled" Value="False" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding Status}" Value="Disconnected">
+                                    <Setter Property="IsEnabled" Value="True" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </DockPanel.Resources>
+                    
                     <TextBlock VerticalAlignment="Center" Text="Source axis:" Margin="0 0 10 0"/>
                     <ComboBox Width="50"
                               material:TextFieldAssist.HasClearButton="True"
