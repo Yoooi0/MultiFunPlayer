@@ -109,6 +109,15 @@ internal abstract class AbstractOutputTarget : Screen, IOutputTarget
         }
     }
 
+    protected (DeviceAxis, DeviceAxisScriptSnapshot) WaitForSnapshotAny(IEnumerable<DeviceAxis> axes, CancellationToken cancellationToken)
+        => _valueProvider.WaitForSnapshotAny(axes, cancellationToken);
+    protected ValueTask<(DeviceAxis, DeviceAxisScriptSnapshot)> WaitForSnapshotAnyAsync(IEnumerable<DeviceAxis> axes, CancellationToken cancellationToken)
+        => _valueProvider.WaitForSnapshotAnyAsync(axes, cancellationToken);
+    protected (bool, DeviceAxisScriptSnapshot) WaitForSnapshot(DeviceAxis axis, CancellationToken cancellationToken)
+        => _valueProvider.WaitForSnapshot(axis, cancellationToken);
+    protected ValueTask<(bool, DeviceAxisScriptSnapshot)> WaitForSnapshotAsync(DeviceAxis axis, CancellationToken cancellationToken)
+        => _valueProvider.WaitForSnapshotAsync(axis, cancellationToken);
+
     protected virtual double CoerceProviderValue(DeviceAxis axis, double value)
     {
         if (!double.IsFinite(value))
@@ -414,6 +423,39 @@ internal abstract class ThreadAbstractOutputTarget : AbstractOutputTarget
                 stopwatch.SleepPrecise(UpdateInterval);
         }
     }
+
+    protected void PooledUpdate(IEnumerable<DeviceAxis> axes, Func<bool> condition, Action<DeviceAxis, DeviceAxisScriptSnapshot, double> body, CancellationToken cancellationToken)
+    {
+        axes ??= DeviceAxis.All;
+
+        var stopwatches = axes.ToDictionary(a => a, _ => new Stopwatch());
+        while (condition())
+        {
+            (var axis, var snapshot) = WaitForSnapshotAny(axes, cancellationToken);
+
+            var stopwatch = stopwatches[axis];
+            var elapsed = stopwatch.ElapsedTicks / (double)Stopwatch.Frequency;
+            stopwatch.Restart();
+
+            body(axis, snapshot, elapsed);
+        }
+    }
+
+    protected void PooledUpdate(DeviceAxis axis, Func<bool> condition, Action<DeviceAxisScriptSnapshot, double> body, CancellationToken cancellationToken)
+    {
+        var stopwatch = new Stopwatch();
+        while (condition())
+        {
+            (var success, var snapshot) = WaitForSnapshot(axis, cancellationToken);
+            if (!success)
+                return;
+
+            var elapsed = stopwatch.ElapsedTicks / (double)Stopwatch.Frequency;
+            stopwatch.Restart();
+
+            body(snapshot, elapsed);
+        }
+    }
 }
 
 internal abstract class AsyncAbstractOutputTarget : AbstractOutputTarget
@@ -494,5 +536,38 @@ internal abstract class AsyncAbstractOutputTarget : AbstractOutputTarget
         }
 
         timer.Dispose();
+    }
+
+    protected async Task PooledUpdateAsync(IEnumerable<DeviceAxis> axes, Func<bool> condition, Action<DeviceAxis, DeviceAxisScriptSnapshot, double> body, CancellationToken cancellationToken)
+    {
+        axes ??= DeviceAxis.All;
+
+        var stopwatches = axes.ToDictionary(a => a, _ => new Stopwatch());
+        while (condition())
+        {
+            (var axis, var snapshot) = await WaitForSnapshotAnyAsync(axes, cancellationToken);
+
+            var stopwatch = stopwatches[axis];
+            var elapsed = stopwatch.ElapsedTicks / (double)Stopwatch.Frequency;
+            stopwatch.Restart();
+
+            body(axis, snapshot, elapsed);
+        }
+    }
+
+    protected async Task PooledUpdateAsync(DeviceAxis axis, Func<bool> condition, Action<DeviceAxisScriptSnapshot, double> body, CancellationToken cancellationToken)
+    {
+        var stopwatch = new Stopwatch();
+        while (condition())
+        {
+            (var success, var snapshot) = await WaitForSnapshotAsync(axis, cancellationToken);
+            if (!success)
+                return;
+
+            var elapsed = stopwatch.ElapsedTicks / (double)Stopwatch.Frequency;
+            stopwatch.Restart();
+
+            body(snapshot, elapsed);
+        }
     }
 }

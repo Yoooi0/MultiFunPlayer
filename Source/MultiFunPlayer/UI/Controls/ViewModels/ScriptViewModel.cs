@@ -118,7 +118,7 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         const double uiUpdateInterval = 1d / 60d;
         const double mediaLoopUpdateInterval = 1d / 10d;
 
-        var contexts = DeviceAxis.All.ToDictionary(a => a, a => new AxisStateUpdateContext(AxisStates[a]));
+        var contexts = DeviceAxis.All.ToDictionary(a => a, a => new AxisStateUpdateContext(AxisModels[a]));
 
         var uiUpdateTime = 0d;
         var mediaLoopUpdateTime = 0d;
@@ -147,10 +147,7 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
             }
 
             foreach (var axis in DeviceAxis.All)
-            {
-                Monitor.Enter(AxisStates[axis]);
                 contexts[axis].BeginUpdate();
-            }
 
             var dirty = false;
             foreach (var axis in DeviceAxis.All)
@@ -164,10 +161,7 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
             }
 
             foreach (var axis in DeviceAxis.All)
-            {
                 contexts[axis].EndUpdate(deltaTime);
-                Monitor.Exit(AxisStates[axis]);
-            }
 
             return dirty;
 
@@ -720,6 +714,26 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
 
     private double GetAxisPosition(DeviceAxis axis) => MediaPosition - GlobalOffset - AxisSettings[axis].Offset;
     public double GetValue(DeviceAxis axis) => MathUtils.Clamp01(AxisStates[axis].Value);
+
+    public (DeviceAxis, DeviceAxisScriptSnapshot) WaitForSnapshotAny(IEnumerable<DeviceAxis> axes, CancellationToken cancellationToken)
+    {
+        axes ??= DeviceAxis.All;
+        var (index, snapshot) = BroadcastEvent<DeviceAxisScriptSnapshot>.WaitAny(axes.Select(a => AxisStates[a].ScriptSnapshotEvent).ToArray(), cancellationToken);
+        return (axes.ElementAt(index), snapshot);
+    }
+
+    public async ValueTask<(DeviceAxis, DeviceAxisScriptSnapshot)> WaitForSnapshotAnyAsync(IEnumerable<DeviceAxis> axes, CancellationToken cancellationToken)
+    {
+        axes ??= DeviceAxis.All;
+        var (index, snapshot) = await BroadcastEvent<DeviceAxisScriptSnapshot>.WaitAnyAsync(axes.Select(a => AxisStates[a].ScriptSnapshotEvent).ToArray(), cancellationToken);
+        return (axes.ElementAt(index), snapshot);
+    }
+
+    public (bool, DeviceAxisScriptSnapshot) WaitForSnapshot(DeviceAxis axis, CancellationToken cancellationToken)
+        => AxisStates[axis].ScriptSnapshotEvent.WaitOne(cancellationToken);
+
+    public async ValueTask<(bool, DeviceAxisScriptSnapshot)> WaitForSnapshotAsync(DeviceAxis axis, CancellationToken cancellationToken)
+        => await AxisStates[axis].ScriptSnapshotEvent.WaitOneAsync(cancellationToken);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private double GetSyncProgress(double time, double duration) => MathUtils.Clamp01(Math.Pow(2, -10 * MathUtils.Clamp01(time / duration)));
@@ -2036,6 +2050,9 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
 
         _cancellationSource = null;
         _updateThread = null;
+
+        foreach (var (_, state) in AxisStates)
+            state.ScriptSnapshotEvent.Dispose();
     }
 
     public void Dispose()
@@ -2073,6 +2090,7 @@ internal partial class AxisState
     [DoNotNotify] public double Speed { get; set; } = double.NaN;
 
     [DoNotNotify] public AxisValueTransition ExternalTransition { get; } = new AxisValueTransition();
+    [DoNotNotify] public BroadcastEvent<DeviceAxisScriptSnapshot> ScriptSnapshotEvent { get; } = new BroadcastEvent<DeviceAxisScriptSnapshot>(false);
 
     [DoNotNotify] public int Index { get; set; } = InvalidIndex;
     [DoNotNotify] public bool Invalid => Index == InvalidIndex;
@@ -2124,6 +2142,7 @@ internal class AxisValueTransition
 
 internal class AxisStateUpdateContext
 {
+    private readonly AxisModel _model;
     private readonly AxisState _state;
 
     public int Index { get; set; }
@@ -2167,10 +2186,16 @@ internal class AxisStateUpdateContext
     private static bool ValueChanged(double last, double current, double epsilon)
         => Math.Abs(last - current) > epsilon || (double.IsFinite(current) ^ double.IsFinite(last));
 
-    public AxisStateUpdateContext(AxisState state) => _state = state;
+    public AxisStateUpdateContext(AxisModel model)
+    {
+        _model = model;
+        _state = model.State;
+    }
 
     public void BeginUpdate()
     {
+        Monitor.Enter(_state);
+
         Value = double.NaN;
         ScriptValue = double.NaN;
         TransitionValue = double.NaN;
@@ -2186,6 +2211,18 @@ internal class AxisStateUpdateContext
         if (double.IsFinite(Value) && double.IsFinite(LastValue))
             _state.Speed = (LastValue - Value) / deltaTime;
 
+        if (LastIndex != Index)
+        {
+            var keyframes = _model.Script?.Keyframes;
+            _state.ScriptSnapshotEvent.Set(new DeviceAxisScriptSnapshot()
+            {
+                KeyframeFrom = keyframes?.ValidateIndex(Index) == true ? keyframes[Index] : null,
+                KeyframeTo = keyframes?.ValidateIndex(Index + 1) == true ? keyframes[Index + 1] : null,
+                IndexFrom = Index,
+                IndexTo = Index + 1
+            });
+        }
+
         _state.Index = Index;
         _state.Value = Value;
         _state.ScriptValue = ScriptValue;
@@ -2196,6 +2233,8 @@ internal class AxisStateUpdateContext
         _state.IsAutoHoming = IsAutoHoming;
         _state.IsSpeedLimited = IsSpeedLimited;
         _state.IsSmartLimited = IsSmartLimited;
+
+        Monitor.Exit(_state);
     }
 }
 
