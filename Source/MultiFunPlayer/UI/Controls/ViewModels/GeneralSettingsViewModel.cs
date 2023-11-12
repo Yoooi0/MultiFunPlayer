@@ -1,4 +1,4 @@
-﻿using MultiFunPlayer.Common;
+using MultiFunPlayer.Common;
 using Newtonsoft.Json.Linq;
 using NLog;
 using NLog.Config;
@@ -14,7 +14,7 @@ internal class GeneralSettingsViewModel : Screen, IHandle<SettingsMessage>, IHan
 
     private readonly IStyletLoggerManager _styletLoggerManager;
 
-    public ObservableConcurrentCollection<LogLevel> LogLevels { get; }
+    public IReadOnlyCollection<LogLevel> LogLevels { get; }
 
     public LogLevel SelectedLogLevel { get; set; } = LogLevel.Info;
     public bool EnableUILogging { get; set; } = false;
@@ -28,7 +28,7 @@ internal class GeneralSettingsViewModel : Screen, IHandle<SettingsMessage>, IHan
         eventAggregator.Subscribe(this);
 
         _styletLoggerManager = styletLoggerManager;
-        LogLevels = new ObservableConcurrentCollection<LogLevel>(LogLevel.AllLevels);
+        LogLevels = LogLevel.AllLevels.ToList().AsReadOnly();
     }
 
     public void OnAlwaysOnTopChanged()

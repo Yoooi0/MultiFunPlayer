@@ -33,8 +33,6 @@ internal class InformationMessageDialogViewModel : Screen
         });
     }
 
-    public override bool Equals(object obj)
-        => obj != null && GetType() == obj.GetType();
-
-    public override int GetHashCode() => VersionText.GetHashCode();
+    public override bool Equals(object obj) => obj != null && GetType() == obj.GetType();
+    public override int GetHashCode() => HashCode.Combine(GetType());
 }
