@@ -5,6 +5,7 @@ using NLog.Config;
 using Stylet;
 using System.Diagnostics;
 using System.Windows;
+using System.Windows.Controls;
 
 namespace MultiFunPlayer.UI.Controls.ViewModels;
 
@@ -21,6 +22,7 @@ internal class GeneralSettingsViewModel : Screen, IHandle<SettingsMessage>, IHan
     public bool AllowWindowResize { get; set; } = false;
     public bool AlwaysOnTop { get; set; } = false;
     public bool ShowErrorDialogs { get; set; } = true;
+    public Orientation AppOrientation { get; set; } = Orientation.Vertical;
 
     public GeneralSettingsViewModel(IStyletLoggerManager styletLoggerManager, IEventAggregator eventAggregator)
     {
@@ -66,6 +68,18 @@ internal class GeneralSettingsViewModel : Screen, IHandle<SettingsMessage>, IHan
         }
     }
 
+    public void OnAppOrientationChanged()
+    {
+        var window = Application.Current.MainWindow;
+        if (window == null)
+            return;
+
+        if (AppOrientation == Orientation.Vertical)
+            window.Width = window.MinWidth = window.MaxWidth = 600;
+        else if (AppOrientation == Orientation.Horizontal)
+            window.Width = window.MinWidth = window.MaxWidth = 1200;
+    }
+
     public void OnSelectedLogLevelChanged()
     {
         static LoggingRule GetRuleWithTarget(string targetName)
@@ -92,6 +106,7 @@ internal class GeneralSettingsViewModel : Screen, IHandle<SettingsMessage>, IHan
             message.Settings["LogLevel"] = JToken.FromObject(SelectedLogLevel ?? LogLevel.Info);
             message.Settings[nameof(EnableUILogging)] = EnableUILogging;
             message.Settings[nameof(AllowWindowResize)] = AllowWindowResize;
+            message.Settings[nameof(AppOrientation)] = JToken.FromObject(AppOrientation);
         }
         else if (message.Action == SettingsAction.Loading)
         {
@@ -105,6 +120,8 @@ internal class GeneralSettingsViewModel : Screen, IHandle<SettingsMessage>, IHan
                 EnableUILogging = enableUILogging;
             if (message.Settings.TryGetValue<bool>(nameof(AllowWindowResize), out var allowWindowResize))
                 AllowWindowResize = allowWindowResize;
+            if (message.Settings.TryGetValue<Orientation>(nameof(AppOrientation), out var appOrientation))
+                AppOrientation = appOrientation;
         }
     }
 
@@ -112,5 +129,6 @@ internal class GeneralSettingsViewModel : Screen, IHandle<SettingsMessage>, IHan
     {
         OnAlwaysOnTopChanged();
         OnAllowWindowResizeChanged();
+        OnAppOrientationChanged();
     }
 }

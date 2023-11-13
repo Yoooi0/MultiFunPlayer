@@ -5,6 +5,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:ui="clr-namespace:MultiFunPlayer.UI"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800"
              x:ClassModifier="internal">
@@ -32,6 +33,17 @@
                 <CheckBox IsChecked="{Binding AllowWindowResize}"
                           DockPanel.Dock="Left"
                           Margin="0 0 10 0"/>
+            </DockPanel>
+
+            <DockPanel LastChildFill="False"
+                       DockPanel.Dock="Top">
+                <TextBlock Text="App Orientation:"
+                           DockPanel.Dock="Left"
+                           VerticalAlignment="Center"
+                           Margin="0 0 10 0"/>
+
+                <ComboBox SelectedItem="{Binding AppOrientation}"
+                          ItemsSource="{Binding Source={ui:EnumBindingSource {x:Type Orientation}}}"/>
             </DockPanel>
 
             <DockPanel LastChildFill="False"
