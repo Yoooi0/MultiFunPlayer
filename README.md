@@ -8,8 +8,13 @@
 
 # About
 
-MultiFunPlayer is a simple app to synchronize your devices (e.g. [OSR](https://www.patreon.com/tempestvr) or [buttplug.io](https://buttplug.io) supported devices) with any video using funscripts. Supported video players are [DeoVR](https://deovr.com/), [MPV](https://mpv.io/), [MPC-HC/BE](https://github.com/clsid2/mpc-hc), [HereSphere](https://store.steampowered.com/app/1234730/HereSphere/) and [Whirligig](http://whirligig.xyz/).
-The player's main feature is the ability to play multiple funscripts at the same time, allowing for greater movement fidelity.
+MultiFunPlayer synchronizes your devices (e.g. [OSR](https://www.patreon.com/tempestvr) or [buttplug.io](https://buttplug.io)) with your video files using funscripts. The player has the ability to synchronize multiple devices with multiple funscripts at the same time enabling enhanced experience.
+
+# Downloads
+
+* ![release](https://img.shields.io/github/v/release/Yoooi0/MultiFunPlayer?logo=github&label=latest%20release&labelColor=blue&color=blue&link=https%3A%2F%2Fgithub.com%2FYoooi0%2FMultiFunPlayer%2Freleases%2Flatest)
+* ![pre-release](https://img.shields.io/github/actions/workflow/status/Yoooi0/MultiFunPlayer/ci.yml?logo=github&labelColor=green&color=green&label=latest%20pre-release&link=https%3A%2F%2Fgithub.com%2FYoooi0%2FMultiFunPlayer%2Factions)
+* ![patreon](https://img.shields.io/badge/patreon%20builds-orange?logo=patreon&link=https%3A%2F%2Fwww.patreon.com%2Fyoooi)
 
 # Patreon only features
 
