@@ -1,4 +1,4 @@
-using Microsoft.WindowsAPICodePack.Dialogs;
+using Microsoft.Win32;
 using MultiFunPlayer.Common;
 using MultiFunPlayer.UI;
 using Newtonsoft.Json.Linq;
@@ -98,15 +98,11 @@ internal class FileOutputTargetViewModel : ThreadAbstractOutputTarget
 
     public void OnSetOutputDirectory()
     {
-        var dialog = new CommonOpenFileDialog()
-        {
-            IsFolderPicker = true
-        };
-
-        if (dialog.ShowDialog() != CommonFileDialogResult.Ok)
+        var dialog = new OpenFolderDialog();
+        if (dialog.ShowDialog() != true)
             return;
 
-        OutputDirectory = new DirectoryInfo(dialog.FileName);
+        OutputDirectory = new DirectoryInfo(dialog.FolderName);
     }
 
     public override void HandleSettings(JObject settings, SettingsAction action)

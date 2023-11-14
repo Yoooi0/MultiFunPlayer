@@ -1,4 +1,4 @@
-using Microsoft.WindowsAPICodePack.Dialogs;
+using Microsoft.Win32;
 using MultiFunPlayer.Common;
 using MultiFunPlayer.Input;
 using MultiFunPlayer.UI;
@@ -232,13 +232,14 @@ internal class MpvMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlayP
 
     public void OnLoadExecutable()
     {
-        var dialog = new CommonOpenFileDialog()
+        var dialog = new OpenFileDialog()
         {
-            EnsureFileExists = true
+            CheckFileExists = true,
+            CheckPathExists = true,
+            Filter = "Executable files (*.exe)|*.exe"
         };
-        dialog.Filters.Add(new CommonFileDialogFilter("Executable files", "*.exe"));
 
-        if (dialog.ShowDialog() != CommonFileDialogResult.Ok)
+        if (dialog.ShowDialog() != true)
             return;
 
         if (!string.Equals(Path.GetFileNameWithoutExtension(dialog.FileName), "mpv", StringComparison.OrdinalIgnoreCase))

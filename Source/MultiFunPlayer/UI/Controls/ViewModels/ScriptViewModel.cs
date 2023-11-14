@@ -8,7 +8,6 @@ using System.IO.Compression;
 using PropertyChanged;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json;
-using Microsoft.WindowsAPICodePack.Dialogs;
 using System.ComponentModel;
 using NLog;
 using System.Runtime.CompilerServices;
@@ -22,6 +21,7 @@ using MultiFunPlayer.MediaSource.MediaResource.Modifier.ViewModels;
 using MultiFunPlayer.MotionProvider.ViewModels;
 using System.Windows.Controls.Primitives;
 using MultiFunPlayer.Property;
+using Microsoft.Win32;
 
 namespace MultiFunPlayer.UI.Controls.ViewModels;
 
@@ -1173,14 +1173,15 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
 
     public void OnAxisLoad(DeviceAxis axis)
     {
-        var dialog = new CommonOpenFileDialog()
+        var dialog = new OpenFileDialog()
         {
+            CheckFileExists = true,
+            CheckPathExists = true,
             InitialDirectory = Directory.Exists(MediaResource?.Source) ? MediaResource.Source : string.Empty,
-            EnsureFileExists = true
+            Filter = "Funscript files (*.funscript)|*.funscript"
         };
-        dialog.Filters.Add(new CommonFileDialogFilter("Funscript files", "*.funscript"));
 
-        if (dialog.ShowDialog() != CommonFileDialogResult.Ok)
+        if (dialog.ShowDialog() != true)
             return;
 
         SetScriptFromReader(FunscriptReader.Default.FromPath(dialog.FileName), axis);
@@ -1387,13 +1388,13 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         if (MediaResource?.IsUrl != true)
             return;
 
-        var dialog = new CommonOpenFileDialog()
+        var dialog = new OpenFileDialog()
         {
-            IsFolderPicker = false,
-            EnsureFileExists = true
+            CheckFileExists = true,
+            CheckPathExists = true
         };
 
-        if (dialog.ShowDialog() != CommonFileDialogResult.Ok)
+        if (dialog.ShowDialog() != true)
             return;
 
         MediaPathModifiers.Add(new FindReplaceMediaPathModifierViewModel()
@@ -1409,16 +1410,11 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
     #region ScriptLibrary
     public void OnLibraryAdd(object sender, RoutedEventArgs e)
     {
-        //TODO: remove dependency once /dotnet/wpf/issues/438 is resolved
-        var dialog = new CommonOpenFileDialog()
-        {
-            IsFolderPicker = true
-        };
-
-        if (dialog.ShowDialog() != CommonFileDialogResult.Ok)
+        var dialog = new OpenFolderDialog();
+        if (dialog.ShowDialog() != true)
             return;
 
-        var directory = new DirectoryInfo(dialog.FileName);
+        var directory = new DirectoryInfo(dialog.FolderName);
         ScriptLibraries.Add(new ScriptLibrary(directory));
         ReloadAxes(null);
     }

@@ -1,4 +1,4 @@
-﻿using Microsoft.WindowsAPICodePack.Dialogs;
+﻿using Microsoft.Win32;
 using MultiFunPlayer.Common;
 using MultiFunPlayer.Input;
 using Newtonsoft.Json;
@@ -65,14 +65,14 @@ internal class LoopingScriptMotionProviderViewModel(DeviceAxis target, IEventAgg
 
     public void SelectScript()
     {
-        var dialog = new CommonOpenFileDialog()
+        var dialog = new OpenFileDialog()
         {
-            IsFolderPicker = false,
-            EnsureFileExists = true
+            CheckFileExists = true,
+            CheckPathExists = true,
+            Filter = "Funscript files (*.funscript)|*.funscript"
         };
-        dialog.Filters.Add(new CommonFileDialogFilter("Funscript files", "*.funscript"));
 
-        if (dialog.ShowDialog() != CommonFileDialogResult.Ok)
+        if (dialog.ShowDialog() != true)
             return;
 
         SourceFile = new FileInfo(dialog.FileName);

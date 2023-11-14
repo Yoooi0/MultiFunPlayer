@@ -3,9 +3,9 @@ using PropertyChanged;
 using System.IO;
 using System.Net;
 using MultiFunPlayer.Common;
-using Microsoft.WindowsAPICodePack.Dialogs;
 using System.Net.Http;
 using System.ComponentModel;
+using Microsoft.Win32;
 
 namespace MultiFunPlayer.MediaSource.MediaResource.Modifier.ViewModels;
 
@@ -99,14 +99,10 @@ internal class UriToLocalMediaPathModifierViewModel : AbstractMediaPathModifier
 
     public void SelectMediaDirectory()
     {
-        var dialog = new CommonOpenFileDialog()
-        {
-            IsFolderPicker = true
-        };
-
-        if (dialog.ShowDialog() != CommonFileDialogResult.Ok)
+        var dialog = new OpenFolderDialog();
+        if (dialog.ShowDialog() != true)
             return;
 
-        MediaDirectory = new DirectoryInfo(dialog.FileName);
+        MediaDirectory = new DirectoryInfo(dialog.FolderName);
     }
 }
