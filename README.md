@@ -106,5 +106,5 @@ Once your video player and output are connected, the funscripts can be loaded in
 
 # Prerequisites
 
-* [.NET 7.0 x64 Desktop Runtime](https://dotnet.microsoft.com/en-us/download/dotnet/7.0/runtime)
+* [.NET 8.0 x64 Desktop Runtime](https://dotnet.microsoft.com/en-us/download/dotnet/8.0/runtime)
 * [Visual C++ 2019 x64 Redistributable](https://aka.ms/vs/17/release/vc_redist.x64.exe)
