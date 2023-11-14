@@ -13,25 +13,14 @@ public record MouseAxisGestureDescriptor(MouseAxis Axis) : IAxisInputGestureDesc
     public override string ToString() => $"[Mouse Axis: {Axis}]";
 }
 
-public class MouseAxisGesture : IAxisInputGesture
+public class MouseAxisGesture(MouseAxisGestureDescriptor descriptor, double value, double delta, double deltaTime) : IAxisInputGesture
 {
-    private readonly MouseAxisGestureDescriptor _descriptor;
+    public double Value { get; } = value;
+    public double Delta { get; } = delta;
+    public double DeltaTime { get; } = deltaTime;
+    public MouseAxis Axis => descriptor.Axis;
 
-    public double Value { get; }
-    public double Delta { get; }
-    public double DeltaTime { get; }
-    public MouseAxis Axis => _descriptor.Axis;
-
-    public IInputGestureDescriptor Descriptor => _descriptor;
-
-    public MouseAxisGesture(MouseAxisGestureDescriptor descriptor, double value, double delta, double deltaTime)
-    {
-        _descriptor = descriptor;
-
-        Value = value;
-        Delta = delta;
-        DeltaTime = deltaTime;
-    }
+    public IInputGestureDescriptor Descriptor => descriptor;
 
     public override string ToString() => $"[Mouse Axis: {Axis}, Value: {Value}, Delta: {Delta}]";
 

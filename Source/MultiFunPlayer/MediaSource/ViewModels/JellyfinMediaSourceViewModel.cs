@@ -39,7 +39,7 @@ internal class JellyfinMediaSourceViewModel : AbstractMediaSource, IHandle<Media
             SingleWriter = true,
         });
 
-        Devices = new ObservableConcurrentCollection<JellyfinDevice>();
+        Devices = [];
         SelectedDevice = null;
     }
 

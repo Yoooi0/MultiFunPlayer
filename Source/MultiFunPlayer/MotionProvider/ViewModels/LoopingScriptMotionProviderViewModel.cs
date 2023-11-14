@@ -11,7 +11,7 @@ namespace MultiFunPlayer.MotionProvider.ViewModels;
 
 [DisplayName("Looping Script")]
 [JsonObject(MemberSerialization = MemberSerialization.OptIn)]
-internal class LoopingScriptMotionProviderViewModel : AbstractMotionProvider
+internal class LoopingScriptMotionProviderViewModel(DeviceAxis target, IEventAggregator eventAggregator) : AbstractMotionProvider(target, eventAggregator)
 {
     private double _time;
 
@@ -23,9 +23,6 @@ internal class LoopingScriptMotionProviderViewModel : AbstractMotionProvider
 
     [JsonProperty] public FileInfo SourceFile { get; set; } = null;
     [JsonProperty] public InterpolationType InterpolationType { get; set; } = InterpolationType.Pchip;
-
-    public LoopingScriptMotionProviderViewModel(DeviceAxis target, IEventAggregator eventAggregator)
-        : base(target, eventAggregator) { }
 
     public void OnSourceFileChanged()
     {

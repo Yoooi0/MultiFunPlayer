@@ -10,8 +10,7 @@ public class EnumBindingSourceExtension : MarkupExtension
         get => _enumType;
         set
         {
-            if (value == null)
-                throw new ArgumentNullException(nameof(value));
+            ArgumentNullException.ThrowIfNull(value);
 
             var enumType = Nullable.GetUnderlyingType(value) ?? value;
             if (!enumType.IsEnum)

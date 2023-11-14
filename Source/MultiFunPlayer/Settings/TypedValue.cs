@@ -2,18 +2,13 @@
 
 namespace MultiFunPlayer.Settings;
 
-public class TypedValue
+public class TypedValue(Type type, object value)
 {
     [JsonProperty("$type")]
-    public Type Type { get; }
-    public object Value { get; }
+    public Type Type { get; } = type;
+    public object Value { get; } = value;
 
     public TypedValue(object value) : this(value.GetType(), value) { }
-    public TypedValue(Type type, object value)
-    {
-        Type = type;
-        Value = value;
-    }
 
     public void Deconstruct(out Type type, out object value)
     {

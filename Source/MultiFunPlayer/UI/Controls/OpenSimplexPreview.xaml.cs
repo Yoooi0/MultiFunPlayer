@@ -100,7 +100,7 @@ internal partial class OpenSimplexPreview : UserControl
         void AddPoint(double x, double y)
             => Points.Add(new Point(x / Length * ActualWidth, (y + 1) / 2 * ActualHeight));
 
-        Points = new PointCollection();
+        Points = [];
 
         var step = Length / PointCount;
         for (var x = 0d; x < Length; x += step)

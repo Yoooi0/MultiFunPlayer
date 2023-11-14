@@ -37,7 +37,7 @@ internal class CustomCurveMotionProviderViewModel : AbstractMotionProvider
     public CustomCurveMotionProviderViewModel(DeviceAxis target, IEventAggregator eventAggregator)
         : base(target, eventAggregator)
     {
-        Points = new ObservableConcurrentCollection<Point> { new Point() };
+        Points = [new()];
         _pendingRefreshFlag = 1;
 
         ResetState(true);
@@ -151,7 +151,7 @@ internal class CustomCurveMotionProviderViewModel : AbstractMotionProvider
         #region CustomCurveMotionProvider::InterpolationType
         s.RegisterAction<DeviceAxis, InterpolationType>($"MotionProvider::{name}::InterpolationType::Set",
             s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All),
-            s => s.WithLabel("Interpolation type").WithItemsSource(EnumUtils.GetValues<InterpolationType>()),
+            s => s.WithLabel("Interpolation type").WithItemsSource(Enum.GetValues<InterpolationType>()),
             (axis, interpolationType) => UpdateProperty(axis, p => p.InterpolationType = interpolationType));
         #endregion
 
@@ -203,7 +203,7 @@ internal class CustomCurveMotionProviderViewModel : AbstractMotionProvider
     private partial record PointsActionSettingsViewModel(ObservableConcurrentCollection<Point> Points, double Duration, InterpolationType InterpolationType)
     {
         public PointsActionSettingsViewModel()
-            : this(new ObservableConcurrentCollection<Point>() { new Point(0.5, 0.5) }, 1, InterpolationType.Linear)
+            : this([new(0.5, 0.5)], 1, InterpolationType.Linear)
         { }
 
         [JsonIgnore]

@@ -6,7 +6,7 @@ public class KeyframeCollection : IReadOnlyList<Keyframe>
 {
     private readonly List<Keyframe> _items;
 
-    public KeyframeCollection() => _items = new List<Keyframe>();
+    public KeyframeCollection() => _items = [];
     public KeyframeCollection(int capacity) => _items = new List<Keyframe>(capacity);
 
     public void Add(TimeSpan position, double value) => Add(position.TotalSeconds, value);

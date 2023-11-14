@@ -1,13 +1,10 @@
-﻿namespace MultiFunPlayer.UI.Dialogs.ViewModels;
+﻿using PropertyChanged;
+using Stylet;
 
-internal class TextInputMessageDialogViewModel
+namespace MultiFunPlayer.UI.Dialogs.ViewModels;
+
+internal class TextInputMessageDialogViewModel(string label, string initialValue = null) : Screen
 {
-    public string Label { get; }
-    public string Value { get; set; }
-
-    public TextInputMessageDialogViewModel(string label, string initialValue = null)
-    {
-        Label = label;
-        Value = initialValue;
-    }
+    public string Label { get; } = label;
+    public string Value { get; set; } = initialValue;
 }

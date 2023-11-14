@@ -64,8 +64,8 @@ internal class ButtplugOutputTargetViewModel : AsyncAbstractOutputTarget
     public ButtplugOutputTargetViewModel(int instanceIndex, IEventAggregator eventAggregator, IDeviceAxisValueProvider valueProvider)
         : base(instanceIndex, eventAggregator, valueProvider)
     {
-        AvailableDevices = new ObservableConcurrentCollection<ButtplugDevice>();
-        DeviceSettings = new ObservableConcurrentCollection<ButtplugDeviceSettings>();
+        AvailableDevices = [];
+        DeviceSettings = [];
         UpdateInterval = 50;
 
         AvailableDevices.CollectionChanged += (s, e) => DeviceSettings.Refresh();

@@ -512,7 +512,7 @@ internal class InternalMediaSourceViewModel : AbstractMediaSource, IHandle<Media
                              .Where(f => string.Equals(f.Extension, ".funscript", StringComparison.OrdinalIgnoreCase))
                              .ToList();
 
-            _items ??= new List<PlaylistItem>();
+            _items ??= [];
         }
 
         public Playlist(IEnumerable<string> files)
@@ -565,17 +565,14 @@ internal class InternalMediaSourceViewModel : AbstractMediaSource, IHandle<Media
         public event PropertyChangedEventHandler PropertyChanged;
     }
 
-    internal class PlaylistItem : PropertyChangedBase
+    internal class PlaylistItem(string path) : PropertyChangedBase
     {
-        private readonly FileInfo _source;
+        private readonly FileInfo _source = new(path);
 
         public string Name => _source.Name;
         public string FullName => _source.FullName;
         public string Extension => _source.Extension;
         public bool Exists => _source.Exists;
-
-        public PlaylistItem(string path)
-            => _source = new FileInfo(path);
 
         public FileInfo AsFileInfo() => _source;
         public PlaylistItem AsRefreshed()

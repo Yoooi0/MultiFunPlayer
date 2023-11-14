@@ -23,15 +23,11 @@ public record GamepadButtonGestureDescriptor : ISimpleInputGestureDescriptor
     public override string ToString() => $"[Gamepad Buttons: {UserIndex}/{Buttons}]";
 }
 
-public class GamepadButtonGesture : ISimpleInputGesture
+public class GamepadButtonGesture(GamepadButtonGestureDescriptor descriptor) : ISimpleInputGesture
 {
-    private readonly GamepadButtonGestureDescriptor _descriptor;
-
-    public int UserIndex => _descriptor.UserIndex;
-    public IEnumerable<GamepadVirtualKey> Buttons => _descriptor.Buttons;
-    public IInputGestureDescriptor Descriptor => _descriptor;
-
-    public GamepadButtonGesture(GamepadButtonGestureDescriptor descriptor) => _descriptor = descriptor;
+    public int UserIndex => descriptor.UserIndex;
+    public IEnumerable<GamepadVirtualKey> Buttons => descriptor.Buttons;
+    public IInputGestureDescriptor Descriptor => descriptor;
 
     internal static GamepadButtonGesture Create(int userIndex, IEnumerable<GamepadVirtualKey> buttons) => new(new(userIndex, buttons));
 }

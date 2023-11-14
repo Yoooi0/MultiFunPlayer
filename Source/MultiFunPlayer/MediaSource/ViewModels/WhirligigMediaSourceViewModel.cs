@@ -15,16 +15,13 @@ using System.Text.RegularExpressions;
 namespace MultiFunPlayer.MediaSource.ViewModels;
 
 [DisplayName("Whirligig")]
-internal class WhirligigMediaSourceViewModel : AbstractMediaSource
+internal class WhirligigMediaSourceViewModel(IShortcutManager shortcutManager, IEventAggregator eventAggregator) : AbstractMediaSource(shortcutManager, eventAggregator)
 {
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
     public override ConnectionStatus Status { get; protected set; }
 
     public EndPoint Endpoint { get; set; } = new IPEndPoint(IPAddress.Loopback, 2000);
-
-    public WhirligigMediaSourceViewModel(IShortcutManager shortcutManager, IEventAggregator eventAggregator)
-        : base(shortcutManager, eventAggregator) { }
 
     public bool IsConnected => Status == ConnectionStatus.Connected;
     public bool IsConnectBusy => Status == ConnectionStatus.Connecting || Status == ConnectionStatus.Disconnecting;

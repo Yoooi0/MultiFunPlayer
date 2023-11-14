@@ -13,23 +13,16 @@ using System.Text;
 namespace MultiFunPlayer.OutputTarget.ViewModels;
 
 [DisplayName("UDP")]
-internal class UdpOutputTargetViewModel : ThreadAbstractOutputTarget
+internal class UdpOutputTargetViewModel(int instanceIndex, IEventAggregator eventAggregator, IDeviceAxisValueProvider valueProvider, IInputProcessorManager inputManager)
+    : ThreadAbstractOutputTarget(instanceIndex, eventAggregator, valueProvider)
 {
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
-
-    private readonly IInputProcessorManager _inputManager;
 
     public override ConnectionStatus Status { get; protected set; }
 
     public bool OffloadElapsedTime { get; set; } = true;
     public bool SendDirtyValuesOnly { get; set; } = false;
     public EndPoint Endpoint { get; set; } = new IPEndPoint(IPAddress.Loopback, 8080);
-
-    public UdpOutputTargetViewModel(int instanceIndex, IEventAggregator eventAggregator, IDeviceAxisValueProvider valueProvider, IInputProcessorManager inputManager)
-        : base(instanceIndex, eventAggregator, valueProvider)
-    {
-        _inputManager = inputManager;
-    }
 
     public bool IsConnected => Status == ConnectionStatus.Connected;
     public bool IsConnectBusy => Status == ConnectionStatus.Connecting || Status == ConnectionStatus.Disconnecting;
@@ -44,7 +37,7 @@ internal class UdpOutputTargetViewModel : ThreadAbstractOutputTarget
             Logger.Info("Connecting to {0} at \"{1}\"", Identifier, $"udp://{Endpoint}");
 
             const int SIO_UDP_CONNRESET = -1744830452;
-            client.Client.IOControl((IOControlCode)SIO_UDP_CONNRESET, new byte[] { 0, 0, 0, 0 }, null);
+            client.Client.IOControl((IOControlCode)SIO_UDP_CONNRESET, [0, 0, 0, 0], null);
 
             client.Connect(Endpoint);
             Status = ConnectionStatus.Connected;
@@ -60,7 +53,7 @@ internal class UdpOutputTargetViewModel : ThreadAbstractOutputTarget
         {
             EventAggregator.Publish(new SyncRequestMessage());
 
-            using var _ = _inputManager.Register<TCodeInputProcessor>(out var tcodeInputProcessor);
+            using var _ = inputManager.Register<TCodeInputProcessor>(out var tcodeInputProcessor);
 
             var buffer = new byte[256];
             var receiveBuffer = new SplittingStringBuffer('\n');

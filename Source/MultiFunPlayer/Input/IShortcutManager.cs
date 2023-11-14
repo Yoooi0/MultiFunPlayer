@@ -53,10 +53,10 @@ internal class ShortcutManager : IShortcutManager
 
     public ShortcutManager()
     {
-        _availableActions = new ObservableConcurrentCollection<string>();
+        _availableActions = [];
 
-        _actions = new Dictionary<string, IShortcutAction>();
-        _actionConfigurationBuilders = new Dictionary<string, IShortcutActionConfigurationBuilder>();
+        _actions = [];
+        _actionConfigurationBuilders = [];
     }
 
     public void RegisterAction(string actionName, Action action)

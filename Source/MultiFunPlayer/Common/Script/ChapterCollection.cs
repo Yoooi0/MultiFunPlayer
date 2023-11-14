@@ -6,7 +6,7 @@ public class ChapterCollection : IReadOnlyList<Chapter>
 {
     private readonly List<Chapter> _items;
 
-    public ChapterCollection() => _items = new List<Chapter>();
+    public ChapterCollection() => _items = [];
     public ChapterCollection(int capacity) => _items = new List<Chapter>(capacity);
 
     public bool Add(string name, TimeSpan startPosition, TimeSpan endPosition) => Add(name, startPosition.TotalSeconds, endPosition.TotalSeconds);

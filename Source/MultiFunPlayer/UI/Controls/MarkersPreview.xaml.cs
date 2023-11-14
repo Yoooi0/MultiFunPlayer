@@ -136,8 +136,8 @@ internal partial class MarkersPreview : UserControl
     {
         InitializeComponent();
 
-        _colors = new Color[]
-        {
+        _colors =
+        [
             (Color)ColorConverter.ConvertFromString("#d94452"),
             (Color)ColorConverter.ConvertFromString("#e86c3f"),
             (Color)ColorConverter.ConvertFromString("#f5ba45"),
@@ -145,7 +145,7 @@ internal partial class MarkersPreview : UserControl
             (Color)ColorConverter.ConvertFromString("#35bb9b"),
             (Color)ColorConverter.ConvertFromString("#5690dc"),
             (Color)ColorConverter.ConvertFromString("#967ada")
-        };
+        ];
     }
 
     private void RefreshChapters()

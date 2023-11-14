@@ -5,16 +5,11 @@ using System.Diagnostics;
 
 namespace MultiFunPlayer.UI.Dialogs.ViewModels;
 
-internal class InformationMessageDialogViewModel : Screen
+internal class InformationMessageDialogViewModel(bool showCheckbox) : Screen
 {
     public string VersionText => $"v{ReflectionUtils.AssemblyInformationalVersion}";
-    public bool ShowCheckbox { get; }
+    public bool ShowCheckbox { get; } = showCheckbox;
     public bool DontShowAgain { get; set; }
-
-    public InformationMessageDialogViewModel(bool showCheckbox)
-    {
-        ShowCheckbox = showCheckbox;
-    }
 
     public void OnDismiss()
     {

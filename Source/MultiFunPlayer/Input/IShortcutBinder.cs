@@ -44,7 +44,7 @@ internal class ShortcutBinder : IShortcutBinder
     {
         _inputManager = inputManager;
         _shortcutManager = shortcutManager;
-        _bindings = new ObservableConcurrentCollection<IShortcutBinding>();
+        _bindings = [];
         _bindingLookup = new ConcurrentDictionary<IInputGestureDescriptor, IShortcutBinding>();
 
         _inputManager.OnGesture += HandleGesture;
@@ -104,10 +104,9 @@ internal class ShortcutBinder : IShortcutBinder
     {
         if (gestureDescriptor == null || configuration == null)
             return;
-        if (!_bindingLookup.ContainsKey(gestureDescriptor))
+        if (!_bindingLookup.TryGetValue(gestureDescriptor, out var binding))
             return;
 
-        var binding = _bindingLookup[gestureDescriptor];
         var configurations = binding.Configurations;
         configurations.Remove(configuration);
     }

@@ -83,12 +83,12 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         MotionProviderManager = motionProviderManager;
 
         AxisModels = new ObservableConcurrentDictionary<DeviceAxis, AxisModel>(DeviceAxis.All.ToDictionary(a => a, a => new AxisModel(a)));
-        MediaPathModifiers = new ObservableConcurrentCollection<IMediaPathModifier>();
+        MediaPathModifiers = [];
         MediaPathModifierTypes = ReflectionUtils.FindImplementations<IMediaPathModifier>()
                                                 .ToDictionary(t => t.GetCustomAttribute<DisplayNameAttribute>(inherit: false).DisplayName, t => t);
         MediaLoopSegment = new MediaLoopSegment();
 
-        ScriptLibraries = new ObservableConcurrentCollection<ScriptLibrary>();
+        ScriptLibraries = [];
         SyncSettings = new SyncSettings();
 
         InvalidateMediaState();
@@ -1733,7 +1733,7 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         #region Axis::InterpolationType
         s.RegisterAction<DeviceAxis, InterpolationType>("Axis::InterpolationType::Set",
             s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All),
-            s => s.WithLabel("Interpolation").WithItemsSource(EnumUtils.GetValues<InterpolationType>()),
+            s => s.WithLabel("Interpolation").WithItemsSource(Enum.GetValues<InterpolationType>()),
             (axis, type) => UpdateSettings(axis, s => s.InterpolationType = type));
         #endregion
 
@@ -1774,7 +1774,7 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         #region Axis::SmartLimitMode
         s.RegisterAction<DeviceAxis, SmartLimitMode>("Axis::SmartLimitMode::Set",
             s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All),
-            s => s.WithLabel("Smart limit mode").WithItemsSource(EnumUtils.GetValues<SmartLimitMode>()),
+            s => s.WithLabel("Smart limit mode").WithItemsSource(Enum.GetValues<SmartLimitMode>()),
             (axis, mode) => UpdateSettings(axis, s => s.SmartLimitMode = mode));
         #endregion
 
@@ -1793,7 +1793,7 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         #region Axis::SmartLimitPoints
         s.RegisterAction<DeviceAxis, ObservableConcurrentCollection<Point>>("Axis::SmartLimitPoints::Set",
             s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All),
-            s => s.WithDefaultValue(new ObservableConcurrentCollection<Point>() { new Point(50, 50) })
+            s => s.WithDefaultValue([new(50, 50)])
                   .WithTemplateName("SmartLimitPointsTemplate")
                   .WithCustomToString(x => $"Points({x.Count})"),
             (axis, points) => UpdateSettings(axis, s => s.SmartLimitPoints.SetFrom(points)));
@@ -2043,18 +2043,11 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
     }
 }
 
-internal class AxisModel : PropertyChangedBase
+internal class AxisModel(DeviceAxis axis) : PropertyChangedBase
 {
-    public AxisState State { get; }
-    public AxisSettings Settings { get; }
-    public IScriptResource Script { get; set; }
-
-    public AxisModel(DeviceAxis axis)
-    {
-        State = new AxisState();
-        Settings = new AxisSettings(axis);
-        Script = null;
-    }
+    public AxisState State { get; } = new AxisState();
+    public AxisSettings Settings { get; } = new AxisSettings(axis);
+    public IScriptResource Script { get; set; } = null;
 }
 
 [AddINotifyPropertyChangedInterface]
@@ -2136,41 +2129,39 @@ internal class AxisValueTransition
     }
 }
 
-internal class AxisStateUpdateContext
+internal class AxisStateUpdateContext(AxisState state)
 {
-    private readonly AxisState _state;
-
     public int Index { get; set; }
     public bool Invalid => Index == AxisState.InvalidIndex;
     public bool BeforeScript => Index == AxisState.BeforeScriptIndex;
     public bool AfterScript => Index == AxisState.AfterScriptIndex;
     public bool InsideScript => Index >= 0 && Index != AxisState.AfterScriptIndex;
 
-    public int LastIndex => _state.Index;
-    public bool LastInvalid => _state.Invalid;
-    public bool LastBeforeScript => _state.BeforeScript;
-    public bool LastAfterScript => _state.AfterScript;
-    public bool LastInsideScript => _state.InsideScript;
+    public int LastIndex => state.Index;
+    public bool LastInvalid => state.Invalid;
+    public bool LastBeforeScript => state.BeforeScript;
+    public bool LastAfterScript => state.AfterScript;
+    public bool LastInsideScript => state.InsideScript;
 
     public double Value { get; set; }
     public double ScriptValue { get; set; }
     public double TransitionValue { get; set; }
     public double MotionProviderValue { get; set; }
 
-    public double LastValue => _state.Value;
-    public double LastScriptValue => _state.ScriptValue;
-    public double LastMotionProviderValue => _state.MotionProviderValue;
-    public double LastTransitionValue => _state.TransitionValue;
+    public double LastValue => state.Value;
+    public double LastScriptValue => state.ScriptValue;
+    public double LastMotionProviderValue => state.MotionProviderValue;
+    public double LastTransitionValue => state.TransitionValue;
 
     public bool InsideGap { get; set; }
     public bool IsAutoHoming { get; set; }
     public bool IsSpeedLimited { get; set; }
     public bool IsSmartLimited { get; set; }
 
-    public bool LastInsideGap => _state.InsideGap;
-    public bool LastIsAutoHoming => _state.IsAutoHoming;
-    public bool LastIsSpeedLimited => _state.IsSpeedLimited;
-    public bool LastIsSmartLimited => _state.IsSmartLimited;
+    public bool LastInsideGap => state.InsideGap;
+    public bool LastIsAutoHoming => state.IsAutoHoming;
+    public bool LastIsSpeedLimited => state.IsSpeedLimited;
+    public bool LastIsSmartLimited => state.IsSmartLimited;
 
     public bool IsDirty => ValueChanged(LastValue, Value, 0.000001);
     public bool IsScriptDirty => ValueChanged(LastScriptValue, ScriptValue, 0.000001);
@@ -2181,8 +2172,6 @@ internal class AxisStateUpdateContext
     private static bool ValueChanged(double last, double current, double epsilon)
         => Math.Abs(last - current) > epsilon || (double.IsFinite(current) ^ double.IsFinite(last));
 
-    public AxisStateUpdateContext(AxisState state) => _state = state;
-
     public void BeginUpdate()
     {
         Value = double.NaN;
@@ -2190,26 +2179,26 @@ internal class AxisStateUpdateContext
         TransitionValue = double.NaN;
         MotionProviderValue = double.NaN;
 
-        Index = _state.Index;
+        Index = state.Index;
     }
 
     public void EndUpdate(double deltaTime)
     {
-        _state.IsDirty = IsDirty;
+        state.IsDirty = IsDirty;
 
         if (double.IsFinite(Value) && double.IsFinite(LastValue))
-            _state.Speed = (LastValue - Value) / deltaTime;
+            state.Speed = (LastValue - Value) / deltaTime;
 
-        _state.Index = Index;
-        _state.Value = Value;
-        _state.ScriptValue = ScriptValue;
-        _state.TransitionValue = TransitionValue;
-        _state.MotionProviderValue = MotionProviderValue;
+        state.Index = Index;
+        state.Value = Value;
+        state.ScriptValue = ScriptValue;
+        state.TransitionValue = TransitionValue;
+        state.MotionProviderValue = MotionProviderValue;
 
-        _state.InsideGap = InsideGap;
-        _state.IsAutoHoming = IsAutoHoming;
-        _state.IsSpeedLimited = IsSpeedLimited;
-        _state.IsSmartLimited = IsSmartLimited;
+        state.InsideGap = InsideGap;
+        state.IsAutoHoming = IsAutoHoming;
+        state.IsSpeedLimited = IsSpeedLimited;
+        state.IsSmartLimited = IsSmartLimited;
     }
 }
 
@@ -2221,7 +2210,7 @@ internal class AxisSettings : PropertyChangedBase
 
     [JsonProperty] public DeviceAxis SmartLimitInputAxis { get; set; } = null;
     [JsonProperty(ObjectCreationHandling = ObjectCreationHandling.Replace)]
-    public ObservableConcurrentCollection<Point> SmartLimitPoints { get; set; } = new() { new Point(25, 100), new Point(90, 0) };
+    public ObservableConcurrentCollection<Point> SmartLimitPoints { get; set; } = [new Point(25, 100), new Point(90, 0)];
     [JsonProperty] public SmartLimitMode SmartLimitMode { get; set; } = SmartLimitMode.Value;
     [JsonProperty] public double SmartLimitTargetValue { get; set; }
 
@@ -2284,14 +2273,9 @@ internal class SyncSettings : PropertyChangedBase
 }
 
 [JsonObject(MemberSerialization.OptIn)]
-internal class ScriptLibrary : PropertyChangedBase
+internal class ScriptLibrary(DirectoryInfo directory) : PropertyChangedBase
 {
-    public ScriptLibrary(DirectoryInfo directory)
-    {
-        Directory = directory;
-    }
-
-    [JsonProperty] public DirectoryInfo Directory { get; }
+    [JsonProperty] public DirectoryInfo Directory { get; } = directory;
     [JsonProperty] public bool Recursive { get; set; }
 
     public IEnumerable<FileInfo> EnumerateFiles(string searchPattern) => Directory.SafeEnumerateFiles(searchPattern, IOUtils.CreateEnumerationOptions(Recursive));
@@ -2354,8 +2338,7 @@ internal class MediaLoopSegment : PropertyChangedBase
     }
 }
 
-public class SeekRequestEventArgs : EventArgs
+public class SeekRequestEventArgs(TimeSpan position) : EventArgs
 {
-    public TimeSpan Position { get; }
-    public SeekRequestEventArgs(TimeSpan position) => Position = position;
+    public TimeSpan Position { get; } = position;
 }

@@ -5,14 +5,10 @@ public record TCodeButtonGestureDescriptor(string Button) : ISimpleInputGestureD
     public override string ToString() => $"[TCode Button: {Button}]";
 }
 
-public class TCodeButtonGesture : ISimpleInputGesture
+public class TCodeButtonGesture(TCodeButtonGestureDescriptor descriptor) : ISimpleInputGesture
 {
-    private readonly TCodeButtonGestureDescriptor _descriptor;
-
-    public string Button => _descriptor.Button;
-    public IInputGestureDescriptor Descriptor => _descriptor;
-
-    public TCodeButtonGesture(TCodeButtonGestureDescriptor descriptor) => _descriptor = descriptor;
+    public string Button => descriptor.Button;
+    public IInputGestureDescriptor Descriptor => descriptor;
 
     public override string ToString() => $"[TCode Button: {Button}]";
 

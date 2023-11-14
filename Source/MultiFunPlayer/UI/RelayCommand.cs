@@ -2,11 +2,8 @@
 
 namespace MultiFunPlayer.UI;
 
-public class RelayCommand<T> : ICommand
+public class RelayCommand<T>(Action<T> execute, Func<T, bool> canExecute) : ICommand
 {
-    private readonly Action<T> _execute;
-    private readonly Func<T, bool> _canExecute;
-
     public event EventHandler CanExecuteChanged
     {
         add => CommandManager.RequerySuggested += value;
@@ -14,21 +11,16 @@ public class RelayCommand<T> : ICommand
     }
 
     public RelayCommand(Action<T> execute) : this(execute, null) { }
-    public RelayCommand(Action<T> execute, Func<T, bool> canExecute)
-    {
-        _execute = execute;
-        _canExecute = canExecute;
-    }
 
     public bool CanExecute(object parameter)
     {
-        if (_canExecute == null)
+        if (canExecute == null)
             return true;
 
         if (parameter is not T)
             return false;
 
-        return _canExecute((T)parameter);
+        return canExecute((T)parameter);
     }
 
     public void Execute(object parameter)
@@ -36,15 +28,12 @@ public class RelayCommand<T> : ICommand
         if (parameter is not T)
             return;
 
-        _execute((T)parameter);
+        execute((T)parameter);
     }
 }
 
-public class RelayCommand<T0, T1> : ICommand
+public class RelayCommand<T0, T1>(Action<T0, T1> execute, Func<T0, T1, bool> canExecute) : ICommand
 {
-    private readonly Action<T0, T1> _execute;
-    private readonly Func<T0, T1, bool> _canExecute;
-
     public event EventHandler CanExecuteChanged
     {
         add => CommandManager.RequerySuggested += value;
@@ -52,21 +41,16 @@ public class RelayCommand<T0, T1> : ICommand
     }
 
     public RelayCommand(Action<T0, T1> execute) : this(execute, null) { }
-    public RelayCommand(Action<T0, T1> execute, Func<T0, T1, bool> canExecute)
-    {
-        _execute = execute;
-        _canExecute = canExecute;
-    }
 
     public bool CanExecute(object parameter)
     {
-        if (_canExecute == null)
+        if (canExecute == null)
             return true;
 
         if (parameter is not object[] parameters || parameters.Length != 2 || parameters[0] is not T0 || parameters[1] is not T1)
             return false;
 
-        return _canExecute((T0)parameters[0], (T1)parameters[1]);
+        return canExecute((T0)parameters[0], (T1)parameters[1]);
     }
 
     public void Execute(object parameter)
@@ -74,6 +58,6 @@ public class RelayCommand<T0, T1> : ICommand
         if (parameter is not object[] parameters || parameters.Length != 2 || parameters[0] is not T0 || parameters[1] is not T1)
             return;
 
-        _execute((T0)parameters[0], (T1)parameters[1]);
+        execute((T0)parameters[0], (T1)parameters[1]);
     }
 }

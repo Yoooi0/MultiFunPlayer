@@ -17,14 +17,10 @@ public record KeyboardGestureDescriptor : ISimpleInputGestureDescriptor
     public override string ToString() => $"[Keyboard Keys: {string.Join(", ", Keys)}]";
 }
 
-public class KeyboardGesture : ISimpleInputGesture
+public class KeyboardGesture(KeyboardGestureDescriptor descriptor) : ISimpleInputGesture
 {
-    private readonly KeyboardGestureDescriptor _descriptor;
-
-    public IReadOnlyCollection<Key> Keys => _descriptor.Keys;
-    public IInputGestureDescriptor Descriptor => _descriptor;
-
-    public KeyboardGesture(KeyboardGestureDescriptor descriptor) => _descriptor = descriptor;
+    public IReadOnlyCollection<Key> Keys => descriptor.Keys;
+    public IInputGestureDescriptor Descriptor => descriptor;
 
     public override string ToString() => $"[Keyboard Keys: {string.Join(", ", Keys)}]";
 

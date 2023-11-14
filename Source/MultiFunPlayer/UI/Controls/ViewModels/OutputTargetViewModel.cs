@@ -30,7 +30,7 @@ internal class OutputTargetViewModel : Conductor<IOutputTarget>.Collection.OneAc
         _outputTargetFactory = outputTargetFactory;
         eventAggregator.Subscribe(this);
 
-        _semaphores = new Dictionary<IOutputTarget, SemaphoreSlim>();
+        _semaphores = [];
         _cancellationSource = new CancellationTokenSource();
 
         AvailableOutputTargetTypes = ReflectionUtils.FindImplementations<IOutputTarget>().ToList();

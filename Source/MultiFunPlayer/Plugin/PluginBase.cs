@@ -144,11 +144,9 @@ public abstract class PluginBase : PropertyChangedBase
         }
     }
 
-    private class MessageProxy : IHandle<object>
+    private class MessageProxy(Action<object> callback) : IHandle<object>
     {
-        private readonly Action<object> _callback;
-        public MessageProxy(Action<object> callback) => _callback = callback;
-        public void Handle(object message) => _callback(message);
+        public void Handle(object message) => callback(message);
     }
     #endregion
 

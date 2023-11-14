@@ -43,7 +43,7 @@ internal class InputProcessorManager : IInputProcessorManager
 
     public InputProcessorManager(IEnumerable<IInputProcessor> processors)
     {
-        _processors = new List<IInputProcessor>();
+        _processors = [];
         foreach (var processor in processors)
             AddProcessor(processor);
     }

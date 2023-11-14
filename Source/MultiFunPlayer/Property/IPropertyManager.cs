@@ -23,7 +23,7 @@ internal class PropertyManager : IPropertyManager
 
     public PropertyManager()
     {
-        _properties = new Dictionary<string, IPropertyDelegate>();
+        _properties = [];
     }
 
     public void RegisterProperty<TOut>(string propertyName, Func<TOut> getter) => _properties.Add(propertyName, new PropertyDelegate<TOut>(getter));

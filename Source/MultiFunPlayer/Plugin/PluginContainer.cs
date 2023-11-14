@@ -18,7 +18,7 @@ internal enum PluginState
     RanToCompletion,
 }
 
-internal class PluginContainer : PropertyChangedBase, IDisposable
+internal class PluginContainer(FileInfo pluginFile) : PropertyChangedBase, IDisposable
 {
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
@@ -26,7 +26,7 @@ internal class PluginContainer : PropertyChangedBase, IDisposable
     private CancellationTokenSource _cancellationSource;
     private Thread _thread;
 
-    public FileInfo PluginFile { get; }
+    public FileInfo PluginFile { get; } = pluginFile;
     public Exception Exception { get; private set; }
     public PluginState State { get; private set; } = PluginState.Idle;
 
@@ -37,11 +37,6 @@ internal class PluginContainer : PropertyChangedBase, IDisposable
     public bool CanStop => State == PluginState.Running;
     public bool CanCompile => State == PluginState.Idle || State == PluginState.Faulted || State == PluginState.RanToCompletion;
     public bool IsBusy => State != PluginState.Idle && State != PluginState.RanToCompletion && State != PluginState.Running;
-
-    public PluginContainer(FileInfo pluginFile)
-    {
-        PluginFile = pluginFile;
-    }
 
     public void Start()
     {

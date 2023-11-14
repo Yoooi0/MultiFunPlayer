@@ -27,7 +27,7 @@ public class ObservableConcurrentDictionaryView<TKey, TValue, TView> : IReadOnly
         _propertyName = propertyName;
         _selector = selector;
 
-        _view = new ObservableConcurrentDictionary<TKey, TView>();
+        _view = [];
         _view.PropertyChanged += (s, e) => PropertyChanged?.Invoke(s, e);
         _view.CollectionChanged += (s, e) => CollectionChanged?.Invoke(s, e);
 

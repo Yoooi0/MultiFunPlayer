@@ -12,7 +12,8 @@ using System.Text;
 namespace MultiFunPlayer.OutputTarget.ViewModels;
 
 [DisplayName("TCP")]
-internal class TcpOutputTargetViewModel : ThreadAbstractOutputTarget
+internal class TcpOutputTargetViewModel(int instanceIndex, IEventAggregator eventAggregator, IDeviceAxisValueProvider valueProvider)
+    : ThreadAbstractOutputTarget(instanceIndex, eventAggregator, valueProvider)
 {
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
@@ -21,9 +22,6 @@ internal class TcpOutputTargetViewModel : ThreadAbstractOutputTarget
     public bool OffloadElapsedTime { get; set; } = true;
     public bool SendDirtyValuesOnly { get; set; } = true;
     public EndPoint Endpoint { get; set; } = new IPEndPoint(IPAddress.Loopback, 8080);
-
-    public TcpOutputTargetViewModel(int instanceIndex, IEventAggregator eventAggregator, IDeviceAxisValueProvider valueProvider)
-        : base(instanceIndex, eventAggregator, valueProvider) { }
 
     public bool IsConnected => Status == ConnectionStatus.Connected;
     public bool IsConnectBusy => Status == ConnectionStatus.Connecting || Status == ConnectionStatus.Disconnecting;

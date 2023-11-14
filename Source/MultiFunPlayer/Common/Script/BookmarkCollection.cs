@@ -6,7 +6,7 @@ public class BookmarkCollection : IReadOnlyList<Bookmark>
 {
     private readonly List<Bookmark> _items;
 
-    public BookmarkCollection() => _items = new List<Bookmark>();
+    public BookmarkCollection() => _items = [];
     public BookmarkCollection(int capacity) => _items = new List<Bookmark>(capacity);
 
     public void Add(string name, TimeSpan position) => Add(name, position.TotalSeconds);

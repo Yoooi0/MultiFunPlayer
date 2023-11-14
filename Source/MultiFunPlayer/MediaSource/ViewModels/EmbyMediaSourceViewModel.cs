@@ -39,7 +39,7 @@ internal class EmbyMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlay
             SingleWriter = true,
         });
 
-        Devices = new ObservableConcurrentCollection<EmbyDevice>();
+        Devices = [];
         SelectedDevice = null;
     }
 

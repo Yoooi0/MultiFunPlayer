@@ -25,8 +25,8 @@ internal class UriToLocalMediaPathModifierViewModel : AbstractMediaPathModifier
 
     public UriToLocalMediaPathModifierViewModel()
     {
-        _mediaPathCache = new Dictionary<string, string>();
-        _mediaSizeCache = new Dictionary<long, FileInfo>();
+        _mediaPathCache = [];
+        _mediaSizeCache = [];
         _client = NetUtils.CreateHttpClient();
     }
 

@@ -24,7 +24,7 @@ internal class RawInputProcessor : IInputProcessor
 
     public RawInputProcessor()
     {
-        _pressedKeys = new HashSet<Key>();
+        _pressedKeys = [];
         _lastMouseAxisTimestamp = 0;
         _mouseXAxis = _mouseYAxis = 0.5;
         _mouseWheelAxis = _mouseHorizontalWheelAxis = 0.5;

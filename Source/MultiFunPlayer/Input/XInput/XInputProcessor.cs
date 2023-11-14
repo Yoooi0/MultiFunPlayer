@@ -21,7 +21,7 @@ internal class XInputProcessor : IInputProcessor
     public XInputProcessor()
     {
         _states = new State[4];
-        _pressedKeys = new HashSet<GamepadVirtualKey>();
+        _pressedKeys = [];
         _cancellationSource = new CancellationTokenSource();
         _thread = new Thread(() => Update(_cancellationSource.Token))
         {

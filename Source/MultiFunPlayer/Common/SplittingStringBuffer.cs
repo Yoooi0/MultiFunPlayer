@@ -2,18 +2,10 @@
 
 namespace MultiFunPlayer.Common;
 
-internal class SplittingStringBuffer
+internal class SplittingStringBuffer(char separator)
 {
-    private readonly char _separator;
-    private char[] _buffer;
+    private char[] _buffer = [];
     private int _index;
-
-    public SplittingStringBuffer(char separator)
-    {
-        _separator = separator;
-        _buffer = Array.Empty<char>();
-        _index = 0;
-    }
 
     public void Push(ReadOnlySpan<char> s)
     {
@@ -32,7 +24,7 @@ internal class SplittingStringBuffer
 
         int endIndex;
         var startIndex = 0;
-        while ((endIndex = Array.IndexOf(_buffer, _separator, startIndex)) >= 0)
+        while ((endIndex = Array.IndexOf(_buffer, separator, startIndex)) >= 0)
         {
             yield return new string(_buffer.AsSpan(new Range(startIndex, endIndex)));
             startIndex = endIndex + 1;

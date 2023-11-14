@@ -79,8 +79,8 @@ internal partial class InterpolationPreview : UserControl
             _keyframes.Add(x, y);
         }
 
-        Points = new ObservableCollection<Point>();
-        _keyframes = new KeyframeCollection();
+        Points = [];
+        _keyframes = [];
 
         AddKeyframe(0, 0.5);
         while (_keyframes.Count < PointCount - 1)
@@ -105,7 +105,7 @@ internal partial class InterpolationPreview : UserControl
         if (_keyframes == null || _keyframes.Count == 0)
             return;
 
-        CurvePoints = new PointCollection();
+        CurvePoints = [];
 
         var step = 1d / CurvePointCount;
         for (var i = 0; i < _keyframes.Count - 1; i++)

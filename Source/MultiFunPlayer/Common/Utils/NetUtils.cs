@@ -31,7 +31,7 @@ public static class NetUtils
         {
             UriHostNameType.IPv4 or UriHostNameType.IPv6 when IPAddress.TryParse(hostOrIPAddress, out var ipAddress) => new IPEndPoint(ipAddress, port),
             UriHostNameType.Dns => new DnsEndPoint(hostOrIPAddress, port),
-            _ => default(EndPoint)
+            _ => default
         };
     }
 

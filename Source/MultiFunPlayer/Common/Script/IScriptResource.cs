@@ -20,18 +20,11 @@ public class ScriptResource : IScriptResource
     public static LinkedScriptResource LinkTo(IScriptResource other) => other != null ? new LinkedScriptResource(other) : null;
 }
 
-public class LinkedScriptResource : IScriptResource
+public class LinkedScriptResource(IScriptResource linked) : IScriptResource
 {
-    private readonly IScriptResource _linked;
-
-    public string Name => _linked.Name;
-    public string Source => _linked.Source;
-    public KeyframeCollection Keyframes => _linked.Keyframes;
-    public ChapterCollection Chapters => _linked.Chapters;
-    public BookmarkCollection Bookmarks => _linked.Bookmarks;
-
-    public LinkedScriptResource(IScriptResource linked)
-    {
-        _linked = linked;
-    }
+    public string Name => linked.Name;
+    public string Source => linked.Source;
+    public KeyframeCollection Keyframes => linked.Keyframes;
+    public ChapterCollection Chapters => linked.Chapters;
+    public BookmarkCollection Bookmarks => linked.Bookmarks;
 }

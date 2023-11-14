@@ -8,12 +8,8 @@ internal interface IOutputTargetFactory
     IOutputTarget CreateOutputTarget(Type type, int index);
 }
 
-internal class OutputTargetFactory : IOutputTargetFactory
+internal class OutputTargetFactory(IContainer container) : IOutputTargetFactory
 {
-    private readonly IContainer _container;
-
-    public OutputTargetFactory(IContainer container) => _container = container;
-
     public IOutputTarget CreateOutputTarget(Type type, int index)
     {
         if (index > MaxInstanceIndex(type))
@@ -22,7 +18,7 @@ internal class OutputTargetFactory : IOutputTargetFactory
         var arguments = type.GetConstructors()[0]
                             .GetParameters()
                             .Skip(1)
-                            .Select(p => _container.GetTypeOrAll(p.ParameterType))
+                            .Select(p => container.GetTypeOrAll(p.ParameterType))
                             .Prepend(index)
                             .ToArray();
 

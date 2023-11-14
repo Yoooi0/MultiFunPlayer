@@ -12,7 +12,7 @@ internal class TCodeInputProcessor : IInputProcessor
 
     public TCodeInputProcessor()
     {
-        _buttonStates = new Dictionary<string, bool>();
+        _buttonStates = [];
     }
 
     public void Parse(string input)

@@ -22,7 +22,7 @@ public class ObservableConcurrentCollection<T> : IList<T>, IReadOnlyObservableCo
     public ObservableConcurrentCollection()
     {
         _context = AsyncOperationManager.SynchronizationContext;
-        _items = new List<T>();
+        _items = [];
         BindingOperations.EnableCollectionSynchronization(this, SyncRoot);
     }
 

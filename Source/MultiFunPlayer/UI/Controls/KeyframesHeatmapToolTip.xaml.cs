@@ -126,7 +126,7 @@ internal partial class KeyframesHeatmapToolTip : UserControl
     private void Refresh(bool refreshPoints, bool refreshScrubber)
     {
         if (refreshPoints)
-            Points = new PointCollection();
+            Points = [];
 
         if (refreshScrubber)
             ScrubberPosition = null;

@@ -19,7 +19,7 @@ internal class PluginViewModel : Screen, IDisposable
 
         Directory.CreateDirectory("Plugins");
 
-        Containers = new ObservableConcurrentDictionary<FileInfo, PluginContainer>();
+        Containers = [];
         _watcher = new FileSystemWatcher()
         {
             Filter = "*.cs",
@@ -52,10 +52,9 @@ internal class PluginViewModel : Screen, IDisposable
 
     private void RemoveContainer(FileInfo fileInfo)
     {
-        if (!Containers.ContainsKey(fileInfo))
+        if (!Containers.TryGetValue(fileInfo, out var container))
             return;
 
-        var container = Containers[fileInfo];
         container.Dispose();
         Containers.Remove(fileInfo);
 

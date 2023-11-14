@@ -43,7 +43,7 @@ internal class PlexMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlay
             SingleWriter = true,
         });
 
-        Clients = new ObservableConcurrentCollection<PlexClient>();
+        Clients = [];
         SelectedClient = null;
     }
 

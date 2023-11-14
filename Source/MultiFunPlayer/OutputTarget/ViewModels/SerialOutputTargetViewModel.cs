@@ -15,18 +15,18 @@ using System.Text.RegularExpressions;
 namespace MultiFunPlayer.OutputTarget.ViewModels;
 
 [DisplayName("Serial")]
-internal class SerialOutputTargetViewModel : ThreadAbstractOutputTarget
+internal class SerialOutputTargetViewModel(int instanceIndex, IEventAggregator eventAggregator, IDeviceAxisValueProvider valueProvider, IInputProcessorManager inputManager)
+    : ThreadAbstractOutputTarget(instanceIndex, eventAggregator, valueProvider)
 {
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
-    private readonly IInputProcessorManager _inputManager;
-    private CancellationTokenSource _refreshCancellationSource;
+    private CancellationTokenSource _refreshCancellationSource = new();
 
     public override ConnectionStatus Status { get; protected set; }
 
     public bool OffloadElapsedTime { get; set; } = true;
     public bool SendDirtyValuesOnly { get; set; } = true;
-    public ObservableConcurrentCollection<SerialPortInfo> SerialPorts { get; set; }
+    public ObservableConcurrentCollection<SerialPortInfo> SerialPorts { get; set; } = [];
     public SerialPortInfo SelectedSerialPort { get; set; }
     public string SelectedSerialPortDeviceId { get; set; }
 
@@ -43,15 +43,6 @@ internal class SerialOutputTargetViewModel : ThreadAbstractOutputTarget
     public int ReadBufferSize { get; set; } = 4096;
 
     public IReadOnlyList<int> AvailableBaudRates { get; } = new List<int>() { 50, 75, 110, 134, 150, 200, 300, 600, 1200, 1800, 2400, 4800, 9600, 19200, 28800, 38400, 57600, 76800, 115200, 230400, 460800, 576000, 921600 };
-
-    public SerialOutputTargetViewModel(int instanceIndex, IEventAggregator eventAggregator, IDeviceAxisValueProvider valueProvider, IInputProcessorManager inputManager)
-        : base(instanceIndex, eventAggregator, valueProvider)
-    {
-        _inputManager = inputManager;
-        SerialPorts = new ObservableConcurrentCollection<SerialPortInfo>();
-
-        _refreshCancellationSource = new CancellationTokenSource();
-    }
 
     protected override void OnInitialActivate()
     {
@@ -173,7 +164,7 @@ internal class SerialOutputTargetViewModel : ThreadAbstractOutputTarget
         {
             EventAggregator.Publish(new SyncRequestMessage());
 
-            using var _ = _inputManager.Register<TCodeInputProcessor>(out var tcodeInputProcessor);
+            using var _ = inputManager.Register<TCodeInputProcessor>(out var tcodeInputProcessor);
 
             var receiveBuffer = new SplittingStringBuffer('\n');
             var lastSentValues = DeviceAxis.All.ToDictionary(a => a, _ => double.NaN);

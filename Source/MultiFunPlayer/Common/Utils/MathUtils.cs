@@ -315,31 +315,18 @@ public class OpenSimplex
         return x < xi ? xi - 1 : xi;
     }
 
-    private struct LatticePoint
+    private readonly struct LatticePoint(int xsv, int ysv)
     {
-        public int xsv, ysv;
-        public double dx, dy;
+        public readonly int xsv = xsv;
+        public readonly int ysv = ysv;
 
-        public LatticePoint(int xsv, int ysv)
-        {
-            var ssv = (xsv + ysv) * -0.211324865405187;
-
-            this.xsv = xsv;
-            this.ysv = ysv;
-
-            dx = -xsv - ssv;
-            dy = -ysv - ssv;
-        }
+        public readonly double dx = -xsv + (xsv + ysv) * 0.211324865405187;
+        public readonly double dy = -ysv + (xsv + ysv) * 0.211324865405187;
     }
 
-    private struct Gradient
+    private readonly struct Gradient(double dx, double dy)
     {
-        public double dx, dy;
-
-        public Gradient(double dx, double dy)
-        {
-            this.dx = dx;
-            this.dy = dy;
-        }
+        public readonly double dx = dx;
+        public readonly double dy = dy;
     }
 }
