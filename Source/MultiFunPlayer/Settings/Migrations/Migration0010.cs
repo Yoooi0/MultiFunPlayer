@@ -22,7 +22,8 @@ internal class Migration0010 : AbstractConfigMigration
 
         if (!settings.ContainsKey("Items"))
         {
-            settings["Items"] = JArray.FromObject(new[] { "DeoVR", "HereSphere", "Internal", "MPC-HC", "MPV", "Whirligig" });
+            var items = new[] { "DeoVR", "HereSphere", "Internal", "MPC-HC", "MPV", "Whirligig" };
+            settings["Items"] = JArray.FromObject(items);
             Logger.Info("Enabled all MediaSource items");
         }
     }

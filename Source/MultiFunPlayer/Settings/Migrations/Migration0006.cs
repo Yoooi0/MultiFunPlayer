@@ -22,6 +22,8 @@ internal class Migration0006 : AbstractConfigMigration
     private void MigrateSmartLimitSettings(JObject settings)
     {
         Logger.Info("Migrating Smart Limit Settings");
+
+        var defaultPoints = new string[] { "25,100", "90,0" };
         foreach (var (axis, child) in settings)
         {
             if (child is not JObject axisSettings)
@@ -41,7 +43,7 @@ internal class Migration0006 : AbstractConfigMigration
 
             if (!axisSettings.ContainsKey("SmartLimitPoints"))
             {
-                axisSettings.Add("SmartLimitPoints", JArray.FromObject(new string[] { "25,100", "90,0" }));
+                axisSettings.Add("SmartLimitPoints", JArray.FromObject(defaultPoints));
                 Logger.Info("Added \"SmartLimitPoints\" to {0} settings", axis);
             }
         }

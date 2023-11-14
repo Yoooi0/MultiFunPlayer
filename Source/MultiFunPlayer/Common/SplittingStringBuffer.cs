@@ -1,4 +1,4 @@
-﻿using System.Numerics;
+using System.Numerics;
 
 namespace MultiFunPlayer.Common;
 
@@ -23,19 +23,18 @@ internal class SplittingStringBuffer(char separator)
             yield break;
 
         int endIndex;
-        var startIndex = 0;
-        while ((endIndex = Array.IndexOf(_buffer, separator, startIndex)) >= 0)
+        var currentIndex = 0;
+        while ((endIndex = Array.IndexOf(_buffer, separator, currentIndex)) >= 0)
         {
-            yield return new string(_buffer.AsSpan(new Range(startIndex, endIndex)));
-            startIndex = endIndex + 1;
+            yield return new string(_buffer.AsSpan(new Range(currentIndex, endIndex)));
+            currentIndex = endIndex + 1;
         }
 
-        if (startIndex == 0)
+        if (currentIndex == 0)
             yield break;
 
-        _buffer.AsSpan(new Range(startIndex, _index)).CopyTo(_buffer);
-        _index -= startIndex;
-
-        Array.Fill(_buffer, '\0', _index, startIndex);
+        _buffer.AsSpan(new Range(currentIndex, _index)).CopyTo(_buffer);
+        _index -= currentIndex;
+        _buffer.AsSpan(new Range(_index, currentIndex)).Clear();
     }
 }

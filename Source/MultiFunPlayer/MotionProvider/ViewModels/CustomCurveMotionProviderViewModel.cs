@@ -200,7 +200,7 @@ internal class CustomCurveMotionProviderViewModel : AbstractMotionProvider
     }
 
     [AddINotifyPropertyChangedInterface]
-    private partial record PointsActionSettingsViewModel(ObservableConcurrentCollection<Point> Points, double Duration, InterpolationType InterpolationType)
+    private record PointsActionSettingsViewModel(ObservableConcurrentCollection<Point> Points, double Duration, InterpolationType InterpolationType)
     {
         public PointsActionSettingsViewModel()
             : this([new(0.5, 0.5)], 1, InterpolationType.Linear)
