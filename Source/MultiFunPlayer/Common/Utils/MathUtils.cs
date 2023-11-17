@@ -1,3 +1,4 @@
+using System.Numerics;
 using System.Runtime.CompilerServices;
 
 namespace MultiFunPlayer.Common;
@@ -271,8 +272,8 @@ public class OpenSimplex
     private double Calculate2DImpl(double xs, double ys)
     {
         var value = 0.0;
-        var xsb = FastFloor(xs);
-        var ysb = FastFloor(ys);
+        var xsb = (int)Math.Floor(xs);
+        var ysb = (int)Math.Floor(ys);
         var xsi = xs - xsb;
         var ysi = ys - ysb;
 
@@ -306,13 +307,6 @@ public class OpenSimplex
         }
 
         return value;
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static int FastFloor(double x)
-    {
-        var xi = (int)x;
-        return x < xi ? xi - 1 : xi;
     }
 
     private readonly struct LatticePoint(int xsv, int ysv)

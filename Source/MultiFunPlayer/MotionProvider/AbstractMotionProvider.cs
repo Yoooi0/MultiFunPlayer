@@ -1,4 +1,4 @@
-using MultiFunPlayer.Common;
+﻿using MultiFunPlayer.Common;
 using MultiFunPlayer.Input;
 using Newtonsoft.Json;
 using PropertyChanged;
@@ -37,7 +37,7 @@ internal abstract class AbstractMotionProvider : Screen, IMotionProvider
     }
 
     protected virtual bool ShouldSyncOnPropertyChanged(string propertyName) => true;
-    protected void RequestSync() =>_eventAggregator?.Publish(new SyncRequestMessage(_target));
+    protected void RequestSync() => _eventAggregator?.Publish(new SyncRequestMessage(_target));
 
     public abstract void Update(double deltaTime);
 
