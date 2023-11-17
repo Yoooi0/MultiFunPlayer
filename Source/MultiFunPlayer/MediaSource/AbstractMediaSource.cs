@@ -9,8 +9,10 @@ using System.Threading.Channels;
 
 namespace MultiFunPlayer.MediaSource;
 
-internal abstract class AbstractMediaSource : Screen, IMediaSource
+internal abstract class AbstractMediaSource : Screen, IMediaSource, IHandle<IMediaSourceControlMessage>
 {
+    private readonly Channel<IMediaSourceControlMessage> _messageChannel;
+    private readonly IEventAggregator _eventAggregator;
     private CancellationTokenSource _cancellationSource;
     private Task _task;
 
@@ -19,18 +21,24 @@ internal abstract class AbstractMediaSource : Screen, IMediaSource
     public bool AutoConnectEnabled { get; set; } = false;
 
     protected bool IsDisposing { get; private set; }
-    protected IEventAggregator EventAggregator { get; }
 
     protected AbstractMediaSource(IShortcutManager shortcutManager, IEventAggregator eventAggregator)
     {
-        EventAggregator = eventAggregator;
-        if (this is IHandle handler)
-            EventAggregator.Subscribe(handler);
+        _messageChannel = Channel.CreateUnbounded<IMediaSourceControlMessage>(new UnboundedChannelOptions()
+        {
+            SingleReader = true,
+            SingleWriter = true,
+        });
+
+        _eventAggregator = eventAggregator;
+        _eventAggregator.Subscribe(this);
 
         RegisterActions(shortcutManager);
     }
 
     protected abstract Task RunAsync(CancellationToken token);
+
+    protected void PublishMessage(object message) => _eventAggregator.Publish(message);
 
     public async virtual Task ConnectAsync()
     {
@@ -141,6 +149,29 @@ internal abstract class AbstractMediaSource : Screen, IMediaSource
         s.RegisterAction<bool>($"{Name}::AutoConnectEnabled::Set", s => s.WithLabel("Enable auto connect"), enabled => AutoConnectEnabled = enabled);
         s.RegisterAction($"{Name}::AutoConnectEnabled::Toggle", () => AutoConnectEnabled = !AutoConnectEnabled);
         #endregion
+    }
+
+    protected void ClearPendingMessages()
+    {
+        while (_messageChannel.Reader.TryRead(out _)) ;
+    }
+
+    protected async ValueTask WaitForMessageAsync(CancellationToken token)
+        => await _messageChannel.Reader.WaitToReadAsync(token);
+
+    protected async ValueTask<IMediaSourceControlMessage> ReadMessageAsync(CancellationToken token)
+        => await _messageChannel.Reader.ReadAsync(token);
+
+    protected bool TryReadMessage(out IMediaSourceControlMessage message)
+        => _messageChannel.Reader.TryRead(out message);
+
+    protected void WriteMessage(IMediaSourceControlMessage message)
+        => _messageChannel.Writer.TryWrite(message);
+
+    public async void Handle(IMediaSourceControlMessage message)
+    {
+        if (Status == ConnectionStatus.Connected)
+            await _messageChannel.Writer.WriteAsync(message);
     }
 
     protected virtual void Dispose(bool disposing)

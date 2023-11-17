@@ -17,25 +17,13 @@ using System.Threading.Channels;
 namespace MultiFunPlayer.MediaSource.ViewModels;
 
 [DisplayName("DeoVR")]
-internal class DeoVRMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlayPauseMessage>, IHandle<MediaSeekMessage>, IHandle<MediaChangePathMessage>, IHandle<MediaChangeSpeedMessage>
+internal class DeoVRMediaSourceViewModel(IShortcutManager shortcutManager, IEventAggregator eventAggregator) : AbstractMediaSource(shortcutManager, eventAggregator)
 {
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
-
-    private readonly Channel<object> _writeMessageChannel;
 
     public override ConnectionStatus Status { get; protected set; }
 
     public EndPoint Endpoint { get; set; } = new IPEndPoint(IPAddress.Loopback, 23554);
-
-    public DeoVRMediaSourceViewModel(IShortcutManager shortcutManager, IEventAggregator eventAggregator)
-        : base(shortcutManager, eventAggregator)
-    {
-        _writeMessageChannel = Channel.CreateUnbounded<object>(new UnboundedChannelOptions()
-        {
-            SingleReader = true,
-            SingleWriter = true,
-        });
-    }
 
     public bool IsConnected => Status == ConnectionStatus.Connected;
     public bool IsConnectBusy => Status == ConnectionStatus.Connecting || Status == ConnectionStatus.Disconnecting;
@@ -64,7 +52,7 @@ internal class DeoVRMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPla
             using var stream = client.GetStream();
 
             Status = ConnectionStatus.Connected;
-            while (_writeMessageChannel.Reader.TryRead(out _));
+            ClearPendingMessages();
 
             using var cancellationSource = CancellationTokenSource.CreateLinkedTokenSource(token);
             var task = await Task.WhenAny(ReadAsync(client, stream, cancellationSource.Token), WriteAsync(client, stream, cancellationSource.Token));
@@ -83,8 +71,8 @@ internal class DeoVRMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPla
         if (IsDisposing)
             return;
 
-        EventAggregator.Publish(new MediaPathChangedMessage(null));
-        EventAggregator.Publish(new MediaPlayingChangedMessage(false));
+        PublishMessage(new MediaPathChangedMessage(null));
+        PublishMessage(new MediaPlayingChangedMessage(false));
     }
 
     private async Task ReadAsync(TcpClient client, NetworkStream stream, CancellationToken token)
@@ -105,8 +93,8 @@ internal class DeoVRMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPla
 
                     if (playerState != null)
                     {
-                        EventAggregator.Publish(new MediaPathChangedMessage(null));
-                        EventAggregator.Publish(new MediaPlayingChangedMessage(false));
+                        PublishMessage(new MediaPathChangedMessage(null));
+                        PublishMessage(new MediaPlayingChangedMessage(false));
                         playerState = null;
                     }
 
@@ -129,32 +117,32 @@ internal class DeoVRMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPla
 
                         if (path != playerState.Path)
                         {
-                            EventAggregator.Publish(new MediaPathChangedMessage(path));
+                            PublishMessage(new MediaPathChangedMessage(path));
                             playerState.Path = path;
                         }
                     }
 
                     if (document.TryGetValue("playerState", out var stateToken) && stateToken.TryToObject<int>(out var state) && state != playerState.State)
                     {
-                        EventAggregator.Publish(new MediaPlayingChangedMessage(state == 0));
+                        PublishMessage(new MediaPlayingChangedMessage(state == 0));
                         playerState.State = state;
                     }
 
                     if (document.TryGetValue("duration", out var durationToken) && durationToken.TryToObject<double>(out var duration) && duration >= 0 && duration != playerState.Duration)
                     {
-                        EventAggregator.Publish(new MediaDurationChangedMessage(TimeSpan.FromSeconds(duration)));
+                        PublishMessage(new MediaDurationChangedMessage(TimeSpan.FromSeconds(duration)));
                         playerState.Duration = duration;
                     }
 
                     if (document.TryGetValue("currentTime", out var timeToken) && timeToken.TryToObject<double>(out var position) && position >= 0 && position != playerState.Position)
                     {
-                        EventAggregator.Publish(new MediaPositionChangedMessage(TimeSpan.FromSeconds(position)));
+                        PublishMessage(new MediaPositionChangedMessage(TimeSpan.FromSeconds(position)));
                         playerState.Position = position;
                     }
 
                     if (document.TryGetValue("playbackSpeed", out var speedToken) && speedToken.TryToObject<double>(out var speed) && speed > 0 && speed != playerState.Speed)
                     {
-                        EventAggregator.Publish(new MediaSpeedChangedMessage(speed));
+                        PublishMessage(new MediaSpeedChangedMessage(speed));
                         playerState.Speed = speed;
                     }
                 }
@@ -173,7 +161,7 @@ internal class DeoVRMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPla
             {
                 using var cancellationSource = CancellationTokenSource.CreateLinkedTokenSource(token);
 
-                var readMessageTask = _writeMessageChannel.Reader.WaitToReadAsync(cancellationSource.Token).AsTask();
+                var readMessageTask = WaitForMessageAsync(cancellationSource.Token).AsTask();
                 var timeoutTask = Task.Delay(1000, cancellationSource.Token);
                 var completedTask = await Task.WhenAny(readMessageTask, timeoutTask);
 
@@ -183,7 +171,7 @@ internal class DeoVRMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPla
 
                 if (completedTask == readMessageTask)
                 {
-                    var message = await _writeMessageChannel.Reader.ReadAsync(token);
+                    var message = await ReadMessageAsync(token);
                     var sendState = new PlayerState();
 
                     if (message is MediaPlayPauseMessage playPauseMessage)
@@ -194,6 +182,8 @@ internal class DeoVRMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPla
                         sendState.Path = changePathMessage.Path;
                     else if (message is MediaChangeSpeedMessage changeSpeedMessage)
                         sendState.Speed = changeSpeedMessage.Speed;
+                    else
+                        continue;
 
                     var messageString = JsonConvert.SerializeObject(sendState);
 
@@ -274,30 +264,6 @@ internal class DeoVRMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPla
                 Endpoint = endpoint;
         });
         #endregion
-    }
-
-    public async void Handle(MediaSeekMessage message)
-    {
-        if (Status == ConnectionStatus.Connected)
-            await _writeMessageChannel.Writer.WriteAsync(message);
-    }
-
-    public async void Handle(MediaPlayPauseMessage message)
-    {
-        if (Status == ConnectionStatus.Connected)
-            await _writeMessageChannel.Writer.WriteAsync(message);
-    }
-
-    public async void Handle(MediaChangePathMessage message)
-    {
-        if (Status == ConnectionStatus.Connected)
-            await _writeMessageChannel.Writer.WriteAsync(message);
-    }
-
-    public async void Handle(MediaChangeSpeedMessage message)
-    {
-        if (Status == ConnectionStatus.Connected)
-            await _writeMessageChannel.Writer.WriteAsync(message);
     }
 
     private class PlayerState

@@ -15,37 +15,22 @@ using Newtonsoft.Json.Linq;
 namespace MultiFunPlayer.MediaSource.ViewModels;
 
 [DisplayName("Plex")]
-internal class PlexMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlayPauseMessage>, IHandle<MediaSeekMessage>
+internal class PlexMediaSourceViewModel(IShortcutManager shortcutManager, IEventAggregator eventAggregator) : AbstractMediaSource(shortcutManager, eventAggregator)
 {
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
-    private readonly Channel<object> _writeMessageChannel;
-    private CancellationTokenSource _refreshCancellationSource;
+    private CancellationTokenSource _refreshCancellationSource = new();
     private XmlNode _currentTimeline;
     private long _commandId;
 
     public override ConnectionStatus Status { get; protected set; }
 
-    public ObservableConcurrentCollection<PlexClient> Clients { get; }
+    public ObservableConcurrentCollection<PlexClient> Clients { get; } = [];
     public PlexClient SelectedClient { get; set; } = null;
     public string SelectedClientMachineIdentifier { get; set; } = null;
     public EndPoint ServerEndpoint { get; set; } = new IPEndPoint(IPAddress.Loopback, 32400);
     public string PlexToken { get; set; } = null;
     private string ClientIdentifier { get; set; } = Guid.NewGuid().ToString();
-
-    public PlexMediaSourceViewModel(IShortcutManager shortcutManager, IEventAggregator eventAggregator)
-        : base(shortcutManager, eventAggregator)
-    {
-        _refreshCancellationSource = new CancellationTokenSource();
-        _writeMessageChannel = Channel.CreateUnbounded<object>(new UnboundedChannelOptions()
-        {
-            SingleReader = true,
-            SingleWriter = true,
-        });
-
-        Clients = [];
-        SelectedClient = null;
-    }
 
     public void OnSelectedClientChanged() => SelectedClientMachineIdentifier = SelectedClient?.MachineIdentifier;
 
@@ -103,8 +88,8 @@ internal class PlexMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlay
         if (IsDisposing)
             return;
 
-        EventAggregator.Publish(new MediaPathChangedMessage(null));
-        EventAggregator.Publish(new MediaPlayingChangedMessage(false));
+        PublishMessage(new MediaPathChangedMessage(null));
+        PublishMessage(new MediaPlayingChangedMessage(false));
     }
 
     private async Task ReadAsync(HttpClient httpClient, CancellationToken token)
@@ -144,8 +129,8 @@ internal class PlexMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlay
 
                 var state = string.Equals(stateAttribute.Value, "playing", StringComparison.OrdinalIgnoreCase);
                 var position = TimeSpan.FromMilliseconds(int.Parse(timeAttribute.Value));
-                EventAggregator.Publish(new MediaPositionChangedMessage(position));
-                EventAggregator.Publish(new MediaPlayingChangedMessage(state));
+                PublishMessage(new MediaPositionChangedMessage(position));
+                PublishMessage(new MediaPlayingChangedMessage(state));
             }
 
             async Task<bool> UpdateMetadataIfNecessaryAsync(string metadataKey, int? streamId)
@@ -184,8 +169,8 @@ internal class PlexMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlay
                 if (string.IsNullOrEmpty(path))
                     return false;
 
-                EventAggregator.Publish(new MediaPathChangedMessage(path));
-                EventAggregator.Publish(new MediaDurationChangedMessage(duration));
+                PublishMessage(new MediaPathChangedMessage(path));
+                PublishMessage(new MediaDurationChangedMessage(duration));
 
                 lastMetadataUri = messageUri;
                 return true;
@@ -247,8 +232,8 @@ internal class PlexMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlay
             {
                 _currentTimeline = null;
                 lastMetadataUri = null;
-                EventAggregator.Publish(new MediaPathChangedMessage(null));
-                EventAggregator.Publish(new MediaPlayingChangedMessage(false));
+                PublishMessage(new MediaPathChangedMessage(null));
+                PublishMessage(new MediaPlayingChangedMessage(false));
             }
         }
         catch (OperationCanceledException) { }
@@ -260,13 +245,13 @@ internal class PlexMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlay
         {
             while (!token.IsCancellationRequested)
             {
-                await _writeMessageChannel.Reader.WaitToReadAsync(token);
+                await WaitForMessageAsync(token);
 
                 if (_currentTimeline == null)
                     continue;
 
                 var mtype = _currentTimeline.Attributes["type"].Value;
-                var message = await _writeMessageChannel.Reader.ReadAsync(token);
+                var message = await ReadMessageAsync(token);
 
                 var commonArguments = $"type={mtype}&commandID={Interlocked.Increment(ref _commandId)}";
                 var messageUriPath = message switch
@@ -486,18 +471,6 @@ internal class PlexMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlay
             e.Throw();
             return null;
         }
-    }
-
-    public async void Handle(MediaSeekMessage message)
-    {
-        if (Status == ConnectionStatus.Connected)
-            await _writeMessageChannel.Writer.WriteAsync(message);
-    }
-
-    public async void Handle(MediaPlayPauseMessage message)
-    {
-        if (Status == ConnectionStatus.Connected)
-            await _writeMessageChannel.Writer.WriteAsync(message);
     }
 
     protected override void Dispose(bool disposing)

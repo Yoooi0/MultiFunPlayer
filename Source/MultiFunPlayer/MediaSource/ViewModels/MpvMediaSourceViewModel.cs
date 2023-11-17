@@ -16,28 +16,17 @@ using System.Threading.Channels;
 namespace MultiFunPlayer.MediaSource.ViewModels;
 
 [DisplayName("MPV")]
-internal class MpvMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlayPauseMessage>, IHandle<MediaSeekMessage>, IHandle<MediaChangePathMessage>, IHandle<MediaChangeSpeedMessage>
+internal class MpvMediaSourceViewModel(IShortcutManager shortcutManager, IEventAggregator eventAggregator) : AbstractMediaSource(shortcutManager, eventAggregator)
 {
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
     private readonly string _pipeName = "multifunplayer-mpv";
-    private readonly Channel<object> _writeMessageChannel;
 
     public override ConnectionStatus Status { get; protected set; }
 
     public FileInfo Executable { get; set; } = null;
     public string Arguments { get; set; } = "--keep-open --pause";
     public bool AutoStartEnabled { get; set; } = false;
-
-    public MpvMediaSourceViewModel(IShortcutManager shortcutManager, IEventAggregator eventAggregator)
-        : base(shortcutManager, eventAggregator)
-    {
-        _writeMessageChannel = Channel.CreateUnbounded<object>(new UnboundedChannelOptions()
-        {
-            SingleReader = true,
-            SingleWriter = true,
-        });
-    }
 
     public bool IsConnected => Status == ConnectionStatus.Connected;
     public bool IsConnectBusy => Status == ConnectionStatus.Connecting || Status == ConnectionStatus.Disconnecting;
@@ -87,7 +76,7 @@ internal class MpvMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlayP
                 await writer.WriteLineAsync("{ \"command\": [\"observe_property_string\", 5, \"speed\"] }");
 
                 Status = ConnectionStatus.Connected;
-                while (_writeMessageChannel.Reader.TryRead(out _));
+                ClearPendingMessages();
 
                 using var cancellationSource = CancellationTokenSource.CreateLinkedTokenSource(token);
                 var task = await Task.WhenAny(ReadAsync(client, reader, cancellationSource.Token), WriteAsync(client, writer, cancellationSource.Token));
@@ -107,8 +96,8 @@ internal class MpvMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlayP
         if (IsDisposing)
             return;
 
-        EventAggregator.Publish(new MediaPathChangedMessage(null));
-        EventAggregator.Publish(new MediaPlayingChangedMessage(false));
+        PublishMessage(new MediaPathChangedMessage(null));
+        PublishMessage(new MediaPlayingChangedMessage(false));
     }
 
     private async Task ReadAsync(NamedPipeClientStream client, StreamReader reader, CancellationToken token)
@@ -138,27 +127,27 @@ internal class MpvMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlayP
                         switch (propertyName)
                         {
                             case "path":
-                                EventAggregator.Publish(new MediaPathChangedMessage(dataToken.TryToObject<string>(out var path) && !string.IsNullOrWhiteSpace(path) ? path : null));
+                                PublishMessage(new MediaPathChangedMessage(dataToken.TryToObject<string>(out var path) && !string.IsNullOrWhiteSpace(path) ? path : null));
                                 break;
                             case "pause":
                                 if (dataToken.TryToObject<string>(out var paused))
-                                    EventAggregator.Publish(new MediaPlayingChangedMessage(!string.Equals(paused, "yes", StringComparison.OrdinalIgnoreCase)));
+                                    PublishMessage(new MediaPlayingChangedMessage(!string.Equals(paused, "yes", StringComparison.OrdinalIgnoreCase)));
                                 break;
                             case "duration":
                                 if (dataToken.TryToObject<double>(out var duration) && duration >= 0)
-                                    EventAggregator.Publish(new MediaDurationChangedMessage(TimeSpan.FromSeconds(duration)));
+                                    PublishMessage(new MediaDurationChangedMessage(TimeSpan.FromSeconds(duration)));
                                 break;
                             case "time-pos":
                                 if (dataToken.TryToObject<double>(out var position) && position >= 0)
                                 {
-                                    EventAggregator.Publish(new MediaPositionChangedMessage(TimeSpan.FromSeconds(position), ForceSeek: nextPositionChangedIsSeek));
+                                    PublishMessage(new MediaPositionChangedMessage(TimeSpan.FromSeconds(position), ForceSeek: nextPositionChangedIsSeek));
                                     nextPositionChangedIsSeek = false;
                                 }
 
                                 break;
                             case "speed":
                                 if (dataToken.TryToObject<double>(out var speed) && speed > 0)
-                                    EventAggregator.Publish(new MediaSpeedChangedMessage(speed));
+                                    PublishMessage(new MediaSpeedChangedMessage(speed));
                                 break;
                         }
                     }
@@ -185,8 +174,8 @@ internal class MpvMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlayP
         {
             while (!token.IsCancellationRequested && client.IsConnected)
             {
-                await _writeMessageChannel.Reader.WaitToReadAsync(token);
-                var message = await _writeMessageChannel.Reader.ReadAsync(token);
+                await WaitForMessageAsync(token);
+                var message = await ReadMessageAsync(token);
 
                 var messageString = message switch
                 {
@@ -313,29 +302,5 @@ internal class MpvMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlayP
         #region Arguments
         s.RegisterAction<string>($"{Name}::Arguments::Set", s => s.WithLabel("Arguments") , arguments => Arguments = arguments);
         #endregion
-    }
-
-    public async void Handle(MediaSeekMessage message)
-    {
-        if (Status == ConnectionStatus.Connected)
-            await _writeMessageChannel.Writer.WriteAsync(message);
-    }
-
-    public async void Handle(MediaPlayPauseMessage message)
-    {
-        if (Status == ConnectionStatus.Connected)
-            await _writeMessageChannel.Writer.WriteAsync(message);
-    }
-
-    public async void Handle(MediaChangePathMessage message)
-    {
-        if (Status == ConnectionStatus.Connected)
-            await _writeMessageChannel.Writer.WriteAsync(message);
-    }
-
-    public async void Handle(MediaChangeSpeedMessage message)
-    {
-        if (Status == ConnectionStatus.Connected)
-            await _writeMessageChannel.Writer.WriteAsync(message);
     }
 }

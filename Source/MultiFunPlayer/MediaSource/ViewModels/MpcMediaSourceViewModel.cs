@@ -13,25 +13,13 @@ using System.Threading.Channels;
 namespace MultiFunPlayer.MediaSource.ViewModels;
 
 [DisplayName("MPC-HC")]
-internal class MpcMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlayPauseMessage>, IHandle<MediaSeekMessage>, IHandle<MediaChangePathMessage>
+internal class MpcMediaSourceViewModel(IShortcutManager shortcutManager, IEventAggregator eventAggregator) : AbstractMediaSource(shortcutManager, eventAggregator)
 {
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
-
-    private readonly Channel<object> _writeMessageChannel;
 
     public override ConnectionStatus Status { get; protected set; }
 
     public EndPoint Endpoint { get; set; } = new IPEndPoint(IPAddress.Loopback, 13579);
-
-    public MpcMediaSourceViewModel(IShortcutManager shortcutManager, IEventAggregator eventAggregator)
-        : base(shortcutManager, eventAggregator)
-    {
-        _writeMessageChannel = Channel.CreateUnbounded<object>(new UnboundedChannelOptions()
-        {
-            SingleReader = true,
-            SingleWriter = true,
-        });
-    }
 
     public bool IsConnected => Status == ConnectionStatus.Connected;
     public bool IsConnectBusy => Status == ConnectionStatus.Connecting || Status == ConnectionStatus.Disconnecting;
@@ -53,7 +41,7 @@ internal class MpcMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlayP
             response.EnsureSuccessStatusCode();
 
             Status = ConnectionStatus.Connected;
-            while (_writeMessageChannel.Reader.TryRead(out _));
+            ClearPendingMessages();
 
             using var cancellationSource = CancellationTokenSource.CreateLinkedTokenSource(token);
             var task = await Task.WhenAny(ReadAsync(client, cancellationSource.Token), WriteAsync(client, cancellationSource.Token));
@@ -71,8 +59,8 @@ internal class MpcMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlayP
         if (IsDisposing)
             return;
 
-        EventAggregator.Publish(new MediaPathChangedMessage(null));
-        EventAggregator.Publish(new MediaPlayingChangedMessage(false));
+        PublishMessage(new MediaPathChangedMessage(null));
+        PublishMessage(new MediaPlayingChangedMessage(false));
     }
 
     private async Task ReadAsync(HttpClient client, CancellationToken token)
@@ -99,7 +87,7 @@ internal class MpcMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlayP
 
                 if (variables.TryGetValue("state", out var stateString) && int.TryParse(stateString, out var state) && state != playerState.State)
                 {
-                    EventAggregator.Publish(new MediaPlayingChangedMessage(state == 2));
+                    PublishMessage(new MediaPlayingChangedMessage(state == 2));
                     playerState.State = state;
                 }
 
@@ -113,26 +101,26 @@ internal class MpcMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlayP
 
                     if (path != playerState.Path)
                     {
-                        EventAggregator.Publish(new MediaPathChangedMessage(path));
+                        PublishMessage(new MediaPathChangedMessage(path));
                         playerState.Path = path;
                     }
                 }
 
                 if (variables.TryGetValue("duration", out var durationString) && long.TryParse(durationString, out var duration) && duration >= 0 && duration != playerState.Duration)
                 {
-                    EventAggregator.Publish(new MediaDurationChangedMessage(TimeSpan.FromMilliseconds(duration)));
+                    PublishMessage(new MediaDurationChangedMessage(TimeSpan.FromMilliseconds(duration)));
                     playerState.Duration = duration;
                 }
 
                 if (variables.TryGetValue("position", out var positionString) && long.TryParse(positionString, out var position) && position >= 0 && position != playerState.Position)
                 {
-                    EventAggregator.Publish(new MediaPositionChangedMessage(TimeSpan.FromMilliseconds(position)));
+                    PublishMessage(new MediaPositionChangedMessage(TimeSpan.FromMilliseconds(position)));
                     playerState.Position = position;
                 }
 
                 if (variables.TryGetValue("playbackrate", out var playbackrateString) && double.TryParse(playbackrateString, out var speed) && speed > 0 && speed != playerState.Speed)
                 {
-                    EventAggregator.Publish(new MediaSpeedChangedMessage(speed));
+                    PublishMessage(new MediaSpeedChangedMessage(speed));
                     playerState.Speed = speed;
                 }
             }
@@ -148,8 +136,8 @@ internal class MpcMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlayP
         {
             while (!token.IsCancellationRequested)
             {
-                await _writeMessageChannel.Reader.WaitToReadAsync(token);
-                var message = await _writeMessageChannel.Reader.ReadAsync(token);
+                await WaitForMessageAsync(token);
+                var message = await ReadMessageAsync(token);
 
                 var uriFile = message switch
                 {
@@ -164,6 +152,9 @@ internal class MpcMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlayP
                     MediaChangePathMessage changePathMessage => string.IsNullOrWhiteSpace(changePathMessage.Path) ? null : $"{Uri.EscapeDataString(changePathMessage.Path)}",
                     _ => null
                 };
+
+                if (uriArguments == null)
+                    continue;
 
                 var requestUri = new Uri($"{uriBase}{uriFile}{uriArguments}");
                 Logger.Trace("Sending \"{0}{1}\" to \"{2}\"", uriFile, uriArguments, Name);
@@ -248,24 +239,6 @@ internal class MpcMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlayP
                 Endpoint = endpoint;
         });
         #endregion
-    }
-
-    public async void Handle(MediaSeekMessage message)
-    {
-        if (Status == ConnectionStatus.Connected)
-            await _writeMessageChannel.Writer.WriteAsync(message);
-    }
-
-    public async void Handle(MediaPlayPauseMessage message)
-    {
-        if (Status == ConnectionStatus.Connected)
-            await _writeMessageChannel.Writer.WriteAsync(message);
-    }
-
-    public async void Handle(MediaChangePathMessage message)
-    {
-        if (Status == ConnectionStatus.Connected)
-            await _writeMessageChannel.Writer.WriteAsync(message);
     }
 
     private class PlayerState

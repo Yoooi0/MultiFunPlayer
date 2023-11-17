@@ -14,25 +14,13 @@ using System.Threading.Channels;
 namespace MultiFunPlayer.MediaSource.ViewModels;
 
 [DisplayName("OFS")]
-internal class OfsMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlayPauseMessage>, IHandle<MediaSeekMessage>, IHandle<MediaChangeSpeedMessage>
+internal class OfsMediaSourceViewModel(IShortcutManager shortcutManager, IEventAggregator eventAggregator) : AbstractMediaSource(shortcutManager, eventAggregator)
 {
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
-
-    private readonly Channel<object> _writeMessageChannel;
 
     public override ConnectionStatus Status { get; protected set; }
 
     public Uri Uri { get; set; } = new Uri("ws://127.0.0.1:8080/ofs");
-
-    public OfsMediaSourceViewModel(IShortcutManager shortcutManager, IEventAggregator eventAggregator)
-        : base(shortcutManager, eventAggregator)
-    {
-        _writeMessageChannel = Channel.CreateUnbounded<object>(new UnboundedChannelOptions()
-        {
-            SingleReader = true,
-            SingleWriter = true,
-        });
-    }
 
     public bool IsConnected => Status == ConnectionStatus.Connected;
     public bool IsConnectBusy => Status == ConnectionStatus.Connecting || Status == ConnectionStatus.Disconnecting;
@@ -66,8 +54,8 @@ internal class OfsMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlayP
         if (IsDisposing)
             return;
 
-        EventAggregator.Publish(new MediaPathChangedMessage(null));
-        EventAggregator.Publish(new MediaPlayingChangedMessage(false));
+        PublishMessage(new MediaPathChangedMessage(null));
+        PublishMessage(new MediaPlayingChangedMessage(false));
     }
 
     private async Task ReadAsync(ClientWebSocket client, CancellationToken token)
@@ -104,23 +92,23 @@ internal class OfsMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlayP
                     switch (eventName)
                     {
                         case "media_change":
-                            EventAggregator.Publish(new MediaPathChangedMessage(dataToken.TryGetValue<string>("path", out var path) && !string.IsNullOrWhiteSpace(path) ? path : null, ReloadScripts: false));
+                            PublishMessage(new MediaPathChangedMessage(dataToken.TryGetValue<string>("path", out var path) && !string.IsNullOrWhiteSpace(path) ? path : null, ReloadScripts: false));
                             break;
                         case "play_change":
                             if (dataToken.TryGetValue<bool>("playing", out var isPlaying))
-                                EventAggregator.Publish(new MediaPlayingChangedMessage(isPlaying));
+                                PublishMessage(new MediaPlayingChangedMessage(isPlaying));
                             break;
                         case "duration_change":
                             if (dataToken.TryGetValue<double>("duration", out var duration) && duration >= 0)
-                                EventAggregator.Publish(new MediaDurationChangedMessage(TimeSpan.FromSeconds(duration)));
+                                PublishMessage(new MediaDurationChangedMessage(TimeSpan.FromSeconds(duration)));
                             break;
                         case "time_change":
                             if (dataToken.TryGetValue<double>("time", out var position) && position >= 0)
-                                EventAggregator.Publish(new MediaPositionChangedMessage(TimeSpan.FromSeconds(position), ForceSeek: true));
+                                PublishMessage(new MediaPositionChangedMessage(TimeSpan.FromSeconds(position), ForceSeek: true));
                             break;
                         case "playbackspeed_change":
                             if (dataToken.TryGetValue<double>("speed", out var speed) && speed > 0)
-                                EventAggregator.Publish(new MediaSpeedChangedMessage(speed));
+                                PublishMessage(new MediaSpeedChangedMessage(speed));
                             break;
                         case "funscript_change":
                             {
@@ -137,13 +125,13 @@ internal class OfsMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlayP
 
                                 if (readerResult.IsMultiAxis)
                                 {
-                                    EventAggregator.Publish(new ChangeScriptMessage(readerResult.Resources));
+                                    PublishMessage(new ChangeScriptMessage(readerResult.Resources));
                                 }
                                 else
                                 {
                                     var axes = DeviceAxisUtils.FindAxesMatchingName(name);
                                     if (axes.Any())
-                                        EventAggregator.Publish(new ChangeScriptMessage(axes.ToDictionary(a => a, _ => readerResult.Resource)));
+                                        PublishMessage(new ChangeScriptMessage(axes.ToDictionary(a => a, _ => readerResult.Resource)));
                                 }
                             }
 
@@ -159,13 +147,13 @@ internal class OfsMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlayP
                                 if (!axes.Any())
                                     break;
 
-                                EventAggregator.Publish(new ChangeScriptMessage(axes.ToDictionary(a => a, _ => default(IScriptResource))));
+                                PublishMessage(new ChangeScriptMessage(axes.ToDictionary(a => a, _ => default(IScriptResource))));
                             }
 
                             break;
                         case "project_change":
-                            EventAggregator.Publish(new MediaPathChangedMessage(null, ReloadScripts: false));
-                            EventAggregator.Publish(new MediaPlayingChangedMessage(false));
+                            PublishMessage(new MediaPathChangedMessage(null, ReloadScripts: false));
+                            PublishMessage(new MediaPlayingChangedMessage(false));
                             break;
                     }
                 }
@@ -184,8 +172,8 @@ internal class OfsMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlayP
         {
             while (!token.IsCancellationRequested && client.State == WebSocketState.Open)
             {
-                await _writeMessageChannel.Reader.WaitToReadAsync(token);
-                var message = await _writeMessageChannel.Reader.ReadAsync(token);
+                await WaitForMessageAsync(token);
+                var message = await ReadMessageAsync(token);
 
                 var messageString = message switch
                 {
@@ -250,23 +238,5 @@ internal class OfsMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlayP
                 Uri = uri;
         });
         #endregion
-    }
-
-    public async void Handle(MediaSeekMessage message)
-    {
-        if (Status == ConnectionStatus.Connected)
-            await _writeMessageChannel.Writer.WriteAsync(message);
-    }
-
-    public async void Handle(MediaPlayPauseMessage message)
-    {
-        if (Status == ConnectionStatus.Connected)
-            await _writeMessageChannel.Writer.WriteAsync(message);
-    }
-
-    public async void Handle(MediaChangeSpeedMessage message)
-    {
-        if (Status == ConnectionStatus.Connected)
-            await _writeMessageChannel.Writer.WriteAsync(message);
     }
 }

@@ -59,25 +59,25 @@ internal class WhirligigMediaSourceViewModel(IShortcutManager shortcutManager, I
                 if (message.Length >= 1 && message[0] == 'C')
                 {
                     var parts = message.Split(' ', 2);
-                    EventAggregator.Publish(new MediaPathChangedMessage(parts.Length == 2 && !string.IsNullOrWhiteSpace(parts[1]) ? parts[1].Trim('"') : null));
+                    PublishMessage(new MediaPathChangedMessage(parts.Length == 2 && !string.IsNullOrWhiteSpace(parts[1]) ? parts[1].Trim('"') : null));
                 }
                 else if (message.Length >= 1 && message[0] == 'S')
                 {
-                    EventAggregator.Publish(new MediaPlayingChangedMessage(false));
+                    PublishMessage(new MediaPlayingChangedMessage(false));
                 }
                 else if (message.Length >= 8 && message[..8] == "duration")
                 {
                     var parts = message.Split('=', 2, StringSplitOptions.TrimEntries);
                     if (parts.Length == 2 && double.TryParse(parts[1].Replace(',', '.'), NumberStyles.Any, NumberFormatInfo.InvariantInfo, out var duration) && duration >= 0)
-                        EventAggregator.Publish(new MediaDurationChangedMessage(TimeSpan.FromSeconds(duration)));
+                        PublishMessage(new MediaDurationChangedMessage(TimeSpan.FromSeconds(duration)));
                 }
                 else if (message.Length >= 1 && message[0] == 'P')
                 {
                     var parts = message.Split(' ', 2);
-                    EventAggregator.Publish(new MediaPlayingChangedMessage(true));
+                    PublishMessage(new MediaPlayingChangedMessage(true));
 
                     if (parts.Length == 2 && double.TryParse(parts[1].Replace(',', '.'), NumberStyles.Any, NumberFormatInfo.InvariantInfo, out var position) && position >= 0)
-                        EventAggregator.Publish(new MediaPositionChangedMessage(TimeSpan.FromSeconds(position)));
+                        PublishMessage(new MediaPositionChangedMessage(TimeSpan.FromSeconds(position)));
                 }
             }
         }
@@ -92,8 +92,8 @@ internal class WhirligigMediaSourceViewModel(IShortcutManager shortcutManager, I
         if (IsDisposing)
             return;
 
-        EventAggregator.Publish(new MediaPathChangedMessage(null));
-        EventAggregator.Publish(new MediaPlayingChangedMessage(false));
+        PublishMessage(new MediaPathChangedMessage(null));
+        PublishMessage(new MediaPlayingChangedMessage(false));
     }
 
     public override void HandleSettings(JObject settings, SettingsAction action)

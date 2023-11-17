@@ -15,12 +15,11 @@ using System.Windows;
 namespace MultiFunPlayer.MediaSource.ViewModels;
 
 [DisplayName("Internal")]
-internal class InternalMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlayPauseMessage>, IHandle<MediaSeekMessage>, IHandle<MediaChangePathMessage>, IHandle<MediaChangeSpeedMessage>
+internal class InternalMediaSourceViewModel(IShortcutManager shortcutManager, IEventAggregator eventAggregator) : AbstractMediaSource(shortcutManager, eventAggregator)
 {
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
     private readonly object _playlistLock = new();
-    private readonly Channel<object> _messageChannel;
 
     private bool _isPlaying;
     private double _position;
@@ -34,16 +33,6 @@ internal class InternalMediaSourceViewModel : AbstractMediaSource, IHandle<Media
 
     public bool IsShuffling { get; set; } = false;
     public bool IsLooping { get; set; } = false;
-
-    public InternalMediaSourceViewModel(IShortcutManager shortcutManager, IEventAggregator eventAggregator)
-        : base(shortcutManager, eventAggregator)
-    {
-        _messageChannel = Channel.CreateUnbounded<object>(new UnboundedChannelOptions()
-        {
-            SingleReader = true,
-            SingleWriter = true
-        });
-    }
 
     public bool IsConnected => Status == ConnectionStatus.Connected;
     public bool IsConnectBusy => Status == ConnectionStatus.Connecting || Status == ConnectionStatus.Disconnecting;
@@ -60,7 +49,7 @@ internal class InternalMediaSourceViewModel : AbstractMediaSource, IHandle<Media
             SetIsPlaying(false);
             SetSpeed(1);
 
-            while (_messageChannel.Reader.TryRead(out var _)) ;
+            ClearPendingMessages();
 
             Status = ConnectionStatus.Connected;
 
@@ -74,7 +63,7 @@ internal class InternalMediaSourceViewModel : AbstractMediaSource, IHandle<Media
                     var elapsed = (currentTicks - lastTicks) / (double)Stopwatch.Frequency;
                     lastTicks = currentTicks;
 
-                    while (_messageChannel.Reader.TryRead(out var message))
+                    while (TryReadMessage(out var message))
                     {
                         if (message is MediaPlayPauseMessage playPauseMessage) { SetIsPlaying(playPauseMessage.ShouldBePlaying); }
                         else if (message is MediaSeekMessage seekMessage && _currentItem != null) { SetPosition(seekMessage.Position.TotalSeconds); }
@@ -148,8 +137,7 @@ internal class InternalMediaSourceViewModel : AbstractMediaSource, IHandle<Media
 
         PlayIndex(-1);
         SetIsPlaying(false);
-
-        while (_messageChannel.Reader.TryRead(out var _));
+        ClearPendingMessages();
     }
 
     private bool? CheckIndexAndRefresh(int index)
@@ -240,8 +228,8 @@ internal class InternalMediaSourceViewModel : AbstractMediaSource, IHandle<Media
 
     public bool CanPlayNext => IsConnected && ScriptPlaylist != null;
     public bool CanPlayPrevious => IsConnected && ScriptPlaylist != null;
-    public void PlayNext() => _ = _messageChannel.Writer.TryWrite(new PlayScriptWithOffsetMessage(1));
-    public void PlayPrevious() => _ = _messageChannel.Writer.TryWrite(new PlayScriptWithOffsetMessage(-1));
+    public void PlayNext() => WriteMessage(new PlayScriptWithOffsetMessage(1));
+    public void PlayPrevious() => WriteMessage(new PlayScriptWithOffsetMessage(-1));
 
     public bool CanClearPlaylist => IsConnected && ScriptPlaylist != null;
     public void ClearPlaylist() => SetPlaylist(null);
@@ -282,7 +270,7 @@ internal class InternalMediaSourceViewModel : AbstractMediaSource, IHandle<Media
         if (Status != ConnectionStatus.Connected && Status != ConnectionStatus.Disconnecting)
             return;
 
-        EventAggregator.Publish(new ChangeScriptMessage(DeviceAxis.All, null));
+        PublishMessage(new ChangeScriptMessage(DeviceAxis.All, null));
         var result = item == null ? null : FunscriptReader.Default.FromFileInfo(item.AsFileInfo());
         if (result?.IsSuccess != true)
         {
@@ -293,13 +281,13 @@ internal class InternalMediaSourceViewModel : AbstractMediaSource, IHandle<Media
 
         if (result.IsMultiAxis)
         {
-            EventAggregator.Publish(new ChangeScriptMessage(result.Resources));
+            PublishMessage(new ChangeScriptMessage(result.Resources));
             SetDuration(result.Resources.Values.Max(s => s.Keyframes[^1].Position));
         }
         else
         {
             var axes = DeviceAxisUtils.FindAxesMatchingName(item.Name, true);
-            EventAggregator.Publish(new ChangeScriptMessage(axes, result.Resource));
+            PublishMessage(new ChangeScriptMessage(axes, result.Resource));
             SetDuration(result.Resource.Keyframes[^1].Position);
         }
 
@@ -310,28 +298,28 @@ internal class InternalMediaSourceViewModel : AbstractMediaSource, IHandle<Media
     {
         _duration = duration;
         if (Status == ConnectionStatus.Connected || Status == ConnectionStatus.Disconnecting)
-            EventAggregator.Publish(new MediaDurationChangedMessage(double.IsFinite(duration) ? TimeSpan.FromSeconds(duration) : null));
+            PublishMessage(new MediaDurationChangedMessage(double.IsFinite(duration) ? TimeSpan.FromSeconds(duration) : null));
     }
 
     private void SetPosition(double position, bool forceSeek = false)
     {
         _position = position;
         if (Status == ConnectionStatus.Connected || Status == ConnectionStatus.Disconnecting)
-            EventAggregator.Publish(new MediaPositionChangedMessage(double.IsFinite(position) ? TimeSpan.FromSeconds(position) : null, forceSeek));
+            PublishMessage(new MediaPositionChangedMessage(double.IsFinite(position) ? TimeSpan.FromSeconds(position) : null, forceSeek));
     }
 
     private void SetSpeed(double speed)
     {
         _speed = speed;
         if (Status == ConnectionStatus.Connected || Status == ConnectionStatus.Disconnecting)
-            EventAggregator.Publish(new MediaSpeedChangedMessage(speed));
+            PublishMessage(new MediaSpeedChangedMessage(speed));
     }
 
     private void SetIsPlaying(bool isPlaying)
     {
         _isPlaying = isPlaying;
         if (Status == ConnectionStatus.Connected || Status == ConnectionStatus.Disconnecting)
-            EventAggregator.Publish(new MediaPlayingChangedMessage(isPlaying));
+            PublishMessage(new MediaPlayingChangedMessage(isPlaying));
     }
 
     public void OnDrop(object sender, DragEventArgs e)
@@ -408,7 +396,7 @@ internal class InternalMediaSourceViewModel : AbstractMediaSource, IHandle<Media
         s.RegisterAction($"{Name}::Playlist::Clear", () => WhenConnected(ClearPlaylist));
         s.RegisterAction($"{Name}::Playlist::Prev", () => WhenConnected(PlayPrevious));
         s.RegisterAction($"{Name}::Playlist::Next", () => WhenConnected(PlayNext));
-        s.RegisterAction<int>($"{Name}::Playlist::PlayByIndex", s => s.WithLabel("Index"), index => WhenConnected(() => _messageChannel.Writer.TryWrite(new PlayScriptAtIndexMessage(index))));
+        s.RegisterAction<int>($"{Name}::Playlist::PlayByIndex", s => s.WithLabel("Index"), index => WhenConnected(() => WriteMessage(new PlayScriptAtIndexMessage(index))));
         s.RegisterAction<string>($"{Name}::Playlist::PlayByName", s => s.WithLabel("File name/path"), name => WhenConnected(() =>
         {
             var playlist = ScriptPlaylist;
@@ -417,33 +405,9 @@ internal class InternalMediaSourceViewModel : AbstractMediaSource, IHandle<Media
 
             var index = playlist.FindIndex(name);
             if (index >= 0)
-                _messageChannel.Writer.TryWrite(new PlayScriptAtIndexMessage(index));
+                WriteMessage(new PlayScriptAtIndexMessage(index));
         }));
         #endregion
-    }
-
-    public void Handle(MediaSeekMessage message)
-    {
-        if (Status == ConnectionStatus.Connected)
-            _messageChannel.Writer.TryWrite(message);
-    }
-
-    public void Handle(MediaPlayPauseMessage message)
-    {
-        if (Status == ConnectionStatus.Connected)
-            _messageChannel.Writer.TryWrite(message);
-    }
-
-    public void Handle(MediaChangePathMessage message)
-    {
-        if (Status == ConnectionStatus.Connected)
-            _messageChannel.Writer.TryWrite(message);
-    }
-
-    public void Handle(MediaChangeSpeedMessage message)
-    {
-        if (Status == ConnectionStatus.Connected)
-            _messageChannel.Writer.TryWrite(message);
     }
 
     public void OnPlayScript(object sender, EventArgs e)
@@ -459,7 +423,7 @@ internal class InternalMediaSourceViewModel : AbstractMediaSource, IHandle<Media
         if (index < 0)
             return;
 
-        _ = _messageChannel.Writer.TryWrite(new PlayScriptAtIndexMessage(index));
+        WriteMessage(new PlayScriptAtIndexMessage(index));
     }
 
     public void OnRemoveItem(object sender, RoutedEventArgs e)
@@ -492,8 +456,8 @@ internal class InternalMediaSourceViewModel : AbstractMediaSource, IHandle<Media
             IsLooping = false;
     }
 
-    private record PlayScriptAtIndexMessage(int Index);
-    private record PlayScriptWithOffsetMessage(int Offset);
+    private record PlayScriptAtIndexMessage(int Index) : IMediaSourceControlMessage;
+    private record PlayScriptWithOffsetMessage(int Offset) : IMediaSourceControlMessage;
 
     internal class Playlist : IReadOnlyList<PlaylistItem>, INotifyCollectionChanged, INotifyPropertyChanged
     {

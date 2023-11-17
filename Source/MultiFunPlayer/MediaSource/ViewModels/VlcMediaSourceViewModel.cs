@@ -17,27 +17,16 @@ using System.Xml.XPath;
 namespace MultiFunPlayer.MediaSource.ViewModels;
 
 [DisplayName("VLC")]
-internal class VlcMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlayPauseMessage>, IHandle<MediaSeekMessage>, IHandle<MediaChangePathMessage>, IHandle<MediaChangeSpeedMessage>
+internal class VlcMediaSourceViewModel(IShortcutManager shortcutManager, IEventAggregator eventAggregator) : AbstractMediaSource(shortcutManager, eventAggregator)
 {
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
-    private readonly Channel<object> _writeMessageChannel;
     private PlayerState _playerState;
 
     public override ConnectionStatus Status { get; protected set; }
 
     public EndPoint Endpoint { get; set; } = new IPEndPoint(IPAddress.Loopback, 8080);
     public string Password { get; set; } = null;
-
-    public VlcMediaSourceViewModel(IShortcutManager shortcutManager, IEventAggregator eventAggregator)
-        : base(shortcutManager, eventAggregator)
-    {
-        _writeMessageChannel = Channel.CreateUnbounded<object>(new UnboundedChannelOptions()
-        {
-            SingleReader = true,
-            SingleWriter = true,
-        });
-    }
 
     public bool IsConnected => Status == ConnectionStatus.Connected;
     public bool IsConnectBusy => Status == ConnectionStatus.Connecting || Status == ConnectionStatus.Disconnecting;
@@ -60,7 +49,7 @@ internal class VlcMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlayP
             response.EnsureSuccessStatusCode();
 
             Status = ConnectionStatus.Connected;
-            while (_writeMessageChannel.Reader.TryRead(out _));
+            ClearPendingMessages();
 
             _playerState = new PlayerState();
 
@@ -80,8 +69,8 @@ internal class VlcMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlayP
         if (IsDisposing)
             return;
 
-        EventAggregator.Publish(new MediaPathChangedMessage(null));
-        EventAggregator.Publish(new MediaPlayingChangedMessage(false));
+        PublishMessage(new MediaPathChangedMessage(null));
+        PublishMessage(new MediaPlayingChangedMessage(false));
     }
 
     private async Task ReadAsync(HttpClient client, CancellationToken token)
@@ -136,31 +125,31 @@ internal class VlcMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlayP
                         continue;
                     }
 
-                    EventAggregator.Publish(new MediaPathChangedMessage(Uri.UnescapeDataString(path)));
+                    PublishMessage(new MediaPathChangedMessage(Uri.UnescapeDataString(path)));
                     _playerState.PlaylistId = playlistId;
                 }
 
                 if (statusDocument.Root.Element("state")?.Value is string state && state != _playerState.State)
                 {
-                    EventAggregator.Publish(new MediaPlayingChangedMessage(string.Equals(state, "playing", StringComparison.OrdinalIgnoreCase)));
+                    PublishMessage(new MediaPlayingChangedMessage(string.Equals(state, "playing", StringComparison.OrdinalIgnoreCase)));
                     _playerState.State = state;
                 }
 
                 if (int.TryParse(statusDocument.Root.Element("length")?.Value, out var duration) && duration >= 0 && duration != _playerState.Duration)
                 {
-                    EventAggregator.Publish(new MediaDurationChangedMessage(TimeSpan.FromSeconds(duration)));
+                    PublishMessage(new MediaDurationChangedMessage(TimeSpan.FromSeconds(duration)));
                     _playerState.Duration = duration;
                 }
 
                 if (double.TryParse(statusDocument.Root.Element("position")?.Value, out var position) && position >= 0 && position != _playerState.Position && _playerState.Duration != null)
                 {
-                    EventAggregator.Publish(new MediaPositionChangedMessage(TimeSpan.FromSeconds(position * (double)_playerState.Duration)));
+                    PublishMessage(new MediaPositionChangedMessage(TimeSpan.FromSeconds(position * (double)_playerState.Duration)));
                     _playerState.Position = position;
                 }
 
                 if (double.TryParse(statusDocument.Root.Element("rate")?.Value, out var speed) && speed > 0 && speed != _playerState.Speed)
                 {
-                    EventAggregator.Publish(new MediaSpeedChangedMessage(speed));
+                    PublishMessage(new MediaSpeedChangedMessage(speed));
                     _playerState.Speed = speed;
                 }
             }
@@ -171,8 +160,8 @@ internal class VlcMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlayP
         {
             _playerState = new PlayerState();
 
-            EventAggregator.Publish(new MediaPathChangedMessage(null));
-            EventAggregator.Publish(new MediaPlayingChangedMessage(false));
+            PublishMessage(new MediaPathChangedMessage(null));
+            PublishMessage(new MediaPlayingChangedMessage(false));
         }
     }
 
@@ -184,8 +173,8 @@ internal class VlcMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlayP
         {
             while (!token.IsCancellationRequested)
             {
-                await _writeMessageChannel.Reader.WaitToReadAsync(token);
-                var message = await _writeMessageChannel.Reader.ReadAsync(token);
+                await WaitForMessageAsync(token);
+                var message = await ReadMessageAsync(token);
 
                 var isPlaying = string.Equals(_playerState?.State, "playing", StringComparison.OrdinalIgnoreCase);
                 var uriArguments = message switch
@@ -312,30 +301,6 @@ internal class VlcMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlayP
                 Endpoint = endpoint;
         });
         #endregion
-    }
-
-    public async void Handle(MediaSeekMessage message)
-    {
-        if (Status == ConnectionStatus.Connected)
-            await _writeMessageChannel.Writer.WriteAsync(message);
-    }
-
-    public async void Handle(MediaPlayPauseMessage message)
-    {
-        if (Status == ConnectionStatus.Connected)
-            await _writeMessageChannel.Writer.WriteAsync(message);
-    }
-
-    public async void Handle(MediaChangePathMessage message)
-    {
-        if (Status == ConnectionStatus.Connected)
-            await _writeMessageChannel.Writer.WriteAsync(message);
-    }
-
-    public async void Handle(MediaChangeSpeedMessage message)
-    {
-        if (Status == ConnectionStatus.Connected)
-            await _writeMessageChannel.Writer.WriteAsync(message);
     }
 
     private class PlayerState

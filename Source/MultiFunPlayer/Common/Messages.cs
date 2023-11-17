@@ -26,10 +26,11 @@ public class ChangeScriptMessage
     public ChangeScriptMessage(IEnumerable<DeviceAxis> axes, IScriptResource scriptResource) => Scripts = axes.ToDictionary(a => a, _ => scriptResource);
 }
 
-public record MediaSeekMessage(TimeSpan Position);
-public record MediaPlayPauseMessage(bool ShouldBePlaying);
-public record MediaChangePathMessage(string Path);
-public record MediaChangeSpeedMessage(double Speed);
+public interface IMediaSourceControlMessage { }
+public record MediaSeekMessage(TimeSpan Position) : IMediaSourceControlMessage;
+public record MediaPlayPauseMessage(bool ShouldBePlaying) : IMediaSourceControlMessage;
+public record MediaChangePathMessage(string Path) : IMediaSourceControlMessage;
+public record MediaChangeSpeedMessage(double Speed) : IMediaSourceControlMessage;
 
 public class SyncRequestMessage
 {

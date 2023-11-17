@@ -13,35 +13,20 @@ using System.Threading.Channels;
 namespace MultiFunPlayer.MediaSource.ViewModels;
 
 [DisplayName("Emby")]
-internal class EmbyMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlayPauseMessage>, IHandle<MediaSeekMessage>, IHandle<MediaChangePathMessage>
+internal class EmbyMediaSourceViewModel(IShortcutManager shortcutManager, IEventAggregator eventAggregator) : AbstractMediaSource(shortcutManager, eventAggregator)
 {
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
-    private readonly Channel<object> _writeMessageChannel;
-    private CancellationTokenSource _refreshCancellationSource;
+    private CancellationTokenSource _refreshCancellationSource = new();
     private EmbySession _currentSession;
 
     public override ConnectionStatus Status { get; protected set; }
 
     public EndPoint ServerEndpoint { get; set; } = new IPEndPoint(IPAddress.Loopback, 8096);
     public string ApiKey { get; set; }
-    public EmbyDevice SelectedDevice { get; set; }
+    public EmbyDevice SelectedDevice { get; set; } = null;
     public string SelectedDeviceId { get; set; }
-    public ObservableConcurrentCollection<EmbyDevice> Devices { get; set; }
-
-    public EmbyMediaSourceViewModel(IShortcutManager shortcutManager, IEventAggregator eventAggregator)
-        : base(shortcutManager, eventAggregator)
-    {
-        _refreshCancellationSource = new CancellationTokenSource();
-        _writeMessageChannel = Channel.CreateUnbounded<object>(new UnboundedChannelOptions()
-        {
-            SingleReader = true,
-            SingleWriter = true,
-        });
-
-        Devices = [];
-        SelectedDevice = null;
-    }
+    public ObservableConcurrentCollection<EmbyDevice> Devices { get; set; } = [];
 
     public void OnSelectedDeviceChanged() => SelectedDeviceId = SelectedDevice?.Id;
 
@@ -84,7 +69,7 @@ internal class EmbyMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlay
             response.EnsureSuccessStatusCode();
 
             Status = ConnectionStatus.Connected;
-            while (_writeMessageChannel.Reader.TryRead(out _)) ;
+            ClearPendingMessages();
 
             using var cancellationSource = CancellationTokenSource.CreateLinkedTokenSource(token);
             var task = await Task.WhenAny(ReadAsync(client, cancellationSource.Token), WriteAsync(client, cancellationSource.Token));
@@ -102,8 +87,8 @@ internal class EmbyMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlay
         if (IsDisposing)
             return;
 
-        EventAggregator.Publish(new MediaPathChangedMessage(null));
-        EventAggregator.Publish(new MediaPlayingChangedMessage(false));
+        PublishMessage(new MediaPathChangedMessage(null));
+        PublishMessage(new MediaPlayingChangedMessage(false));
     }
 
     private async Task ReadAsync(HttpClient client, CancellationToken token)
@@ -142,30 +127,30 @@ internal class EmbyMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlay
 
                 if (item == null && lastItem != null)
                 {
-                    EventAggregator.Publish(new MediaPathChangedMessage(null));
-                    EventAggregator.Publish(new MediaPlayingChangedMessage(false));
+                    PublishMessage(new MediaPathChangedMessage(null));
+                    PublishMessage(new MediaPlayingChangedMessage(false));
                 }
 
                 if (item?.Path != null)
                 {
                     if (lastItem?.Path == null || !string.Equals(lastItem.Path, item.Path, StringComparison.Ordinal))
                     {
-                        EventAggregator.Publish(new MediaPathChangedMessage(item.Path));
-                        EventAggregator.Publish(new MediaDurationChangedMessage(TimeSpan.FromMilliseconds(item.RunTimeTicks / 10000.0)));
-                        EventAggregator.Publish(new MediaPositionChangedMessage(TimeSpan.FromMilliseconds(state.PositionTicks / 10000.0), ForceSeek: true));
-                        EventAggregator.Publish(new MediaSpeedChangedMessage(state.PlaybackRate));
-                        EventAggregator.Publish(new MediaPlayingChangedMessage(!state.IsPaused));
+                        PublishMessage(new MediaPathChangedMessage(item.Path));
+                        PublishMessage(new MediaDurationChangedMessage(TimeSpan.FromMilliseconds(item.RunTimeTicks / 10000.0)));
+                        PublishMessage(new MediaPositionChangedMessage(TimeSpan.FromMilliseconds(state.PositionTicks / 10000.0), ForceSeek: true));
+                        PublishMessage(new MediaSpeedChangedMessage(state.PlaybackRate));
+                        PublishMessage(new MediaPlayingChangedMessage(!state.IsPaused));
                     }
                     else
                     {
                         if (lastItem == null || lastItem.RunTimeTicks != item.RunTimeTicks)
-                            EventAggregator.Publish(new MediaDurationChangedMessage(TimeSpan.FromMilliseconds(item.RunTimeTicks / 10000.0)));
+                            PublishMessage(new MediaDurationChangedMessage(TimeSpan.FromMilliseconds(item.RunTimeTicks / 10000.0)));
                         if (lastState == null || lastState.IsPaused != state.IsPaused)
-                            EventAggregator.Publish(new MediaPlayingChangedMessage(!state.IsPaused));
+                            PublishMessage(new MediaPlayingChangedMessage(!state.IsPaused));
                         if (lastState == null || lastState.PositionTicks != state.PositionTicks)
-                            EventAggregator.Publish(new MediaPositionChangedMessage(TimeSpan.FromMilliseconds(state.PositionTicks / 10000.0)));
+                            PublishMessage(new MediaPositionChangedMessage(TimeSpan.FromMilliseconds(state.PositionTicks / 10000.0)));
                         if (lastState == null || double.Abs(lastState.PlaybackRate - state.PlaybackRate) > 0.00001)
-                            EventAggregator.Publish(new MediaSpeedChangedMessage(state.PlaybackRate));
+                            PublishMessage(new MediaSpeedChangedMessage(state.PlaybackRate));
                     }
                 }
 
@@ -182,8 +167,8 @@ internal class EmbyMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlay
         {
             while (!token.IsCancellationRequested)
             {
-                await _writeMessageChannel.Reader.WaitToReadAsync(token);
-                var message = await _writeMessageChannel.Reader.ReadAsync(token);
+                await WaitForMessageAsync(token);
+                var message = await ReadMessageAsync(token);
 
                 if (_currentSession == null)
                     continue;
@@ -347,24 +332,6 @@ internal class EmbyMediaSourceViewModel : AbstractMediaSource, IHandle<MediaPlay
                 ServerEndpoint = endpoint;
         });
         #endregion
-    }
-
-    public async void Handle(MediaSeekMessage message)
-    {
-        if (Status == ConnectionStatus.Connected)
-            await _writeMessageChannel.Writer.WriteAsync(message);
-    }
-
-    public async void Handle(MediaPlayPauseMessage message)
-    {
-        if (Status == ConnectionStatus.Connected)
-            await _writeMessageChannel.Writer.WriteAsync(message);
-    }
-
-    public async void Handle(MediaChangePathMessage message)
-    {
-        if (Status == ConnectionStatus.Connected)
-            await _writeMessageChannel.Writer.WriteAsync(message);
     }
 
     protected override void Dispose(bool disposing)
