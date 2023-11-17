@@ -1,4 +1,4 @@
-﻿using MultiFunPlayer.Common;
+using MultiFunPlayer.Common;
 using MultiFunPlayer.Input;
 using Newtonsoft.Json;
 using PropertyChanged;
@@ -13,7 +13,7 @@ internal abstract class AbstractMotionProvider : Screen, IMotionProvider
     private readonly DeviceAxis _target;
     private readonly IEventAggregator _eventAggregator;
 
-    public string Name => GetType().GetCustomAttribute<DisplayNameAttribute>(inherit: false).DisplayName;
+    public string Name { get; init; }
     [DoNotNotify] public double Value { get; protected set; }
 
     [JsonProperty] public double Speed { get; set; } = 1;
@@ -24,6 +24,8 @@ internal abstract class AbstractMotionProvider : Screen, IMotionProvider
     {
         _target = target;
         _eventAggregator = eventAggregator;
+
+        Name = GetType().GetCustomAttribute<DisplayNameAttribute>(inherit: false).DisplayName;
     }
 
     protected override void OnPropertyChanged(string propertyName)
