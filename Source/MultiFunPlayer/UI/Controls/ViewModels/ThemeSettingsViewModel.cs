@@ -40,6 +40,19 @@ internal class ThemeSettingsViewModel : Screen, IHandle<SettingsMessage>
             ApplyTheme();
     }
 
+    public void OnResetClick()
+    {
+        IgnorePropertyChanged(() =>
+        {
+            PrimaryColor = Color.FromRgb(0x71, 0x87, 0x92);
+            EnableColorAdjustment = false;
+            Contrast = Contrast.Medium;
+            ContrastRatio = 4.5;
+            IsDarkTheme = false;
+        });
+        ApplyTheme();
+    }
+
     private void ApplyTheme()
     {
         if (_paletteHelper.GetTheme() is not Theme theme)
