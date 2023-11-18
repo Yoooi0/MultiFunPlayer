@@ -298,6 +298,9 @@ internal class PlexMediaSourceViewModel(IShortcutManager shortcutManager, IEvent
     private int _isRefreshingFlag;
     public async Task RefreshClients()
     {
+        if (string.IsNullOrWhiteSpace(PlexToken))
+            return;
+
         if (Interlocked.CompareExchange(ref _isRefreshingFlag, 1, 0) != 0)
             return;
 
@@ -330,6 +333,8 @@ internal class PlexMediaSourceViewModel(IShortcutManager shortcutManager, IEvent
             AddDefaultHeaders(message.Headers);
 
             var response = await client.SendAsync(message, token);
+            response.EnsureSuccessStatusCode();
+
             var document = new XmlDocument();
             document.Load(await response.Content.ReadAsStreamAsync(token));
 
