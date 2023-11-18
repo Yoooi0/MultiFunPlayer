@@ -8,6 +8,7 @@ using Newtonsoft.Json.Linq;
 using NLog;
 using PropertyChanged;
 using Stylet;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Net;
 using System.Net.WebSockets;
@@ -31,11 +32,11 @@ internal class ButtplugOutputTargetViewModel : AsyncAbstractOutputTarget
     public ObservableConcurrentCollection<ButtplugDevice> AvailableDevices { get; protected set; }
 
     [DependsOn(nameof(SelectedDevice))]
-    public ObservableConcurrentCollection<ActuatorType> AvailableActuatorTypes
-        => SelectedDevice != null ? new(SelectedDevice.Actuators.Select(a => a.ActuatorType).Distinct()) : null;
+    public IReadOnlyCollection<ActuatorType> AvailableActuatorTypes
+        => SelectedDevice != null ? [.. SelectedDevice.Actuators.Select(a => a.ActuatorType).Distinct()] : null;
 
     [DependsOn(nameof(SelectedDevice), nameof(AvailableActuatorTypes))]
-    public ObservableConcurrentCollection<uint> AvailableActuatorIndices
+    public IReadOnlyCollection<uint> AvailableActuatorIndices
     {
         get
         {
@@ -49,7 +50,7 @@ internal class ButtplugOutputTargetViewModel : AsyncAbstractOutputTarget
             if (!allowedIndices.Any())
                 return null;
 
-            return new(allowedIndices);
+            return [.. allowedIndices];
         }
     }
 
