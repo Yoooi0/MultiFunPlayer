@@ -1,4 +1,4 @@
-<UserControl x:Class="MultiFunPlayer.MotionProvider.Views.LoopingScriptMotionProviderView"
+﻿<UserControl x:Class="MultiFunPlayer.MotionProvider.Views.LoopingScriptMotionProviderView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:material="http://materialdesigninxaml.net/winfx/xaml/themes"
              xmlns:metro="http://metro.mahapps.com/winfx/xaml/controls"
@@ -21,10 +21,10 @@
             <Button DockPanel.Dock="Right"
                     Click="{s:Action SelectScript}" 
                     Style="{StaticResource MaterialDesignFloatingActionMiniButton}"
-                    Margin="0 -12 0 0"
                     Height="24"
                     Width="24"
-                    ToolTip="Load script">
+                    ToolTip="Load script"
+                    VerticalAlignment="Center">
                 <material:PackIcon Kind="FileDownload"/>
             </Button>
 
@@ -32,7 +32,6 @@
                      Style="{StaticResource MaterialDesignFloatingHintTextBox}"
                      material:HintAssist.Hint="{Binding Script.Source}"
                      IsReadOnly="True"
-                     VerticalAlignment="Center"
                      DockPanel.Dock="Right" 
                      Margin="0 -10 20 0"
                      TextAlignment="Left"/>
