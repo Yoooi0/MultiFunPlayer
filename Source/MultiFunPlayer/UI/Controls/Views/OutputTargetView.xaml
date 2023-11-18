@@ -90,7 +90,7 @@
                                         </ItemsControl.ItemsPanel>
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate>
-                                                <Button Style="{StaticResource MaterialDesignPaperLightButton}"
+                                                <Button Style="{StaticResource MaterialDesignPaperButton}"
                                                         Command="{s:Action AddItem}"
                                                         CommandParameter="{Binding}"
                                                         s:View.ActionTarget="{Binding DataContext, Source={StaticResource ViewModelProxy}}"

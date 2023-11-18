@@ -1067,7 +1067,7 @@
 
                                     <Border Background="{DynamicResource MaterialDesignCardBackground}"
                                             BorderThickness="0 1 0 0"
-                                            BorderBrush="{DynamicResource PrimaryHueLightBrush}">
+                                            BorderBrush="{DynamicResource PrimaryHueMidBrush}">
                                         <ContentPresenter Name="PART_Content" Focusable="False"
                                                       ContentTemplate="{TemplateBinding ContentTemplate}"
                                                       ContentStringFormat="{TemplateBinding ContentStringFormat}"

@@ -172,7 +172,7 @@
                                 <material:PopupBox.ToggleContent>
                                     <material:ColorZone VerticalAlignment="Center"
                                                         CornerRadius="10"
-                                                        Mode="PrimaryLight"
+                                                        Mode="PrimaryMid"
                                                         Width="20"
                                                         Height="20"
                                                         material:ShadowAssist.ShadowDepth="Depth2">
@@ -195,7 +195,7 @@
                                Margin="0 0 10 0"
                                VerticalAlignment="Center"/>
 
-                    <Button Style="{StaticResource MaterialDesignFloatingActionMiniLightButton}"
+                    <Button Style="{StaticResource MaterialDesignFloatingActionMiniButton}"
                             Click="{s:Action OnSetOutputDirectory}"
                             DockPanel.Dock="Right"
                             ToolTip="Set output directory"

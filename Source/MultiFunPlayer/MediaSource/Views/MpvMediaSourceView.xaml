@@ -88,7 +88,7 @@
                            Margin="0 0 10 0"
                            VerticalAlignment="Center"/>
 
-                <Button Style="{StaticResource MaterialDesignFloatingActionMiniLightButton}"
+                <Button Style="{StaticResource MaterialDesignFloatingActionMiniButton}"
                         Click="{s:Action OnLoadExecutable}"
                         ToolTip="Set path"
                         DockPanel.Dock="Right"
@@ -96,7 +96,7 @@
                         Width="24">
                     <material:PackIcon Kind="FileDownload"/>
                 </Button>
-                <Button Style="{StaticResource MaterialDesignFloatingActionMiniLightButton}"
+                <Button Style="{StaticResource MaterialDesignFloatingActionMiniButton}"
                         Click="{s:Action OnDownloadExecutable}"
                         material:ButtonProgressAssist.IsIndicatorVisible="{Binding IsDownloading}"
                         material:ButtonProgressAssist.Value="-1"

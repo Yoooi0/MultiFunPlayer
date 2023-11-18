@@ -85,7 +85,7 @@
                                                            Kind="FastForward">
                                             <material:PackIcon.Style>
                                                 <Style TargetType="material:PackIcon">
-                                                    <Setter Property="Foreground" Value="{DynamicResource PrimaryHueLightBrush}"/>
+                                                    <Setter Property="Foreground" Value="{DynamicResource PrimaryHueMidBrush}"/>
                                                     <Style.Triggers>
                                                         <DataTrigger Binding="{Binding IsSyncing}" Value="True">
                                                             <Setter Property="Foreground" Value="{DynamicResource MaterialDesignErrorBrush}"/>
@@ -102,7 +102,7 @@
                                                          Margin="0 -24 0 24">
                                             <ProgressBar.Style>
                                                 <Style TargetType="ProgressBar" BasedOn="{StaticResource MaterialDesignCircularProgressBar}">
-                                                    <Setter Property="Foreground" Value="{DynamicResource PrimaryHueLightBrush}"/>
+                                                    <Setter Property="Foreground" Value="{DynamicResource PrimaryHueBrush}"/>
                                                     <Style.Triggers>
                                                         <DataTrigger Binding="{Binding IsSyncing}" Value="True">
                                                             <Setter Property="Foreground" Value="{DynamicResource MaterialDesignErrorBrush}"/>
@@ -230,7 +230,7 @@
                                         <DockPanel LastChildFill="True"
                                                    Margin="0 20 0 0">
                                             <Button DockPanel.Dock="Bottom"
-                                                    Style="{StaticResource MaterialDesignFloatingActionMiniLightButton}"
+                                                    Style="{StaticResource MaterialDesignFloatingActionMiniButton}"
                                                     Width="32"
                                                     Height="32"
                                                     Margin="0 0 0 10"
@@ -329,7 +329,7 @@
                                             </Button>
                                             <DockPanel LastChildFill="True"
                                                        Margin="0 20 0 0">
-                                                <material:PopupBox Style="{StaticResource MaterialDesignMultiFloatingActionLightPopupBox}"
+                                                <material:PopupBox Style="{StaticResource MaterialDesignMultiFloatingActionPopupBox}"
                                                                Width="32"
                                                                Height="32"
                                                                DockPanel.Dock="Bottom"
@@ -354,7 +354,7 @@
 
                                                             <ItemsControl.ItemTemplate>
                                                                 <DataTemplate>
-                                                                    <Button Style="{StaticResource MaterialDesignRaisedLightButton}"
+                                                                    <Button Style="{StaticResource MaterialDesignRaisedButton}"
                                                                         Click="{s:Action OnMediaPathModifierAdd}"
                                                                         Content="{Binding Key}"
                                                                         Margin="5"
@@ -890,7 +890,7 @@
                                                Height="36">
                                         <StackPanel Orientation="Horizontal" DockPanel.Dock="Right">
                                             <TextBlock Text="{Binding Key.FriendlyName}"
-                                                       Foreground="{DynamicResource PrimaryHueLightBrush}"
+                                                       Foreground="{DynamicResource PrimaryHueMidBrush}"
                                                        Margin="0 0 10 0"
                                                        VerticalAlignment="Center"
                                                        FontSize="14"
@@ -1053,7 +1053,7 @@
                                                         <Button Content="Bypass all"
                                                                 Click="{s:Action OnBypassAll}"
                                                                 Typography.Capitals="AllSmallCaps"
-                                                                Style="{StaticResource MaterialDesignPaperLightButton}"
+                                                                Style="{StaticResource MaterialDesignPaperButton}"
                                                                 Margin="0 0 0 15"/>
                                                         
                                                         <TextBlock Text="Bypass:"

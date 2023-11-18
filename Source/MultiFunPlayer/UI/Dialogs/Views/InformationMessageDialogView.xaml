@@ -27,7 +27,7 @@
             <Separator Margin="0 20 0 20"/>
 
             <UniformGrid Columns="3">
-                <Button Style="{StaticResource MaterialDesignPaperDarkButton}"
+                <Button Style="{StaticResource MaterialDesignPaperButton}"
                         Command="{s:Action OnNavigate}"
                         CommandParameter="https://patreon.com/Yoooi"
                         Margin="0 0 5 0">
@@ -37,7 +37,7 @@
                     </StackPanel>
                 </Button>
 
-                <Button Style="{StaticResource MaterialDesignPaperDarkButton}"
+                <Button Style="{StaticResource MaterialDesignPaperButton}"
                         Command="{s:Action OnNavigate}"
                         CommandParameter="https://yoooi0.github.io/MultiFunPlayer"
                         Margin="5 0 5 0">
@@ -47,7 +47,7 @@
                     </StackPanel>
                 </Button>
 
-                <Button Style="{StaticResource MaterialDesignPaperDarkButton}"
+                <Button Style="{StaticResource MaterialDesignPaperButton}"
                         Command="{s:Action OnNavigate}"
                         CommandParameter="https://github.com/Yoooi0/MultiFunPlayer"
                         Margin="5 0 0 0">
@@ -80,7 +80,7 @@
             
             <Button Content="Dismiss"
                     Width="100"
-                    IsDefault="True" Style="{DynamicResource MaterialDesignFlatLightBgButton}"
+                    IsDefault="True" Style="{DynamicResource MaterialDesignFlatMidBgButton}"
                     HorizontalAlignment="Center"
                     Command="{s:Action OnDismiss}"/>
             <CheckBox IsChecked="{Binding DontShowAgain}" 

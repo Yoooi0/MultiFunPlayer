@@ -34,7 +34,7 @@
                        Margin="0 0 10 0"/>
 
             <Button DockPanel.Dock="Right"
-                    Style="{StaticResource MaterialDesignFloatingActionMiniLightButton}"
+                    Style="{StaticResource MaterialDesignFloatingActionMiniButton}"
                     Click="{s:Action OnMediaDirectoryChanged}"
                     IsEnabled="{Binding MediaDirectory, Converter={StaticResource notNullBooleanConverter}}"
                     Height="24"
@@ -44,7 +44,7 @@
             </Button>
             
             <Button DockPanel.Dock="Right"
-                    Style="{StaticResource MaterialDesignFloatingActionMiniLightButton}"
+                    Style="{StaticResource MaterialDesignFloatingActionMiniButton}"
                     Click="{s:Action SelectMediaDirectory}"
                     Height="24"
                     Width="24"                  

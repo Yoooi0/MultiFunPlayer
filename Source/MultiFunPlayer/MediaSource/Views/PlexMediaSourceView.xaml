@@ -87,7 +87,7 @@
                 <DockPanel LastChildFill="False" 
                            DockPanel.Dock="Right">
                     <Button DockPanel.Dock="Right"
-                            Style="{StaticResource MaterialDesignFloatingActionMiniLightButton}"
+                            Style="{StaticResource MaterialDesignFloatingActionMiniButton}"
                             Command="{s:Action RefreshClients}"
                             IsEnabled="{Binding CanRefreshClients}"
                             Height="20"

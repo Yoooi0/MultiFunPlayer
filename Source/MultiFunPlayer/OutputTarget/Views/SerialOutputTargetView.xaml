@@ -128,7 +128,7 @@
                     </ComboBox>
 
                     <Button DockPanel.Dock="Left"
-                            Style="{StaticResource MaterialDesignFloatingActionMiniLightButton}"
+                            Style="{StaticResource MaterialDesignFloatingActionMiniButton}"
                             Command="{s:Action RefreshPorts}"
                             IsEnabled="{Binding CanRefreshPorts}"
                             Height="20"
@@ -275,7 +275,7 @@
 
                         <material:PopupBox.ToggleContent>
                             <material:ColorZone CornerRadius="10"
-                                                Mode="PrimaryLight"
+                                                Mode="PrimaryMid"
                                                 Width="20"
                                                 Height="20"
                                                 material:ShadowAssist.ShadowDepth="Depth2">
@@ -431,7 +431,7 @@
                         <material:PopupBox.ToggleContent>
                             <material:ColorZone VerticalAlignment="Center"
                                                 CornerRadius="10"
-                                                Mode="PrimaryLight"
+                                                Mode="PrimaryMid"
                                                 Width="20"
                                                 Height="20"
                                                 material:ShadowAssist.ShadowDepth="Depth2">
