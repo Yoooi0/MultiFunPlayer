@@ -34,7 +34,7 @@
                                 Grid.Column="1">
                             <TextBlock Text="Mid"
                                         HorizontalAlignment="Center"
-                                        Foreground="{DynamicResource PrimaryHueDarkForegroundBrush}"
+                                        Foreground="{DynamicResource PrimaryHueMidForegroundBrush}"
                                         Margin="10" 
                                         FontFamily="Consolas" />
                         </Border>
