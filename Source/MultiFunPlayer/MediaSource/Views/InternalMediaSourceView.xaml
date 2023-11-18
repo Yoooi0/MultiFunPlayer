@@ -1,4 +1,4 @@
-<UserControl x:Class="MultiFunPlayer.MediaSource.Views.InternalMediaSourceView"
+﻿<UserControl x:Class="MultiFunPlayer.MediaSource.Views.InternalMediaSourceView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:material="http://materialdesigninxaml.net/winfx/xaml/themes"
              xmlns:s="https://github.com/canton7/Stylet"
@@ -296,17 +296,20 @@
                                                                            FontWeight="Medium"
                                                                            VerticalAlignment="Center"/>
 
-                                                                <Button Style="{StaticResource MaterialDesignRaisedButton}"
+                                                                <Button Style="{StaticResource MaterialDesignPaperButton}"
+                                                                        BorderBrush="{DynamicResource MaterialDesignLightErrorBrush}"
+                                                                        Foreground="{DynamicResource MaterialDesignErrorBrush}"
+                                                                        Background="{DynamicResource MaterialDesignCardBackground}"
                                                                         Click="{s:Action OnRemoveItem}"
-                                                                        material:RippleAssist.Feedback="{DynamicResource PrimaryHueMidForegroundBrush}"
+                                                                        material:RippleAssist.Feedback="{DynamicResource MaterialDesignLightErrorBrush}"
                                                                         x:Name="RemoveButton"
                                                                         Grid.Column="2"
                                                                         Margin="0 0 3 0"
                                                                         ToolTip="Remove from playlist"
-                                                                        Height="16" 
-                                                                        Width="16" 
+                                                                        Height="18" 
+                                                                        Width="18" 
                                                                         Padding="0">
-                                                                    <material:PackIcon Kind="TrashCanOutline"/>
+                                                                    <material:PackIcon Kind="TrashCanOutline" Width="16" Height="16"/>
                                                                 </Button>
                                                             </Grid>
                                                         </Button>
