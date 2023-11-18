@@ -302,7 +302,6 @@
                                                                         Background="{DynamicResource MaterialDesignCardBackground}"
                                                                         Click="{s:Action OnRemoveItem}"
                                                                         material:RippleAssist.Feedback="{DynamicResource MaterialDesignLightErrorBrush}"
-                                                                        x:Name="RemoveButton"
                                                                         Grid.Column="2"
                                                                         Margin="0 0 3 0"
                                                                         ToolTip="Remove from playlist"
@@ -356,11 +355,6 @@
                                                                     <Setter Property="Background" TargetName="Button" Value="{DynamicResource PrimaryHueMidBrush}"/>
                                                                     <Setter Property="Foreground" TargetName="Button" Value="{DynamicResource PrimaryHueMidForegroundBrush}"/>
                                                                     <Setter Property="material:RippleAssist.Feedback" TargetName="Button" Value="{DynamicResource PrimaryHueMidForegroundBrush}"/>
-
-                                                                    <Setter Property="Foreground" TargetName="RemoveButton" Value="{DynamicResource PrimaryHueMidBrush}"/>
-                                                                    <Setter Property="Background" TargetName="RemoveButton" Value="{DynamicResource PrimaryHueMidForegroundBrush}"/>
-                                                                    <Setter Property="BorderBrush" TargetName="RemoveButton" Value="{DynamicResource PrimaryHueMidForegroundBrush}"/>
-                                                                    <Setter Property="material:RippleAssist.Feedback" TargetName="RemoveButton" Value="{DynamicResource PrimaryHueMidBrush}"/>
                                                                 </DataTrigger.Setters>
                                                             </DataTrigger>
                                                         </DataTemplate.Triggers>
