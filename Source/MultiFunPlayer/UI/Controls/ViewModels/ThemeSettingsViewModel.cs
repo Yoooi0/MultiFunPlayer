@@ -77,7 +77,7 @@ internal class ThemeSettingsViewModel : Screen, IHandle<SettingsMessage>
         _paletteHelper.SetTheme(theme);
         Application.Current.Resources.SetMahApps(theme, IsDarkTheme ? BaseTheme.Dark : BaseTheme.Light);
 
-        var customThemeSource = $"pack://application:,,,/CustomTheme.{(IsDarkTheme ? "Dark" : "Light")}.xaml";
+        var customThemeSource = $"pack://application:,,,/UI/Themes/Color.{(IsDarkTheme ? "Dark" : "Light")}.xaml";
         var customThemeResource = new ResourceDictionary { Source = new Uri(customThemeSource) };
 
         AutoUpdateSolidColorBrush("MaterialDesignErrorBrush");
