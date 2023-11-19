@@ -146,7 +146,7 @@
                                         Height="30" 
                                         Width="30" 
                                         Padding="0"
-                                        Visibility="{Binding Value.SettingsView, Converter={StaticResource InvertedNullVisibilityConverter}}"
+                                        Visibility="{Binding Value.SettingsView, Converter={StaticResource NullVisibilityConverter}}"
                                         Command="{x:Static material:DialogHost.OpenDialogCommand}">
                                     <material:PackIcon Kind="Cog"/>
 

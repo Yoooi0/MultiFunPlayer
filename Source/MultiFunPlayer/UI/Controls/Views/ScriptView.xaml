@@ -1322,7 +1322,7 @@
                                                                         <Separator/>
 
                                                                         <DockPanel LastChildFill="False"
-                                                                                   Visibility="{Binding Value.Settings.UpdateMotionProviderWithAxis, Converter={StaticResource InvertedNullVisibilityConverter}}"
+                                                                                   Visibility="{Binding Value.Settings.UpdateMotionProviderWithAxis, Converter={StaticResource NullVisibilityConverter}}"
                                                                                    Margin="0 0 0 10">
                                                                             <TextBlock Text="{Binding Value.Settings.UpdateMotionProviderWithAxis, StringFormat={}Match {0} speed}" 
                                                                                        DockPanel.Dock="Left"
