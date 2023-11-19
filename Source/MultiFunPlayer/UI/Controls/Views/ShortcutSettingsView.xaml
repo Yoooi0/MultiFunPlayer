@@ -317,7 +317,7 @@
                         <Button DockPanel.Dock="Right"
                                 Style="{StaticResource MaterialDesignFlatButton}"
                                 Click="{s:Action AddGesture}"
-                                IsEnabled="{Binding CapturedGesture, Converter={StaticResource notNullBooleanConverter}}"
+                                IsEnabled="{Binding CapturedGesture, Converter={StaticResource InvertedNullableToBooleanConverter}}"
                                 Foreground="{DynamicResource MaterialDesignSuccessBrush}"
                                 ToolTip="Add captured gesture"
                                 VerticalAlignment="Center"

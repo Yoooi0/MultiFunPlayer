@@ -192,7 +192,7 @@
                                 Orientation="Horizontal">
                             <Button Click="{s:Action OnOpenMediaLocation}" 
                                     Style="{StaticResource MaterialDesignToolBarButton}"
-                                    IsEnabled="{Binding MediaResource, Converter={StaticResource notNullBooleanConverter}}"
+                                    IsEnabled="{Binding MediaResource, Converter={StaticResource InvertedNullableToBooleanConverter}}"
                                     ToolTip="Open media location"
                                     Padding="8">
                                 <material:PackIcon Kind="FolderOpen" Height="19" Width="19"/>
@@ -457,7 +457,7 @@
                                 <Button.IsEnabled>
                                     <MultiBinding Converter="{StaticResource BooleanAllConverter}">
                                         <MultiBinding.Bindings>
-                                            <Binding Path="MediaResource" Converter="{StaticResource notNullBooleanConverter}"/>
+                                            <Binding Path="MediaResource" Converter="{StaticResource InvertedNullableToBooleanConverter}"/>
                                             <Binding Path="MediaResource.IsUrl"/>
                                         </MultiBinding.Bindings>
                                     </MultiBinding>
@@ -527,8 +527,8 @@
                                                         <DataTrigger Value="True">
                                                             <DataTrigger.Binding>
                                                                 <MultiBinding Converter="{StaticResource BooleanAllConverter}">
-                                                                    <Binding Path="MediaLoopSegment.StartPosition" Converter="{StaticResource notNullBooleanConverter}"/>
-                                                                    <Binding Path="MediaLoopSegment.EndPosition" Converter="{StaticResource notNullBooleanConverter}"/>
+                                                                    <Binding Path="MediaLoopSegment.StartPosition" Converter="{StaticResource InvertedNullableToBooleanConverter}"/>
+                                                                    <Binding Path="MediaLoopSegment.EndPosition" Converter="{StaticResource InvertedNullableToBooleanConverter}"/>
                                                                 </MultiBinding>
                                                             </DataTrigger.Binding>
                                                             <DataTrigger.Setters>
@@ -543,9 +543,9 @@
 
                                     <MenuItem Padding="8" Header="Clear" Command="{s:Action ClearMediaLoop}">
                                         <MenuItem.IsEnabled>
-                                            <MultiBinding Converter="{StaticResource booleanOrConverter}">
-                                                <Binding Path="MediaLoopSegment.StartPosition" Converter="{StaticResource notNullBooleanConverter}"/>
-                                                <Binding Path="MediaLoopSegment.EndPosition" Converter="{StaticResource notNullBooleanConverter}"/>
+                                            <MultiBinding Converter="{StaticResource BooleanOrConverter}">
+                                                <Binding Path="MediaLoopSegment.StartPosition" Converter="{StaticResource InvertedNullableToBooleanConverter}"/>
+                                                <Binding Path="MediaLoopSegment.EndPosition" Converter="{StaticResource InvertedNullableToBooleanConverter}"/>
                                             </MultiBinding>
                                         </MenuItem.IsEnabled>
                                         <MenuItem.Icon>
@@ -673,7 +673,7 @@
                                         <Setter Property="Foreground" Value="{DynamicResource MaterialDesignBodyDisabled}"/>
                                         <Setter Property="FontWeight" Value="Medium"/>
                                         <Style.Triggers>
-                                            <DataTrigger Binding="{Binding Value.Script, Converter={StaticResource notNullBooleanConverter}}" Value="True">
+                                            <DataTrigger Binding="{Binding Value.Script, Converter={StaticResource InvertedNullableToBooleanConverter}}" Value="True">
                                                 <Setter Property="Foreground" Value="{DynamicResource InvertedPrimaryHueDarkBrush}"/>
                                                 <Setter Property="FontWeight" Value="Black"/>
                                             </DataTrigger>
@@ -705,7 +705,7 @@
                                                             <Setter Property="Text" Value="Disabled"/>
                                                             <Setter Property="Foreground" Value="{DynamicResource MaterialDesignPaper}"/>
                                                             <Style.Triggers>
-                                                                <DataTrigger Binding="{Binding Value.Settings.LinkAxis, Converter={StaticResource notNullBooleanConverter}}" Value="True">
+                                                                <DataTrigger Binding="{Binding Value.Settings.LinkAxis, Converter={StaticResource InvertedNullableToBooleanConverter}}" Value="True">
                                                                     <Setter Property="Text" Value="Enabled"/>
                                                                     <Setter Property="Foreground" Value="{DynamicResource MaterialDesignLightSuccessBrush}"/>
                                                                 </DataTrigger>
@@ -727,7 +727,7 @@
                                                             <Setter Property="Text" Value="Disabled"/>
                                                             <Setter Property="Foreground" Value="{DynamicResource MaterialDesignPaper}"/>
                                                             <Style.Triggers>
-                                                                <DataTrigger Binding="{Binding Value.Settings.SelectedMotionProvider, Converter={StaticResource notNullBooleanConverter}}" Value="True">
+                                                                <DataTrigger Binding="{Binding Value.Settings.SelectedMotionProvider, Converter={StaticResource InvertedNullableToBooleanConverter}}" Value="True">
                                                                     <Setter Property="Text" Value="Enabled"/>
                                                                     <Setter Property="Foreground" Value="{DynamicResource MaterialDesignLightSuccessBrush}"/>
                                                                 </DataTrigger>
@@ -782,7 +782,7 @@
                                                             <Setter Property="Text" Value="Disabled"/>
                                                             <Setter Property="Foreground" Value="{DynamicResource MaterialDesignPaper}"/>
                                                             <Style.Triggers>
-                                                                <DataTrigger Binding="{Binding Value.Settings.SmartLimitInputAxis, Converter={StaticResource notNullBooleanConverter}}" Value="True">
+                                                                <DataTrigger Binding="{Binding Value.Settings.SmartLimitInputAxis, Converter={StaticResource InvertedNullableToBooleanConverter}}" Value="True">
                                                                     <Setter Property="Text" Value="Enabled"/>
                                                                     <Setter Property="Foreground" Value="{DynamicResource MaterialDesignLightSuccessBrush}"/>
                                                                 </DataTrigger>
@@ -804,7 +804,7 @@
                                                 <Style TargetType="material:PackIcon">
                                                     <Setter Property="Foreground" Value="{DynamicResource MaterialDesignDivider}"/>
                                                     <Style.Triggers>
-                                                        <DataTrigger Binding="{Binding Value.Settings.LinkAxis, Converter={StaticResource notNullBooleanConverter}}" Value="True">
+                                                        <DataTrigger Binding="{Binding Value.Settings.LinkAxis, Converter={StaticResource InvertedNullableToBooleanConverter}}" Value="True">
                                                             <Setter Property="Foreground" Value="{DynamicResource MaterialDesignSuccessBrush}"/>
                                                         </DataTrigger>
                                                         <DataTrigger Binding="{Binding Value.Settings.LinkAxisHasPriority}" Value="True">
@@ -820,7 +820,7 @@
                                                 <Style TargetType="material:PackIcon">
                                                     <Setter Property="Foreground" Value="{DynamicResource MaterialDesignDivider}"/>
                                                     <Style.Triggers>
-                                                        <DataTrigger Binding="{Binding Value.Settings.SelectedMotionProvider, Converter={StaticResource notNullBooleanConverter}}" Value="True">
+                                                        <DataTrigger Binding="{Binding Value.Settings.SelectedMotionProvider, Converter={StaticResource InvertedNullableToBooleanConverter}}" Value="True">
                                                             <Setter Property="Foreground" Value="{DynamicResource MaterialDesignSuccessBrush}"/>
                                                         </DataTrigger>
                                                         <DataTrigger Value="True">
@@ -862,7 +862,7 @@
                                                 <Style TargetType="material:PackIcon">
                                                     <Setter Property="Foreground" Value="{DynamicResource MaterialDesignDivider}"/>
                                                     <Style.Triggers>
-                                                        <DataTrigger Binding="{Binding Value.Settings.SmartLimitInputAxis, Converter={StaticResource notNullBooleanConverter}}" Value="True">
+                                                        <DataTrigger Binding="{Binding Value.Settings.SmartLimitInputAxis, Converter={StaticResource InvertedNullableToBooleanConverter}}" Value="True">
                                                             <Setter Property="Foreground" Value="{DynamicResource MaterialDesignSuccessBrush}"/>
                                                         </DataTrigger>
                                                         <DataTrigger Binding="{Binding Value.State.IsSmartLimited}" Value="True">
@@ -906,7 +906,7 @@
 
                                                     <MenuItem Command="{s:Action OnAxisOpenFolder}"
                                                               CommandParameter="{Binding Key}"
-                                                              IsEnabled="{Binding Value.Script, Converter={StaticResource notNullBooleanConverter}}"
+                                                              IsEnabled="{Binding Value.Script, Converter={StaticResource InvertedNullableToBooleanConverter}}"
                                                               Padding="8">
                                                         <MenuItem.Header>
                                                             <DockPanel LastChildFill="True">
@@ -920,7 +920,7 @@
                                                     </MenuItem>
                                                     <MenuItem Command="{s:Action OnAxisLoad}"
                                                               CommandParameter="{Binding Key}"
-                                                              IsEnabled="{Binding DataContext.MediaResource, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}, Converter={StaticResource notNullBooleanConverter}}"
+                                                              IsEnabled="{Binding DataContext.MediaResource, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}, Converter={StaticResource InvertedNullableToBooleanConverter}}"
                                                               Padding="8">
                                                         <MenuItem.Header>
                                                             <DockPanel LastChildFill="True">
@@ -934,7 +934,7 @@
                                                     </MenuItem>
                                                     <MenuItem Command="{s:Action OnAxisClear}"
                                                               CommandParameter="{Binding Key}"
-                                                              IsEnabled="{Binding Value.Script, Converter={StaticResource notNullBooleanConverter}}"
+                                                              IsEnabled="{Binding Value.Script, Converter={StaticResource InvertedNullableToBooleanConverter}}"
                                                               Padding="8">
                                                         <MenuItem.Header>
                                                             <DockPanel LastChildFill="True">
@@ -948,7 +948,7 @@
                                                     </MenuItem>
                                                     <MenuItem Command="{s:Action OnAxisReload}"
                                                               CommandParameter="{Binding Key}"
-                                                              IsEnabled="{Binding DataContext.MediaResource, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}, Converter={StaticResource notNullBooleanConverter}}"
+                                                              IsEnabled="{Binding DataContext.MediaResource, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}, Converter={StaticResource InvertedNullableToBooleanConverter}}"
                                                               Padding="8">
                                                         <MenuItem.Header>
                                                             <DockPanel LastChildFill="True">
@@ -961,7 +961,7 @@
                                                         </MenuItem.Header>
                                                     </MenuItem>
 
-                                                    <MenuItem IsEnabled="{Binding Value.Script, Converter={StaticResource notNullBooleanConverter}}"
+                                                    <MenuItem IsEnabled="{Binding Value.Script, Converter={StaticResource InvertedNullableToBooleanConverter}}"
                                                               Background="{DynamicResource MaterialDesignToolBarBackground}"
                                                               Padding="8">
                                                         <MenuItem.Header>
@@ -977,7 +977,7 @@
                                                         <MenuItem Header="_Media location" 
                                                                   Command="{s:Action OnAxisMoveToMedia}"
                                                                   CommandParameter="{Binding Key}"
-                                                                  IsEnabled="{Binding DataContext.MediaResource, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}, Converter={StaticResource notNullBooleanConverter}}"/>
+                                                                  IsEnabled="{Binding DataContext.MediaResource, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}, Converter={StaticResource InvertedNullableToBooleanConverter}}"/>
 
                                                         <MenuItem Header="_Library location" 
                                                                   ItemsSource="{Binding DataContext.ScriptLibraries, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}">
@@ -1034,7 +1034,7 @@
                                                                 <Style.Triggers>
                                                                     <DataTrigger Value="True">
                                                                         <DataTrigger.Binding>
-                                                                            <MultiBinding Converter="{StaticResource booleanOrConverter}">
+                                                                            <MultiBinding Converter="{StaticResource BooleanOrConverter}">
                                                                                 <Binding Path="Value.Settings.BypassScript"/>
                                                                                 <Binding Path="Value.Settings.BypassMotionProvider"/>
                                                                                 <Binding Path="Value.Settings.BypassTransition"/>
@@ -1104,7 +1104,7 @@
                                                         <material:PackIcon.Style>
                                                             <Style TargetType="material:PackIcon">
                                                                 <Style.Triggers>
-                                                                    <DataTrigger Binding="{Binding Value.Settings.LinkAxis, Converter={StaticResource notNullBooleanConverter}}" Value="True">
+                                                                    <DataTrigger Binding="{Binding Value.Settings.LinkAxis, Converter={StaticResource InvertedNullableToBooleanConverter}}" Value="True">
                                                                         <Setter Property="Foreground" Value="{DynamicResource MaterialDesignSuccessBrush}"/>
                                                                     </DataTrigger>
                                                                     <DataTrigger Binding="{Binding Value.Settings.LinkAxisHasPriority}" Value="True">
@@ -1173,7 +1173,7 @@
                                                         <material:PackIcon.Style>
                                                             <Style TargetType="material:PackIcon">
                                                                 <Style.Triggers>
-                                                                    <DataTrigger Binding="{Binding Value.Settings.SelectedMotionProvider, Converter={StaticResource notNullBooleanConverter}}" Value="True">
+                                                                    <DataTrigger Binding="{Binding Value.Settings.SelectedMotionProvider, Converter={StaticResource InvertedNullableToBooleanConverter}}" Value="True">
                                                                         <Setter Property="Foreground" Value="{DynamicResource MaterialDesignSuccessBrush}"/>
                                                                     </DataTrigger>
                                                                 </Style.Triggers>
@@ -1405,7 +1405,7 @@
                                                         <material:PackIcon.Style>
                                                             <Style TargetType="material:PackIcon">
                                                                 <Style.Triggers>
-                                                                    <DataTrigger Binding="{Binding Value.Settings.SmartLimitInputAxis, Converter={StaticResource notNullBooleanConverter}}" Value="True">
+                                                                    <DataTrigger Binding="{Binding Value.Settings.SmartLimitInputAxis, Converter={StaticResource InvertedNullableToBooleanConverter}}" Value="True">
                                                                         <Setter Property="Foreground" Value="{DynamicResource MaterialDesignSuccessBrush}"/>
                                                                     </DataTrigger>
                                                                 </Style.Triggers>

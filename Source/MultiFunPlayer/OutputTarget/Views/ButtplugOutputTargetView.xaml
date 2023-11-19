@@ -400,7 +400,7 @@
                                       material:HintAssist.HelperText="Actuator types"
                                       ItemsSource="{Binding AvailableActuatorTypes}" 
                                       SelectedItem="{Binding SelectedActuatorType}"
-                                      IsEnabled="{Binding SelectedDevice, Converter={StaticResource notNullBooleanConverter}}"/>
+                                      IsEnabled="{Binding SelectedDevice, Converter={StaticResource InvertedNullableToBooleanConverter}}"/>
 
                             <ComboBox Margin="0 0 10 0" 
                                       Width="50"
@@ -408,7 +408,7 @@
                                       material:HintAssist.HelperText="Indices"
                                       ItemsSource="{Binding AvailableActuatorIndices}" 
                                       SelectedItem="{Binding SelectedActuatorIndex}"
-                                      IsEnabled="{Binding SelectedActuatorType, Converter={StaticResource notNullBooleanConverter}}"/>
+                                      IsEnabled="{Binding SelectedActuatorType, Converter={StaticResource InvertedNullableToBooleanConverter}}"/>
 
                             <Button Style="{StaticResource MaterialDesignFlatButton}"
                                     ToolTip="Add"

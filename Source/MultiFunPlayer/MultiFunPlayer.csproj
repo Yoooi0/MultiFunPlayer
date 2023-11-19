@@ -30,7 +30,6 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="MahApps.Metro" Version="2.4.9" />
-    <PackageReference Include="MaterialDesignExtensions" Version="4.0.0-a02" />
     <PackageReference Include="MaterialDesignThemes" Version="4.7.0" />
     <PackageReference Include="MaterialDesignThemes.MahApps" Version="0.2.6" />
     <PackageReference Include="Microsoft.CodeAnalysis.Common" Version="4.7.0" />
