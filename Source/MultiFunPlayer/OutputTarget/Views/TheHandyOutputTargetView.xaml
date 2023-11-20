@@ -13,7 +13,6 @@
              x:ClassModifier="internal">
     <UserControl.Resources>
         <converters:UriToStringConverter x:Key="UriToStringConverter"/>
-        <converters:MsToHzConverter x:Key="MsToHzConverter"/>
     </UserControl.Resources>
     <Expander material:ExpanderAssist.HorizontalHeaderPadding="0 0 6 0"
               Style="{StaticResource MaterialDesignToolBarExpander}"

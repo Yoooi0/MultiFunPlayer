@@ -11,9 +11,6 @@
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800"
              x:ClassModifier="internal">
-    <UserControl.Resources>
-        <converters:MsToHzConverter x:Key="MsToHzConverter"/>
-    </UserControl.Resources>
     <Expander material:ExpanderAssist.HorizontalHeaderPadding="0 0 6 0"
               Style="{StaticResource MaterialDesignToolBarExpander}"
               Background="{DynamicResource MaterialDesignToolBarBackground}"

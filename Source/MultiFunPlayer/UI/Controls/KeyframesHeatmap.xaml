@@ -10,10 +10,6 @@
              mc:Ignorable="d" 
              d:DesignHeight="50" d:DesignWidth="800"
              x:ClassModifier="internal">
-    <UserControl.Resources>
-        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
-    </UserControl.Resources>
-
     <Grid>
         <local:AutoClosingPopup IsOpen="{Binding ToolTipIsOpen, Mode=TwoWay, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}"
                                 HorizontalOffset="{Binding ToolTipHorizontalOffset, Mode=OneWay, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}"

@@ -29,6 +29,7 @@
                     <converters:InvertedNullableToBooleanConverter x:Key="InvertedNullableToBooleanConverter" />
                     <converters:BooleanAndConverter x:Key="BooleanAndConverter" />
                     <converters:BooleanOrConverter x:Key="BooleanOrConverter" />
+                    <converters:MsToHzConverter x:Key="MsToHzConverter"/>
 
                     <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
                     <material:NotConverter x:Key="NotConverter"/>
