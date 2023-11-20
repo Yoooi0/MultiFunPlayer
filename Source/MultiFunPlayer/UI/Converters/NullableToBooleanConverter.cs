@@ -12,7 +12,7 @@ internal class NullableConverter<T>(T nullValue, T notNullValue) : IValueConvert
         => (value is string s && string.IsNullOrWhiteSpace(s)) || value is null ? NullValue : NotNullValue;
 
     public virtual object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
-        => Binding.DoNothing;
+        => throw new NotSupportedException();
 }
 
 internal sealed class NullableToBooleanConverter : NullableConverter<bool>
