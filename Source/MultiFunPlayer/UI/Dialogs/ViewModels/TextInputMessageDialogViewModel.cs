@@ -1,5 +1,4 @@
-﻿using PropertyChanged;
-using Stylet;
+﻿using Stylet;
 
 namespace MultiFunPlayer.UI.Dialogs.ViewModels;
 

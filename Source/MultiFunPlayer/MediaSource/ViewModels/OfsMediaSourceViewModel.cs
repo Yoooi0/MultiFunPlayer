@@ -9,7 +9,6 @@ using System.ComponentModel;
 using System.IO;
 using System.Net.WebSockets;
 using System.Text;
-using System.Threading.Channels;
 
 namespace MultiFunPlayer.MediaSource.ViewModels;
 

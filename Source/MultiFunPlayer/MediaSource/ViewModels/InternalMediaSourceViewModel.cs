@@ -9,7 +9,6 @@ using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
-using System.Threading.Channels;
 using System.Windows;
 
 namespace MultiFunPlayer.MediaSource.ViewModels;

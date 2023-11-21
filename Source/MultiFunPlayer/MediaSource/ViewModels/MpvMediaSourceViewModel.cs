@@ -11,7 +11,6 @@ using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.IO.Pipes;
-using System.Threading.Channels;
 
 namespace MultiFunPlayer.MediaSource.ViewModels;
 
