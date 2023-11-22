@@ -39,10 +39,10 @@ internal class PlexMediaSourceViewModel(IShortcutManager shortcutManager, IEvent
         _ = RefreshClients();
     }
 
-    public bool CanChangeClient => !IsConnected && !IsConnectBusy;
+    public bool CanChangeClient => !IsConnected && !IsConnectBusy && !IsRefreshBusy && !string.IsNullOrWhiteSpace(PlexToken) && Clients.Count != 0;
     public bool IsConnected => Status == ConnectionStatus.Connected;
     public bool IsConnectBusy => Status == ConnectionStatus.Connecting || Status == ConnectionStatus.Disconnecting;
-    public bool CanToggleConnect => !IsConnectBusy;
+    public bool CanToggleConnect => !IsConnectBusy && SelectedClient != null && !string.IsNullOrWhiteSpace(PlexToken);
 
     protected override async Task<bool> OnConnectingAsync()
     {
@@ -291,7 +291,7 @@ internal class PlexMediaSourceViewModel(IShortcutManager shortcutManager, IEvent
         catch (OperationCanceledException) { }
     }
 
-    public bool CanRefreshClients => !IsRefreshBusy && !IsConnected && !IsConnectBusy && ServerEndpoint != null;
+    public bool CanRefreshClients => !IsRefreshBusy && !IsConnected && !IsConnectBusy && ServerEndpoint != null && !string.IsNullOrWhiteSpace(PlexToken);
     public bool IsRefreshBusy { get; set; }
 
     private int _isRefreshingFlag;
@@ -359,6 +359,7 @@ internal class PlexMediaSourceViewModel(IShortcutManager shortcutManager, IEvent
             Clients.RemoveRange(Clients.Except(currentClients).ToList());
             Clients.AddRange(currentClients.Except(Clients).ToList());
 
+            NotifyOfPropertyChange(nameof(Clients));
             SelectClientByMachineIdentifier(lastSelectedMachineIdentifier);
 
             await Task.Delay(250, token);

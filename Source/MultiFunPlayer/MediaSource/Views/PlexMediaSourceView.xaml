@@ -156,7 +156,7 @@
             <DockPanel LastChildFill="True"
                        HorizontalAlignment="Left">
                 <TextBox Style="{StaticResource MaterialDesignFloatingHintTextBox}"
-                         Text="{Binding PlexToken}"
+                         Text="{Binding PlexToken, UpdateSourceTrigger=PropertyChanged}"
                          MinWidth="250"
                          Margin="0 -10 0 0"
                          DockPanel.Dock="Left"
