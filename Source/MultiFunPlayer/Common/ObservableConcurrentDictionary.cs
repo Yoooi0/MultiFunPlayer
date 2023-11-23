@@ -1,4 +1,4 @@
-﻿using PropertyChanged;
+using PropertyChanged;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Specialized;
@@ -40,6 +40,9 @@ public class ObservableConcurrentDictionary<TKey, TValue> : IDictionary<TKey, TV
         }, null);
     }
 
+    private void NotifyObserversOfChange(NotifyCollectionChangedAction action)
+        => NotifyObserversOfChange(new NotifyCollectionChangedEventArgs(action));
+
     private void NotifyObserversOfChange(NotifyCollectionChangedAction action, TKey key, TValue value, int index)
         => NotifyObserversOfChange(new NotifyCollectionChangedEventArgs(action, new KeyValuePair<TKey, TValue>(key, value), index));
 
@@ -61,10 +64,10 @@ public class ObservableConcurrentDictionary<TKey, TValue> : IDictionary<TKey, TV
 
     private bool TryRemoveWithNotification(TKey key, out TValue value)
     {
-        var index = IndexOf(key);
         var result = _dictionary.TryRemove(key, out value);
         if (result)
-            NotifyObserversOfChange(NotifyCollectionChangedAction.Remove, key, value, index);
+            NotifyObserversOfChange(NotifyCollectionChangedAction.Reset);
+
         return result;
     }
 
