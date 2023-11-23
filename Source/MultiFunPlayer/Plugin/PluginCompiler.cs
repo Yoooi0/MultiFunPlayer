@@ -74,6 +74,19 @@ internal static class PluginCompiler
     private static IContainer Container { get; set; }
     private static IViewManager ViewManager { get; set; }
 
+    private static IReadOnlyCollection<MetadataReference> _referenceCache;
+    private static IReadOnlyCollection<MetadataReference> ReferenceCache
+    {
+        get
+        {
+            _referenceCache ??= [.. AppDomain.CurrentDomain.GetAssemblies()
+                .Select(a => !string.IsNullOrWhiteSpace(a.Location) ? AssemblyMetadata.CreateFromFile(a.Location).GetReference() : null)
+                .NotNull()];
+
+            return _referenceCache;
+        }
+    }
+
     [MethodImpl(MethodImplOptions.NoInlining)]
     public static void QueueCompile(FileInfo pluginFile, Action<PluginCompilationResult> callback)
     {
@@ -88,11 +101,7 @@ internal static class PluginCompiler
     public static PluginCompilationResult Compile(FileInfo pluginFile)
     {
         var result = InternalCompile(pluginFile);
-
-        //TODO: for some reason compilation leaks a lot of unmanaged memory
-        GC.Collect();
-        GC.WaitForPendingFinalizers();
-
+        GC.Collect(GC.MaxGeneration, GCCollectionMode.Default, blocking: false);
         return result;
     }
 
@@ -102,13 +111,7 @@ internal static class PluginCompiler
         var context = default(CollectibleAssemblyLoadContext);
         try
         {
-            var references = new List<MetadataReference>
-            {
-                MetadataReference.CreateFromFile(typeof(object).Assembly.Location),
-                MetadataReference.CreateFromFile(typeof(PluginBase).Assembly.Location)
-            };
-
-            references.AddRange(ReflectionUtils.Assembly.GetReferencedAssemblies().Select(a => MetadataReference.CreateFromFile(Assembly.Load(a).Location)));
+            var references = ReferenceCache.ToList();
 
             var pluginSource = File.ReadAllText(pluginFile.FullName);
             foreach(var match in ReferenceRegex.Matches(pluginSource).NotNull())
