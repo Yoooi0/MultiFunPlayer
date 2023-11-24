@@ -14,6 +14,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.Loader;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading.Channels;
 using System.Windows;
 
 namespace MultiFunPlayer.Plugin;
@@ -68,6 +69,9 @@ internal class PluginCompilationResult : IDisposable
 
 internal static class PluginCompiler
 {
+    private static Channel<Action> _compileQueue;
+    private static Task _compileTask;
+
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
     private static Regex ReferenceRegex { get; } = new Regex(@"^//#r\s+""(?<type>name|file):(?<value>.+?)""", RegexOptions.Compiled | RegexOptions.Multiline);
 
@@ -90,11 +94,30 @@ internal static class PluginCompiler
     [MethodImpl(MethodImplOptions.NoInlining)]
     public static void QueueCompile(FileInfo pluginFile, Action<PluginCompilationResult> callback)
     {
-        _ = Task.Run(() =>
+        _compileQueue ??= Channel.CreateUnbounded<Action>(new UnboundedChannelOptions()
         {
+            SingleReader = true,
+            SingleWriter = false
+        });
+
+        _compileTask ??= Task.Factory.StartNew(DoCompile,
+            default,
+            TaskCreationOptions.LongRunning,
+            TaskScheduler.Default)
+            .Unwrap();
+
+        _compileQueue.Writer.TryWrite(() =>
+        {
+            Logger.Debug("Compiling plugin [File: {0}]", pluginFile.FullName);
             var result = Compile(pluginFile);
             callback(result);
         });
+
+        static async Task DoCompile()
+        {
+            await foreach (var compileAction in _compileQueue.Reader.ReadAllAsync())
+                compileAction();
+        }
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
