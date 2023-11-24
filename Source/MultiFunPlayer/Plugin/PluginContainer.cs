@@ -132,8 +132,6 @@ internal class PluginContainer(FileInfo pluginFile) : PropertyChangedBase, IDisp
             return;
 
         State = PluginState.Compiling;
-
-        var contents = File.ReadAllText(PluginFile.FullName);
         PluginCompiler.QueueCompile(PluginFile, x => {
             OnCompile(x);
             callback?.Invoke();
