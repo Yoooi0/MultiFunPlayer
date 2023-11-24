@@ -123,10 +123,10 @@ internal class RawInputProcessor : IInputProcessor
             _lastMouseAxisTimestamp = timestamp;
 
             if (Math.Abs(_mouseDeltaXAccum) > 0.000001)
-                HandleGesture(MouseAxisGesture.Create(MouseAxis.X, _mouseXAxis, _mouseDeltaXAccum, elapsed));
+                HandleGesture(MouseAxisGesture.Create(MouseAxis.X, _mouseXAxis, _mouseDeltaXAccum, 0));
 
             if (Math.Abs(_mouseDeltaYAccum) > 0.000001)
-                HandleGesture(MouseAxisGesture.Create(MouseAxis.Y, _mouseYAxis, _mouseDeltaYAccum, elapsed));
+                HandleGesture(MouseAxisGesture.Create(MouseAxis.Y, _mouseYAxis, _mouseDeltaYAccum, 0));
 
             _mouseDeltaXAccum = 0;
             _mouseDeltaYAccum = 0;
