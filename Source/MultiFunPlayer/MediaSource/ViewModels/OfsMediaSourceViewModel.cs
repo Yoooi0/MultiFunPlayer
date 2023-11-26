@@ -61,19 +61,9 @@ internal sealed class OfsMediaSourceViewModel(IShortcutManager shortcutManager, 
     {
         try
         {
-            var readBuffer = new byte[1024];
             while (!token.IsCancellationRequested && client.State == WebSocketState.Open)
             {
-                using var memory = new MemoryStream();
-
-                var result = default(WebSocketReceiveResult);
-                do
-                {
-                    result = await client.ReceiveAsync(readBuffer, token);
-                    memory.Write(readBuffer, 0, result.Count);
-                } while (!token.IsCancellationRequested && !result.EndOfMessage);
-
-                var message = Encoding.UTF8.GetString(memory.ToArray());
+                var message = Encoding.UTF8.GetString(await client.ReceiveAsync(token));
                 if (message == null)
                     continue;
 

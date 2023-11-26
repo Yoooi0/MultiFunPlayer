@@ -98,22 +98,11 @@ internal sealed class WebSocketOutputTargetViewModel : AsyncAbstractOutputTarget
 
     private async Task ReadAsync(ClientWebSocket client, CancellationToken token)
     {
-        var readBuffer = new byte[1024];
-
         try
         {
             while (!token.IsCancellationRequested)
             {
-                using var memory = new MemoryStream();
-
-                var result = default(WebSocketReceiveResult);
-                do
-                {
-                    result = await client.ReceiveAsync(readBuffer, token);
-                    memory.Write(readBuffer, 0, result.Count);
-                } while (!token.IsCancellationRequested && !result.EndOfMessage);
-
-                var message = Encoding.UTF8.GetString(memory.ToArray());
+                var message = Encoding.UTF8.GetString(await client.ReceiveAsync(token));
                 Logger.Trace("Received \"{0}\" from \"{1}\"", message, Name);
             }
         }

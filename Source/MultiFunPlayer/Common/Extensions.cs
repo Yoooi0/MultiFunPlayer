@@ -8,6 +8,7 @@ using System.Linq.Expressions;
 using System.Net;
 using System.Net.Http;
 using System.Net.Sockets;
+using System.Net.WebSockets;
 using System.Runtime.CompilerServices;
 using System.Runtime.ExceptionServices;
 
@@ -325,6 +326,25 @@ public static class StreamExtensions
 
             memoryStream.Write(readMemory.Span);
         }
+
+        return memoryStream.ToArray();
+    }
+}
+
+public static class WebSocketExtensions
+{
+    public static async Task<byte[]> ReceiveAsync(this ClientWebSocket client, CancellationToken token)
+    {
+        using var memoryOwner = MemoryPool<byte>.Shared.Rent(1024);
+        using var memoryStream = new MemoryStream();
+
+        var readMemory = memoryOwner.Memory;
+        var result = default(ValueWebSocketReceiveResult);
+        do
+        {
+            result = await client.ReceiveAsync(readMemory, token);
+            await memoryStream.WriteAsync(readMemory, token);
+        } while (!token.IsCancellationRequested && !result.EndOfMessage);
 
         return memoryStream.ToArray();
     }
