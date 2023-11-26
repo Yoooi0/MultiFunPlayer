@@ -128,7 +128,7 @@ internal sealed class TcpOutputTargetViewModel(int instanceIndex, IEventAggregat
         try
         {
             using var client = new TcpClient();
-            await client.ConnectAsync(Endpoint);
+            await client.ConnectAsync(Endpoint, token);
             client.GetStream();
             return true;
         }

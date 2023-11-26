@@ -14,8 +14,8 @@ public sealed class WindowTitleBarIconVisibilityConverter : IMultiValueConverter
         var icon = values[0];
         if (icon != null && (windowStyle == WindowStyle.SingleBorderWindow || windowStyle == WindowStyle.ThreeDBorderWindow))
             return Visibility.Visible;
-        else
-            return Visibility.Collapsed;
+
+        return Visibility.Collapsed;
     }
 
     public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture)

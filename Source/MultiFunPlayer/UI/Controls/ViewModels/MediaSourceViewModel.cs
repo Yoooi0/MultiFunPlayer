@@ -105,7 +105,7 @@ internal sealed class MediaSourceViewModel : Conductor<IMediaSource>.Collection.
             if (settings.TryGetValue<int>(nameof(ScanInterval), out var scanInterval))
                 ScanInterval = scanInterval;
             if (settings.TryGetValue<List<string>>(nameof(Items), out var items))
-                Items.AddRange(AvailableSources.Where(x => items.Any(s => string.Equals(s, x.Name, StringComparison.OrdinalIgnoreCase))));
+                Items.AddRange(AvailableSources.Where(x => items.Exists(s => string.Equals(s, x.Name, StringComparison.OrdinalIgnoreCase))));
             if (settings.TryGetValue<string>(nameof(ActiveItem), out var selectedItem))
                 ChangeActiveItem(Items.FirstOrDefault(x => string.Equals(x.Name, selectedItem, StringComparison.OrdinalIgnoreCase)) ?? Items.FirstOrDefault(), closePrevious: false);
 

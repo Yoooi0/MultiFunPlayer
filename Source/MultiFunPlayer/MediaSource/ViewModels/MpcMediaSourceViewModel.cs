@@ -65,7 +65,7 @@ internal sealed class MpcMediaSourceViewModel(IShortcutManager shortcutManager, 
     private async Task ReadAsync(HttpClient client, CancellationToken token)
     {
         var variablesUri = new Uri($"http://{Endpoint.ToUriString()}/variables.html");
-        var variableRegex = new Regex(@"<p id=""(.+?)"">(.+?)<\/p>", RegexOptions.Compiled);
+        var variableRegex = new Regex(@"<p id=""(?<name>.+?)"">(?<value>.+?)<\/p>", RegexOptions.Compiled);
         var playerState = new PlayerState();
 
         try
@@ -82,7 +82,7 @@ internal sealed class MpcMediaSourceViewModel(IShortcutManager shortcutManager, 
                 var message = await response.Content.ReadAsStringAsync(token);
 
                 Logger.Trace("Received \"{0}\" from \"{1}\"", message, Name);
-                var variables = variableRegex.Matches(message).NotNull().ToDictionary(m => m.Groups[1].Value, m => m.Groups[2].Value);
+                var variables = variableRegex.Matches(message).NotNull().ToDictionary(m => m.Groups["name"].Value, m => m.Groups["value"].Value);
 
                 if (variables.TryGetValue("state", out var stateString) && int.TryParse(stateString, out var state) && state != playerState.State)
                 {

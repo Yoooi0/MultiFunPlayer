@@ -14,10 +14,10 @@ public sealed class WindowCaptionButtonVisibilityConverter : IMultiValueConverte
 
         if (button.Name == "PART_CloseButton")
             return (windowStyle != WindowStyle.None) ? Visibility.Visible : Visibility.Collapsed;
-        else if (resizeMode != ResizeMode.NoResize && (windowStyle == WindowStyle.SingleBorderWindow || windowStyle == WindowStyle.ThreeDBorderWindow))
+        if (resizeMode != ResizeMode.NoResize && (windowStyle == WindowStyle.SingleBorderWindow || windowStyle == WindowStyle.ThreeDBorderWindow))
             return Visibility.Visible;
-        else
-            return Visibility.Collapsed;
+
+        return Visibility.Collapsed;
     }
 
     public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture)

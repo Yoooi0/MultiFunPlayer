@@ -126,7 +126,7 @@ public static class TaskExtensions
         static async Task DoWaitAsync(Task task, CancellationToken cancellationToken)
         {
             var tcs = new TaskCompletionSource();
-            using var registration = cancellationToken.Register(() => tcs.TrySetCanceled(cancellationToken), useSynchronizationContext: false);
+            await using var registration = cancellationToken.Register(() => tcs.TrySetCanceled(cancellationToken), useSynchronizationContext: false);
             await await Task.WhenAny(task, tcs.Task);
         }
 
@@ -142,7 +142,7 @@ public static class TaskExtensions
         static async Task<T> DoWaitAsync<T>(Task<T> task, CancellationToken cancellationToken)
         {
             var tcs = new TaskCompletionSource<T>();
-            using var registration = cancellationToken.Register(() => tcs.TrySetCanceled(cancellationToken), useSynchronizationContext: false);
+            await using var registration = cancellationToken.Register(() => tcs.TrySetCanceled(cancellationToken), useSynchronizationContext: false);
             return await await Task.WhenAny(task, tcs.Task);
         }
 
@@ -159,7 +159,7 @@ public static class TaskExtensions
         {
             var tcs = new TaskCompletionSource();
             using var cancellationSource = new CancellationTokenSource(millisecondsDelay);
-            using var registration = cancellationSource.Token.Register(() => tcs.TrySetCanceled(), useSynchronizationContext: false);
+            await using var registration = cancellationSource.Token.Register(() => tcs.TrySetCanceled(), useSynchronizationContext: false);
 
             try { await await Task.WhenAny(task, tcs.Task); }
             catch (OperationCanceledException) when (tcs.Task.IsCanceled) { throw new TimeoutException(); }
@@ -174,7 +174,7 @@ public static class TaskExtensions
         {
             var tcs = new TaskCompletionSource<T>();
             using var cancellationSource = new CancellationTokenSource(millisecondsDelay);
-            using var registration = cancellationSource.Token.Register(() => tcs.TrySetCanceled(), useSynchronizationContext: false);
+            await using var registration = cancellationSource.Token.Register(() => tcs.TrySetCanceled(), useSynchronizationContext: false);
 
             try { return await await Task.WhenAny(task, tcs.Task); }
             catch (OperationCanceledException) when (tcs.Task.IsCanceled) { throw new TimeoutException(); }
@@ -346,8 +346,8 @@ public static class NetExtensions
         response.EnsureSuccessStatusCode();
 
         var stream = await response.Content.ReadAsStreamAsync();
-        using var fileStream = File.Create(fileName);
-        stream.CopyTo(fileStream);
+        await using var fileStream = File.Create(fileName);
+        await stream.CopyToAsync(fileStream);
     }
 
     public static ValueTask ConnectAsync(this TcpClient client , EndPoint endpoint, CancellationToken cancellationToken)
@@ -364,30 +364,30 @@ public static class NetExtensions
     {
         if (endpoint is IPEndPoint ipEndPoint)
             client.Connect(ipEndPoint.Address, ipEndPoint.Port);
-        else if (endpoint is DnsEndPoint dnsEndPoint)
+        if (endpoint is DnsEndPoint dnsEndPoint)
             client.Connect(dnsEndPoint.Host, dnsEndPoint.Port);
-        else
-            throw new NotSupportedException($"{endpoint.GetType()} in not supported.");
+
+        throw new NotSupportedException($"{endpoint.GetType()} in not supported.");
     }
 
     public static void Connect(this UdpClient client, EndPoint endpoint)
     {
         if (endpoint is IPEndPoint ipEndPoint)
             client.Connect(ipEndPoint.Address, ipEndPoint.Port);
-        else if (endpoint is DnsEndPoint dnsEndPoint)
+        if (endpoint is DnsEndPoint dnsEndPoint)
             client.Connect(dnsEndPoint.Host, dnsEndPoint.Port);
-        else
-            throw new NotSupportedException($"{endpoint.GetType()} in not supported.");
+
+        throw new NotSupportedException($"{endpoint.GetType()} in not supported.");
     }
 
     public static Task ConnectAsync(this TcpClient client, EndPoint endpoint)
     {
         if (endpoint is IPEndPoint ipEndPoint)
             return client.ConnectAsync(ipEndPoint.Address, ipEndPoint.Port);
-        else if (endpoint is DnsEndPoint dnsEndPoint)
+        if (endpoint is DnsEndPoint dnsEndPoint)
             return client.ConnectAsync(dnsEndPoint.Host, dnsEndPoint.Port);
-        else
-            throw new NotSupportedException($"{endpoint.GetType()} in not supported.");
+
+        throw new NotSupportedException($"{endpoint.GetType()} in not supported.");
     }
 
     public static bool IsLocalhost(this EndPoint endpoint)

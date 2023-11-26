@@ -22,7 +22,7 @@ internal sealed class FunscriptWriter : IScriptWriter
 
     public FunscriptWriter(string outputPath)
     {
-        ArgumentNullException.ThrowIfNull(outputPath, nameof(outputPath));
+        ArgumentNullException.ThrowIfNull(outputPath);
 
         _stream = new FileStream(outputPath, FileMode.CreateNew);
         _isFirst = true;
@@ -65,7 +65,7 @@ internal sealed class CsvWriter : IScriptWriter
 
     public CsvWriter(string outputPath)
     {
-        ArgumentNullException.ThrowIfNull(outputPath, nameof(outputPath));
+        ArgumentNullException.ThrowIfNull(outputPath);
 
         _stream = new FileStream(outputPath, FileMode.CreateNew);
         Write("position;value\n");

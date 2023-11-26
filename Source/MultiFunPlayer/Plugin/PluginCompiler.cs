@@ -272,9 +272,7 @@ internal static class PluginCompiler
             }
             else
             {
-                var settings = Activator.CreateInstance(settingsType) as PluginSettingsBase;
-                if (settings == null)
-                    return PluginCompilationResult.FromFailure(context, new PluginCompileException("Unable to create settings instance"));
+                var settings = (PluginSettingsBase)Activator.CreateInstance(settingsType);
 
                 var settingsView = default(UIElement);
                 Execute.OnUIThreadSync(() =>
@@ -328,5 +326,5 @@ internal sealed class PluginCompileException : Exception
         : base(message, innerException) { }
 
     public PluginCompileException(string message, IEnumerable<Diagnostic> diagnostics)
-        : this($"{message}\n{string.Join("\n", diagnostics.Select(d => d.ToString()))}") { }
+        : this($"{message}\n{string.Join('\n', diagnostics.Select(d => d.ToString()))}") { }
 }

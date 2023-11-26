@@ -100,7 +100,7 @@ internal sealed class SerialOutputTargetViewModel(int instanceIndex, IEventAggre
             observer.Completed += (_, _) => taskCompletion.TrySetResult();
 
             searcher.Get(observer);
-            using (token.Register(() => taskCompletion.TrySetCanceled()))
+            await using (token.Register(() => taskCompletion.TrySetCanceled()))
                 await taskCompletion.Task.WaitAsync(token);
 
             var lastSelectedDeviceId = SelectedSerialPortDeviceId;

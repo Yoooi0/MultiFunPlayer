@@ -245,14 +245,16 @@ internal sealed class ButtplugOutputTargetViewModel : AsyncAbstractOutputTarget
                         Logger.Trace("Sending \"{value} (Duration={duration}\" to \"{actuator}\"", value, duration, actuator);
                         return linearActuator.LinearAsync(duration, value, token);
                     }
-                    else if (actuator is ButtplugDeviceRotateActuator rotateActuator)
+
+                    if (actuator is ButtplugDeviceRotateActuator rotateActuator)
                     {
                         var speed = Math.Clamp(Math.Abs(value - 0.5) / 0.5, 0, 1);
                         var clockwise = value > 0.5;
                         Logger.Trace("Sending \"{speed} (Clockwise={clockwise})\" to \"{actuator}\"", speed, clockwise, actuator);
                         return rotateActuator.RotateAsync(speed, clockwise, token);
                     }
-                    else if (actuator is ButtplugDeviceScalarActuator scalarActuator)
+
+                    if (actuator is ButtplugDeviceScalarActuator scalarActuator)
                     {
                         Logger.Trace("Sending \"{value}\" to \"{actuator}\"", value, actuator);
                         return scalarActuator.ScalarAsync(value, token);

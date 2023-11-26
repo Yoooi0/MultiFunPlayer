@@ -32,7 +32,7 @@ internal abstract class AbstractShortcutAction : IShortcutAction
     {
         if (gestureDescriptor is ISimpleInputGestureDescriptor)
             return _arguments.Count == 0 || !_arguments[0].IsAssignableTo(typeof(IInputGesture)) || typeof(ISimpleInputGesture).IsAssignableTo(_arguments[0]);
-        else if (gestureDescriptor is IAxisInputGestureDescriptor)
+        if (gestureDescriptor is IAxisInputGestureDescriptor)
             return _arguments.Count > 0 && typeof(IAxisInputGesture).IsAssignableTo(_arguments[0]);
 
         return false;

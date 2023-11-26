@@ -23,9 +23,9 @@ internal sealed class Migration0009 : AbstractConfigMigration
 
         var devices = DeviceSettingsViewModel.DefaultDevices.ToList();
         if (!settings.TryGetValue<string>("SelectedDevice", out var selectedDevice) || string.IsNullOrWhiteSpace(selectedDevice))
-            selectedDevice = devices.Last().Name;
+            selectedDevice = devices[^1].Name;
 
-        var device = devices.Find(d => string.Equals(d.Name, selectedDevice, StringComparison.OrdinalIgnoreCase)) ?? devices.Last();
+        var device = devices.Find(d => string.Equals(d.Name, selectedDevice, StringComparison.OrdinalIgnoreCase)) ?? devices[^1];
         var migratedName = $"{device.Name} (migrated)";
         var migratedDevice = device.Clone(migratedName);
 

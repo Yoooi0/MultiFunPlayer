@@ -39,7 +39,7 @@ internal sealed class Migration0011 : AbstractConfigMigration
         {
             var oldDescriptor = action["Descriptor"].ToString();
 
-            var descriptorPrefix = oldDescriptor.Split("::").First();
+            var descriptorPrefix = oldDescriptor.Split("::")[0];
             var newDescriptor = oldDescriptor.Replace(descriptorPrefix, descriptorPrefixMap[descriptorPrefix]);
 
             action["Descriptor"] = newDescriptor;

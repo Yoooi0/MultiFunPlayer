@@ -53,7 +53,7 @@ internal sealed class MediaResourceInfo
                 if (string.Equals(uri.Scheme, "file", StringComparison.OrdinalIgnoreCase))
                     return false;
 
-                var name = uri.Segments.Last().Trim('/');
+                var name = uri.Segments[^1].Trim('/');
                 foreach (var c in Path.GetInvalidFileNameChars())
                     name = name.Replace(c, '_');
 

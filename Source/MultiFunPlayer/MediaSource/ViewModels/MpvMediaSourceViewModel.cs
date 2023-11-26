@@ -46,27 +46,23 @@ internal sealed class MpvMediaSourceViewModel(IShortcutManager shortcutManager, 
             {
                 var executable = Executable?.AsRefreshed() ?? new FileInfo(Path.Join(Path.GetDirectoryName(Environment.ProcessPath), "mpv.exe"));
                 if (!executable.Exists)
-                {
                     throw new Exception("Could not find mpv executable! Please set path to mpv.exe or download latest release from settings.");
-                }
-                else
+
+                var processInfo = new ProcessStartInfo()
                 {
-                    var processInfo = new ProcessStartInfo()
-                    {
-                        FileName = executable.FullName,
-                        Arguments = $"--input-ipc-server={_pipeName} {Arguments}"
-                    };
+                    FileName = executable.FullName,
+                    Arguments = $"--input-ipc-server={_pipeName} {Arguments}"
+                };
 
-                    Process.Start(processInfo);
+                Process.Start(processInfo);
 
-                    await client.ConnectAsync(2000, token);
-                }
+                await client.ConnectAsync(2000, token);
             }
 
             if (client.IsConnected)
             {
                 using var reader = new StreamReader(client);
-                using var writer = new StreamWriter(client) { AutoFlush = true };
+                await using var writer = new StreamWriter(client) { AutoFlush = true };
 
                 await writer.WriteLineAsync("{ \"command\": [\"observe_property_string\", 1, \"pause\"] }");
                 await writer.WriteLineAsync("{ \"command\": [\"observe_property_string\", 2, \"duration\"] }");
@@ -180,7 +176,7 @@ internal sealed class MpvMediaSourceViewModel(IShortcutManager shortcutManager, 
                 {
                     MediaPlayPauseMessage playPauseMessage => CreateMessage("set_property", "pause", !playPauseMessage.ShouldBePlaying ? "yes" : "no"),
                     MediaSeekMessage seekMessage => CreateMessage("set_property", "time-pos", seekMessage.Position.TotalSeconds.ToString("F4").Replace(',', '.')),
-                    MediaChangePathMessage changePathMessage => CreateMessage("loadfile", changePathMessage.Path.Replace(@"\", "/")),
+                    MediaChangePathMessage changePathMessage => CreateMessage("loadfile", changePathMessage.Path.Replace('\\', '/')),
                     MediaChangeSpeedMessage changeSpeedMessage => CreateMessage("set_property", "speed", changeSpeedMessage.Speed.ToString("F4").Replace(',', '.')),
                     _ => null
                 };

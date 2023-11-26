@@ -173,7 +173,7 @@ public sealed class NonReloadingTabControl : TabControl
         return null;
     }
 
-    protected TabItem GetSelectedTabItem()
+    private TabItem GetSelectedTabItem()
     {
         var selectedItem = SelectedItem;
         if (selectedItem == null)
