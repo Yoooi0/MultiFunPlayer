@@ -16,7 +16,7 @@ using System.Text.RegularExpressions;
 namespace MultiFunPlayer.MediaSource.ViewModels;
 
 [DisplayName("HereSphere")]
-internal class HereSphereMediaSourceViewModel(IShortcutManager shortcutManager, IEventAggregator eventAggregator) : AbstractMediaSource(shortcutManager, eventAggregator)
+internal sealed class HereSphereMediaSourceViewModel(IShortcutManager shortcutManager, IEventAggregator eventAggregator) : AbstractMediaSource(shortcutManager, eventAggregator)
 {
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
@@ -266,7 +266,7 @@ internal class HereSphereMediaSourceViewModel(IShortcutManager shortcutManager, 
         #endregion
     }
 
-    private class PlayerState
+    private sealed class PlayerState
     {
         [JsonProperty("path")] public string Path { get; set; }
         [JsonProperty("currentTime")] public double? Position { get; set; }

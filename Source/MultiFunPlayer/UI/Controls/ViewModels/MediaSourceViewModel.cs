@@ -6,7 +6,7 @@ using Stylet;
 
 namespace MultiFunPlayer.UI.Controls.ViewModels;
 
-internal class MediaSourceViewModel : Conductor<IMediaSource>.Collection.OneActive, IHandle<SettingsMessage>, IDisposable
+internal sealed class MediaSourceViewModel : Conductor<IMediaSource>.Collection.OneActive, IHandle<SettingsMessage>, IDisposable
 {
     private Task _task;
     private CancellationTokenSource _cancellationSource;
@@ -238,7 +238,7 @@ internal class MediaSourceViewModel : Conductor<IMediaSource>.Collection.OneActi
         }
     }
 
-    protected async virtual void Dispose(bool disposing)
+    private async void Dispose(bool disposing)
     {
         _cancellationSource?.Cancel();
 

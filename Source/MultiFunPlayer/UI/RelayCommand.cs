@@ -2,7 +2,7 @@
 
 namespace MultiFunPlayer.UI;
 
-public class RelayCommand<T>(Action<T> execute, Func<T, bool> canExecute) : ICommand
+public sealed class RelayCommand<T>(Action<T> execute, Func<T, bool> canExecute) : ICommand
 {
     public event EventHandler CanExecuteChanged
     {
@@ -32,7 +32,7 @@ public class RelayCommand<T>(Action<T> execute, Func<T, bool> canExecute) : ICom
     }
 }
 
-public class RelayCommand<T0, T1>(Action<T0, T1> execute, Func<T0, T1, bool> canExecute) : ICommand
+public sealed class RelayCommand<T0, T1>(Action<T0, T1> execute, Func<T0, T1, bool> canExecute) : ICommand
 {
     public event EventHandler CanExecuteChanged
     {

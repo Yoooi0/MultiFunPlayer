@@ -26,7 +26,7 @@ using Microsoft.Win32;
 namespace MultiFunPlayer.UI.Controls.ViewModels;
 
 [JsonObject(MemberSerialization = MemberSerialization.OptIn)]
-internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
+internal sealed class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
     IHandle<MediaPositionChangedMessage>, IHandle<MediaPlayingChangedMessage>, IHandle<MediaPathChangedMessage>, IHandle<MediaDurationChangedMessage>,
     IHandle<MediaSpeedChangedMessage>, IHandle<SettingsMessage>, IHandle<SyncRequestMessage>, IHandle<ChangeScriptMessage>
 {
@@ -2022,7 +2022,7 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
     }
     #endregion
 
-    protected virtual void Dispose(bool disposing)
+    private void Dispose(bool disposing)
     {
         _cancellationSource?.Cancel();
         _updateThread?.Join();
@@ -2039,7 +2039,7 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
     }
 }
 
-internal class AxisModel(DeviceAxis axis) : PropertyChangedBase
+internal sealed class AxisModel(DeviceAxis axis) : PropertyChangedBase
 {
     public AxisState State { get; } = new AxisState();
     public AxisSettings Settings { get; } = new AxisSettings(axis);
@@ -2047,7 +2047,7 @@ internal class AxisModel(DeviceAxis axis) : PropertyChangedBase
 }
 
 [AddINotifyPropertyChangedInterface]
-internal partial class AxisState
+internal sealed partial class AxisState
 {
     public static int AfterScriptIndex { get; } = int.MaxValue;
     public static int BeforeScriptIndex { get; } = -1;
@@ -2085,7 +2085,7 @@ internal partial class AxisState
     }
 }
 
-internal class AxisValueTransition
+internal sealed class AxisValueTransition
 {
     private bool _initialized;
     private double _fromValue;
@@ -2125,7 +2125,7 @@ internal class AxisValueTransition
     }
 }
 
-internal class AxisStateUpdateContext(AxisState state)
+internal sealed class AxisStateUpdateContext(AxisState state)
 {
     public int Index { get; set; }
     public bool Invalid => Index == AxisState.InvalidIndex;
@@ -2199,7 +2199,7 @@ internal class AxisStateUpdateContext(AxisState state)
 }
 
 [JsonObject(MemberSerialization.OptIn)]
-internal class AxisSettings : PropertyChangedBase
+internal sealed class AxisSettings : PropertyChangedBase
 {
     [JsonProperty] public bool LinkAxisHasPriority { get; set; } = false;
     [JsonProperty] public DeviceAxis LinkAxis { get; set; } = null;
@@ -2259,7 +2259,7 @@ internal enum SmartLimitMode
 }
 
 [JsonObject(MemberSerialization.OptIn)]
-internal class SyncSettings : PropertyChangedBase
+internal sealed class SyncSettings : PropertyChangedBase
 {
     [JsonProperty] public double Duration { get; set; } = 4;
     [JsonProperty] public bool SyncOnMediaResourceChanged { get; set; } = true;
@@ -2269,7 +2269,7 @@ internal class SyncSettings : PropertyChangedBase
 }
 
 [JsonObject(MemberSerialization.OptIn)]
-internal class ScriptLibrary(DirectoryInfo directory) : PropertyChangedBase
+internal sealed class ScriptLibrary(DirectoryInfo directory) : PropertyChangedBase
 {
     [JsonProperty] public DirectoryInfo Directory { get; } = directory;
     [JsonProperty] public bool Recursive { get; set; }
@@ -2277,7 +2277,7 @@ internal class ScriptLibrary(DirectoryInfo directory) : PropertyChangedBase
     public IEnumerable<FileInfo> EnumerateFiles(string searchPattern) => Directory.SafeEnumerateFiles(searchPattern, IOUtils.CreateEnumerationOptions(Recursive));
 }
 
-internal class MediaLoopSegment : PropertyChangedBase
+internal sealed class MediaLoopSegment : PropertyChangedBase
 {
     private double? _startPosition;
     private double? _endPosition;
@@ -2334,7 +2334,7 @@ internal class MediaLoopSegment : PropertyChangedBase
     }
 }
 
-public class SeekRequestEventArgs(TimeSpan position) : EventArgs
+public sealed class SeekRequestEventArgs(TimeSpan position) : EventArgs
 {
     public TimeSpan Position { get; } = position;
 }

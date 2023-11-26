@@ -13,7 +13,7 @@ using System.Text;
 namespace MultiFunPlayer.OutputTarget.ViewModels;
 
 [DisplayName("UDP")]
-internal class UdpOutputTargetViewModel(int instanceIndex, IEventAggregator eventAggregator, IDeviceAxisValueProvider valueProvider, IInputProcessorManager inputManager)
+internal sealed class UdpOutputTargetViewModel(int instanceIndex, IEventAggregator eventAggregator, IDeviceAxisValueProvider valueProvider, IInputProcessorManager inputManager)
     : ThreadAbstractOutputTarget(instanceIndex, eventAggregator, valueProvider)
 {
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();

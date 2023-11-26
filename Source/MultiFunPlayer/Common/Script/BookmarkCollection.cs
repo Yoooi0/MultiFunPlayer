@@ -2,7 +2,7 @@
 
 namespace MultiFunPlayer.Common;
 
-public class BookmarkCollection : IReadOnlyList<Bookmark>
+public sealed class BookmarkCollection : IReadOnlyList<Bookmark>
 {
     private readonly List<Bookmark> _items;
 

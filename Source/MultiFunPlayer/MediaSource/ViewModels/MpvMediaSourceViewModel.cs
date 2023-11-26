@@ -15,7 +15,7 @@ using System.IO.Pipes;
 namespace MultiFunPlayer.MediaSource.ViewModels;
 
 [DisplayName("MPV")]
-internal class MpvMediaSourceViewModel(IShortcutManager shortcutManager, IEventAggregator eventAggregator) : AbstractMediaSource(shortcutManager, eventAggregator)
+internal sealed class MpvMediaSourceViewModel(IShortcutManager shortcutManager, IEventAggregator eventAggregator) : AbstractMediaSource(shortcutManager, eventAggregator)
 {
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 

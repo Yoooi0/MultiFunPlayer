@@ -19,7 +19,7 @@ internal interface IMotionProviderManager : IDeviceAxisValueProvider
     void RegisterActions(IShortcutManager shortcutManager);
 }
 
-internal class MotionProviderManager : IMotionProviderManager, IHandle<SettingsMessage>
+internal sealed class MotionProviderManager : IMotionProviderManager, IHandle<SettingsMessage>
 {
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 

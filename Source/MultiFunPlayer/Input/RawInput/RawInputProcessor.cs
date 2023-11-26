@@ -8,9 +8,9 @@ using System.Windows.Interop;
 
 namespace MultiFunPlayer.Input.RawInput;
 
-internal class RawInputProcessor : IInputProcessor
+internal sealed class RawInputProcessor : IInputProcessor
 {
-    protected static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+    private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
     private readonly HashSet<Key> _pressedKeys;
     private HwndSource _source;
@@ -136,7 +136,7 @@ internal class RawInputProcessor : IInputProcessor
     private void HandleGesture(IInputGesture gesture)
         => OnGesture?.Invoke(this, gesture);
 
-    protected virtual void Dispose(bool disposing)
+    private void Dispose(bool disposing)
     {
         _source?.RemoveHook(MessageSink);
 

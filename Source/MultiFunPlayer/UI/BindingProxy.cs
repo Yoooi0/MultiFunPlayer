@@ -2,7 +2,7 @@ using System.Windows;
 
 namespace MultiFunPlayer.UI;
 
-internal class BindingProxy : Freezable
+internal sealed class BindingProxy : Freezable
 {
     protected override Freezable CreateInstanceCore() => new BindingProxy();
 

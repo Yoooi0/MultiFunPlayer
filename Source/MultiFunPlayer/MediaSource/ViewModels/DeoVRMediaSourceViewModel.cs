@@ -16,7 +16,7 @@ using System.Text.RegularExpressions;
 namespace MultiFunPlayer.MediaSource.ViewModels;
 
 [DisplayName("DeoVR")]
-internal class DeoVRMediaSourceViewModel(IShortcutManager shortcutManager, IEventAggregator eventAggregator) : AbstractMediaSource(shortcutManager, eventAggregator)
+internal sealed class DeoVRMediaSourceViewModel(IShortcutManager shortcutManager, IEventAggregator eventAggregator) : AbstractMediaSource(shortcutManager, eventAggregator)
 {
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
@@ -265,7 +265,7 @@ internal class DeoVRMediaSourceViewModel(IShortcutManager shortcutManager, IEven
         #endregion
     }
 
-    private class PlayerState
+    private sealed class PlayerState
     {
         [JsonProperty("path")] public string Path { get; set; }
         [JsonProperty("currentTime")] public double? Position { get; set; }

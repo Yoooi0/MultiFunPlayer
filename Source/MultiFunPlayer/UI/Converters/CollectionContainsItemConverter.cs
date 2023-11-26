@@ -4,7 +4,7 @@ using System.Windows.Data;
 
 namespace MultiFunPlayer.UI.Converters;
 
-internal class CollectionContainsItemConverter : IMultiValueConverter
+internal sealed class CollectionContainsItemConverter : IMultiValueConverter
 {
     public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
     {

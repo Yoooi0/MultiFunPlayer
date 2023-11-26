@@ -12,7 +12,7 @@ using System.Net.Http;
 namespace MultiFunPlayer.MediaSource.ViewModels;
 
 [DisplayName("Jellyfin")]
-internal class JellyfinMediaSourceViewModel(IShortcutManager shortcutManager, IEventAggregator eventAggregator) : AbstractMediaSource(shortcutManager, eventAggregator)
+internal sealed class JellyfinMediaSourceViewModel(IShortcutManager shortcutManager, IEventAggregator eventAggregator) : AbstractMediaSource(shortcutManager, eventAggregator)
 {
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
@@ -339,7 +339,7 @@ internal class JellyfinMediaSourceViewModel(IShortcutManager shortcutManager, IE
         base.Dispose(disposing);
     }
 
-    internal record class JellyfinDevice()
+    internal sealed record class JellyfinDevice()
     {
         public string Name { get; init; }
         public string Id { get; init; }
@@ -347,7 +347,7 @@ internal class JellyfinMediaSourceViewModel(IShortcutManager shortcutManager, IE
         public string AppVersion { get; init; }
     }
 
-    internal record class JellyfinSession()
+    internal sealed record class JellyfinSession()
     {
         public string Id { get; init; }
         [JsonProperty("PlayState")]
@@ -356,6 +356,6 @@ internal class JellyfinMediaSourceViewModel(IShortcutManager shortcutManager, IE
         public PlayItem Item { get; init; }
     }
 
-    internal record class PlayState(long PositionTicks, bool IsPaused);
-    internal record class PlayItem(long RunTimeTicks, string Path);
+    internal sealed record class PlayState(long PositionTicks, bool IsPaused);
+    internal sealed record class PlayItem(long RunTimeTicks, string Path);
 }

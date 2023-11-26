@@ -16,7 +16,7 @@ using System.Windows;
 namespace MultiFunPlayer.OutputTarget.ViewModels;
 
 [DisplayName("Buttplug.io")]
-internal class ButtplugOutputTargetViewModel : AsyncAbstractOutputTarget
+internal sealed class ButtplugOutputTargetViewModel : AsyncAbstractOutputTarget
 {
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
@@ -28,7 +28,7 @@ internal class ButtplugOutputTargetViewModel : AsyncAbstractOutputTarget
 
     public override ConnectionStatus Status { get; protected set; }
     public EndPoint Endpoint { get; set; } = new IPEndPoint(IPAddress.Loopback, 12345);
-    public ObservableConcurrentCollection<ButtplugDevice> AvailableDevices { get; protected set; }
+    public ObservableConcurrentCollection<ButtplugDevice> AvailableDevices { get; }
 
     [DependsOn(nameof(SelectedDevice))]
     public IReadOnlyCollection<ActuatorType> AvailableActuatorTypes
@@ -59,7 +59,7 @@ internal class ButtplugOutputTargetViewModel : AsyncAbstractOutputTarget
     public uint? SelectedActuatorIndex { get; set; }
     public bool CanAddSelected => SelectedDevice != null && SelectedDeviceAxis != null && SelectedActuatorType != null && SelectedActuatorIndex != null;
 
-    public ObservableConcurrentCollection<ButtplugDeviceSettings> DeviceSettings { get; protected set; }
+    public ObservableConcurrentCollection<ButtplugDeviceSettings> DeviceSettings { get; }
 
     public ButtplugOutputTargetViewModel(int instanceIndex, IEventAggregator eventAggregator, IDeviceAxisValueProvider valueProvider)
         : base(instanceIndex, eventAggregator, valueProvider)
@@ -387,7 +387,7 @@ internal class ButtplugOutputTargetViewModel : AsyncAbstractOutputTarget
 }
 
 [JsonObject(MemberSerialization.OptIn)]
-internal class ButtplugDeviceSettings : PropertyChangedBase
+internal sealed class ButtplugDeviceSettings : PropertyChangedBase
 {
     [JsonProperty] public string DeviceName { get; set; }
     [JsonProperty] public uint DeviceIndex { get; set; }

@@ -3,7 +3,7 @@ using System.Windows.Data;
 
 namespace MultiFunPlayer.UI.Converters;
 
-internal class BooleanOrConverter : IMultiValueConverter
+internal sealed class BooleanOrConverter : IMultiValueConverter
 {
     public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
         => values.Cast<bool>().Any(x => x);
@@ -12,7 +12,7 @@ internal class BooleanOrConverter : IMultiValueConverter
         => throw new NotImplementedException();
 }
 
-internal class BooleanAndConverter : IMultiValueConverter
+internal sealed class BooleanAndConverter : IMultiValueConverter
 {
     public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
         => values.Cast<bool>().All(x => x);

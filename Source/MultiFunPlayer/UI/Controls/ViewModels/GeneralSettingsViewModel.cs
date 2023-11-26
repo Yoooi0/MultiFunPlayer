@@ -9,7 +9,7 @@ using System.Windows.Controls;
 
 namespace MultiFunPlayer.UI.Controls.ViewModels;
 
-internal class GeneralSettingsViewModel : Screen, IHandle<SettingsMessage>, IHandle<WindowCreatedMessage>
+internal sealed class GeneralSettingsViewModel : Screen, IHandle<SettingsMessage>, IHandle<WindowCreatedMessage>
 {
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 

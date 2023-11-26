@@ -3,9 +3,9 @@
 namespace MultiFunPlayer.Common;
 
 [DebuggerDisplay("[{Name}: {Position}s]")]
-public record Bookmark(string Name, double Position);
+public sealed record Bookmark(string Name, double Position);
 
-public class BookmarkPositionComparer : IComparer<Bookmark>
+public sealed class BookmarkPositionComparer : IComparer<Bookmark>
 {
     public static BookmarkPositionComparer Default { get; } = new();
 

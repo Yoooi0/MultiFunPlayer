@@ -12,7 +12,7 @@ using System.Text;
 namespace MultiFunPlayer.OutputTarget.ViewModels;
 
 [DisplayName("Pipe")]
-internal class PipeOutputTargetViewModel(int instanceIndex, IEventAggregator eventAggregator, IDeviceAxisValueProvider valueProvider)
+internal sealed class PipeOutputTargetViewModel(int instanceIndex, IEventAggregator eventAggregator, IDeviceAxisValueProvider valueProvider)
     : ThreadAbstractOutputTarget(instanceIndex, eventAggregator, valueProvider)
 {
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();

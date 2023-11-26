@@ -5,7 +5,7 @@ using System.Text;
 
 namespace MultiFunPlayer.MediaSource.MediaResource;
 
-internal class MediaResourceInfo
+internal sealed class MediaResourceInfo
 {
     public bool IsPath { get; init; }
     public bool IsUrl { get; init; }

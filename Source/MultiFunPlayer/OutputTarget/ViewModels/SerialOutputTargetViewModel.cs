@@ -15,7 +15,7 @@ using System.Text.RegularExpressions;
 namespace MultiFunPlayer.OutputTarget.ViewModels;
 
 [DisplayName("Serial")]
-internal class SerialOutputTargetViewModel(int instanceIndex, IEventAggregator eventAggregator, IDeviceAxisValueProvider valueProvider, IInputProcessorManager inputManager)
+internal sealed class SerialOutputTargetViewModel(int instanceIndex, IEventAggregator eventAggregator, IDeviceAxisValueProvider valueProvider, IInputProcessorManager inputManager)
     : ThreadAbstractOutputTarget(instanceIndex, eventAggregator, valueProvider)
 {
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();

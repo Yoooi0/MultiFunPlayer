@@ -12,7 +12,7 @@ public interface IReadOnlyObservableConcurrentCollection<T> : IReadOnlyList<T>, 
 }
 
 [DoNotNotify]
-public class ObservableConcurrentCollection<T> : IList<T>, IReadOnlyObservableConcurrentCollection<T>, IList
+public sealed class ObservableConcurrentCollection<T> : IList<T>, IReadOnlyObservableConcurrentCollection<T>, IList
 {
     private readonly SynchronizationContext _context;
     private readonly List<T> _items;

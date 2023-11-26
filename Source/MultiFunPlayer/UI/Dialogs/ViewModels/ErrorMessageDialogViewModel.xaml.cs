@@ -2,7 +2,7 @@
 
 namespace MultiFunPlayer.UI.Dialogs.ViewModels;
 
-internal class ErrorMessageDialogViewModel : Screen
+internal sealed class ErrorMessageDialogViewModel : Screen
 {
     public string Message { get; }
 

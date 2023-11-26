@@ -144,7 +144,7 @@ public abstract class PluginBase : PropertyChangedBase
         }
     }
 
-    private class MessageProxy(Action<object> callback) : IHandle<object>
+    private sealed class MessageProxy(Action<object> callback) : IHandle<object>
     {
         public void Handle(object message) => callback(message);
     }

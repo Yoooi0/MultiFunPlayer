@@ -4,7 +4,7 @@ using Newtonsoft.Json.Linq;
 
 namespace MultiFunPlayer.Settings.Converters;
 
-internal class ShortcutActionConfigurationConverter(IShortcutManager manager) : JsonConverter<IShortcutActionConfiguration>
+internal sealed class ShortcutActionConfigurationConverter(IShortcutManager manager) : JsonConverter<IShortcutActionConfiguration>
 {
     public override IShortcutActionConfiguration ReadJson(JsonReader reader, Type objectType, IShortcutActionConfiguration existingValue, bool hasExistingValue, JsonSerializer serializer)
     {

@@ -10,12 +10,12 @@ public enum GamepadAxis
     RightThumbY
 }
 
-public record GamepadAxisGestureDescriptor(int UserIndex, GamepadAxis Axis) : IAxisInputGestureDescriptor
+public sealed record GamepadAxisGestureDescriptor(int UserIndex, GamepadAxis Axis) : IAxisInputGestureDescriptor
 {
     public override string ToString() => $"[Gamepad Axis: {UserIndex}/{Axis}]";
 }
 
-public class GamepadAxisGesture(GamepadAxisGestureDescriptor descriptor, double value, double delta, double deltaTime) : AbstractAxisInputGesture(descriptor, value, delta, deltaTime)
+public sealed class GamepadAxisGesture(GamepadAxisGestureDescriptor descriptor, double value, double delta, double deltaTime) : AbstractAxisInputGesture(descriptor, value, delta, deltaTime)
 {
     public int UserIndex => descriptor.UserIndex;
     public GamepadAxis Axis => descriptor.Axis;

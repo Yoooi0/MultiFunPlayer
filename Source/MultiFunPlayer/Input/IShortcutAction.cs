@@ -50,7 +50,7 @@ internal abstract class AbstractShortcutAction : IShortcutAction
     }
 }
 
-internal class ShortcutAction(Action action) : AbstractShortcutAction
+internal sealed class ShortcutAction(Action action) : AbstractShortcutAction
 {
     public override void Invoke(params object[] arguments)
     {
@@ -61,7 +61,7 @@ internal class ShortcutAction(Action action) : AbstractShortcutAction
     public void Invoke() => action.Invoke();
 }
 
-internal class ShortcutAction<T0>(Action<T0> action) : AbstractShortcutAction
+internal sealed class ShortcutAction<T0>(Action<T0> action) : AbstractShortcutAction
 {
     public override void Invoke(params object[] arguments)
     {
@@ -72,7 +72,7 @@ internal class ShortcutAction<T0>(Action<T0> action) : AbstractShortcutAction
     public void Invoke(T0 arg0) => action.Invoke(arg0);
 }
 
-internal class ShortcutAction<T0, T1>(Action<T0, T1> action) : AbstractShortcutAction
+internal sealed class ShortcutAction<T0, T1>(Action<T0, T1> action) : AbstractShortcutAction
 {
     public override void Invoke(params object[] arguments)
     {
@@ -83,7 +83,7 @@ internal class ShortcutAction<T0, T1>(Action<T0, T1> action) : AbstractShortcutA
     public void Invoke(T0 arg0, T1 arg1) => action.Invoke(arg0, arg1);
 }
 
-internal class ShortcutAction<T0, T1, T2>(Action<T0, T1, T2> action) : AbstractShortcutAction
+internal sealed class ShortcutAction<T0, T1, T2>(Action<T0, T1, T2> action) : AbstractShortcutAction
 {
     public override void Invoke(params object[] arguments)
     {
@@ -94,7 +94,7 @@ internal class ShortcutAction<T0, T1, T2>(Action<T0, T1, T2> action) : AbstractS
     public void Invoke(T0 arg0, T1 arg1, T2 arg2) => action.Invoke(arg0, arg1, arg2);
 }
 
-internal class ShortcutAction<T0, T1, T2, T3>(Action<T0, T1, T2, T3> action) : AbstractShortcutAction
+internal sealed class ShortcutAction<T0, T1, T2, T3>(Action<T0, T1, T2, T3> action) : AbstractShortcutAction
 {
     public override void Invoke(params object[] arguments)
     {
@@ -105,7 +105,7 @@ internal class ShortcutAction<T0, T1, T2, T3>(Action<T0, T1, T2, T3> action) : A
     public void Invoke(T0 arg0, T1 arg1, T2 arg2, T3 arg3) => action.Invoke(arg0, arg1, arg2, arg3);
 }
 
-internal class ShortcutAction<T0, T1, T2, T3, T4>(Action<T0, T1, T2, T3, T4> action) : AbstractShortcutAction
+internal sealed class ShortcutAction<T0, T1, T2, T3, T4>(Action<T0, T1, T2, T3, T4> action) : AbstractShortcutAction
 {
     public override void Invoke(params object[] arguments)
     {

@@ -5,7 +5,7 @@ internal interface IShortcutActionConfigurationBuilder
     IShortcutActionConfiguration Build();
 }
 
-internal class ShortcutActionConfigurationBuilder(string actionName, params IShortcutSettingBuilder[] builders) : IShortcutActionConfigurationBuilder
+internal sealed class ShortcutActionConfigurationBuilder(string actionName, params IShortcutSettingBuilder[] builders) : IShortcutActionConfigurationBuilder
 {
     public IShortcutActionConfiguration Build() => new ShortcutActionConfiguration(actionName, builders.Select(b => b.Build()));
 }

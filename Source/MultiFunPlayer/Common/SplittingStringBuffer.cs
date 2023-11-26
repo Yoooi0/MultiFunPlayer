@@ -2,7 +2,7 @@ using System.Numerics;
 
 namespace MultiFunPlayer.Common;
 
-internal class SplittingStringBuffer(char separator)
+internal sealed class SplittingStringBuffer(char separator)
 {
     private char[] _buffer = [];
     private int _index;

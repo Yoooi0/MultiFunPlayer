@@ -12,7 +12,7 @@ namespace MultiFunPlayer.MotionProvider.ViewModels;
 
 [DisplayName("Custom Curve")]
 [JsonObject(MemberSerialization = MemberSerialization.OptIn)]
-internal class CustomCurveMotionProviderViewModel : AbstractMotionProvider
+internal sealed class CustomCurveMotionProviderViewModel : AbstractMotionProvider
 {
     private readonly object _stateLock = new();
 
@@ -46,7 +46,7 @@ internal class CustomCurveMotionProviderViewModel : AbstractMotionProvider
     protected override bool ShouldSyncOnPropertyChanged(string propertyName)
         => propertyName != nameof(Time);
 
-    protected void OnPointsChanged(ObservableConcurrentCollection<Point> oldValue, ObservableConcurrentCollection<Point> newValue)
+    public void OnPointsChanged(ObservableConcurrentCollection<Point> oldValue, ObservableConcurrentCollection<Point> newValue)
     {
         if (oldValue != null)
             oldValue.CollectionChanged -= OnPointsCollectionChanged;
@@ -56,10 +56,10 @@ internal class CustomCurveMotionProviderViewModel : AbstractMotionProvider
         Interlocked.Exchange(ref _pendingRefreshFlag, 1);
     }
 
-    protected void OnViewportChanged()
+    public void OnViewportChanged()
         => Interlocked.Exchange(ref _pendingRefreshFlag, 1);
 
-    protected void OnIsLoopingChanged()
+    public void OnIsLoopingChanged()
     {
         lock (_stateLock)
             if (IsLooping)
@@ -200,7 +200,7 @@ internal class CustomCurveMotionProviderViewModel : AbstractMotionProvider
     }
 
     [AddINotifyPropertyChangedInterface]
-    private record PointsActionSettingsViewModel(ObservableConcurrentCollection<Point> Points, double Duration, InterpolationType InterpolationType)
+    private sealed record PointsActionSettingsViewModel(ObservableConcurrentCollection<Point> Points, double Duration, InterpolationType InterpolationType)
     {
         public PointsActionSettingsViewModel()
             : this([new(0.5, 0.5)], 1, InterpolationType.Linear)

@@ -16,7 +16,7 @@ using System.Xml.XPath;
 namespace MultiFunPlayer.MediaSource.ViewModels;
 
 [DisplayName("VLC")]
-internal class VlcMediaSourceViewModel(IShortcutManager shortcutManager, IEventAggregator eventAggregator) : AbstractMediaSource(shortcutManager, eventAggregator)
+internal sealed class VlcMediaSourceViewModel(IShortcutManager shortcutManager, IEventAggregator eventAggregator) : AbstractMediaSource(shortcutManager, eventAggregator)
 {
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
@@ -302,7 +302,7 @@ internal class VlcMediaSourceViewModel(IShortcutManager shortcutManager, IEventA
         #endregion
     }
 
-    private class PlayerState
+    private sealed class PlayerState
     {
         public double? Position { get; set; }
         public double? Speed { get; set; }

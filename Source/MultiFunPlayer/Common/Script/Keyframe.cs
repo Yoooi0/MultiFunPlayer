@@ -3,9 +3,9 @@
 namespace MultiFunPlayer.Common;
 
 [DebuggerDisplay("[{Position}, {Value}]")]
-public record Keyframe(double Position, double Value);
+public sealed record Keyframe(double Position, double Value);
 
-public class KeyframePositionComparer : IComparer<Keyframe>
+public sealed class KeyframePositionComparer : IComparer<Keyframe>
 {
     public static KeyframePositionComparer Default { get; } = new();
 

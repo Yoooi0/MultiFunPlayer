@@ -17,7 +17,7 @@ public interface IShortcutSettingBuilder<T> : IShortcutSettingBuilder
     public IShortcutSettingBuilder<T> WithCustomToString(Func<T, string> toString);
 }
 
-public class ShortcutSettingBuilder<T> : IShortcutSettingBuilder<T>
+public sealed class ShortcutSettingBuilder<T> : IShortcutSettingBuilder<T>
 {
     private T _defaultValue;
     private string _description;

@@ -12,7 +12,7 @@ using System.Text;
 namespace MultiFunPlayer.OutputTarget.ViewModels;
 
 [DisplayName("WebSocket")]
-internal class WebSocketOutputTargetViewModel : AsyncAbstractOutputTarget
+internal sealed class WebSocketOutputTargetViewModel : AsyncAbstractOutputTarget
 {
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 

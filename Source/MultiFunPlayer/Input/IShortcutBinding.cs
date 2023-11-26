@@ -12,7 +12,7 @@ public interface IShortcutBinding
 }
 
 [AddINotifyPropertyChangedInterface]
-public partial class ShortcutBinding(IInputGestureDescriptor gesture) : IShortcutBinding
+public sealed partial class ShortcutBinding(IInputGestureDescriptor gesture) : IShortcutBinding
 {
     [JsonProperty(TypeNameHandling = TypeNameHandling.Objects)]
     public IInputGestureDescriptor Gesture { get; } = gesture;

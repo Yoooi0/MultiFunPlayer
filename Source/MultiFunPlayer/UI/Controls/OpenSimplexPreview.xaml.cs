@@ -12,7 +12,7 @@ namespace MultiFunPlayer.UI.Controls;
 /// Interaction logic for OpenSimplexPreview.xaml
 /// </summary>
 [AddINotifyPropertyChangedInterface]
-internal partial class OpenSimplexPreview : UserControl
+internal sealed partial class OpenSimplexPreview : UserControl
 {
     private readonly OpenSimplex _noise;
     private double _seed;

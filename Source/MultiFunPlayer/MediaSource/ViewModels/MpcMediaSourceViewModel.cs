@@ -12,7 +12,7 @@ using System.Text.RegularExpressions;
 namespace MultiFunPlayer.MediaSource.ViewModels;
 
 [DisplayName("MPC-HC")]
-internal class MpcMediaSourceViewModel(IShortcutManager shortcutManager, IEventAggregator eventAggregator) : AbstractMediaSource(shortcutManager, eventAggregator)
+internal sealed class MpcMediaSourceViewModel(IShortcutManager shortcutManager, IEventAggregator eventAggregator) : AbstractMediaSource(shortcutManager, eventAggregator)
 {
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
@@ -240,7 +240,7 @@ internal class MpcMediaSourceViewModel(IShortcutManager shortcutManager, IEventA
         #endregion
     }
 
-    private class PlayerState
+    private sealed class PlayerState
     {
         public string Path { get; set; }
         public long? Position { get; set; }

@@ -5,7 +5,7 @@ using System.Windows.Data;
 
 namespace MultiFunPlayer.UI.Converters;
 
-internal class ButtplugDeviceConnectedConverter : IMultiValueConverter
+internal sealed class ButtplugDeviceConnectedConverter : IMultiValueConverter
 {
     public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
     {

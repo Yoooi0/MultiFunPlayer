@@ -12,7 +12,7 @@ using System.Net.Http;
 namespace MultiFunPlayer.MediaSource.ViewModels;
 
 [DisplayName("Emby")]
-internal class EmbyMediaSourceViewModel(IShortcutManager shortcutManager, IEventAggregator eventAggregator) : AbstractMediaSource(shortcutManager, eventAggregator)
+internal sealed class EmbyMediaSourceViewModel(IShortcutManager shortcutManager, IEventAggregator eventAggregator) : AbstractMediaSource(shortcutManager, eventAggregator)
 {
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
@@ -342,7 +342,7 @@ internal class EmbyMediaSourceViewModel(IShortcutManager shortcutManager, IEvent
         base.Dispose(disposing);
     }
 
-    internal record class EmbyDevice()
+    internal sealed record class EmbyDevice()
     {
         public string Name { get; init; }
         [JsonProperty("ReportedDeviceId")]
@@ -351,7 +351,7 @@ internal class EmbyMediaSourceViewModel(IShortcutManager shortcutManager, IEvent
         public string AppVersion { get; init; }
     }
 
-    internal record class EmbySession()
+    internal sealed record class EmbySession()
     {
         public string Id { get; init; }
         [JsonProperty("PlayState")]
@@ -360,6 +360,6 @@ internal class EmbyMediaSourceViewModel(IShortcutManager shortcutManager, IEvent
         public PlayItem Item { get; init; }
     }
 
-    internal record class PlayState(long PositionTicks, bool IsPaused, double PlaybackRate);
-    internal record class PlayItem(long RunTimeTicks, string Path);
+    internal sealed record class PlayState(long PositionTicks, bool IsPaused, double PlaybackRate);
+    internal sealed record class PlayItem(long RunTimeTicks, string Path);
 }

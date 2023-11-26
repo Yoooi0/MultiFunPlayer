@@ -14,7 +14,7 @@ using Newtonsoft.Json.Linq;
 namespace MultiFunPlayer.MediaSource.ViewModels;
 
 [DisplayName("Plex")]
-internal class PlexMediaSourceViewModel(IShortcutManager shortcutManager, IEventAggregator eventAggregator) : AbstractMediaSource(shortcutManager, eventAggregator)
+internal sealed class PlexMediaSourceViewModel(IShortcutManager shortcutManager, IEventAggregator eventAggregator) : AbstractMediaSource(shortcutManager, eventAggregator)
 {
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
@@ -487,6 +487,6 @@ internal class PlexMediaSourceViewModel(IShortcutManager shortcutManager, IEvent
         base.Dispose(disposing);
     }
 
-    internal record class PlexClient(string Name, string Host, string Address, int Port, string MachineIdentifier, string Version, string Protocol,
+    internal sealed record class PlexClient(string Name, string Host, string Address, int Port, string MachineIdentifier, string Version, string Protocol,
                                      string Product, string DeviceClass, int ProtocolVersion, string ProtocolCapabilities);
 }

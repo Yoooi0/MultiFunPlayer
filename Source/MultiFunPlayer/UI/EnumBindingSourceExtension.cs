@@ -3,7 +3,7 @@ using System.Windows.Markup;
 
 namespace MultiFunPlayer.UI;
 
-public class EnumBindingSourceExtension : MarkupExtension
+public sealed class EnumBindingSourceExtension : MarkupExtension
 {
     private readonly Type _enumType;
 

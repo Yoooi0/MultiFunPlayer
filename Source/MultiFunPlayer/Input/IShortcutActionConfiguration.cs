@@ -17,9 +17,9 @@ public interface IShortcutActionConfiguration
     object[] GetActionParams(IInputGesture gesture = null);
 }
 
-public class ShortcutActionConfiguration : PropertyChangedBase, IShortcutActionConfiguration
+public sealed class ShortcutActionConfiguration : PropertyChangedBase, IShortcutActionConfiguration
 {
-    protected static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+    private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
     private readonly List<IShortcutSetting> _settings;
     private object[] _valuesBuffer;

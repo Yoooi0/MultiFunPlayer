@@ -7,7 +7,7 @@ using Stylet;
 
 namespace MultiFunPlayer.UI.Controls.ViewModels;
 
-internal class OutputTargetViewModel : Conductor<IOutputTarget>.Collection.OneActive, IHandle<SettingsMessage>, IDisposable
+internal sealed class OutputTargetViewModel : Conductor<IOutputTarget>.Collection.OneActive, IHandle<SettingsMessage>, IDisposable
 {
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
@@ -245,7 +245,7 @@ internal class OutputTargetViewModel : Conductor<IOutputTarget>.Collection.OneAc
         s.UnregisterAction($"{target.Identifier}::Connection::Disconnect");
     }
 
-    protected async virtual void Dispose(bool disposing)
+    private async void Dispose(bool disposing)
     {
         _cancellationSource?.Cancel();
 

@@ -9,7 +9,7 @@ namespace MultiFunPlayer.Common;
 public interface IReadOnlyObservableConcurrentDictionary<TKey, TValue> : IReadOnlyDictionary<TKey, TValue>, INotifyCollectionChanged, INotifyPropertyChanged { }
 
 [DoNotNotify]
-public class ObservableConcurrentDictionary<TKey, TValue> : IDictionary<TKey, TValue>, IReadOnlyObservableConcurrentDictionary<TKey, TValue>
+public sealed class ObservableConcurrentDictionary<TKey, TValue> : IDictionary<TKey, TValue>, IReadOnlyObservableConcurrentDictionary<TKey, TValue>
 {
     private readonly SynchronizationContext _context;
     private readonly ConcurrentDictionary<TKey, TValue> _dictionary;

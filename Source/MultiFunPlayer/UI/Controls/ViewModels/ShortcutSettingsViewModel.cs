@@ -16,9 +16,10 @@ using System.Windows.Data;
 namespace MultiFunPlayer.UI.Controls.ViewModels;
 
 [JsonObject(MemberSerialization = MemberSerialization.OptIn)]
-internal class ShortcutSettingsViewModel : Screen, IHandle<SettingsMessage>, IDisposable
+internal sealed class ShortcutSettingsViewModel : Screen, IHandle<SettingsMessage>, IDisposable
 {
-    protected static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+    private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+
     private readonly IInputProcessorManager _inputManager;
     private readonly IShortcutManager _shortcutManager;
     private readonly IShortcutBinder _shortcutBinder;
@@ -297,7 +298,7 @@ internal class ShortcutSettingsViewModel : Screen, IHandle<SettingsMessage>, IDi
         #endregion
     }
 
-    protected virtual void Dispose(bool disposing)
+    private void Dispose(bool disposing)
     {
         _inputManager.OnGesture -= HandleGesture;
     }

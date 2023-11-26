@@ -2,7 +2,7 @@ using System.Collections;
 
 namespace MultiFunPlayer.Common;
 
-public class KeyframeCollection : IReadOnlyList<Keyframe>
+public sealed class KeyframeCollection : IReadOnlyList<Keyframe>
 {
     private readonly List<Keyframe> _items;
 

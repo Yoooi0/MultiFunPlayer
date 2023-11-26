@@ -40,7 +40,7 @@ internal abstract class AbstractPropertyDelegate<TOut> : IPropertyDelegate<TOut>
     }
 }
 
-internal class PropertyDelegate<TOut>(Func<TOut> getter) : AbstractPropertyDelegate<TOut>
+internal sealed class PropertyDelegate<TOut>(Func<TOut> getter) : AbstractPropertyDelegate<TOut>
 {
     public override TOut GetValue(params object[] arguments)
     {
@@ -53,7 +53,7 @@ internal class PropertyDelegate<TOut>(Func<TOut> getter) : AbstractPropertyDeleg
     public TOut GetValue() => getter();
 }
 
-internal class PropertyDelegate<T0, TOut>(Func<T0, TOut> getter) : AbstractPropertyDelegate<TOut>
+internal sealed class PropertyDelegate<T0, TOut>(Func<T0, TOut> getter) : AbstractPropertyDelegate<TOut>
 {
     public override TOut GetValue(params object[] arguments)
     {
@@ -66,7 +66,7 @@ internal class PropertyDelegate<T0, TOut>(Func<T0, TOut> getter) : AbstractPrope
     public TOut GetValue(T0 arg0) => getter(arg0);
 }
 
-internal class PropertyDelegate<T0, T1, TOut>(Func<T0, T1, TOut> getter) : AbstractPropertyDelegate<TOut>
+internal sealed class PropertyDelegate<T0, T1, TOut>(Func<T0, T1, TOut> getter) : AbstractPropertyDelegate<TOut>
 {
     public override TOut GetValue(params object[] arguments)
     {

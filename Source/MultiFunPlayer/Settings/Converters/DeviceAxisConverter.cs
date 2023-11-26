@@ -6,7 +6,7 @@ using System.Globalization;
 
 namespace MultiFunPlayer.Settings.Converters;
 
-internal class DeviceAxisConverter : JsonConverter<DeviceAxis>
+internal sealed class DeviceAxisConverter : JsonConverter<DeviceAxis>
 {
     public override DeviceAxis ReadJson(JsonReader reader, Type objectType, DeviceAxis existingValue, bool hasExistingValue, JsonSerializer serializer)
         => reader.Value is string name && DeviceAxis.TryParse(name, out var axis) ? axis : null;
@@ -15,7 +15,7 @@ internal class DeviceAxisConverter : JsonConverter<DeviceAxis>
         => writer.WriteValue(value?.Name);
 }
 
-internal class DeviceAxisTypeConverter : TypeConverter
+internal sealed class DeviceAxisTypeConverter : TypeConverter
 {
     public override bool CanConvertFrom(ITypeDescriptorContext context, Type sourceType) => sourceType == typeof(string);
     public override bool CanConvertTo(ITypeDescriptorContext context, Type destinationType) => destinationType == typeof(string);

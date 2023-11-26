@@ -10,12 +10,12 @@ public enum MouseAxis
     MouseHorizontalWheel
 }
 
-public record MouseAxisGestureDescriptor(MouseAxis Axis) : IAxisInputGestureDescriptor
+public sealed record MouseAxisGestureDescriptor(MouseAxis Axis) : IAxisInputGestureDescriptor
 {
     public override string ToString() => $"[Mouse Axis: {Axis}]";
 }
 
-public class MouseAxisGesture(MouseAxisGestureDescriptor descriptor, double value, double delta, double deltaTime) : AbstractAxisInputGesture(descriptor, value, delta, deltaTime)
+public sealed class MouseAxisGesture(MouseAxisGestureDescriptor descriptor, double value, double delta, double deltaTime) : AbstractAxisInputGesture(descriptor, value, delta, deltaTime)
 {
     public MouseAxis Axis => descriptor.Axis;
 

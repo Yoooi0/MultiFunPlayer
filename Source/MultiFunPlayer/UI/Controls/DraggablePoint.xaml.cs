@@ -8,7 +8,7 @@ namespace MultiFunPlayer.UI.Controls;
 /// Interaction logic for DraggablePoint.xaml
 /// </summary>
 [AddINotifyPropertyChangedInterface]
-public partial class DraggablePoint : UserControl
+public sealed partial class DraggablePoint : UserControl
 {
     public Point Position
     {

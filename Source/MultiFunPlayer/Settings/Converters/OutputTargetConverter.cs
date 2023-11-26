@@ -5,7 +5,7 @@ using MultiFunPlayer.Common;
 
 namespace MultiFunPlayer.Settings.Converters;
 
-internal class OutputTargetConverter(IOutputTargetFactory outputTargetFactory) : JsonConverter<IOutputTarget>
+internal sealed class OutputTargetConverter(IOutputTargetFactory outputTargetFactory) : JsonConverter<IOutputTarget>
 {
     public override IOutputTarget ReadJson(JsonReader reader, Type objectType, IOutputTarget existingValue, bool hasExistingValue, JsonSerializer serializer)
     {

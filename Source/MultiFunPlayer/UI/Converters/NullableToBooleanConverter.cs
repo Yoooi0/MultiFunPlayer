@@ -3,7 +3,7 @@ using System.Windows.Data;
 
 namespace MultiFunPlayer.UI.Converters;
 
-internal class NullableConverter<T>(T nullValue, T notNullValue) : IValueConverter
+internal abstract class NullableConverter<T>(T nullValue, T notNullValue) : IValueConverter
 {
     public T NullValue { get; } = nullValue;
     public T NotNullValue { get; } = notNullValue;

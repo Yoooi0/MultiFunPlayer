@@ -152,7 +152,7 @@ public static class Interpolation
     public static double Step(double x0, double y0, double x) => y0;
 }
 
-public class OpenSimplex
+public sealed class OpenSimplex
 {
     private const int PSIZE = 2048;
     private const int PMASK = PSIZE - 1;

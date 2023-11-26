@@ -70,7 +70,7 @@ public abstract class AbstractTextScriptReader : AbstractScriptReader
     }
 }
 
-public class FunscriptReader : AbstractTextScriptReader
+public sealed class FunscriptReader : AbstractTextScriptReader
 {
     public static FunscriptReader Default { get; } = new FunscriptReader();
 
@@ -158,15 +158,15 @@ public class FunscriptReader : AbstractTextScriptReader
         }
     }
 
-    private record Script(List<Action> Actions, List<ScriptAxis> Axes, Metadata Metadata);
-    private record Action(double At, double Pos);
-    private record ScriptAxis(string Id, List<Action> Actions);
-    private record Metadata(List<Chapter> Chapters, List<Bookmark> Bookmarks);
-    private record Chapter(string Name, TimeSpan StartTime, TimeSpan EndTime);
-    private record Bookmark(string Name, TimeSpan Time);
+    private sealed record Script(List<Action> Actions, List<ScriptAxis> Axes, Metadata Metadata);
+    private sealed record Action(double At, double Pos);
+    private sealed record ScriptAxis(string Id, List<Action> Actions);
+    private sealed record Metadata(List<Chapter> Chapters, List<Bookmark> Bookmarks);
+    private sealed record Chapter(string Name, TimeSpan StartTime, TimeSpan EndTime);
+    private sealed record Bookmark(string Name, TimeSpan Time);
 }
 
-public class CsvReader : AbstractTextScriptReader
+public sealed class CsvReader : AbstractTextScriptReader
 {
     public static CsvReader Default { get; } = new CsvReader();
 

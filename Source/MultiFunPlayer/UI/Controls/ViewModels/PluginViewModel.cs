@@ -7,7 +7,7 @@ using System.IO;
 
 namespace MultiFunPlayer.UI.Controls.ViewModels;
 
-internal class PluginViewModel : Screen, IDisposable
+internal sealed class PluginViewModel : Screen, IDisposable
 {
     private readonly IShortcutManager _shortcutManager;
     private FileSystemWatcher _watcher;
@@ -83,7 +83,7 @@ internal class PluginViewModel : Screen, IDisposable
         s.UnregisterAction($"Plugin::{container.Name}::Stop");
     }
 
-    protected virtual void Dispose(bool disposing)
+    private void Dispose(bool disposing)
     {
         _watcher?.Dispose();
         _watcher = null;
@@ -100,7 +100,7 @@ internal class PluginViewModel : Screen, IDisposable
         GC.SuppressFinalize(this);
     }
 
-    private class FileInfoFullNameComparer : IEqualityComparer<FileInfo>
+    private sealed class FileInfoFullNameComparer : IEqualityComparer<FileInfo>
     {
         public bool Equals(FileInfo x, FileInfo y) => EqualityComparer<string>.Default.Equals(x?.FullName, y?.FullName);
         public int GetHashCode([DisallowNull] FileInfo obj) => HashCode.Combine(obj.FullName);

@@ -13,7 +13,7 @@ namespace MultiFunPlayer.UI.Controls;
 /// Interaction logic for DraggablePointCanvas.xaml
 /// </summary>
 [AddINotifyPropertyChangedInterface]
-public partial class DraggablePointCanvas : UserControl
+public sealed partial class DraggablePointCanvas : UserControl
 {
     private Vector _captureOffset;
     private KeyframeCollection _keyframes;

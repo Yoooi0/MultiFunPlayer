@@ -15,7 +15,7 @@ internal interface IScriptWriter : IDisposable
     }
 }
 
-internal class FunscriptWriter : IScriptWriter
+internal sealed class FunscriptWriter : IScriptWriter
 {
     private readonly Stream _stream;
     private bool _isFirst;
@@ -44,7 +44,7 @@ internal class FunscriptWriter : IScriptWriter
 
     private void Write(string s) => _stream.Write(Encoding.UTF8.GetBytes(s));
 
-    protected virtual void Dispose(bool disposing)
+    private void Dispose(bool disposing)
     {
         Write("]}");
 
@@ -59,7 +59,7 @@ internal class FunscriptWriter : IScriptWriter
     }
 }
 
-internal class CsvWriter : IScriptWriter
+internal sealed class CsvWriter : IScriptWriter
 {
     private readonly Stream _stream;
 
@@ -76,7 +76,7 @@ internal class CsvWriter : IScriptWriter
 
     private void Write(string s) => _stream.Write(Encoding.UTF8.GetBytes(s));
 
-    protected virtual void Dispose(bool disposing)
+    private void Dispose(bool disposing)
     {
         _stream.Flush();
         _stream.Dispose();

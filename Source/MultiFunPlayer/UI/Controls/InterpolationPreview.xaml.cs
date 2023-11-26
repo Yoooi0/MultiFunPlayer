@@ -13,7 +13,7 @@ namespace MultiFunPlayer.UI.Controls;
 /// Interaction logic for InterpolationPreview.xaml
 /// </summary>
 [AddINotifyPropertyChangedInterface]
-internal partial class InterpolationPreview : UserControl
+internal sealed partial class InterpolationPreview : UserControl
 {
     private KeyframeCollection _keyframes;
 

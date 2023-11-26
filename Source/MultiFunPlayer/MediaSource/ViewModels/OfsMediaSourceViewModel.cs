@@ -13,7 +13,7 @@ using System.Text;
 namespace MultiFunPlayer.MediaSource.ViewModels;
 
 [DisplayName("OFS")]
-internal class OfsMediaSourceViewModel(IShortcutManager shortcutManager, IEventAggregator eventAggregator) : AbstractMediaSource(shortcutManager, eventAggregator)
+internal sealed class OfsMediaSourceViewModel(IShortcutManager shortcutManager, IEventAggregator eventAggregator) : AbstractMediaSource(shortcutManager, eventAggregator)
 {
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 

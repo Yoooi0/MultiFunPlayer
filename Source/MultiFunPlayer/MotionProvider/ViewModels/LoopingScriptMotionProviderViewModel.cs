@@ -11,7 +11,7 @@ namespace MultiFunPlayer.MotionProvider.ViewModels;
 
 [DisplayName("Looping Script")]
 [JsonObject(MemberSerialization = MemberSerialization.OptIn)]
-internal class LoopingScriptMotionProviderViewModel(DeviceAxis target, IEventAggregator eventAggregator) : AbstractMotionProvider(target, eventAggregator)
+internal sealed class LoopingScriptMotionProviderViewModel(DeviceAxis target, IEventAggregator eventAggregator) : AbstractMotionProvider(target, eventAggregator)
 {
     private double _time;
 

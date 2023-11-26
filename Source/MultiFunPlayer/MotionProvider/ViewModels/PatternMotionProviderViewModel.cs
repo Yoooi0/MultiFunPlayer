@@ -19,7 +19,7 @@ internal enum PatternType
 
 [DisplayName("Pattern")]
 [JsonObject(MemberSerialization = MemberSerialization.OptIn)]
-internal class PatternMotionProviderViewModel(DeviceAxis target, IEventAggregator eventAggregator) : AbstractMotionProvider(target, eventAggregator)
+internal sealed class PatternMotionProviderViewModel(DeviceAxis target, IEventAggregator eventAggregator) : AbstractMotionProvider(target, eventAggregator)
 {
     private double _time;
 

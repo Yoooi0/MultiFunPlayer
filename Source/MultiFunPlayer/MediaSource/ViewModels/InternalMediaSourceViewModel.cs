@@ -14,7 +14,7 @@ using System.Windows;
 namespace MultiFunPlayer.MediaSource.ViewModels;
 
 [DisplayName("Internal")]
-internal class InternalMediaSourceViewModel(IShortcutManager shortcutManager, IEventAggregator eventAggregator) : AbstractMediaSource(shortcutManager, eventAggregator)
+internal sealed class InternalMediaSourceViewModel(IShortcutManager shortcutManager, IEventAggregator eventAggregator) : AbstractMediaSource(shortcutManager, eventAggregator)
 {
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
@@ -455,10 +455,10 @@ internal class InternalMediaSourceViewModel(IShortcutManager shortcutManager, IE
             IsLooping = false;
     }
 
-    private record PlayScriptAtIndexMessage(int Index) : IMediaSourceControlMessage;
-    private record PlayScriptWithOffsetMessage(int Offset) : IMediaSourceControlMessage;
+    private sealed record PlayScriptAtIndexMessage(int Index) : IMediaSourceControlMessage;
+    private sealed record PlayScriptWithOffsetMessage(int Offset) : IMediaSourceControlMessage;
 
-    internal class Playlist : IReadOnlyList<PlaylistItem>, INotifyCollectionChanged, INotifyPropertyChanged
+    internal sealed class Playlist : IReadOnlyList<PlaylistItem>, INotifyCollectionChanged, INotifyPropertyChanged
     {
         private readonly List<PlaylistItem> _items;
 
@@ -528,7 +528,7 @@ internal class InternalMediaSourceViewModel(IShortcutManager shortcutManager, IE
         public event PropertyChangedEventHandler PropertyChanged;
     }
 
-    internal class PlaylistItem(string path) : PropertyChangedBase
+    internal sealed class PlaylistItem(string path) : PropertyChangedBase
     {
         private readonly FileInfo _source = new(path);
 

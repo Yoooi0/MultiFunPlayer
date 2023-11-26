@@ -34,7 +34,7 @@ internal struct IInputProcessorManagerRegistration : IDisposable
     }
 }
 
-internal class InputProcessorManager : IInputProcessorManager
+internal sealed class InputProcessorManager : IInputProcessorManager
 {
     private readonly List<IInputProcessor> _processors;
     private readonly object _lock = new();
@@ -68,7 +68,7 @@ internal class InputProcessorManager : IInputProcessorManager
 
     private void HandleGesture(object sender, IInputGesture gesture) => OnGesture?.Invoke(this, gesture);
 
-    protected virtual void Dispose(bool disposing)
+    private void Dispose(bool disposing)
     {
         lock (_lock)
         {

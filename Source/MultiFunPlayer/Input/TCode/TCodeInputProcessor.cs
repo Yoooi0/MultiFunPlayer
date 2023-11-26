@@ -3,9 +3,10 @@ using System.Text.RegularExpressions;
 
 namespace MultiFunPlayer.Input.TCode;
 
-internal class TCodeInputProcessor : IInputProcessor
+internal sealed class TCodeInputProcessor : IInputProcessor
 {
-    protected static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+    private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+
     private readonly Dictionary<string, bool> _buttonStates;
 
     public event EventHandler<IInputGesture> OnGesture;
@@ -32,7 +33,7 @@ internal class TCodeInputProcessor : IInputProcessor
     private void HandleGesture(IInputGesture gesture)
         => OnGesture?.Invoke(this, gesture);
 
-    protected virtual void Dispose(bool disposing) { }
+    private void Dispose(bool disposing) { }
 
     public void Dispose()
     {

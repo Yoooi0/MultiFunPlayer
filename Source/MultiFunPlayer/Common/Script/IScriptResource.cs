@@ -9,7 +9,7 @@ public interface IScriptResource
     BookmarkCollection Bookmarks { get; }
 }
 
-public class ScriptResource : IScriptResource
+public sealed class ScriptResource : IScriptResource
 {
     public string Name { get; init; }
     public string Source { get; init; }
@@ -20,7 +20,7 @@ public class ScriptResource : IScriptResource
     public static LinkedScriptResource LinkTo(IScriptResource other) => other != null ? new LinkedScriptResource(other) : null;
 }
 
-public class LinkedScriptResource(IScriptResource linked) : IScriptResource
+public sealed class LinkedScriptResource(IScriptResource linked) : IScriptResource
 {
     public string Name => linked.Name;
     public string Source => linked.Source;

@@ -9,7 +9,7 @@ using System.Linq.Expressions;
 namespace MultiFunPlayer.Common;
 
 [DoNotNotify]
-public class ObservableConcurrentDictionaryView<TKey, TValue, TView> : IReadOnlyObservableConcurrentDictionary<TKey, TView> where TValue : class
+public sealed class ObservableConcurrentDictionaryView<TKey, TValue, TView> : IReadOnlyObservableConcurrentDictionary<TKey, TView> where TValue : class
 {
     private readonly IReadOnlyObservableConcurrentDictionary<TKey, TValue> _dictionary;
     private readonly Func<TValue, TView> _selector;

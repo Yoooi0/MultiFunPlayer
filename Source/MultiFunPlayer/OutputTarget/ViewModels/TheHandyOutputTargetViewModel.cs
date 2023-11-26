@@ -14,7 +14,7 @@ using System.Text;
 namespace MultiFunPlayer.OutputTarget.ViewModels;
 
 [DisplayName("The Handy")]
-internal class TheHandyOutputTargetViewModel : AsyncAbstractOutputTarget
+internal sealed class TheHandyOutputTargetViewModel : AsyncAbstractOutputTarget
 {
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 

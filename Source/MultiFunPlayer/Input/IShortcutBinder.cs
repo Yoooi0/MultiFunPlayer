@@ -27,9 +27,9 @@ internal interface IShortcutBinder : IDisposable
     void Clear();
 }
 
-internal class ShortcutBinder : IShortcutBinder
+internal sealed class ShortcutBinder : IShortcutBinder
 {
-    protected static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+    private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
     private readonly ObservableConcurrentCollection<IShortcutBinding> _bindings;
     private readonly ConcurrentDictionary<IInputGestureDescriptor, IShortcutBinding> _bindingLookup;
@@ -188,7 +188,7 @@ internal class ShortcutBinder : IShortcutBinder
         }
     }
 
-    protected virtual void Dispose(bool disposing)
+    private void Dispose(bool disposing)
     {
         _inputManager.OnGesture -= HandleGesture;
     }

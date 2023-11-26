@@ -38,9 +38,9 @@ internal interface IShortcutManager : IDisposable
     void Invoke<T0, T1, T2, T3, T4>(string actionName, T0 arg0, T1 arg1, T2 arg2, T3 arg3, T4 arg4);
 }
 
-internal class ShortcutManager : IShortcutManager
+internal sealed class ShortcutManager : IShortcutManager
 {
-    protected static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+    private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
     private readonly ObservableConcurrentCollection<string> _availableActions;
     private readonly Dictionary<string, IShortcutAction> _actions;
@@ -236,7 +236,7 @@ internal class ShortcutManager : IShortcutManager
             concreteAction.Invoke(arg0, arg1, arg2, arg3, arg4);
     }
 
-    protected virtual void Dispose(bool disposing) { }
+    private void Dispose(bool disposing) { }
 
     public void Dispose()
     {

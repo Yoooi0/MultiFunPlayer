@@ -19,7 +19,7 @@ using System.Windows;
 
 namespace MultiFunPlayer.Plugin;
 
-internal class PluginCompilationResult : IDisposable
+internal sealed class PluginCompilationResult : IDisposable
 {
     public Exception Exception { get; private set; }
     public AssemblyLoadContext Context { get; private set; }
@@ -50,7 +50,7 @@ internal class PluginCompilationResult : IDisposable
 
     public PluginBase CreatePluginInstance() => PluginFactory?.Invoke();
 
-    protected virtual void Dispose(bool disposing)
+    private void Dispose(bool disposing)
     {
         PluginFactory = null;
         SettingsView = null;
@@ -308,7 +308,7 @@ internal static class PluginCompiler
         ViewManager = container.Get<IViewManager>();
     }
 
-    private class CollectibleAssemblyLoadContext : AssemblyLoadContext
+    private sealed class CollectibleAssemblyLoadContext : AssemblyLoadContext
     {
         public CollectibleAssemblyLoadContext()
             : base(isCollectible: true) { }
@@ -317,7 +317,7 @@ internal static class PluginCompiler
     }
 }
 
-internal class PluginCompileException : Exception
+internal sealed class PluginCompileException : Exception
 {
     public PluginCompileException() { }
 

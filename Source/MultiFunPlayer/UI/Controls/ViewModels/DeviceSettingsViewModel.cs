@@ -8,7 +8,7 @@ using System.Windows;
 
 namespace MultiFunPlayer.UI.Controls.ViewModels;
 
-internal class DeviceSettingsViewModel : Screen, IHandle<SettingsMessage>
+internal sealed class DeviceSettingsViewModel : Screen, IHandle<SettingsMessage>
 {
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
@@ -191,7 +191,7 @@ internal class DeviceSettingsViewModel : Screen, IHandle<SettingsMessage>
 }
 
 [JsonObject(MemberSerialization = MemberSerialization.OptIn)]
-internal class DeviceSettingsModel : PropertyChangedBase
+internal sealed class DeviceSettingsModel : PropertyChangedBase
 {
     [JsonProperty] public string Name { get; set; } = null;
     [JsonProperty] public bool IsDefault { get; set; } = false;
@@ -208,7 +208,7 @@ internal class DeviceSettingsModel : PropertyChangedBase
 }
 
 [JsonObject(MemberSerialization = MemberSerialization.OptIn)]
-internal class DeviceAxisSettingsModel : PropertyChangedBase
+internal sealed class DeviceAxisSettingsModel : PropertyChangedBase
 {
     [JsonProperty] public string Name { get; set; } = null;
     [JsonProperty] public string FriendlyName { get; set; } = null;

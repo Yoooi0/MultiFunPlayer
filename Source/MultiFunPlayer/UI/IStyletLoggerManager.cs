@@ -19,7 +19,7 @@ internal interface IStyletLoggerManager
     bool IsLoggingEnabled();
 }
 
-internal class StyletLoggerManager : IStyletLoggerManager
+internal sealed class StyletLoggerManager : IStyletLoggerManager
 {
     private readonly ConcurrentDictionary<string, IStyletLogger> _loggers;
     private bool _enabled;

@@ -18,7 +18,7 @@ internal enum PluginState
     RanToCompletion,
 }
 
-internal class PluginContainer(FileInfo pluginFile) : PropertyChangedBase, IDisposable
+internal sealed class PluginContainer(FileInfo pluginFile) : PropertyChangedBase, IDisposable
 {
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
@@ -187,7 +187,7 @@ internal class PluginContainer(FileInfo pluginFile) : PropertyChangedBase, IDisp
             SettingsHelper.Write(settings, settingsPath);
     }
 
-    protected virtual void Dispose(bool disposing)
+    private void Dispose(bool disposing)
     {
         _cancellationSource?.Cancel();
         _thread?.Join();

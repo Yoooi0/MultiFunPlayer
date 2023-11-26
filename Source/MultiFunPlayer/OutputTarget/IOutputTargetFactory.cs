@@ -8,7 +8,7 @@ internal interface IOutputTargetFactory
     IOutputTarget CreateOutputTarget(Type type, int index);
 }
 
-internal class OutputTargetFactory(IContainer container) : IOutputTargetFactory
+internal sealed class OutputTargetFactory(IContainer container) : IOutputTargetFactory
 {
     public IOutputTarget CreateOutputTarget(Type type, int index)
     {

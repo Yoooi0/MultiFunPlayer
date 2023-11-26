@@ -4,7 +4,7 @@ using System.Windows.Data;
 
 namespace MultiFunPlayer.UI.Converters;
 
-public class PortToStringConverter : IValueConverter
+public sealed class PortToStringConverter : IValueConverter
 {
     public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         => value is not int port ? null : port.ToString();

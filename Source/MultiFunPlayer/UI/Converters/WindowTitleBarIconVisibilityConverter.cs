@@ -4,7 +4,7 @@ using System.Windows.Data;
 
 namespace MultiFunPlayer.UI.Converters;
 
-public class WindowTitleBarIconVisibilityConverter : IMultiValueConverter
+public sealed class WindowTitleBarIconVisibilityConverter : IMultiValueConverter
 {
     public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
     {

@@ -6,9 +6,9 @@ using Vortice.XInput;
 
 namespace MultiFunPlayer.Input.XInput;
 
-internal class XInputProcessor : IInputProcessor
+internal sealed class XInputProcessor : IInputProcessor
 {
-    protected static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+    private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
     private readonly State[] _states;
     private readonly HashSet<GamepadVirtualKey> _pressedKeys;
@@ -117,7 +117,7 @@ internal class XInputProcessor : IInputProcessor
     private void HandleGesture(IInputGesture gesture)
         => OnGesture?.Invoke(this, gesture);
 
-    protected virtual void Dispose(bool disposing)
+    private void Dispose(bool disposing)
     {
         Vortice.XInput.XInput.SetReporting(false);
 

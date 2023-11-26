@@ -4,7 +4,7 @@ using Vortice.XInput;
 
 namespace MultiFunPlayer.UI.Converters;
 
-internal class GamepadKeyToStringConverter : IValueConverter
+internal sealed class GamepadKeyToStringConverter : IValueConverter
 {
     public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
     {

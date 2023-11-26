@@ -2,7 +2,7 @@
 
 namespace MultiFunPlayer.Common;
 
-public class ChapterCollection : IReadOnlyList<Chapter>
+public sealed class ChapterCollection : IReadOnlyList<Chapter>
 {
     private readonly List<Chapter> _items;
 

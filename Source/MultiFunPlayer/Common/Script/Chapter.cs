@@ -3,9 +3,9 @@
 namespace MultiFunPlayer.Common;
 
 [DebuggerDisplay("[{Name}: {StartPosition}s -> {EndPosition}s]")]
-public record Chapter(string Name, double StartPosition, double EndPosition);
+public sealed record Chapter(string Name, double StartPosition, double EndPosition);
 
-public class ChapterStartPositionComparer : IComparer<Chapter>
+public sealed class ChapterStartPositionComparer : IComparer<Chapter>
 {
     public static ChapterStartPositionComparer Default { get; } = new();
 
