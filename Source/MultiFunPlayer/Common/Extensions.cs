@@ -1,5 +1,6 @@
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using System.Buffers;
 using System.Collections;
 using System.Diagnostics;
 using System.IO;
@@ -292,40 +293,40 @@ public static class CollectionExtensions
 
 public static class StreamExtensions
 {
-    private static readonly byte[] _readBuffer = new byte[1024];
-
     public static async Task<byte[]> ReadBytesAsync(this NetworkStream stream, int count, CancellationToken token)
     {
-        using var memory = new MemoryStream();
+        using var memoryOwner = MemoryPool<byte>.Shared.Rent(1024);
+        using var memoryStream = new MemoryStream();
 
-        while (memory.Position < count)
+        var readMemory = memoryOwner.Memory[..Math.Min(count, 1024)];
+        while (memoryStream.Position < count)
         {
-            var read = await stream.ReadAsync(_readBuffer.AsMemory(0, Math.Min(_readBuffer.Length, count)), token);
+            var read = await stream.ReadAsync(readMemory, token);
             if (read == 0)
                 break;
 
-            await memory.WriteAsync(_readBuffer.AsMemory(0, read), token);
+            await memoryStream.WriteAsync(readMemory, token);
         }
 
-        memory.Seek(0, SeekOrigin.Begin);
-        return memory.ToArray();
+        return memoryStream.ToArray();
     }
 
     public static byte[] ReadBytes(this NetworkStream stream, int count)
     {
-        using var memory = new MemoryStream();
+        using var memoryOwner = MemoryPool<byte>.Shared.Rent(1024);
+        using var memoryStream = new MemoryStream();
 
-        while (memory.Position < count)
+        var readMemory = memoryOwner.Memory[..Math.Min(count, 1024)];
+        while (memoryStream.Position < count)
         {
-            var read = stream.Read(_readBuffer, 0, Math.Min(_readBuffer.Length, count));
+            var read = stream.Read(readMemory.Span);
             if (read == 0)
                 break;
 
-            memory.Write(_readBuffer, 0, read);
+            memoryStream.Write(readMemory.Span);
         }
 
-        memory.Seek(0, SeekOrigin.Begin);
-        return memory.ToArray();
+        return memoryStream.ToArray();
     }
 }
 
