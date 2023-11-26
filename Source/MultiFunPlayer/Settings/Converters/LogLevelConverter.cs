@@ -10,5 +10,5 @@ internal class LogLevelConverter : JsonConverter<LogLevel>
         => LogLevel.FromString(reader.Value as string);
 
     public override void WriteJson(JsonWriter writer, LogLevel value, JsonSerializer serializer)
-        => JToken.FromObject(value.Name).WriteTo(writer);
+        => writer.WriteValue(value.Name);
 }

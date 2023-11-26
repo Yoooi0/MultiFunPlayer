@@ -27,6 +27,6 @@ internal class ShortcutActionConfigurationConverter(IShortcutManager manager) : 
             [nameof(IShortcutActionConfiguration.Settings)] = JArray.FromObject(value.Settings.Select(s => new TypedValue(s.Type, s.Value)))
         };
 
-        o.WriteTo(writer);
+        serializer.Serialize(writer, o);
     }
 }

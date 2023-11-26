@@ -9,23 +9,10 @@ namespace MultiFunPlayer.Settings.Converters;
 internal class DeviceAxisConverter : JsonConverter<DeviceAxis>
 {
     public override DeviceAxis ReadJson(JsonReader reader, Type objectType, DeviceAxis existingValue, bool hasExistingValue, JsonSerializer serializer)
-    {
-        if (reader.Value is not string name)
-            return null;
-
-        if (DeviceAxis.TryParse(name, out var axis))
-            return axis;
-
-        return null;
-    }
+        => reader.Value is string name && DeviceAxis.TryParse(name, out var axis) ? axis : null;
 
     public override void WriteJson(JsonWriter writer, DeviceAxis value, JsonSerializer serializer)
-    {
-        if (value == null)
-            return;
-
-        JToken.FromObject(value.Name).WriteTo(writer);
-    }
+        => writer.WriteValue(value?.Name);
 }
 
 internal class DeviceAxisTypeConverter : TypeConverter

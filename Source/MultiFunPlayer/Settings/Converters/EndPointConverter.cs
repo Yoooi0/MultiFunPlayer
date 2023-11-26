@@ -11,5 +11,5 @@ internal class EndPointConverter : JsonConverter<EndPoint>
         => NetUtils.ParseEndpoint(reader.Value as string);
 
     public override void WriteJson(JsonWriter writer, EndPoint value, JsonSerializer serializer)
-        => JToken.FromObject(value.ToUriString()).WriteTo(writer);
+        => writer.WriteValue(value.ToUriString());
 }
