@@ -15,15 +15,10 @@ public record GamepadAxisGestureDescriptor(int UserIndex, GamepadAxis Axis) : IA
     public override string ToString() => $"[Gamepad Axis: {UserIndex}/{Axis}]";
 }
 
-public class GamepadAxisGesture(GamepadAxisGestureDescriptor descriptor, double value, double delta, double deltaTime) : IAxisInputGesture
+public class GamepadAxisGesture(GamepadAxisGestureDescriptor descriptor, double value, double delta, double deltaTime) : AbstractAxisInputGesture(descriptor, value, delta, deltaTime)
 {
-    public double Value { get; } = value;
-    public double Delta { get; } = delta;
-    public double DeltaTime { get; } = deltaTime;
-
     public int UserIndex => descriptor.UserIndex;
     public GamepadAxis Axis => descriptor.Axis;
-    public IInputGestureDescriptor Descriptor => descriptor;
 
     public override string ToString() => $"[Gamepad Axis: {UserIndex}/{Axis}, Value: {Value}, Delta: {Delta}]";
 

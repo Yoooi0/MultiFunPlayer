@@ -18,16 +18,16 @@ public record GamepadButtonGestureDescriptor : ISimpleInputGestureDescriptor
     }
 
     public virtual bool Equals(GamepadButtonGestureDescriptor other) => UserIndex == other?.UserIndex && _comparer.Equals(_buttons, other?._buttons);
-    public bool Equals(IInputGestureDescriptor other) => other is GamepadButtonGestureDescriptor d && Equals(d);
     public override int GetHashCode() => _comparer.GetHashCode(_buttons);
     public override string ToString() => $"[Gamepad Buttons: {UserIndex}/{Buttons}]";
 }
 
-public class GamepadButtonGesture(GamepadButtonGestureDescriptor descriptor) : ISimpleInputGesture
+public class GamepadButtonGesture(GamepadButtonGestureDescriptor descriptor) : AbstractSimpleInputGesture(descriptor)
 {
     public int UserIndex => descriptor.UserIndex;
     public IEnumerable<GamepadVirtualKey> Buttons => descriptor.Buttons;
-    public IInputGestureDescriptor Descriptor => descriptor;
+
+    public override string ToString() => $"[Gamepad Button: {UserIndex}/{string.Join(", ", Buttons)}]";
 
     internal static GamepadButtonGesture Create(int userIndex, IEnumerable<GamepadVirtualKey> buttons) => new(new(userIndex, buttons));
 }

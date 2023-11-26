@@ -12,15 +12,13 @@ public record KeyboardGestureDescriptor : ISimpleInputGestureDescriptor
     public KeyboardGestureDescriptor(IEnumerable<Key> keys) => _keys = new SortedSet<Key>(keys.ToHashSet());
 
     public virtual bool Equals(KeyboardGestureDescriptor other) => _comparer.Equals(_keys, other?._keys);
-    public bool Equals(IInputGestureDescriptor other) => other is KeyboardGestureDescriptor d && Equals(d);
     public override int GetHashCode() => _comparer.GetHashCode(_keys);
     public override string ToString() => $"[Keyboard Keys: {string.Join(", ", Keys)}]";
 }
 
-public class KeyboardGesture(KeyboardGestureDescriptor descriptor) : ISimpleInputGesture
+public class KeyboardGesture(KeyboardGestureDescriptor descriptor) : AbstractSimpleInputGesture(descriptor)
 {
     public IReadOnlyCollection<Key> Keys => descriptor.Keys;
-    public IInputGestureDescriptor Descriptor => descriptor;
 
     public override string ToString() => $"[Keyboard Keys: {string.Join(", ", Keys)}]";
 

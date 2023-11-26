@@ -7,10 +7,9 @@ public record MouseButtonGestureDescriptor(MouseButton Button) : ISimpleInputGes
     public override string ToString() => $"[Mouse Button: {Button}]";
 }
 
-public class MouseButtonGesture(MouseButtonGestureDescriptor descriptor) : ISimpleInputGesture
+public class MouseButtonGesture(MouseButtonGestureDescriptor descriptor) : AbstractSimpleInputGesture(descriptor)
 {
     public MouseButton Button => descriptor.Button;
-    public IInputGestureDescriptor Descriptor => descriptor;
 
     public override string ToString() => $"[Mouse Button: {Button}]";
 

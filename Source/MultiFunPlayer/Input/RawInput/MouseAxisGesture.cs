@@ -1,4 +1,6 @@
-﻿namespace MultiFunPlayer.Input.RawInput;
+﻿using System.Windows.Controls;
+
+namespace MultiFunPlayer.Input.RawInput;
 
 public enum MouseAxis
 {
@@ -13,14 +15,9 @@ public record MouseAxisGestureDescriptor(MouseAxis Axis) : IAxisInputGestureDesc
     public override string ToString() => $"[Mouse Axis: {Axis}]";
 }
 
-public class MouseAxisGesture(MouseAxisGestureDescriptor descriptor, double value, double delta, double deltaTime) : IAxisInputGesture
+public class MouseAxisGesture(MouseAxisGestureDescriptor descriptor, double value, double delta, double deltaTime) : AbstractAxisInputGesture(descriptor, value, delta, deltaTime)
 {
-    public double Value { get; } = value;
-    public double Delta { get; } = delta;
-    public double DeltaTime { get; } = deltaTime;
     public MouseAxis Axis => descriptor.Axis;
-
-    public IInputGestureDescriptor Descriptor => descriptor;
 
     public override string ToString() => $"[Mouse Axis: {Axis}, Value: {Value}, Delta: {Delta}]";
 
