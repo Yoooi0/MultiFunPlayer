@@ -185,10 +185,19 @@ public class ObservableConcurrentCollection<T> : IList<T>, IReadOnlyObservableCo
     IEnumerator IEnumerable.GetEnumerator() => ((IList<T>)this).GetEnumerator();
     public IEnumerator<T> GetEnumerator() { lock (SyncRoot) { return _items.ToList().GetEnumerator(); } }
 
-    bool IList.Contains(object value) => Contains((T)value);
-    int IList.IndexOf(object value) => IndexOf((T)value);
-    void IList.Insert(int index, object value) => Insert(index, (T)value);
-    void IList.Remove(object value) => Remove((T)value);
+    bool IList.Contains(object value) => value is T x && Contains(x);
+    int IList.IndexOf(object value) => value is T x ? IndexOf(x) : -1;
+    void IList.Insert(int index, object value)
+    {
+        if (value is T x)
+            Insert(index, x);
+    }
+
+    void IList.Remove(object value)
+    {
+        if (value is T x)
+            Remove(x);
+    }
 
     void ICollection.CopyTo(Array array, int index)
     {
