@@ -67,7 +67,7 @@ internal class PluginContainer(FileInfo pluginFile) : PropertyChangedBase, IDisp
             Logger.Info($"Starting \"{Name}\"");
 
             var token = _cancellationSource.Token;
-            token.Register(() => plugin?.InternalDispose());
+            HandleSettings(SettingsAction.Loading);
 
             plugin = _compilationResult.CreatePluginInstance();
             plugin.InternalInitialize();
@@ -89,20 +89,32 @@ internal class PluginContainer(FileInfo pluginFile) : PropertyChangedBase, IDisp
             }
             catch (OperationCanceledException) { }
 
-            State = PluginState.Stopping;
-            plugin.InternalDispose();
-            State = PluginState.RanToCompletion;
-
             Logger.Debug($"\"{Name}\" ran to completion");
         }
         catch (Exception e)
         {
             Logger.Error(e, $"{Name} failed with exception");
-
-            State = PluginState.Stopping;
-            plugin?.InternalDispose();
-            State = PluginState.Faulted;
             Exception = e;
+        }
+        finally
+        {
+            State = PluginState.Stopping;
+
+            try
+            {
+                plugin?.InternalDispose();
+                HandleSettings(SettingsAction.Saving);
+            }
+            catch (Exception e)
+            {
+                Exception = Exception == null ? e : new AggregateException(Exception, e);
+            }
+
+            State = Exception != null ? PluginState.Faulted : PluginState.RanToCompletion;
+
+            _cancellationSource?.Dispose();
+            _cancellationSource = null;
+            _thread = null;
         }
     }
 
@@ -158,7 +170,6 @@ internal class PluginContainer(FileInfo pluginFile) : PropertyChangedBase, IDisp
                 Exception = _compilationResult.Exception;
             }
 
-            HandleSettings(SettingsAction.Loading);
             NotifyOfPropertyChange(nameof(SettingsView));
         }
     }
@@ -179,12 +190,9 @@ internal class PluginContainer(FileInfo pluginFile) : PropertyChangedBase, IDisp
     protected virtual void Dispose(bool disposing)
     {
         _cancellationSource?.Cancel();
-
         _thread?.Join();
 
-        HandleSettings(SettingsAction.Saving);
         _cancellationSource?.Dispose();
-
         _compilationResult?.Dispose();
 
         _thread = null;
