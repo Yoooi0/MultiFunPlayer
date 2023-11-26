@@ -272,8 +272,8 @@ internal static class PluginCompiler
             }
             else
             {
-                var settings = settingsType != null ? Activator.CreateInstance(settingsType) as PluginSettingsBase : null;
-                if (settingsType != null && settings == null)
+                var settings = Activator.CreateInstance(settingsType) as PluginSettingsBase;
+                if (settings == null)
                     return PluginCompilationResult.FromFailure(context, new PluginCompileException("Unable to create settings instance"));
 
                 var settingsView = default(UIElement);
