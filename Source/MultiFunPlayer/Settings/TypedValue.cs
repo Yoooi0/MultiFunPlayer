@@ -1,18 +1,6 @@
-﻿using Newtonsoft.Json;
+﻿namespace MultiFunPlayer.Settings;
 
-namespace MultiFunPlayer.Settings;
-
-public class TypedValue(Type type, object value)
+public readonly record struct TypedValue(Type Type, object Value)
 {
-    [JsonProperty("$type")]
-    public Type Type { get; } = type;
-    public object Value { get; } = value;
-
     public TypedValue(object value) : this(value.GetType(), value) { }
-
-    public void Deconstruct(out Type type, out object value)
-    {
-        type = Type;
-        value = Value;
-    }
 }
