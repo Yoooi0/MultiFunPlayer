@@ -238,12 +238,11 @@ internal sealed class MediaSourceViewModel : Conductor<IMediaSource>.Collection.
         }
     }
 
-    private async void Dispose(bool disposing)
+    private void Dispose(bool disposing)
     {
         _cancellationSource?.Cancel();
 
-        if (_task != null)
-            await _task;
+        _task?.GetAwaiter().GetResult();
 
         _semaphore?.Dispose();
         _currentSource?.Dispose();

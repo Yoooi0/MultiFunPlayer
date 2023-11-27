@@ -170,10 +170,10 @@ internal abstract class AbstractMediaSource : Screen, IMediaSource, IHandle<IMed
     protected void WriteMessage(IMediaSourceControlMessage message)
         => _messageChannel.Writer.TryWrite(message);
 
-    public async void Handle(IMediaSourceControlMessage message)
+    public void Handle(IMediaSourceControlMessage message)
     {
         if (Status == ConnectionStatus.Connected)
-            await _messageChannel.Writer.WriteAsync(message);
+            _messageChannel.Writer.TryWrite(message);
     }
 
     protected virtual void Dispose(bool disposing)

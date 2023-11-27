@@ -94,7 +94,7 @@ internal sealed class ShortcutSettingsViewModel : Screen, IHandle<SettingsMessag
     protected override void OnActivate() => _shortcutBinder.HandleGestures = false;
     protected override void OnDeactivate() => _shortcutBinder.HandleGestures = true;
 
-    private async void HandleGesture(object sender, IInputGesture gesture)
+    private void HandleGesture(object sender, IInputGesture gesture)
     {
         if (!IsCapturingGesture)
             return;
@@ -111,7 +111,7 @@ internal sealed class ShortcutSettingsViewModel : Screen, IHandle<SettingsMessag
                 return;
         }
 
-        await _captureGestureChannel.Writer.WriteAsync(gesture);
+        _captureGestureChannel.Writer.TryWrite(gesture);
     }
 
     public async void CaptureGesture(object sender, RoutedEventArgs e)

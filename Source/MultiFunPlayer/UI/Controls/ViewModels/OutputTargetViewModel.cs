@@ -245,12 +245,11 @@ internal sealed class OutputTargetViewModel : Conductor<IOutputTarget>.Collectio
         s.UnregisterAction($"{target.Identifier}::Connection::Disconnect");
     }
 
-    private async void Dispose(bool disposing)
+    private void Dispose(bool disposing)
     {
         _cancellationSource?.Cancel();
 
-        if (_task != null)
-            await _task;
+        _task?.GetAwaiter().GetResult();
 
         if (_semaphores != null)
             foreach (var (_, semaphore) in _semaphores)
