@@ -67,7 +67,6 @@ internal sealed class PluginContainer(FileInfo pluginFile) : PropertyChangedBase
             Logger.Info($"Starting \"{Name}\"");
 
             var token = _cancellationSource.Token;
-            HandleSettings(SettingsAction.Loading);
 
             plugin = _compilationResult.CreatePluginInstance();
             plugin.InternalInitialize();
@@ -170,6 +169,7 @@ internal sealed class PluginContainer(FileInfo pluginFile) : PropertyChangedBase
                 Exception = _compilationResult.Exception;
             }
 
+            HandleSettings(SettingsAction.Loading);
             NotifyOfPropertyChange(nameof(SettingsView));
         }
     }
