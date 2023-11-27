@@ -18,11 +18,13 @@ internal sealed class TCodeInputProcessor : IInputProcessor
 
     public void Parse(string input)
     {
-        var buttonMatch = Regex.Match(input, "#(.+?):(0|1)");
-        if (buttonMatch.Success)
+        foreach(var match in Regex.Matches(input, "#(.+?):(0|1)").OfType<Match>())
         {
-            var button = buttonMatch.Groups[1].Value;
-            var state = int.Parse(buttonMatch.Groups[2].Value) == 1;
+            if (!match.Success)
+                continue;
+
+            var button = match.Groups[1].Value;
+            var state = int.Parse(match.Groups[2].Value) == 1;
             if (!state && _buttonStates.TryGetValue(button, out var lastState) && lastState)
                 HandleGesture(TCodeButtonGesture.Create(button));
 
