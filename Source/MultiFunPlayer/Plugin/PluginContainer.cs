@@ -179,7 +179,15 @@ internal sealed class PluginContainer(FileInfo pluginFile) : PropertyChangedBase
 
         var settingsPath = $"Plugins\\{Path.GetFileNameWithoutExtension(PluginFile.Name)}.config.json";
         var settings = SettingsHelper.ReadOrEmpty(settingsPath);
-        _compilationResult.Settings.HandleSettings(settings, action);
+
+        try
+        {
+            _compilationResult.Settings.HandleSettings(settings, action);
+        }
+        catch (Exception e)
+        {
+            Logger.Warn(e, "Plugin settings failed with exception [Action: {0}]", action);
+        }
 
         if (action == SettingsAction.Saving && settings.HasValues)
             SettingsHelper.Write(settings, settingsPath);
