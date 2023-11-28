@@ -1,4 +1,4 @@
-﻿using MultiFunPlayer.Common;
+using MultiFunPlayer.Common;
 using Newtonsoft.Json.Linq;
 using Stylet;
 using System.IO;
@@ -18,6 +18,6 @@ public abstract class PluginSettingsBase : PropertyChangedBase
         return CreateViewFromStream(stream);
     }
 
-    public abstract UIElement CreateView();
+    public virtual UIElement CreateView() => null;
     public abstract void HandleSettings(JObject settings, SettingsAction action);
 }
