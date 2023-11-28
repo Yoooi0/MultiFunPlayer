@@ -66,10 +66,8 @@ internal sealed class PluginContainer(FileInfo pluginFile) : PropertyChangedBase
         {
             Logger.Info($"Starting \"{Name}\"");
 
-            var token = _cancellationSource.Token;
-
             plugin = _compilationResult.CreatePluginInstance();
-            plugin.InternalInitialize();
+            plugin.InternalInitialize(_cancellationSource.Token);
 
             State = PluginState.Running;
 
@@ -77,12 +75,12 @@ internal sealed class PluginContainer(FileInfo pluginFile) : PropertyChangedBase
             {
                 if (plugin is SyncPluginBase syncPlugin)
                 {
-                    syncPlugin.InternalExecute(token);
+                    syncPlugin.InternalExecute();
                 }
                 else if (plugin is AsyncPluginBase asyncPlugin)
                 {
                     // https://stackoverflow.com/a/9343733 ¯\_(ツ)_/¯
-                    var task = asyncPlugin.InternalExecuteAsync(token);
+                    var task = asyncPlugin.InternalExecuteAsync();
                     task.GetAwaiter().GetResult();
                 }
             }
