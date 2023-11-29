@@ -309,6 +309,7 @@
                                         <CheckBox IsChecked="{Binding IsGamepadAxisGestureEnabled}" Content="Gamepad axis"/>
                                         <CheckBox IsChecked="{Binding IsGamepadButtonGestureEnabled}" Content="Gamepad button"/>
                                         <CheckBox IsChecked="{Binding IsTCodeButtonGestureEnabled}" Content="TCode button"/>
+                                        <CheckBox IsChecked="{Binding IsTCodeAxisGestureEnabled}" Content="TCode axis"/>
                                     </StackPanel>
                                 </StackPanel>
                             </Grid>

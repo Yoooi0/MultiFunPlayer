@@ -41,6 +41,7 @@ internal sealed class ShortcutSettingsViewModel : Screen, IHandle<SettingsMessag
     [JsonProperty] public bool IsGamepadAxisGestureEnabled { get; set; } = true;
     [JsonProperty] public bool IsGamepadButtonGestureEnabled { get; set; } = true;
     [JsonProperty] public bool IsTCodeButtonGestureEnabled { get; set; } = true;
+    [JsonProperty] public bool IsTCodeAxisGestureEnabled { get; set; } = true;
 
     public ShortcutSettingsViewModel(IInputProcessorManager inputManager, IShortcutManager shortcutManager, IShortcutBinder shortcutBinder, IEventAggregator eventAggregator)
     {
@@ -107,6 +108,7 @@ internal sealed class ShortcutSettingsViewModel : Screen, IHandle<SettingsMessag
             case GamepadAxisGesture when !IsGamepadAxisGestureEnabled:
             case GamepadButtonGesture when !IsGamepadButtonGestureEnabled:
             case TCodeButtonGesture when !IsTCodeButtonGestureEnabled:
+            case TCodeAxisGesture when !IsTCodeAxisGestureEnabled:
             case IAxisInputGesture axisGesture when Math.Abs(axisGesture.Delta) < 0.01:
                 return;
         }
@@ -121,7 +123,8 @@ internal sealed class ShortcutSettingsViewModel : Screen, IHandle<SettingsMessag
 
         if (!IsKeyboardKeysGestureEnabled && !IsMouseAxisGestureEnabled
         && !IsMouseButtonGestureEnabled && !IsGamepadAxisGestureEnabled
-        && !IsGamepadButtonGestureEnabled && !IsTCodeButtonGestureEnabled)
+        && !IsGamepadButtonGestureEnabled && !IsTCodeButtonGestureEnabled
+        && !IsTCodeAxisGestureEnabled)
             return;
 
         _captureGestureCancellationSource = new CancellationTokenSource();
