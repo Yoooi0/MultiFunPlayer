@@ -20,9 +20,6 @@ jobs:
       uses: actions/setup-dotnet@v3
       with:
         dotnet-version: '8.0.x'
-    - name: Determine Dotnet Version
-      id: dotnet-version
-      run: echo "version=$(dotnet --version)" >> $GITHUB_OUTPUT
     - name: Setup GitVersion
       uses: gittools/actions/gitversion/setup@v0.10.2
       with:
@@ -43,7 +40,7 @@ jobs:
     - name: Pack Framework Dependent
       run: 7z a MultiFunPlayer-${{ steps.gitversion.outputs.semVer }}.zip .\Source\MultiFunPlayer\bin\Release\win-x64\publish\framework-dependent\*
     - name: Pack Self Contained
-      run: 7z a MultiFunPlayer-${{ steps.gitversion.outputs.semVer }}-SelfContained.${{ steps.dotnet-version.outputs.version }}.zip .\Source\MultiFunPlayer\bin\Release\win-x64\publish\self-contained\*
+      run: 7z a MultiFunPlayer-${{ steps.gitversion.outputs.semVer }}-SelfContained.$(dotnet --version).zip .\Source\MultiFunPlayer\bin\Release\win-x64\publish\self-contained\*
     - name: Create Release
       id: create-release
       uses: ncipollo/release-action@v1
