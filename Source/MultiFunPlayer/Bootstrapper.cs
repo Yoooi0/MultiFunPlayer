@@ -126,7 +126,7 @@ internal sealed class Bootstrapper : Bootstrapper<RootViewModel>
         {
             Process.Start(new ProcessStartInfo
             {
-                FileName = "https://docs.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist",
+                FileName = "https://aka.ms/vs/17/release/vc_redist.x64.exe",
                 UseShellExecute = true
             });
         }
