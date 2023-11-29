@@ -102,7 +102,7 @@
                                                          Margin="0 -24 0 24">
                                             <ProgressBar.Style>
                                                 <Style TargetType="ProgressBar" BasedOn="{StaticResource MaterialDesignCircularProgressBar}">
-                                                    <Setter Property="Foreground" Value="{DynamicResource PrimaryHueBrush}"/>
+                                                    <Setter Property="Foreground" Value="{DynamicResource PrimaryHueMidBrush}"/>
                                                     <Style.Triggers>
                                                         <DataTrigger Binding="{Binding IsSyncing}" Value="True">
                                                             <Setter Property="Foreground" Value="{DynamicResource MaterialDesignErrorBrush}"/>
