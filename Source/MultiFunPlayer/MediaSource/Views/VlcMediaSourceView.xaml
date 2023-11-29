@@ -90,7 +90,8 @@
                            Margin="0 0 10 0"
                            VerticalAlignment="Center"/>
 
-                <PasswordBox behaviours:PasswordBoxAssist.Password="{Binding Password, UpdateSourceTrigger=PropertyChanged}"
+                <PasswordBox Style="{StaticResource MaterialDesignRevealPasswordBox}"
+                             material:PasswordBoxAssist.Password="{Binding Password, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                              material:TextFieldAssist.HasClearButton="True"
                              HorizontalAlignment="Stretch"/>
             </DockPanel>
