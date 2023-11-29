@@ -49,53 +49,77 @@
                               Margin="0 5 0 5">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
-                            <material:Card Margin="10 5 10 5" MinWidth="400">
+                            <material:Card Margin="10 5 10 5" MinWidth="400">                                
                                 <DockPanel LastChildFill="False">
                                     <material:ColorZone Width="30"
                                                         Height="30">
+                                        <material:ColorZone.Resources>
+                                            <Style TargetType="material:ColorZone">
+                                                <Setter Property="ToolTip" Value="Idle"/>
+
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding Value.State}" Value="{x:Static plugin:PluginState.Compiling}">
+                                                        <Setter Property="ToolTip" Value="Compiling"/>
+                                                    </DataTrigger>
+
+                                                    <DataTrigger Binding="{Binding Value.State}" Value="{x:Static plugin:PluginState.Starting}">
+                                                        <Setter Property="ToolTip" Value="Starting"/>
+                                                    </DataTrigger>
+
+                                                    <DataTrigger Binding="{Binding Value.State}" Value="{x:Static plugin:PluginState.Running}">
+                                                        <Setter Property="ToolTip" Value="Running"/>
+                                                    </DataTrigger>
+
+                                                    <DataTrigger Binding="{Binding Value.State}" Value="{x:Static plugin:PluginState.Stopping}">
+                                                        <Setter Property="ToolTip" Value="Stopping"/>
+                                                    </DataTrigger>
+
+                                                    <DataTrigger Binding="{Binding Value.State}" Value="{x:Static plugin:PluginState.Faulted}">
+                                                        <Setter Property="ToolTip" Value="{Binding Value.Exception}"/>
+                                                    </DataTrigger>
+
+                                                    <DataTrigger Binding="{Binding Value.State}" Value="{x:Static plugin:PluginState.RanToCompletion}">
+                                                        <Setter Property="ToolTip" Value="Ran To Completion"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </material:ColorZone.Resources>
+                                        
                                         <material:PackIcon Width="20"
                                                            Height="20"
-                                                           Background="Transparent"
                                                            VerticalAlignment="Center"
                                                            HorizontalAlignment="Center">
                                             <material:PackIcon.Resources>
                                                 <Style TargetType="material:PackIcon">
                                                     <Setter Property="Kind" Value="PowerSleep"/>
-                                                    <Setter Property="ToolTip" Value="Idle"/>
-
+                                                    
                                                     <Style.Triggers>
                                                         <DataTrigger Binding="{Binding Value.State}" Value="{x:Static plugin:PluginState.Compiling}">
                                                             <Setter Property="Kind" Value="Wrench"/>
-                                                            <Setter Property="ToolTip" Value="Compiling"/>
                                                         </DataTrigger>
 
                                                         <DataTrigger Binding="{Binding Value.State}" Value="{x:Static plugin:PluginState.Starting}">
                                                             <Setter Property="Kind" Value="MotionPlayOutline"/>
-                                                            <Setter Property="ToolTip" Value="Starting"/>
                                                             <Setter Property="Foreground" Value="{DynamicResource MaterialDesignWarningBrush}"/>
                                                         </DataTrigger>
 
                                                         <DataTrigger Binding="{Binding Value.State}" Value="{x:Static plugin:PluginState.Running}">
                                                             <Setter Property="Kind" Value="Play"/>
-                                                            <Setter Property="ToolTip" Value="Running"/>
                                                             <Setter Property="Foreground" Value="{DynamicResource MaterialDesignSuccessBrush}"/>
                                                         </DataTrigger>
 
                                                         <DataTrigger Binding="{Binding Value.State}" Value="{x:Static plugin:PluginState.Stopping}">
                                                             <Setter Property="Kind" Value="Stop"/>
-                                                            <Setter Property="ToolTip" Value="Stopping"/>
                                                             <Setter Property="Foreground" Value="{DynamicResource MaterialDesignWarningBrush}"/>
                                                         </DataTrigger>
 
                                                         <DataTrigger Binding="{Binding Value.State}" Value="{x:Static plugin:PluginState.Faulted}">
                                                             <Setter Property="Kind" Value="ExclamationBold"/>
-                                                            <Setter Property="ToolTip" Value="{Binding Value.Exception}"/>
                                                             <Setter Property="Foreground" Value="{DynamicResource MaterialDesignErrorBrush}"/>
                                                         </DataTrigger>
 
                                                         <DataTrigger Binding="{Binding Value.State}" Value="{x:Static plugin:PluginState.RanToCompletion}">
                                                             <Setter Property="Kind" Value="CheckBold"/>
-                                                            <Setter Property="ToolTip" Value="Ran To Completion"/>
                                                             <Setter Property="Foreground" Value="{DynamicResource MaterialDesignSuccessBrush}"/>
                                                         </DataTrigger>
                                                     </Style.Triggers>
