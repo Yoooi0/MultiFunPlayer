@@ -51,4 +51,4 @@ jobs:
         name: MultiFunPlayer v${{ steps.gitversion.outputs.semVer }}
         artifacts: |
           MultiFunPlayer-${{ steps.gitversion.outputs.semVer }}.zip
-          MultiFunPlayer-${{ steps.gitversion.outputs.semVer }}-SelfContained.${{ steps.dotnet-version.outputs.version }}.zip
+          MultiFunPlayer-${{ steps.gitversion.outputs.semVer }}-SelfContained.$(dotnet --version).zip
