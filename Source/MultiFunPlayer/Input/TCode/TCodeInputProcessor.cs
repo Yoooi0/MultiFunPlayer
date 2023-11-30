@@ -9,14 +9,16 @@ internal sealed class TCodeInputProcessor : IInputProcessor
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
     private readonly Dictionary<string, bool> _buttonStates;
-    private readonly Dictionary<string, int> _axisStates;
+    private readonly Dictionary<string, int> _unsignedAxisStates;
+    private readonly Dictionary<string, int> _signedAxisStates;
 
     public event EventHandler<IInputGesture> OnGesture;
 
     public TCodeInputProcessor()
     {
         _buttonStates = [];
-        _axisStates = [];
+        _unsignedAxisStates = [];
+        _signedAxisStates = [];
     }
 
     public void Parse(string input)
@@ -34,25 +36,27 @@ internal sealed class TCodeInputProcessor : IInputProcessor
             _buttonStates[button] = state;
         }
 
-        foreach(var match in Regex.Matches(input, @"@(.+?):(\d{1,5})").OfType<Match>())
+        foreach(var match in Regex.Matches(input, @"@(?<axis>.+?):(?<value>\d{1,5})").OfType<Match>().Where(m => m.Success))
+            CreateAxisGesture(_unsignedAxisStates, match, ushort.MinValue, ushort.MaxValue);
+
+        foreach (var match in Regex.Matches(input, @"\$(?<axis>.+?):(?<value>-?\d{1,5})").OfType<Match>().Where(m => m.Success))
+            CreateAxisGesture(_signedAxisStates, match, short.MinValue, short.MaxValue);
+
+        void CreateAxisGesture(Dictionary<string, int> states, Match match, double minValue, double maxValue)
         {
-            if (!match.Success)
-                continue;
+            var axis = match.Groups["axis"].Value;
+            var value = int.Parse(match.Groups["value"].Value);
+            states.TryAdd(axis, 0);
 
-            var axis = match.Groups[1].Value;
-            var value = int.Parse(match.Groups[2].Value);
-            _axisStates.TryAdd(axis, 0);
-
-            var lastValue = _axisStates[axis];
-            var delta = value - lastValue;
+            var delta = value - states[axis];
             if (delta == 0)
-                continue;
+                return;
 
-            var valueDecimal = MathUtils.UnLerp(0, ushort.MaxValue, value);
-            var deltaDecimal = MathUtils.UnLerp(0, ushort.MaxValue, delta);
+            var valueDecimal = MathUtils.UnLerp(minValue, maxValue, value);
+            var deltaDecimal = MathUtils.UnLerp(minValue, maxValue, delta);
 
             HandleGesture(TCodeAxisGesture.Create(axis, valueDecimal, deltaDecimal, 0));
-            _axisStates[axis] = value;
+            states[axis] = value;
         }
     }
 
