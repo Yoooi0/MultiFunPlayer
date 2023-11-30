@@ -576,12 +576,12 @@ internal sealed class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDispo
     public void Handle(MediaDurationChangedMessage message)
     {
         var newDuration = message.Duration?.TotalSeconds ?? double.NaN;
-        if (MediaDuration == newDuration)
-            return;
+        if (MediaDuration != newDuration)
+        {
+            Logger.Info("Received {0} [Duration: {1}]", nameof(MediaDurationChangedMessage), message.Duration?.ToString());
+            MediaDuration = newDuration;
+        }
 
-        Logger.Info("Received {0} [Duration: {1}]", nameof(MediaDurationChangedMessage), message.Duration?.ToString());
-
-        MediaDuration = newDuration;
         ScheduleAutoSkipToScriptStart();
     }
 
