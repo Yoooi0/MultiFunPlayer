@@ -564,11 +564,10 @@
                     </ItemsControl>
 
                     <TextBox DockPanel.Dock="Top"
-                             Text="{Binding ActionsFilter}"
+                             Text="{Binding ActionsFilter, UpdateSourceTrigger=PropertyChanged, Delay=200}"
                              Style="{StaticResource MaterialDesignFloatingHintTextBox}"
                              Margin="5 0 5 0"
-                             material:HintAssist.Hint="Filter actions"
-                             behaviours:InputAssist.UpdateSourceOnEnter="TextBox.Text"/>
+                             material:HintAssist.Hint="Filter actions"/>
 
                     <ItemsControl DockPanel.Dock="Top"
                                   ItemsSource="{Binding AvailableActionsView}"
