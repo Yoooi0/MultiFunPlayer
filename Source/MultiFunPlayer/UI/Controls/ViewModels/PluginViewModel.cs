@@ -61,6 +61,9 @@ internal sealed class PluginViewModel : Screen, IDisposable
         if (!fileInfo.AsRefreshed().Exists)
             return;
 
+        if (fileInfo.Extension != ".cs")
+            return;
+
         if (Containers.ContainsKey(fileInfo))
             return;
 
