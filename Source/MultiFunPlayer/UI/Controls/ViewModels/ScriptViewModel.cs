@@ -22,17 +22,20 @@ using MultiFunPlayer.MotionProvider.ViewModels;
 using System.Windows.Controls.Primitives;
 using MultiFunPlayer.Property;
 using Microsoft.Win32;
+using MultiFunPlayer.Script;
+using MultiFunPlayer.Script.Repository;
 
 namespace MultiFunPlayer.UI.Controls.ViewModels;
 
 [JsonObject(MemberSerialization = MemberSerialization.OptIn)]
 internal sealed class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
     IHandle<MediaPositionChangedMessage>, IHandle<MediaPlayingChangedMessage>, IHandle<MediaPathChangedMessage>, IHandle<MediaDurationChangedMessage>,
-    IHandle<MediaSpeedChangedMessage>, IHandle<SettingsMessage>, IHandle<SyncRequestMessage>, IHandle<ChangeScriptMessage>
+    IHandle<MediaSpeedChangedMessage>, IHandle<SettingsMessage>, IHandle<SyncRequestMessage>, IHandle<ReloadScriptsRequestMessage>, IHandle<ChangeScriptMessage>
 {
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
     private readonly IEventAggregator _eventAggregator;
+
     private Thread _updateThread;
     private CancellationTokenSource _cancellationSource;
     private double _internalMediaPosition;
@@ -52,13 +55,13 @@ internal sealed class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDispo
 
     public Dictionary<string, Type> MediaPathModifierTypes { get; }
     public MediaLoopSegment MediaLoopSegment { get; }
-    public IMotionProviderManager MotionProviderManager { get; }
 
+    public IScriptRepositoryManager ScriptRepositoryManager { get; }
+    public IMotionProviderManager MotionProviderManager { get; }
     public MediaResourceInfo MediaResource { get; set; }
 
     [JsonProperty] public ObservableConcurrentDictionaryView<DeviceAxis, AxisModel, AxisSettings> AxisSettings { get; }
     [JsonProperty(ItemTypeNameHandling = TypeNameHandling.Objects)] public ObservableConcurrentCollection<IMediaPathModifier> MediaPathModifiers { get; }
-    [JsonProperty] public ObservableConcurrentCollection<ScriptLibrary> ScriptLibraries { get; }
     [JsonProperty] public SyncSettings SyncSettings { get; set; }
 
     [JsonProperty] public double GlobalOffset { get; set; } = 0;
@@ -75,10 +78,12 @@ internal sealed class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDispo
     public bool IsSyncing => AxisStates.Values.Any(s => s.SyncTime > 0);
     public double SyncProgress => !IsSyncing ? 100 : GetSyncProgress(AxisStates.Values.Max(s => s.SyncTime), SyncSettings.Duration) * 100;
 
-    public ScriptViewModel(IShortcutManager shortcutManager, IPropertyManager propertyManager, IMotionProviderManager motionProviderManager, IEventAggregator eventAggregator)
+    public ScriptViewModel(IShortcutManager shortcutManager, IPropertyManager propertyManager, IMotionProviderManager motionProviderManager,
+        IScriptRepositoryManager scriptManager, IEventAggregator eventAggregator)
     {
         _eventAggregator = eventAggregator;
         _eventAggregator.Subscribe(this);
+        ScriptRepositoryManager = scriptManager;
 
         MotionProviderManager = motionProviderManager;
 
@@ -86,9 +91,8 @@ internal sealed class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDispo
         MediaPathModifiers = [];
         MediaPathModifierTypes = ReflectionUtils.FindImplementations<IMediaPathModifier>()
                                                 .ToDictionary(t => t.GetCustomAttribute<DisplayNameAttribute>(inherit: false).DisplayName, t => t);
-        MediaLoopSegment = new MediaLoopSegment();
 
-        ScriptLibraries = [];
+        MediaLoopSegment = new MediaLoopSegment();
         SyncSettings = new SyncSettings();
 
         InvalidateMediaState();
@@ -645,7 +649,11 @@ internal sealed class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDispo
     {
         if (message.Action == SettingsAction.Saving)
         {
-            message.Settings["Script"] = JObject.FromObject(this);
+            if (!message.Settings.EnsureContainsObjects("Script")
+             || !message.Settings.TryGetObject(out var settings, "Script"))
+                return;
+
+            settings.Merge(JObject.FromObject(this), new JsonMergeSettings() { MergeArrayHandling = MergeArrayHandling.Replace });
         }
         else if (message.Action == SettingsAction.Loading)
         {
@@ -666,9 +674,6 @@ internal sealed class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDispo
             if (settings.TryGetValue<List<IMediaPathModifier>>(nameof(MediaPathModifiers), new JsonSerializerSettings() { TypeNameHandling = TypeNameHandling.Objects }, out var mediaPathModifiers))
                 MediaPathModifiers.SetFrom(mediaPathModifiers);
 
-            if (settings.TryGetValue<List<ScriptLibrary>>(nameof(ScriptLibraries), out var scriptDirectories))
-                ScriptLibraries.SetFrom(scriptDirectories);
-
             if (settings.TryGetValue<double>(nameof(GlobalOffset), out var globalOffset)) GlobalOffset = globalOffset;
             if (settings.TryGetValue<bool>(nameof(ValuesContentVisible), out var valuesContentVisible)) ValuesContentVisible = valuesContentVisible;
             if (settings.TryGetValue<bool>(nameof(MediaContentVisible), out var mediaContentVisible)) MediaContentVisible = mediaContentVisible;
@@ -684,6 +689,7 @@ internal sealed class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDispo
     }
 
     public void Handle(SyncRequestMessage message) => ResetSync(true, message.Axes);
+    public void Handle(ReloadScriptsRequestMessage message) => ReloadAxes(message.Axes);
 
     public void Handle(ChangeScriptMessage message)
     {
@@ -765,82 +771,6 @@ internal sealed class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDispo
     #endregion
 
     #region Script
-    private List<DeviceAxis> SearchForScripts(IEnumerable<DeviceAxis> axes = null)
-    {
-        axes ??= DeviceAxis.All;
-
-        var updated = new List<DeviceAxis>();
-        if (!axes.Any() || MediaResource == null)
-            return updated;
-
-        Logger.Debug("Maching files to axes [Axes: {list}]", axes);
-        void TryMatchName(string scriptName, ScriptReaderResult result)
-        {
-            if (!result.IsSuccess)
-                return;
-
-            if (result.IsMultiAxis)
-            {
-                foreach (var (axis, resource) in result.Resources)
-                    DoSetScript(axis, resource);
-            }
-            else
-            {
-                foreach (var axis in DeviceAxisUtils.FindAxesMatchingName(axes, scriptName, MediaResource.Name))
-                    DoSetScript(axis, result.Resource);
-            }
-
-            void DoSetScript(DeviceAxis axis, IScriptResource resource)
-            {
-                SetScript(axis, resource);
-                updated.Add(axis);
-
-                Logger.Debug("Matched {0} script to \"{1}\"", axis, scriptName);
-            }
-        }
-
-        bool TryMatchArchive(string path)
-        {
-            if (File.Exists(path))
-            {
-                Logger.Info("Matching zip file \"{0}\"", path);
-                using var zip = ZipFile.OpenRead(path);
-                foreach (var entry in zip.Entries.Where(e => string.Equals(Path.GetExtension(e.FullName), ".funscript", StringComparison.OrdinalIgnoreCase)))
-                {
-                    using var stream = entry.Open();
-                    TryMatchName(entry.Name, FunscriptReader.Default.FromStream(entry.Name, path, stream));
-                }
-
-                return true;
-            }
-
-            return false;
-        }
-
-        var mediaWithoutExtension = Path.GetFileNameWithoutExtension(MediaResource.Name);
-        foreach (var library in ScriptLibraries)
-        {
-            Logger.Info("Searching library \"{0}\"", library.Directory);
-            foreach (var zipFile in library.EnumerateFiles($"{mediaWithoutExtension}.zip"))
-                TryMatchArchive(zipFile.FullName);
-
-            foreach (var funscriptFile in library.EnumerateFiles($"{mediaWithoutExtension}.*funscript"))
-                TryMatchName(funscriptFile.Name, FunscriptReader.Default.FromFileInfo(funscriptFile));
-        }
-
-        if (Directory.Exists(MediaResource.Source))
-        {
-            Logger.Info("Searching media location \"{0}\"", MediaResource.Source);
-            var sourceDirectory = new DirectoryInfo(MediaResource.Source);
-            TryMatchArchive(Path.Join(sourceDirectory.FullName, $"{mediaWithoutExtension}.zip"));
-
-            foreach (var funscriptFile in sourceDirectory.EnumerateFiles($"{mediaWithoutExtension}.*funscript"))
-                TryMatchName(funscriptFile.Name, FunscriptReader.Default.FromFileInfo(funscriptFile));
-        }
-
-        return updated;
-    }
-
     private void UpdateLinkedScriptsTo(DeviceAxis axis) => UpdateLinkScriptFor(DeviceAxis.All.Where(a => a != axis && AxisSettings[a].LinkAxis == axis));
     private void UpdateLinkScriptFor(IEnumerable<DeviceAxis> axes = null)
     {
@@ -935,8 +865,14 @@ internal sealed class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDispo
         var axesWithLinkPriority = axes.Where(a => AxisSettings[a].LinkAxisHasPriority);
         var axesWithoutLinkPriority = axes.Where(a => !AxisSettings[a].LinkAxisHasPriority);
 
-        var updated = SearchForScripts(axesWithoutLinkPriority);
-        UpdateLinkScriptFor(axesWithLinkPriority);
+        ScriptRepositoryManager.BeginSearchForScripts(MediaResource, axesWithoutLinkPriority, scripts =>
+            {
+                foreach (var (axis, resource) in scripts)
+                    SetScript(axis, resource);
+
+                UpdateLinkScriptFor(axesWithLinkPriority);
+                _eventAggregator.Publish(new PostScriptSearchMessage(scripts));
+            }, _cancellationSource.Token);
     }
 
     private void SkipGap(double minimumSkip = 0, params DeviceAxis[] axes) => SkipGap(axes?.AsEnumerable(), minimumSkip);
@@ -1404,36 +1340,6 @@ internal sealed class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDispo
         });
 
         Handle(new MediaPathChangedMessage(MediaResource.OriginalPath));
-    }
-    #endregion
-
-    #region ScriptLibrary
-    public void OnLibraryAdd(object sender, RoutedEventArgs e)
-    {
-        var dialog = new OpenFolderDialog();
-        if (dialog.ShowDialog() != true)
-            return;
-
-        var directory = new DirectoryInfo(dialog.FolderName);
-        ScriptLibraries.Add(new ScriptLibrary(directory));
-        ReloadAxes(null);
-    }
-
-    public void OnLibraryDelete(object sender, RoutedEventArgs e)
-    {
-        if (sender is not FrameworkElement element || element.DataContext is not ScriptLibrary library)
-            return;
-
-        ScriptLibraries.Remove(library);
-        ReloadAxes(null);
-    }
-
-    public void OnLibraryOpenFolder(object sender, RoutedEventArgs e)
-    {
-        if (sender is not FrameworkElement element || element.DataContext is not ScriptLibrary library)
-            return;
-
-        Process.Start("explorer.exe", library.Directory.FullName);
     }
     #endregion
 
@@ -2266,15 +2172,6 @@ internal sealed class SyncSettings : PropertyChangedBase
     [JsonProperty] public bool SyncOnMediaPlayPause { get; set; } = true;
     [JsonProperty] public bool SyncOnSeek { get; set; } = true;
     [JsonProperty] public bool SyncOnAutoHomeStartEnd { get; set; } = true;
-}
-
-[JsonObject(MemberSerialization.OptIn)]
-internal sealed class ScriptLibrary(DirectoryInfo directory) : PropertyChangedBase
-{
-    [JsonProperty] public DirectoryInfo Directory { get; } = directory;
-    [JsonProperty] public bool Recursive { get; set; }
-
-    public IEnumerable<FileInfo> EnumerateFiles(string searchPattern) => Directory.SafeEnumerateFiles(searchPattern, IOUtils.CreateEnumerationOptions(Recursive));
 }
 
 internal sealed class MediaLoopSegment : PropertyChangedBase

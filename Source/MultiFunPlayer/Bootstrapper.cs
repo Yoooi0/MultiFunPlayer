@@ -8,6 +8,8 @@ using MultiFunPlayer.MotionProvider;
 using MultiFunPlayer.OutputTarget;
 using MultiFunPlayer.Plugin;
 using MultiFunPlayer.Property;
+using MultiFunPlayer.Script.Repository;
+using MultiFunPlayer.Script.Repository.ViewModels;
 using MultiFunPlayer.Settings;
 using MultiFunPlayer.UI;
 using MultiFunPlayer.UI.Controls.ViewModels;
@@ -67,6 +69,9 @@ internal sealed class Bootstrapper : Bootstrapper<RootViewModel>
         builder.Bind<IPropertyManager>().To<PropertyManager>().InSingletonScope();
         builder.Bind<IMotionProviderFactory>().To<MotionProviderFactory>().InSingletonScope();
         builder.Bind<IMotionProviderManager>().To<MotionProviderManager>().InSingletonScope();
+
+        builder.Bind<IScriptRepository>().ToAllImplementations().InSingletonScope();
+        builder.Bind<IScriptRepositoryManager>().To<ScriptRepositoryManager>().InSingletonScope();
     }
 
     protected override void Configure()

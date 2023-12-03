@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics;
 
-namespace MultiFunPlayer.Common;
+namespace MultiFunPlayer.Script;
 
 [DebuggerDisplay("[{Name}: {StartPosition}s -> {EndPosition}s]")]
 public sealed record Chapter(string Name, double StartPosition, double EndPosition);

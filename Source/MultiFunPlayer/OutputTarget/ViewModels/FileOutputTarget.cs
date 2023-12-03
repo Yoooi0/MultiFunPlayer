@@ -1,5 +1,6 @@
 using Microsoft.Win32;
 using MultiFunPlayer.Common;
+using MultiFunPlayer.Script;
 using MultiFunPlayer.UI;
 using Newtonsoft.Json.Linq;
 using NLog;

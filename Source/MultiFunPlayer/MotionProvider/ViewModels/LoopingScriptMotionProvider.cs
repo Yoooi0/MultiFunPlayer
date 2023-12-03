@@ -1,6 +1,7 @@
 ﻿using Microsoft.Win32;
 using MultiFunPlayer.Common;
 using MultiFunPlayer.Input;
+using MultiFunPlayer.Script;
 using Newtonsoft.Json;
 using Stylet;
 using System.ComponentModel;

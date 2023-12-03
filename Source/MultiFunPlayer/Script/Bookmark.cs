@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics;
 
-namespace MultiFunPlayer.Common;
+namespace MultiFunPlayer.Script;
 
 [DebuggerDisplay("[{Name}: {Position}s]")]
 public sealed record Bookmark(string Name, double Position);

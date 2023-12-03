@@ -1,6 +1,6 @@
 ﻿using System.Collections;
 
-namespace MultiFunPlayer.Common;
+namespace MultiFunPlayer.Script;
 
 public sealed class BookmarkCollection : IReadOnlyList<Bookmark>
 {

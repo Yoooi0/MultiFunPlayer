@@ -1,8 +1,9 @@
 ﻿using System.Globalization;
 using System.IO;
 using System.Text;
+using MultiFunPlayer.Common;
 
-namespace MultiFunPlayer.Common;
+namespace MultiFunPlayer.Script;
 
 internal interface IScriptWriter : IDisposable
 {

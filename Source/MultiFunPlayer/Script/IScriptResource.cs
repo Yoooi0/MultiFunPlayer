@@ -1,4 +1,6 @@
-namespace MultiFunPlayer.Common;
+using MultiFunPlayer.Common;
+
+namespace MultiFunPlayer.Script;
 
 public interface IScriptResource
 {

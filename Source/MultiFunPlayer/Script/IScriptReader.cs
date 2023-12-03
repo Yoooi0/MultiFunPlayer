@@ -1,9 +1,10 @@
+using MultiFunPlayer.Common;
 using Newtonsoft.Json;
 using System.Globalization;
 using System.IO;
 using System.Text;
 
-namespace MultiFunPlayer.Common;
+namespace MultiFunPlayer.Script;
 
 public enum ScriptType
 {
@@ -93,7 +94,7 @@ public sealed class FunscriptReader : AbstractTextScriptReader
         if (hasActions && DeviceAxis.TryParse("L0", out var strokeAxis))
             resources[strokeAxis] = resource;
 
-        foreach(var scriptAxis in script.Axes)
+        foreach (var scriptAxis in script.Axes)
         {
             if (!DeviceAxis.TryParse(scriptAxis.Id, out var axis))
                 continue;

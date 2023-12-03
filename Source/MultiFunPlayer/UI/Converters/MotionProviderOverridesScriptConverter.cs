@@ -1,4 +1,4 @@
-﻿using MultiFunPlayer.Common;
+﻿using MultiFunPlayer.Script;
 using System.Globalization;
 using System.Windows.Data;
 

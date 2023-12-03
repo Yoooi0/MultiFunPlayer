@@ -130,6 +130,7 @@ public abstract class PluginBase : PropertyChangedBase
     protected virtual void HandleMessage(MediaChangeSpeedMessage message) { }
     protected virtual void HandleMessage(ScriptChangedMessage message) { }
     protected virtual void HandleMessage(SyncRequestMessage message) { }
+    protected virtual void HandleMessage(PostScriptSearchMessage message) { }
 
     protected virtual Task HandleMessageAsync(MediaSpeedChangedMessage message, CancellationToken cancellationToken) => Task.CompletedTask;
     protected virtual Task HandleMessageAsync(MediaPositionChangedMessage message, CancellationToken cancellationToken) => Task.CompletedTask;
@@ -142,6 +143,7 @@ public abstract class PluginBase : PropertyChangedBase
     protected virtual Task HandleMessageAsync(MediaChangeSpeedMessage message, CancellationToken cancellationToken) => Task.CompletedTask;
     protected virtual Task HandleMessageAsync(ScriptChangedMessage message, CancellationToken cancellationToken) => Task.CompletedTask;
     protected virtual Task HandleMessageAsync(SyncRequestMessage message, CancellationToken cancellationToken) => Task.CompletedTask;
+    protected virtual Task HandleMessageAsync(PostScriptSearchMessage message, CancellationToken cancellationToken) => Task.CompletedTask;
 
     private void HandleMessageInternal(object e)
     {
@@ -158,6 +160,7 @@ public abstract class PluginBase : PropertyChangedBase
             else if (e is MediaChangeSpeedMessage mediaChangeSpeedMessage) HandleMessage(mediaChangeSpeedMessage);
             else if (e is ScriptChangedMessage scriptChangedMessage) HandleMessage(scriptChangedMessage);
             else if (e is SyncRequestMessage syncRequestMessage) HandleMessage(syncRequestMessage);
+            else if (e is PostScriptSearchMessage postScriptSearchMessage) HandleMessage(postScriptSearchMessage);
         }
         catch (Exception exception)
         {
@@ -182,6 +185,7 @@ public abstract class PluginBase : PropertyChangedBase
                     else if (e is MediaChangeSpeedMessage mediaChangeSpeedMessage) await HandleMessageAsync(mediaChangeSpeedMessage, token);
                     else if (e is ScriptChangedMessage scriptChangedMessage) await HandleMessageAsync(scriptChangedMessage, token);
                     else if (e is SyncRequestMessage syncRequestMessage) await HandleMessageAsync(syncRequestMessage, token);
+                    else if (e is PostScriptSearchMessage postScriptSearchMessage) await HandleMessageAsync(postScriptSearchMessage, token);
                 }
                 catch (OperationCanceledException) { }
                 catch (Exception exception)

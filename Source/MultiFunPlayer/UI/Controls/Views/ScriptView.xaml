@@ -197,14 +197,17 @@
                                     Padding="8">
                                 <material:PackIcon Kind="FolderOpen" Height="19" Width="19"/>
                             </Button>
+
                             <Button Style="{StaticResource MaterialDesignToolBarButton}"
-                                    ToolTip="Script libraries" 
+                                    ToolTip="Script repositories"
                                     Padding="8"
                                     Command="{x:Static material:DialogHost.OpenDialogCommand}">
+                                <material:PackIcon Kind="DatabaseSearch" Height="19" Width="19"/>
+
                                 <Button.CommandParameter>
-                                    <Grid Margin="20" Width="500" MaxHeight="400"
+                                    <Grid Margin="20" MinWidth="100"
                                           s:View.ActionTarget="{Binding}">
-                                        <TextBlock Text="Script libraries" 
+                                        <TextBlock Text="Script repositories" 
                                                    HorizontalAlignment="Left"
                                                    VerticalAlignment="Top"
                                                    Margin="0 -12 -15 0"
@@ -227,75 +230,12 @@
                                                                Height="20" 
                                                                Width="20"/>
                                         </Button>
-                                        <DockPanel LastChildFill="True"
-                                                   Margin="0 20 0 0">
-                                            <Button DockPanel.Dock="Bottom"
-                                                    Style="{StaticResource MaterialDesignFloatingActionMiniButton}"
-                                                    Width="32"
-                                                    Height="32"
-                                                    Margin="0 0 0 10"
-                                                    Padding="0"
-                                                    Click="{s:Action OnLibraryAdd}">
-                                                <material:PackIcon Kind="Plus"
-                                                                   Width="24"
-                                                                   Height="24"/>
-                                            </Button>
 
-                                            <material:Card material:ShadowAssist.ShadowDepth="Depth1" Margin="0 0 0 10" ClipContent="True">
-                                                <ItemsControl DockPanel.Dock="Bottom"
-                                                            ItemsSource="{Binding ScriptLibraries}">
-                                                    <ItemsControl.Template>
-                                                        <ControlTemplate>
-                                                            <ScrollViewer VerticalScrollBarVisibility="Visible" 
-                                                                          HorizontalScrollBarVisibility="Disabled">
-                                                                <ItemsPresenter/>
-                                                            </ScrollViewer>
-                                                        </ControlTemplate>
-                                                    </ItemsControl.Template>
-                                                    <ItemsControl.ItemTemplate>
-                                                        <DataTemplate>
-                                                            <Border Padding="5" Background="{DynamicResource MaterialDesignCardBackground}">
-                                                                <DockPanel LastChildFill="True">
-                                                                    <Button DockPanel.Dock="Right"   
-                                                                            Style="{StaticResource MaterialDesignFlatButton}"
-                                                                            ToolTip="Remove"
-                                                                            material:RippleAssist.Feedback="{DynamicResource MaterialDesignErrorBrush}"
-                                                                            Foreground="{DynamicResource MaterialDesignErrorBrush}"
-                                                                            Height="24" 
-                                                                            Width="24" 
-                                                                            Padding="0"
-                                                                            Click="{s:Action OnLibraryDelete}" >
-                                                                        <material:PackIcon Kind="Delete"/>
-                                                                    </Button>
-                                                                    <Button DockPanel.Dock="Right"   
-                                                                            Style="{StaticResource MaterialDesignFlatButton}"
-                                                                            ToolTip="Open location"
-                                                                            Height="24" 
-                                                                            Width="24" 
-                                                                            Padding="0"
-                                                                            Click="{s:Action OnLibraryOpenFolder}">
-                                                                        <material:PackIcon Kind="FolderOpen"/>
-                                                                    </Button>
-                                                                    <CheckBox IsChecked="{Binding Recursive}"
-                                                                              DockPanel.Dock="Right"
-                                                                              Width="24"
-                                                                              ToolTip="Recurse subdirectories"/>
-                                                                    <TextBlock Text="{Binding Directory.FullName}"
-                                                                               VerticalAlignment="Center"
-                                                                               FontSize="12"
-                                                                               DockPanel.Dock="Left"/>
-                                                                </DockPanel>
-                                                            </Border>
-                                                        </DataTemplate>
-                                                    </ItemsControl.ItemTemplate>
-                                                </ItemsControl>
-                                            </material:Card>
-                                        </DockPanel>
+                                        <ContentControl Margin="0 20 0 0" Width="500" s:View.Model="{Binding ScriptRepositoryManager}"/>
                                     </Grid>
                                 </Button.CommandParameter>
-                                <material:PackIcon Kind="FolderSearch" Height="19" Width="19"/>
                             </Button>
-
+                            
                             <Button Style="{StaticResource MaterialDesignToolBarButton}"
                                     ToolTip="Media path modifiers"
                                     Padding="8"
