@@ -102,9 +102,9 @@ internal sealed class MotionProviderManager : IMotionProviderManager, IHandle<Se
 
     public void RegisterActions(IShortcutManager s)
     {
-        CustomCurveMotionProviderViewModel.RegisterActions(s, GetMotionProvider<CustomCurveMotionProviderViewModel>);
-        LoopingScriptMotionProviderViewModel.RegisterActions(s, GetMotionProvider<LoopingScriptMotionProviderViewModel>);
-        PatternMotionProviderViewModel.RegisterActions(s, GetMotionProvider<PatternMotionProviderViewModel>);
-        RandomMotionProviderViewModel.RegisterActions(s, GetMotionProvider<RandomMotionProviderViewModel>);
+        CustomCurveMotionProvider.RegisterActions(s, GetMotionProvider<CustomCurveMotionProvider>);
+        LoopingScriptMotionProvider.RegisterActions(s, GetMotionProvider<LoopingScriptMotionProvider>);
+        PatternMotionProvider.RegisterActions(s, GetMotionProvider<PatternMotionProvider>);
+        RandomMotionProvider.RegisterActions(s, GetMotionProvider<RandomMotionProvider>);
     }
 }

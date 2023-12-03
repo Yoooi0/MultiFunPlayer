@@ -1,0 +1,261 @@
+﻿<UserControl x:Class="MultiFunPlayer.OutputTarget.Views.TheHandyOutputTarget"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:material="http://materialdesigninxaml.net/winfx/xaml/themes"
+             xmlns:metro="http://metro.mahapps.com/winfx/xaml/controls"
+             xmlns:s="https://github.com/canton7/Stylet"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:converters="clr-namespace:MultiFunPlayer.UI.Converters"
+             xmlns:common="clr-namespace:MultiFunPlayer.Common"
+             mc:Ignorable="d" 
+             d:DesignHeight="450" d:DesignWidth="800"
+             x:ClassModifier="internal">
+    <UserControl.Resources>
+        <converters:UriToStringConverter x:Key="UriToStringConverter"/>
+    </UserControl.Resources>
+    <Expander material:ExpanderAssist.HorizontalHeaderPadding="0 0 6 0"
+              Style="{StaticResource MaterialDesignToolBarExpander}"
+              Background="{DynamicResource MaterialDesignToolBarBackground}"
+              IsExpanded="{Binding DataContext.ContentVisible, RelativeSource={RelativeSource FindAncestor, AncestorLevel=2, AncestorType={x:Type UserControl}}}">
+        <Expander.Header>
+            <StackPanel Orientation="Horizontal"
+                        Height="36">
+                <Button DockPanel.Dock="Left"
+                        Command="{s:Action ToggleConnectAsync}"
+                        CommandParameter="{Binding}"
+                        s:View.ActionTarget="{Binding DataContext.Parent, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}"
+                        IsEnabled="{Binding CanToggleConnect}"
+                        material:ButtonProgressAssist.IsIndicatorVisible="{Binding IsConnectBusy}"
+                        material:ButtonProgressAssist.Value="-1"
+                        material:ButtonProgressAssist.IsIndeterminate="True">
+                    <Button.Style>
+                        <Style TargetType="{x:Type ButtonBase}" BasedOn="{StaticResource MaterialDesignProgressToolBarButton}">
+                            <Setter Property="ToolTip" Value="Connect" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsConnected}" Value="True">
+                                    <Setter Property="ToolTip" Value="Disconnect" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                    <material:PackIcon Width="19" Height="19">
+                        <material:PackIcon.Style>
+                            <Style TargetType="material:PackIcon" BasedOn="{StaticResource {x:Type material:PackIcon}}">
+                                <Setter Property="Kind" Value="Play" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsConnected}" Value="True">
+                                        <Setter Property="Kind" Value="Stop" />
+                                        <DataTrigger.EnterActions>
+                                            <BeginStoryboard>
+                                                <Storyboard>
+                                                    <DoubleAnimation Storyboard.TargetProperty="Opacity" From="0" To="1" Duration="0:0:0.8" />
+                                                </Storyboard>
+                                            </BeginStoryboard>
+                                        </DataTrigger.EnterActions>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </material:PackIcon.Style>
+                    </material:PackIcon>
+                </Button>
+
+                <ToggleButton DockPanel.Dock="Left"
+                              IsChecked="{Binding AutoConnectEnabled}"           
+                              Style="{StaticResource MaterialDesignToolBarToggleButton}"
+                              ToolTip="Auto-connect">
+                    <material:PackIcon Kind="MotionPlayOutline" Opacity=".56" Width="20" Height="20"/>
+                    <material:ToggleButtonAssist.OnContent>
+                        <material:PackIcon Kind="MotionPlayOutline" Width="20" Height="20"/>
+                    </material:ToggleButtonAssist.OnContent>
+                </ToggleButton>
+            </StackPanel>
+        </Expander.Header>
+
+        <StackPanel Margin="20">
+            <TextBlock Text="The Handy support is in experimantal state, the device might not behave correctly"
+                       Margin="0 -15 0 10"
+                       FontSize="12"
+                       Foreground="{DynamicResource MaterialDesignErrorBrush}"
+                       Typography.Capitals="AllSmallCaps"
+                       FontWeight="Bold"
+                       HorizontalAlignment="Center"/>
+
+            <DockPanel LastChildFill="True" Margin="0 0 0 10">
+                <DockPanel DockPanel.Dock="Left">
+                    <TextBlock VerticalAlignment="Center" Text="Source axis:" Margin="0 0 10 0"/>
+                    <ComboBox Width="50"
+                              material:TextFieldAssist.HasClearButton="True"
+                              HorizontalAlignment="Center"
+                              ItemsSource="{Binding Source={x:Static common:DeviceAxis.All}}" 
+                              SelectedItem="{Binding SourceAxis}"/>
+                </DockPanel>
+
+                <StackPanel DockPanel.Dock="Right" 
+                            Orientation="Horizontal" 
+                            HorizontalAlignment="Right"
+                            VerticalAlignment="Center">
+                    <TextBlock VerticalAlignment="Center" Text="Update rate:" Margin="0 0 10 0"/>
+                    <Slider Value="{Binding UpdateInterval, Mode=TwoWay}"
+                            Style="{StaticResource MaterialDesignReversedSlider}"
+                            HorizontalAlignment="Stretch"
+                            VerticalAlignment="Top"
+                            Margin="0 0 10 0"
+                            Width="100"
+                            Minimum="{Binding MinimumUpdateInterval}" 
+                            Maximum="{Binding MaximumUpdateInterval}" 
+                            Ticks="{Binding UpdateIntervalTicks}" 
+                            IsDirectionReversed="True"
+                            IsSnapToTickEnabled="True" 
+                            Orientation="Horizontal"
+                            material:SliderAssist.OnlyShowFocusVisualWhileDragging="True"/>
+                    <TextBlock VerticalAlignment="Center" 
+                               HorizontalAlignment="Right" 
+                               Margin="0 0 5 0"
+                               TextAlignment="Right"
+                               Width="40"
+                               Text="{Binding UpdateInterval, Converter={StaticResource MsToHzConverter}, StringFormat={}{0} hz}"/>
+
+                    <material:PopupBox PlacementMode="TopAndAlignRightEdges"
+                                       PopupMode="Click"
+                                       StaysOpen="True"
+                                       ToolTip="Update settings">
+                        <StackPanel Margin="10">
+                            <DockPanel Width="100" HorizontalAlignment="Left">
+                                <TextBlock DockPanel.Dock="Left"
+                                           Text="Average:"/>
+                                <TextBlock DockPanel.Dock="Right" 
+                                           Text="{Binding AverageUpdateRate, StringFormat={}{0} hz}"
+                                           TextAlignment="Right"/>
+                            </DockPanel>
+
+                            <DockPanel Width="100" HorizontalAlignment="Left">
+                                <TextBlock DockPanel.Dock="Left"
+                                           Text="Jitter:"/>
+                                <TextBlock DockPanel.Dock="Right" 
+                                           Text="{Binding UpdateRateJitter, StringFormat={}{0} hz}"
+                                           TextAlignment="Right"/>
+                            </DockPanel>
+                        </StackPanel>
+
+                        <material:PopupBox.ToggleContent>
+                            <material:ColorZone VerticalAlignment="Center"
+                                                CornerRadius="10"
+                                                Mode="PrimaryMid"
+                                                Width="20"
+                                                Height="20"
+                                                material:ShadowAssist.ShadowDepth="Depth2">
+                                <material:PackIcon Kind="Cog"
+                                                   Width="16"
+                                                   Height="16"
+                                                   HorizontalAlignment="Center"
+                                                   VerticalAlignment="Center"/>
+                            </material:ColorZone>
+                        </material:PopupBox.ToggleContent>
+                    </material:PopupBox>
+                </StackPanel>
+            </DockPanel>
+            
+            <DockPanel LastChildFill="True" Margin="0 0 0 20">
+                <DockPanel DockPanel.Dock="Left"
+                           LastChildFill="True">
+                    <DockPanel.Resources>
+                        <Style TargetType="{x:Type DockPanel}">
+                            <Setter Property="IsEnabled" Value="False" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding Status}" Value="Disconnected">
+                                    <Setter Property="IsEnabled" Value="True" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </DockPanel.Resources>
+
+                    <TextBox Text="{Binding ConnectionKey}"
+                             material:HintAssist.Hint="connection key"
+                             Style="{StaticResource MaterialDesignFloatingHintTextBox}"
+                             DockPanel.Dock="Left"
+                             Margin="0 -12 0 0"
+                             VerticalAlignment="Center"/>
+                </DockPanel>
+            </DockPanel>
+
+            <TextBlock Text="Output Range"
+                       Typography.Capitals="AllSmallCaps"
+                       FontWeight="Bold"
+                       VerticalAlignment="Center"
+                       HorizontalAlignment="Left"/>
+            <ItemsControl ItemsSource="{Binding AxisSettings}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <UniformGrid Columns="3" IsItemsHost="True" Margin="0 0 -13 0"/>
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <DockPanel LastChildFill="True"
+                                   Margin="0 0 20 1">
+                            <ToggleButton DockPanel.Dock="Left" 
+                                          VerticalAlignment="Center" 
+                                          IsChecked="{Binding Value.Enabled}"
+                                          Height="14"
+                                          Width="20"
+                                          Padding="0">
+                                <ToggleButton.Resources>
+                                    <Style TargetType="{x:Type ToggleButton}" BasedOn="{StaticResource MaterialDesignPaperButton}">
+                                        <Setter Property="material:ElevationAssist.Elevation" Value="Dp0"/>
+                                        <Style.Triggers>
+                                            <Trigger Property="IsChecked" Value="True">
+                                                <Setter Property="Background" Value="{DynamicResource PrimaryHueMidBrush}"/>
+                                                <Setter Property="Foreground" Value="{DynamicResource PrimaryHueMidForegroundBrush}"/>
+                                                <Setter Property="material:RippleAssist.Feedback" Value="{DynamicResource PrimaryHueMidForegroundBrush}" />
+                                            </Trigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </ToggleButton.Resources>
+
+                                <TextBlock Text="{Binding Key}"
+                                           FontSize="10"
+                                           FontWeight="Bold"/>
+                            </ToggleButton>
+
+                            <Canvas DockPanel.Dock="Right" 
+                                    HorizontalAlignment="Stretch">
+                                <metro:RangeSlider Style="{StaticResource MaterialDesignCompactRangeSlider}" 
+                                                   Width="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType={x:Type Canvas}}}"
+                                                   Minimum="0" 
+                                                   Maximum="100" 
+                                                   MinRangeWidth="10" 
+                                                   MinRange="1"
+                                                   AutoToolTipPlacement="TopLeft" 
+                                                   UseLayoutRounding="False"
+                                                   LowerValue="{Binding Value.Minimum, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
+                                                   UpperValue="{Binding Value.Maximum, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                   IsEnabled="{Binding Value.Enabled}">
+                                    <metro:RangeSlider.AutoToolTipLowerValueTemplate>
+                                        <DataTemplate>
+                                            <TextBlock HorizontalAlignment="Right" Text="{Binding StringFormat='{}{0:D}%'}" />
+                                        </DataTemplate>
+                                    </metro:RangeSlider.AutoToolTipLowerValueTemplate>
+                                    <metro:RangeSlider.AutoToolTipUpperValueTemplate>
+                                        <DataTemplate>
+                                            <TextBlock HorizontalAlignment="Right" Text="{Binding StringFormat='{}{0:D}%'}" />
+                                        </DataTemplate>
+                                    </metro:RangeSlider.AutoToolTipUpperValueTemplate>
+                                    <metro:RangeSlider.AutoToolTipRangeValuesTemplate>
+                                        <DataTemplate DataType="mah:RangeSliderAutoTooltipValues">
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBlock Text="{Binding LowerValue, StringFormat='{}{0:D}%'}" />
+                                                <TextBlock Text=" - " />
+                                                <TextBlock Text="{Binding UpperValue, StringFormat='{}{0:D}%'}" />
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </metro:RangeSlider.AutoToolTipRangeValuesTemplate>
+                                </metro:RangeSlider>
+                            </Canvas>
+                        </DockPanel>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </StackPanel>
+    </Expander>
+</UserControl>

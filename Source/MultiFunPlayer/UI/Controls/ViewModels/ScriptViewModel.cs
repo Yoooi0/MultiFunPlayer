@@ -1397,7 +1397,7 @@ internal sealed class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDispo
         if (dialog.ShowDialog() != true)
             return;
 
-        MediaPathModifiers.Add(new FindReplaceMediaPathModifierViewModel()
+        MediaPathModifiers.Add(new FindReplaceMediaPathModifier()
         {
             Find = MediaResource.OriginalPath,
             Replace = dialog.FileName
@@ -2243,7 +2243,7 @@ internal sealed class AxisSettings : PropertyChangedBase
             if (DeviceAxis.TryParse("L0", out var strokeAxis))
                 UpdateMotionProviderWithAxis = strokeAxis;
 
-            var providerName = typeof(RandomMotionProviderViewModel).GetCustomAttribute<DisplayNameAttribute>()?.DisplayName;
+            var providerName = typeof(RandomMotionProvider).GetCustomAttribute<DisplayNameAttribute>()?.DisplayName;
             if (providerName != null)
                 SelectedMotionProvider = providerName;
 

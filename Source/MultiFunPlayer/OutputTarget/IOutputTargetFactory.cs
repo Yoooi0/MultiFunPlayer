@@ -27,7 +27,7 @@ internal sealed class OutputTargetFactory(IContainer container) : IOutputTargetF
 
     private int MaxInstanceIndex(Type type)
     {
-        if (type == typeof(ButtplugOutputTargetViewModel))
+        if (type == typeof(ButtplugOutputTarget))
             return 0;
 
         return 9;

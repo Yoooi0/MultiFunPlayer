@@ -20,10 +20,10 @@ internal static class DialogHelper
     }
 
     public static Task ShowErrorAsync(string message, string dialogName)
-        => CanShowError ? ShowOnUIThreadAsync(new ErrorMessageDialogViewModel(message), dialogName) : Task.CompletedTask;
+        => CanShowError ? ShowOnUIThreadAsync(new ErrorMessageDialog(message), dialogName) : Task.CompletedTask;
 
     public static Task ShowErrorAsync(Exception exception, string message, string dialogName)
-        => CanShowError ? ShowOnUIThreadAsync(new ErrorMessageDialogViewModel(exception, message), dialogName) : Task.CompletedTask;
+        => CanShowError ? ShowOnUIThreadAsync(new ErrorMessageDialog(exception, message), dialogName) : Task.CompletedTask;
 
     public static Task ShowOnUIThreadAsync(object model, string dialogName)
         => Execute.OnUIThreadAsync(async () => await ShowAsync(model, dialogName));

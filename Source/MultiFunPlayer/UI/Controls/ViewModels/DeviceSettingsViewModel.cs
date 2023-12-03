@@ -38,7 +38,7 @@ internal sealed class DeviceSettingsViewModel : Screen, IHandle<SettingsMessage>
         if (!CanRenameSelectedDevice)
             return;
 
-        var result = await DialogHelper.ShowAsync(new TextInputMessageDialogViewModel("Device name:", SelectedDevice.Name), "SettingsDialog") as string;
+        var result = await DialogHelper.ShowAsync(new TextInputMessageDialog("Device name:", SelectedDevice.Name), "SettingsDialog") as string;
         if (string.IsNullOrWhiteSpace(result))
             return;
 
@@ -50,7 +50,7 @@ internal sealed class DeviceSettingsViewModel : Screen, IHandle<SettingsMessage>
 
     public async void OnCloneDevice()
     {
-        var result = await DialogHelper.ShowAsync(new TextInputMessageDialogViewModel("Device name:", $"{SelectedDevice.Name} (custom)"), "SettingsDialog").ConfigureAwait(true) as string;
+        var result = await DialogHelper.ShowAsync(new TextInputMessageDialog("Device name:", $"{SelectedDevice.Name} (custom)"), "SettingsDialog").ConfigureAwait(true) as string;
         if (string.IsNullOrWhiteSpace(result))
             return;
 

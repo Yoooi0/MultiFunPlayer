@@ -38,7 +38,7 @@ internal sealed class RootViewModel : Conductor<IScreen>.Collection.AllActive, I
         base.OnActivate();
     }
 
-    public void OnInformationClick() => _ = DialogHelper.ShowOnUIThreadAsync(new InformationMessageDialogViewModel(showCheckbox: false), "RootDialog");
+    public void OnInformationClick() => _ = DialogHelper.ShowOnUIThreadAsync(new InformationMessageDialog(showCheckbox: false), "RootDialog");
     public void OnSettingsClick() => _ = DialogHelper.ShowOnUIThreadAsync(Settings, "RootDialog");
     public void OnPluginClick() => _ = DialogHelper.ShowOnUIThreadAsync(Plugin, "RootDialog");
 
@@ -72,7 +72,7 @@ internal sealed class RootViewModel : Conductor<IScreen>.Collection.AllActive, I
             {
                 Execute.PostToUIThread(async () =>
                 {
-                    var result = await DialogHelper.ShowAsync(new InformationMessageDialogViewModel(showCheckbox: true), "RootDialog");
+                    var result = await DialogHelper.ShowAsync(new InformationMessageDialog(showCheckbox: true), "RootDialog");
                     if (result is not bool disablePopup)
                         return;
 

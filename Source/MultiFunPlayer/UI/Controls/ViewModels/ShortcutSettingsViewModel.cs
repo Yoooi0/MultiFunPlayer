@@ -193,7 +193,7 @@ internal sealed class ShortcutSettingsViewModel : Screen, IHandle<SettingsMessag
         if (sender is not FrameworkElement element || element.DataContext is not IShortcutActionConfiguration configuration)
             return;
 
-        _ = DialogHelper.ShowOnUIThreadAsync(new ShortcutActionConfigurationDialogViewModel(configuration), "SettingsDialog");
+        _ = DialogHelper.ShowOnUIThreadAsync(new ShortcutActionConfigurationDialog(configuration), "SettingsDialog");
     }
 
     public void MoveAssignedActionDown(object sender, RoutedEventArgs e)
