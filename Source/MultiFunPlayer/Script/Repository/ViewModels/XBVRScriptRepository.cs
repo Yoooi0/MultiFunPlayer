@@ -23,16 +23,10 @@ internal sealed class XBVRScriptRepository : AbstractScriptRepository
     {
         if (Endpoint == null)
             return [];
-        if (!mediaResource.IsUrl || !mediaResource.Source.Contains(Endpoint.ToUriString()))
+
+        if (!TryGetSceneId(out var sceneId))
             return [];
-
-        var name = Path.GetFileNameWithoutExtension(mediaResource.Name);
-        var match = Regex.Match(name, @"^(?<id>\d+) - .+$");
-        if (!match.Success)
-            return [];
-
-        var sceneId = match.Groups["id"].Value;
-
+        
         using var client = NetUtils.CreateHttpClient();
         var result = new Dictionary<DeviceAxis, IScriptResource>();
         var uri = new Uri($"http://{Endpoint.ToUriString()}/api/scene/{sceneId}");
@@ -41,6 +35,44 @@ internal sealed class XBVRScriptRepository : AbstractScriptRepository
         var metadata = JsonConvert.DeserializeObject<SceneMetadata>(response);
         _ = TryMatchFileSystem() || await TryMatchDms();
         return result;
+
+        bool TryGetSceneId(out object sceneId)
+        {
+            sceneId = null;
+            if (mediaResource.IsPath)
+            {
+                var match = Regex.Match(mediaResource.Name, @"^(?<id>\d+) - .+");
+                if (!match.Success)
+                    return false;
+
+                sceneId = match.Groups["id"].Value;
+                return true;
+            }
+            else if (mediaResource.IsUrl)
+            {
+                var ipOrHost = Endpoint switch
+                {
+                    IPEndPoint ipEndpoint => ipEndpoint.Address.ToString(),
+                    DnsEndPoint dnsEndpoint => dnsEndpoint.Host,
+                    _ => null
+                };
+
+                if (string.IsNullOrEmpty(ipOrHost))
+                    return false;
+                if (!mediaResource.Source.Contains(ipOrHost))
+                    return false;
+
+                var mediaResourceUri = new Uri(mediaResource.IsModified ? mediaResource.ModifiedPath : mediaResource.OriginalPath);
+                var match = Regex.Match(mediaResourceUri.Query, @"scene=(?<id>.+?)(?>$|&)");
+                if (!match.Success)
+                    return false;
+
+                sceneId = match.Groups["id"].Value;
+                return true;
+            }
+
+            return false;
+        }
 
         bool TryMatchFileSystem()
         {
