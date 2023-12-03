@@ -25,7 +25,7 @@ internal sealed class TypedValueConverter : JsonConverter<TypedValue>
         o.AddTypeProperty(value.Type);
 
         if (valueToken.Type == JTokenType.Object)
-            o.Merge(valueToken, new JsonMergeSettings() { MergeArrayHandling = MergeArrayHandling.Union });
+            o.Merge(valueToken);
         else
             o["Value"] = valueToken;
 
