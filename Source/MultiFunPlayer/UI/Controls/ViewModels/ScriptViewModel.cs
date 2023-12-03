@@ -1140,37 +1140,6 @@ internal sealed class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDispo
         }
     }
 
-    private bool MoveScript(DeviceAxis axis, DirectoryInfo directory)
-    {
-        if (directory?.Exists == false || AxisModels[axis].Script == null)
-            return false;
-
-        try
-        {
-            var source = AxisModels[axis].Script.Source;
-            if (!File.Exists(source))
-                return false;
-
-            File.Move(source, Path.Join(directory.FullName, Path.GetFileName(source)));
-        }
-        catch { return false; }
-
-        return true;
-    }
-
-    public void OnAxisMoveToMedia(DeviceAxis axis)
-    {
-        if (MediaResource != null && MoveScript(axis, new DirectoryInfo(MediaResource.Source)))
-            ReloadAxes(axis);
-    }
-
-    public RelayCommand<DeviceAxis, ScriptLibrary> OnAxisMoveToLibraryCommand => new(OnAxisMoveToLibrary);
-    public void OnAxisMoveToLibrary(DeviceAxis axis, ScriptLibrary library)
-    {
-        if (MoveScript(axis, library?.Directory.AsRefreshed()))
-            ReloadAxes(axis);
-    }
-
     [SuppressPropertyChangedWarnings]
     public void OnLinkAxisPriorityChanged(object sender, RoutedEventArgs e)
     {

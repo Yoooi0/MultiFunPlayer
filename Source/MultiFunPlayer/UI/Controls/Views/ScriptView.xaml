@@ -214,7 +214,7 @@
                                                    FontSize="14"
                                                    FontWeight="Bold"
                                                    Typography.Capitals="AllSmallCaps"/>
-
+                                        
                                         <Button DockPanel.Dock="Top"
                                                 Style="{StaticResource MaterialDesignFlatButton}"
                                                 material:RippleAssist.Feedback="{DynamicResource MaterialDesignBody}"
@@ -899,53 +899,6 @@
                                                                 <TextBlock Text="Reload" DockPanel.Dock="Right"/>
                                                             </DockPanel>
                                                         </MenuItem.Header>
-                                                    </MenuItem>
-
-                                                    <MenuItem IsEnabled="{Binding Value.Script, Converter={StaticResource InvertedNullableToBooleanConverter}}"
-                                                              Background="{DynamicResource MaterialDesignToolBarBackground}"
-                                                              Padding="8">
-                                                        <MenuItem.Header>
-                                                            <DockPanel LastChildFill="True">
-                                                                <Border Width="36" Height="36" DockPanel.Dock="Left">
-                                                                    <material:PackIcon Kind="FileMove" Width="16" Height="16"/>
-                                                                </Border>
-
-                                                                <TextBlock Text="Move" DockPanel.Dock="Right"/>
-                                                            </DockPanel>
-                                                        </MenuItem.Header>
-
-                                                        <MenuItem Header="_Media location" 
-                                                                  Command="{s:Action OnAxisMoveToMedia}"
-                                                                  CommandParameter="{Binding Key}"
-                                                                  IsEnabled="{Binding DataContext.MediaResource, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}, Converter={StaticResource InvertedNullableToBooleanConverter}}"/>
-
-                                                        <MenuItem Header="_Library location" 
-                                                                  ItemsSource="{Binding DataContext.ScriptLibraries, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}">
-                                                            <MenuItem.Resources>
-                                                                <Style TargetType="{x:Type MenuItem}" BasedOn="{StaticResource MaterialDesignMenuItem}">
-                                                                    <Style.Triggers>
-                                                                        <DataTrigger Binding="{Binding DataContext.ScriptLibraries.Count, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}"
-                                                                                     Value="0">
-                                                                            <Setter Property="IsEnabled" Value="False"/>
-                                                                        </DataTrigger>
-                                                                    </Style.Triggers>
-                                                                </Style>
-                                                            </MenuItem.Resources>
-                                                            <MenuItem.ItemContainerStyle>
-                                                                <Style TargetType="{x:Type MenuItem}" BasedOn="{StaticResource MaterialDesignMenuItem}">
-                                                                    <Setter Property="Header" Value="{Binding Directory}"/>
-                                                                    <Setter Property="Command" Value="{Binding DataContext.OnAxisMoveToLibraryCommand, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}"/>
-                                                                    <Setter Property="CommandParameter">
-                                                                        <Setter.Value>
-                                                                            <MultiBinding Converter="{StaticResource MultiObjectToArrayConverter}">
-                                                                                <Binding Path="DataContext.Key" RelativeSource="{RelativeSource FindAncestor, AncestorType={x:Type Menu}}"/>
-                                                                                <Binding/>
-                                                                            </MultiBinding>
-                                                                        </Setter.Value>
-                                                                    </Setter>
-                                                                </Style>
-                                                            </MenuItem.ItemContainerStyle>
-                                                        </MenuItem>
                                                     </MenuItem>
                                                 </MenuItem>
                                             </Menu>
