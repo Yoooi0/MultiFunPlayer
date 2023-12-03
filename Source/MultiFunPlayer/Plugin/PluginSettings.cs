@@ -25,7 +25,7 @@ public abstract class PluginSettingsBase : PropertyChangedBase
     public virtual void HandleSettings(JObject settings, SettingsAction action)
     {
         if (action == SettingsAction.Saving)
-            settings.Merge(JObject.FromObject(this));
+            settings.Merge(JObject.FromObject(this), new JsonMergeSettings() { MergeArrayHandling = MergeArrayHandling.Replace });
         else if (action == SettingsAction.Loading)
             settings.Populate(this);
     }
