@@ -24,7 +24,7 @@ internal sealed class ScriptRepositoryManager : Screen, IScriptRepositoryManager
         _eventAggregator.Subscribe(this);
 
         _localRepository = repositories.First(r => r.GetType().IsAssignableTo(typeof(ILocalScriptRepository))) as ILocalScriptRepository;
-        Repositories = new(repositories.Select(r => new ScriptRepositoryModel(r) { Enabled = r.GetType() == typeof(LocalScriptRepository) }));
+        Repositories = new(repositories.Select(r => new ScriptRepositoryModel(r)));
     }
 
     public void BeginSearchForScripts(MediaResourceInfo mediaResource, IEnumerable<DeviceAxis> axes, Action<Dictionary<DeviceAxis, IScriptResource>> callback, CancellationToken token)
@@ -100,8 +100,9 @@ internal sealed class ScriptRepositoryManager : Screen, IScriptRepositoryManager
     }
 }
 
-internal record ScriptRepositoryModel(IScriptRepository Repository)
+internal class ScriptRepositoryModel(IScriptRepository Repository) : PropertyChangedBase
 {
-    public bool Enabled { get; set; }
-    public bool CanToggleEnabled => Repository.GetType() != typeof(LocalScriptRepository);
+    public IScriptRepository Repository { get; } = Repository;
+    public bool Enabled { get; set; } = Repository.GetType() == typeof(ScriptRepositoryModel);
+    public bool CanToggleEnabled { get; } = Repository.GetType() != typeof(LocalScriptRepository);
 }
