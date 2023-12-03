@@ -70,7 +70,7 @@ internal sealed class MediaResourceInfo
 
                 var source = sb.ToString().TrimEnd('\\', '/');
                 builder.WithSourceAndName(source, name)
-                        .AsUrl();
+                       .AsUrl();
 
                 return true;
             }
@@ -105,7 +105,7 @@ internal sealed class MediaResourceInfo
 
             var source = path.Remove(path.Length - name.Length).TrimEnd('\\', '/');
             builder.WithSourceAndName(source, name)
-                    .AsPath();
+                   .AsPath();
 
             return true;
         }

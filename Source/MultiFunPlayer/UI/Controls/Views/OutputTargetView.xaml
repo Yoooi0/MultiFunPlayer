@@ -13,7 +13,6 @@
              d:DesignHeight="450" d:DesignWidth="800"
              x:ClassModifier="internal">
     <UserControl.Resources>
-        <converters:DisplayNameConverter x:Key="DisplayNameConverter"/>
         <ui:BindingProxy x:Key="ViewModelProxy" DataContext="{Binding}"/>
     </UserControl.Resources>
     <material:Card material:ShadowAssist.ShadowDepth="Depth1">
