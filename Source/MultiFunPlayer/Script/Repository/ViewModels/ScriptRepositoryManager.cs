@@ -25,6 +25,9 @@ internal sealed class ScriptRepositoryManager : Screen, IScriptRepositoryManager
 
         _localRepository = repositories.First(r => r.GetType().IsAssignableTo(typeof(ILocalScriptRepository))) as ILocalScriptRepository;
         Repositories = new(repositories.Select(r => new ScriptRepositoryModel(r)));
+
+        foreach (var model in Repositories)
+            model.PropertyChanged += OnModelPropertyChanged;
     }
 
     public void BeginSearchForScripts(MediaResourceInfo mediaResource, IEnumerable<DeviceAxis> axes, Action<Dictionary<DeviceAxis, IScriptResource>> callback, CancellationToken token)
@@ -58,6 +61,12 @@ internal sealed class ScriptRepositoryManager : Screen, IScriptRepositoryManager
         }
 
         return result;
+    }
+
+    private void OnModelPropertyChanged(object sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(ScriptRepositoryModel.Enabled))
+            _eventAggregator.Publish(new ReloadScriptsRequestMessage());
     }
 
     public void Handle(SettingsMessage message)
