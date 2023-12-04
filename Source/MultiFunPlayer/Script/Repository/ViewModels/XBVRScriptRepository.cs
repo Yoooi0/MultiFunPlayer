@@ -1,4 +1,4 @@
-using MultiFunPlayer.Common;
+﻿using MultiFunPlayer.Common;
 using MultiFunPlayer.MediaSource.MediaResource;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -59,16 +59,26 @@ internal sealed class XBVRScriptRepository : AbstractScriptRepository
 
                 if (string.IsNullOrEmpty(ipOrHost))
                     return false;
-                if (!mediaResource.Source.Contains(ipOrHost))
-                    return false;
 
                 var mediaResourceUri = new Uri(mediaResource.IsModified ? mediaResource.ModifiedPath : mediaResource.OriginalPath);
-                var match = Regex.Match(mediaResourceUri.Query, @"scene=(?<id>.+?)(?>$|&)");
-                if (!match.Success)
+                if (string.Equals(mediaResourceUri.Host, ipOrHost, StringComparison.OrdinalIgnoreCase))
                     return false;
 
-                sceneId = match.Groups["id"].Value;
-                return true;
+                // <endpoint>/res?scene=<sceneId>
+                var match = Regex.Match(mediaResourceUri.Query, "scene=(?<id>.+?)(?>$|&)");
+                if (match.Success)
+                {
+                    sceneId = match.Groups["id"].Value;
+                    return true;
+                }
+
+                // <endpoint>/api/dms/file/<sceneId>
+                match = Regex.Match(mediaResourceUri.Query, @"api\/dms\/file\/(?<id>\d+)");
+                if (match.Success)
+                {
+                    sceneId = match.Groups["id"].Value;
+                    return true;
+                }
             }
 
             return false;
