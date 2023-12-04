@@ -1,4 +1,4 @@
-using MultiFunPlayer.Common;
+﻿using MultiFunPlayer.Common;
 using MultiFunPlayer.MediaSource.MediaResource;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -44,7 +44,7 @@ internal sealed class StashScriptRepository : AbstractScriptRepository
         var content = await response.Content.ReadAsStringAsync(token);
 
         var queryRespone = JsonConvert.DeserializeObject<QueryResponse>(content);
-        _ = TryMatchFileSystem(queryRespone, axes, result, localRepository);
+        _ = TryMatchFileSystem(queryRespone, axes, result, localRepository) || await TryMatchDms(queryRespone, result, client, token);
         return result;
 
         bool TryGetSceneId(out int sceneId)
@@ -117,8 +117,31 @@ internal sealed class StashScriptRepository : AbstractScriptRepository
         return result.Count > 0;
     }
 
+    private static async Task<bool> TryMatchDms(QueryResponse queryRespone, Dictionary<DeviceAxis, IScriptResource> result, HttpClient client, CancellationToken token)
+    {
+        if (!DeviceAxis.TryParse("L0", out var axis))
+            return false;
+
+        var scriptUri = queryRespone.Data.FindScene.Paths.Funscript;
+        var scriptName = Path.ChangeExtension(queryRespone.Data.FindScene.Files[0].Path, ".funscript");
+        Logger.Trace("Downloading {0} script file [Uri: {1}]", axis, scriptUri);
+
+        var scriptStream = await client.GetStreamAsync(scriptUri, token);
+        var readerResult = FunscriptReader.Default.FromStream(scriptName, scriptUri, scriptStream);
+        if (!readerResult.IsSuccess)
+            return false;
+
+        if (readerResult.IsMultiAxis)
+            result.Merge(readerResult.Resources);
+        else
+            result[axis] = readerResult.Resource;
+
+        return result.Count > 0;
+    }
+
     private sealed record QueryResponse(QueryData Data);
     private sealed record QueryData(QueryFindScene FindScene);
-    private sealed record QueryFindScene(List<QueryFile> Files);
+    private sealed record QueryFindScene(List<QueryFile> Files, QueryPaths Paths);
     private sealed record QueryFile(string Path);
+    private sealed record QueryPaths(string Funscript);
 }
