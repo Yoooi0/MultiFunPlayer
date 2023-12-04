@@ -1,6 +1,4 @@
-﻿using MultiFunPlayer.Input.RawInput;
-
-namespace MultiFunPlayer.Input.TCode;
+﻿namespace MultiFunPlayer.Input.TCode;
 
 public sealed record TCodeButtonGestureDescriptor(string Button) : ISimpleInputGestureDescriptor
 {

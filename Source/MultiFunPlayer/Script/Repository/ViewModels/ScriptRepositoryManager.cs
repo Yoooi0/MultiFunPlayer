@@ -1,11 +1,8 @@
-﻿using MaterialDesignThemes.Wpf;
-using MultiFunPlayer.Common;
+﻿using MultiFunPlayer.Common;
 using MultiFunPlayer.MediaSource.MediaResource;
-using Newtonsoft.Json.Linq;
 using NLog;
 using Stylet;
 using System.ComponentModel;
-using System.Reflection;
 
 namespace MultiFunPlayer.Script.Repository.ViewModels;
 

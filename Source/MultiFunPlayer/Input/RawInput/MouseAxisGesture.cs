@@ -1,6 +1,4 @@
-﻿using System.Windows.Controls;
-
-namespace MultiFunPlayer.Input.RawInput;
+﻿namespace MultiFunPlayer.Input.RawInput;
 
 public enum MouseAxis
 {

@@ -1,6 +1,5 @@
 ﻿using MultiFunPlayer.Common;
 using MultiFunPlayer.MediaSource.MediaResource;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Stylet;
 using System.ComponentModel;

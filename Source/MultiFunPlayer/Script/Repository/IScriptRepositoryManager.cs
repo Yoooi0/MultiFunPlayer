@@ -1,6 +1,5 @@
 ﻿using MultiFunPlayer.Common;
 using MultiFunPlayer.MediaSource.MediaResource;
-using MultiFunPlayer.MediaSource.MediaResource.Modifier;
 
 namespace MultiFunPlayer.Script.Repository;
 

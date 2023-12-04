@@ -4,7 +4,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Windows.Controls;
 using System.Windows;
-using System.IO.Compression;
 using PropertyChanged;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json;

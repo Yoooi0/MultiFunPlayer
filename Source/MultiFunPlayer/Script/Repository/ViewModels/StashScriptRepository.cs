@@ -1,7 +1,6 @@
 ﻿using MultiFunPlayer.Common;
 using MultiFunPlayer.MediaSource.MediaResource;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using NLog;
 using System.ComponentModel;
 using System.IO;
@@ -44,7 +43,7 @@ internal sealed class StashScriptRepository : AbstractScriptRepository
         var content = await response.Content.ReadAsStringAsync(token);
 
         var queryRespone = JsonConvert.DeserializeObject<QueryResponse>(content);
-        _ = TryMatchFileSystem(queryRespone, axes, result, localRepository) || await TryMatchDms(queryRespone, result, client, token);
+        _ = TryMatchLocal(queryRespone, axes, result, localRepository) || await TryMatchDms(queryRespone, result, client, token);
         return result;
 
         bool TryGetSceneId(out int sceneId)
@@ -96,7 +95,7 @@ internal sealed class StashScriptRepository : AbstractScriptRepository
         }
     }
 
-    private static bool TryMatchFileSystem(QueryResponse queryRespone, IEnumerable<DeviceAxis> axes, Dictionary<DeviceAxis, IScriptResource> result, ILocalScriptRepository localRepository)
+    private static bool TryMatchLocal(QueryResponse queryRespone, IEnumerable<DeviceAxis> axes, Dictionary<DeviceAxis, IScriptResource> result, ILocalScriptRepository localRepository)
     {
         foreach (var file in queryRespone.Data.FindScene.Files)
         {

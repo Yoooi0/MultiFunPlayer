@@ -1,5 +1,4 @@
-﻿using Newtonsoft.Json.Linq;
-using System.Windows.Markup;
+﻿using System.Windows.Markup;
 
 namespace MultiFunPlayer.UI;
 

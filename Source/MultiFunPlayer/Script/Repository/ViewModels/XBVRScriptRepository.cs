@@ -1,10 +1,8 @@
 ﻿using MultiFunPlayer.Common;
 using MultiFunPlayer.MediaSource.MediaResource;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using NLog;
 using System.ComponentModel;
-using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Text.RegularExpressions;
@@ -34,7 +32,7 @@ internal sealed class XBVRScriptRepository : AbstractScriptRepository
         var response = await client.GetStringAsync(uri, token);
 
         var metadata = JsonConvert.DeserializeObject<SceneMetadata>(response);
-        _ = TryMatchFileSystem(metadata, axes, result, localRepository) || await TryMatchDms(metadata, axes, result, client, token);
+        _ = TryMatchLocal(metadata, axes, result, localRepository) || await TryMatchDms(metadata, axes, result, client, token);
         return result;
 
         bool TryGetSceneId(out object sceneId)
@@ -86,7 +84,7 @@ internal sealed class XBVRScriptRepository : AbstractScriptRepository
         }
     }
 
-    private bool TryMatchFileSystem(SceneMetadata metadata, IEnumerable<DeviceAxis> axes, Dictionary<DeviceAxis, IScriptResource> result, ILocalScriptRepository localRepository)
+    private bool TryMatchLocal(SceneMetadata metadata, IEnumerable<DeviceAxis> axes, Dictionary<DeviceAxis, IScriptResource> result, ILocalScriptRepository localRepository)
     {
         foreach (var videoFile in metadata.Files.Where(f => f.Type == "video"))
         {

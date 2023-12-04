@@ -1,5 +1,4 @@
 ﻿using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using NLog;
 
 namespace MultiFunPlayer.Settings.Converters;

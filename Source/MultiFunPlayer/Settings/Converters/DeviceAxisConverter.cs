@@ -1,6 +1,5 @@
 ﻿using MultiFunPlayer.Common;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using System.ComponentModel;
 using System.Globalization;
 
