@@ -125,7 +125,7 @@ internal sealed class XBVRScriptRepository : AbstractScriptRepository
                 Logger.Trace("Downloading {0} script file [Uri: {1}]", axis, scriptUri);
 
                 var scriptStream = await client.GetStreamAsync(scriptUri, token);
-                var readerResult = FunscriptReader.Default.FromStream(script.Filename, uri.ToString(), scriptStream);
+                var readerResult = FunscriptReader.Default.FromStream(script.Filename, scriptUri.ToString(), scriptStream);
                 if (!readerResult.IsSuccess)
                     continue;
 
