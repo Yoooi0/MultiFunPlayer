@@ -23,7 +23,7 @@ internal sealed class LocalScriptRepository(IEventAggregator eventAggregator) : 
 
     public override ValueTask<Dictionary<DeviceAxis, IScriptResource>> SearchForScriptsAsync(
         MediaResourceInfo mediaResource, IEnumerable<DeviceAxis> axes, ILocalScriptRepository localRepository, CancellationToken token)
-        => ValueTask.FromResult(mediaResource.IsPath ? SearchForScripts(mediaResource.Name, mediaResource.Source, axes) : []);
+        => ValueTask.FromResult(SearchForScripts(mediaResource.Name, mediaResource.Source, axes));
 
     public Dictionary<DeviceAxis, IScriptResource> SearchForScripts(string mediaName, string mediaSource, IEnumerable<DeviceAxis> axes)
     {
