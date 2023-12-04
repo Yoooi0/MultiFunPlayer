@@ -1,6 +1,7 @@
 ﻿using MultiFunPlayer.Common;
 using MultiFunPlayer.MediaSource.MediaResource;
 using NLog;
+using PropertyChanged;
 using Stylet;
 using System.ComponentModel;
 
@@ -60,6 +61,7 @@ internal sealed class ScriptRepositoryManager : Screen, IScriptRepositoryManager
         return result;
     }
 
+    [SuppressPropertyChangedWarnings]
     private void OnModelPropertyChanged(object sender, PropertyChangedEventArgs e)
     {
         if (e.PropertyName == nameof(ScriptRepositoryModel.Enabled))

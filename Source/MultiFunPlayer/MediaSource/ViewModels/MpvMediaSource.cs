@@ -36,7 +36,7 @@ internal sealed class MpvMediaSource(IShortcutManager shortcutManager, IEventAgg
         try
         {
             Logger.Info("Connecting to {0} at \"{1}\"", Name, _pipeName);
-            using var client = new NamedPipeClientStream(".", _pipeName, PipeDirection.InOut, PipeOptions.Asynchronous);
+            await using var client = new NamedPipeClientStream(".", _pipeName, PipeDirection.InOut, PipeOptions.Asynchronous);
 
             try
             {

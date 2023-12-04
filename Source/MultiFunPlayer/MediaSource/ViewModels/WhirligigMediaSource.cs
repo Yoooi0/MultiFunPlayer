@@ -45,7 +45,7 @@ internal sealed class WhirligigMediaSource(IShortcutManager shortcutManager, IEv
                 await client.ConnectAsync(Endpoint, connectCancellationSource.Token);
             }
 
-            using var stream = client.GetStream();
+            await using var stream = client.GetStream();
             using var reader = new StreamReader(stream);
 
             Status = ConnectionStatus.Connected;
@@ -130,7 +130,7 @@ internal sealed class WhirligigMediaSource(IShortcutManager shortcutManager, IEv
                 await client.ConnectAsync(Endpoint, connectCancellationSource.Token);
             }
 
-            using var stream = client.GetStream();
+            await using var stream = client.GetStream();
 
             return client.Connected;
         }

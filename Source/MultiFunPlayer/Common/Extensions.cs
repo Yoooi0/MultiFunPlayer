@@ -297,7 +297,7 @@ public static class StreamExtensions
     public static async Task<byte[]> ReadBytesAsync(this NetworkStream stream, int count, CancellationToken token)
     {
         using var memoryOwner = MemoryPool<byte>.Shared.Rent(1024);
-        using var memoryStream = new MemoryStream();
+        await using var memoryStream = new MemoryStream();
 
         var readMemory = memoryOwner.Memory[..Math.Min(count, 1024)];
         while (memoryStream.Position < count)
@@ -336,7 +336,7 @@ public static class WebSocketExtensions
     public static async Task<byte[]> ReceiveAsync(this ClientWebSocket client, CancellationToken token)
     {
         using var memoryOwner = MemoryPool<byte>.Shared.Rent(1024);
-        using var memoryStream = new MemoryStream();
+        await using var memoryStream = new MemoryStream();
 
         var readMemory = memoryOwner.Memory;
         var result = default(ValueWebSocketReceiveResult);

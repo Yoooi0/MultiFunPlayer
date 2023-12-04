@@ -48,7 +48,7 @@ internal sealed class DeoVRMediaSource(IShortcutManager shortcutManager, IEventA
                 await client.ConnectAsync(Endpoint, connectCancellationSource.Token);
             }
 
-            using var stream = client.GetStream();
+            await using var stream = client.GetStream();
 
             Status = ConnectionStatus.Connected;
             ClearPendingMessages();
@@ -242,7 +242,7 @@ internal sealed class DeoVRMediaSource(IShortcutManager shortcutManager, IEventA
                 await client.ConnectAsync(Endpoint, connectCancellationSource.Token);
             }
 
-            using var stream = client.GetStream();
+            await using var stream = client.GetStream();
 
             return client.Connected;
         }
