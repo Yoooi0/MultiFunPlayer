@@ -108,7 +108,7 @@ internal sealed class XBVRScriptRepository : AbstractScriptRepository
             foreach (var scriptFile in metadata.Files.Where(f => f.Type == "script"))
             {
                 Logger.Debug("Trying to match axes for script file [Path: {0}, Filename: {1}]", scriptFile.Path, scriptFile.Filename);
-                foreach (var axis in DeviceAxisUtils.FindAxesMatchingName(scriptFile.Filename))
+                foreach (var axis in DeviceAxisUtils.FindAxesMatchingName(axes, scriptFile.Filename))
                 {
                     Logger.Debug("Matched \"{0}\" to {1} axis", scriptFile.Filename, axis);
                     if (matchedFiles.TryGetValue(axis, out var existingScriptFile))
