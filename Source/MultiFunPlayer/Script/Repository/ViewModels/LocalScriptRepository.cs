@@ -1,4 +1,4 @@
-﻿using Microsoft.Win32;
+using Microsoft.Win32;
 using MultiFunPlayer.Common;
 using MultiFunPlayer.MediaSource.MediaResource;
 using Newtonsoft.Json;
@@ -11,7 +11,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Windows;
 
-namespace MultiFunPlayer.Script.Repository;
+namespace MultiFunPlayer.Script.Repository.ViewModels;
 
 [DisplayName("Local")]
 [JsonObject(MemberSerialization.OptIn)]

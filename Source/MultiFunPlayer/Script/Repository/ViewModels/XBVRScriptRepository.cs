@@ -1,4 +1,4 @@
-﻿using MultiFunPlayer.Common;
+using MultiFunPlayer.Common;
 using MultiFunPlayer.MediaSource.MediaResource;
 using Newtonsoft.Json;
 using NLog;
@@ -7,7 +7,7 @@ using System.Net;
 using System.Net.Http;
 using System.Text.RegularExpressions;
 
-namespace MultiFunPlayer.Script.Repository;
+namespace MultiFunPlayer.Script.Repository.ViewModels;
 
 internal enum XBVRDmsMatchType
 {

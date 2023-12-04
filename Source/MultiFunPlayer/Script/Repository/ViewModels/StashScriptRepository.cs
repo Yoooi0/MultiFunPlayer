@@ -9,7 +9,7 @@ using System.Net.Http;
 using System.Text;
 using System.Text.RegularExpressions;
 
-namespace MultiFunPlayer.Script.Repository;
+namespace MultiFunPlayer.Script.Repository.ViewModels;
 
 [DisplayName("Stash")]
 [JsonObject(MemberSerialization.OptIn)]
