@@ -89,6 +89,21 @@
             </DockPanel>
         </DataTemplate>
         
+        <DataTemplate DataType="{x:Type repository:StashScriptRepository}">
+            <StackPanel Margin="20">
+                <DockPanel LastChildFill="True">
+                    <TextBlock Text="Endpoint:"
+                               DockPanel.Dock="Left"
+                               Margin="0 0 10 0"
+                               VerticalAlignment="Center"/>
+
+                    <controls:EndPointBox EndPoint="{Binding Endpoint}"
+                                          DockPanel.Dock="Left"
+                                          HorizontalAlignment="Left"/>
+                </DockPanel>
+            </StackPanel>
+        </DataTemplate>
+
         <DataTemplate DataType="{x:Type repository:XBVRScriptRepository}">
             <StackPanel Margin="20">
                 <DockPanel LastChildFill="True">
