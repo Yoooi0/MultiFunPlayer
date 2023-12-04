@@ -1,4 +1,4 @@
-﻿using MultiFunPlayer.Common;
+using MultiFunPlayer.Common;
 using MultiFunPlayer.MediaSource.MediaResource;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -26,7 +26,7 @@ internal sealed class XBVRScriptRepository : AbstractScriptRepository
 
         if (!TryGetSceneId(out var sceneId))
             return [];
-        
+
         using var client = NetUtils.CreateHttpClient();
         var result = new Dictionary<DeviceAxis, IScriptResource>();
         var uri = new Uri($"http://{Endpoint.ToUriString()}/api/scene/{sceneId}");
@@ -129,6 +129,6 @@ internal sealed class XBVRScriptRepository : AbstractScriptRepository
         }
     }
 
-    private record SceneMetadata([JsonProperty("file")] List<SceneFile> Files);
-    private record SceneFile(int Id, string Path, string Filename, string Type);
+    private sealed record SceneMetadata([JsonProperty("file")] List<SceneFile> Files);
+    private sealed record SceneFile(int Id, string Path, string Filename, string Type);
 }
