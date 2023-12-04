@@ -45,15 +45,15 @@ internal sealed class ScriptRepositoryManager : Screen, IScriptRepositoryManager
             if (!model.Enabled)
                 continue;
 
-            var name = model.Repository.GetType().GetCustomAttribute<DisplayNameAttribute>().DisplayName;
+            var repository = model.Repository;
             try
             {
-                Logger.Debug($"Searching for scripts in {name} repository");
-                result.Merge(await model.Repository.SearchForScriptsAsync(mediaResource, axes, _localRepository, token));
+                Logger.Debug($"Searching for scripts in {repository.Name} repository");
+                result.Merge(await repository.SearchForScriptsAsync(mediaResource, axes, _localRepository, token));
             }
             catch (Exception e)
             {
-                Logger.Error(e, $"{name} repository failed with exception");
+                Logger.Error(e, $"{repository.Name} repository failed with exception");
             }
         }
 
