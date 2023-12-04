@@ -1,4 +1,4 @@
-﻿using MultiFunPlayer.Common;
+using MultiFunPlayer.Common;
 using MultiFunPlayer.MediaSource.MediaResource;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -21,7 +21,7 @@ internal sealed class StashScriptRepository : AbstractScriptRepository
     [JsonProperty] public EndPoint Endpoint { get; set; } = new IPEndPoint(IPAddress.Loopback, 9999);
 
     public override async ValueTask<Dictionary<DeviceAxis, IScriptResource>> SearchForScriptsAsync(
-        MediaResourceInfo mediaResource, IEnumerable<DeviceAxis> axes, ILocalScriptRepository matcher, CancellationToken token)
+        MediaResourceInfo mediaResource, IEnumerable<DeviceAxis> axes, ILocalScriptRepository localRepository, CancellationToken token)
     {
         if (Endpoint == null)
             return [];
@@ -44,7 +44,7 @@ internal sealed class StashScriptRepository : AbstractScriptRepository
         var content = await response.Content.ReadAsStringAsync(token);
 
         var queryRespone = JsonConvert.DeserializeObject<QueryResponse>(content);
-        _ = TryMatchFileSystem();
+        _ = TryMatchFileSystem(queryRespone, axes, result, localRepository);
         return result;
 
         bool TryGetSceneId(out int sceneId)
@@ -94,27 +94,27 @@ internal sealed class StashScriptRepository : AbstractScriptRepository
 
             return false;
         }
+    }
 
-        bool TryMatchFileSystem()
+    private static bool TryMatchFileSystem(QueryResponse queryRespone, IEnumerable<DeviceAxis> axes, Dictionary<DeviceAxis, IScriptResource> result, ILocalScriptRepository localRepository)
+    {
+        foreach (var file in queryRespone.Data.FindScene.Files)
         {
-            foreach (var file in queryRespone.Data.FindScene.Files)
+            var directory = Path.GetDirectoryName(file.Path);
+            var fileName = Path.GetFileName(file.Path);
+
+            Logger.Debug("Trying to match scripts for video file [Directory: {0}, Filename: {1}]", directory, fileName);
+            var searchResult = localRepository.SearchForScripts(fileName, directory, axes);
+            foreach (var (axis, resource) in searchResult)
             {
-                var directory = Path.GetDirectoryName(file.Path);
-                var fileName = Path.GetFileName(file.Path);
+                if (result.TryGetValue(axis, out var existingResource))
+                    Logger.Debug("Overwriting already matched script [From: {0}, To: {1}]", existingResource.Name, resource.Name);
 
-                Logger.Debug("Trying to match scripts for video file [Directory: {0}, Filename: {1}]", directory, fileName);
-                var searchResult = matcher.SearchForScripts(fileName, directory, axes);
-                foreach(var (axis, resource) in searchResult)
-                {
-                    if (result.TryGetValue(axis, out var existingResource))
-                        Logger.Debug("Overwriting already matched script [From: {0}, To: {1}]", existingResource.Name, resource.Name);
-
-                    result[axis] = resource;
-                }
+                result[axis] = resource;
             }
-
-            return result.Count > 0;
         }
+
+        return result.Count > 0;
     }
 
     private sealed record QueryResponse(QueryData Data);
