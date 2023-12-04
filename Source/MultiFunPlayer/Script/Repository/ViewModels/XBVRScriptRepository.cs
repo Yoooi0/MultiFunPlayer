@@ -9,6 +9,13 @@ using System.Text.RegularExpressions;
 
 namespace MultiFunPlayer.Script.Repository;
 
+internal enum XBVRDmsMatchType
+{
+    FirstOnly,
+    Overwrite,
+    SelectedOnly
+}
+
 [DisplayName("XBVR")]
 [JsonObject(MemberSerialization.OptIn)]
 internal sealed class XBVRScriptRepository : AbstractScriptRepository
@@ -16,6 +23,7 @@ internal sealed class XBVRScriptRepository : AbstractScriptRepository
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
     [JsonProperty] public EndPoint Endpoint { get; set; } = new IPEndPoint(IPAddress.Loopback, 9999);
+    [JsonProperty] public XBVRDmsMatchType DmsMatchType { get; set; } = XBVRDmsMatchType.Overwrite;
 
     public override async ValueTask<Dictionary<DeviceAxis, IScriptResource>> SearchForScriptsAsync(
         MediaResourceInfo mediaResource, IEnumerable<DeviceAxis> axes, ILocalScriptRepository localRepository, CancellationToken token)
@@ -107,14 +115,21 @@ internal sealed class XBVRScriptRepository : AbstractScriptRepository
         var matchedFiles = new Dictionary<DeviceAxis, SceneFile>();
         foreach (var scriptFile in metadata.Files.Where(f => f.Type == "script"))
         {
-            Logger.Debug("Trying to match axes for script file [Path: {0}, Filename: {1}]", scriptFile.Path, scriptFile.Filename);
+            Logger.Debug("Trying to match axes for script file [Path: {0}, Filename: {1}, IsSelected: {2}]", scriptFile.Path, scriptFile.Filename, scriptFile.IsSelected);
             foreach (var axis in DeviceAxisUtils.FindAxesMatchingName(axes, scriptFile.Filename))
             {
-                Logger.Debug("Matched \"{0}\" to {1} axis", scriptFile.Filename, axis);
-                if (matchedFiles.TryGetValue(axis, out var existingScriptFile))
+                if (DmsMatchType == XBVRDmsMatchType.Overwrite && matchedFiles.TryGetValue(axis, out var existingScriptFile))
                     Logger.Debug("Overwriting already matched {0} script file [From: {1}, To: {2}]", axis, existingScriptFile.Filename, scriptFile.Filename);
 
-                matchedFiles[axis] = scriptFile;
+                var validMatch = (DmsMatchType == XBVRDmsMatchType.SelectedOnly && scriptFile.IsSelected)
+                              || (DmsMatchType == XBVRDmsMatchType.FirstOnly && !matchedFiles.ContainsKey(axis))
+                              || (DmsMatchType == XBVRDmsMatchType.Overwrite);
+
+                if (validMatch)
+                {
+                    Logger.Debug("Matched \"{0}\" to {1} axis", scriptFile.Filename, axis);
+                    matchedFiles[axis] = scriptFile;
+                }
             }
         }
 
@@ -138,5 +153,5 @@ internal sealed class XBVRScriptRepository : AbstractScriptRepository
     }
 
     private sealed record SceneMetadata([JsonProperty("file")] List<SceneFile> Files);
-    private sealed record SceneFile(int Id, string Path, string Filename, string Type);
+    private sealed record SceneFile(int Id, string Path, string Filename, string Type, [JsonProperty("is_selected_script")] bool IsSelected);
 }

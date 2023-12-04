@@ -5,6 +5,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:ui="clr-namespace:MultiFunPlayer.UI"
              xmlns:controls="clr-namespace:MultiFunPlayer.UI.Controls"
              xmlns:repository="clr-namespace:MultiFunPlayer.Script.Repository"
              mc:Ignorable="d" 
@@ -104,7 +105,7 @@
         </DataTemplate>
 
         <DataTemplate DataType="{x:Type repository:XBVRScriptRepository}">
-            <StackPanel Margin="20">
+            <StackPanel Margin="20" Orientation="Horizontal">
                 <DockPanel LastChildFill="True">
                     <TextBlock Text="Endpoint:"
                                DockPanel.Dock="Left"
@@ -112,8 +113,19 @@
                                VerticalAlignment="Center"/>
 
                     <controls:EndPointBox EndPoint="{Binding Endpoint}"
-                                          DockPanel.Dock="Left"
-                                          HorizontalAlignment="Left"/>
+                                          DockPanel.Dock="Left"/>
+                </DockPanel>
+
+                <DockPanel LastChildFill="False"
+                           Margin="30 0 0 0">
+                    <TextBlock Text="DMS match type:"
+                            DockPanel.Dock="Left"
+                            Margin="0 0 10 0"
+                            VerticalAlignment="Center"/>
+
+                    <ComboBox ItemsSource="{Binding Source={ui:EnumBindingSource {x:Type repository:XBVRDmsMatchType}}}"
+                              SelectedItem="{Binding DmsMatchType}"
+                              DockPanel.Dock="Left"/>
                 </DockPanel>
             </StackPanel>
         </DataTemplate>
