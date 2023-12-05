@@ -9,13 +9,6 @@ using System.Text.RegularExpressions;
 
 namespace MultiFunPlayer.Script.Repository.ViewModels;
 
-internal enum XBVRDmsMatchType
-{
-    FirstOnly,
-    Overwrite,
-    SelectedOnly
-}
-
 [DisplayName("XBVR")]
 [JsonObject(MemberSerialization.OptIn)]
 internal sealed class XBVRScriptRepository : AbstractScriptRepository
@@ -23,7 +16,8 @@ internal sealed class XBVRScriptRepository : AbstractScriptRepository
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
     [JsonProperty] public EndPoint Endpoint { get; set; } = new IPEndPoint(IPAddress.Loopback, 9999);
-    [JsonProperty] public XBVRDmsMatchType DmsMatchType { get; set; } = XBVRDmsMatchType.Overwrite;
+    [JsonProperty] public XBVRVideoMatchType VideoMatchType { get; set; } = XBVRVideoMatchType.UseFirstMatchOnly;
+    [JsonProperty] public XBVRScriptMatchType ScriptMatchType { get; set; } = XBVRScriptMatchType.MatchAllUseFirst;
 
     public override async ValueTask<Dictionary<DeviceAxis, IScriptResource>> SearchForScriptsAsync(
         MediaResourceInfo mediaResource, IEnumerable<DeviceAxis> axes, ILocalScriptRepository localRepository, CancellationToken token)
@@ -98,12 +92,28 @@ internal sealed class XBVRScriptRepository : AbstractScriptRepository
         {
             Logger.Debug("Trying to match scripts for video file [Path: {0}, Filename: {1}]", videoFile.Path, videoFile.Filename);
             var searchResult = localRepository.SearchForScripts(videoFile.Filename, videoFile.Path, axes);
+            if (searchResult.Count == 0)
+                continue;
+
+            if (VideoMatchType == XBVRVideoMatchType.UseFirstMatchOnly)
+            {
+                result = searchResult;
+                return true;
+            }
+
             foreach (var (axis, resource) in searchResult)
             {
-                if (result.TryGetValue(axis, out var existingResource))
+                if (VideoMatchType == XBVRVideoMatchType.MatchAllOverwrite && result.TryGetValue(axis, out var existingResource))
                     Logger.Debug("Overwriting already matched script [From: {0}, To: {1}]", existingResource.Name, resource.Name);
 
-                result[axis] = resource;
+                var validMatch = (VideoMatchType == XBVRVideoMatchType.MatchAllUseFirst && !result.ContainsKey(axis))
+                              || (VideoMatchType == XBVRVideoMatchType.MatchAllOverwrite);
+
+                if (validMatch)
+                {
+                    Logger.Debug("Matched \"{0}\" to {1} axis", resource.Name, axis);
+                    result[axis] = resource;
+                }
             }
         }
 
@@ -118,12 +128,12 @@ internal sealed class XBVRScriptRepository : AbstractScriptRepository
             Logger.Debug("Trying to match axes for script file [Path: {0}, Filename: {1}, IsSelected: {2}]", scriptFile.Path, scriptFile.Filename, scriptFile.IsSelected);
             foreach (var axis in DeviceAxisUtils.FindAxesMatchingName(axes, scriptFile.Filename))
             {
-                if (DmsMatchType == XBVRDmsMatchType.Overwrite && matchedFiles.TryGetValue(axis, out var existingScriptFile))
+                if (ScriptMatchType == XBVRScriptMatchType.MatchAllOverwrite && matchedFiles.TryGetValue(axis, out var existingScriptFile))
                     Logger.Debug("Overwriting already matched {0} script file [From: {1}, To: {2}]", axis, existingScriptFile.Filename, scriptFile.Filename);
 
-                var validMatch = (DmsMatchType == XBVRDmsMatchType.SelectedOnly && scriptFile.IsSelected)
-                              || (DmsMatchType == XBVRDmsMatchType.FirstOnly && !matchedFiles.ContainsKey(axis))
-                              || (DmsMatchType == XBVRDmsMatchType.Overwrite);
+                var validMatch = (ScriptMatchType == XBVRScriptMatchType.MatchSelectedOnly && scriptFile.IsSelected)
+                              || (ScriptMatchType == XBVRScriptMatchType.MatchAllUseFirst && !matchedFiles.ContainsKey(axis))
+                              || (ScriptMatchType == XBVRScriptMatchType.MatchAllOverwrite);
 
                 if (validMatch)
                 {
@@ -154,4 +164,24 @@ internal sealed class XBVRScriptRepository : AbstractScriptRepository
 
     private sealed record SceneMetadata([JsonProperty("file")] List<SceneFile> Files);
     private sealed record SceneFile(int Id, string Path, string Filename, string Type, [JsonProperty("is_selected_script")] bool IsSelected);
+}
+
+internal enum XBVRScriptMatchType
+{
+    [Description("Try to match all scripts, for each axis only use the first matched script")]
+    MatchAllUseFirst,
+    [Description("Try to match all scripts, overwrite if multiple scripts match an axis")]
+    MatchAllOverwrite,
+    [Description("Try to only match scripts selected in XBVR, overwrite if multiple scripts match an axis")]
+    MatchSelectedOnly
+}
+
+internal enum XBVRVideoMatchType
+{
+    [Description("Use first video that matches at least one axis")]
+    UseFirstMatchOnly,
+    [Description("Try to match all videos, for each axis use first matched script")]
+    MatchAllUseFirst,
+    [Description("Try to match all videos, overwrite if multiple scripts match an axis")]
+    MatchAllOverwrite
 }

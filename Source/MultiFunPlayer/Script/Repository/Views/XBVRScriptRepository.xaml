@@ -9,8 +9,9 @@
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800"
              x:ClassModifier="internal">
-    <StackPanel Margin="20" Orientation="Horizontal">
-        <DockPanel LastChildFill="True">
+    <StackPanel Margin="20" Orientation="Vertical">
+        <DockPanel LastChildFill="False"
+                   Margin="0 0 0 20">
             <TextBlock Text="Endpoint:"
                        DockPanel.Dock="Left"
                        Margin="0 0 10 0"
@@ -21,15 +22,28 @@
         </DockPanel>
 
         <DockPanel LastChildFill="False"
-                   Margin="30 0 0 0">
-            <TextBlock Text="DMS match type:"
-                       DockPanel.Dock="Left"
-                       Margin="0 0 10 0"
-                       VerticalAlignment="Center"/>
+                   Margin="0 0 0 10">
+            <TextBlock Text="Video match type:"
+                           DockPanel.Dock="Left"
+                           Margin="0 0 10 0"
+                           VerticalAlignment="Center"/>
 
-            <ComboBox ItemsSource="{Binding Source={ui:EnumBindingSource {x:Type repository:XBVRDmsMatchType}}}"
-                      SelectedItem="{Binding DmsMatchType}"
-                      DockPanel.Dock="Left"/>
+            <ComboBox ItemsSource="{Binding Source={ui:EnumBindingSource {x:Type repository:XBVRVideoMatchType}}}"
+                          SelectedItem="{Binding VideoMatchType}"
+                          ToolTip="{Binding SelectedItem, RelativeSource={RelativeSource Self}, Converter={StaticResource DescriptionConverter}}"
+                          DockPanel.Dock="Left"/>
+        </DockPanel>
+
+        <DockPanel LastChildFill="False">
+            <TextBlock Text="Script match type:"
+                           DockPanel.Dock="Left"
+                           Margin="0 0 10 0"
+                           VerticalAlignment="Center"/>
+
+            <ComboBox ItemsSource="{Binding Source={ui:EnumBindingSource {x:Type repository:XBVRScriptMatchType}}}"
+                          SelectedItem="{Binding ScriptMatchType}"
+                          ToolTip="{Binding SelectedItem, RelativeSource={RelativeSource Self}, Converter={StaticResource DescriptionConverter}}"
+                          DockPanel.Dock="Left"/>
         </DockPanel>
     </StackPanel>
 </UserControl>

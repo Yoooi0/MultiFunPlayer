@@ -26,6 +26,7 @@
                                                            TrueValue="Collapsed"/>
 
                     <converters:DisplayNameConverter x:Key="DisplayNameConverter"/>
+                    <converters:DescriptionConverter x:Key="DescriptionConverter"/>
                     <converters:NullableToBooleanConverter x:Key="NullableToBooleanConverter" />
                     <converters:InvertedNullableToBooleanConverter x:Key="InvertedNullableToBooleanConverter" />
                     <converters:BooleanAndConverter x:Key="BooleanAndConverter" />
