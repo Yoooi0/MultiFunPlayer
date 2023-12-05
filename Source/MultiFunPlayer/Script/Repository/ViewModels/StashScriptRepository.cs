@@ -18,6 +18,7 @@ internal sealed class StashScriptRepository : AbstractScriptRepository
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
     [JsonProperty] public EndPoint Endpoint { get; set; } = new IPEndPoint(IPAddress.Loopback, 9999);
+    [JsonProperty] public StashVideoMatchType VideoMatchType { get; set; } = StashVideoMatchType.UseFirstMatchOnly;
 
     public override async ValueTask<Dictionary<DeviceAxis, IScriptResource>> SearchForScriptsAsync(
         MediaResourceInfo mediaResource, IEnumerable<DeviceAxis> axes, ILocalScriptRepository localRepository, CancellationToken token)
@@ -95,7 +96,7 @@ internal sealed class StashScriptRepository : AbstractScriptRepository
         }
     }
 
-    private static bool TryMatchLocal(QueryResponse queryRespone, IEnumerable<DeviceAxis> axes, Dictionary<DeviceAxis, IScriptResource> result, ILocalScriptRepository localRepository)
+    private bool TryMatchLocal(QueryResponse queryRespone, IEnumerable<DeviceAxis> axes, Dictionary<DeviceAxis, IScriptResource> result, ILocalScriptRepository localRepository)
     {
         foreach (var file in queryRespone.Data.FindScene.Files)
         {
@@ -104,12 +105,28 @@ internal sealed class StashScriptRepository : AbstractScriptRepository
 
             Logger.Debug("Trying to match scripts for video file [Directory: {0}, Filename: {1}]", directory, fileName);
             var searchResult = localRepository.SearchForScripts(fileName, directory, axes);
+            if (searchResult.Count == 0)
+                continue;
+
+            if (VideoMatchType == StashVideoMatchType.UseFirstMatchOnly)
+            {
+                result = searchResult;
+                return true;
+            }
+
             foreach (var (axis, resource) in searchResult)
             {
-                if (result.TryGetValue(axis, out var existingResource))
+                if (VideoMatchType == StashVideoMatchType.MatchAllOverwrite && result.TryGetValue(axis, out var existingResource))
                     Logger.Debug("Overwriting already matched script [From: {0}, To: {1}]", existingResource.Name, resource.Name);
 
-                result[axis] = resource;
+                var validMatch = (VideoMatchType == StashVideoMatchType.MatchAllUseFirst && !result.ContainsKey(axis))
+                              || (VideoMatchType == StashVideoMatchType.MatchAllOverwrite);
+
+                if (validMatch)
+                {
+                    Logger.Debug("Matched \"{0}\" to {1} axis", resource.Name, axis);
+                    result[axis] = resource;
+                }
             }
         }
 
@@ -143,4 +160,14 @@ internal sealed class StashScriptRepository : AbstractScriptRepository
     private sealed record QueryFindScene(List<QueryFile> Files, QueryPaths Paths);
     private sealed record QueryFile(string Path);
     private sealed record QueryPaths(string Funscript);
+}
+
+internal enum StashVideoMatchType
+{
+    [Description("Use first video that matches at least one axis")]
+    UseFirstMatchOnly,
+    [Description("Try to match all videos, for each axis use first matched script")]
+    MatchAllUseFirst,
+    [Description("Try to match all videos, overwrite if multiple scripts match an axis")]
+    MatchAllOverwrite
 }
