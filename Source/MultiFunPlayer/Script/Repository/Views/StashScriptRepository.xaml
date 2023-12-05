@@ -4,6 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:ui="clr-namespace:MultiFunPlayer.UI"
+             xmlns:common="clr-namespace:MultiFunPlayer.Common"
              xmlns:controls="clr-namespace:MultiFunPlayer.UI.Controls"
              xmlns:repository="clr-namespace:MultiFunPlayer.Script.Repository.ViewModels"
              mc:Ignorable="d" 
@@ -32,6 +33,19 @@
                       SelectedItem="{Binding VideoMatchType}"
                       ToolTip="{Binding SelectedItem, RelativeSource={RelativeSource Self}, Converter={StaticResource DescriptionConverter}}"
                       DockPanel.Dock="Left"/>
+        </DockPanel>
+
+
+        <DockPanel LastChildFill="False">
+            <TextBlock Text="Script match axis:" 
+                       DockPanel.Dock="Left"
+                       Margin="0 0 10 0" 
+                       VerticalAlignment="Center"/>
+            <ComboBox DockPanel.Dock="Left"
+                      Margin="0 0 10 0" 
+                      Width="50" 
+                      ItemsSource="{Binding Source={x:Static common:DeviceAxis.All}}" 
+                      SelectedItem="{Binding ScriptMatchAxis}"/>
         </DockPanel>
     </StackPanel>
 </UserControl>

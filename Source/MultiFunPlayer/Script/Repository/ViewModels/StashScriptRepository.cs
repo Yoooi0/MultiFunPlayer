@@ -19,6 +19,7 @@ internal sealed class StashScriptRepository : AbstractScriptRepository
 
     [JsonProperty] public EndPoint Endpoint { get; set; } = new IPEndPoint(IPAddress.Loopback, 9999);
     [JsonProperty] public StashVideoMatchType VideoMatchType { get; set; } = StashVideoMatchType.UseFirstMatchOnly;
+    [JsonProperty] public DeviceAxis ScriptMatchAxis { get; set; } = DeviceAxis.All.First();
 
     public override async ValueTask<Dictionary<DeviceAxis, IScriptResource>> SearchForScriptsAsync(
         MediaResourceInfo mediaResource, IEnumerable<DeviceAxis> axes, ILocalScriptRepository localRepository, CancellationToken token)
@@ -133,14 +134,11 @@ internal sealed class StashScriptRepository : AbstractScriptRepository
         return result.Count > 0;
     }
 
-    private static async Task<bool> TryMatchDms(QueryResponse queryRespone, Dictionary<DeviceAxis, IScriptResource> result, HttpClient client, CancellationToken token)
+    private async Task<bool> TryMatchDms(QueryResponse queryRespone, Dictionary<DeviceAxis, IScriptResource> result, HttpClient client, CancellationToken token)
     {
-        if (!DeviceAxis.TryParse("L0", out var axis))
-            return false;
-
         var scriptUri = queryRespone.Data.FindScene.Paths.Funscript;
         var scriptName = Path.ChangeExtension(queryRespone.Data.FindScene.Files[0].Path, ".funscript");
-        Logger.Trace("Downloading {0} script file [Uri: {1}]", axis, scriptUri);
+        Logger.Trace("Downloading script file [Uri: {0}]", scriptUri);
 
         var scriptStream = await client.GetStreamAsync(scriptUri, token);
         var readerResult = FunscriptReader.Default.FromStream(scriptName, scriptUri, scriptStream);
@@ -149,8 +147,8 @@ internal sealed class StashScriptRepository : AbstractScriptRepository
 
         if (readerResult.IsMultiAxis)
             result.Merge(readerResult.Resources);
-        else
-            result[axis] = readerResult.Resource;
+        else if (ScriptMatchAxis != null)
+            result[ScriptMatchAxis] = readerResult.Resource;
 
         return result.Count > 0;
     }
