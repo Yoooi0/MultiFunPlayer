@@ -39,7 +39,7 @@ internal sealed class LocalScriptRepository(IEventAggregator eventAggregator) : 
         {
             foreach (var library in ScriptLibraries)
             {
-                Logger.Info("Searching library \"{0}\"", library.Directory);
+                Logger.Debug("Searching library \"{0}\"", library.Directory);
                 foreach (var zipFile in library.EnumerateFiles($"{mediaWithoutExtension}.zip"))
                     TryMatchArchive(zipFile.FullName);
 
@@ -50,7 +50,7 @@ internal sealed class LocalScriptRepository(IEventAggregator eventAggregator) : 
 
         if (Directory.Exists(mediaSource))
         {
-            Logger.Info("Searching media location \"{0}\"", mediaSource);
+            Logger.Debug("Searching media location \"{0}\"", mediaSource);
             var sourceDirectory = new DirectoryInfo(mediaSource);
             TryMatchArchive(Path.Join(sourceDirectory.FullName, $"{mediaWithoutExtension}.zip"));
 
@@ -64,7 +64,7 @@ internal sealed class LocalScriptRepository(IEventAggregator eventAggregator) : 
         {
             Logger.Debug("Matched {0} script to \"{1}\"", axis, resource.Name);
             if (searchResult.TryGetValue(axis, out var existingResource))
-                Logger.Warn("Overwriting {0} script from \"{1}\"", axis, existingResource.Name);
+                Logger.Debug("Overwriting {0} script from \"{1}\"", axis, existingResource.Name);
 
             searchResult[axis] = resource;
         }
@@ -91,7 +91,7 @@ internal sealed class LocalScriptRepository(IEventAggregator eventAggregator) : 
             if (!File.Exists(archivePath))
                 return;
 
-            Logger.Info("Matching zip file \"{0}\"", archivePath);
+            Logger.Debug("Matching zip file \"{0}\"", archivePath);
             using var zip = ZipFile.OpenRead(archivePath);
             foreach (var entry in zip.Entries.Where(e => string.Equals(Path.GetExtension(e.FullName), ".funscript", StringComparison.OrdinalIgnoreCase)))
             {

@@ -41,6 +41,7 @@ internal sealed class ScriptRepositoryManager : Screen, IScriptRepositoryManager
         if (mediaResource == null)
             return result;
 
+        Logger.Info("Trying to match scripts to resource [Name: {0}, Source: {1}]", mediaResource.Name, mediaResource.Source);
         foreach (var model in Repositories)
         {
             if (!model.Enabled)
@@ -49,14 +50,17 @@ internal sealed class ScriptRepositoryManager : Screen, IScriptRepositoryManager
             var repository = model.Repository;
             try
             {
-                Logger.Debug($"Searching for scripts in {repository.Name} repository");
+                Logger.Debug("Searching for scripts in {0} repository", repository.Name);
                 result.Merge(await repository.SearchForScriptsAsync(mediaResource, axes, _localRepository, token));
             }
             catch (Exception e)
             {
-                Logger.Error(e, $"{repository.Name} repository failed with exception");
+                Logger.Error(e, "{0} repository failed with exception", repository.Name);
             }
         }
+
+        foreach(var (axis, resource) in result)
+            Logger.Info("Matched {0} script to \"{1}\"", axis, resource.Name);
 
         return result;
     }
