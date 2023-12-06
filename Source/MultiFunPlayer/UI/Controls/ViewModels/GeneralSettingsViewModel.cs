@@ -23,6 +23,7 @@ internal sealed class GeneralSettingsViewModel : Screen, IHandle<SettingsMessage
     public bool AlwaysOnTop { get; set; } = false;
     public bool ShowErrorDialogs { get; set; } = true;
     public Orientation AppOrientation { get; set; } = Orientation.Vertical;
+    public bool RememberWindowLocation { get; set; } = false;
 
     public GeneralSettingsViewModel(IStyletLoggerManager styletLoggerManager, IEventAggregator eventAggregator)
     {
@@ -99,29 +100,34 @@ internal sealed class GeneralSettingsViewModel : Screen, IHandle<SettingsMessage
 
     public void Handle(SettingsMessage message)
     {
+        var settings = message.Settings;
+
         if (message.Action == SettingsAction.Saving)
         {
-            message.Settings[nameof(AlwaysOnTop)] = AlwaysOnTop;
-            message.Settings[nameof(ShowErrorDialogs)] = ShowErrorDialogs;
-            message.Settings["LogLevel"] = JToken.FromObject(SelectedLogLevel ?? LogLevel.Info);
-            message.Settings[nameof(EnableUILogging)] = EnableUILogging;
-            message.Settings[nameof(AllowWindowResize)] = AllowWindowResize;
-            message.Settings[nameof(AppOrientation)] = JToken.FromObject(AppOrientation);
+            settings[nameof(AlwaysOnTop)] = AlwaysOnTop;
+            settings[nameof(ShowErrorDialogs)] = ShowErrorDialogs;
+            settings["LogLevel"] = JToken.FromObject(SelectedLogLevel ?? LogLevel.Info);
+            settings[nameof(EnableUILogging)] = EnableUILogging;
+            settings[nameof(AllowWindowResize)] = AllowWindowResize;
+            settings[nameof(AppOrientation)] = JToken.FromObject(AppOrientation);
+            settings[nameof(RememberWindowLocation)] = RememberWindowLocation;
         }
         else if (message.Action == SettingsAction.Loading)
         {
-            if (message.Settings.TryGetValue<bool>(nameof(AlwaysOnTop), out var alwaysOnTop))
+            if (settings.TryGetValue<bool>(nameof(AlwaysOnTop), out var alwaysOnTop))
                 AlwaysOnTop = alwaysOnTop;
-            if (message.Settings.TryGetValue<bool>(nameof(ShowErrorDialogs), out var showErrorDialogs))
+            if (settings.TryGetValue<bool>(nameof(ShowErrorDialogs), out var showErrorDialogs))
                 ShowErrorDialogs = showErrorDialogs;
-            if (message.Settings.TryGetValue<LogLevel>("LogLevel", out var logLevel))
+            if (settings.TryGetValue<LogLevel>("LogLevel", out var logLevel))
                 SelectedLogLevel = logLevel;
-            if (message.Settings.TryGetValue<bool>(nameof(EnableUILogging), out var enableUILogging))
+            if (settings.TryGetValue<bool>(nameof(EnableUILogging), out var enableUILogging))
                 EnableUILogging = enableUILogging;
             if (message.Settings.TryGetValue<bool>(nameof(AllowWindowResize), out var allowWindowResize))
                 AllowWindowResize = allowWindowResize;
-            if (message.Settings.TryGetValue<Orientation>(nameof(AppOrientation), out var appOrientation))
+            if (settings.TryGetValue<Orientation>(nameof(AppOrientation), out var appOrientation))
                 AppOrientation = appOrientation;
+            if (settings.TryGetValue<bool>(nameof(RememberWindowLocation), out var rememberWindowLocation))
+                RememberWindowLocation = rememberWindowLocation;
         }
     }
 

@@ -20,6 +20,8 @@ internal sealed class RootViewModel : Conductor<IScreen>.Collection.AllActive, I
 
     public bool DisablePopup { get; set; }
     public int WindowHeight { get; set; }
+    public int WindowLeft { get; set; }
+    public int WindowTop { get; set; }
 
     public RootViewModel(IEventAggregator eventAggregator)
     {
@@ -42,6 +44,16 @@ internal sealed class RootViewModel : Conductor<IScreen>.Collection.AllActive, I
     public void OnSettingsClick() => _ = DialogHelper.ShowOnUIThreadAsync(Settings, "RootDialog");
     public void OnPluginClick() => _ = DialogHelper.ShowOnUIThreadAsync(Plugin, "RootDialog");
 
+    protected override void OnViewLoaded()
+    {
+        var window = Application.Current.MainWindow;
+        if (window == null)
+            return;
+
+        window.WindowStartupLocation = Settings.General.RememberWindowLocation ? WindowStartupLocation.Manual
+                                                                               : WindowStartupLocation.CenterScreen;
+    }
+
     public void OnMouseDown(object sender, MouseButtonEventArgs e)
     {
         if (sender is not Window window)
@@ -61,11 +73,17 @@ internal sealed class RootViewModel : Conductor<IScreen>.Collection.AllActive, I
         {
             settings[nameof(DisablePopup)] = DisablePopup;
             settings[nameof(WindowHeight)] = WindowHeight;
+            settings[nameof(WindowLeft)] = WindowLeft;
+            settings[nameof(WindowTop)] = WindowTop;
         }
         else if (message.Action == SettingsAction.Loading)
         {
             if (settings.TryGetValue<int>(nameof(WindowHeight), out var windowHeight))
                 WindowHeight = windowHeight;
+            if (settings.TryGetValue<int>(nameof(WindowLeft), out var windowLeft))
+                WindowLeft = windowLeft;
+            if (settings.TryGetValue<int>(nameof(WindowTop), out var windowTop))
+                WindowTop = windowTop;
 
             DisablePopup = settings.TryGetValue(nameof(DisablePopup), out var disablePopupToken) && disablePopupToken.Value<bool>();
             if (!DisablePopup)

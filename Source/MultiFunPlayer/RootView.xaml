@@ -5,7 +5,7 @@
         xmlns:s="https://github.com/canton7/Stylet"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
         mc:Ignorable="d"
         Style="{StaticResource MaterialDesignWindow}"
         x:ClassModifier="internal"
@@ -24,7 +24,10 @@
         MaxWidth="600"
         ResizeMode="CanMinimize"
         SizeToContent="Height"
+        Left="{Binding WindowLeft, Mode=TwoWay}"
+        Top="{Binding WindowTop, Mode=TwoWay}"
         Height="{Binding WindowHeight, Mode=TwoWay}"
+        WindowStartupLocation="CenterScreen"
         FadeContentIfInactive="False"
         MouseDown="{s:Action OnMouseDown}">
     <controls:MaterialWindow.TitleTemplate>
