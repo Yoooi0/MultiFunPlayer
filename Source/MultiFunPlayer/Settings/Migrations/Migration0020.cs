@@ -21,6 +21,12 @@ internal sealed class Migration0020 : AbstractConfigMigration
         Logger.Info("Migrating gamepad button gestures");
         foreach (var gesture in settings.SelectTokens("$.Bindings[*].Gesture").OfType<JObject>())
         {
+            if (!gesture.TryGetValue("$type", out var typeToken) || !typeToken.ToString().Contains("GamepadButtonGestureDescriptor"))
+                continue;
+
+            if (!gesture.ContainsKey("Button"))
+                continue;
+
             gesture.Add("Buttons", new JArray(gesture["Button"].ToString()));
             gesture.Remove("Button");
             Logger.Info("Renamed gesture property from \"Button\" to \"Buttons\"");
