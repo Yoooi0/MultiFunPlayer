@@ -33,7 +33,7 @@ internal sealed class StashScriptRepository : AbstractScriptRepository
         using var client = NetUtils.CreateHttpClient();
         var result = new Dictionary<DeviceAxis, IScriptResource>();
 
-        var query = $"{{\"query\":\"{{ findScene(id: {sceneId}) {{ files {{ path }}, paths {{ funscript }} }} }}\",\"variables\":null}}";
+        var query = $"{{\"query\":\"{{ findScene(id: {sceneId}) {{ id, title, files {{ path }}, paths {{ funscript }} }} }}\",\"variables\":null}}";
         var request = new HttpRequestMessage
         {
             RequestUri = new Uri($"http://{Endpoint.ToUriString()}/graphql"),
@@ -143,11 +143,16 @@ internal sealed class StashScriptRepository : AbstractScriptRepository
             return false;
 
         var scriptUri = queryRespone.Data.FindScene.Paths.Funscript;
-        var scriptName = Path.ChangeExtension(queryRespone.Data.FindScene.Files[0].Path, ".funscript");
+
+        var scriptName = queryRespone.Data.FindScene.Id;
+        if (!string.IsNullOrWhiteSpace(queryRespone.Data.FindScene.Title))
+            scriptName += $" - {queryRespone.Data.FindScene.Title}";
+        scriptName += ".funscript";
+
         Logger.Trace("Downloading script file [Uri: {0}]", scriptUri);
 
         var scriptStream = await client.GetStreamAsync(scriptUri, token);
-        var readerResult = FunscriptReader.Default.FromStream(scriptName, scriptUri, scriptStream);
+        var readerResult = FunscriptReader.Default.FromStream(scriptName, $"http://{Endpoint.ToUriString()}", scriptStream);
         if (!readerResult.IsSuccess)
             return false;
 
@@ -161,7 +166,7 @@ internal sealed class StashScriptRepository : AbstractScriptRepository
 
     private sealed record QueryResponse(QueryData Data);
     private sealed record QueryData(QueryFindScene FindScene);
-    private sealed record QueryFindScene(List<QueryFile> Files, QueryPaths Paths);
+    private sealed record QueryFindScene(string Id, string Title, List<QueryFile> Files, QueryPaths Paths);
     private sealed record QueryFile(string Path);
     private sealed record QueryPaths(string Funscript);
 }
