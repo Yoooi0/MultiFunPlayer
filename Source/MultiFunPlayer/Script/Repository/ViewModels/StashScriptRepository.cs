@@ -1,4 +1,4 @@
-using MultiFunPlayer.Common;
+﻿using MultiFunPlayer.Common;
 using MultiFunPlayer.MediaSource.MediaResource;
 using Newtonsoft.Json;
 using NLog;
@@ -33,7 +33,7 @@ internal sealed class StashScriptRepository : AbstractScriptRepository
         using var client = NetUtils.CreateHttpClient();
         var result = new Dictionary<DeviceAxis, IScriptResource>();
 
-        var query = $"{{\"query\":\"{{ findScene(id: {sceneId}) {{ files {{ path }} }} }}\",\"variables\":null}}";
+        var query = $"{{\"query\":\"{{ findScene(id: {sceneId}) {{ files {{ path }}, paths {{ funscript }} }} }}\",\"variables\":null}}";
         var request = new HttpRequestMessage
         {
             RequestUri = new Uri($"http://{Endpoint.ToUriString()}/graphql"),
