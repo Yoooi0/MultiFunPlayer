@@ -88,6 +88,9 @@ internal sealed class XBVRScriptRepository : AbstractScriptRepository
 
     private bool TryMatchLocal(SceneMetadata metadata, IEnumerable<DeviceAxis> axes, Dictionary<DeviceAxis, IScriptResource> result, ILocalScriptRepository localRepository)
     {
+        if (metadata?.Files == null)
+            return false;
+
         foreach (var videoFile in metadata.Files.Where(f => f.Type == "video"))
         {
             Logger.Debug("Trying to match scripts for video file [Path: {0}, Filename: {1}]", videoFile.Path, videoFile.Filename);
@@ -122,6 +125,9 @@ internal sealed class XBVRScriptRepository : AbstractScriptRepository
 
     private async Task<bool> TryMatchDms(SceneMetadata metadata, IEnumerable<DeviceAxis> axes, Dictionary<DeviceAxis, IScriptResource> result, HttpClient client, CancellationToken token)
     {
+        if (metadata?.Files == null)
+            return false;
+
         var matchedFiles = new Dictionary<DeviceAxis, SceneFile>();
         foreach (var scriptFile in metadata.Files.Where(f => f.Type == "script"))
         {
