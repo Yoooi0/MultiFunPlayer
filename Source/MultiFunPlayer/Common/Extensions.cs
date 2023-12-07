@@ -421,6 +421,14 @@ public static class NetExtensions
         throw new NotSupportedException($"{endpoint.GetType()} in not supported.");
     }
 
+    public static int GetPort(this EndPoint endpoint) => endpoint switch
+    {
+        IPEndPoint ipEndPoint => ipEndPoint.Port,
+        DnsEndPoint dnsEndPoint => dnsEndPoint.Port,
+        _ => throw new NotSupportedException($"{endpoint.GetType()} in not supported.")
+    };
+    public static string GetProtocol(this EndPoint endpoint) => endpoint.GetPort() == 443 ? "https" : "http";
+
     public static string ToUriString(this EndPoint endpoint)
     {
         if (endpoint is IPEndPoint ipEndPoint)

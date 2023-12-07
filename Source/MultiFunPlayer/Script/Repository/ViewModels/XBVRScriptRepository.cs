@@ -30,7 +30,7 @@ internal sealed class XBVRScriptRepository : AbstractScriptRepository
 
         using var client = NetUtils.CreateHttpClient();
         var result = new Dictionary<DeviceAxis, IScriptResource>();
-        var uri = new Uri($"http://{Endpoint.ToUriString()}/api/scene/{sceneId}");
+        var uri = new Uri($"{Endpoint.GetProtocol()}://{Endpoint.ToUriString()}/api/scene/{sceneId}");
         var response = await client.GetStringAsync(uri, token);
 
         var metadata = JsonConvert.DeserializeObject<SceneMetadata>(response);
@@ -145,7 +145,7 @@ internal sealed class XBVRScriptRepository : AbstractScriptRepository
 
         foreach (var (axis, script) in matchedFiles)
         {
-            var scriptUri = new Uri($"http://{Endpoint.ToUriString()}/api/dms/file/{script.Id}");
+            var scriptUri = new Uri($"{Endpoint.GetProtocol()}://{Endpoint.ToUriString()}/api/dms/file/{script.Id}");
             Logger.Trace("Downloading {0} script file [Uri: {1}]", axis, scriptUri);
 
             var scriptStream = await client.GetStreamAsync(scriptUri, token);

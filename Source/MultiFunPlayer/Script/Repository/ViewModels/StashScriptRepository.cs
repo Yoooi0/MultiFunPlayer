@@ -36,7 +36,7 @@ internal sealed class StashScriptRepository : AbstractScriptRepository
         var query = $"{{\"query\":\"{{ findScene(id: {sceneId}) {{ files {{ path }} }} }}\",\"variables\":null}}";
         var request = new HttpRequestMessage
         {
-            RequestUri = new Uri($"http://{Endpoint.ToUriString()}/graphql"),
+            RequestUri = new Uri($"{Endpoint.GetProtocol()}://{Endpoint.ToUriString()}/graphql"),
             Method = HttpMethod.Post,
             Content = new StringContent(query, Encoding.UTF8, "application/json")
         };
