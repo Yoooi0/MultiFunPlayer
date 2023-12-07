@@ -1,4 +1,4 @@
-﻿using MultiFunPlayer.Common;
+using MultiFunPlayer.Common;
 using MultiFunPlayer.MediaSource.MediaResource;
 using Newtonsoft.Json;
 using NLog;
@@ -99,6 +99,9 @@ internal sealed class StashScriptRepository : AbstractScriptRepository
 
     private bool TryMatchLocal(QueryResponse queryRespone, IEnumerable<DeviceAxis> axes, Dictionary<DeviceAxis, IScriptResource> result, ILocalScriptRepository localRepository)
     {
+        if (queryRespone?.Data?.FindScene?.Files == null)
+            return false;
+
         foreach (var file in queryRespone.Data.FindScene.Files)
         {
             var directory = Path.GetDirectoryName(file.Path);
@@ -136,6 +139,9 @@ internal sealed class StashScriptRepository : AbstractScriptRepository
 
     private async Task<bool> TryMatchDms(QueryResponse queryRespone, Dictionary<DeviceAxis, IScriptResource> result, HttpClient client, CancellationToken token)
     {
+        if (queryRespone?.Data?.FindScene?.Paths?.Funscript == null)
+            return false;
+
         var scriptUri = queryRespone.Data.FindScene.Paths.Funscript;
         var scriptName = Path.ChangeExtension(queryRespone.Data.FindScene.Files[0].Path, ".funscript");
         Logger.Trace("Downloading script file [Uri: {0}]", scriptUri);
