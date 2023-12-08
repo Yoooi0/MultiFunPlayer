@@ -115,6 +115,6 @@ internal sealed class ScriptRepositoryManager : Screen, IScriptRepositoryManager
 internal class ScriptRepositoryModel(IScriptRepository Repository) : PropertyChangedBase
 {
     public IScriptRepository Repository { get; } = Repository;
-    public bool Enabled { get; set; } = Repository.GetType() == typeof(ScriptRepositoryModel);
+    public bool Enabled { get; set; } = Repository.GetType() == typeof(LocalScriptRepository);
     public bool CanToggleEnabled { get; } = Repository.GetType() != typeof(LocalScriptRepository);
 }
