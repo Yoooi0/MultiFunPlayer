@@ -385,30 +385,20 @@ public static class NetExtensions
     {
         if (endpoint is IPEndPoint ipEndPoint)
             client.Connect(ipEndPoint.Address, ipEndPoint.Port);
-        if (endpoint is DnsEndPoint dnsEndPoint)
+        else if (endpoint is DnsEndPoint dnsEndPoint)
             client.Connect(dnsEndPoint.Host, dnsEndPoint.Port);
-
-        throw new NotSupportedException($"{endpoint.GetType()} in not supported.");
+        else
+            throw new NotSupportedException($"{endpoint.GetType()} in not supported.");
     }
 
     public static void Connect(this UdpClient client, EndPoint endpoint)
     {
         if (endpoint is IPEndPoint ipEndPoint)
             client.Connect(ipEndPoint.Address, ipEndPoint.Port);
-        if (endpoint is DnsEndPoint dnsEndPoint)
+        else if (endpoint is DnsEndPoint dnsEndPoint)
             client.Connect(dnsEndPoint.Host, dnsEndPoint.Port);
-
-        throw new NotSupportedException($"{endpoint.GetType()} in not supported.");
-    }
-
-    public static Task ConnectAsync(this TcpClient client, EndPoint endpoint)
-    {
-        if (endpoint is IPEndPoint ipEndPoint)
-            return client.ConnectAsync(ipEndPoint.Address, ipEndPoint.Port);
-        if (endpoint is DnsEndPoint dnsEndPoint)
-            return client.ConnectAsync(dnsEndPoint.Host, dnsEndPoint.Port);
-
-        throw new NotSupportedException($"{endpoint.GetType()} in not supported.");
+        else
+            throw new NotSupportedException($"{endpoint.GetType()} in not supported.");
     }
 
     public static bool IsLocalhost(this EndPoint endpoint)
