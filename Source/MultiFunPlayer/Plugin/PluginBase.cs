@@ -266,9 +266,7 @@ public abstract class AsyncPluginBase : PluginBase
 
         var taskCompletionSource = new TaskCompletionSource();
         await using var registration = cancellationToken.Register(() => taskCompletionSource.TrySetCanceled(cancellationToken), useSynchronizationContext: false);
-
-        try { await taskCompletionSource.Task; }
-        finally { await registration.DisposeAsync(); }
+        await taskCompletionSource.Task;
     }
 
     internal async Task InternalExecuteAsync()
