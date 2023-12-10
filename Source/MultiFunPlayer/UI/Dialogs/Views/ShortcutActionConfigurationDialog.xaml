@@ -112,7 +112,7 @@
                 <DataTemplate DataType="{x:Type input:IShortcutSetting}">
                     <DockPanel LastChildFill="True">
                         <TextBlock Text="{Binding Label, StringFormat={}{0}:}"
-                                   Visibility="{Binding Label, Converter={StaticResource notNullToVisibleConverter}}"
+                                   Visibility="{Binding Label, Converter={StaticResource NullableToVisibilityConverter}}"
                                    VerticalAlignment="Center"
                                    Margin="0 0 10 0"
                                    DockPanel.Dock="Left" />
