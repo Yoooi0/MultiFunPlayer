@@ -344,7 +344,7 @@ public static class WebSocketExtensions
         do
         {
             result = await client.ReceiveAsync(readMemory, token);
-            await memoryStream.WriteAsync(readMemory, token);
+            await memoryStream.WriteAsync(readMemory[..result.Count], token);
         } while (!token.IsCancellationRequested && !result.EndOfMessage);
 
         return memoryStream.ToArray();
