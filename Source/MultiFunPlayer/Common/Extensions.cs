@@ -299,14 +299,15 @@ public static class StreamExtensions
         using var memoryOwner = MemoryPool<byte>.Shared.Rent(1024);
         await using var memoryStream = new MemoryStream();
 
-        var readMemory = memoryOwner.Memory[..Math.Min(count, 1024)];
+        var readMemory = memoryOwner.Memory;
         while (memoryStream.Position < count)
         {
-            var read = await stream.ReadAsync(readMemory, token);
+            var remaining = Math.Min(count - (int)memoryStream.Position, readMemory.Length);
+            var read = await stream.ReadAsync(readMemory[..remaining], token);
             if (read == 0)
                 break;
 
-            await memoryStream.WriteAsync(readMemory, token);
+            await memoryStream.WriteAsync(readMemory[..read], token);
         }
 
         return memoryStream.ToArray();
@@ -314,17 +315,17 @@ public static class StreamExtensions
 
     public static byte[] ReadBytes(this NetworkStream stream, int count)
     {
-        using var memoryOwner = MemoryPool<byte>.Shared.Rent(1024);
         using var memoryStream = new MemoryStream();
+        var readBuffer = ArrayPool<byte>.Shared.Rent(1024);
 
-        var readMemory = memoryOwner.Memory[..Math.Min(count, 1024)];
         while (memoryStream.Position < count)
         {
-            var read = stream.Read(readMemory.Span);
+            var remaining = Math.Min(count - (int)memoryStream.Position, readBuffer.Length);
+            var read = stream.Read(readBuffer.AsSpan(0, remaining));
             if (read == 0)
                 break;
 
-            memoryStream.Write(readMemory.Span);
+            memoryStream.Write(readBuffer.AsSpan(0, read));
         }
 
         return memoryStream.ToArray();
@@ -343,7 +344,7 @@ public static class WebSocketExtensions
         do
         {
             result = await client.ReceiveAsync(readMemory, token);
-            await memoryStream.WriteAsync(readMemory, token);
+            await memoryStream.WriteAsync(readMemory[..result.Count], token);
         } while (!token.IsCancellationRequested && !result.EndOfMessage);
 
         return memoryStream.ToArray();
