@@ -21,6 +21,7 @@ internal sealed class OfsMediaSource(IShortcutManager shortcutManager, IEventAgg
     public override ConnectionStatus Status { get; protected set; }
 
     public Uri Uri { get; set; } = new Uri("ws://127.0.0.1:8080/ofs");
+    public bool ForceSeek { get; set; } = false;
 
     public bool IsConnected => Status == ConnectionStatus.Connected;
     public bool IsConnectBusy => Status == ConnectionStatus.Connecting || Status == ConnectionStatus.Disconnecting;
@@ -94,7 +95,7 @@ internal sealed class OfsMediaSource(IShortcutManager shortcutManager, IEventAgg
                             break;
                         case "time_change":
                             if (dataToken.TryGetValue<double>("time", out var position) && position >= 0)
-                                PublishMessage(new MediaPositionChangedMessage(TimeSpan.FromSeconds(position), ForceSeek: true));
+                                PublishMessage(new MediaPositionChangedMessage(TimeSpan.FromSeconds(position), ForceSeek));
                             break;
                         case "playbackspeed_change":
                             if (dataToken.TryGetValue<double>("speed", out var speed) && speed > 0)
@@ -189,11 +190,14 @@ internal sealed class OfsMediaSource(IShortcutManager shortcutManager, IEventAgg
         if (action == SettingsAction.Saving)
         {
             settings[nameof(Uri)] = Uri?.ToString();
+            settings[nameof(ForceSeek)] = ForceSeek;
         }
         else if (action == SettingsAction.Loading)
         {
             if (settings.TryGetValue<Uri>(nameof(Uri), out var uri))
                 Uri = uri;
+            if (settings.TryGetValue<bool>(nameof(ForceSeek), out var forceSeek))
+                ForceSeek = forceSeek;
         }
     }
 

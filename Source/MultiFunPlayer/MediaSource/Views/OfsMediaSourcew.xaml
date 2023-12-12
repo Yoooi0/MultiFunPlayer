@@ -71,7 +71,7 @@
             </StackPanel>
         </Expander.Header>
 
-        <StackPanel Margin="20">
+        <StackPanel Margin="20" Orientation="Horizontal">
             <DockPanel DockPanel.Dock="Left"
                         LastChildFill="False">
                 <DockPanel.Resources>
@@ -91,6 +91,40 @@
                          Width="250"
                          Margin="0 -12 20 0"
                          VerticalAlignment="Center"/>
+            </DockPanel>
+
+            <DockPanel LastChildFill="False" Margin="0 0 0 10">
+                <TextBlock Text="Force seek:"
+                           DockPanel.Dock="Left"
+                           Margin="0 0 10 0"
+                           VerticalAlignment="Center"/>
+
+                <CheckBox IsChecked="{Binding ForceSeek}"
+                          Style="{StaticResource MaterialDesignSwitchToggleButton}"
+                          Margin="0 0 5 0"
+                          DockPanel.Dock="Left"/>
+
+                <material:ColorZone DockPanel.Dock="Right"
+                                    VerticalAlignment="Center"
+                                    CornerRadius="7"
+                                    Mode="Custom"
+                                    Background="{DynamicResource PrimaryHueLightBrush}"
+                                    Width="14"
+                                    Height="14">
+                    <material:ColorZone.ToolTip>
+                        <TextBlock>
+                            Forces each media position change to be applied immediately.<LineBreak/>
+                            Useful when doing a lot of small time skips in OFS.<LineBreak/>
+                            If enabled requires "Sync when Seek" option to be disabled.
+                        </TextBlock>
+                    </material:ColorZone.ToolTip>
+                    <material:PackIcon Kind="QuestionMark"
+                                       Foreground="Black"
+                                       Width="10"
+                                       Height="10"
+                                       HorizontalAlignment="Center"
+                                       VerticalAlignment="Center"/>
+                </material:ColorZone>
             </DockPanel>
         </StackPanel>
     </Expander>
