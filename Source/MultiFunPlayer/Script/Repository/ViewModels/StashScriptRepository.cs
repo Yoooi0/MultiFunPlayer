@@ -4,7 +4,6 @@ using Newtonsoft.Json;
 using NLog;
 using System.ComponentModel;
 using System.IO;
-using System.Net;
 using System.Net.Http;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -17,14 +16,14 @@ internal sealed class StashScriptRepository : AbstractScriptRepository
 {
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
-    [JsonProperty] public EndPoint Endpoint { get; set; } = new IPEndPoint(IPAddress.Loopback, 9999);
+    [JsonProperty] public Uri ServerBaseUri { get; set; } = new Uri("http://127.0.0.1:9999");
     [JsonProperty] public StashVideoMatchType VideoMatchType { get; set; } = StashVideoMatchType.UseFirstMatchOnly;
     [JsonProperty] public DeviceAxis ScriptMatchAxis { get; set; } = DeviceAxis.All.First();
 
     public override async ValueTask<Dictionary<DeviceAxis, IScriptResource>> SearchForScriptsAsync(
         MediaResourceInfo mediaResource, IEnumerable<DeviceAxis> axes, ILocalScriptRepository localRepository, CancellationToken token)
     {
-        if (Endpoint == null)
+        if (ServerBaseUri == null)
             return [];
 
         if (!TryGetSceneId(out var sceneId))
@@ -36,7 +35,7 @@ internal sealed class StashScriptRepository : AbstractScriptRepository
         var query = $"{{\"query\":\"{{ findScene(id: {sceneId}) {{ id, title, files {{ path }}, paths {{ funscript }} }} }}\",\"variables\":null}}";
         var request = new HttpRequestMessage
         {
-            RequestUri = new Uri($"http://{Endpoint.ToUriString()}/graphql"),
+            RequestUri = new Uri(ServerBaseUri, "/graphql"),
             Method = HttpMethod.Post,
             Content = new StringContent(query, Encoding.UTF8, "application/json")
         };
@@ -62,18 +61,8 @@ internal sealed class StashScriptRepository : AbstractScriptRepository
             }
             else if (mediaResource.IsUrl)
             {
-                var ipOrHost = Endpoint switch
-                {
-                    IPEndPoint ipEndpoint => ipEndpoint.Address.ToString(),
-                    DnsEndPoint dnsEndpoint => dnsEndpoint.Host,
-                    _ => null
-                };
-
-                if (string.IsNullOrEmpty(ipOrHost))
-                    return false;
-
                 var mediaResourceUri = new Uri(mediaResource.IsModified ? mediaResource.ModifiedPath : mediaResource.OriginalPath);
-                if (string.Equals(mediaResourceUri.Host, ipOrHost, StringComparison.OrdinalIgnoreCase))
+                if (string.Equals(mediaResourceUri.Host, ServerBaseUri.Host, StringComparison.OrdinalIgnoreCase))
                     return false;
 
                 // <endpoint>/res?scene=<sceneId>
@@ -152,7 +141,7 @@ internal sealed class StashScriptRepository : AbstractScriptRepository
         Logger.Trace("Downloading script file [Uri: {0}]", scriptUri);
 
         var scriptStream = await client.GetStreamAsync(scriptUri, token);
-        var readerResult = FunscriptReader.Default.FromStream(scriptName, $"http://{Endpoint.ToUriString()}", scriptStream);
+        var readerResult = FunscriptReader.Default.FromStream(scriptName, ServerBaseUri.ToString(), scriptStream);
         if (!readerResult.IsSuccess)
             return false;
 

@@ -17,8 +17,10 @@
                        Margin="0 0 10 0"
                        VerticalAlignment="Center"/>
 
-            <controls:EndPointBox EndPoint="{Binding Endpoint}"
-                                  DockPanel.Dock="Left"/>
+            <controls:UriBox Uri="{Binding ServerBaseUri}"
+                             DockPanel.Dock="Left"
+                             ShowPathAndQuery="False"
+                             AvailableSchemes="http https"/>
         </DockPanel>
 
         <DockPanel LastChildFill="False">
