@@ -223,12 +223,9 @@ internal sealed class ButtplugOutputTarget : AsyncAbstractOutputTarget
     {
         await PolledUpdateAsync(DeviceAxis.All, () => !token.IsCancellationRequested && client.IsConnected, async (axis, snapshot, elapsed) =>
         {
-            Logger.Trace("Begin PolledUpdate [Index From: {0}, Index To: {1}, Duration: {2}, Elapsed: {3}]", snapshot.IndexFrom, snapshot.IndexTo, snapshot.Duration, elapsed);
+            Logger.Trace("Begin PolledUpdate [Axis: {0}, Index From: {1}, Index To: {2}, Duration: {3}, Elapsed: {4}]", axis, snapshot.IndexFrom, snapshot.IndexTo, snapshot.Duration, elapsed);
 
-            var settings = DeviceSettings.Where(x => x.SourceAxis == axis && x.UpdateType == ButtplugDeviceUpdateType.PolledUpdate).ToList();
-            if (settings.Count == 0)
-                return;
-
+            var settings = DeviceSettings.Where(x => x.SourceAxis == axis && x.UpdateType == ButtplugDeviceUpdateType.PolledUpdate);
             var tasks = GetDeviceTasks(snapshot, settings, token);
 
             try
