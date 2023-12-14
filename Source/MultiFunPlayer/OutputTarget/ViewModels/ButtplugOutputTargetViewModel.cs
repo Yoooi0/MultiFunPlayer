@@ -138,65 +138,12 @@ internal class ButtplugOutputTargetViewModel : AsyncAbstractOutputTarget
         {
             _ = ScanAsync(client, token);
 
-            var lastSentValuesPerDevice = new Dictionary<ButtplugDevice, Dictionary<DeviceAxis, double>>();
-            bool CheckDirtyAndUpdate(ButtplugDeviceSettings settings)
-            {
-                var device = GetDeviceFromSettings(settings);
-                if (device == null)
-                    return false;
-
-                if (!lastSentValuesPerDevice.ContainsKey(device))
-                    lastSentValuesPerDevice.Add(device, DeviceAxis.All.ToDictionary(a => a, _ => double.NaN));
-
-                var axis = settings.SourceAxis;
-                var lastSentValues = lastSentValuesPerDevice[device];
-                var currentValue = Values[axis];
-                var lastValue = lastSentValues[axis];
-
-                if (!double.IsFinite(currentValue))
-                    return false;
-                if (!AxisSettings[axis].Enabled)
-                    return false;
-
-                var shouldUpdate = !double.IsFinite(lastValue)
-                                || (currentValue == 0 && lastValue != 0)
-                                || Math.Abs(lastValue - currentValue) >= 0.005;
-
-                if (shouldUpdate)
-                    lastSentValues[axis] = currentValue;
-
-                return shouldUpdate;
-            }
-
             EventAggregator.Publish(new SyncRequestMessage());
+            using var cancellationSource = CancellationTokenSource.CreateLinkedTokenSource(token);
+            var task = await Task.WhenAny(FixedUpdateAsync(client, cancellationSource.Token), PooledUpdateAsync(client, cancellationSource.Token));
+            cancellationSource.Cancel();
 
-            await FixedUpdateAsync(() => !token.IsCancellationRequested && client.IsConnected, async elapsed =>
-            {
-                Logger.Trace("Begin FixedUpdate [Elapsed: {0}]", elapsed);
-                UpdateValues();
-
-                foreach (var orphanedDevice in lastSentValuesPerDevice.Keys.Except(AvailableDevices))
-                    lastSentValuesPerDevice.Remove(orphanedDevice);
-
-                foreach (var orphanedDevice in AvailableDevices.Where(d => lastSentValuesPerDevice.ContainsKey(d) && !GetSettingsForDevice(d).Any()))
-                {
-                    await orphanedDevice.StopAsync(token);
-                    lastSentValuesPerDevice.Remove(orphanedDevice);
-                }
-
-                var dirtySettings = DeviceSettings.Where(CheckDirtyAndUpdate);
-                var tasks = GetDeviceTasks(elapsed * 1000, dirtySettings, token);
-
-                try
-                {
-                    await Task.WhenAll(tasks);
-                }
-                catch (Exception)
-                {
-                    foreach (var exception in tasks.Where(t => t.Exception != null).Select(t => t.Exception))
-                        Logger.Debug(exception, "Buttplug device exception");
-                }
-            }, token);
+            task.ThrowIfFaulted();
         }
         catch (OperationCanceledException) { }
         catch (Exception e)
@@ -206,6 +153,94 @@ internal class ButtplugOutputTargetViewModel : AsyncAbstractOutputTarget
         }
 
         AvailableDevices.Clear();
+    }
+
+    private async Task FixedUpdateAsync(ButtplugClient client, CancellationToken token)
+    {
+        var lastSentValuesPerDevice = new Dictionary<ButtplugDevice, Dictionary<DeviceAxis, double>>();
+        bool CheckDirtyAndUpdate(ButtplugDeviceSettings settings)
+        {
+            if (settings.UpdateType != ButtplugDeviceUpdateType.FixedUpdate)
+                return false;
+
+            var device = GetDeviceFromSettings(settings);
+            if (device == null)
+                return false;
+
+            if (!lastSentValuesPerDevice.ContainsKey(device))
+                lastSentValuesPerDevice.Add(device, DeviceAxis.All.ToDictionary(a => a, _ => double.NaN));
+
+            var axis = settings.SourceAxis;
+            var lastSentValues = lastSentValuesPerDevice[device];
+            var currentValue = Values[axis];
+            var lastValue = lastSentValues[axis];
+
+            if (!double.IsFinite(currentValue))
+                return false;
+            if (!AxisSettings[axis].Enabled)
+                return false;
+
+            var shouldUpdate = !double.IsFinite(lastValue)
+                            || (currentValue == 0 && lastValue != 0)
+                            || Math.Abs(lastValue - currentValue) >= 0.005;
+
+            if (shouldUpdate)
+                lastSentValues[axis] = currentValue;
+
+            return shouldUpdate;
+        }
+
+        await FixedUpdateAsync(() => !token.IsCancellationRequested && client.IsConnected, async elapsed =>
+        {
+            Logger.Trace("Begin FixedUpdate [Elapsed: {0}]", elapsed);
+            UpdateValues();
+
+            foreach (var orphanedDevice in lastSentValuesPerDevice.Keys.Except(AvailableDevices))
+                lastSentValuesPerDevice.Remove(orphanedDevice);
+
+            foreach (var orphanedDevice in AvailableDevices.Where(d => lastSentValuesPerDevice.ContainsKey(d) && !GetSettingsForDevice(d).Any()))
+            {
+                await orphanedDevice.StopAsync(token);
+                lastSentValuesPerDevice.Remove(orphanedDevice);
+            }
+
+            var dirtySettings = DeviceSettings.Where(CheckDirtyAndUpdate);
+            var tasks = GetDeviceTasks(elapsed * 1000, dirtySettings, token);
+
+            try
+            {
+                await Task.WhenAll(tasks);
+            }
+            catch (Exception)
+            {
+                foreach (var exception in tasks.Where(t => t.Exception != null).Select(t => t.Exception))
+                    Logger.Debug(exception, "Buttplug device exception");
+            }
+        }, token);
+    }
+
+    private async Task PooledUpdateAsync(ButtplugClient client, CancellationToken token)
+    {
+        await PooledUpdateAsync(DeviceAxis.All, () => !token.IsCancellationRequested && client.IsConnected, async (axis, snapshot, elapsed) =>
+        {
+            Logger.Trace("Begin PooledUpdate [Index From: {0}, Index To: {1}, Duration: {2}, Elapsed: {3}]", snapshot.IndexFrom, snapshot.IndexTo, snapshot.Duration, elapsed);
+
+            var settings = DeviceSettings.Where(x => x.SourceAxis == axis && x.UpdateType == ButtplugDeviceUpdateType.PooledUpdate).ToList();
+            if (settings.Count == 0)
+                return;
+
+            var tasks = GetDeviceTasks(snapshot, settings, token);
+
+            try
+            {
+                await Task.WhenAll(tasks);
+            }
+            catch (Exception)
+            {
+                foreach (var exception in tasks.Where(t => t.Exception != null).Select(t => t.Exception))
+                    Logger.Debug(exception, "Buttplug device exception");
+            }
+        }, token);
     }
 
     private ButtplugDevice GetDeviceFromSettings(ButtplugDeviceSettings settings)
@@ -222,8 +257,59 @@ internal class ButtplugOutputTargetViewModel : AsyncAbstractOutputTarget
     }
 
     private IEnumerable<Task> GetDeviceTasks(double interval, IEnumerable<ButtplugDeviceSettings> settings, CancellationToken token)
-    {
-        return settings.GroupBy(m => m.DeviceName).SelectMany(deviceGroup =>
+        => GetDeviceTasks(settings, (s, a) =>
+        {
+            var value = Values[s.SourceAxis];
+            if (a is ButtplugDeviceLinearActuator linearActuator)
+            {
+                var duration = (uint)Math.Floor(interval + 0.75);
+                Logger.Trace("Sending \"{value} (Duration={duration}\" to \"{actuator}\"", value, duration, a);
+                return linearActuator.LinearAsync(duration, value, token);
+            }
+            else if (a is ButtplugDeviceRotateActuator rotateActuator)
+            {
+                var speed = Math.Clamp(Math.Abs(value - 0.5) / 0.5, 0, 1);
+                var clockwise = value > 0.5;
+                Logger.Trace("Sending \"{speed} (Clockwise={clockwise})\" to \"{actuator}\"", speed, clockwise, a);
+                return rotateActuator.RotateAsync(speed, clockwise, token);
+            }
+            else if (a is ButtplugDeviceScalarActuator scalarActuator)
+            {
+                Logger.Trace("Sending \"{value}\" to \"{actuator}\"", value, a);
+                return scalarActuator.ScalarAsync(value, token);
+            }
+
+            return Task.CompletedTask;
+        }, token);
+
+    private IEnumerable<Task> GetDeviceTasks(DeviceAxisScriptSnapshot snapshot, IEnumerable<ButtplugDeviceSettings> settings, CancellationToken token)
+        => GetDeviceTasks(settings, (_, a) =>
+        {
+            var value = snapshot.KeyframeTo.Value;
+            if (a is ButtplugDeviceLinearActuator linearActuator)
+            {
+                var duration = (uint)Math.Floor(snapshot.Duration + 0.75);
+                Logger.Trace("Sending \"{value} (Duration={duration}\" to \"{actuator}\"", value, duration, a);
+                return linearActuator.LinearAsync(duration, value, token);
+            }
+            else if (a is ButtplugDeviceRotateActuator rotateActuator)
+            {
+                var speed = Math.Clamp(Math.Abs(value - 0.5) / 0.5, 0, 1);
+                var clockwise = value > 0.5;
+                Logger.Trace("Sending \"{speed} (Clockwise={clockwise})\" to \"{actuator}\"", speed, clockwise, a);
+                return rotateActuator.RotateAsync(speed, clockwise, token);
+            }
+            else if (a is ButtplugDeviceScalarActuator scalarActuator)
+            {
+                Logger.Trace("Sending \"{value}\" to \"{actuator}\"", value, a);
+                return scalarActuator.ScalarAsync(value, token);
+            }
+
+            return Task.CompletedTask;
+        }, token);
+
+    private IEnumerable<Task> GetDeviceTasks(IEnumerable<ButtplugDeviceSettings> settings, Func<ButtplugDeviceSettings, ButtplugDeviceActuator, Task> taskFactory, CancellationToken token)
+        => settings.GroupBy(m => m.DeviceName).SelectMany(deviceGroup =>
         {
             var deviceName = deviceGroup.Key;
             return deviceGroup.GroupBy(m => m.DeviceIndex).SelectMany(indexGroup =>
@@ -238,31 +324,10 @@ internal class ButtplugOutputTargetViewModel : AsyncAbstractOutputTarget
                     if (!device.TryGetActuator(s.ActuatorIndex, s.ActuatorType, out var actuator))
                         return Task.CompletedTask;
 
-                    var value = Values[s.SourceAxis];
-                    if (actuator is ButtplugDeviceLinearActuator linearActuator)
-                    {
-                        var duration = (uint)Math.Floor(interval + 0.75);
-                        Logger.Trace("Sending \"{value} (Duration={duration}\" to \"{actuator}\"", value, duration, actuator);
-                        return linearActuator.LinearAsync(duration, value, token);
-                    }
-                    else if (actuator is ButtplugDeviceRotateActuator rotateActuator)
-                    {
-                        var speed = Math.Clamp(Math.Abs(value - 0.5) / 0.5, 0, 1);
-                        var clockwise = value > 0.5;
-                        Logger.Trace("Sending \"{speed} (Clockwise={clockwise})\" to \"{actuator}\"", speed, clockwise, actuator);
-                        return rotateActuator.RotateAsync(speed, clockwise, token);
-                    }
-                    else if (actuator is ButtplugDeviceScalarActuator scalarActuator)
-                    {
-                        Logger.Trace("Sending \"{value}\" to \"{actuator}\"", value, actuator);
-                        return scalarActuator.ScalarAsync(value, token);
-                    }
-
-                    return Task.CompletedTask;
+                    return taskFactory(s, actuator);
                 }));
             });
         });
-    }
 
     private async Task ScanAsync(ButtplugClient client, CancellationToken token)
     {
@@ -367,7 +432,8 @@ internal class ButtplugOutputTargetViewModel : AsyncAbstractOutputTarget
             DeviceIndex = SelectedDevice.Index,
             SourceAxis = SelectedDeviceAxis,
             ActuatorIndex = SelectedActuatorIndex.Value,
-            ActuatorType = SelectedActuatorType.Value
+            ActuatorType = SelectedActuatorType.Value,
+            UpdateType = ButtplugDeviceUpdateType.PooledUpdate
         });
 
         SelectedDevice = null;
@@ -394,4 +460,11 @@ internal class ButtplugDeviceSettings : PropertyChangedBase
     [JsonProperty] public DeviceAxis SourceAxis { get; set; }
     [JsonProperty] public ActuatorType ActuatorType { get; set; }
     [JsonProperty] public uint ActuatorIndex { get; set; }
+    [JsonProperty] public ButtplugDeviceUpdateType UpdateType { get; set; }
+}
+
+internal enum ButtplugDeviceUpdateType
+{
+    FixedUpdate,
+    PooledUpdate
 }
