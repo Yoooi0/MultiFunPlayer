@@ -263,7 +263,7 @@ internal sealed class ButtplugOutputTarget : AsyncAbstractOutputTarget
             if (a is ButtplugDeviceLinearActuator linearActuator)
             {
                 var duration = (uint)Math.Floor(interval + 0.75);
-                Logger.Trace("Sending \"{value} (Duration={duration}\" to \"{actuator}\"", value, duration, a);
+                Logger.Trace("Sending \"{value} (Duration={duration})\" to \"{actuator}\"", value, duration, a);
                 return linearActuator.LinearAsync(duration, value, token);
             }
             else if (a is ButtplugDeviceRotateActuator rotateActuator)
@@ -289,7 +289,7 @@ internal sealed class ButtplugOutputTarget : AsyncAbstractOutputTarget
             if (a is ButtplugDeviceLinearActuator linearActuator)
             {
                 var duration = (uint)Math.Floor(snapshot.Duration + 0.75);
-                Logger.Trace("Sending \"{value} (Duration={duration}\" to \"{actuator}\"", value, duration, a);
+                Logger.Trace("Sending \"{value} (Duration={duration})\" to \"{actuator}\"", value, duration, a);
                 return linearActuator.LinearAsync(duration, value, token);
             }
             else if (a is ButtplugDeviceRotateActuator rotateActuator)
