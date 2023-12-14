@@ -2018,10 +2018,10 @@ internal sealed class AxisValueTransition
     }
 }
 
-internal sealed class AxisStateUpdateContext(AxisState state)
+internal sealed class AxisStateUpdateContext(AxisModel model)
 {
-    private readonly AxisModel _model;
-    private readonly AxisState _state;
+    private readonly AxisModel _model = model;
+    private readonly AxisState _state = model.State;
 
     public int Index { get; set; }
     public bool Invalid => Index == AxisState.InvalidIndex;
@@ -2029,31 +2029,31 @@ internal sealed class AxisStateUpdateContext(AxisState state)
     public bool AfterScript => Index == AxisState.AfterScriptIndex;
     public bool InsideScript => Index >= 0 && Index != AxisState.AfterScriptIndex;
 
-    public int LastIndex => state.Index;
-    public bool LastInvalid => state.Invalid;
-    public bool LastBeforeScript => state.BeforeScript;
-    public bool LastAfterScript => state.AfterScript;
-    public bool LastInsideScript => state.InsideScript;
+    public int LastIndex => _state.Index;
+    public bool LastInvalid => _state.Invalid;
+    public bool LastBeforeScript => _state.BeforeScript;
+    public bool LastAfterScript => _state.AfterScript;
+    public bool LastInsideScript => _state.InsideScript;
 
     public double Value { get; set; }
     public double ScriptValue { get; set; }
     public double TransitionValue { get; set; }
     public double MotionProviderValue { get; set; }
 
-    public double LastValue => state.Value;
-    public double LastScriptValue => state.ScriptValue;
-    public double LastMotionProviderValue => state.MotionProviderValue;
-    public double LastTransitionValue => state.TransitionValue;
+    public double LastValue => _state.Value;
+    public double LastScriptValue => _state.ScriptValue;
+    public double LastMotionProviderValue => _state.MotionProviderValue;
+    public double LastTransitionValue => _state.TransitionValue;
 
     public bool InsideGap { get; set; }
     public bool IsAutoHoming { get; set; }
     public bool IsSpeedLimited { get; set; }
     public bool IsSmartLimited { get; set; }
 
-    public bool LastInsideGap => state.InsideGap;
-    public bool LastIsAutoHoming => state.IsAutoHoming;
-    public bool LastIsSpeedLimited => state.IsSpeedLimited;
-    public bool LastIsSmartLimited => state.IsSmartLimited;
+    public bool LastInsideGap => _state.InsideGap;
+    public bool LastIsAutoHoming => _state.IsAutoHoming;
+    public bool LastIsSpeedLimited => _state.IsSpeedLimited;
+    public bool LastIsSmartLimited => _state.IsSmartLimited;
 
     public bool IsDirty => ValueChanged(LastValue, Value, 0.000001);
     public bool IsScriptDirty => ValueChanged(LastScriptValue, ScriptValue, 0.000001);
@@ -2064,12 +2064,6 @@ internal sealed class AxisStateUpdateContext(AxisState state)
     private static bool ValueChanged(double last, double current, double epsilon)
         => Math.Abs(last - current) > epsilon || (double.IsFinite(current) ^ double.IsFinite(last));
 
-    public AxisStateUpdateContext(AxisModel model)
-    {
-        _model = model;
-        _state = model.State;
-    }
-
     public void BeginUpdate()
     {
         Monitor.Enter(_state);
@@ -2079,15 +2073,15 @@ internal sealed class AxisStateUpdateContext(AxisState state)
         TransitionValue = double.NaN;
         MotionProviderValue = double.NaN;
 
-        Index = state.Index;
+        Index = _state.Index;
     }
 
     public void EndUpdate(double deltaTime)
     {
-        state.IsDirty = IsDirty;
+        _state.IsDirty = IsDirty;
 
         if (double.IsFinite(Value) && double.IsFinite(LastValue))
-            state.Speed = (LastValue - Value) / deltaTime;
+            _state.Speed = (LastValue - Value) / deltaTime;
 
         if (LastIndex != Index)
         {
