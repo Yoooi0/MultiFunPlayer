@@ -66,7 +66,8 @@ internal sealed class BroadcastEvent<T> : IDisposable where T : class
             var task = await Task.WhenAny(tasks);
             cancellationToken.ThrowIfCancellationRequested();
 
-            var signalledEvent = events[tasks.IndexOf(task)];
+            index = tasks.IndexOf(task);
+            var signalledEvent = events[index];
             var result = (index, signalledEvent._value);
             signalledEvent._waitHandle.Reset();
             return result;
