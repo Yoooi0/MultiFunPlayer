@@ -282,6 +282,9 @@ internal sealed class ButtplugOutputTarget : AsyncAbstractOutputTarget
     private IEnumerable<Task> GetDeviceTasks(DeviceAxisScriptSnapshot snapshot, IEnumerable<ButtplugDeviceSettings> settings, CancellationToken token)
         => GetDeviceTasks(settings, (_, a) =>
         {
+            if (snapshot.KeyframeFrom == null || snapshot.KeyframeTo == null)
+                return Task.CompletedTask;
+
             var value = snapshot.KeyframeTo.Value;
             if (a is ButtplugDeviceLinearActuator linearActuator)
             {
