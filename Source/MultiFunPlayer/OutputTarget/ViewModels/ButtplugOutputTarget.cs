@@ -242,7 +242,7 @@ internal sealed class ButtplugOutputTarget : AsyncAbstractOutputTarget
                     if (actuator is ButtplugDeviceLinearActuator linearActuator)
                     {
                         var duration = (uint)Math.Floor(interval + 0.75);
-                        Logger.Trace("Sending \"{value} (Duration={duration}\" to \"{actuator}\"", value, duration, actuator);
+                        Logger.Trace("Sending \"{value} (Duration={duration})\" to \"{actuator}\"", value, duration, actuator);
                         return linearActuator.LinearAsync(duration, value, token);
                     }
 
