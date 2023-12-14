@@ -53,6 +53,9 @@ internal abstract class AbstractOutputTarget : Screen, IOutputTarget
         EventAggregator = eventAggregator;
         _valueProvider = valueProvider;
 
+        if (this is IHandle handler)
+            eventAggregator.Subscribe(handler);
+
         Name = GetType().GetCustomAttribute<DisplayNameAttribute>(inherit: false).DisplayName;
         Values = DeviceAxis.All.ToDictionary(a => a, _ => double.NaN);
         AxisSettings = new ObservableConcurrentDictionary<DeviceAxis, DeviceAxisSettings>(DeviceAxis.All.ToDictionary(a => a, _ => new DeviceAxisSettings()));
