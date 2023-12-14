@@ -1,14 +1,9 @@
 ﻿namespace MultiFunPlayer.Common;
 
-internal sealed class BroadcastEvent<T> : IDisposable where T : class
+internal sealed class BroadcastEvent<T>(bool initialState) : IDisposable where T : class
 {
-    private ManualResetEvent _waitHandle;
+    private ManualResetEvent _waitHandle = new(initialState);
     private volatile T _value;
-
-    public BroadcastEvent(bool initialState)
-    {
-        _waitHandle = new ManualResetEvent(initialState);
-    }
 
     public void Set(T value)
     {

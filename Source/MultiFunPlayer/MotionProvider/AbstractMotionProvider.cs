@@ -13,7 +13,7 @@ internal abstract class AbstractMotionProvider : Screen, IMotionProvider
     private readonly DeviceAxis _target;
     private readonly IEventAggregator _eventAggregator;
 
-    public string Name => GetType().GetCustomAttribute<DisplayNameAttribute>(inherit: false).DisplayName;
+    public string Name { get; init; }
     [DoNotNotify] public double Value { get; protected set; }
 
     [JsonProperty] public double Speed { get; set; } = 1;
@@ -24,6 +24,8 @@ internal abstract class AbstractMotionProvider : Screen, IMotionProvider
     {
         _target = target;
         _eventAggregator = eventAggregator;
+
+        Name = GetType().GetCustomAttribute<DisplayNameAttribute>(inherit: false).DisplayName;
     }
 
     protected override void OnPropertyChanged(string propertyName)
@@ -35,7 +37,7 @@ internal abstract class AbstractMotionProvider : Screen, IMotionProvider
     }
 
     protected virtual bool ShouldSyncOnPropertyChanged(string propertyName) => true;
-    protected void RequestSync() =>_eventAggregator?.Publish(new SyncRequestMessage(_target));
+    protected void RequestSync() => _eventAggregator?.Publish(new SyncRequestMessage(_target));
 
     public abstract void Update(double deltaTime);
 

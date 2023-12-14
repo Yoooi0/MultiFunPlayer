@@ -18,7 +18,7 @@ internal abstract class AbstractOutputTarget : Screen, IOutputTarget
     private int _statsCount;
     private int _statsJitter = int.MinValue;
 
-    public string Name => GetType().GetCustomAttribute<DisplayNameAttribute>(inherit: false).DisplayName;
+    public string Name { get; init; }
     public string Identifier => $"{Name}/{InstanceIndex}";
     public int InstanceIndex { get; }
 
@@ -53,6 +53,7 @@ internal abstract class AbstractOutputTarget : Screen, IOutputTarget
         EventAggregator = eventAggregator;
         _valueProvider = valueProvider;
 
+        Name = GetType().GetCustomAttribute<DisplayNameAttribute>(inherit: false).DisplayName;
         Values = DeviceAxis.All.ToDictionary(a => a, _ => double.NaN);
         AxisSettings = new ObservableConcurrentDictionary<DeviceAxis, DeviceAxisSettings>(DeviceAxis.All.ToDictionary(a => a, _ => new DeviceAxisSettings()));
         UpdateInterval = 10;

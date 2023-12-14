@@ -8,9 +8,6 @@ namespace MultiFunPlayer.Input;
 internal interface IShortcutBinder : IDisposable
 {
     bool HandleGestures { get; set; }
-
-    event EventHandler<GestureEventArgs> OnGesture;
-
     IReadOnlyObservableConcurrentCollection<IShortcutBinding> Bindings { get; }
 
     IShortcutActionConfiguration BindAction(IInputGestureDescriptor gestureDescriptor, string actionName);
@@ -30,31 +27,27 @@ internal interface IShortcutBinder : IDisposable
     void Clear();
 }
 
-internal class ShortcutBinder : IShortcutBinder
+internal sealed class ShortcutBinder : IShortcutBinder
 {
-    protected static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+    private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
     private readonly ObservableConcurrentCollection<IShortcutBinding> _bindings;
     private readonly ConcurrentDictionary<IInputGestureDescriptor, IShortcutBinding> _bindingLookup;
+    private readonly IInputProcessorManager _inputManager;
     private readonly IShortcutManager _shortcutManager;
-    private readonly List<IInputProcessor> _processors;
-
-    public event EventHandler<GestureEventArgs> OnGesture;
-
-    public IReadOnlyObservableConcurrentCollection<IShortcutBinding> Bindings => _bindings;
 
     public bool HandleGestures { get; set; } = true;
 
-    public ShortcutBinder(IShortcutManager shortcutManager, IEnumerable<IInputProcessor> processors)
+    public IReadOnlyObservableConcurrentCollection<IShortcutBinding> Bindings => _bindings;
+
+    public ShortcutBinder(IInputProcessorManager inputManager, IShortcutManager shortcutManager)
     {
+        _inputManager = inputManager;
         _shortcutManager = shortcutManager;
-        _bindings = new ObservableConcurrentCollection<IShortcutBinding>();
+        _bindings = [];
         _bindingLookup = new ConcurrentDictionary<IInputGestureDescriptor, IShortcutBinding>();
 
-        _processors = processors.ToList();
-        foreach (var processor in _processors)
-            processor.OnGesture += HandleGesture;
-
+        _inputManager.OnGesture += HandleGesture;
         _shortcutManager.ActionUnregistered += OnActionUnregistered;
     }
 
@@ -111,10 +104,9 @@ internal class ShortcutBinder : IShortcutBinder
     {
         if (gestureDescriptor == null || configuration == null)
             return;
-        if (!_bindingLookup.ContainsKey(gestureDescriptor))
+        if (!_bindingLookup.TryGetValue(gestureDescriptor, out var binding))
             return;
 
-        var binding = _bindingLookup[gestureDescriptor];
         var configurations = binding.Configurations;
         configurations.Remove(configuration);
     }
@@ -179,9 +171,6 @@ internal class ShortcutBinder : IShortcutBinder
 
     private void HandleGesture(object sender, IInputGesture gesture)
     {
-        var eventArgs = new GestureEventArgs(gesture);
-        OnGesture?.Invoke(this, eventArgs);
-
         if (!HandleGestures)
             return;
         if (!_bindingLookup.TryGetValue(gesture.Descriptor, out var binding))
@@ -199,10 +188,9 @@ internal class ShortcutBinder : IShortcutBinder
         }
     }
 
-    protected virtual void Dispose(bool disposing)
+    private void Dispose(bool disposing)
     {
-        foreach (var processor in _processors)
-            processor.OnGesture -= HandleGesture;
+        _inputManager.OnGesture -= HandleGesture;
     }
 
     public void Dispose()

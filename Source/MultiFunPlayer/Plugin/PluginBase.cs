@@ -4,13 +4,17 @@ using MultiFunPlayer.Property;
 using NLog;
 using Stylet;
 using StyletIoC;
+using System.Collections.Frozen;
 using System.Diagnostics.CodeAnalysis;
+using System.Reflection;
 
 namespace MultiFunPlayer.Plugin;
 
 public abstract class PluginBase : PropertyChangedBase
 {
     private readonly MessageProxy _messageProxy;
+    private readonly FrozenDictionary<Type, bool> _asyncHandlerOverrides;
+    internal CancellationTokenSource _internalCancellationSource;
 
     internal event EventHandler<Exception> OnInternalException;
 
@@ -26,6 +30,11 @@ public abstract class PluginBase : PropertyChangedBase
     {
         _messageProxy = new(HandleMessageInternal);
         Logger = LogManager.GetLogger(GetType().FullName);
+
+        _asyncHandlerOverrides = GetType().GetMethods(BindingFlags.Instance | BindingFlags.NonPublic)
+                                          .Where(m => m.Name == nameof(HandleMessageAsync))
+                                          .ToFrozenDictionary(m => m.GetParameters()[0].ParameterType,
+                                                              m => m.GetBaseDefinition().DeclaringType != m.DeclaringType);
     }
 
     #region DeviceAxis
@@ -121,6 +130,20 @@ public abstract class PluginBase : PropertyChangedBase
     protected virtual void HandleMessage(MediaChangeSpeedMessage message) { }
     protected virtual void HandleMessage(ScriptChangedMessage message) { }
     protected virtual void HandleMessage(SyncRequestMessage message) { }
+    protected virtual void HandleMessage(PostScriptSearchMessage message) { }
+
+    protected virtual Task HandleMessageAsync(MediaSpeedChangedMessage message, CancellationToken cancellationToken) => Task.CompletedTask;
+    protected virtual Task HandleMessageAsync(MediaPositionChangedMessage message, CancellationToken cancellationToken) => Task.CompletedTask;
+    protected virtual Task HandleMessageAsync(MediaPlayPauseMessage message, CancellationToken cancellationToken) => Task.CompletedTask;
+    protected virtual Task HandleMessageAsync(MediaPathChangedMessage message, CancellationToken cancellationToken) => Task.CompletedTask;
+    protected virtual Task HandleMessageAsync(MediaDurationChangedMessage message, CancellationToken cancellationToken) => Task.CompletedTask;
+    protected virtual Task HandleMessageAsync(MediaSeekMessage message, CancellationToken cancellationToken) => Task.CompletedTask;
+    protected virtual Task HandleMessageAsync(MediaPlayingChangedMessage message, CancellationToken cancellationToken) => Task.CompletedTask;
+    protected virtual Task HandleMessageAsync(MediaChangePathMessage message, CancellationToken cancellationToken) => Task.CompletedTask;
+    protected virtual Task HandleMessageAsync(MediaChangeSpeedMessage message, CancellationToken cancellationToken) => Task.CompletedTask;
+    protected virtual Task HandleMessageAsync(ScriptChangedMessage message, CancellationToken cancellationToken) => Task.CompletedTask;
+    protected virtual Task HandleMessageAsync(SyncRequestMessage message, CancellationToken cancellationToken) => Task.CompletedTask;
+    protected virtual Task HandleMessageAsync(PostScriptSearchMessage message, CancellationToken cancellationToken) => Task.CompletedTask;
 
     private void HandleMessageInternal(object e)
     {
@@ -137,23 +160,51 @@ public abstract class PluginBase : PropertyChangedBase
             else if (e is MediaChangeSpeedMessage mediaChangeSpeedMessage) HandleMessage(mediaChangeSpeedMessage);
             else if (e is ScriptChangedMessage scriptChangedMessage) HandleMessage(scriptChangedMessage);
             else if (e is SyncRequestMessage syncRequestMessage) HandleMessage(syncRequestMessage);
+            else if (e is PostScriptSearchMessage postScriptSearchMessage) HandleMessage(postScriptSearchMessage);
         }
         catch (Exception exception)
         {
             OnInternalException?.Invoke(this, exception);
         }
+
+        if (_asyncHandlerOverrides.TryGetValue(e.GetType(), out var overridden) && overridden)
+        {
+            var token = _internalCancellationSource.Token;
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    if (e is MediaSpeedChangedMessage mediaSpeedChangedMessage) await HandleMessageAsync(mediaSpeedChangedMessage, token);
+                    else if (e is MediaPositionChangedMessage mediaPositionChangedMessage) await HandleMessageAsync(mediaPositionChangedMessage, token);
+                    else if (e is MediaPlayingChangedMessage mediaPlayingChangedMessage) await HandleMessageAsync(mediaPlayingChangedMessage, token);
+                    else if (e is MediaPathChangedMessage mediaPathChangedMessage) await HandleMessageAsync(mediaPathChangedMessage, token);
+                    else if (e is MediaDurationChangedMessage mediaDurationChangedMessage) await HandleMessageAsync(mediaDurationChangedMessage, token);
+                    else if (e is MediaSeekMessage mediaSeekMessage) await HandleMessageAsync(mediaSeekMessage, token);
+                    else if (e is MediaPlayPauseMessage mediaPlayPauseMessage) await HandleMessageAsync(mediaPlayPauseMessage, token);
+                    else if (e is MediaChangePathMessage mediaChangePathMessage) await HandleMessageAsync(mediaChangePathMessage, token);
+                    else if (e is MediaChangeSpeedMessage mediaChangeSpeedMessage) await HandleMessageAsync(mediaChangeSpeedMessage, token);
+                    else if (e is ScriptChangedMessage scriptChangedMessage) await HandleMessageAsync(scriptChangedMessage, token);
+                    else if (e is SyncRequestMessage syncRequestMessage) await HandleMessageAsync(syncRequestMessage, token);
+                    else if (e is PostScriptSearchMessage postScriptSearchMessage) await HandleMessageAsync(postScriptSearchMessage, token);
+                }
+                catch (OperationCanceledException) { }
+                catch (Exception exception)
+                {
+                    OnInternalException?.Invoke(this, exception);
+                }
+            });
+        }
     }
 
-    private class MessageProxy : IHandle<object>
+    private sealed class MessageProxy(Action<object> callback) : IHandle<object>
     {
-        private readonly Action<object> _callback;
-        public MessageProxy(Action<object> callback) => _callback = callback;
-        public void Handle(object message) => _callback(message);
+        public void Handle(object message) => callback(message);
     }
     #endregion
 
-    internal void InternalInitialize()
+    internal void InternalInitialize(CancellationToken cancellationToken)
     {
+        _internalCancellationSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         EventAggregator.Subscribe(_messageProxy);
     }
 
@@ -163,6 +214,11 @@ public abstract class PluginBase : PropertyChangedBase
     internal void InternalDispose()
     {
         EventAggregator.Unsubscribe(_messageProxy);
+
+        _internalCancellationSource?.Cancel();
+        _internalCancellationSource?.Dispose();
+        _internalCancellationSource = null;
+
         Dispose(disposing: true);
         GC.SuppressFinalize(this);
     }
@@ -178,21 +234,19 @@ public abstract class SyncPluginBase : PluginBase
         throw new OperationCanceledException();
     }
 
-    internal void InternalExecute(CancellationToken cancellationToken)
+    internal void InternalExecute()
     {
-        using var cancellationSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         var internalException = default(Exception);
-
         void HandleInternalException(object _, Exception e)
         {
             if (Interlocked.CompareExchange(ref internalException, e, null) == null)
-                cancellationSource.Cancel();
+                _internalCancellationSource.Cancel();
         }
 
         try
         {
             OnInternalException += HandleInternalException;
-            Execute(cancellationSource.Token);
+            Execute(_internalCancellationSource.Token);
         }
         catch (OperationCanceledException) when (internalException != null) { internalException.Throw(); }
         catch (Exception e) when (internalException != null) { throw new AggregateException(internalException, e); }
@@ -211,27 +265,23 @@ public abstract class AsyncPluginBase : PluginBase
         }
 
         var taskCompletionSource = new TaskCompletionSource();
-        using var registration = cancellationToken.Register(() => taskCompletionSource.TrySetCanceled(cancellationToken), useSynchronizationContext: false);
-
-        try { await taskCompletionSource.Task; }
-        finally { await registration.DisposeAsync(); }
+        await using var registration = cancellationToken.Register(() => taskCompletionSource.TrySetCanceled(cancellationToken), useSynchronizationContext: false);
+        await taskCompletionSource.Task;
     }
 
-    internal async Task InternalExecuteAsync(CancellationToken cancellationToken)
+    internal async Task InternalExecuteAsync()
     {
-        using var cancellationSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         var internalException = default(Exception);
-
         void HandleInternalException(object _, Exception e)
         {
             if (Interlocked.CompareExchange(ref internalException, e, null) == null)
-                cancellationSource.Cancel();
+                _internalCancellationSource.Cancel();
         }
 
         try
         {
             OnInternalException += HandleInternalException;
-            await ExecuteAsync(cancellationSource.Token);
+            await ExecuteAsync(_internalCancellationSource.Token);
         }
         catch (OperationCanceledException) when (internalException != null) { internalException.Throw(); }
         catch (Exception e) when (internalException != null) { throw new AggregateException(internalException, e); }

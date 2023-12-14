@@ -1,0 +1,144 @@
+﻿<UserControl x:Class="MultiFunPlayer.UI.Dialogs.Views.ShortcutActionConfigurationDialog"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:material="http://materialdesigninxaml.net/winfx/xaml/themes"
+             xmlns:s="https://github.com/canton7/Stylet"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:metro="http://metro.mahapps.com/winfx/xaml/controls" 
+             xmlns:ui="clr-namespace:MultiFunPlayer.UI"
+             xmlns:input="clr-namespace:MultiFunPlayer.Input"
+             xmlns:controls="clr-namespace:MultiFunPlayer.UI.Controls"
+             xmlns:common="clr-namespace:MultiFunPlayer.Common"
+             mc:Ignorable="d" 
+             d:DesignHeight="450" d:DesignWidth="800"
+             x:ClassModifier="internal">
+    <DockPanel Margin="20" MaxWidth="300" MinWidth="150">
+        <Button DockPanel.Dock="Top"
+                Style="{StaticResource MaterialDesignFlatButton}"
+                material:RippleAssist.Feedback="{DynamicResource MaterialDesignBody}"
+                Foreground="{DynamicResource MaterialDesignBody}"
+                Height="24"
+                Width="24"
+                Padding="0"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Top"
+                Margin="0 -15 -15 0"
+                Command="{x:Static material:DialogHost.CloseDialogCommand}">
+            <material:PackIcon Kind="Close" 
+                               Height="20" 
+                               Width="20"/>
+        </Button>
+
+        <ItemsControl ItemsSource="{Binding Settings}">
+            <ItemsControl.Resources>
+                <ui:ShortcutSettingTemplateSelector x:Key="ShortcutSettingTemplateSelector"/>
+
+                <DataTemplate x:Key="BooleanTemplate" DataType="{x:Type input:IShortcutSetting}">
+                    <DockPanel>
+                        <CheckBox IsChecked="{Binding Value}" />
+                    </DockPanel>
+                </DataTemplate>
+                <DataTemplate x:Key="Int32Template" DataType="{x:Type input:IShortcutSetting}">
+                    <DockPanel>
+                        <metro:NumericUpDown Value="{Binding Value}" StringFormat="{Binding StringFormat}"/>
+                    </DockPanel>
+                </DataTemplate>
+                <DataTemplate x:Key="SingleTemplate" DataType="{x:Type input:IShortcutSetting}">
+                    <DockPanel>
+                        <metro:NumericUpDown Value="{Binding Value}" StringFormat="{Binding StringFormat}"/>
+                    </DockPanel>
+                </DataTemplate>
+                <DataTemplate x:Key="DoubleTemplate" DataType="{x:Type input:IShortcutSetting}">
+                    <DockPanel>
+                        <metro:NumericUpDown Value="{Binding Value}" StringFormat="{Binding StringFormat}"/>
+                    </DockPanel>
+                </DataTemplate>
+                <DataTemplate x:Key="StringTemplate" DataType="{x:Type input:IShortcutSetting}">
+                    <DockPanel>
+                        <TextBox Text="{Binding Value}"
+                                 material:TextFieldAssist.HasClearButton="True" />
+                    </DockPanel>
+                </DataTemplate>
+                <DataTemplate x:Key="OneOfDefaultTemplate" DataType="{x:Type input:IOneOfShortcutSetting}">
+                    <DockPanel>
+                        <ComboBox SelectedItem="{Binding Value}" 
+                                  ItemsSource="{Binding ItemsSource}"
+                                  material:TextFieldAssist.HasClearButton="True" />
+                    </DockPanel>
+                </DataTemplate>
+                <DataTemplate x:Key="SmartLimitPointsTemplate" DataType="{x:Type input:IShortcutSetting}">
+                    <DockPanel>
+                        <controls:SmartLimitPreview Points="{Binding Value}"
+                                                    HorizontalAlignment="Center"/>
+                    </DockPanel>
+                </DataTemplate>
+                <DataTemplate x:Key="CustomCurveMotionProviderPointsTemplate" DataType="{x:Type input:IShortcutSetting}">
+                    <StackPanel>
+                        <DockPanel LastChildFill="True">
+                            <TextBlock Text="Interpolation type:" 
+                                       DockPanel.Dock="Left"
+                                       Margin="0 0 10 0"
+                                       VerticalAlignment="Center"/>
+
+                            <ComboBox DockPanel.Dock="Left"
+                                      ItemsSource="{Binding Source={ui:EnumBindingSource {x:Type common:InterpolationType}}}" 
+                                      SelectedItem="{Binding Value.InterpolationType}"/>
+                        </DockPanel>
+                        
+                        <DockPanel LastChildFill="True"
+                                   Margin="0 0 0 10">
+                            <TextBlock Text="Duration:" 
+                                       DockPanel.Dock="Left"
+                                       Margin="0 0 10 0"
+                                       VerticalAlignment="Center"/>
+
+                            <metro:NumericUpDown Value="{Binding Value.Duration}"
+                                                 x:Name="CustomCurveMotionProviderPointsTemplateDuration"
+                                                 Minimum="1"
+                                                 Maximum="60"/>
+                        </DockPanel>
+
+                        <controls:DraggablePointCanvas Points="{Binding Value.Points}"
+                                                       Height="150"
+                                                       Width="300"
+                                                       Viewport="{Binding Value.Viewport}"
+                                                       InterpolationType="{Binding Value.InterpolationType}"
+                                                       PopupFormat="{}{0:F1}s, {1:P0}"/>
+                    </StackPanel>
+                </DataTemplate>
+            </ItemsControl.Resources>
+            <ItemsControl.ItemTemplate>
+                <DataTemplate DataType="{x:Type input:IShortcutSetting}">
+                    <DockPanel LastChildFill="True">
+                        <TextBlock Text="{Binding Label, StringFormat={}{0}:}"
+                                   Visibility="{Binding Label, Converter={StaticResource NullableToVisibilityConverter}}"
+                                   VerticalAlignment="Center"
+                                   Margin="0 0 10 0"
+                                   DockPanel.Dock="Left" />
+
+                        <material:ColorZone DockPanel.Dock="Right"
+                                            VerticalAlignment="Center"
+                                            CornerRadius="7"
+                                            Mode="PrimaryLight"
+                                            Width="14"
+                                            Height="14"
+                                            Margin="10 0 0 0"
+                                            ToolTip="{Binding Description}"
+                                            Visibility="{Binding Description, Converter={StaticResource NullableToVisibilityConverter}}">
+                            <material:PackIcon Kind="Help"
+                                               Width="10"
+                                               Height="10"
+                                               HorizontalAlignment="Center"
+                                               VerticalAlignment="Center"/>
+                        </material:ColorZone>
+
+                        <ContentControl Content="{Binding}" 
+                                        ContentTemplateSelector="{StaticResource ShortcutSettingTemplateSelector}"
+                                        DockPanel.Dock="Left" />
+                    </DockPanel>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+    </DockPanel>
+</UserControl>

@@ -10,7 +10,7 @@ namespace MultiFunPlayer.UI.Controls;
 /// Interaction logic for EndpointBox.xaml
 /// </summary>
 [AddINotifyPropertyChangedInterface]
-public partial class EndPointBox : UserControl
+public sealed partial class EndPointBox : UserControl
 {
     [OnChangedMethod(nameof(UpdateEndPoint))]
     public string HostOrIPAddress { get; set; }

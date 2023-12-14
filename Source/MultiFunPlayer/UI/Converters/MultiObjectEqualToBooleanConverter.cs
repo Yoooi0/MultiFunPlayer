@@ -3,7 +3,7 @@ using System.Windows.Data;
 
 namespace MultiFunPlayer.UI.Converters;
 
-internal class MultiObjectEqualToBooleanConverter : IMultiValueConverter
+internal sealed class MultiObjectEqualToBooleanConverter : IMultiValueConverter
 {
     public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
     {

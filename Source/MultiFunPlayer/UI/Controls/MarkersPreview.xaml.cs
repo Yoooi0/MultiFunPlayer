@@ -1,4 +1,5 @@
 ﻿using MultiFunPlayer.Common;
+using MultiFunPlayer.Script;
 using MultiFunPlayer.UI.Controls.ViewModels;
 using PropertyChanged;
 using System.Collections.Specialized;
@@ -14,7 +15,7 @@ namespace MultiFunPlayer.UI.Controls;
 /// Interaction logic for MarkersPreview.xaml
 /// </summary>
 [AddINotifyPropertyChangedInterface]
-internal partial class MarkersPreview : UserControl
+internal sealed partial class MarkersPreview : UserControl
 {
     private readonly Color[] _colors;
 
@@ -136,8 +137,8 @@ internal partial class MarkersPreview : UserControl
     {
         InitializeComponent();
 
-        _colors = new Color[]
-        {
+        _colors =
+        [
             (Color)ColorConverter.ConvertFromString("#d94452"),
             (Color)ColorConverter.ConvertFromString("#e86c3f"),
             (Color)ColorConverter.ConvertFromString("#f5ba45"),
@@ -145,7 +146,7 @@ internal partial class MarkersPreview : UserControl
             (Color)ColorConverter.ConvertFromString("#35bb9b"),
             (Color)ColorConverter.ConvertFromString("#5690dc"),
             (Color)ColorConverter.ConvertFromString("#967ada")
-        };
+        ];
     }
 
     private void RefreshChapters()
@@ -293,7 +294,7 @@ internal partial class MarkersPreview : UserControl
     }
 }
 
-internal class ChapterModel
+internal sealed class ChapterModel
 {
     public string Name { get; init; }
     public double StartPosition { get; init; }
@@ -306,7 +307,7 @@ internal class ChapterModel
     public double CanvasLength => CanvasRight - CanvasLeft;
 }
 
-internal class BookmarkModel
+internal sealed class BookmarkModel
 {
     public string Name { get; init; }
     public double Position { get; init; }
@@ -315,5 +316,5 @@ internal class BookmarkModel
     public double CanvasLeft => Math.Floor(Position * CanvasMultiplier);
 }
 
-internal record ChapterToolTipModel(string Name, TimeSpan StartPosition, TimeSpan EndPosition);
-internal record MarkerToolTipModel(string MarkerType, string Name, TimeSpan Position);
+internal sealed record ChapterToolTipModel(string Name, TimeSpan StartPosition, TimeSpan EndPosition);
+internal sealed record MarkerToolTipModel(string MarkerType, string Name, TimeSpan Position);

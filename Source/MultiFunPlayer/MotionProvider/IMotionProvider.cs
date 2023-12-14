@@ -1,7 +1,4 @@
-﻿using MultiFunPlayer.Common;
-using MultiFunPlayer.Input;
-
-namespace MultiFunPlayer.MotionProvider;
+﻿namespace MultiFunPlayer.MotionProvider;
 
 internal interface IMotionProvider
 {

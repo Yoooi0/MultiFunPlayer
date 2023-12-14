@@ -1,6 +1,7 @@
 using MultiFunPlayer.Common;
 using MultiFunPlayer.Input;
 using MultiFunPlayer.Input.RawInput;
+using MultiFunPlayer.Input.TCode;
 using MultiFunPlayer.Input.XInput;
 using MultiFunPlayer.UI.Dialogs.ViewModels;
 using Newtonsoft.Json;
@@ -15,18 +16,20 @@ using System.Windows.Data;
 namespace MultiFunPlayer.UI.Controls.ViewModels;
 
 [JsonObject(MemberSerialization = MemberSerialization.OptIn)]
-internal class ShortcutSettingsViewModel : Screen, IHandle<SettingsMessage>, IDisposable
+internal sealed class ShortcutSettingsViewModel : Screen, IHandle<SettingsMessage>, IDisposable
 {
-    protected static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-    private readonly IShortcutManager _manager;
-    private readonly IShortcutBinder _binder;
+    private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+
+    private readonly IInputProcessorManager _inputManager;
+    private readonly IShortcutManager _shortcutManager;
+    private readonly IShortcutBinder _shortcutBinder;
     private readonly Channel<IInputGesture> _captureGestureChannel;
     private CancellationTokenSource _captureGestureCancellationSource;
 
     public string ActionsFilter { get; set; }
     public ICollectionView AvailableActionsView { get; }
-    public IReadOnlyObservableConcurrentCollection<string> AvailableActions => _manager.AvailableActions;
-    public IReadOnlyObservableConcurrentCollection<IShortcutBinding> Bindings => _binder.Bindings;
+    public IReadOnlyObservableConcurrentCollection<string> AvailableActions => _shortcutManager.AvailableActions;
+    public IReadOnlyObservableConcurrentCollection<IShortcutBinding> Bindings => _shortcutBinder.Bindings;
 
     public bool IsCapturingGesture { get; private set; }
     public IInputGestureDescriptor CapturedGesture { get; set; }
@@ -37,14 +40,17 @@ internal class ShortcutSettingsViewModel : Screen, IHandle<SettingsMessage>, IDi
     [JsonProperty] public bool IsMouseButtonGestureEnabled { get; set; } = false;
     [JsonProperty] public bool IsGamepadAxisGestureEnabled { get; set; } = true;
     [JsonProperty] public bool IsGamepadButtonGestureEnabled { get; set; } = true;
+    [JsonProperty] public bool IsTCodeButtonGestureEnabled { get; set; } = true;
+    [JsonProperty] public bool IsTCodeAxisGestureEnabled { get; set; } = true;
 
-    public ShortcutSettingsViewModel(IShortcutManager manager, IShortcutBinder binder, IEventAggregator eventAggregator)
+    public ShortcutSettingsViewModel(IInputProcessorManager inputManager, IShortcutManager shortcutManager, IShortcutBinder shortcutBinder, IEventAggregator eventAggregator)
     {
         DisplayName = "Shortcut";
-        _manager = manager;
-        _binder = binder;
+        _inputManager = inputManager;
+        _shortcutManager = shortcutManager;
+        _shortcutBinder = shortcutBinder;
 
-        Logger.Debug($"Initialized with {manager.AvailableActions.Count} available actions");
+        Logger.Debug($"Initialized with {shortcutManager.AvailableActions.Count} available actions");
 
         eventAggregator.Subscribe(this);
 
@@ -56,7 +62,7 @@ internal class ShortcutSettingsViewModel : Screen, IHandle<SettingsMessage>, IDi
             if (SelectedBinding == null)
                 return false;
 
-            if (!_manager.ActionAcceptsGesture(actionName, SelectedBinding.Gesture))
+            if (!_shortcutManager.ActionAcceptsGesture(actionName, SelectedBinding.Gesture))
                 return false;
 
             if (!string.IsNullOrWhiteSpace(ActionsFilter))
@@ -69,7 +75,7 @@ internal class ShortcutSettingsViewModel : Screen, IHandle<SettingsMessage>, IDi
             return true;
         };
 
-        _binder.OnGesture += HandleGesture;
+        _inputManager.OnGesture += HandleGesture;
         _captureGestureChannel = Channel.CreateBounded<IInputGesture>(new BoundedChannelOptions(1)
         {
             FullMode = BoundedChannelFullMode.DropOldest,
@@ -83,29 +89,31 @@ internal class ShortcutSettingsViewModel : Screen, IHandle<SettingsMessage>, IDi
                 AvailableActionsView.Refresh();
         };
 
-        RegisterActions(_manager);
+        RegisterActions(_shortcutManager);
     }
 
-    protected override void OnActivate() => _binder.HandleGestures = false;
-    protected override void OnDeactivate() => _binder.HandleGestures = true;
+    protected override void OnActivate() => _shortcutBinder.HandleGestures = false;
+    protected override void OnDeactivate() => _shortcutBinder.HandleGestures = true;
 
-    private async void HandleGesture(object sender, GestureEventArgs e)
+    private void HandleGesture(object sender, IInputGesture gesture)
     {
         if (!IsCapturingGesture)
             return;
 
-        switch (e.Gesture)
+        switch (gesture)
         {
             case KeyboardGesture when !IsKeyboardKeysGestureEnabled:
             case MouseAxisGesture when !IsMouseAxisGestureEnabled:
             case MouseButtonGesture when !IsMouseButtonGestureEnabled:
             case GamepadAxisGesture when !IsGamepadAxisGestureEnabled:
             case GamepadButtonGesture when !IsGamepadButtonGestureEnabled:
+            case TCodeButtonGesture when !IsTCodeButtonGestureEnabled:
+            case TCodeAxisGesture when !IsTCodeAxisGestureEnabled:
             case IAxisInputGesture axisGesture when Math.Abs(axisGesture.Delta) < 0.01:
                 return;
         }
 
-        await _captureGestureChannel.Writer.WriteAsync(e.Gesture);
+        _captureGestureChannel.Writer.TryWrite(gesture);
     }
 
     public async void CaptureGesture(object sender, RoutedEventArgs e)
@@ -115,7 +123,8 @@ internal class ShortcutSettingsViewModel : Screen, IHandle<SettingsMessage>, IDi
 
         if (!IsKeyboardKeysGestureEnabled && !IsMouseAxisGestureEnabled
         && !IsMouseButtonGestureEnabled && !IsGamepadAxisGestureEnabled
-        && !IsGamepadButtonGestureEnabled)
+        && !IsGamepadButtonGestureEnabled && !IsTCodeButtonGestureEnabled
+        && !IsTCodeAxisGestureEnabled)
             return;
 
         _captureGestureCancellationSource = new CancellationTokenSource();
@@ -132,7 +141,7 @@ internal class ShortcutSettingsViewModel : Screen, IHandle<SettingsMessage>, IDi
         if (CapturedGesture == null)
             return;
 
-        SelectedBinding = _binder.GetOrCreateBinding(CapturedGesture);
+        SelectedBinding = _shortcutBinder.GetOrCreateBinding(CapturedGesture);
         CapturedGesture = null;
     }
 
@@ -141,7 +150,7 @@ internal class ShortcutSettingsViewModel : Screen, IHandle<SettingsMessage>, IDi
         if (sender is not FrameworkElement element || element.DataContext is not IShortcutBinding binding)
             return;
 
-        _binder.RemoveBinding(binding);
+        _shortcutBinder.RemoveBinding(binding);
     }
 
     public void AssignAction(object sender, RoutedEventArgs e)
@@ -151,7 +160,7 @@ internal class ShortcutSettingsViewModel : Screen, IHandle<SettingsMessage>, IDi
         if (SelectedBinding == null)
             return;
 
-        _binder.BindAction(SelectedBinding.Gesture, actionName);
+        _shortcutBinder.BindAction(SelectedBinding.Gesture, actionName);
     }
 
     public void RemoveAssignedAction(object sender, RoutedEventArgs e)
@@ -161,7 +170,7 @@ internal class ShortcutSettingsViewModel : Screen, IHandle<SettingsMessage>, IDi
         if (SelectedBinding == null)
             return;
 
-        _binder.UnbindAction(SelectedBinding.Gesture, configuration);
+        _shortcutBinder.UnbindAction(SelectedBinding.Gesture, configuration);
     }
 
     public void MoveAssignedActionUp(object sender, RoutedEventArgs e)
@@ -184,7 +193,7 @@ internal class ShortcutSettingsViewModel : Screen, IHandle<SettingsMessage>, IDi
         if (sender is not FrameworkElement element || element.DataContext is not IShortcutActionConfiguration configuration)
             return;
 
-        _ = DialogHelper.ShowOnUIThreadAsync(new ShortcutActionConfigurationDialogViewModel(configuration), "SettingsDialog");
+        _ = DialogHelper.ShowOnUIThreadAsync(new ShortcutActionConfigurationDialog(configuration), "SettingsDialog");
     }
 
     public void MoveAssignedActionDown(object sender, RoutedEventArgs e)
@@ -205,7 +214,7 @@ internal class ShortcutSettingsViewModel : Screen, IHandle<SettingsMessage>, IDi
     private async Task TryCaptureGestureAsync(CancellationToken token)
     {
         bool ValidateGesture(IInputGesture gesture)
-            => !_binder.ContainsBinding(gesture.Descriptor);
+            => !_shortcutBinder.ContainsBinding(gesture.Descriptor);
 
         var tryCount = 0;
         var gesture = default(IInputGesture);
@@ -251,16 +260,18 @@ internal class ShortcutSettingsViewModel : Screen, IHandle<SettingsMessage>, IDi
                 IsMouseAxisGestureEnabled = isMouseAxisGestureEnabled;
             if (settings.TryGetValue<bool>(nameof(IsMouseButtonGestureEnabled), out var isMouseButtonGestureEnabled))
                 IsMouseButtonGestureEnabled = isMouseButtonGestureEnabled;
-            if (settings.TryGetValue<bool>(nameof(IsGamepadAxisGestureEnabled), out var isHidAxisGestureEnabled))
-                IsGamepadAxisGestureEnabled = isHidAxisGestureEnabled;
-            if (settings.TryGetValue<bool>(nameof(IsGamepadButtonGestureEnabled), out var isHidButtonGestureEnabled))
-                IsGamepadButtonGestureEnabled = isHidButtonGestureEnabled;
+            if (settings.TryGetValue<bool>(nameof(IsGamepadAxisGestureEnabled), out var isGamepadAxisGestureEnabled))
+                IsGamepadAxisGestureEnabled = isGamepadAxisGestureEnabled;
+            if (settings.TryGetValue<bool>(nameof(IsGamepadButtonGestureEnabled), out var isGamepadButtonGestureEnabled))
+                IsGamepadButtonGestureEnabled = isGamepadButtonGestureEnabled;
+            if (settings.TryGetValue<bool>(nameof(IsTCodeButtonGestureEnabled), out var isTCodeButtonGestureEnabled))
+                IsTCodeButtonGestureEnabled = isTCodeButtonGestureEnabled;
 
             if (settings.TryGetValue<List<ShortcutBinding>>(nameof(Bindings), out var bindings))
             {
-                _binder.Clear();
+                _shortcutBinder.Clear();
                 foreach (var binding in bindings)
-                    _binder.AddBinding(binding);
+                    _shortcutBinder.AddBinding(binding);
             }
         }
     }
@@ -274,7 +285,7 @@ internal class ShortcutSettingsViewModel : Screen, IHandle<SettingsMessage>, IDi
             s => s.WithLabel("Enabled"),
             (descriptor, enabled) =>
             {
-                var binding = _binder.GetBinding(descriptor);
+                var binding = _shortcutBinder.GetBinding(descriptor);
                 if (binding != null)
                     binding.Enabled = enabled;
             });
@@ -283,16 +294,16 @@ internal class ShortcutSettingsViewModel : Screen, IHandle<SettingsMessage>, IDi
             s => s.WithLabel("Target shortcut").WithItemsSource(bindingGesturesView, true),
             descriptor =>
             {
-                var binding = _binder.GetBinding(descriptor);
+                var binding = _shortcutBinder.GetBinding(descriptor);
                 if (binding != null)
                     binding.Enabled = !binding.Enabled;
             });
         #endregion
     }
 
-    protected virtual void Dispose(bool disposing)
+    private void Dispose(bool disposing)
     {
-        _manager?.Dispose();
+        _inputManager.OnGesture -= HandleGesture;
     }
 
     public void Dispose()

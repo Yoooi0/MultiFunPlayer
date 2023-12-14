@@ -1,0 +1,6 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Style x:Key="{x:Static SystemParameters.FocusVisualStyleKey}" TargetType="Control">
+        <Setter Property="Control.Template" Value="{x:Null}"/>
+    </Style>
+</ResourceDictionary>

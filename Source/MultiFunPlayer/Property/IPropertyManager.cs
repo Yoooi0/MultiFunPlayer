@@ -15,7 +15,7 @@ internal interface IPropertyManager
     TOut GetValue<T0, T1, TOut>(string propertyName, T0 arg0, T1 arg1);
 }
 
-internal class PropertyManager : IPropertyManager
+internal sealed class PropertyManager : IPropertyManager
 {
     private readonly Dictionary<string, IPropertyDelegate> _properties;
 
@@ -23,7 +23,7 @@ internal class PropertyManager : IPropertyManager
 
     public PropertyManager()
     {
-        _properties = new Dictionary<string, IPropertyDelegate>();
+        _properties = [];
     }
 
     public void RegisterProperty<TOut>(string propertyName, Func<TOut> getter) => _properties.Add(propertyName, new PropertyDelegate<TOut>(getter));

@@ -12,19 +12,12 @@ public interface IShortcutBinding
 }
 
 [AddINotifyPropertyChangedInterface]
-public partial class ShortcutBinding : IShortcutBinding
+public sealed partial class ShortcutBinding(IInputGestureDescriptor gesture) : IShortcutBinding
 {
     [JsonProperty(TypeNameHandling = TypeNameHandling.Objects)]
-    public IInputGestureDescriptor Gesture { get; }
+    public IInputGestureDescriptor Gesture { get; } = gesture;
 
     [JsonProperty("Actions")]
-    public ObservableConcurrentCollection<IShortcutActionConfiguration> Configurations { get; }
-    public bool Enabled { get; set; }
-
-    public ShortcutBinding(IInputGestureDescriptor gesture)
-    {
-        Gesture = gesture;
-        Configurations = new ObservableConcurrentCollection<IShortcutActionConfiguration>();
-        Enabled = true;
-    }
+    public ObservableConcurrentCollection<IShortcutActionConfiguration> Configurations { get; } = [];
+    public bool Enabled { get; set; } = true;
 }

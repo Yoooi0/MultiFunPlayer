@@ -4,7 +4,7 @@ using NLog;
 
 namespace MultiFunPlayer.Settings.Migrations;
 
-internal class Migration0011 : AbstractConfigMigration
+internal sealed class Migration0011 : AbstractConfigMigration
 {
     private readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
@@ -39,7 +39,7 @@ internal class Migration0011 : AbstractConfigMigration
         {
             var oldDescriptor = action["Descriptor"].ToString();
 
-            var descriptorPrefix = oldDescriptor.Split("::").First();
+            var descriptorPrefix = oldDescriptor.Split("::")[0];
             var newDescriptor = oldDescriptor.Replace(descriptorPrefix, descriptorPrefixMap[descriptorPrefix]);
 
             action["Descriptor"] = newDescriptor;

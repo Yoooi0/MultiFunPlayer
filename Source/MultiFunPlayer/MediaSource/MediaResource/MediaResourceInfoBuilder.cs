@@ -12,7 +12,7 @@ internal interface IMediaResourceInfoBuilder
     MediaResourceInfo Build();
 }
 
-internal class MediaResourceInfoBuilder : IMediaResourceInfoBuilder
+internal sealed class MediaResourceInfoBuilder : IMediaResourceInfoBuilder
 {
     [Flags]
     private enum BuilderFlags

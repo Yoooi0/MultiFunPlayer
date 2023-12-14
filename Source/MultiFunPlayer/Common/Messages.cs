@@ -1,3 +1,4 @@
+using MultiFunPlayer.Script;
 using Newtonsoft.Json.Linq;
 
 namespace MultiFunPlayer.Common;
@@ -8,34 +9,37 @@ public enum SettingsAction
     Loading
 }
 
-internal record SettingsMessage(JObject Settings, SettingsAction Action);
-internal record WindowCreatedMessage();
+internal sealed record SettingsMessage(JObject Settings, SettingsAction Action);
+internal sealed record WindowCreatedMessage();
 
-public record MediaSpeedChangedMessage(double Speed);
-public record MediaPositionChangedMessage(TimeSpan? Position, bool ForceSeek = false);
-public record MediaPlayingChangedMessage(bool IsPlaying);
-public record MediaPathChangedMessage(string Path, bool ReloadScripts = true);
-public record MediaDurationChangedMessage(TimeSpan? Duration);
+public sealed record MediaSpeedChangedMessage(double Speed);
+public sealed record MediaPositionChangedMessage(TimeSpan? Position, bool ForceSeek = false);
+public sealed record MediaPlayingChangedMessage(bool IsPlaying);
+public sealed record MediaPathChangedMessage(string Path, bool ReloadScripts = true);
+public sealed record MediaDurationChangedMessage(TimeSpan? Duration);
 
-public record ScriptChangedMessage(DeviceAxis Axis, IScriptResource Script);
-public class ChangeScriptMessage
+public sealed record PostScriptSearchMessage(Dictionary<DeviceAxis, IScriptResource> Scripts);
+public sealed record ScriptChangedMessage(DeviceAxis Axis, IScriptResource Script);
+public sealed record ChangeScriptMessage(Dictionary<DeviceAxis, IScriptResource> Scripts)
 {
-    public Dictionary<DeviceAxis, IScriptResource> Scripts { get; }
-    public ChangeScriptMessage(Dictionary<DeviceAxis, IScriptResource> scripts) => Scripts = scripts;
-    public ChangeScriptMessage(DeviceAxis axis, IScriptResource script) => Scripts = new() { [axis] = script };
-    public ChangeScriptMessage(IEnumerable<DeviceAxis> axes, IScriptResource scriptResource) => Scripts = axes.ToDictionary(a => a, _ => scriptResource);
+    public ChangeScriptMessage(DeviceAxis axis, IScriptResource script) : this(new Dictionary<DeviceAxis, IScriptResource>() { [axis] = script }) { }
+    public ChangeScriptMessage(IEnumerable<DeviceAxis> axes, IScriptResource scriptResource) : this(axes.ToDictionary(a => a, _ => scriptResource)) { }
 }
 
-public record MediaSeekMessage(TimeSpan Position);
-public record MediaPlayPauseMessage(bool ShouldBePlaying);
-public record MediaChangePathMessage(string Path);
-public record MediaChangeSpeedMessage(double Speed);
+public interface IMediaSourceControlMessage { }
+public sealed record MediaSeekMessage(TimeSpan Position) : IMediaSourceControlMessage;
+public sealed record MediaPlayPauseMessage(bool ShouldBePlaying) : IMediaSourceControlMessage;
+public sealed record MediaChangePathMessage(string Path) : IMediaSourceControlMessage;
+public sealed record MediaChangeSpeedMessage(double Speed) : IMediaSourceControlMessage;
 
-public class SyncRequestMessage
+public sealed record SyncRequestMessage(List<DeviceAxis> Axes = null)
 {
-    public List<DeviceAxis> Axes { get; }
-
-    public SyncRequestMessage() => Axes = null;
     public SyncRequestMessage(params DeviceAxis[] axes) : this(axes?.AsEnumerable()) { }
-    public SyncRequestMessage(IEnumerable<DeviceAxis> axes) => Axes = axes?.ToList();
+    public SyncRequestMessage(IEnumerable<DeviceAxis> axes) : this(axes?.ToList()) { }
+}
+
+public sealed record ReloadScriptsRequestMessage(List<DeviceAxis> Axes = null)
+{
+    public ReloadScriptsRequestMessage(params DeviceAxis[] axes) : this(axes?.AsEnumerable()) { }
+    public ReloadScriptsRequestMessage(IEnumerable<DeviceAxis> axes) : this(axes?.ToList()) { }
 }

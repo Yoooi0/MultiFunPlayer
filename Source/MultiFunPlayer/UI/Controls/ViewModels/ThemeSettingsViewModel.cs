@@ -5,12 +5,11 @@ using MultiFunPlayer.Common;
 using Newtonsoft.Json.Linq;
 using Stylet;
 using System.Windows;
-using System.Windows.Input;
 using System.Windows.Media;
 
 namespace MultiFunPlayer.UI.Controls.ViewModels;
 
-internal class ThemeSettingsViewModel : Screen, IHandle<SettingsMessage>
+internal sealed class ThemeSettingsViewModel : Screen, IHandle<SettingsMessage>
 {
     private readonly PaletteHelper _paletteHelper;
 
@@ -41,6 +40,19 @@ internal class ThemeSettingsViewModel : Screen, IHandle<SettingsMessage>
             ApplyTheme();
     }
 
+    public void OnResetClick()
+    {
+        IgnorePropertyChanged(() =>
+        {
+            PrimaryColor = Color.FromRgb(0x71, 0x87, 0x92);
+            EnableColorAdjustment = false;
+            Contrast = Contrast.Medium;
+            ContrastRatio = 4.5;
+            IsDarkTheme = false;
+        });
+        ApplyTheme();
+    }
+
     private void ApplyTheme()
     {
         if (_paletteHelper.GetTheme() is not Theme theme)
@@ -65,7 +77,7 @@ internal class ThemeSettingsViewModel : Screen, IHandle<SettingsMessage>
         _paletteHelper.SetTheme(theme);
         Application.Current.Resources.SetMahApps(theme, IsDarkTheme ? BaseTheme.Dark : BaseTheme.Light);
 
-        var customThemeSource = $"pack://application:,,,/CustomTheme.{(IsDarkTheme ? "Dark" : "Light")}.xaml";
+        var customThemeSource = $"pack://application:,,,/UI/Themes/Color.{(IsDarkTheme ? "Dark" : "Light")}.xaml";
         var customThemeResource = new ResourceDictionary { Source = new Uri(customThemeSource) };
 
         AutoUpdateSolidColorBrush("MaterialDesignErrorBrush");

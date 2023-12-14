@@ -3,7 +3,7 @@ using System.Windows.Input;
 
 namespace MultiFunPlayer.UI.Controls;
 
-internal class AutoClosingPopup : Popup
+internal sealed class AutoClosingPopup : Popup
 {
     public AutoClosingPopup() => IsHitTestVisible = true;
 

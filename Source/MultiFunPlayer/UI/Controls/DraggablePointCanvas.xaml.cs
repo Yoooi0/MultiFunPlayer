@@ -13,7 +13,7 @@ namespace MultiFunPlayer.UI.Controls;
 /// Interaction logic for DraggablePointCanvas.xaml
 /// </summary>
 [AddINotifyPropertyChangedInterface]
-public partial class DraggablePointCanvas : UserControl
+public sealed partial class DraggablePointCanvas : UserControl
 {
     private Vector _captureOffset;
     private KeyframeCollection _keyframes;
@@ -371,7 +371,7 @@ public partial class DraggablePointCanvas : UserControl
         if (!_keyframes.ValidateIndex(index) || !_keyframes.ValidateIndex(index + 1))
             return;
 
-        var y = _keyframes.Interpolate(index, x, InterpolationType);
+        var y = Math.Clamp(_keyframes.Interpolate(index, x, InterpolationType), 0, ActualHeight);
         (Scrubber.Data as EllipseGeometry).Center = new Point(x, y);
 
         bool CanRefresh()

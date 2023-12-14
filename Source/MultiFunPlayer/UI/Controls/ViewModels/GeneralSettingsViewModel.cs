@@ -1,26 +1,29 @@
-﻿using MultiFunPlayer.Common;
+using MultiFunPlayer.Common;
 using Newtonsoft.Json.Linq;
 using NLog;
 using NLog.Config;
 using Stylet;
 using System.Diagnostics;
 using System.Windows;
+using System.Windows.Controls;
 
 namespace MultiFunPlayer.UI.Controls.ViewModels;
 
-internal class GeneralSettingsViewModel : Screen, IHandle<SettingsMessage>, IHandle<WindowCreatedMessage>
+internal sealed class GeneralSettingsViewModel : Screen, IHandle<SettingsMessage>, IHandle<WindowCreatedMessage>
 {
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
     private readonly IStyletLoggerManager _styletLoggerManager;
 
-    public ObservableConcurrentCollection<LogLevel> LogLevels { get; }
+    public IReadOnlyCollection<LogLevel> LogLevels { get; }
 
     public LogLevel SelectedLogLevel { get; set; } = LogLevel.Info;
     public bool EnableUILogging { get; set; } = false;
     public bool AllowWindowResize { get; set; } = false;
     public bool AlwaysOnTop { get; set; } = false;
     public bool ShowErrorDialogs { get; set; } = true;
+    public Orientation AppOrientation { get; set; } = Orientation.Vertical;
+    public bool RememberWindowLocation { get; set; } = false;
 
     public GeneralSettingsViewModel(IStyletLoggerManager styletLoggerManager, IEventAggregator eventAggregator)
     {
@@ -28,7 +31,7 @@ internal class GeneralSettingsViewModel : Screen, IHandle<SettingsMessage>, IHan
         eventAggregator.Subscribe(this);
 
         _styletLoggerManager = styletLoggerManager;
-        LogLevels = new ObservableConcurrentCollection<LogLevel>(LogLevel.AllLevels);
+        LogLevels = LogLevel.AllLevels.ToList().AsReadOnly();
     }
 
     public void OnAlwaysOnTopChanged()
@@ -66,6 +69,18 @@ internal class GeneralSettingsViewModel : Screen, IHandle<SettingsMessage>, IHan
         }
     }
 
+    public void OnAppOrientationChanged()
+    {
+        var window = Application.Current.MainWindow;
+        if (window == null)
+            return;
+
+        if (AppOrientation == Orientation.Vertical)
+            window.Width = window.MinWidth = window.MaxWidth = 600;
+        else if (AppOrientation == Orientation.Horizontal)
+            window.Width = window.MinWidth = window.MaxWidth = 1200;
+    }
+
     public void OnSelectedLogLevelChanged()
     {
         static LoggingRule GetRuleWithTarget(string targetName)
@@ -85,26 +100,34 @@ internal class GeneralSettingsViewModel : Screen, IHandle<SettingsMessage>, IHan
 
     public void Handle(SettingsMessage message)
     {
+        var settings = message.Settings;
+
         if (message.Action == SettingsAction.Saving)
         {
-            message.Settings[nameof(AlwaysOnTop)] = AlwaysOnTop;
-            message.Settings[nameof(ShowErrorDialogs)] = ShowErrorDialogs;
-            message.Settings["LogLevel"] = JToken.FromObject(SelectedLogLevel ?? LogLevel.Info);
-            message.Settings[nameof(EnableUILogging)] = EnableUILogging;
-            message.Settings[nameof(AllowWindowResize)] = AllowWindowResize;
+            settings[nameof(AlwaysOnTop)] = AlwaysOnTop;
+            settings[nameof(ShowErrorDialogs)] = ShowErrorDialogs;
+            settings["LogLevel"] = JToken.FromObject(SelectedLogLevel ?? LogLevel.Info);
+            settings[nameof(EnableUILogging)] = EnableUILogging;
+            settings[nameof(AllowWindowResize)] = AllowWindowResize;
+            settings[nameof(AppOrientation)] = JToken.FromObject(AppOrientation);
+            settings[nameof(RememberWindowLocation)] = RememberWindowLocation;
         }
         else if (message.Action == SettingsAction.Loading)
         {
-            if (message.Settings.TryGetValue<bool>(nameof(AlwaysOnTop), out var alwaysOnTop))
+            if (settings.TryGetValue<bool>(nameof(AlwaysOnTop), out var alwaysOnTop))
                 AlwaysOnTop = alwaysOnTop;
-            if (message.Settings.TryGetValue<bool>(nameof(ShowErrorDialogs), out var showErrorDialogs))
+            if (settings.TryGetValue<bool>(nameof(ShowErrorDialogs), out var showErrorDialogs))
                 ShowErrorDialogs = showErrorDialogs;
-            if (message.Settings.TryGetValue<LogLevel>("LogLevel", out var logLevel))
+            if (settings.TryGetValue<LogLevel>("LogLevel", out var logLevel))
                 SelectedLogLevel = logLevel;
-            if (message.Settings.TryGetValue<bool>(nameof(EnableUILogging), out var enableUILogging))
+            if (settings.TryGetValue<bool>(nameof(EnableUILogging), out var enableUILogging))
                 EnableUILogging = enableUILogging;
             if (message.Settings.TryGetValue<bool>(nameof(AllowWindowResize), out var allowWindowResize))
                 AllowWindowResize = allowWindowResize;
+            if (settings.TryGetValue<Orientation>(nameof(AppOrientation), out var appOrientation))
+                AppOrientation = appOrientation;
+            if (settings.TryGetValue<bool>(nameof(RememberWindowLocation), out var rememberWindowLocation))
+                RememberWindowLocation = rememberWindowLocation;
         }
     }
 
@@ -112,5 +135,6 @@ internal class GeneralSettingsViewModel : Screen, IHandle<SettingsMessage>, IHan
     {
         OnAlwaysOnTopChanged();
         OnAllowWindowResizeChanged();
+        OnAppOrientationChanged();
     }
 }

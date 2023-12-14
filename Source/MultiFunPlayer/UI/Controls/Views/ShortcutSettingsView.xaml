@@ -9,6 +9,7 @@
              xmlns:converters="clr-namespace:MultiFunPlayer.UI.Converters"
              xmlns:rawinput="clr-namespace:MultiFunPlayer.Input.RawInput"
              xmlns:xinput="clr-namespace:MultiFunPlayer.Input.XInput"
+             xmlns:tcode="clr-namespace:MultiFunPlayer.Input.TCode"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800"
              x:ClassModifier="internal">
@@ -21,15 +22,16 @@
                 <material:ColorZone Background="#FF7043"
                                     VerticalAlignment="Stretch"
                                     HorizontalAlignment="Stretch"
-                                    CornerRadius="2 0 0 2">
+                                    CornerRadius="2 0 0 2"
+                                    Width="34"
+                                    Height="30">
                     <material:PackIcon DockPanel.Dock="Left"
                                        Foreground="Black"
                                        Kind="MicrosoftXboxController"
                                        VerticalAlignment="Center"
                                        HorizontalAlignment="Center"
                                        Width="24"
-                                       Height="20"
-                                       Margin="5"/>
+                                       Height="20"/>
                 </material:ColorZone>
 
                 <TextBlock Text="User:"
@@ -95,15 +97,16 @@
                 <material:ColorZone Background="#FFCA28"
                                     VerticalAlignment="Stretch"
                                     HorizontalAlignment="Stretch"
-                                    CornerRadius="2 0 0 2">
+                                    CornerRadius="2 0 0 2"
+                                    Width="34"
+                                    Height="30">
                     <material:PackIcon DockPanel.Dock="Left"
                                        Foreground="Black"
                                        Kind="MicrosoftXboxController"
                                        VerticalAlignment="Center"
                                        HorizontalAlignment="Center"
                                        Width="24"
-                                       Height="20"
-                                       Margin="5"/>
+                                       Height="20"/>
                 </material:ColorZone>
 
                 <TextBlock Text="Axis:"
@@ -125,15 +128,47 @@
                 <material:ColorZone Background="#81C784"
                                     VerticalAlignment="Stretch"
                                     HorizontalAlignment="Stretch"
-                                    CornerRadius="2 0 0 2">
+                                    CornerRadius="2 0 0 2"
+                                    Width="34"
+                                    Height="30">
                     <material:PackIcon DockPanel.Dock="Left"
                                        Foreground="Black"
                                        Kind="Mouse"
                                        VerticalAlignment="Center"
                                        HorizontalAlignment="Center"
                                        Width="24"
-                                       Height="20"
-                                       Margin="5"/>
+                                       Height="20"/>
+                </material:ColorZone>
+
+                <TextBlock Text="Button:"
+                           Margin="5 0 5 0"
+                           VerticalAlignment="Center"
+                           FontSize="12"
+                           Typography.Capitals="AllPetiteCaps"/>
+
+                <TextBlock Text="{Binding Button, StringFormat={}{0}}"
+                           VerticalAlignment="Center"
+                           FontSize="12"
+                           FontWeight="Bold"
+                           Typography.Capitals="AllPetiteCaps"/>
+            </DockPanel>
+        </DataTemplate>
+
+        <DataTemplate DataType="{x:Type tcode:TCodeButtonGestureDescriptor}">
+            <DockPanel LastChildFill="True">
+                <material:ColorZone Background="#D8494C"
+                                    VerticalAlignment="Stretch"
+                                    HorizontalAlignment="Stretch"
+                                    CornerRadius="2 0 0 2"
+                                    Width="34"
+                                    Height="30">
+                    <material:PackIcon DockPanel.Dock="Left"
+                                       Foreground="Black"
+                                       Kind="AlphaT"
+                                       VerticalAlignment="Center"
+                                       HorizontalAlignment="Center"
+                                       Width="34"
+                                       Height="34"/>
                 </material:ColorZone>
 
                 <TextBlock Text="Button:"
@@ -155,15 +190,16 @@
                 <material:ColorZone Background="#64B5F6"
                                     VerticalAlignment="Stretch"
                                     HorizontalAlignment="Stretch"
-                                    CornerRadius="2 0 0 2">
+                                    CornerRadius="2 0 0 2"
+                                    Width="34"
+                                    Height="30">
                     <material:PackIcon DockPanel.Dock="Left"
                                        Foreground="Black"
                                        Kind="MouseMoveVertical"
                                        VerticalAlignment="Center"
                                        HorizontalAlignment="Center"
                                        Width="24"
-                                       Height="20"
-                                       Margin="5"/>
+                                       Height="20"/>
                 </material:ColorZone>
 
                 <TextBlock Text="Axis:"
@@ -185,15 +221,16 @@
                 <material:ColorZone Background="#CE93D8"
                                     VerticalAlignment="Stretch"
                                     HorizontalAlignment="Stretch"
-                                    CornerRadius="2 0 0 2">
+                                    CornerRadius="2 0 0 2"
+                                    Width="34"
+                                    Height="30">
                     <material:PackIcon DockPanel.Dock="Left"
                                        Foreground="Black"
                                        Kind="KeyboardOutline"
                                        VerticalAlignment="Center"
                                        HorizontalAlignment="Center"
                                        Width="24"
-                                       Height="20"
-                                       Margin="5"/>
+                                       Height="20"/>
                 </material:ColorZone>
 
                 <TextBlock Text="Keys:"
@@ -271,6 +308,8 @@
                                         <CheckBox IsChecked="{Binding IsMouseButtonGestureEnabled}" Content="Mouse button"/>
                                         <CheckBox IsChecked="{Binding IsGamepadAxisGestureEnabled}" Content="Gamepad axis"/>
                                         <CheckBox IsChecked="{Binding IsGamepadButtonGestureEnabled}" Content="Gamepad button"/>
+                                        <CheckBox IsChecked="{Binding IsTCodeButtonGestureEnabled}" Content="TCode button"/>
+                                        <CheckBox IsChecked="{Binding IsTCodeAxisGestureEnabled}" Content="TCode axis"/>
                                     </StackPanel>
                                 </StackPanel>
                             </Grid>
@@ -279,7 +318,7 @@
                         <Button DockPanel.Dock="Right"
                                 Style="{StaticResource MaterialDesignFlatButton}"
                                 Click="{s:Action AddGesture}"
-                                IsEnabled="{Binding CapturedGesture, Converter={StaticResource notNullBooleanConverter}}"
+                                IsEnabled="{Binding CapturedGesture, Converter={StaticResource InvertedNullableToBooleanConverter}}"
                                 Foreground="{DynamicResource MaterialDesignSuccessBrush}"
                                 ToolTip="Add captured gesture"
                                 VerticalAlignment="Center"
@@ -525,11 +564,10 @@
                     </ItemsControl>
 
                     <TextBox DockPanel.Dock="Top"
-                             Text="{Binding ActionsFilter}"
+                             Text="{Binding ActionsFilter, UpdateSourceTrigger=PropertyChanged, Delay=200}"
                              Style="{StaticResource MaterialDesignFloatingHintTextBox}"
                              Margin="5 0 5 0"
-                             material:HintAssist.Hint="Filter actions"
-                             behaviours:InputAssist.UpdateSourceOnEnter="TextBox.Text"/>
+                             material:HintAssist.Hint="Filter actions"/>
 
                     <ItemsControl DockPanel.Dock="Top"
                                   ItemsSource="{Binding AvailableActionsView}"

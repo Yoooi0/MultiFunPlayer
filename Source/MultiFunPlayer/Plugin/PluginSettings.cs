@@ -1,4 +1,5 @@
 ﻿using MultiFunPlayer.Common;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Stylet;
 using System.IO;
@@ -8,6 +9,7 @@ using System.Windows.Markup;
 
 namespace MultiFunPlayer.Plugin;
 
+[JsonObject(MemberSerialization = MemberSerialization.OptIn)]
 public abstract class PluginSettingsBase : PropertyChangedBase
 {
     protected UIElement CreateViewFromStream(Stream stream) => XamlReader.Load(stream) as UIElement;
@@ -18,6 +20,13 @@ public abstract class PluginSettingsBase : PropertyChangedBase
         return CreateViewFromStream(stream);
     }
 
-    public abstract UIElement CreateView();
-    public abstract void HandleSettings(JObject settings, SettingsAction action);
+    public virtual UIElement CreateView() => null;
+
+    public virtual void HandleSettings(JObject settings, SettingsAction action)
+    {
+        if (action == SettingsAction.Saving)
+            settings.Merge(JObject.FromObject(this), new JsonMergeSettings() { MergeArrayHandling = MergeArrayHandling.Replace });
+        else if (action == SettingsAction.Loading)
+            settings.Populate(this);
+    }
 }

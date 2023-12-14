@@ -3,7 +3,7 @@ using System.Windows.Data;
 
 namespace MultiFunPlayer.UI.Converters;
 
-public class UriToStringConverter : IValueConverter
+public sealed class UriToStringConverter : IValueConverter
 {
     public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         => value is Uri uri ? uri.ToString() : null;

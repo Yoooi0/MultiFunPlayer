@@ -8,7 +8,7 @@ namespace MultiFunPlayer.UI.Behaviours;
 
 internal static class ComboBoxAssist
 {
-    private static CommandAction _previewSelectionChangedHandler;
+    private readonly static Dictionary<ComboBox, CommandAction> _handlers = [];
 
     public static readonly DependencyProperty PreviewSelectionChangedProperty =
         DependencyProperty.RegisterAttached("PreviewSelectionChanged",
@@ -26,7 +26,7 @@ internal static class ComboBoxAssist
         if (dp is not ComboBox comboBox || e.NewValue is not CommandAction handler)
             return;
 
-        _previewSelectionChangedHandler = handler;
+        _handlers.Add(comboBox, handler);
         comboBox.SelectionChanged -= OnSelectionChanged;
         comboBox.SelectionChanged += OnSelectionChanged;
 
@@ -40,7 +40,7 @@ internal static class ComboBoxAssist
             return;
 
         var binding = comboBox.GetBindingExpression(Selector.SelectedValueProperty);
-        _previewSelectionChangedHandler?.Execute(e);
+        _handlers[comboBox].Execute(e);
         binding.UpdateSource();
     }
 }

@@ -10,14 +10,10 @@ internal interface IMotionProviderFactory
     IEnumerable<IMotionProvider> CreateMotionProviderCollection(DeviceAxis target);
 }
 
-internal class MotionProviderFactory : IMotionProviderFactory
+internal sealed class MotionProviderFactory(IContainer container) : IMotionProviderFactory
 {
-    private readonly IContainer _container;
-
-    public MotionProviderFactory(IContainer container) => _container = container;
-
     public IMotionProvider CreateMotionProvider(Type type, DeviceAxis target)
-        => (IMotionProvider)Activator.CreateInstance(type, new object[] { target, _container.Get<IEventAggregator>() });
+        => (IMotionProvider)Activator.CreateInstance(type, new object[] { target, container.Get<IEventAggregator>() });
 
     public IEnumerable<IMotionProvider> CreateMotionProviderCollection(DeviceAxis target)
         => ReflectionUtils.FindImplementations<IMotionProvider>().Select(t => CreateMotionProvider(t, target));

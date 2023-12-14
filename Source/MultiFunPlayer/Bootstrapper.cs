@@ -8,6 +8,8 @@ using MultiFunPlayer.MotionProvider;
 using MultiFunPlayer.OutputTarget;
 using MultiFunPlayer.Plugin;
 using MultiFunPlayer.Property;
+using MultiFunPlayer.Script.Repository;
+using MultiFunPlayer.Script.Repository.ViewModels;
 using MultiFunPlayer.Settings;
 using MultiFunPlayer.UI;
 using MultiFunPlayer.UI.Controls.ViewModels;
@@ -32,7 +34,7 @@ using System.Windows.Interop;
 
 namespace MultiFunPlayer;
 
-internal class Bootstrapper : Bootstrapper<RootViewModel>
+internal sealed class Bootstrapper : Bootstrapper<RootViewModel>
 {
     static Bootstrapper()
     {
@@ -56,15 +58,20 @@ internal class Bootstrapper : Bootstrapper<RootViewModel>
 
         builder.Bind<IMediaSource>().ToAllImplementations().InSingletonScope();
         builder.Bind<IConfigMigration>().ToAllImplementations().InSingletonScope();
-        builder.Bind<IInputProcessor>().ToAllImplementations().InSingletonScope();
+        builder.Bind<IInputProcessor>().To<XInputProcessor>().InSingletonScope();
+        builder.Bind<IInputProcessor>().To<RawInputProcessor>().InSingletonScope();
 
         builder.Bind<IStyletLoggerManager>().To<StyletLoggerManager>().InSingletonScope();
         builder.Bind<IOutputTargetFactory>().To<OutputTargetFactory>().InSingletonScope();
         builder.Bind<IShortcutManager>().To<ShortcutManager>().InSingletonScope();
         builder.Bind<IShortcutBinder>().To<ShortcutBinder>().InSingletonScope();
+        builder.Bind<IInputProcessorManager>().To<InputProcessorManager>().InSingletonScope();
         builder.Bind<IPropertyManager>().To<PropertyManager>().InSingletonScope();
         builder.Bind<IMotionProviderFactory>().To<MotionProviderFactory>().InSingletonScope();
         builder.Bind<IMotionProviderManager>().To<MotionProviderManager>().InSingletonScope();
+
+        builder.Bind<IScriptRepository>().ToAllImplementations().InSingletonScope();
+        builder.Bind<IScriptRepositoryManager>().To<ScriptRepositoryManager>().InSingletonScope();
     }
 
     protected override void Configure()
@@ -124,7 +131,7 @@ internal class Bootstrapper : Bootstrapper<RootViewModel>
         {
             Process.Start(new ProcessStartInfo
             {
-                FileName = "https://docs.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist",
+                FileName = "https://aka.ms/vs/17/release/vc_redist.x64.exe",
                 UseShellExecute = true
             });
         }

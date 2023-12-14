@@ -4,7 +4,7 @@ using Newtonsoft.Json.Linq;
 
 namespace MultiFunPlayer.Settings.Converters;
 
-internal class TypedValueConverter : JsonConverter<TypedValue>
+internal sealed class TypedValueConverter : JsonConverter<TypedValue>
 {
     public override TypedValue ReadJson(JsonReader reader, Type objectType, TypedValue existingValue, bool hasExistingValue, JsonSerializer serializer)
     {
@@ -25,7 +25,7 @@ internal class TypedValueConverter : JsonConverter<TypedValue>
         o.AddTypeProperty(value.Type);
 
         if (valueToken.Type == JTokenType.Object)
-            o.Merge(valueToken, new JsonMergeSettings() { MergeArrayHandling = MergeArrayHandling.Union });
+            o.Merge(valueToken);
         else
             o["Value"] = valueToken;
 

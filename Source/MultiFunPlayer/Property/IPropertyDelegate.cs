@@ -40,12 +40,8 @@ internal abstract class AbstractPropertyDelegate<TOut> : IPropertyDelegate<TOut>
     }
 }
 
-internal class PropertyDelegate<TOut> : AbstractPropertyDelegate<TOut>
+internal sealed class PropertyDelegate<TOut>(Func<TOut> getter) : AbstractPropertyDelegate<TOut>
 {
-    private readonly Func<TOut> _getter;
-
-    public PropertyDelegate(Func<TOut> getter) => _getter = getter;
-
     public override TOut GetValue(params object[] arguments)
     {
         if (arguments == null || arguments.Length == 0)
@@ -54,15 +50,11 @@ internal class PropertyDelegate<TOut> : AbstractPropertyDelegate<TOut>
         return GetValue();
     }
 
-    public TOut GetValue() => _getter();
+    public TOut GetValue() => getter();
 }
 
-internal class PropertyDelegate<T0, TOut> : AbstractPropertyDelegate<TOut>
+internal sealed class PropertyDelegate<T0, TOut>(Func<T0, TOut> getter) : AbstractPropertyDelegate<TOut>
 {
-    private readonly Func<T0, TOut> _getter;
-
-    public PropertyDelegate(Func<T0, TOut> getter) => _getter = getter;
-
     public override TOut GetValue(params object[] arguments)
     {
         if (arguments?.Length != 1 || !GetArgument<T0>(arguments[0], out var arg0))
@@ -71,22 +63,18 @@ internal class PropertyDelegate<T0, TOut> : AbstractPropertyDelegate<TOut>
         return GetValue(arg0);
     }
 
-    public TOut GetValue(T0 arg0) => _getter(arg0);
+    public TOut GetValue(T0 arg0) => getter(arg0);
 }
 
-internal class PropertyDelegate<T0, T1, TOut> : AbstractPropertyDelegate<TOut>
+internal sealed class PropertyDelegate<T0, T1, TOut>(Func<T0, T1, TOut> getter) : AbstractPropertyDelegate<TOut>
 {
-    private readonly Func<T0, T1, TOut> _getter;
-
-    public PropertyDelegate(Func<T0, T1, TOut> getter) => _getter = getter;
-
     public override TOut GetValue(params object[] arguments)
     {
         if (arguments?.Length != 2 || !GetArgument<T0>(arguments[0], out var arg0) || !GetArgument<T1>(arguments[1], out var arg1))
             throw new ArgumentException(null, nameof(arguments));
 
-        return _getter(arg0, arg1);
+        return getter(arg0, arg1);
     }
 
-    public TOut GetValue(T0 arg0, T1 arg1) => _getter(arg0, arg1);
+    public TOut GetValue(T0 arg0, T1 arg1) => getter(arg0, arg1);
 }

@@ -8,22 +8,13 @@ public static class MathUtils
     public static double Clamp01(double x) => Math.Clamp(x, 0, 1);
 
     [MethodImpl(MethodImplOptions.AggressiveOptimization)]
-    public static double Lerp(double from, double to, double t) => LerpUnclamped(from, to, Math.Clamp(t, 0, 1));
+    public static double Lerp(double from, double to, double t) => from + (to - from) * Math.Clamp(t, 0, 1);
 
     [MethodImpl(MethodImplOptions.AggressiveOptimization)]
-    public static double LerpUnclamped(double from, double to, double t) => from + (to - from) * t;
-
-    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
-    public static double UnLerp(double from, double to, double t) => Clamp01(UnLerpUnclamped(from, to, t));
-
-    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
-    public static double UnLerpUnclamped(double from, double to, double t) => (t - from) / (to - from);
+    public static double UnLerp(double from, double to, double t) => Math.Clamp((t - from) / (to - from), 0, 1);
 
     [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     public static double Map(double x, double from0, double to0, double from1, double to1) => Lerp(from1, to1, UnLerp(from0, to0, x));
-
-    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
-    public static double MapUnclamped(double x, double from0, double to0, double from1, double to1) => LerpUnclamped(from1, to1, UnLerpUnclamped(from0, to0, x));
 }
 
 public enum InterpolationType
@@ -152,7 +143,7 @@ public static class Interpolation
     public static double Step(double x0, double y0, double x) => y0;
 }
 
-public class OpenSimplex
+public sealed class OpenSimplex
 {
     private const int PSIZE = 2048;
     private const int PMASK = PSIZE - 1;
@@ -271,8 +262,8 @@ public class OpenSimplex
     private double Calculate2DImpl(double xs, double ys)
     {
         var value = 0.0;
-        var xsb = FastFloor(xs);
-        var ysb = FastFloor(ys);
+        var xsb = (int)Math.Floor(xs);
+        var ysb = (int)Math.Floor(ys);
         var xsi = xs - xsb;
         var ysi = ys - ysb;
 
@@ -308,38 +299,18 @@ public class OpenSimplex
         return value;
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static int FastFloor(double x)
+    private readonly struct LatticePoint(int xsv, int ysv)
     {
-        var xi = (int)x;
-        return x < xi ? xi - 1 : xi;
+        public readonly int xsv = xsv;
+        public readonly int ysv = ysv;
+
+        public readonly double dx = -xsv + (xsv + ysv) * 0.211324865405187;
+        public readonly double dy = -ysv + (xsv + ysv) * 0.211324865405187;
     }
 
-    private struct LatticePoint
+    private readonly struct Gradient(double dx, double dy)
     {
-        public int xsv, ysv;
-        public double dx, dy;
-
-        public LatticePoint(int xsv, int ysv)
-        {
-            var ssv = (xsv + ysv) * -0.211324865405187;
-
-            this.xsv = xsv;
-            this.ysv = ysv;
-
-            dx = -xsv - ssv;
-            dy = -ysv - ssv;
-        }
-    }
-
-    private struct Gradient
-    {
-        public double dx, dy;
-
-        public Gradient(double dx, double dy)
-        {
-            this.dx = dx;
-            this.dy = dy;
-        }
+        public readonly double dx = dx;
+        public readonly double dy = dy;
     }
 }

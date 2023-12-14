@@ -14,7 +14,7 @@ namespace MultiFunPlayer.UI.Controls;
 /// Interaction logic for KeyframesHeatmap.xaml
 /// </summary>
 [AddINotifyPropertyChangedInterface]
-internal partial class KeyframesHeatmap : UserControl
+internal sealed partial class KeyframesHeatmap : UserControl
 {
     public static int MaxBucketCount => 500;
 
@@ -199,14 +199,14 @@ internal partial class KeyframesHeatmap : UserControl
     public KeyframesHeatmap()
     {
         _buckets = new HeatmapBucket[MaxBucketCount];
-        _colors = new Color[]
-        {
+        _colors =
+        [
             (Color)ColorConverter.ConvertFromString("#244b5c"),
             (Color)ColorConverter.ConvertFromString("#75b9d1"),
             (Color)ColorConverter.ConvertFromString("#efce62"),
             (Color)ColorConverter.ConvertFromString("#f39944"),
             (Color)ColorConverter.ConvertFromString("#f53e2e"),
-        };
+        ];
 
         InitializeComponent();
     }
@@ -269,8 +269,8 @@ internal partial class KeyframesHeatmap : UserControl
 
     private void Refresh()
     {
-        Stops = new GradientStopCollection();
-        Points = new PointCollection();
+        Stops = [];
+        Points = [];
 
         if (Keyframes == null || Keyframes.Count == 0 || !double.IsFinite(Duration) || Duration <= 0 || ActualWidth < 1 || ActualHeight < 1)
             return;

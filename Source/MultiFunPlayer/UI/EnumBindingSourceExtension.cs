@@ -2,28 +2,19 @@
 
 namespace MultiFunPlayer.UI;
 
-public class EnumBindingSourceExtension : MarkupExtension
+public sealed class EnumBindingSourceExtension : MarkupExtension
 {
-    private Type _enumType;
-    public Type EnumType
-    {
-        get => _enumType;
-        set
-        {
-            if (value == null)
-                throw new ArgumentNullException(nameof(value));
-
-            var enumType = Nullable.GetUnderlyingType(value) ?? value;
-            if (!enumType.IsEnum)
-                throw new ArgumentException("{enumType} is not an Enum");
-
-            _enumType = value;
-        }
-    }
+    private readonly Type _enumType;
 
     public EnumBindingSourceExtension(Type enumType)
     {
-        EnumType = enumType;
+        ArgumentNullException.ThrowIfNull(enumType);
+
+        var actualEnumType = Nullable.GetUnderlyingType(enumType) ?? enumType;
+        if (!actualEnumType.IsEnum)
+            throw new ArgumentException($"{enumType} is not an Enum type");
+
+        _enumType = enumType;
     }
 
     public override object ProvideValue(IServiceProvider serviceProvider)

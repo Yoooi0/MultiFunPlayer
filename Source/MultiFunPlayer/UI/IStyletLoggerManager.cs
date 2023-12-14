@@ -19,7 +19,7 @@ internal interface IStyletLoggerManager
     bool IsLoggingEnabled();
 }
 
-internal class StyletLoggerManager : IStyletLoggerManager
+internal sealed class StyletLoggerManager : IStyletLoggerManager
 {
     private readonly ConcurrentDictionary<string, IStyletLogger> _loggers;
     private bool _enabled;
@@ -55,12 +55,10 @@ internal class StyletLoggerManager : IStyletLoggerManager
 
     public bool IsLoggingEnabled() => _enabled;
 
-    private sealed class NLogStyletLogger : IStyletLogger
+    private sealed class NLogStyletLogger(string name) : IStyletLogger
     {
-        private readonly Logger _logger;
+        private readonly Logger _logger = LogManager.GetLogger(name);
         private bool _enabled;
-
-        public NLogStyletLogger(string name) => _logger = LogManager.GetLogger(name);
 
         public void SuspendLogging() => _enabled = false;
         public void ResumeLogging() => _enabled = true;

@@ -5,7 +5,7 @@ using System.Text;
 
 namespace MultiFunPlayer.MediaSource.MediaResource;
 
-internal class MediaResourceInfo
+internal sealed class MediaResourceInfo
 {
     public bool IsPath { get; init; }
     public bool IsUrl { get; init; }
@@ -53,7 +53,7 @@ internal class MediaResourceInfo
                 if (string.Equals(uri.Scheme, "file", StringComparison.OrdinalIgnoreCase))
                     return false;
 
-                var name = uri.Segments.Last().Trim('/');
+                var name = uri.Segments[^1].Trim('/');
                 foreach (var c in Path.GetInvalidFileNameChars())
                     name = name.Replace(c, '_');
 
@@ -70,7 +70,7 @@ internal class MediaResourceInfo
 
                 var source = sb.ToString().TrimEnd('\\', '/');
                 builder.WithSourceAndName(source, name)
-                        .AsUrl();
+                       .AsUrl();
 
                 return true;
             }
@@ -105,7 +105,7 @@ internal class MediaResourceInfo
 
             var source = path.Remove(path.Length - name.Length).TrimEnd('\\', '/');
             builder.WithSourceAndName(source, name)
-                    .AsPath();
+                   .AsPath();
 
             return true;
         }

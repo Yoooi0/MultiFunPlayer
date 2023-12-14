@@ -1,0 +1,36 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Style TargetType="{x:Type TextBlock}" x:Key="ConnectionStatusTextBlock">
+        <Style.Triggers>
+            <DataTrigger Binding="{Binding Status}" Value="Connected">
+                <Setter Property="Foreground" Value="{DynamicResource MaterialDesignSuccessBrush}"/>
+            </DataTrigger>
+            <DataTrigger Binding="{Binding Status}" Value="Disconnected">
+                <Setter Property="Foreground" Value="{DynamicResource MaterialDesignErrorBrush}"/>
+            </DataTrigger>
+            <DataTrigger Binding="{Binding Status}" Value="Connecting">
+                <Setter Property="Foreground" Value="{DynamicResource MaterialDesignPendingBrush}"/>
+            </DataTrigger>
+            <DataTrigger Binding="{Binding Status}" Value="Disconnecting">
+                <Setter Property="Foreground" Value="{DynamicResource MaterialDesignPendingBrush}"/>
+            </DataTrigger>
+        </Style.Triggers>
+    </Style>
+
+    <Style TargetType="{x:Type TextBlock}" x:Key="ConnectionStatusLightTextBlock">
+        <Style.Triggers>
+            <DataTrigger Binding="{Binding Status}" Value="Connected">
+                <Setter Property="Foreground" Value="{DynamicResource MaterialDesignLightSuccessBrush}"/>
+            </DataTrigger>
+            <DataTrigger Binding="{Binding Status}" Value="Disconnected">
+                <Setter Property="Foreground" Value="{DynamicResource MaterialDesignLightErrorBrush}"/>
+            </DataTrigger>
+            <DataTrigger Binding="{Binding Status}" Value="Connecting">
+                <Setter Property="Foreground" Value="{DynamicResource MaterialDesignLightPendingBrush}"/>
+            </DataTrigger>
+            <DataTrigger Binding="{Binding Status}" Value="Disconnecting">
+                <Setter Property="Foreground" Value="{DynamicResource MaterialDesignLightPendingBrush}"/>
+            </DataTrigger>
+        </Style.Triggers>
+    </Style>
+</ResourceDictionary>

@@ -18,7 +18,7 @@ internal enum PluginState
     RanToCompletion,
 }
 
-internal class PluginContainer : PropertyChangedBase, IDisposable
+internal sealed class PluginContainer(FileInfo pluginFile) : PropertyChangedBase, IDisposable
 {
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
@@ -26,7 +26,7 @@ internal class PluginContainer : PropertyChangedBase, IDisposable
     private CancellationTokenSource _cancellationSource;
     private Thread _thread;
 
-    public FileInfo PluginFile { get; }
+    public FileInfo PluginFile { get; } = pluginFile;
     public Exception Exception { get; private set; }
     public PluginState State { get; private set; } = PluginState.Idle;
 
@@ -37,11 +37,6 @@ internal class PluginContainer : PropertyChangedBase, IDisposable
     public bool CanStop => State == PluginState.Running;
     public bool CanCompile => State == PluginState.Idle || State == PluginState.Faulted || State == PluginState.RanToCompletion;
     public bool IsBusy => State != PluginState.Idle && State != PluginState.RanToCompletion && State != PluginState.Running;
-
-    public PluginContainer(FileInfo pluginFile)
-    {
-        PluginFile = pluginFile;
-    }
 
     public void Start()
     {
@@ -71,11 +66,8 @@ internal class PluginContainer : PropertyChangedBase, IDisposable
         {
             Logger.Info($"Starting \"{Name}\"");
 
-            var token = _cancellationSource.Token;
-            token.Register(() => plugin?.InternalDispose());
-
             plugin = _compilationResult.CreatePluginInstance();
-            plugin.InternalInitialize();
+            plugin.InternalInitialize(_cancellationSource.Token);
 
             State = PluginState.Running;
 
@@ -83,31 +75,43 @@ internal class PluginContainer : PropertyChangedBase, IDisposable
             {
                 if (plugin is SyncPluginBase syncPlugin)
                 {
-                    syncPlugin.InternalExecute(token);
+                    syncPlugin.InternalExecute();
                 }
                 else if (plugin is AsyncPluginBase asyncPlugin)
                 {
                     // https://stackoverflow.com/a/9343733 ¯\_(ツ)_/¯
-                    var task = asyncPlugin.InternalExecuteAsync(token);
+                    var task = asyncPlugin.InternalExecuteAsync();
                     task.GetAwaiter().GetResult();
                 }
             }
             catch (OperationCanceledException) { }
-
-            State = PluginState.Stopping;
-            plugin.InternalDispose();
-            State = PluginState.RanToCompletion;
 
             Logger.Debug($"\"{Name}\" ran to completion");
         }
         catch (Exception e)
         {
             Logger.Error(e, $"{Name} failed with exception");
-
-            State = PluginState.Stopping;
-            plugin?.InternalDispose();
-            State = PluginState.Faulted;
             Exception = e;
+        }
+        finally
+        {
+            State = PluginState.Stopping;
+
+            try
+            {
+                plugin?.InternalDispose();
+                HandleSettings(SettingsAction.Saving);
+            }
+            catch (Exception e)
+            {
+                Exception = Exception == null ? e : new AggregateException(Exception, e);
+            }
+
+            State = Exception != null ? PluginState.Faulted : PluginState.RanToCompletion;
+
+            _cancellationSource?.Dispose();
+            _cancellationSource = null;
+            _thread = null;
         }
     }
 
@@ -137,8 +141,6 @@ internal class PluginContainer : PropertyChangedBase, IDisposable
             return;
 
         State = PluginState.Compiling;
-
-        var contents = File.ReadAllText(PluginFile.FullName);
         PluginCompiler.QueueCompile(PluginFile, x => {
             OnCompile(x);
             callback?.Invoke();
@@ -177,21 +179,26 @@ internal class PluginContainer : PropertyChangedBase, IDisposable
 
         var settingsPath = $"Plugins\\{Path.GetFileNameWithoutExtension(PluginFile.Name)}.config.json";
         var settings = SettingsHelper.ReadOrEmpty(settingsPath);
-        _compilationResult.Settings.HandleSettings(settings, action);
+
+        try
+        {
+            _compilationResult.Settings.HandleSettings(settings, action);
+        }
+        catch (Exception e)
+        {
+            Logger.Warn(e, "Plugin settings failed with exception [Action: {0}]", action);
+        }
 
         if (action == SettingsAction.Saving && settings.HasValues)
             SettingsHelper.Write(settings, settingsPath);
     }
 
-    protected virtual void Dispose(bool disposing)
+    private void Dispose(bool disposing)
     {
         _cancellationSource?.Cancel();
-
         _thread?.Join();
 
-        HandleSettings(SettingsAction.Saving);
         _cancellationSource?.Dispose();
-
         _compilationResult?.Dispose();
 
         _thread = null;

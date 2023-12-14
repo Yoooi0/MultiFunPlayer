@@ -1,12 +1,13 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net7.0-windows</TargetFramework>
+    <TargetFramework>net8.0-windows</TargetFramework>
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
     <UseWPF>true</UseWPF>
     <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-    <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>    
+    <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
+	<IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
     <ApplicationIcon>..\..\Assets\icon.ico</ApplicationIcon>
     <SelfContained>false</SelfContained>
     <ImplicitUsings>true</ImplicitUsings>
@@ -30,11 +31,10 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="MahApps.Metro" Version="2.4.9" />
-    <PackageReference Include="MaterialDesignExtensions" Version="4.0.0-a02" />
     <PackageReference Include="MaterialDesignThemes" Version="4.7.0" />
     <PackageReference Include="MaterialDesignThemes.MahApps" Version="0.2.6" />
-    <PackageReference Include="Microsoft.CodeAnalysis.Common" Version="4.7.0" />
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.7.0" />
+    <PackageReference Include="Microsoft.CodeAnalysis.Common" Version="4.8.0" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.8.0" />
     <PackageReference Include="NETStandard.Library" Version="2.0.3" />
     <PackageReference Include="Newtonsoft.Json" Version="13.*" />
     <PackageReference Include="NLog" Version="5.*" />
@@ -43,9 +43,8 @@
     </PackageReference>
     <PackageReference Include="RawInput.Sharp" Version="0.1.1" />
     <PackageReference Include="Stylet" Version="1.*" />
-    <PackageReference Include="System.IO.Ports" Version="7.*" />
-    <PackageReference Include="Microsoft-WindowsAPICodePack-Shell" Version="1.1.5" />
-    <PackageReference Include="System.Management" Version="7.*" />
+    <PackageReference Include="System.IO.Ports" Version="8.*" />
+    <PackageReference Include="System.Management" Version="8.*" />
     <PackageReference Include="Vortice.XInput" Version="3.3.4" />
   </ItemGroup>
 </Project>

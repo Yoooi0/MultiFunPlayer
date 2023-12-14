@@ -2,7 +2,7 @@
 
 namespace MultiFunPlayer.Input.XInput;
 
-public record GamepadButtonGestureDescriptor : ISimpleInputGestureDescriptor
+public sealed record GamepadButtonGestureDescriptor : ISimpleInputGestureDescriptor
 {
     private static readonly IEqualityComparer<SortedSet<GamepadVirtualKey>> _comparer = SortedSet<GamepadVirtualKey>.CreateSetComparer();
 
@@ -17,21 +17,17 @@ public record GamepadButtonGestureDescriptor : ISimpleInputGestureDescriptor
         UserIndex = userIndex;
     }
 
-    public virtual bool Equals(GamepadButtonGestureDescriptor other) => UserIndex == other?.UserIndex && _comparer.Equals(_buttons, other?._buttons);
-    public bool Equals(IInputGestureDescriptor other) => other is GamepadButtonGestureDescriptor d && Equals(d);
+    public bool Equals(GamepadButtonGestureDescriptor other) => UserIndex == other?.UserIndex && _comparer.Equals(_buttons, other?._buttons);
     public override int GetHashCode() => _comparer.GetHashCode(_buttons);
     public override string ToString() => $"[Gamepad Buttons: {UserIndex}/{Buttons}]";
 }
 
-public class GamepadButtonGesture : ISimpleInputGesture
+public sealed class GamepadButtonGesture(GamepadButtonGestureDescriptor descriptor) : AbstractSimpleInputGesture(descriptor)
 {
-    private readonly GamepadButtonGestureDescriptor _descriptor;
+    public int UserIndex => descriptor.UserIndex;
+    public IEnumerable<GamepadVirtualKey> Buttons => descriptor.Buttons;
 
-    public IInputGestureDescriptor Descriptor => _descriptor;
-    public int UserIndex => _descriptor.UserIndex;
-    public IEnumerable<GamepadVirtualKey> Buttons => _descriptor.Buttons;
-
-    public GamepadButtonGesture(GamepadButtonGestureDescriptor descriptor) => _descriptor = descriptor;
+    public override string ToString() => $"[Gamepad Button: {UserIndex}/{string.Join(", ", Buttons)}]";
 
     internal static GamepadButtonGesture Create(int userIndex, IEnumerable<GamepadVirtualKey> buttons) => new(new(userIndex, buttons));
 }

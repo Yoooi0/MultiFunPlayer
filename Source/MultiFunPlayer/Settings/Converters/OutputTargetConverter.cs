@@ -5,12 +5,8 @@ using MultiFunPlayer.Common;
 
 namespace MultiFunPlayer.Settings.Converters;
 
-internal class OutputTargetConverter : JsonConverter<IOutputTarget>
+internal sealed class OutputTargetConverter(IOutputTargetFactory outputTargetFactory) : JsonConverter<IOutputTarget>
 {
-    private readonly IOutputTargetFactory _outputTargetFactory;
-
-    public OutputTargetConverter(IOutputTargetFactory outputTargetFactory) => _outputTargetFactory = outputTargetFactory;
-
     public override IOutputTarget ReadJson(JsonReader reader, Type objectType, IOutputTarget existingValue, bool hasExistingValue, JsonSerializer serializer)
     {
         var o = JToken.ReadFrom(reader) as JObject;
@@ -22,7 +18,7 @@ internal class OutputTargetConverter : JsonConverter<IOutputTarget>
         o.Remove("$type");
         o.Remove("$index");
 
-        var instance = _outputTargetFactory.CreateOutputTarget(type, index)
+        var instance = outputTargetFactory.CreateOutputTarget(type, index)
             ?? throw new JsonReaderException($"Failed to create instance of \"{type}\" with \"{index}\" index");
 
         instance.HandleSettings(o, SettingsAction.Loading);

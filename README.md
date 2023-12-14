@@ -8,8 +8,13 @@
 
 # About
 
-MultiFunPlayer is a simple app to synchronize your devices (e.g. [OSR](https://www.patreon.com/tempestvr) or [buttplug.io](https://buttplug.io) supported devices) with any video using funscripts. Supported video players are [DeoVR](https://deovr.com/), [MPV](https://mpv.io/), [MPC-HC/BE](https://github.com/clsid2/mpc-hc), [HereSphere](https://store.steampowered.com/app/1234730/HereSphere/) and [Whirligig](http://whirligig.xyz/).
-The player's main feature is the ability to play multiple funscripts at the same time, allowing for greater movement fidelity.
+MultiFunPlayer synchronizes your devices (e.g. [OSR](https://www.patreon.com/tempestvr) or [buttplug.io](https://buttplug.io)) with your video files using funscripts. The player has the ability to synchronize multiple devices with multiple funscripts at the same time enabling enhanced experience.
+
+# Downloads
+
+* [![release](https://img.shields.io/github/v/release/Yoooi0/MultiFunPlayer?logo=github&label=latest%20release&labelColor=blue&color=blue)](https://github.com/Yoooi0/MultiFunPlayer/releases/latest)
+* [![pre-release](https://img.shields.io/github/actions/workflow/status/Yoooi0/MultiFunPlayer/ci.yml?logo=github&labelColor=green&color=green&label=latest%20pre-release)](https://github.com/Yoooi0/MultiFunPlayer/actions)
+* [![patreon](https://img.shields.io/badge/patreon-orange?logo=patreon)](https://www.patreon.com/yoooi)
 
 # Patreon only features
 
@@ -17,7 +22,7 @@ The player's main feature is the ability to play multiple funscripts at the same
 
 # Main features
 
-* Supports **[DeoVR](https://deovr.com/), [MPV](https://mpv.io/), [MPC-HC/BE](https://github.com/clsid2/mpc-hc), [HereSphere](https://store.steampowered.com/app/1234730/HereSphere/), [OpenFunscripter](https://github.com/OpenFunscripter/OFS), [Whirligig](http://whirligig.xyz/), [Plex](https://plex.tv), [Emby](https://emby.media/) and [Jellyfin](https://jellyfin.org/)** video players
+* Supports **[DeoVR](https://deovr.com/), [MPV](https://mpv.io/), [MPC-HC/BE](https://github.com/clsid2/mpc-hc), [HereSphere](https://store.steampowered.com/app/1234730/HereSphere/), [OpenFunscripter](https://github.com/OpenFunscripter/OFS), [VLC](https://videolan.org/vlc/), [Whirligig](http://whirligig.xyz/), [Plex](https://plex.tv), [Emby](https://emby.media/) and [Jellyfin](https://jellyfin.org/)** video players
 * Internal player to **play scripts without video files** 
 * Supports **[buttplug.io](https://buttplug.io), TCP, UDP, websockets, namedpipes, serial, file and The Handy (experimental)** outputs
 * **C# plugin system** for custom behaviours and integrations
@@ -101,5 +106,5 @@ Once your video player and output are connected, the funscripts can be loaded in
 
 # Prerequisites
 
-* [.NET 7.0 x64 Desktop Runtime](https://dotnet.microsoft.com/en-us/download/dotnet/7.0/runtime)
+* [.NET 8.0 x64 Desktop Runtime](https://dotnet.microsoft.com/en-us/download/dotnet/8.0/runtime)
 * [Visual C++ 2019 x64 Redistributable](https://aka.ms/vs/17/release/vc_redist.x64.exe)

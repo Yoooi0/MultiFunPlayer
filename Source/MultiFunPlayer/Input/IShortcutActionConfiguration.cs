@@ -14,13 +14,12 @@ public interface IShortcutActionConfiguration
     void Populate(IEnumerable<object> values);
     void Populate(IEnumerable<TypedValue> values);
 
-    object[] GetActionParams();
-    object[] GetActionParamsWithGesture(IInputGesture gesture);
+    object[] GetActionParams(IInputGesture gesture = null);
 }
 
-public class ShortcutActionConfiguration : PropertyChangedBase, IShortcutActionConfiguration
+public sealed class ShortcutActionConfiguration : PropertyChangedBase, IShortcutActionConfiguration
 {
-    protected static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+    private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
     private readonly List<IShortcutSetting> _settings;
     private object[] _valuesBuffer;
@@ -77,31 +76,17 @@ public class ShortcutActionConfiguration : PropertyChangedBase, IShortcutActionC
         }
     }
 
-    public object[] GetActionParams()
+    public object[] GetActionParams(IInputGesture gesture = null)
     {
-        EnsureBufferLength(_settings.Count);
+        _valuesBuffer ??= new object[gesture == null ? _settings.Count : _settings.Count + 1];
 
-        for (var i = 0; i < _settings.Count; i++)
-            _valuesBuffer[i] = _settings[i].Value;
+        var i = 0;
+        if (gesture != null)
+            _valuesBuffer[i++] = gesture;
+        foreach (var setting in _settings)
+            _valuesBuffer[i++] = setting.Value;
 
         return _valuesBuffer;
-    }
-
-    public object[] GetActionParamsWithGesture(IInputGesture gesture)
-    {
-        EnsureBufferLength(_settings.Count + 1);
-
-        _valuesBuffer[0] = gesture;
-        for (var i = 0; i < _settings.Count; i++)
-            _valuesBuffer[i + 1] = _settings[i].Value;
-
-        return _valuesBuffer;
-    }
-
-    private void EnsureBufferLength(int length)
-    {
-        if (_valuesBuffer == null || _valuesBuffer.Length != length)
-            _valuesBuffer = new object[length];
     }
 
     [SuppressPropertyChangedWarnings]

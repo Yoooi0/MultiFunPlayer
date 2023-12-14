@@ -58,7 +58,7 @@ public partial class ShortcutSetting<T> : IShortcutSetting<T>
 }
 
 [AddINotifyPropertyChangedInterface]
-public partial class OneOfShortcutSetting<T> : ShortcutSetting<T>, IOneOfShortcutSetting<T>
+public sealed partial class OneOfShortcutSetting<T> : ShortcutSetting<T>, IOneOfShortcutSetting<T>
 {
     public IEnumerable<T> ItemsSource { get; init; }
 }

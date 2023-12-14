@@ -4,11 +4,9 @@ using System.Diagnostics;
 using System.IO;
 using System.Windows.Controls;
 using System.Windows;
-using System.IO.Compression;
 using PropertyChanged;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json;
-using Microsoft.WindowsAPICodePack.Dialogs;
 using System.ComponentModel;
 using NLog;
 using System.Runtime.CompilerServices;
@@ -22,17 +20,21 @@ using MultiFunPlayer.MediaSource.MediaResource.Modifier.ViewModels;
 using MultiFunPlayer.MotionProvider.ViewModels;
 using System.Windows.Controls.Primitives;
 using MultiFunPlayer.Property;
+using Microsoft.Win32;
+using MultiFunPlayer.Script;
+using MultiFunPlayer.Script.Repository;
 
 namespace MultiFunPlayer.UI.Controls.ViewModels;
 
 [JsonObject(MemberSerialization = MemberSerialization.OptIn)]
-internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
+internal sealed class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
     IHandle<MediaPositionChangedMessage>, IHandle<MediaPlayingChangedMessage>, IHandle<MediaPathChangedMessage>, IHandle<MediaDurationChangedMessage>,
-    IHandle<MediaSpeedChangedMessage>, IHandle<SettingsMessage>, IHandle<SyncRequestMessage>, IHandle<ChangeScriptMessage>
+    IHandle<MediaSpeedChangedMessage>, IHandle<SettingsMessage>, IHandle<SyncRequestMessage>, IHandle<ReloadScriptsRequestMessage>, IHandle<ChangeScriptMessage>
 {
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
     private readonly IEventAggregator _eventAggregator;
+
     private Thread _updateThread;
     private CancellationTokenSource _cancellationSource;
     private double _internalMediaPosition;
@@ -52,13 +54,13 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
 
     public Dictionary<string, Type> MediaPathModifierTypes { get; }
     public MediaLoopSegment MediaLoopSegment { get; }
-    public IMotionProviderManager MotionProviderManager { get; }
 
+    public IScriptRepositoryManager ScriptRepositoryManager { get; }
+    public IMotionProviderManager MotionProviderManager { get; }
     public MediaResourceInfo MediaResource { get; set; }
 
     [JsonProperty] public ObservableConcurrentDictionaryView<DeviceAxis, AxisModel, AxisSettings> AxisSettings { get; }
     [JsonProperty(ItemTypeNameHandling = TypeNameHandling.Objects)] public ObservableConcurrentCollection<IMediaPathModifier> MediaPathModifiers { get; }
-    [JsonProperty] public ObservableConcurrentCollection<ScriptLibrary> ScriptLibraries { get; }
     [JsonProperty] public SyncSettings SyncSettings { get; set; }
 
     [JsonProperty] public double GlobalOffset { get; set; } = 0;
@@ -75,20 +77,21 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
     public bool IsSyncing => AxisStates.Values.Any(s => s.SyncTime > 0);
     public double SyncProgress => !IsSyncing ? 100 : GetSyncProgress(AxisStates.Values.Max(s => s.SyncTime), SyncSettings.Duration) * 100;
 
-    public ScriptViewModel(IShortcutManager shortcutManager, IPropertyManager propertyManager, IMotionProviderManager motionProviderManager, IEventAggregator eventAggregator)
+    public ScriptViewModel(IShortcutManager shortcutManager, IPropertyManager propertyManager, IMotionProviderManager motionProviderManager,
+        IScriptRepositoryManager scriptManager, IEventAggregator eventAggregator)
     {
         _eventAggregator = eventAggregator;
         _eventAggregator.Subscribe(this);
+        ScriptRepositoryManager = scriptManager;
 
         MotionProviderManager = motionProviderManager;
 
         AxisModels = new ObservableConcurrentDictionary<DeviceAxis, AxisModel>(DeviceAxis.All.ToDictionary(a => a, a => new AxisModel(a)));
-        MediaPathModifiers = new ObservableConcurrentCollection<IMediaPathModifier>();
+        MediaPathModifiers = [];
         MediaPathModifierTypes = ReflectionUtils.FindImplementations<IMediaPathModifier>()
                                                 .ToDictionary(t => t.GetCustomAttribute<DisplayNameAttribute>(inherit: false).DisplayName, t => t);
-        MediaLoopSegment = new MediaLoopSegment();
 
-        ScriptLibraries = new ObservableConcurrentCollection<ScriptLibrary>();
+        MediaLoopSegment = new MediaLoopSegment();
         SyncSettings = new SyncSettings();
 
         InvalidateMediaState();
@@ -298,12 +301,10 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
                 {
                     if (settings.BypassTransition)
                         return false;
-                    if (state.ExternalTransition.Completed)
+                    if (!state.ExternalTransition.Update(deltaTime))
                         return false;
 
-                    var value = state.ExternalTransition.Value;
-                    state.ExternalTransition.Update(deltaTime);
-                    context.TransitionValue = value;
+                    context.TransitionValue = state.ExternalTransition.GetValue();
                     return context.IsTransitionDirty;
                 }
             }
@@ -572,12 +573,12 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
     public void Handle(MediaDurationChangedMessage message)
     {
         var newDuration = message.Duration?.TotalSeconds ?? double.NaN;
-        if (MediaDuration == newDuration)
-            return;
+        if (MediaDuration != newDuration)
+        {
+            Logger.Info("Received {0} [Duration: {1}]", nameof(MediaDurationChangedMessage), message.Duration?.ToString());
+            MediaDuration = newDuration;
+        }
 
-        Logger.Info("Received {0} [Duration: {1}]", nameof(MediaDurationChangedMessage), message.Duration?.ToString());
-
-        MediaDuration = newDuration;
         ScheduleAutoSkipToScriptStart();
     }
 
@@ -641,7 +642,11 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
     {
         if (message.Action == SettingsAction.Saving)
         {
-            message.Settings["Script"] = JObject.FromObject(this);
+            if (!message.Settings.EnsureContainsObjects("Script")
+             || !message.Settings.TryGetObject(out var settings, "Script"))
+                return;
+
+            settings.Merge(JObject.FromObject(this), new JsonMergeSettings() { MergeArrayHandling = MergeArrayHandling.Replace });
         }
         else if (message.Action == SettingsAction.Loading)
         {
@@ -662,14 +667,12 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
             if (settings.TryGetValue<List<IMediaPathModifier>>(nameof(MediaPathModifiers), new JsonSerializerSettings() { TypeNameHandling = TypeNameHandling.Objects }, out var mediaPathModifiers))
                 MediaPathModifiers.SetFrom(mediaPathModifiers);
 
-            if (settings.TryGetValue<List<ScriptLibrary>>(nameof(ScriptLibraries), out var scriptDirectories))
-                ScriptLibraries.SetFrom(scriptDirectories);
-
             if (settings.TryGetValue<double>(nameof(GlobalOffset), out var globalOffset)) GlobalOffset = globalOffset;
             if (settings.TryGetValue<bool>(nameof(ValuesContentVisible), out var valuesContentVisible)) ValuesContentVisible = valuesContentVisible;
             if (settings.TryGetValue<bool>(nameof(MediaContentVisible), out var mediaContentVisible)) MediaContentVisible = mediaContentVisible;
             if (settings.TryGetValue<bool>(nameof(AxisContentVisible), out var axisContentVisible)) AxisContentVisible = axisContentVisible;
             if (settings.TryGetValue<int>(nameof(HeatmapBucketCount), out var heatmapBucketCount)) HeatmapBucketCount = heatmapBucketCount;
+            if (settings.TryGetValue<bool>(nameof(HeatmapEnablePreview), out var heatmapEnablePreview)) HeatmapEnablePreview = heatmapEnablePreview;
             if (settings.TryGetValue<bool>(nameof(HeatmapInvertY), out var heatmapInvertY)) HeatmapInvertY = heatmapInvertY;
             if (settings.TryGetValue<bool>(nameof(HeatmapShowStrokeLength), out var heatmapShowStrokeLength)) HeatmapShowStrokeLength = heatmapShowStrokeLength;
             if (settings.TryGetValue<bool>(nameof(AutoSkipToScriptStartEnabled), out var autoSkipToScriptStartEnabled)) AutoSkipToScriptStartEnabled = autoSkipToScriptStartEnabled;
@@ -680,6 +683,7 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
     }
 
     public void Handle(SyncRequestMessage message) => ResetSync(true, message.Axes);
+    public void Handle(ReloadScriptsRequestMessage message) => ReloadAxes(message.Axes);
 
     public void Handle(ChangeScriptMessage message)
     {
@@ -781,82 +785,6 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
     #endregion
 
     #region Script
-    private List<DeviceAxis> SearchForScripts(IEnumerable<DeviceAxis> axes = null)
-    {
-        axes ??= DeviceAxis.All;
-
-        var updated = new List<DeviceAxis>();
-        if (!axes.Any() || MediaResource == null)
-            return updated;
-
-        Logger.Debug("Maching files to axes [Axes: {list}]", axes);
-        void TryMatchName(string scriptName, ScriptReaderResult result)
-        {
-            if (!result.IsSuccess)
-                return;
-
-            if (result.IsMultiAxis)
-            {
-                foreach (var (axis, resource) in result.Resources)
-                    DoSetScript(axis, resource);
-            }
-            else
-            {
-                foreach (var axis in DeviceAxisUtils.FindAxesMatchingName(axes, scriptName, MediaResource.Name))
-                    DoSetScript(axis, result.Resource);
-            }
-
-            void DoSetScript(DeviceAxis axis, IScriptResource resource)
-            {
-                SetScript(axis, resource);
-                updated.Add(axis);
-
-                Logger.Debug("Matched {0} script to \"{1}\"", axis, scriptName);
-            }
-        }
-
-        bool TryMatchArchive(string path)
-        {
-            if (File.Exists(path))
-            {
-                Logger.Info("Matching zip file \"{0}\"", path);
-                using var zip = ZipFile.OpenRead(path);
-                foreach (var entry in zip.Entries.Where(e => string.Equals(Path.GetExtension(e.FullName), ".funscript", StringComparison.OrdinalIgnoreCase)))
-                {
-                    using var stream = entry.Open();
-                    TryMatchName(entry.Name, FunscriptReader.Default.FromStream(entry.Name, path, stream));
-                }
-
-                return true;
-            }
-
-            return false;
-        }
-
-        var mediaWithoutExtension = Path.GetFileNameWithoutExtension(MediaResource.Name);
-        foreach (var library in ScriptLibraries)
-        {
-            Logger.Info("Searching library \"{0}\"", library.Directory);
-            foreach (var zipFile in library.EnumerateFiles($"{mediaWithoutExtension}.zip"))
-                TryMatchArchive(zipFile.FullName);
-
-            foreach (var funscriptFile in library.EnumerateFiles($"{mediaWithoutExtension}.*funscript"))
-                TryMatchName(funscriptFile.Name, FunscriptReader.Default.FromFileInfo(funscriptFile));
-        }
-
-        if (Directory.Exists(MediaResource.Source))
-        {
-            Logger.Info("Searching media location \"{0}\"", MediaResource.Source);
-            var sourceDirectory = new DirectoryInfo(MediaResource.Source);
-            TryMatchArchive(Path.Join(sourceDirectory.FullName, $"{mediaWithoutExtension}.zip"));
-
-            foreach (var funscriptFile in sourceDirectory.EnumerateFiles($"{mediaWithoutExtension}.*funscript"))
-                TryMatchName(funscriptFile.Name, FunscriptReader.Default.FromFileInfo(funscriptFile));
-        }
-
-        return updated;
-    }
-
     private void UpdateLinkedScriptsTo(DeviceAxis axis) => UpdateLinkScriptFor(DeviceAxis.All.Where(a => a != axis && AxisSettings[a].LinkAxis == axis));
     private void UpdateLinkScriptFor(IEnumerable<DeviceAxis> axes = null)
     {
@@ -951,8 +879,14 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         var axesWithLinkPriority = axes.Where(a => AxisSettings[a].LinkAxisHasPriority);
         var axesWithoutLinkPriority = axes.Where(a => !AxisSettings[a].LinkAxisHasPriority);
 
-        var updated = SearchForScripts(axesWithoutLinkPriority);
-        UpdateLinkScriptFor(axesWithLinkPriority);
+        ScriptRepositoryManager.BeginSearchForScripts(MediaResource, axesWithoutLinkPriority, scripts =>
+            {
+                foreach (var (axis, resource) in scripts)
+                    SetScript(axis, resource);
+
+                UpdateLinkScriptFor(axesWithLinkPriority);
+                _eventAggregator.Publish(new PostScriptSearchMessage(scripts));
+            }, _cancellationSource.Token);
     }
 
     private void SkipGap(double minimumSkip = 0, params DeviceAxis[] axes) => SkipGap(axes?.AsEnumerable(), minimumSkip);
@@ -1189,14 +1123,15 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
 
     public void OnAxisLoad(DeviceAxis axis)
     {
-        var dialog = new CommonOpenFileDialog()
+        var dialog = new OpenFileDialog()
         {
+            CheckFileExists = true,
+            CheckPathExists = true,
             InitialDirectory = Directory.Exists(MediaResource?.Source) ? MediaResource.Source : string.Empty,
-            EnsureFileExists = true
+            Filter = "Funscript files (*.funscript)|*.funscript"
         };
-        dialog.Filters.Add(new CommonFileDialogFilter("Funscript files", "*.funscript"));
 
-        if (dialog.ShowDialog() != CommonFileDialogResult.Ok)
+        if (dialog.ShowDialog() != true)
             return;
 
         SetScriptFromReader(FunscriptReader.Default.FromPath(dialog.FileName), axis);
@@ -1214,40 +1149,9 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         lock (state)
         {
             var fromValue = double.IsFinite(state.Value) ? state.Value : axis.DefaultValue;
-            var toValue = offset ? fromValue + value : value;
+            var toValue = MathUtils.Clamp01(offset ? fromValue + value : value);
             state.ExternalTransition.Reset(fromValue, toValue, duration);
         }
-    }
-
-    private bool MoveScript(DeviceAxis axis, DirectoryInfo directory)
-    {
-        if (directory?.Exists == false || AxisModels[axis].Script == null)
-            return false;
-
-        try
-        {
-            var source = AxisModels[axis].Script.Source;
-            if (!File.Exists(source))
-                return false;
-
-            File.Move(source, Path.Join(directory.FullName, Path.GetFileName(source)));
-        }
-        catch { return false; }
-
-        return true;
-    }
-
-    public void OnAxisMoveToMedia(DeviceAxis axis)
-    {
-        if (MediaResource != null && MoveScript(axis, new DirectoryInfo(MediaResource.Source)))
-            ReloadAxes(axis);
-    }
-
-    public RelayCommand<DeviceAxis, ScriptLibrary> OnAxisMoveToLibraryCommand => new(OnAxisMoveToLibrary);
-    public void OnAxisMoveToLibrary(DeviceAxis axis, ScriptLibrary library)
-    {
-        if (MoveScript(axis, library?.Directory.AsRefreshed()))
-            ReloadAxes(axis);
     }
 
     [SuppressPropertyChangedWarnings]
@@ -1403,57 +1307,22 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         if (MediaResource?.IsUrl != true)
             return;
 
-        var dialog = new CommonOpenFileDialog()
+        var dialog = new OpenFileDialog()
         {
-            IsFolderPicker = false,
-            EnsureFileExists = true
+            CheckFileExists = true,
+            CheckPathExists = true
         };
 
-        if (dialog.ShowDialog() != CommonFileDialogResult.Ok)
+        if (dialog.ShowDialog() != true)
             return;
 
-        MediaPathModifiers.Add(new FindReplaceMediaPathModifierViewModel()
+        MediaPathModifiers.Add(new FindReplaceMediaPathModifier()
         {
             Find = MediaResource.OriginalPath,
             Replace = dialog.FileName
         });
 
         Handle(new MediaPathChangedMessage(MediaResource.OriginalPath));
-    }
-    #endregion
-
-    #region ScriptLibrary
-    public void OnLibraryAdd(object sender, RoutedEventArgs e)
-    {
-        //TODO: remove dependency once /dotnet/wpf/issues/438 is resolved
-        var dialog = new CommonOpenFileDialog()
-        {
-            IsFolderPicker = true
-        };
-
-        if (dialog.ShowDialog() != CommonFileDialogResult.Ok)
-            return;
-
-        var directory = new DirectoryInfo(dialog.FileName);
-        ScriptLibraries.Add(new ScriptLibrary(directory));
-        ReloadAxes(null);
-    }
-
-    public void OnLibraryDelete(object sender, RoutedEventArgs e)
-    {
-        if (sender is not FrameworkElement element || element.DataContext is not ScriptLibrary library)
-            return;
-
-        ScriptLibraries.Remove(library);
-        ReloadAxes(null);
-    }
-
-    public void OnLibraryOpenFolder(object sender, RoutedEventArgs e)
-    {
-        if (sender is not FrameworkElement element || element.DataContext is not ScriptLibrary library)
-            return;
-
-        Process.Start("explorer.exe", library.Directory.FullName);
     }
     #endregion
 
@@ -1667,7 +1536,7 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
 
         s.RegisterAction<IAxisInputGesture, DeviceAxis>("Axis::Value::Drive",
             s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All),
-            (gesture, axis) => SetAxisTransition(axis, gesture.Delta, duration: 0, offset: true));
+            (gesture, axis) => SetAxisTransition(axis, gesture.Delta, gesture.DeltaTime, offset: true));
         #endregion
 
         #region Axis::Sync
@@ -1749,7 +1618,7 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         #region Axis::InterpolationType
         s.RegisterAction<DeviceAxis, InterpolationType>("Axis::InterpolationType::Set",
             s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All),
-            s => s.WithLabel("Interpolation").WithItemsSource(EnumUtils.GetValues<InterpolationType>()),
+            s => s.WithLabel("Interpolation").WithItemsSource(Enum.GetValues<InterpolationType>()),
             (axis, type) => UpdateSettings(axis, s => s.InterpolationType = type));
         #endregion
 
@@ -1790,7 +1659,7 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         #region Axis::SmartLimitMode
         s.RegisterAction<DeviceAxis, SmartLimitMode>("Axis::SmartLimitMode::Set",
             s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All),
-            s => s.WithLabel("Smart limit mode").WithItemsSource(EnumUtils.GetValues<SmartLimitMode>()),
+            s => s.WithLabel("Smart limit mode").WithItemsSource(Enum.GetValues<SmartLimitMode>()),
             (axis, mode) => UpdateSettings(axis, s => s.SmartLimitMode = mode));
         #endregion
 
@@ -1809,7 +1678,7 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
         #region Axis::SmartLimitPoints
         s.RegisterAction<DeviceAxis, ObservableConcurrentCollection<Point>>("Axis::SmartLimitPoints::Set",
             s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All),
-            s => s.WithDefaultValue(new ObservableConcurrentCollection<Point>() { new Point(50, 50) })
+            s => s.WithDefaultValue([new(50, 50)])
                   .WithTemplateName("SmartLimitPointsTemplate")
                   .WithCustomToString(x => $"Points({x.Count})"),
             (axis, points) => UpdateSettings(axis, s => s.SmartLimitPoints.SetFrom(points)));
@@ -2042,7 +1911,7 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
     }
     #endregion
 
-    protected virtual void Dispose(bool disposing)
+    private void Dispose(bool disposing)
     {
         _cancellationSource?.Cancel();
         _updateThread?.Join();
@@ -2062,22 +1931,15 @@ internal class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDisposable,
     }
 }
 
-internal class AxisModel : PropertyChangedBase
+internal sealed class AxisModel(DeviceAxis axis) : PropertyChangedBase
 {
-    public AxisState State { get; }
-    public AxisSettings Settings { get; }
-    public IScriptResource Script { get; set; }
-
-    public AxisModel(DeviceAxis axis)
-    {
-        State = new AxisState();
-        Settings = new AxisSettings(axis);
-        Script = null;
-    }
+    public AxisState State { get; } = new AxisState();
+    public AxisSettings Settings { get; } = new AxisSettings(axis);
+    public IScriptResource Script { get; set; } = null;
 }
 
 [AddINotifyPropertyChangedInterface]
-internal partial class AxisState
+internal sealed partial class AxisState
 {
     public static int AfterScriptIndex { get; } = int.MaxValue;
     public static int BeforeScriptIndex { get; } = -1;
@@ -2116,7 +1978,7 @@ internal partial class AxisState
     }
 }
 
-internal class AxisValueTransition
+internal sealed class AxisValueTransition
 {
     private bool _initialized;
     private double _fromValue;
@@ -2124,12 +1986,28 @@ internal class AxisValueTransition
     private double _duration;
     private double _time;
 
-    public double Value => _duration > 0.00001 ? MathUtils.Lerp(_fromValue, _toValue, MathUtils.Clamp01(_time / _duration)) : _toValue;
-    public bool Completed => !_initialized || (_time >= 0 && _time >= _duration);
-
     public AxisValueTransition() => _initialized = false;
 
-    public void Update(double deltaTime) => _time = _time < 0 ? deltaTime : _time + deltaTime;
+    public bool Update(double deltaTime)
+    {
+        if (!_initialized)
+            return false;
+        if (_time >= 0 && _time >= _duration)
+            return false;
+
+        _time = _time < 0 ? deltaTime : _time + deltaTime;
+        return true;
+    }
+
+    public double GetValue()
+    {
+        if (_duration < 0.00001)
+            return _toValue;
+
+        var t = MathUtils.Clamp01(_time / _duration);
+        return MathUtils.Lerp(_fromValue, _toValue, t);
+    }
+
     public void Reset(double fromValue, double toValue, double duration)
     {
         _initialized = true;
@@ -2140,7 +2018,7 @@ internal class AxisValueTransition
     }
 }
 
-internal class AxisStateUpdateContext
+internal sealed class AxisStateUpdateContext(AxisState state)
 {
     private readonly AxisModel _model;
     private readonly AxisState _state;
@@ -2151,31 +2029,31 @@ internal class AxisStateUpdateContext
     public bool AfterScript => Index == AxisState.AfterScriptIndex;
     public bool InsideScript => Index >= 0 && Index != AxisState.AfterScriptIndex;
 
-    public int LastIndex => _state.Index;
-    public bool LastInvalid => _state.Invalid;
-    public bool LastBeforeScript => _state.BeforeScript;
-    public bool LastAfterScript => _state.AfterScript;
-    public bool LastInsideScript => _state.InsideScript;
+    public int LastIndex => state.Index;
+    public bool LastInvalid => state.Invalid;
+    public bool LastBeforeScript => state.BeforeScript;
+    public bool LastAfterScript => state.AfterScript;
+    public bool LastInsideScript => state.InsideScript;
 
     public double Value { get; set; }
     public double ScriptValue { get; set; }
     public double TransitionValue { get; set; }
     public double MotionProviderValue { get; set; }
 
-    public double LastValue => _state.Value;
-    public double LastScriptValue => _state.ScriptValue;
-    public double LastMotionProviderValue => _state.MotionProviderValue;
-    public double LastTransitionValue => _state.TransitionValue;
+    public double LastValue => state.Value;
+    public double LastScriptValue => state.ScriptValue;
+    public double LastMotionProviderValue => state.MotionProviderValue;
+    public double LastTransitionValue => state.TransitionValue;
 
     public bool InsideGap { get; set; }
     public bool IsAutoHoming { get; set; }
     public bool IsSpeedLimited { get; set; }
     public bool IsSmartLimited { get; set; }
 
-    public bool LastInsideGap => _state.InsideGap;
-    public bool LastIsAutoHoming => _state.IsAutoHoming;
-    public bool LastIsSpeedLimited => _state.IsSpeedLimited;
-    public bool LastIsSmartLimited => _state.IsSmartLimited;
+    public bool LastInsideGap => state.InsideGap;
+    public bool LastIsAutoHoming => state.IsAutoHoming;
+    public bool LastIsSpeedLimited => state.IsSpeedLimited;
+    public bool LastIsSmartLimited => state.IsSmartLimited;
 
     public bool IsDirty => ValueChanged(LastValue, Value, 0.000001);
     public bool IsScriptDirty => ValueChanged(LastScriptValue, ScriptValue, 0.000001);
@@ -2201,15 +2079,15 @@ internal class AxisStateUpdateContext
         TransitionValue = double.NaN;
         MotionProviderValue = double.NaN;
 
-        Index = _state.Index;
+        Index = state.Index;
     }
 
     public void EndUpdate(double deltaTime)
     {
-        _state.IsDirty = IsDirty;
+        state.IsDirty = IsDirty;
 
         if (double.IsFinite(Value) && double.IsFinite(LastValue))
-            _state.Speed = (LastValue - Value) / deltaTime;
+            state.Speed = (LastValue - Value) / deltaTime;
 
         if (LastIndex != Index)
         {
@@ -2239,14 +2117,14 @@ internal class AxisStateUpdateContext
 }
 
 [JsonObject(MemberSerialization.OptIn)]
-internal class AxisSettings : PropertyChangedBase
+internal sealed class AxisSettings : PropertyChangedBase
 {
     [JsonProperty] public bool LinkAxisHasPriority { get; set; } = false;
     [JsonProperty] public DeviceAxis LinkAxis { get; set; } = null;
 
     [JsonProperty] public DeviceAxis SmartLimitInputAxis { get; set; } = null;
     [JsonProperty(ObjectCreationHandling = ObjectCreationHandling.Replace)]
-    public ObservableConcurrentCollection<Point> SmartLimitPoints { get; set; } = new() { new Point(25, 100), new Point(90, 0) };
+    public ObservableConcurrentCollection<Point> SmartLimitPoints { get; set; } = [new Point(25, 100), new Point(90, 0)];
     [JsonProperty] public SmartLimitMode SmartLimitMode { get; set; } = SmartLimitMode.Value;
     [JsonProperty] public double SmartLimitTargetValue { get; set; }
 
@@ -2283,7 +2161,7 @@ internal class AxisSettings : PropertyChangedBase
             if (DeviceAxis.TryParse("L0", out var strokeAxis))
                 UpdateMotionProviderWithAxis = strokeAxis;
 
-            var providerName = typeof(RandomMotionProviderViewModel).GetCustomAttribute<DisplayNameAttribute>()?.DisplayName;
+            var providerName = typeof(RandomMotionProvider).GetCustomAttribute<DisplayNameAttribute>()?.DisplayName;
             if (providerName != null)
                 SelectedMotionProvider = providerName;
 
@@ -2299,7 +2177,7 @@ internal enum SmartLimitMode
 }
 
 [JsonObject(MemberSerialization.OptIn)]
-internal class SyncSettings : PropertyChangedBase
+internal sealed class SyncSettings : PropertyChangedBase
 {
     [JsonProperty] public double Duration { get; set; } = 4;
     [JsonProperty] public bool SyncOnMediaResourceChanged { get; set; } = true;
@@ -2308,21 +2186,7 @@ internal class SyncSettings : PropertyChangedBase
     [JsonProperty] public bool SyncOnAutoHomeStartEnd { get; set; } = true;
 }
 
-[JsonObject(MemberSerialization.OptIn)]
-internal class ScriptLibrary : PropertyChangedBase
-{
-    public ScriptLibrary(DirectoryInfo directory)
-    {
-        Directory = directory;
-    }
-
-    [JsonProperty] public DirectoryInfo Directory { get; }
-    [JsonProperty] public bool Recursive { get; set; }
-
-    public IEnumerable<FileInfo> EnumerateFiles(string searchPattern) => Directory.SafeEnumerateFiles(searchPattern, IOUtils.CreateEnumerationOptions(Recursive));
-}
-
-internal class MediaLoopSegment : PropertyChangedBase
+internal sealed class MediaLoopSegment : PropertyChangedBase
 {
     private double? _startPosition;
     private double? _endPosition;
@@ -2379,8 +2243,7 @@ internal class MediaLoopSegment : PropertyChangedBase
     }
 }
 
-public class SeekRequestEventArgs : EventArgs
+public sealed class SeekRequestEventArgs(TimeSpan position) : EventArgs
 {
-    public TimeSpan Position { get; }
-    public SeekRequestEventArgs(TimeSpan position) => Position = position;
+    public TimeSpan Position { get; } = position;
 }

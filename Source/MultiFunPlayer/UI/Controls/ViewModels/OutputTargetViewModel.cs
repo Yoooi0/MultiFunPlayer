@@ -7,7 +7,7 @@ using Stylet;
 
 namespace MultiFunPlayer.UI.Controls.ViewModels;
 
-internal class OutputTargetViewModel : Conductor<IOutputTarget>.Collection.OneActive, IHandle<SettingsMessage>, IDisposable
+internal sealed class OutputTargetViewModel : Conductor<IOutputTarget>.Collection.OneActive, IHandle<SettingsMessage>, IDisposable
 {
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
@@ -30,7 +30,7 @@ internal class OutputTargetViewModel : Conductor<IOutputTarget>.Collection.OneAc
         _outputTargetFactory = outputTargetFactory;
         eventAggregator.Subscribe(this);
 
-        _semaphores = new Dictionary<IOutputTarget, SemaphoreSlim>();
+        _semaphores = [];
         _cancellationSource = new CancellationTokenSource();
 
         AvailableOutputTargetTypes = ReflectionUtils.FindImplementations<IOutputTarget>().ToList();
@@ -245,12 +245,11 @@ internal class OutputTargetViewModel : Conductor<IOutputTarget>.Collection.OneAc
         s.UnregisterAction($"{target.Identifier}::Connection::Disconnect");
     }
 
-    protected async virtual void Dispose(bool disposing)
+    private void Dispose(bool disposing)
     {
         _cancellationSource?.Cancel();
 
-        if (_task != null)
-            await _task;
+        _task?.GetAwaiter().GetResult();
 
         if (_semaphores != null)
             foreach (var (_, semaphore) in _semaphores)

@@ -5,7 +5,7 @@ using System.Windows.Data;
 
 namespace MultiFunPlayer.UI.Converters;
 
-internal class MotionProviderSelectorConverter : IMultiValueConverter
+internal sealed class MotionProviderSelectorConverter : IMultiValueConverter
 {
     public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
     {

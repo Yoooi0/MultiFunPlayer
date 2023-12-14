@@ -1,4 +1,4 @@
-﻿using PropertyChanged;
+using PropertyChanged;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Specialized;
@@ -9,10 +9,11 @@ namespace MultiFunPlayer.Common;
 public interface IReadOnlyObservableConcurrentDictionary<TKey, TValue> : IReadOnlyDictionary<TKey, TValue>, INotifyCollectionChanged, INotifyPropertyChanged { }
 
 [DoNotNotify]
-public class ObservableConcurrentDictionary<TKey, TValue> : IDictionary<TKey, TValue>, IReadOnlyObservableConcurrentDictionary<TKey, TValue>
+public sealed class ObservableConcurrentDictionary<TKey, TValue> : IDictionary<TKey, TValue>, IReadOnlyObservableConcurrentDictionary<TKey, TValue>
 {
     private readonly SynchronizationContext _context;
     private readonly ConcurrentDictionary<TKey, TValue> _dictionary;
+    private readonly IEqualityComparer<TKey> _comparer;
 
     public event NotifyCollectionChangedEventHandler CollectionChanged;
     public event PropertyChangedEventHandler PropertyChanged;
@@ -21,12 +22,21 @@ public class ObservableConcurrentDictionary<TKey, TValue> : IDictionary<TKey, TV
     {
         _context = AsyncOperationManager.SynchronizationContext;
         _dictionary = new ConcurrentDictionary<TKey, TValue>();
+        _comparer = EqualityComparer<TKey>.Default;
     }
 
     public ObservableConcurrentDictionary(IEnumerable<KeyValuePair<TKey, TValue>> collection)
     {
         _context = AsyncOperationManager.SynchronizationContext;
         _dictionary = new ConcurrentDictionary<TKey, TValue>(collection);
+        _comparer = EqualityComparer<TKey>.Default;
+    }
+
+    public ObservableConcurrentDictionary(IEqualityComparer<TKey> comparer)
+    {
+        _context = AsyncOperationManager.SynchronizationContext;
+        _dictionary = new ConcurrentDictionary<TKey, TValue>(comparer);
+        _comparer = comparer;
     }
 
     private void NotifyObserversOfChange(NotifyCollectionChangedEventArgs collectionChangedArgs)
@@ -39,6 +49,9 @@ public class ObservableConcurrentDictionary<TKey, TValue> : IDictionary<TKey, TV
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Values)));
         }, null);
     }
+
+    private void NotifyObserversOfChange(NotifyCollectionChangedAction action)
+        => NotifyObserversOfChange(new NotifyCollectionChangedEventArgs(action));
 
     private void NotifyObserversOfChange(NotifyCollectionChangedAction action, TKey key, TValue value, int index)
         => NotifyObserversOfChange(new NotifyCollectionChangedEventArgs(action, new KeyValuePair<TKey, TValue>(key, value), index));
@@ -61,10 +74,10 @@ public class ObservableConcurrentDictionary<TKey, TValue> : IDictionary<TKey, TV
 
     private bool TryRemoveWithNotification(TKey key, out TValue value)
     {
-        var index = IndexOf(key);
         var result = _dictionary.TryRemove(key, out value);
         if (result)
-            NotifyObserversOfChange(NotifyCollectionChangedAction.Remove, key, value, index);
+            NotifyObserversOfChange(NotifyCollectionChangedAction.Reset);
+
         return result;
     }
 
@@ -93,7 +106,7 @@ public class ObservableConcurrentDictionary<TKey, TValue> : IDictionary<TKey, TV
         foreach (var current in _dictionary.Keys)
         {
             index++;
-            if (EqualityComparer<TKey>.Default.Equals(current, key))
+            if (_comparer.Equals(current, key))
                 return index;
         }
 

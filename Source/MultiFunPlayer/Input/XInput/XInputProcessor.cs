@@ -1,13 +1,14 @@
 using MultiFunPlayer.Common;
 using Newtonsoft.Json;
 using NLog;
+using System.Diagnostics;
 using Vortice.XInput;
 
 namespace MultiFunPlayer.Input.XInput;
 
-internal class XInputProcessor : IInputProcessor
+internal sealed class XInputProcessor : IInputProcessor
 {
-    protected static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+    private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
     private readonly State[] _states;
     private readonly HashSet<GamepadVirtualKey> _pressedKeys;
@@ -20,7 +21,7 @@ internal class XInputProcessor : IInputProcessor
     public XInputProcessor()
     {
         _states = new State[4];
-        _pressedKeys = new HashSet<GamepadVirtualKey>();
+        _pressedKeys = [];
         _cancellationSource = new CancellationTokenSource();
         _thread = new Thread(() => Update(_cancellationSource.Token))
         {
@@ -44,8 +45,12 @@ internal class XInputProcessor : IInputProcessor
             Logger.Debug("User: {0}, Capabilities: {1}", i, JsonConvert.SerializeObject(capabilities, Formatting.None));
         }
 
+        var stopwatch = Stopwatch.StartNew();
         while (!token.IsCancellationRequested)
         {
+            var elapsed = stopwatch.ElapsedTicks / (double)Stopwatch.Frequency;
+            stopwatch.Restart();
+
             for (var i = 0; i < _states.Length; i++)
             {
                 if (!Vortice.XInput.XInput.GetState(i, out var state))
@@ -59,7 +64,7 @@ internal class XInputProcessor : IInputProcessor
                 if (lastState.PacketNumber == state.PacketNumber)
                     continue;
 
-                ParseStateGestures(i, ref lastState.Gamepad, ref state.Gamepad);
+                ParseStateGestures(i, ref lastState.Gamepad, ref state.Gamepad, elapsed);
                 _states[i] = state;
             }
 
@@ -83,37 +88,45 @@ internal class XInputProcessor : IInputProcessor
         }
     }
 
-    private void ParseStateGestures(int userIndex, ref Gamepad last, ref Gamepad current)
+    private void ParseStateGestures(int userIndex, ref Gamepad last, ref Gamepad current, double elapsed)
     {
         void CreateAxisGestureShort(short last, short current, GamepadAxis axis)
         {
-            var delta = (double)(current - last) / ushort.MaxValue;
-            var value = MathUtils.Map(current, short.MinValue, short.MaxValue, 0, 1);
-            HandleGesture(GamepadAxisGesture.Create(userIndex, axis, value, delta));
+            if (current != last)
+                return;
+
+            var delta = MathUtils.UnLerp(-ushort.MaxValue, ushort.MaxValue, current - last);
+            var value = MathUtils.UnLerp(short.MinValue, short.MaxValue, current);
+            HandleGesture(GamepadAxisGesture.Create(userIndex, axis, value, delta, elapsed));
         }
 
         void CreateAxisGestureByte(byte last, byte current, GamepadAxis axis)
         {
-            var delta = (double)(current - last) / byte.MaxValue;
-            var value = MathUtils.Map(current, byte.MinValue, byte.MaxValue, 0, 1);
-            HandleGesture(GamepadAxisGesture.Create(userIndex, axis, value, delta));
+            if (current != last)
+                return;
+
+            var delta = MathUtils.UnLerp(-byte.MaxValue, byte.MaxValue, current - last);
+            var value = MathUtils.UnLerp(byte.MinValue, byte.MaxValue, current);
+            HandleGesture(GamepadAxisGesture.Create(userIndex, axis, value, delta, elapsed));
         }
 
-        if (current.RightThumbX != last.RightThumbX) CreateAxisGestureShort(last.RightThumbX, current.RightThumbX, GamepadAxis.RightThumbX);
-        if (current.RightThumbY != last.RightThumbY) CreateAxisGestureShort(last.RightThumbY, current.RightThumbY, GamepadAxis.RightThumbY);
+        CreateAxisGestureShort(last.RightThumbX, current.RightThumbX, GamepadAxis.RightThumbX);
+        CreateAxisGestureShort(last.RightThumbY, current.RightThumbY, GamepadAxis.RightThumbY);
 
-        if (current.LeftThumbX != last.LeftThumbX) CreateAxisGestureShort(last.LeftThumbX, current.LeftThumbX, GamepadAxis.LeftThumbX);
-        if (current.LeftThumbY != last.LeftThumbY) CreateAxisGestureShort(last.LeftThumbY, current.LeftThumbY, GamepadAxis.LeftThumbY);
+        CreateAxisGestureShort(last.LeftThumbX, current.LeftThumbX, GamepadAxis.LeftThumbX);
+        CreateAxisGestureShort(last.LeftThumbY, current.LeftThumbY, GamepadAxis.LeftThumbY);
 
-        if (current.RightTrigger != last.RightTrigger) CreateAxisGestureByte(last.RightTrigger, current.RightTrigger, GamepadAxis.RightTrigger);
-        if (current.LeftTrigger != last.LeftTrigger) CreateAxisGestureByte(last.LeftTrigger, current.LeftTrigger, GamepadAxis.LeftTrigger);
+        CreateAxisGestureByte(last.RightTrigger, current.RightTrigger, GamepadAxis.RightTrigger);
+        CreateAxisGestureByte(last.LeftTrigger, current.LeftTrigger, GamepadAxis.LeftTrigger);
     }
 
     private void HandleGesture(IInputGesture gesture)
         => OnGesture?.Invoke(this, gesture);
 
-    protected virtual void Dispose(bool disposing)
+    private void Dispose(bool disposing)
     {
+        Vortice.XInput.XInput.SetReporting(false);
+
         _cancellationSource?.Cancel();
         _thread?.Join();
         _cancellationSource?.Dispose();

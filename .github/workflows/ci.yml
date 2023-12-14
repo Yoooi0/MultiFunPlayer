@@ -27,7 +27,7 @@ jobs:
       docs: ${{ steps.changes.outputs.docs }}
     steps:
     - name: Checkout
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
           fetch-depth: 0
     - name: Detect changes
@@ -53,7 +53,7 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
     - name: Checkout
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
           fetch-depth: 0
     - name: Setup GitHub Pages
@@ -76,7 +76,7 @@ jobs:
         path: ./Docs/build
     - name: Deploy to GitHub Pages
       id: deployment
-      uses: actions/deploy-pages@v1
+      uses: actions/deploy-pages@v2
   
   build:
     runs-on: windows-latest
@@ -87,20 +87,20 @@ jobs:
         build_type: [Release, Debug]
     steps:
     - name: Checkout
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
           fetch-depth: 0
     - name: Setup dotnet
       uses: actions/setup-dotnet@v3
       with:
-        dotnet-version: '7.0.x'
+        dotnet-version: '8.0.x'
     - name: Setup GitVersion
-      uses: gittools/actions/gitversion/setup@v0.9.15
+      uses: gittools/actions/gitversion/setup@v0.10.2
       with:
         versionSpec: '5.x'
     - name: Determine version
       id:   gitversion
-      uses: gittools/actions/gitversion/execute@v0.9.15
+      uses: gittools/actions/gitversion/execute@v0.10.2
     - name: Install dependencies
       run: dotnet restore
     - name: Build ${{ matrix.build_type }}

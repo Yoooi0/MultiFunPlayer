@@ -10,7 +10,7 @@ namespace MultiFunPlayer.UI.Controls;
 [TemplatePart(Name = "PART_ItemsHolder", Type = typeof(Panel))]
 [TemplatePart(Name = "PART_ScrollViewer", Type = typeof(ScrollViewer))]
 [TemplatePart(Name = "PART_TabPanel", Type = typeof(TabPanel))]
-public class NonReloadingTabControl : TabControl
+public sealed class NonReloadingTabControl : TabControl
 {
     private Panel _itemsHolderPanel;
     private ScrollViewer _scrollViewer;
@@ -173,7 +173,7 @@ public class NonReloadingTabControl : TabControl
         return null;
     }
 
-    protected TabItem GetSelectedTabItem()
+    private TabItem GetSelectedTabItem()
     {
         var selectedItem = SelectedItem;
         if (selectedItem == null)

@@ -14,11 +14,12 @@ using System.Runtime.CompilerServices;
 using System.Runtime.Loader;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading.Channels;
 using System.Windows;
 
 namespace MultiFunPlayer.Plugin;
 
-internal class PluginCompilationResult : IDisposable
+internal sealed class PluginCompilationResult : IDisposable
 {
     public Exception Exception { get; private set; }
     public AssemblyLoadContext Context { get; private set; }
@@ -49,7 +50,7 @@ internal class PluginCompilationResult : IDisposable
 
     public PluginBase CreatePluginInstance() => PluginFactory?.Invoke();
 
-    protected virtual void Dispose(bool disposing)
+    private void Dispose(bool disposing)
     {
         PluginFactory = null;
         SettingsView = null;
@@ -68,31 +69,62 @@ internal class PluginCompilationResult : IDisposable
 
 internal static class PluginCompiler
 {
+    private static Channel<Action> _compileQueue;
+    private static Task _compileTask;
+
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
     private static Regex ReferenceRegex { get; } = new Regex(@"^//#r\s+""(?<type>name|file):(?<value>.+?)""", RegexOptions.Compiled | RegexOptions.Multiline);
 
     private static IContainer Container { get; set; }
     private static IViewManager ViewManager { get; set; }
 
+    private static IReadOnlyCollection<MetadataReference> _referenceCache;
+    private static IReadOnlyCollection<MetadataReference> ReferenceCache
+    {
+        get
+        {
+            _referenceCache ??= [.. AppDomain.CurrentDomain.GetAssemblies()
+                .Select(a => !string.IsNullOrWhiteSpace(a.Location) ? AssemblyMetadata.CreateFromFile(a.Location).GetReference() : null)
+                .NotNull()];
+
+            return _referenceCache;
+        }
+    }
+
     [MethodImpl(MethodImplOptions.NoInlining)]
     public static void QueueCompile(FileInfo pluginFile, Action<PluginCompilationResult> callback)
     {
-        _ = Task.Run(() =>
+        _compileQueue ??= Channel.CreateUnbounded<Action>(new UnboundedChannelOptions()
         {
+            SingleReader = true,
+            SingleWriter = false
+        });
+
+        _compileTask ??= Task.Factory.StartNew(DoCompile,
+            default,
+            TaskCreationOptions.LongRunning,
+            TaskScheduler.Default)
+            .Unwrap();
+
+        _compileQueue.Writer.TryWrite(() =>
+        {
+            Logger.Debug("Compiling plugin [File: {0}]", pluginFile.FullName);
             var result = Compile(pluginFile);
             callback(result);
         });
+
+        static async Task DoCompile()
+        {
+            await foreach (var compileAction in _compileQueue.Reader.ReadAllAsync())
+                compileAction();
+        }
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
     public static PluginCompilationResult Compile(FileInfo pluginFile)
     {
         var result = InternalCompile(pluginFile);
-
-        //TODO: for some reason compilation leaks a lot of unmanaged memory
-        GC.Collect();
-        GC.WaitForPendingFinalizers();
-
+        GC.Collect(GC.MaxGeneration, GCCollectionMode.Default, blocking: false);
         return result;
     }
 
@@ -102,13 +134,7 @@ internal static class PluginCompiler
         var context = default(CollectibleAssemblyLoadContext);
         try
         {
-            var references = new List<MetadataReference>
-            {
-                MetadataReference.CreateFromFile(typeof(object).Assembly.Location),
-                MetadataReference.CreateFromFile(typeof(PluginBase).Assembly.Location)
-            };
-
-            references.AddRange(ReflectionUtils.Assembly.GetReferencedAssemblies().Select(a => MetadataReference.CreateFromFile(Assembly.Load(a).Location)));
+            var references = ReferenceCache.ToList();
 
             var pluginSource = File.ReadAllText(pluginFile.FullName);
             foreach(var match in ReferenceRegex.Matches(pluginSource).NotNull())
@@ -246,9 +272,7 @@ internal static class PluginCompiler
             }
             else
             {
-                var settings = settingsType != null ? Activator.CreateInstance(settingsType) as PluginSettingsBase : null;
-                if (settingsType != null && settings == null)
-                    return PluginCompilationResult.FromFailure(context, new PluginCompileException("Unable to create settings instance"));
+                var settings = (PluginSettingsBase)Activator.CreateInstance(settingsType);
 
                 var settingsView = default(UIElement);
                 Execute.OnUIThreadSync(() =>
@@ -282,7 +306,7 @@ internal static class PluginCompiler
         ViewManager = container.Get<IViewManager>();
     }
 
-    private class CollectibleAssemblyLoadContext : AssemblyLoadContext
+    private sealed class CollectibleAssemblyLoadContext : AssemblyLoadContext
     {
         public CollectibleAssemblyLoadContext()
             : base(isCollectible: true) { }
@@ -291,7 +315,7 @@ internal static class PluginCompiler
     }
 }
 
-internal class PluginCompileException : Exception
+internal sealed class PluginCompileException : Exception
 {
     public PluginCompileException() { }
 
@@ -302,5 +326,5 @@ internal class PluginCompileException : Exception
         : base(message, innerException) { }
 
     public PluginCompileException(string message, IEnumerable<Diagnostic> diagnostics)
-        : this($"{message}\n{string.Join("\n", diagnostics.Select(d => d.ToString()))}") { }
+        : this($"{message}\n{string.Join('\n', diagnostics.Select(d => d.ToString()))}") { }
 }

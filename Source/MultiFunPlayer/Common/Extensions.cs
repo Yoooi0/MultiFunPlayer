@@ -1,5 +1,6 @@
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using System.Buffers;
 using System.Collections;
 using System.Diagnostics;
 using System.IO;
@@ -7,6 +8,7 @@ using System.Linq.Expressions;
 using System.Net;
 using System.Net.Http;
 using System.Net.Sockets;
+using System.Net.WebSockets;
 using System.Runtime.CompilerServices;
 using System.Runtime.ExceptionServices;
 using System.Threading;
@@ -127,7 +129,7 @@ public static class TaskExtensions
         static async Task DoWaitAsync(Task task, CancellationToken cancellationToken)
         {
             var tcs = new TaskCompletionSource();
-            using var registration = cancellationToken.Register(() => tcs.TrySetCanceled(cancellationToken), useSynchronizationContext: false);
+            await using var registration = cancellationToken.Register(() => tcs.TrySetCanceled(cancellationToken), useSynchronizationContext: false);
             await await Task.WhenAny(task, tcs.Task);
         }
 
@@ -143,7 +145,7 @@ public static class TaskExtensions
         static async Task<T> DoWaitAsync<T>(Task<T> task, CancellationToken cancellationToken)
         {
             var tcs = new TaskCompletionSource<T>();
-            using var registration = cancellationToken.Register(() => tcs.TrySetCanceled(cancellationToken), useSynchronizationContext: false);
+            await using var registration = cancellationToken.Register(() => tcs.TrySetCanceled(cancellationToken), useSynchronizationContext: false);
             return await await Task.WhenAny(task, tcs.Task);
         }
 
@@ -160,7 +162,7 @@ public static class TaskExtensions
         {
             var tcs = new TaskCompletionSource();
             using var cancellationSource = new CancellationTokenSource(millisecondsDelay);
-            using var registration = cancellationSource.Token.Register(() => tcs.TrySetCanceled(), useSynchronizationContext: false);
+            await using var registration = cancellationSource.Token.Register(() => tcs.TrySetCanceled(), useSynchronizationContext: false);
 
             try { await await Task.WhenAny(task, tcs.Task); }
             catch (OperationCanceledException) when (tcs.Task.IsCanceled) { throw new TimeoutException(); }
@@ -175,7 +177,7 @@ public static class TaskExtensions
         {
             var tcs = new TaskCompletionSource<T>();
             using var cancellationSource = new CancellationTokenSource(millisecondsDelay);
-            using var registration = cancellationSource.Token.Register(() => tcs.TrySetCanceled(), useSynchronizationContext: false);
+            await using var registration = cancellationSource.Token.Register(() => tcs.TrySetCanceled(), useSynchronizationContext: false);
 
             try { return await await Task.WhenAny(task, tcs.Task); }
             catch (OperationCanceledException) when (tcs.Task.IsCanceled) { throw new TimeoutException(); }
@@ -293,40 +295,60 @@ public static class CollectionExtensions
 
 public static class StreamExtensions
 {
-    private static readonly byte[] _readBuffer = new byte[1024];
-
     public static async Task<byte[]> ReadBytesAsync(this NetworkStream stream, int count, CancellationToken token)
     {
-        using var memory = new MemoryStream();
+        using var memoryOwner = MemoryPool<byte>.Shared.Rent(1024);
+        await using var memoryStream = new MemoryStream();
 
-        while (memory.Position < count)
+        var readMemory = memoryOwner.Memory;
+        while (memoryStream.Position < count)
         {
-            var read = await stream.ReadAsync(_readBuffer.AsMemory(0, Math.Min(_readBuffer.Length, count)), token);
+            var remaining = Math.Min(count - (int)memoryStream.Position, readMemory.Length);
+            var read = await stream.ReadAsync(readMemory[..remaining], token);
             if (read == 0)
                 break;
 
-            await memory.WriteAsync(_readBuffer.AsMemory(0, read), token);
+            await memoryStream.WriteAsync(readMemory[..read], token);
         }
 
-        memory.Seek(0, SeekOrigin.Begin);
-        return memory.ToArray();
+        return memoryStream.ToArray();
     }
 
     public static byte[] ReadBytes(this NetworkStream stream, int count)
     {
-        using var memory = new MemoryStream();
+        using var memoryStream = new MemoryStream();
+        var readBuffer = ArrayPool<byte>.Shared.Rent(1024);
 
-        while (memory.Position < count)
+        while (memoryStream.Position < count)
         {
-            var read = stream.Read(_readBuffer, 0, Math.Min(_readBuffer.Length, count));
+            var remaining = Math.Min(count - (int)memoryStream.Position, readBuffer.Length);
+            var read = stream.Read(readBuffer.AsSpan(0, remaining));
             if (read == 0)
                 break;
 
-            memory.Write(_readBuffer, 0, read);
+            memoryStream.Write(readBuffer.AsSpan(0, read));
         }
 
-        memory.Seek(0, SeekOrigin.Begin);
-        return memory.ToArray();
+        return memoryStream.ToArray();
+    }
+}
+
+public static class WebSocketExtensions
+{
+    public static async Task<byte[]> ReceiveAsync(this ClientWebSocket client, CancellationToken token)
+    {
+        using var memoryOwner = MemoryPool<byte>.Shared.Rent(1024);
+        await using var memoryStream = new MemoryStream();
+
+        var readMemory = memoryOwner.Memory;
+        var result = default(ValueWebSocketReceiveResult);
+        do
+        {
+            result = await client.ReceiveAsync(readMemory, token);
+            await memoryStream.WriteAsync(readMemory[..result.Count], token);
+        } while (!token.IsCancellationRequested && !result.EndOfMessage);
+
+        return memoryStream.ToArray();
     }
 }
 
@@ -347,8 +369,8 @@ public static class NetExtensions
         response.EnsureSuccessStatusCode();
 
         var stream = await response.Content.ReadAsStreamAsync();
-        using var fileStream = File.Create(fileName);
-        stream.CopyTo(fileStream);
+        await using var fileStream = File.Create(fileName);
+        await stream.CopyToAsync(fileStream);
     }
 
     public static ValueTask ConnectAsync(this TcpClient client , EndPoint endpoint, CancellationToken cancellationToken)
@@ -377,16 +399,6 @@ public static class NetExtensions
             client.Connect(ipEndPoint.Address, ipEndPoint.Port);
         else if (endpoint is DnsEndPoint dnsEndPoint)
             client.Connect(dnsEndPoint.Host, dnsEndPoint.Port);
-        else
-            throw new NotSupportedException($"{endpoint.GetType()} in not supported.");
-    }
-
-    public static Task ConnectAsync(this TcpClient client, EndPoint endpoint)
-    {
-        if (endpoint is IPEndPoint ipEndPoint)
-            return client.ConnectAsync(ipEndPoint.Address, ipEndPoint.Port);
-        else if (endpoint is DnsEndPoint dnsEndPoint)
-            return client.ConnectAsync(dnsEndPoint.Host, dnsEndPoint.Port);
         else
             throw new NotSupportedException($"{endpoint.GetType()} in not supported.");
     }
@@ -475,7 +487,7 @@ public static class WaitHandleExtensions
         var completionSource = new TaskCompletionSource<bool>();
 
         using var threadPoolRegistration = new ThreadPoolRegistration(handle, completionSource);
-        using var cancellationTokenRegistration = cancellationToken.Register(CancellationTokenCallback, completionSource, useSynchronizationContext: false);
+        await using var cancellationTokenRegistration = cancellationToken.Register(CancellationTokenCallback, completionSource, useSynchronizationContext: false);
 
         return await completionSource.Task;
 

@@ -13,43 +13,34 @@ jobs:
     runs-on: windows-latest
     steps:
     - name: Checkout
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
           fetch-depth: 0
     - name: Setup Dotnet
       uses: actions/setup-dotnet@v3
       with:
-        dotnet-version: '7.0.x'
-    - name: Determine Dotnet Version
-      id: dotnet-version
-      run: echo "version=$(dotnet --version)" >> $GITHUB_OUTPUT
+        dotnet-version: '8.0.x'
     - name: Setup GitVersion
-      uses: gittools/actions/gitversion/setup@v0.9.15
+      uses: gittools/actions/gitversion/setup@v0.10.2
       with:
         versionSpec: '5.x'
     - name: Run GitVersion
       id:   gitversion
-      uses: gittools/actions/gitversion/execute@v0.9.15
+      uses: gittools/actions/gitversion/execute@v0.10.2
     - name: Install Dependencies
       run: dotnet restore
     - name: Build Framework Dependent
       run: dotnet publish --self-contained false --configuration Release --property:PublishDir=.\bin\Release\win-x64\publish\framework-dependent /p:AssemblyVersion=${{ steps.gitversion.outputs.assemblySemVer }} /p:FileVersion=${{ steps.gitversion.outputs.assemblySemFileVer }} /p:InformationalVersion=${{ steps.gitversion.outputs.fullSemVer }}.${{ steps.gitversion.outputs.shortSha }}
     - name: Build Self Contained
       run: dotnet publish --self-contained true --configuration Release --property:PublishDir=.\bin\Release\win-x64\publish\self-contained /p:AssemblyVersion=${{ steps.gitversion.outputs.assemblySemVer }} /p:FileVersion=${{ steps.gitversion.outputs.assemblySemFileVer }} /p:InformationalVersion=${{ steps.gitversion.outputs.fullSemVer }}.${{ steps.gitversion.outputs.shortSha }}
-    - name: Download NetBeauty
-      uses: robinraju/release-downloader@v1.3
-      with:
-        repository: 'nulastudio/NetBeauty2'
-        tag: 'v2.0.0.0-beta.3'
-        fileName: 'win-x64.zip'
-    - name: Unpack NetBeauty
-      run: 7z e win-x64.zip
+    - name: Setup NetBeauty
+      run: dotnet tool install --global nulastudio.nbeauty
     - name: Run NetBeauty
-      run: .\nbeauty2.exe .\Source\MultiFunPlayer\bin\Release\win-x64\publish\self-contained\ Bin
+      run: nbeauty2.exe .\Source\MultiFunPlayer\bin\Release\win-x64\publish\self-contained\ Bin
     - name: Pack Framework Dependent
       run: 7z a MultiFunPlayer-${{ steps.gitversion.outputs.semVer }}.zip .\Source\MultiFunPlayer\bin\Release\win-x64\publish\framework-dependent\*
     - name: Pack Self Contained
-      run: 7z a MultiFunPlayer-${{ steps.gitversion.outputs.semVer }}-SelfContained.${{ steps.dotnet-version.outputs.version }}.zip .\Source\MultiFunPlayer\bin\Release\win-x64\publish\self-contained\*
+      run: 7z a MultiFunPlayer-${{ steps.gitversion.outputs.semVer }}-SelfContained.$(dotnet --version).zip .\Source\MultiFunPlayer\bin\Release\win-x64\publish\self-contained\*
     - name: Create Release
       id: create-release
       uses: ncipollo/release-action@v1
@@ -58,6 +49,4 @@ jobs:
         prerelease: false
         artifactErrorsFailBuild: true
         name: MultiFunPlayer v${{ steps.gitversion.outputs.semVer }}
-        artifacts: |
-          MultiFunPlayer-${{ steps.gitversion.outputs.semVer }}.zip
-          MultiFunPlayer-${{ steps.gitversion.outputs.semVer }}-SelfContained.${{ steps.dotnet-version.outputs.version }}.zip
+        artifacts: MultiFunPlayer-${{ steps.gitversion.outputs.semVer }}*.zip

@@ -7,7 +7,7 @@ using System.Linq.Expressions;
 
 namespace MultiFunPlayer.Common;
 
-public class ObservableConcurrentCollectionView<TValue, TView> : IReadOnlyObservableConcurrentCollection<TView> where TValue : class
+public sealed class ObservableConcurrentCollectionView<TValue, TView> : IReadOnlyObservableConcurrentCollection<TView> where TValue : class
 {
     private readonly IReadOnlyObservableConcurrentCollection<TValue> _collection;
     private readonly Func<TValue, TView> _selector;
@@ -26,8 +26,8 @@ public class ObservableConcurrentCollectionView<TValue, TView> : IReadOnlyObserv
         _propertyName = propertyName;
         _selector = selector;
 
-        _registeredItems = new List<TValue>();
-        _view = new ObservableConcurrentCollection<TView>();
+        _registeredItems = [];
+        _view = [];
         _view.PropertyChanged += (s, e) => PropertyChanged?.Invoke(s, e);
         _view.CollectionChanged += (s, e) => CollectionChanged?.Invoke(s, e);
 

@@ -6,7 +6,7 @@ using Stylet;
 
 namespace MultiFunPlayer.UI.Controls.ViewModels;
 
-internal class MediaSourceViewModel : Conductor<IMediaSource>.Collection.OneActive, IHandle<SettingsMessage>, IDisposable
+internal sealed class MediaSourceViewModel : Conductor<IMediaSource>.Collection.OneActive, IHandle<SettingsMessage>, IDisposable
 {
     private Task _task;
     private CancellationTokenSource _cancellationSource;
@@ -105,7 +105,7 @@ internal class MediaSourceViewModel : Conductor<IMediaSource>.Collection.OneActi
             if (settings.TryGetValue<int>(nameof(ScanInterval), out var scanInterval))
                 ScanInterval = scanInterval;
             if (settings.TryGetValue<List<string>>(nameof(Items), out var items))
-                Items.AddRange(AvailableSources.Where(x => items.Any(s => string.Equals(s, x.Name, StringComparison.OrdinalIgnoreCase))));
+                Items.AddRange(AvailableSources.Where(x => items.Exists(s => string.Equals(s, x.Name, StringComparison.OrdinalIgnoreCase))));
             if (settings.TryGetValue<string>(nameof(ActiveItem), out var selectedItem))
                 ChangeActiveItem(Items.FirstOrDefault(x => string.Equals(x.Name, selectedItem, StringComparison.OrdinalIgnoreCase)) ?? Items.FirstOrDefault(), closePrevious: false);
 
@@ -238,12 +238,11 @@ internal class MediaSourceViewModel : Conductor<IMediaSource>.Collection.OneActi
         }
     }
 
-    protected async virtual void Dispose(bool disposing)
+    private void Dispose(bool disposing)
     {
         _cancellationSource?.Cancel();
 
-        if (_task != null)
-            await _task;
+        _task?.GetAwaiter().GetResult();
 
         _semaphore?.Dispose();
         _currentSource?.Dispose();

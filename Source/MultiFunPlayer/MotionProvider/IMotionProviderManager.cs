@@ -12,7 +12,7 @@ namespace MultiFunPlayer.MotionProvider;
 
 internal interface IMotionProviderManager
 {
-    IEnumerable<string> MotionProviderNames { get; }
+    IReadOnlyCollection<string> MotionProviderNames { get; }
 
     IMotionProvider GetMotionProvider(DeviceAxis axis, string motionProviderName);
     double GetValue(DeviceAxis axis);
@@ -20,16 +20,16 @@ internal interface IMotionProviderManager
     void RegisterActions(IShortcutManager shortcutManager);
 }
 
-internal class MotionProviderManager : IMotionProviderManager, IHandle<SettingsMessage>
+internal sealed class MotionProviderManager : IMotionProviderManager, IHandle<SettingsMessage>
 {
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
     private readonly IEventAggregator _eventAggregator;
-    private readonly HashSet<string> _motionProviderNames;
+    private readonly Dictionary<Type, string> _motionProviderNames;
     private readonly Dictionary<DeviceAxis, Dictionary<string, IMotionProvider>> _motionProviders;
     private readonly Dictionary<DeviceAxis, double> _values;
 
-    public IEnumerable<string> MotionProviderNames => _motionProviderNames;
+    public IReadOnlyCollection<string> MotionProviderNames => _motionProviderNames.Values;
 
     public MotionProviderManager(IEventAggregator eventAggregator, IMotionProviderFactory motionProviderFactory)
     {
@@ -37,12 +37,11 @@ internal class MotionProviderManager : IMotionProviderManager, IHandle<SettingsM
         _eventAggregator.Subscribe(this);
 
         var motionProviderTypes = ReflectionUtils.FindImplementations<IMotionProvider>();
-        _motionProviderNames = motionProviderTypes.Select(t => t.GetCustomAttribute<DisplayNameAttribute>(inherit: false).DisplayName)
-                                                  .ToHashSet();
+        _motionProviderNames = motionProviderTypes.ToDictionary(t => t,
+                                                                t => t.GetCustomAttribute<DisplayNameAttribute>(inherit: false).DisplayName);
         _motionProviders = DeviceAxis.All.ToDictionary(a => a,
                                                        a => motionProviderFactory.CreateMotionProviderCollection(a)
-                                                                                 .ToDictionary(p => p.GetType().GetCustomAttribute<DisplayNameAttribute>(inherit: false).DisplayName,
-                                                                                               p => p));
+                                                                                 .ToDictionary(p => p.Name, p => p));
         _values = DeviceAxis.All.ToDictionary(a => a, _ => double.NaN);
     }
 
@@ -59,10 +58,7 @@ internal class MotionProviderManager : IMotionProviderManager, IHandle<SettingsM
     }
 
     public T GetMotionProvider<T>(DeviceAxis axis) where T : class, IMotionProvider
-    {
-        var name = typeof(T).GetCustomAttribute<DisplayNameAttribute>(inherit: false).DisplayName;
-        return GetMotionProvider(axis, name) as T;
-    }
+        => GetMotionProvider(axis, _motionProviderNames[typeof(T)]) as T;
 
     public void Update(DeviceAxis axis, string motionProviderName, double deltaTime)
     {
@@ -107,9 +103,9 @@ internal class MotionProviderManager : IMotionProviderManager, IHandle<SettingsM
 
     public void RegisterActions(IShortcutManager s)
     {
-        CustomCurveMotionProviderViewModel.RegisterActions(s, GetMotionProvider<CustomCurveMotionProviderViewModel>);
-        LoopingScriptMotionProviderViewModel.RegisterActions(s, GetMotionProvider<LoopingScriptMotionProviderViewModel>);
-        PatternMotionProviderViewModel.RegisterActions(s, GetMotionProvider<PatternMotionProviderViewModel>);
-        RandomMotionProviderViewModel.RegisterActions(s, GetMotionProvider<RandomMotionProviderViewModel>);
+        CustomCurveMotionProvider.RegisterActions(s, GetMotionProvider<CustomCurveMotionProvider>);
+        LoopingScriptMotionProvider.RegisterActions(s, GetMotionProvider<LoopingScriptMotionProvider>);
+        PatternMotionProvider.RegisterActions(s, GetMotionProvider<PatternMotionProvider>);
+        RandomMotionProvider.RegisterActions(s, GetMotionProvider<RandomMotionProvider>);
     }
 }

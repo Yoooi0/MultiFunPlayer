@@ -4,18 +4,14 @@ using Newtonsoft.Json.Linq;
 
 namespace MultiFunPlayer.Settings.Converters;
 
-internal class ShortcutActionConfigurationConverter : JsonConverter<IShortcutActionConfiguration>
+internal sealed class ShortcutActionConfigurationConverter(IShortcutManager manager) : JsonConverter<IShortcutActionConfiguration>
 {
-    private readonly IShortcutManager _manager;
-
-    public ShortcutActionConfigurationConverter(IShortcutManager manager) => _manager = manager;
-
     public override IShortcutActionConfiguration ReadJson(JsonReader reader, Type objectType, IShortcutActionConfiguration existingValue, bool hasExistingValue, JsonSerializer serializer)
     {
         var o = JToken.ReadFrom(reader) as JObject;
         var actionName = o[nameof(IShortcutActionConfiguration.Name)].ToString();
 
-        var configuration = _manager.CreateShortcutActionConfigurationInstance(actionName)
+        var configuration = manager.CreateShortcutActionConfigurationInstance(actionName)
             ?? throw new JsonReaderException($"Unable to find \"{actionName}\" shortcut action");
 
         var settings = o[nameof(IShortcutActionConfiguration.Settings)].ToObject<List<TypedValue>>();
@@ -31,6 +27,6 @@ internal class ShortcutActionConfigurationConverter : JsonConverter<IShortcutAct
             [nameof(IShortcutActionConfiguration.Settings)] = JArray.FromObject(value.Settings.Select(s => new TypedValue(s.Type, s.Value)))
         };
 
-        o.WriteTo(writer);
+        serializer.Serialize(writer, o);
     }
 }
