@@ -424,7 +424,7 @@ internal abstract class ThreadAbstractOutputTarget : AbstractOutputTarget
         }
     }
 
-    protected void PooledUpdate(IEnumerable<DeviceAxis> axes, Func<bool> condition, Action<DeviceAxis, DeviceAxisScriptSnapshot, double> body, CancellationToken cancellationToken)
+    protected void PolledUpdate(IEnumerable<DeviceAxis> axes, Func<bool> condition, Action<DeviceAxis, DeviceAxisScriptSnapshot, double> body, CancellationToken cancellationToken)
     {
         axes ??= DeviceAxis.All;
 
@@ -441,7 +441,7 @@ internal abstract class ThreadAbstractOutputTarget : AbstractOutputTarget
         }
     }
 
-    protected void PooledUpdate(DeviceAxis axis, Func<bool> condition, Action<DeviceAxisScriptSnapshot, double> body, CancellationToken cancellationToken)
+    protected void PolledUpdate(DeviceAxis axis, Func<bool> condition, Action<DeviceAxisScriptSnapshot, double> body, CancellationToken cancellationToken)
     {
         var stopwatch = new Stopwatch();
         while (condition())
@@ -538,7 +538,7 @@ internal abstract class AsyncAbstractOutputTarget : AbstractOutputTarget
         timer.Dispose();
     }
 
-    protected async Task PooledUpdateAsync(IEnumerable<DeviceAxis> axes, Func<bool> condition, Action<DeviceAxis, DeviceAxisScriptSnapshot, double> body, CancellationToken cancellationToken)
+    protected async Task PolledUpdateAsync(IEnumerable<DeviceAxis> axes, Func<bool> condition, Action<DeviceAxis, DeviceAxisScriptSnapshot, double> body, CancellationToken cancellationToken)
     {
         axes ??= DeviceAxis.All;
 
@@ -555,7 +555,7 @@ internal abstract class AsyncAbstractOutputTarget : AbstractOutputTarget
         }
     }
 
-    protected async Task PooledUpdateAsync(DeviceAxis axis, Func<bool> condition, Action<DeviceAxisScriptSnapshot, double> body, CancellationToken cancellationToken)
+    protected async Task PolledUpdateAsync(DeviceAxis axis, Func<bool> condition, Action<DeviceAxisScriptSnapshot, double> body, CancellationToken cancellationToken)
     {
         var stopwatch = new Stopwatch();
         while (condition())

@@ -140,7 +140,7 @@ internal class ButtplugOutputTargetViewModel : AsyncAbstractOutputTarget
 
             EventAggregator.Publish(new SyncRequestMessage());
             using var cancellationSource = CancellationTokenSource.CreateLinkedTokenSource(token);
-            var task = await Task.WhenAny(FixedUpdateAsync(client, cancellationSource.Token), PooledUpdateAsync(client, cancellationSource.Token));
+            var task = await Task.WhenAny(FixedUpdateAsync(client, cancellationSource.Token), PolledUpdateAsync(client, cancellationSource.Token));
             cancellationSource.Cancel();
 
             task.ThrowIfFaulted();
@@ -219,13 +219,13 @@ internal class ButtplugOutputTargetViewModel : AsyncAbstractOutputTarget
         }, token);
     }
 
-    private async Task PooledUpdateAsync(ButtplugClient client, CancellationToken token)
+    private async Task PolledUpdateAsync(ButtplugClient client, CancellationToken token)
     {
-        await PooledUpdateAsync(DeviceAxis.All, () => !token.IsCancellationRequested && client.IsConnected, async (axis, snapshot, elapsed) =>
+        await PolledUpdateAsync(DeviceAxis.All, () => !token.IsCancellationRequested && client.IsConnected, async (axis, snapshot, elapsed) =>
         {
-            Logger.Trace("Begin PooledUpdate [Index From: {0}, Index To: {1}, Duration: {2}, Elapsed: {3}]", snapshot.IndexFrom, snapshot.IndexTo, snapshot.Duration, elapsed);
+            Logger.Trace("Begin PolledUpdate [Index From: {0}, Index To: {1}, Duration: {2}, Elapsed: {3}]", snapshot.IndexFrom, snapshot.IndexTo, snapshot.Duration, elapsed);
 
-            var settings = DeviceSettings.Where(x => x.SourceAxis == axis && x.UpdateType == ButtplugDeviceUpdateType.PooledUpdate).ToList();
+            var settings = DeviceSettings.Where(x => x.SourceAxis == axis && x.UpdateType == ButtplugDeviceUpdateType.PolledUpdate).ToList();
             if (settings.Count == 0)
                 return;
 
@@ -433,7 +433,7 @@ internal class ButtplugOutputTargetViewModel : AsyncAbstractOutputTarget
             SourceAxis = SelectedDeviceAxis,
             ActuatorIndex = SelectedActuatorIndex.Value,
             ActuatorType = SelectedActuatorType.Value,
-            UpdateType = ButtplugDeviceUpdateType.PooledUpdate
+            UpdateType = ButtplugDeviceUpdateType.PolledUpdate
         });
 
         SelectedDevice = null;
@@ -466,5 +466,5 @@ internal class ButtplugDeviceSettings : PropertyChangedBase
 internal enum ButtplugDeviceUpdateType
 {
     FixedUpdate,
-    PooledUpdate
+    PolledUpdate
 }

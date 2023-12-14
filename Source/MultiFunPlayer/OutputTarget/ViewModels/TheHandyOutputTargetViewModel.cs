@@ -109,9 +109,9 @@ internal class TheHandyOutputTargetViewModel : AsyncAbstractOutputTarget
             Status = ConnectionStatus.Connected;
             EventAggregator.Publish(new SyncRequestMessage());
 
-            await PooledUpdateAsync(SourceAxis, () => !token.IsCancellationRequested, async (snapshot, elapsed) =>
+            await PolledUpdateAsync(SourceAxis, () => !token.IsCancellationRequested, async (snapshot, elapsed) =>
             {
-                Logger.Trace("Begin PooledUpdate [Index From: {0}, Index To: {1}, Duration: {2}, Elapsed: {3}]", snapshot.IndexFrom, snapshot.IndexTo, snapshot.Duration, elapsed);
+                Logger.Trace("Begin PolledUpdate [Index From: {0}, Index To: {1}, Duration: {2}, Elapsed: {3}]", snapshot.IndexFrom, snapshot.IndexTo, snapshot.Duration, elapsed);
                 if (snapshot.KeyframeFrom == null || snapshot.KeyframeTo == null)
                     return;
 
