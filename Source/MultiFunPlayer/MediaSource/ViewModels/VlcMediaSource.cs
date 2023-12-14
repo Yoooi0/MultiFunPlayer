@@ -124,7 +124,13 @@ internal sealed class VlcMediaSource(IShortcutManager shortcutManager, IEventAgg
                         continue;
                     }
 
-                    PublishMessage(new MediaPathChangedMessage(Uri.UnescapeDataString(path)));
+                    if (Uri.TryCreate(path, UriKind.Absolute, out var uri) && uri.IsFile)
+                        PublishMessage(new MediaPathChangedMessage(uri.LocalPath));
+                    else if (Uri.TryCreate(path, UriKind.RelativeOrAbsolute, out uri))
+                        PublishMessage(new MediaPathChangedMessage(uri.ToString()));
+                    else
+                        PublishMessage(new MediaPathChangedMessage(Uri.UnescapeDataString(path)));
+
                     _playerState.PlaylistId = playlistId;
                 }
 
