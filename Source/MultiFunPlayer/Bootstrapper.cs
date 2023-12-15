@@ -272,8 +272,7 @@ internal sealed class Bootstrapper : Bootstrapper<RootViewModel>
             settings["LogBlacklist"] = JObject.FromObject(new Dictionary<string, LogLevel>()
             {
                 [$"{typeof(RawInputProcessor).Namespace}.*"] = LogLevel.Trace,
-                [$"{typeof(XInputProcessor).Namespace}.*"] = LogLevel.Trace,
-                [$"{typeof(ShortcutSettingsViewModel).FullName}"] = LogLevel.Trace
+                [$"{typeof(XInputProcessor).Namespace}.*"] = LogLevel.Trace
             });
             dirty = true;
         }
