@@ -24,11 +24,8 @@ internal sealed class TCodeInputProcessor : IInputProcessor
     public void Parse(string input)
     {
         Logger.Trace("Parsing {0}", input);
-        foreach(var match in Regex.Matches(input, "#(.+?):(0|1)").OfType<Match>())
+        foreach(var match in Regex.Matches(input, "#(.+?):(0|1)").OfType<Match>().Where(m => m.Success))
         {
-            if (!match.Success)
-                continue;
-
             var button = match.Groups[1].Value;
             var state = int.Parse(match.Groups[2].Value) == 1;
             if (!state && _buttonStates.TryGetValue(button, out var lastState) && lastState)
