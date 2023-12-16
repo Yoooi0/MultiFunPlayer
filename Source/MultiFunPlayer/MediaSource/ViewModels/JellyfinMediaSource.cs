@@ -40,7 +40,7 @@ internal sealed class JellyfinMediaSource(IShortcutManager shortcutManager, IEve
     public bool IsConnectBusy => Status == ConnectionStatus.Connecting || Status == ConnectionStatus.Disconnecting;
     public bool CanToggleConnect => !IsConnectBusy;
 
-    protected override async Task<bool> OnConnectingAsync()
+    protected override async ValueTask<bool> OnConnectingAsync()
     {
         if (SelectedDeviceId == null)
             return false;
