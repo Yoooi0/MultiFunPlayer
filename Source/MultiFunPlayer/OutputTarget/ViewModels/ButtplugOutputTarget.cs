@@ -280,12 +280,13 @@ internal sealed class ButtplugOutputTarget : AsyncAbstractOutputTarget
         }, token);
 
     private IEnumerable<Task> GetDeviceTasks(DeviceAxisScriptSnapshot snapshot, IEnumerable<ButtplugDeviceSettings> settings, CancellationToken token)
-        => GetDeviceTasks(settings, (_, a) =>
+        => GetDeviceTasks(settings, (s, a) =>
         {
             if (snapshot.KeyframeFrom == null || snapshot.KeyframeTo == null)
                 return Task.CompletedTask;
 
-            var value = snapshot.KeyframeTo.Value;
+            var axisSettings = AxisSettings[s.SourceAxis];
+            var value = MathUtils.Lerp(axisSettings.Minimum / 100, axisSettings.Maximum / 100, snapshot.KeyframeTo.Value);
             if (a is ButtplugDeviceLinearActuator linearActuator)
             {
                 var duration = (uint)Math.Floor(snapshot.Duration + 0.75);
