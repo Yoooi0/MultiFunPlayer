@@ -289,7 +289,7 @@ internal sealed class ButtplugOutputTarget : AsyncAbstractOutputTarget
             var value = MathUtils.Lerp(axisSettings.Minimum / 100, axisSettings.Maximum / 100, snapshot.KeyframeTo.Value);
             if (a is ButtplugDeviceLinearActuator linearActuator)
             {
-                var duration = (uint)Math.Floor(snapshot.Duration + 0.75);
+                var duration = (uint)Math.Floor(snapshot.Duration * 1000 + 0.75);
                 Logger.Trace("Sending \"{value} (Duration={duration})\" to \"{actuator}\"", value, duration, a);
                 return linearActuator.LinearAsync(duration, value, token);
             }
