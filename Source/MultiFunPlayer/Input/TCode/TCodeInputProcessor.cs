@@ -23,6 +23,7 @@ internal sealed class TCodeInputProcessor : IInputProcessor
 
     public void Parse(string input)
     {
+        Logger.Trace("Parsing {0}", input);
         foreach(var match in Regex.Matches(input, "#(.+?):(0|1)").OfType<Match>())
         {
             if (!match.Success)
