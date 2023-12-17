@@ -37,7 +37,7 @@
         <Canvas>
             <Polyline Points="{Binding Points, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}"
                       StrokeThickness="1.5" 
-                      Stroke="Black">
+                      Stroke="{DynamicResource MaterialDesignBody}">
             </Polyline>
         </Canvas>
     </material:Card>
