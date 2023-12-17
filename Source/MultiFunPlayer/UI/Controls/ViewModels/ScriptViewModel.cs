@@ -782,20 +782,18 @@ internal sealed class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDispo
         foreach (var axis in axes)
         {
             var model = AxisModels[axis];
-            if (model.Settings.LinkAxis == null)
+            if (model.Settings.LinkAxisHasPriority || model.Script == null || model.Script is LinkedScriptResource)
             {
-                if (model.Settings.LinkAxisHasPriority)
+                if (model.Settings.LinkAxis == null)
+                {
                     ResetAxes(axis);
-
-                continue;
+                }
+                else
+                {
+                    Logger.Debug("Linked {0} to {1}", axis, model.Settings.LinkAxis);
+                    SetScript(axis, ScriptResource.LinkTo(AxisModels[model.Settings.LinkAxis].Script));
+                }
             }
-
-            if (model.Script != null && !model.Settings.LinkAxisHasPriority && model.Script is not LinkedScriptResource)
-                continue;
-
-            Logger.Debug("Linked {0} to {1}", axis, model.Settings.LinkAxis);
-
-            SetScript(axis, ScriptResource.LinkTo(AxisModels[model.Settings.LinkAxis].Script));
         }
     }
 
@@ -867,6 +865,7 @@ internal sealed class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDispo
 
         ScriptRepositoryManager.BeginSearchForScripts(MediaResource, axesWithoutLinkPriority, scripts =>
             {
+                UpdateLinkScriptFor(axesWithoutLinkPriority.Except(scripts.Keys));
                 foreach (var (axis, resource) in scripts)
                     SetScript(axis, resource);
 
