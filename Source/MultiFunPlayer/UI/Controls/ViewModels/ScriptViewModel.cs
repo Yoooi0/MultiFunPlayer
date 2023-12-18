@@ -67,8 +67,9 @@ internal sealed class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDispo
     [JsonProperty] public bool ValuesContentVisible { get; set; } = false;
     [JsonProperty] public bool MediaContentVisible { get; set; } = false;
     [JsonProperty] public bool AxisContentVisible { get; set; } = false;
-    [JsonProperty] public bool HeatmapShowStrokeLength { get; set; } = true;
+    [JsonProperty] public bool HeatmapShowRange { get; set; } = true;
     [JsonProperty] public bool HeatmapEnablePreview { get; set; } = true;
+    [JsonProperty] public bool HeatmapCombineHeat { get; set; } = true;
     [JsonProperty] public int HeatmapBucketCount { get; set; } = 333;
     [JsonProperty] public bool HeatmapInvertY { get; set; } = false;
     [JsonProperty] public bool AutoSkipToScriptStartEnabled { get; set; } = true;
@@ -679,8 +680,9 @@ internal sealed class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDispo
             if (settings.TryGetValue<bool>(nameof(AxisContentVisible), out var axisContentVisible)) AxisContentVisible = axisContentVisible;
             if (settings.TryGetValue<int>(nameof(HeatmapBucketCount), out var heatmapBucketCount)) HeatmapBucketCount = heatmapBucketCount;
             if (settings.TryGetValue<bool>(nameof(HeatmapEnablePreview), out var heatmapEnablePreview)) HeatmapEnablePreview = heatmapEnablePreview;
+            if (settings.TryGetValue<bool>(nameof(HeatmapCombineHeat), out var heatmapCombineHeat)) HeatmapCombineHeat = heatmapCombineHeat;
             if (settings.TryGetValue<bool>(nameof(HeatmapInvertY), out var heatmapInvertY)) HeatmapInvertY = heatmapInvertY;
-            if (settings.TryGetValue<bool>(nameof(HeatmapShowStrokeLength), out var heatmapShowStrokeLength)) HeatmapShowStrokeLength = heatmapShowStrokeLength;
+            if (settings.TryGetValue<bool>(nameof(HeatmapShowRange), out var heatmapShowRange)) HeatmapShowRange = heatmapShowRange;
             if (settings.TryGetValue<bool>(nameof(AutoSkipToScriptStartEnabled), out var autoSkipToScriptStartEnabled)) AutoSkipToScriptStartEnabled = autoSkipToScriptStartEnabled;
             if (settings.TryGetValue<double>(nameof(AutoSkipToScriptStartOffset), out var autoSkipToScriptStartOffset)) AutoSkipToScriptStartOffset = autoSkipToScriptStartOffset;
 
