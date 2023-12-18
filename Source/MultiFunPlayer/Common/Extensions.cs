@@ -466,7 +466,7 @@ public static class WaitHandleExtensions
     public static bool WaitOne(this WaitHandle handle, TimeSpan timeout, bool exitContext, CancellationToken cancellationToken)
         => ThrowIfCancellationRequested(WaitHandle.WaitAny(new[] { handle, cancellationToken.WaitHandle }, timeout, exitContext) == 0, cancellationToken);
 
-    private static bool ThrowIfCancellationRequested(bool result,  CancellationToken cancellationToken)
+    private static bool ThrowIfCancellationRequested(bool result, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
         return result;
