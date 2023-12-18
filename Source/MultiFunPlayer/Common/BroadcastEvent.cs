@@ -22,7 +22,7 @@ internal sealed class BroadcastEvent<T>(bool initialState) : IDisposable where T
     public (bool Success, T Value) WaitOne(TimeSpan timeout) => (_waitHandle.WaitOne(timeout) && _waitHandle.Reset(), _value);
     public (bool Success, T Value) WaitOne(TimeSpan timeout, bool exitContext) => (_waitHandle.WaitOne(timeout, exitContext) && _waitHandle.Reset(), _value);
 
-    public async Task<(bool Success, T Value)> WaitOneAsync(CancellationToken cancellationToken)
+    public async ValueTask<(bool Success, T Value)> WaitOneAsync(CancellationToken cancellationToken)
     {
         if (_waitHandle.WaitOne(0, cancellationToken))
             return (_waitHandle.Reset(), _value);
@@ -42,7 +42,7 @@ internal sealed class BroadcastEvent<T>(bool initialState) : IDisposable where T
         return result;
     }
 
-    public static async Task<(int Index, T Value)> WaitAnyAsync(IList<BroadcastEvent<T>> events, CancellationToken cancellationToken)
+    public static async ValueTask<(int Index, T Value)> WaitAnyAsync(BroadcastEvent<T>[] events, CancellationToken cancellationToken)
     {
         var waitHandles = events.Select(e => e._waitHandle).Append(cancellationToken.WaitHandle).ToArray();
         var index = WaitHandle.WaitAny(waitHandles, 0);
@@ -57,7 +57,7 @@ internal sealed class BroadcastEvent<T>(bool initialState) : IDisposable where T
         }
         else
         {
-            var tasks = events.Select(e => e.WaitOneAsync(cancellationToken)).ToList();
+            var tasks = events.Select(e => e.WaitOneAsync(cancellationToken).AsTask()).ToList();
             var task = await Task.WhenAny(tasks);
             cancellationToken.ThrowIfCancellationRequested();
 
