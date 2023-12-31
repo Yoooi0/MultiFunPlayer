@@ -3,6 +3,7 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:material="http://materialdesigninxaml.net/winfx/xaml/themes"
     xmlns:controls="clr-namespace:MultiFunPlayer.UI.Controls" 
+    xmlns:common="clr-namespace:MultiFunPlayer.Common" 
     xmlns:s="https://github.com/canton7/Stylet"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -40,15 +41,26 @@
                                    Width="30"
                                    Height="30"
                                    Margin="8 0 0 0"/>
+                
                 <TextBlock DockPanel.Dock="Left"
-                               Margin="8 0 0 0"
-                               Style="{StaticResource WindowTitleTextBlockStyle}" 
-                               Text="{Binding Title, RelativeSource={RelativeSource AncestorType={x:Type controls:MaterialWindow}}}"/>
+                           Margin="8 0 0 0"
+                           Style="{StaticResource WindowTitleTextBlockStyle}" 
+                           Text="{Binding Title, RelativeSource={RelativeSource AncestorType={x:Type controls:MaterialWindow}}}"/>
+
+                <Border Width="1" 
+                        DockPanel.Dock="Left"
+                        VerticalAlignment="Stretch" 
+                        Margin="8 4 8 4"
+                        Background="{Binding BorderForegroundBrush, RelativeSource={RelativeSource AncestorType={x:Type controls:MaterialWindow}}}" />
+                
+                <TextBlock DockPanel.Dock="Left"
+                           Style="{StaticResource WindowTitleTextBlockStyle}" 
+                           Text="{Binding Source={x:Static common:ReflectionUtils.AssemblyVersion}, StringFormat={}v{0}}"/>
 
                 <Border Width="1" 
                         DockPanel.Dock="Right"
                         VerticalAlignment="Stretch" 
-                        Margin="8,4,8,4"
+                        Margin="8 4 8 4"
                         Background="{Binding BorderForegroundBrush, RelativeSource={RelativeSource AncestorType={x:Type controls:MaterialWindow}}}" />
 
                 <Button Style="{StaticResource WindowButtonStyle}"
