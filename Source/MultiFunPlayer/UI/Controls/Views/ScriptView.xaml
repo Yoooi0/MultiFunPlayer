@@ -231,7 +231,7 @@
                                                                Width="20"/>
                                         </Button>
 
-                                        <ContentControl Margin="0 20 0 0" Width="500" s:View.Model="{Binding ScriptRepositoryManager}"/>
+                                        <ContentControl Margin="0 20 0 0" s:View.Model="{Binding ScriptRepositoryManager}"/>
                                     </Grid>
                                 </Button.CommandParameter>
                             </Button>
