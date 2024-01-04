@@ -55,7 +55,7 @@
                 
                 <TextBlock DockPanel.Dock="Left"
                            Style="{StaticResource WindowTitleTextBlockStyle}" 
-                           Text="{Binding Source={x:Static common:ReflectionUtils.AssemblyVersion}, StringFormat={}v{0}}"/>
+                           Text="{Binding DataContext.WindowTitleVersion, Mode=OneTime, RelativeSource={RelativeSource AncestorType={x:Type controls:MaterialWindow}}}"/>
 
                 <Border Width="1" 
                         DockPanel.Dock="Right"
