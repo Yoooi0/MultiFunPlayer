@@ -11,23 +11,29 @@ internal sealed class BroadcastEvent<T>(bool initialState) : IDisposable where T
         _waitHandle.Set();
     }
 
-    public (bool Success, T Value) WaitOne() => (_waitHandle.WaitOne() && _waitHandle.Reset(), _value);
-    public (bool Success, T Value) WaitOne(CancellationToken cancellationToken) => (_waitHandle.WaitOne(cancellationToken) && _waitHandle.Reset(), _value);
-    public (bool Success, T Value) WaitOne(int millisecondsTimeout, CancellationToken cancellationToken) => (_waitHandle.WaitOne(millisecondsTimeout, cancellationToken) && _waitHandle.Reset(), _value);
-    public (bool Success, T Value) WaitOne(TimeSpan timeout, CancellationToken cancellationToken) => (_waitHandle.WaitOne(timeout, cancellationToken) && _waitHandle.Reset(), _value);
-    public (bool Success, T Value) WaitOne(int millisecondsTimeout, bool exitContext, CancellationToken cancellationToken) => (_waitHandle.WaitOne(millisecondsTimeout, exitContext, cancellationToken) && _waitHandle.Reset(), _value);
-    public (bool Success, T Value) WaitOne(TimeSpan timeout, bool exitContext, CancellationToken cancellationToken) => (_waitHandle.WaitOne(timeout, exitContext, cancellationToken) && _waitHandle.Reset(), _value);
-    public (bool Success, T Value) WaitOne(int millisecondsTimeout) => (_waitHandle.WaitOne(millisecondsTimeout) && _waitHandle.Reset(), _value);
-    public (bool Success, T Value) WaitOne(int millisecondsTimeout, bool exitContext) => (_waitHandle.WaitOne(millisecondsTimeout, exitContext) && _waitHandle.Reset(), _value);
-    public (bool Success, T Value) WaitOne(TimeSpan timeout) => (_waitHandle.WaitOne(timeout) && _waitHandle.Reset(), _value);
-    public (bool Success, T Value) WaitOne(TimeSpan timeout, bool exitContext) => (_waitHandle.WaitOne(timeout, exitContext) && _waitHandle.Reset(), _value);
+    private T Reset()
+    {
+        _waitHandle.Reset();
+        return _value;
+    }
+
+    public (bool Success, T Value) WaitOne() => (_waitHandle.WaitOne(), Reset());
+    public (bool Success, T Value) WaitOne(CancellationToken cancellationToken) => (_waitHandle.WaitOne(cancellationToken), Reset());
+    public (bool Success, T Value) WaitOne(int millisecondsTimeout, CancellationToken cancellationToken) => (_waitHandle.WaitOne(millisecondsTimeout, cancellationToken), Reset());
+    public (bool Success, T Value) WaitOne(TimeSpan timeout, CancellationToken cancellationToken) => (_waitHandle.WaitOne(timeout, cancellationToken), Reset());
+    public (bool Success, T Value) WaitOne(int millisecondsTimeout, bool exitContext, CancellationToken cancellationToken) => (_waitHandle.WaitOne(millisecondsTimeout, exitContext, cancellationToken), Reset());
+    public (bool Success, T Value) WaitOne(TimeSpan timeout, bool exitContext, CancellationToken cancellationToken) => (_waitHandle.WaitOne(timeout, exitContext, cancellationToken), Reset());
+    public (bool Success, T Value) WaitOne(int millisecondsTimeout) => (_waitHandle.WaitOne(millisecondsTimeout), Reset());
+    public (bool Success, T Value) WaitOne(int millisecondsTimeout, bool exitContext) => (_waitHandle.WaitOne(millisecondsTimeout, exitContext), Reset());
+    public (bool Success, T Value) WaitOne(TimeSpan timeout) => (_waitHandle.WaitOne(timeout), Reset());
+    public (bool Success, T Value) WaitOne(TimeSpan timeout, bool exitContext) => (_waitHandle.WaitOne(timeout, exitContext), Reset());
 
     public async ValueTask<(bool Success, T Value)> WaitOneAsync(CancellationToken cancellationToken)
     {
         if (_waitHandle.WaitOne(0, cancellationToken))
-            return (_waitHandle.Reset(), _value);
-        else
-            return (await _waitHandle.WaitOneAsync(cancellationToken) && _waitHandle.Reset(), _value);
+            return (true, _value);
+
+        return (await _waitHandle.WaitOneAsync(cancellationToken), Reset());
     }
 
     public static (int Index, T Value) WaitAny(BroadcastEvent<T>[] events, CancellationToken cancellationToken)
@@ -36,10 +42,7 @@ internal sealed class BroadcastEvent<T>(bool initialState) : IDisposable where T
         var index = WaitHandle.WaitAny(waitHandles);
         cancellationToken.ThrowIfCancellationRequested();
 
-        var signalledEvent = events[index];
-        var result = (index, signalledEvent._value);
-        signalledEvent._waitHandle.Reset();
-        return result;
+        return (index, events[index].Reset());
     }
 
     public static async ValueTask<(int Index, T Value)> WaitAnyAsync(BroadcastEvent<T>[] events, CancellationToken cancellationToken)
@@ -49,24 +52,14 @@ internal sealed class BroadcastEvent<T>(bool initialState) : IDisposable where T
         cancellationToken.ThrowIfCancellationRequested();
 
         if (index != WaitHandle.WaitTimeout)
-        {
-            var signalledEvent = events[index];
-            var result = (index, signalledEvent._value);
-            signalledEvent._waitHandle.Reset();
-            return result;
-        }
-        else
-        {
-            var tasks = events.Select(e => e.WaitOneAsync(cancellationToken).AsTask()).ToList();
-            var task = await Task.WhenAny(tasks);
-            cancellationToken.ThrowIfCancellationRequested();
+            return (index, events[index].Reset());
 
-            index = tasks.IndexOf(task);
-            var signalledEvent = events[index];
-            var result = (index, signalledEvent._value);
-            signalledEvent._waitHandle.Reset();
-            return result;
-        }
+        var tasks = events.Select(e => e.WaitOneAsync(cancellationToken).AsTask()).ToList();
+        var task = await Task.WhenAny(tasks);
+        cancellationToken.ThrowIfCancellationRequested();
+
+        index = tasks.IndexOf(task);
+        return (index, events[index].Reset());
     }
 
     private void Dispose(bool disposing)
