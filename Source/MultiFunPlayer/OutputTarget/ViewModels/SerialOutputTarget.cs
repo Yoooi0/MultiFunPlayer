@@ -126,7 +126,7 @@ internal sealed class SerialOutputTarget(int instanceIndex, IEventAggregator eve
     public bool IsConnectBusy => Status == ConnectionStatus.Connecting || Status == ConnectionStatus.Disconnecting;
     public bool CanToggleConnect => !IsConnectBusy && !IsRefreshBusy && SelectedSerialPortDeviceId != null;
 
-    protected override async Task<bool> OnConnectingAsync()
+    protected override async ValueTask<bool> OnConnectingAsync()
     {
         if (SelectedSerialPortDeviceId == null)
             return false;

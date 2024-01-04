@@ -51,7 +51,7 @@
             </material:Card.Background>
             <Canvas ClipToBounds="True">
                 <Polygon Points="{Binding Points, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}"
-                         Visibility="{Binding ShowStrokeLength, Converter={StaticResource BooleanToVisibilityConverter}, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}"
+                         Visibility="{Binding ShowRange, Converter={StaticResource BooleanToVisibilityConverter}, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}"
                          StrokeThickness="0.5"
                          Stroke="{DynamicResource MaterialDesignBody}">
                     <Polygon.Fill>
@@ -62,7 +62,7 @@
                 <Rectangle VerticalAlignment="Stretch" HorizontalAlignment="Stretch"
                            RadiusX="5" RadiusY="5"
                            SnapsToDevicePixels="True"
-                           Visibility="{Binding ShowStrokeLength, Converter={StaticResource InverseBoolToVisConverter}, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}"
+                           Visibility="{Binding ShowRange, Converter={StaticResource InverseBoolToVisConverter}, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}"
                            Width="{Binding ActualWidth, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}"
                            Height="{Binding ActualHeight, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}">
                     <Rectangle.Fill>

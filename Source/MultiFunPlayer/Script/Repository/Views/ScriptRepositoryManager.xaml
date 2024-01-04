@@ -8,9 +8,11 @@
              xmlns:controls="clr-namespace:MultiFunPlayer.UI.Controls"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800"
-             x:ClassModifier="internal">
+             x:ClassModifier="internal"
+             MinWidth="500"
+             Foreground="{DynamicResource MaterialDesignBody}">
     <StackPanel>
-        <material:Card>
+        <material:Card material:ShadowAssist.ShadowDepth="Depth1">
             <controls:NonReloadingTabControl ItemsSource="{Binding Repositories}">
                 <TabControl.ItemTemplate>
                     <DataTemplate>
@@ -20,14 +22,9 @@
                             <ToggleButton Style="{StaticResource MaterialDesignSwitchToggleButton}"
                                           IsChecked="{Binding Enabled}"
                                           Visibility="{Binding CanToggleEnabled, Converter={StaticResource BooleanToVisibilityConverter}}"
-                                          Height="13">
-                                <material:ToggleButtonAssist.SwitchTrackOnBackground>
-                                    <SolidColorBrush Color="{DynamicResource MaterialDesignSuccessColor}" />
-                                </material:ToggleButtonAssist.SwitchTrackOnBackground>
-                                <material:ToggleButtonAssist.SwitchTrackOffBackground>
-                                    <SolidColorBrush Color="{DynamicResource MaterialDesignErrorColor}" />
-                                </material:ToggleButtonAssist.SwitchTrackOffBackground>
-                            </ToggleButton>
+                                          Height="13"
+                                          material:ToggleButtonAssist.SwitchTrackOnBackground="{DynamicResource MaterialDesignSuccessBrush}"
+                                          material:ToggleButtonAssist.SwitchTrackOffBackground="{DynamicResource MaterialDesignErrorBrush}"/>
                         </StackPanel>
                     </DataTemplate>
                 </TabControl.ItemTemplate>

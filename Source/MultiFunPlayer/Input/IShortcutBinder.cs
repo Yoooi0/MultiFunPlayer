@@ -182,10 +182,7 @@ internal sealed class ShortcutBinder : IShortcutBinder
 
         Logger.Trace("Handling {0} gesture", gesture.Descriptor);
         foreach (var configuration in binding.Configurations)
-        {
-            Logger.Trace("Invoking {0} action", configuration.Name);
             _shortcutManager.Invoke(configuration, gesture);
-        }
     }
 
     private void Dispose(bool disposing)

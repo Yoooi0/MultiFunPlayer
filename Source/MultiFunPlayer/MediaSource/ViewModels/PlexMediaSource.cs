@@ -44,7 +44,7 @@ internal sealed class PlexMediaSource(IShortcutManager shortcutManager, IEventAg
     public bool IsConnectBusy => Status == ConnectionStatus.Connecting || Status == ConnectionStatus.Disconnecting;
     public bool CanToggleConnect => !IsConnectBusy && SelectedClient != null && !string.IsNullOrWhiteSpace(PlexToken);
 
-    protected override async Task<bool> OnConnectingAsync()
+    protected override async ValueTask<bool> OnConnectingAsync()
     {
         if (SelectedClientMachineIdentifier == null)
             return false;

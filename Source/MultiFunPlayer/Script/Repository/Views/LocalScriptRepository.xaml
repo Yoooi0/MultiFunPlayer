@@ -73,7 +73,8 @@
                                     <TextBlock Text="{Binding Directory.FullName}"
                                                VerticalAlignment="Center"
                                                FontSize="12"
-                                               DockPanel.Dock="Left"/>
+                                               DockPanel.Dock="Left"
+                                               Margin="0 0 20 0"/>
                                 </DockPanel>
                             </Border>
                         </DataTemplate>

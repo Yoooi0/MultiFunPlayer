@@ -18,7 +18,7 @@
                        Margin="0 0 10 0"
                        VerticalAlignment="Center"/>
 
-            <controls:UriBox EndPoint="{Binding ServerBaseUri}"
+            <controls:UriBox Uri="{Binding ServerBaseUri}"
                              DockPanel.Dock="Left"
                              ShowPathAndQuery="False"
                              AvailableSchemes="http https"/>

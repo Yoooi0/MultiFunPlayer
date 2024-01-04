@@ -48,7 +48,7 @@ internal sealed class MediaSourceViewModel : Conductor<IMediaSource>.Collection.
 
             var selectedIndex = Items.IndexOf(ActiveItem);
             Items.Remove(source);
-            ActiveItem = Items.Count > 0 ? Items[Math.Min(selectedIndex, Items.Count - 1)] : null;
+            ActiveItem = Items.Count > 0 ? Items[Math.Clamp(selectedIndex, 0, Items.Count - 1)] : null;
 
             _semaphore.Release();
         }

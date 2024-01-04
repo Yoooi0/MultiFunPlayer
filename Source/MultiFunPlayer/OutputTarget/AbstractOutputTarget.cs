@@ -69,12 +69,13 @@ internal abstract class AbstractOutputTarget : Screen, IOutputTarget
             return;
 
         Status = ConnectionStatus.Disconnecting;
+        await Task.Delay(250);
         await OnDisconnectingAsync();
         Status = ConnectionStatus.Disconnected;
     }
 
-    protected abstract Task<bool> OnConnectingAsync();
-    protected abstract Task OnDisconnectingAsync();
+    protected abstract ValueTask<bool> OnConnectingAsync();
+    protected abstract ValueTask OnDisconnectingAsync();
 
     public async virtual ValueTask<bool> CanConnectAsync(CancellationToken token) => await ValueTask.FromResult(false);
     public async virtual ValueTask<bool> CanConnectAsyncWithStatus(CancellationToken token)
@@ -328,7 +329,9 @@ internal abstract class AbstractOutputTarget : Screen, IOutputTarget
 
     protected virtual void Dispose(bool disposing)
     {
-        OnDisconnectingAsync().GetAwaiter().GetResult();
+        var valueTask = OnDisconnectingAsync();
+        if (!valueTask.IsCompleted)
+            valueTask.AsTask().GetAwaiter().GetResult();
     }
 
     public void Dispose()
@@ -360,7 +363,7 @@ internal abstract class ThreadAbstractOutputTarget : AbstractOutputTarget
             await DisconnectAsync();
     }
 
-    protected override async Task<bool> OnConnectingAsync()
+    protected override ValueTask<bool> OnConnectingAsync()
     {
         _cancellationSource = new CancellationTokenSource();
         _thread = new Thread(() =>
@@ -373,16 +376,14 @@ internal abstract class ThreadAbstractOutputTarget : AbstractOutputTarget
         };
         _thread.Start();
 
-        return await Task.FromResult(true);
+        return ValueTask.FromResult(true);
     }
 
     private int _isDisconnectingFlag;
-    protected override async Task OnDisconnectingAsync()
+    protected override ValueTask OnDisconnectingAsync()
     {
         if (Interlocked.CompareExchange(ref _isDisconnectingFlag, 1, 0) != 0)
-            return;
-
-        await Task.Delay(250);
+            return ValueTask.CompletedTask;
 
         _cancellationSource?.Cancel();
         _thread?.Join();
@@ -393,6 +394,7 @@ internal abstract class ThreadAbstractOutputTarget : AbstractOutputTarget
         _thread = null;
 
         Interlocked.Decrement(ref _isDisconnectingFlag);
+        return ValueTask.CompletedTask;
     }
 
     public override void HandleSettings(JObject settings, SettingsAction action)
@@ -482,7 +484,7 @@ internal abstract class AsyncAbstractOutputTarget : AbstractOutputTarget
             await DisconnectAsync();
     }
 
-    protected override async Task<bool> OnConnectingAsync()
+    protected override ValueTask<bool> OnConnectingAsync()
     {
         _cancellationSource = new CancellationTokenSource();
         _task = Task.Factory.StartNew(() => RunAsync(_cancellationSource.Token),
@@ -492,21 +494,19 @@ internal abstract class AsyncAbstractOutputTarget : AbstractOutputTarget
             .Unwrap();
         _ = _task.ContinueWith(_ => DisconnectAsync()).Unwrap();
 
-        return await Task.FromResult(true);
+        return ValueTask.FromResult(true);
     }
 
     private int _isDisconnectingFlag;
-    protected override async Task OnDisconnectingAsync()
+    protected override async ValueTask OnDisconnectingAsync()
     {
         if (Interlocked.CompareExchange(ref _isDisconnectingFlag, 1, 0) != 0)
             return;
 
         _cancellationSource?.Cancel();
-
         if (_task != null)
             await _task;
 
-        await Task.Delay(250);
         _cancellationSource?.Dispose();
 
         _cancellationSource = null;

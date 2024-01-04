@@ -5,6 +5,7 @@ using MultiFunPlayer.UI.Dialogs.ViewModels;
 using Newtonsoft.Json.Linq;
 using Stylet;
 using StyletIoC;
+using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Input;
 
@@ -22,6 +23,19 @@ internal sealed class RootViewModel : Conductor<IScreen>.Collection.AllActive, I
     public int WindowHeight { get; set; }
     public int WindowLeft { get; set; }
     public int WindowTop { get; set; }
+
+    public string WindowTitleVersion
+    {
+        get
+        {
+            var match = Regex.Match(ReflectionUtils.AssemblyInformationalVersion, @"^(?<version>\d+\.\d+\.\d+)(?:-(?<tag>.+))?\.(?<sha>.{7})$");
+            if (!match.Success)
+                return $"v{ReflectionUtils.AssemblyInformationalVersion}";
+            if (match.Groups["tag"].Success)
+                return $"v{match.Groups["version"]}.{match.Groups["sha"]}";
+            return $"v{match.Groups["version"]}";
+        }
+    }
 
     public RootViewModel(IEventAggregator eventAggregator)
     {
