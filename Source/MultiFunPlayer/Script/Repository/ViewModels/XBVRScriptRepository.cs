@@ -89,7 +89,7 @@ internal sealed class XBVRScriptRepository : AbstractScriptRepository
 
             if (VideoMatchType == XBVRVideoMatchType.UseFirstMatchOnly)
             {
-                result = searchResult;
+                result.Merge(searchResult);
                 return true;
             }
 
