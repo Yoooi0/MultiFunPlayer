@@ -103,7 +103,7 @@ internal sealed class StashScriptRepository : AbstractScriptRepository
 
             if (VideoMatchType == StashVideoMatchType.UseFirstMatchOnly)
             {
-                result = searchResult;
+                result.Merge(searchResult);
                 return true;
             }
 
