@@ -237,6 +237,9 @@ internal sealed class ShortcutSettingsViewModel : Screen, IHandle<SettingsMessag
         configurations.Move(index, index + 1);
     }
 
+    public void OnSelectedShortcutTypeChanged()
+        => CapturedGestures.Clear();
+
     public void Handle(SettingsMessage message)
     {
         if (message.Action == SettingsAction.Saving)
