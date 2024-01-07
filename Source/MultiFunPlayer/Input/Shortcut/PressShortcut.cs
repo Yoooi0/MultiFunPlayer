@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel;
 
-namespace MultiFunPlayer.Input.Binding;
+namespace MultiFunPlayer.Input.Shortcut;
 
 [DisplayName("Button Press")]
 public sealed class PressShortcut(ISimpleInputGestureDescriptor gesture)

@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel;
 
-namespace MultiFunPlayer.Input.Binding;
+namespace MultiFunPlayer.Input.Shortcut;
 
 [DisplayName("Button Release")]
 public sealed class ReleaseShortcut(ISimpleInputGestureDescriptor gesture)
