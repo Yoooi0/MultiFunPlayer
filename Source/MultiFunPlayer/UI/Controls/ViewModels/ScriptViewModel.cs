@@ -23,6 +23,7 @@ using MultiFunPlayer.Property;
 using Microsoft.Win32;
 using MultiFunPlayer.Script;
 using MultiFunPlayer.Script.Repository;
+using MultiFunPlayer.Shortcut;
 
 namespace MultiFunPlayer.UI.Controls.ViewModels;
 

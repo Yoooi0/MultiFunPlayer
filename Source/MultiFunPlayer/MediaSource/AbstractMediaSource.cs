@@ -1,5 +1,5 @@
 using MultiFunPlayer.Common;
-using MultiFunPlayer.Input;
+using MultiFunPlayer.Shortcut;
 using Newtonsoft.Json.Linq;
 using PropertyChanged;
 using Stylet;

@@ -1,6 +1,7 @@
-﻿using System.ComponentModel;
+﻿using MultiFunPlayer.Input;
+using System.ComponentModel;
 
-namespace MultiFunPlayer.Input.Shortcut;
+namespace MultiFunPlayer.Shortcut;
 
 [DisplayName("Button Long Press")]
 public sealed class LongPressShortcut(ISimpleInputGestureDescriptor gesture)

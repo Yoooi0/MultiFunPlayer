@@ -1,7 +1,7 @@
 ﻿using MultiFunPlayer.Common;
-using MultiFunPlayer.Input;
 using MultiFunPlayer.MotionProvider.ViewModels;
 using MultiFunPlayer.Settings;
+using MultiFunPlayer.Shortcut;
 using Newtonsoft.Json.Linq;
 using NLog;
 using Stylet;

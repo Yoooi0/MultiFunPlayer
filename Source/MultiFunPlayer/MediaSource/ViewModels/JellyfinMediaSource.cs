@@ -1,12 +1,11 @@
 using MultiFunPlayer.Common;
-using MultiFunPlayer.Input;
+using MultiFunPlayer.Shortcut;
 using MultiFunPlayer.UI;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NLog;
 using Stylet;
 using System.ComponentModel;
-using System.Net;
 using System.Net.Http;
 
 namespace MultiFunPlayer.MediaSource.ViewModels;

@@ -1,6 +1,7 @@
 ﻿using MultiFunPlayer.Common;
 using MultiFunPlayer.Input;
 using MultiFunPlayer.Property;
+using MultiFunPlayer.Shortcut;
 using NLog;
 using Stylet;
 using StyletIoC;

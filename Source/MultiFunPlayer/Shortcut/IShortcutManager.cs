@@ -1,9 +1,9 @@
 using MultiFunPlayer.Common;
+using MultiFunPlayer.Input;
 using MultiFunPlayer.Settings;
 using NLog;
-using System.Windows.Data;
 
-namespace MultiFunPlayer.Input;
+namespace MultiFunPlayer.Shortcut;
 
 internal interface IShortcutManager : IDisposable
 {

@@ -11,6 +11,7 @@ using MultiFunPlayer.Property;
 using MultiFunPlayer.Script.Repository;
 using MultiFunPlayer.Script.Repository.ViewModels;
 using MultiFunPlayer.Settings;
+using MultiFunPlayer.Shortcut;
 using MultiFunPlayer.UI;
 using MultiFunPlayer.UI.Controls.ViewModels;
 using Newtonsoft.Json;

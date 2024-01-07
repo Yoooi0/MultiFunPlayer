@@ -1,7 +1,7 @@
 using Buttplug;
 using Buttplug.NewtonsoftJson;
 using MultiFunPlayer.Common;
-using MultiFunPlayer.Input;
+using MultiFunPlayer.Shortcut;
 using MultiFunPlayer.UI;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;

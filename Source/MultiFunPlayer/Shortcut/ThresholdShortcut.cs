@@ -1,7 +1,8 @@
-﻿using System.ComponentModel;
+﻿using MultiFunPlayer.Input;
+using System.ComponentModel;
 using System.Diagnostics;
 
-namespace MultiFunPlayer.Input.Shortcut;
+namespace MultiFunPlayer.Shortcut;
 
 [DisplayName("Axis Threshold")]
 public sealed class ThresholdShortcut(IAxisInputGestureDescriptor gesture)

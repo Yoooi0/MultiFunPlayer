@@ -1,6 +1,7 @@
-﻿using System.ComponentModel;
+﻿using MultiFunPlayer.Input;
+using System.ComponentModel;
 
-namespace MultiFunPlayer.Input.Shortcut;
+namespace MultiFunPlayer.Shortcut;
 
 [DisplayName("Button Click")]
 public sealed class ClickShortcut(ISimpleInputGestureDescriptor gesture)

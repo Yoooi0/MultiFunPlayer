@@ -1,8 +1,9 @@
 using MultiFunPlayer.Common;
+using MultiFunPlayer.Input;
 using Newtonsoft.Json;
 using PropertyChanged;
 
-namespace MultiFunPlayer.Input;
+namespace MultiFunPlayer.Shortcut;
 
 public interface IShortcut
 {

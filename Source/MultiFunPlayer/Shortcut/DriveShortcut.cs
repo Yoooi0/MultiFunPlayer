@@ -1,6 +1,7 @@
-﻿using System.ComponentModel;
+﻿using MultiFunPlayer.Input;
+using System.ComponentModel;
 
-namespace MultiFunPlayer.Input.Shortcut;
+namespace MultiFunPlayer.Shortcut;
 
 [DisplayName("Axis Drive")]
 public sealed class DriveShortcut(IAxisInputGestureDescriptor gesture)

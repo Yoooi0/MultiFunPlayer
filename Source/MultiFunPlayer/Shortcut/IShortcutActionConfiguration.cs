@@ -1,10 +1,11 @@
-﻿using MultiFunPlayer.Settings;
+﻿using MultiFunPlayer.Input;
+using MultiFunPlayer.Settings;
 using NLog;
 using PropertyChanged;
 using Stylet;
 using System.ComponentModel;
 
-namespace MultiFunPlayer.Input;
+namespace MultiFunPlayer.Shortcut;
 
 public interface IShortcutActionConfiguration
 {
