@@ -85,6 +85,12 @@ internal sealed class Bootstrapper : Bootstrapper<RootViewModel>
         var dirty = ConfigureLoging(settings);
 
         var logger = LogManager.GetLogger(nameof(MultiFunPlayer));
+        var shortcutManager = Container.Get<IShortcutManager>();
+        shortcutManager.RegisterAction<LogLevel, string>("Debug::Log",
+            s => s.WithLabel("Log level").WithDefaultValue(LogLevel.Info).WithItemsSource(LogLevel.AllLoggingLevels),
+            s => s.WithLabel("Message"),
+            logger.Log);
+
         AppDomain.CurrentDomain.UnhandledException += (s, e) =>
         {
             logger.Fatal(e.ExceptionObject as Exception);
