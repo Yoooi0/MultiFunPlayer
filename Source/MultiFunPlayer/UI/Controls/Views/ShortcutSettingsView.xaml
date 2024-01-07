@@ -630,17 +630,36 @@
                     <DockPanel DockPanel.Dock="Top"
                                LastChildFill="True">
                         <TextBlock DockPanel.Dock="Left"
-                                   Text="Shortcut type:"
+                                   Text="Shortcut:"
                                    Margin="5 0 10 0"
                                    VerticalAlignment="Center"
                                    Typography.Capitals="AllSmallCaps"
                                    FontWeight="Medium"/>
 
+                        <Button DockPanel.Dock="Right"
+                                Style="{StaticResource MaterialDesignFlatButton}"
+                                Click="{s:Action AddShortcut}"
+                                Foreground="{DynamicResource MaterialDesignSuccessBrush}"
+                                ToolTip="Add shortcut"
+                                VerticalAlignment="Center"
+                                Width="32" 
+                                Height="32"
+                                Margin="0" 
+                                Padding="0">
+                            <material:PackIcon Kind="Plus" Width="28" Height="28" />
+                            <Button.IsEnabled>
+                                <MultiBinding Converter="{StaticResource BooleanAndConverter}">
+                                    <Binding Path="SelectedShortcutType" Converter="{StaticResource InvertedNullableToBooleanConverter}"/>
+                                    <Binding Path="SelectedCapturedGesture" Converter="{StaticResource InvertedNullableToBooleanConverter}"/>
+                                </MultiBinding>
+                            </Button.IsEnabled>
+                        </Button>
+
                         <ComboBox ItemsSource="{Binding ShortcutTypes}"
                                   SelectedItem="{Binding SelectedShortcutType}"
                                   material:TextFieldAssist.HasClearButton="True"
                                   DockPanel.Dock="Left"
-                                  Margin="20 5 20 5">
+                                  Margin="0 0 10 0">
                             <ComboBox.ItemTemplate>
                                 <DataTemplate>
                                     <TextBlock Text="{Binding Converter={StaticResource DisplayNameConverter}}"/>
@@ -650,13 +669,14 @@
                     </DockPanel>
 
                     <DockPanel LastChildFill="True"
-                               DockPanel.Dock="Top">
+                               DockPanel.Dock="Top"
+                               IsEnabled="{Binding SelectedShortcutType, Converter={StaticResource InvertedNullableToBooleanConverter}}">
                         <material:PopupBox DockPanel.Dock="Right"
                                            Style="{StaticResource MaterialDesignToolBarPopupBox}"
                                            VerticalAlignment="Center"
                                            StaysOpen="True"
                                            PlacementMode="BottomAndAlignRightEdges"
-                                           ToolTip="Filter gestures"
+                                           ToolTip="Filter"
                                            Height="32"
                                            Width="32">
                             <material:PopupBox.ToggleContent>
@@ -672,8 +692,8 @@
                                         <CheckBox IsChecked="{Binding IsMouseButtonGestureEnabled}" Content="Mouse button"/>
                                         <CheckBox IsChecked="{Binding IsGamepadAxisGestureEnabled}" Content="Gamepad axis"/>
                                         <CheckBox IsChecked="{Binding IsGamepadButtonGestureEnabled}" Content="Gamepad button"/>
-                                        <CheckBox IsChecked="{Binding IsTCodeButtonGestureEnabled}" Content="TCode button"/>
                                         <CheckBox IsChecked="{Binding IsTCodeAxisGestureEnabled}" Content="TCode axis"/>
+                                        <CheckBox IsChecked="{Binding IsTCodeButtonGestureEnabled}" Content="TCode button"/>
                                     </StackPanel>
                                 </StackPanel>
                             </Grid>
@@ -681,21 +701,10 @@
 
                         <Button DockPanel.Dock="Right"
                                 Style="{StaticResource MaterialDesignFlatButton}"
-                                Click="{s:Action AddShortcut}"
-                                Foreground="{DynamicResource MaterialDesignSuccessBrush}"
-                                ToolTip="Add captured gesture"
-                                VerticalAlignment="Center"
-                                Width="32" 
-                                Height="32"
-                                Margin="0" 
-                                Padding="0">
-                            <material:PackIcon Kind="Plus" Width="28" Height="28" />
-                        </Button>
-
-                        <Button DockPanel.Dock="Right"
-                                Style="{StaticResource MaterialDesignFlatButton}"
                                 Click="{s:Action CaptureGestures}"
-                                ToolTip="Capture gestures"
+                                material:ButtonProgressAssist.IsIndeterminate="True"
+                                material:ButtonProgressAssist.IsIndicatorVisible="{Binding IsCapturingGestures}"
+                                ToolTip="Start capturing"
                                 VerticalAlignment="Center"
                                 Width="32" 
                                 Height="32"
@@ -713,8 +722,10 @@
 
                         <ComboBox ItemsSource="{Binding CapturedGestures}"
                                   SelectedItem="{Binding SelectedCapturedGesture}"
+                                  IsEnabled="{Binding CapturedGestures.Count, Mode=OneWay, Converter={StaticResource NotZeroConverter}}"
                                   material:TextFieldAssist.HasClearButton="True"
-                                  Height="39">
+                                  Height="33"
+                                  Margin="0 0 10 0">
                             <ComboBox.ItemContainerStyle>
                                 <Style TargetType="{x:Type ComboBoxItem}" BasedOn="{StaticResource MaterialDesignComboBoxItemStyle}">
                                     <Setter Property="Padding" Value="5"/>
