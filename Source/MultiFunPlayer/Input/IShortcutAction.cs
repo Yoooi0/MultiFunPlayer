@@ -3,8 +3,8 @@
 internal interface IShortcutAction
 {
     void Invoke(params object[] arguments);
-    void Invoke(IShortcutActionConfiguration actionConfiguration, IInputGesture gesture);
-    bool AcceptsGesture(IInputGestureDescriptor gestureDescriptor);
+    void Invoke(IShortcutActionConfiguration actionConfiguration, IInputGestureData gestureData);
+    bool AcceptsGestureData(Type gestureDataType);
 }
 
 internal abstract class AbstractShortcutAction : IShortcutAction
@@ -18,22 +18,22 @@ internal abstract class AbstractShortcutAction : IShortcutAction
 
     public abstract void Invoke(params object[] arguments);
 
-    public void Invoke(IShortcutActionConfiguration actionConfiguration, IInputGesture gesture)
+    public void Invoke(IShortcutActionConfiguration actionConfiguration, IInputGestureData gestureData)
     {
         if (_arguments.Count == 0)
             Invoke();
-        else if (_arguments[0].IsAssignableTo(typeof(IInputGesture)))
-            Invoke(actionConfiguration.GetActionParams(gesture));
+        else if (_arguments[0].IsAssignableTo(typeof(IInputGestureData)))
+            Invoke(actionConfiguration.GetActionParams(gestureData));
         else
             Invoke(actionConfiguration.GetActionParams());
     }
 
-    public bool AcceptsGesture(IInputGestureDescriptor gestureDescriptor)
+    public bool AcceptsGestureData(Type gestureDataType)
     {
-        if (gestureDescriptor is ISimpleInputGestureDescriptor)
-            return _arguments.Count == 0 || !_arguments[0].IsAssignableTo(typeof(IInputGesture)) || typeof(ISimpleInputGesture).IsAssignableTo(_arguments[0]);
-        if (gestureDescriptor is IAxisInputGestureDescriptor)
-            return _arguments.Count > 0 && typeof(IAxisInputGesture).IsAssignableTo(_arguments[0]);
+        if (gestureDataType == typeof(ISimpleInputGestureData))
+            return _arguments.Count == 0 || !_arguments[0].IsAssignableTo(typeof(IInputGesture)) || gestureDataType.IsAssignableTo(_arguments[0]);
+        if (gestureDataType == typeof(IAxisInputGestureData))
+            return _arguments.Count > 0 && gestureDataType.IsAssignableTo(_arguments[0]);
 
         return false;
     }

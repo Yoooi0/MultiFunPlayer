@@ -5,11 +5,11 @@ public sealed record TCodeButtonGestureDescriptor(string Button) : ISimpleInputG
     public override string ToString() => $"[TCode Button: {Button}]";
 }
 
-public sealed class TCodeButtonGesture(TCodeButtonGestureDescriptor descriptor) : AbstractSimpleInputGesture(descriptor)
+public sealed class TCodeButtonGesture(TCodeButtonGestureDescriptor descriptor, bool state) : AbstractSimpleInputGesture(descriptor, state)
 {
     public string Button => descriptor.Button;
 
     public override string ToString() => $"[TCode Button: {Button}]";
 
-    public static TCodeButtonGesture Create(string button) => new(new(button));
+    public static TCodeButtonGesture Create(string button, bool state) => new(new(button), state);
 }

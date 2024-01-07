@@ -21,7 +21,6 @@ public abstract class PluginBase : PropertyChangedBase
     [Inject] internal IDeviceAxisValueProvider DeviceAxisValueProvider { get; set; }
     [Inject] internal IEventAggregator EventAggregator { get; set; }
     [Inject] internal IShortcutManager ShortcutManager { get; set; }
-    [Inject] internal IShortcutBinder ShortcutBinder { get; set; }
     [Inject] internal IPropertyManager PropertyManager { get; set; }
 
     protected Logger Logger { get; }
@@ -69,34 +68,30 @@ public abstract class PluginBase : PropertyChangedBase
         => ShortcutManager.RegisterAction(actionName, settings0, settings1, settings2, settings3, action);
     protected void RegisterAction<T0, T1, T2, T3, T4>(string actionName, Func<IShortcutSettingBuilder<T0>, IShortcutSettingBuilder<T0>> settings0, Func<IShortcutSettingBuilder<T1>, IShortcutSettingBuilder<T1>> settings1, Func<IShortcutSettingBuilder<T2>, IShortcutSettingBuilder<T2>> settings2, Func<IShortcutSettingBuilder<T3>, IShortcutSettingBuilder<T3>> settings3, Func<IShortcutSettingBuilder<T4>, IShortcutSettingBuilder<T4>> settings4, Action<T0, T1, T2, T3, T4> action)
         => ShortcutManager.RegisterAction(actionName, settings0, settings1, settings2, settings3, settings4, action);
-    protected void RegisterAction<TG>(string actionName, Action<TG> action) where TG : IInputGesture
+
+    protected void RegisterAction<TD>(string actionName, Action<TD> action) where TD : IInputGestureData
         => ShortcutManager.RegisterAction(actionName, action);
-    protected void RegisterAction<TG, T0>(string actionName, Func<IShortcutSettingBuilder<T0>, IShortcutSettingBuilder<T0>> settings0, Action<TG, T0> action) where TG : IInputGesture
+    protected void RegisterAction<TD, T0>(string actionName, Func<IShortcutSettingBuilder<T0>, IShortcutSettingBuilder<T0>> settings0, Action<TD, T0> action) where TD : IInputGestureData
         => ShortcutManager.RegisterAction(actionName, settings0, action);
-    protected void RegisterAction<TG, T0, T1>(string actionName, Func<IShortcutSettingBuilder<T0>, IShortcutSettingBuilder<T0>> settings0, Func<IShortcutSettingBuilder<T1>, IShortcutSettingBuilder<T1>> settings1, Action<TG, T0, T1> action) where TG : IInputGesture
+    protected void RegisterAction<TD, T0, T1>(string actionName, Func<IShortcutSettingBuilder<T0>, IShortcutSettingBuilder<T0>> settings0, Func<IShortcutSettingBuilder<T1>, IShortcutSettingBuilder<T1>> settings1, Action<TD, T0, T1> action) where TD : IInputGestureData
         => ShortcutManager.RegisterAction(actionName, settings0, settings1, action);
-    protected void RegisterAction<TG, T0, T1, T2>(string actionName, Func<IShortcutSettingBuilder<T0>, IShortcutSettingBuilder<T0>> settings0, Func<IShortcutSettingBuilder<T1>, IShortcutSettingBuilder<T1>> settings1, Func<IShortcutSettingBuilder<T2>, IShortcutSettingBuilder<T2>> settings2, Action<TG, T0, T1, T2> action) where TG : IInputGesture
+    protected void RegisterAction<TD, T0, T1, T2>(string actionName, Func<IShortcutSettingBuilder<T0>, IShortcutSettingBuilder<T0>> settings0, Func<IShortcutSettingBuilder<T1>, IShortcutSettingBuilder<T1>> settings1, Func<IShortcutSettingBuilder<T2>, IShortcutSettingBuilder<T2>> settings2, Action<TD, T0, T1, T2> action) where TD : IInputGestureData
         => ShortcutManager.RegisterAction(actionName, settings0, settings1, settings2, action);
-    protected void RegisterAction<TG, T0, T1, T2, T3>(string actionName, Func<IShortcutSettingBuilder<T0>, IShortcutSettingBuilder<T0>> settings0, Func<IShortcutSettingBuilder<T1>, IShortcutSettingBuilder<T1>> settings1, Func<IShortcutSettingBuilder<T2>, IShortcutSettingBuilder<T2>> settings2, Func<IShortcutSettingBuilder<T3>, IShortcutSettingBuilder<T3>> settings3, Action<TG, T0, T1, T2, T3> action) where TG : IInputGesture
+    protected void RegisterAction<TD, T0, T1, T2, T3>(string actionName, Func<IShortcutSettingBuilder<T0>, IShortcutSettingBuilder<T0>> settings0, Func<IShortcutSettingBuilder<T1>, IShortcutSettingBuilder<T1>> settings1, Func<IShortcutSettingBuilder<T2>, IShortcutSettingBuilder<T2>> settings2, Func<IShortcutSettingBuilder<T3>, IShortcutSettingBuilder<T3>> settings3, Action<TD, T0, T1, T2, T3> action) where TD : IInputGestureData
         => ShortcutManager.RegisterAction(actionName, settings0, settings1, settings2, settings3, action);
 
     protected void UnregisterAction(string actionName) => ShortcutManager.UnregisterAction(actionName);
-    #endregion
 
-    #region Binding
-    protected IShortcutActionConfiguration BindAction(IInputGestureDescriptor gestureDescriptor, string actionName, params object[] values)
-        => ShortcutBinder.BindActionWithSettings(gestureDescriptor, actionName, values);
-    protected void UnbindAction(IInputGestureDescriptor gestureDescriptor, IShortcutActionConfiguration action)
-        => ShortcutBinder.UnbindAction(gestureDescriptor, action);
-
-    protected IShortcutBinding GetOrCreateBinding(IInputGestureDescriptor gestureDescriptor)
-        => ShortcutBinder.GetOrCreateBinding(gestureDescriptor);
-    protected void AddBinding(IShortcutBinding binding)
-        => ShortcutBinder.AddBinding(binding);
-    protected bool RemoveBinding(IShortcutBinding binding)
-        => ShortcutBinder.RemoveBinding(binding);
-    protected bool RemoveBinding(IInputGestureDescriptor gestureDescriptor)
-        => ShortcutBinder.RemoveBinding(gestureDescriptor);
+    protected IShortcutActionConfiguration BindAction(IShortcut shortcut, string actionName, params object[] values)
+        => ShortcutManager.BindActionWithSettings(shortcut, actionName, values);
+    protected void UnbindAction(IShortcut shortcut, IShortcutActionConfiguration action)
+        => ShortcutManager.UnbindAction(shortcut, action);
+    protected IShortcut AddShortcut(IShortcut shortcut)
+        => ShortcutManager.AddShortcut(shortcut);
+    protected IShortcut AddShortcut<T>(IInputGestureDescriptor gesture) where T : IShortcut
+        => ShortcutManager.AddShortcut<T>(gesture);
+    protected bool RemoveShortcut(IShortcut shortcut)
+        => ShortcutManager.RemoveShortcut(shortcut);
     #endregion
 
     #region Property

@@ -64,7 +64,6 @@ internal sealed class Bootstrapper : Bootstrapper<RootViewModel>
         builder.Bind<IStyletLoggerManager>().To<StyletLoggerManager>().InSingletonScope();
         builder.Bind<IOutputTargetFactory>().To<OutputTargetFactory>().InSingletonScope();
         builder.Bind<IShortcutManager>().To<ShortcutManager>().InSingletonScope();
-        builder.Bind<IShortcutBinder>().To<ShortcutBinder>().InSingletonScope();
         builder.Bind<IInputProcessorManager>().To<InputProcessorManager>().InSingletonScope();
         builder.Bind<IPropertyManager>().To<PropertyManager>().InSingletonScope();
         builder.Bind<IMotionProviderFactory>().To<MotionProviderFactory>().InSingletonScope();

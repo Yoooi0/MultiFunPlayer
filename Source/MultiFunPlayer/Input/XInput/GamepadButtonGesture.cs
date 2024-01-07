@@ -22,12 +22,12 @@ public sealed record GamepadButtonGestureDescriptor : ISimpleInputGestureDescrip
     public override string ToString() => $"[Gamepad Buttons: {UserIndex}/{Buttons}]";
 }
 
-public sealed class GamepadButtonGesture(GamepadButtonGestureDescriptor descriptor) : AbstractSimpleInputGesture(descriptor)
+public sealed class GamepadButtonGesture(GamepadButtonGestureDescriptor descriptor, bool state) : AbstractSimpleInputGesture(descriptor, state)
 {
     public int UserIndex => descriptor.UserIndex;
     public IEnumerable<GamepadVirtualKey> Buttons => descriptor.Buttons;
 
     public override string ToString() => $"[Gamepad Button: {UserIndex}/{string.Join(", ", Buttons)}]";
 
-    internal static GamepadButtonGesture Create(int userIndex, IEnumerable<GamepadVirtualKey> buttons) => new(new(userIndex, buttons));
+    internal static GamepadButtonGesture Create(int userIndex, IEnumerable<GamepadVirtualKey> buttons, bool state) => new(new(userIndex, buttons), state);
 }

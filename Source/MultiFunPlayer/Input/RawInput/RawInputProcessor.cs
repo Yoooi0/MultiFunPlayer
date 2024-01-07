@@ -74,11 +74,12 @@ internal sealed class RawInputProcessor : IInputProcessor
         if (pressed)
         {
             _pressedKeys.Add(key);
+            HandleGesture(KeyboardGesture.Create(_pressedKeys, true));
         }
         else
         {
             if (_pressedKeys.Count > 0)
-                HandleGesture(KeyboardGesture.Create(_pressedKeys));
+                HandleGesture(KeyboardGesture.Create(_pressedKeys, false));
             _pressedKeys.Clear();
         }
     }
@@ -87,11 +88,17 @@ internal sealed class RawInputProcessor : IInputProcessor
     {
         bool HasFlag(RawMouseButtonFlags flag) => data.Mouse.Buttons.HasFlag(flag);
 
-        if (HasFlag(RawMouseButtonFlags.Button4Down)) HandleGesture(MouseButtonGesture.Create(MouseButton.XButton1));
-        else if (HasFlag(RawMouseButtonFlags.Button5Down)) HandleGesture(MouseButtonGesture.Create(MouseButton.XButton2));
-        else if (HasFlag(RawMouseButtonFlags.LeftButtonDown)) HandleGesture(MouseButtonGesture.Create(MouseButton.Left));
-        else if (HasFlag(RawMouseButtonFlags.RightButtonDown)) HandleGesture(MouseButtonGesture.Create(MouseButton.Right));
-        else if (HasFlag(RawMouseButtonFlags.MiddleButtonDown)) HandleGesture(MouseButtonGesture.Create(MouseButton.Middle));
+        if (HasFlag(RawMouseButtonFlags.Button4Up)) HandleGesture(MouseButtonGesture.Create(MouseButton.XButton1, false));
+        else if (HasFlag(RawMouseButtonFlags.Button5Up)) HandleGesture(MouseButtonGesture.Create(MouseButton.XButton2, false));
+        else if (HasFlag(RawMouseButtonFlags.LeftButtonUp)) HandleGesture(MouseButtonGesture.Create(MouseButton.Left, false));
+        else if (HasFlag(RawMouseButtonFlags.RightButtonUp)) HandleGesture(MouseButtonGesture.Create(MouseButton.Right, false));
+        else if (HasFlag(RawMouseButtonFlags.MiddleButtonUp)) HandleGesture(MouseButtonGesture.Create(MouseButton.Middle, false));
+
+        if (HasFlag(RawMouseButtonFlags.Button4Down)) HandleGesture(MouseButtonGesture.Create(MouseButton.XButton1, true));
+        else if (HasFlag(RawMouseButtonFlags.Button5Down)) HandleGesture(MouseButtonGesture.Create(MouseButton.XButton2, true));
+        else if (HasFlag(RawMouseButtonFlags.LeftButtonDown)) HandleGesture(MouseButtonGesture.Create(MouseButton.Left, true));
+        else if (HasFlag(RawMouseButtonFlags.RightButtonDown)) HandleGesture(MouseButtonGesture.Create(MouseButton.Right, true));
+        else if (HasFlag(RawMouseButtonFlags.MiddleButtonDown)) HandleGesture(MouseButtonGesture.Create(MouseButton.Middle, true));
 
         if (data.Mouse.ButtonData != 0)
         {

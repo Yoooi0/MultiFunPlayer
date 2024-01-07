@@ -16,11 +16,11 @@ public sealed record KeyboardGestureDescriptor : ISimpleInputGestureDescriptor
     public override string ToString() => $"[Keyboard Keys: {string.Join(", ", Keys)}]";
 }
 
-public sealed class KeyboardGesture(KeyboardGestureDescriptor descriptor) : AbstractSimpleInputGesture(descriptor)
+public sealed class KeyboardGesture(KeyboardGestureDescriptor descriptor, bool state) : AbstractSimpleInputGesture(descriptor, state)
 {
     public IReadOnlyCollection<Key> Keys => descriptor.Keys;
 
     public override string ToString() => $"[Keyboard Keys: {string.Join(", ", Keys)}]";
 
-    public static KeyboardGesture Create(IEnumerable<Key> keys) => new(new(keys));
+    public static KeyboardGesture Create(IEnumerable<Key> keys, bool state) => new(new(keys), state);
 }

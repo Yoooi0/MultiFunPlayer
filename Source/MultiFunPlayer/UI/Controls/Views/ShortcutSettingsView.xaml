@@ -4,8 +4,7 @@
              xmlns:s="https://github.com/canton7/Stylet"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
-             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-             xmlns:behaviours="clr-namespace:MultiFunPlayer.UI.Behaviours" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:converters="clr-namespace:MultiFunPlayer.UI.Converters"
              xmlns:rawinput="clr-namespace:MultiFunPlayer.Input.RawInput"
              xmlns:xinput="clr-namespace:MultiFunPlayer.Input.XInput"
@@ -280,12 +279,34 @@
 
     <Grid Width="500" MinHeight="300" Height="650" Margin="20">
         <DockPanel LastChildFill="True">
-            <material:Card material:ShadowAssist.ShadowDepth="Depth1"
-                           Margin="0 0 0 10"
-                           DockPanel.Dock="Top">
-                <DockPanel LastChildFill="True">
+            <material:Card DockPanel.Dock="Top"
+                           material:ShadowAssist.ShadowDepth="Depth1"
+                           IsEnabled="{Binding IsCapturingGestures, Converter={StaticResource NotConverter}}"
+                           Margin="0 0 0 10">
+                <DockPanel Margin="5">
+                    <DockPanel DockPanel.Dock="Top"
+                               LastChildFill="True">
+                        <TextBlock DockPanel.Dock="Left"
+                                   Text="Shortcut type:"
+                                   Margin="5 0 10 0"
+                                   VerticalAlignment="Center"
+                                   Typography.Capitals="AllSmallCaps"
+                                   FontWeight="Medium"/>
+
+                        <ComboBox ItemsSource="{Binding ShortcutTypes}"
+                                  SelectedItem="{Binding SelectedShortcutType}"
+                                  material:TextFieldAssist.HasClearButton="True"
+                                  DockPanel.Dock="Left"
+                                  Margin="20 5 20 5">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding Converter={StaticResource DisplayNameConverter}}"/>
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+                    </DockPanel>
+
                     <DockPanel LastChildFill="True"
-                               Margin="5"
                                DockPanel.Dock="Top">
                         <material:PopupBox DockPanel.Dock="Right"
                                            Style="{StaticResource MaterialDesignToolBarPopupBox}"
@@ -317,8 +338,7 @@
 
                         <Button DockPanel.Dock="Right"
                                 Style="{StaticResource MaterialDesignFlatButton}"
-                                Click="{s:Action AddGesture}"
-                                IsEnabled="{Binding CapturedGesture, Converter={StaticResource InvertedNullableToBooleanConverter}}"
+                                Click="{s:Action AddShortcut}"
                                 Foreground="{DynamicResource MaterialDesignSuccessBrush}"
                                 ToolTip="Add captured gesture"
                                 VerticalAlignment="Center"
@@ -331,9 +351,8 @@
 
                         <Button DockPanel.Dock="Right"
                                 Style="{StaticResource MaterialDesignFlatButton}"
-                                Click="{s:Action CaptureGesture}"
-                                IsEnabled="{Binding IsCapturingGesture, Converter={StaticResource NotConverter}}"
-                                ToolTip="Capture gesture"
+                                Click="{s:Action CaptureGestures}"
+                                ToolTip="Capture gestures"
                                 VerticalAlignment="Center"
                                 Width="32" 
                                 Height="32"
@@ -349,18 +368,34 @@
                                    Typography.Capitals="AllSmallCaps"
                                    FontWeight="Medium"/>
 
-                        <material:Card Margin="0 0 30 0"
-                                       Height="28"
-                                       material:ShadowAssist.ShadowDepth="Depth1"
-                                       VerticalAlignment="Center"
-                                       DockPanel.Dock="Left">
-                            <ContentControl Content="{Binding CapturedGesture}"/>
-                        </material:Card>
+                        <ComboBox ItemsSource="{Binding CapturedGestures}"
+                                  SelectedItem="{Binding SelectedCapturedGesture}"
+                                  material:TextFieldAssist.HasClearButton="True"
+                                  Height="39">
+                            <ComboBox.ItemContainerStyle>
+                                <Style TargetType="{x:Type ComboBoxItem}" BasedOn="{StaticResource MaterialDesignComboBoxItemStyle}">
+                                    <Setter Property="Padding" Value="5"/>
+                                </Style>
+                            </ComboBox.ItemContainerStyle>
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate>
+                                    <material:Card material:ShadowAssist.ShadowDepth="Depth1">
+                                        <ContentControl Content="{Binding}"/>
+                                    </material:Card>
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
                     </DockPanel>
-
+                </DockPanel>
+            </material:Card>
+            
+            <material:Card material:ShadowAssist.ShadowDepth="Depth1"
+                           Margin="0 0 0 10"
+                           DockPanel.Dock="Top">
+                <DockPanel LastChildFill="True">
                     <ListBox DockPanel.Dock="Top"
-                             ItemsSource="{Binding Bindings}"
-                             SelectedItem="{Binding SelectedBinding}"
+                             ItemsSource="{Binding Shortcuts}"
+                             SelectedItem="{Binding SelectedShortcut}"
                              Height="275"
                              VirtualizingStackPanel.IsVirtualizing="True"
                              VirtualizingStackPanel.VirtualizationMode="Standard"
@@ -383,7 +418,7 @@
                                                         <MultiBinding Converter="{StaticResource MultiObjectEqualToBooleanConverter}">
                                                             <MultiBinding.Bindings>
                                                                 <Binding RelativeSource="{RelativeSource Self}" Converter="{StaticResource ItemIndexInContainerConverter}"/>
-                                                                <Binding Path="DataContext.Bindings.Count" 
+                                                                <Binding Path="DataContext.Shortcuts.Count" 
                                                                          RelativeSource="{RelativeSource FindAncestor, AncestorType={x:Type UserControl}}"
                                                                          Converter="{StaticResource MathAddConverter}"
                                                                          ConverterParameter="-1"/>
@@ -435,7 +470,7 @@
                                     <DockPanel LastChildFill="True">
                                         <Button DockPanel.Dock="Right"   
                                                 Style="{StaticResource MaterialDesignFlatButton}"
-                                                Click="{s:Action RemoveGesture}"
+                                                Click="{s:Action RemoveShortcut}"
                                                 ToolTip="Remove"
                                                 material:RippleAssist.Feedback="{DynamicResource MaterialDesignErrorBrush}"
                                                 Foreground="{DynamicResource MaterialDesignErrorBrush}"
@@ -468,6 +503,7 @@
                                                    FontWeight="Medium"
                                                    Typography.Capitals="AllPetiteCaps"/>
 
+                                        <TextBlock Text="{Binding Converter={StaticResource DisplayNameConverter}}"/>
                                         <ContentControl Content="{Binding Gesture}"
                                                         VerticalAlignment="Center"/>
                                     </DockPanel>
@@ -489,7 +525,7 @@
                                FontWeight="Medium"/>
 
                     <ItemsControl DockPanel.Dock="Top"
-                                  ItemsSource="{Binding SelectedBinding.Configurations}"
+                                  ItemsSource="{Binding SelectedShortcut.Configurations}"
                                   Margin="5 5 0 0"
                                   Height="100"
                                   VirtualizingStackPanel.IsVirtualizing="True"

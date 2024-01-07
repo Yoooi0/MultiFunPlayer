@@ -1521,9 +1521,9 @@ internal sealed class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDispo
             s => s.WithLabel("Duration").WithStringFormat("{}{0:0.00}s"),
             (axis, value, duration) => SetAxisTransition(axis, value, duration));
 
-        s.RegisterAction<IAxisInputGesture, DeviceAxis>("Axis::Value::Drive",
+        s.RegisterAction<IAxisInputGestureData, DeviceAxis>("Axis::Value::Drive",
             s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All),
-            (gesture, axis) => SetAxisTransition(axis, gesture.Delta, gesture.DeltaTime, offset: true));
+            (data, axis) => SetAxisTransition(axis, data.ValueOrDelta, data.DeltaTime, offset: data.IsRelative));
         #endregion
 
         #region Axis::Sync
@@ -1808,9 +1808,9 @@ internal sealed class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDispo
             s => s.WithLabel("Value").WithStringFormat("{}{0}%"),
             (axis, value) => UpdateSettings(axis, s => s.MotionProviderBlend = Math.Clamp(value, 0, 100)));
 
-        s.RegisterAction<IAxisInputGesture, DeviceAxis>("Axis::MotionProviderBlend::Drive",
+        s.RegisterAction<IAxisInputGestureData, DeviceAxis>("Axis::MotionProviderBlend::Drive",
             s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All),
-            (gesture, axis) => UpdateSettings(axis, s => s.MotionProviderBlend = Math.Clamp(s.MotionProviderBlend + gesture.Delta * 100, 0, 100)));
+            (data, axis) => UpdateSettings(axis, s => s.MotionProviderBlend = Math.Clamp(data.ApplyTo(s.MotionProviderBlend, 100), 0, 100)));
         #endregion
 
         #region Axis::MotionProviderFillGaps
