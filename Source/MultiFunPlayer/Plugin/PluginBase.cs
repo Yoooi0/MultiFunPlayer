@@ -82,17 +82,6 @@ public abstract class PluginBase : PropertyChangedBase
         => ShortcutManager.RegisterAction(actionName, settings0, settings1, settings2, settings3, action);
 
     protected void UnregisterAction(string actionName) => ShortcutManager.UnregisterAction(actionName);
-
-    protected IShortcutActionConfiguration BindAction(IShortcut shortcut, string actionName, params object[] values)
-        => ShortcutManager.BindActionWithSettings(shortcut, actionName, values);
-    protected void UnbindAction(IShortcut shortcut, IShortcutActionConfiguration action)
-        => ShortcutManager.UnbindAction(shortcut, action);
-    protected IShortcut AddShortcut(IShortcut shortcut)
-        => ShortcutManager.AddShortcut(shortcut);
-    protected IShortcut AddShortcut<T>(IInputGestureDescriptor gesture) where T : IShortcut
-        => ShortcutManager.AddShortcut<T>(gesture);
-    protected bool RemoveShortcut(IShortcut shortcut)
-        => ShortcutManager.RemoveShortcut(shortcut);
     #endregion
 
     #region Property
