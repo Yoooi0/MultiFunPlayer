@@ -4,15 +4,15 @@ using System.ComponentModel;
 namespace MultiFunPlayer.Shortcut;
 
 [DisplayName("Button Long Press")]
-public sealed class LongPressShortcut(ISimpleInputGestureDescriptor gesture)
-    : AbstractShortcut<ISimpleInputGesture, ISimpleInputGestureData>(gesture)
+internal sealed class LongPressShortcut(IShortcutActionResolver actionResolver, ISimpleInputGestureDescriptor gesture)
+    : AbstractShortcut<ISimpleInputGesture, ISimpleInputGestureData>(actionResolver, gesture)
 {
     public int MinimumHoldDuration { get; set; } = 1000;
     public int MaximumHoldDuration { get; set; } = -1;
 
     private int _pressTime;
 
-    protected override ISimpleInputGestureData CreateData(ISimpleInputGesture gesture)
+    protected override void Update(ISimpleInputGesture gesture)
     {
         if (gesture.State && _pressTime == 0)
         {
@@ -24,13 +24,11 @@ public sealed class LongPressShortcut(ISimpleInputGestureDescriptor gesture)
 
             _pressTime = 0;
             if (duration < MinimumHoldDuration)
-                return null;
+                return;
             if (MaximumHoldDuration > MinimumHoldDuration && duration > MaximumHoldDuration)
-                return null;
+                return;
 
-            return SimpleInputGestureData.FromGesture(gesture);
+            Invoke(SimpleInputGestureData.FromGesture(gesture));
         }
-
-        return null;
     }
 }

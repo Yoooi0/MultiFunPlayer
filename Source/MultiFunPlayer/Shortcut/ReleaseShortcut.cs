@@ -4,20 +4,21 @@ using System.ComponentModel;
 namespace MultiFunPlayer.Shortcut;
 
 [DisplayName("Button Release")]
-public sealed class ReleaseShortcut(ISimpleInputGestureDescriptor gesture)
-    : AbstractShortcut<ISimpleInputGesture, ISimpleInputGestureData>(gesture)
+internal sealed class ReleaseShortcut(IShortcutActionResolver actionResolver, ISimpleInputGestureDescriptor gesture)
+    : AbstractShortcut<ISimpleInputGesture, ISimpleInputGestureData>(actionResolver, gesture)
 {
     private bool _lastPressed;
 
     public bool HandleRepeating { get; set; } = false;
 
-    protected override ISimpleInputGestureData CreateData(ISimpleInputGesture gesture)
+    protected override void Update(ISimpleInputGesture gesture)
     {
         var wasReleased = _lastPressed && !gesture.State;
         _lastPressed = gesture.State;
         if (gesture.State)
-            return null;
+            return;
 
-        return (HandleRepeating || wasReleased) ? SimpleInputGestureData.FromGesture(gesture) : null;
+        if (HandleRepeating || wasReleased)
+            Invoke(SimpleInputGestureData.FromGesture(gesture));
     }
 }

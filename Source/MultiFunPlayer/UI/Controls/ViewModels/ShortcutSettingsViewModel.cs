@@ -167,7 +167,7 @@ internal sealed class ShortcutSettingsViewModel : Screen, IHandle<SettingsMessag
         if (SelectedCapturedGesture == null)
             return;
 
-        var shortcut = (IShortcut)Activator.CreateInstance(SelectedShortcutType, [SelectedCapturedGesture]);
+        var shortcut = (IShortcut)Activator.CreateInstance(SelectedShortcutType, [_shortcutManager,  SelectedCapturedGesture]);
         SelectedShortcut = _shortcutManager.AddShortcut(shortcut);
     }
 

@@ -4,20 +4,21 @@ using System.ComponentModel;
 namespace MultiFunPlayer.Shortcut;
 
 [DisplayName("Button Press")]
-public sealed class PressShortcut(ISimpleInputGestureDescriptor gesture)
-    : AbstractShortcut<ISimpleInputGesture, ISimpleInputGestureData>(gesture)
+internal sealed class PressShortcut(IShortcutActionResolver actionResolver, ISimpleInputGestureDescriptor gesture)
+    : AbstractShortcut<ISimpleInputGesture, ISimpleInputGestureData>(actionResolver, gesture)
 {
     private bool _lastPressed;
 
     public bool HandleRepeating { get; set; } = false;
 
-    protected override ISimpleInputGestureData CreateData(ISimpleInputGesture gesture)
+    protected override void Update(ISimpleInputGesture gesture)
     {
         var wasPressed = !_lastPressed && gesture.State;
         _lastPressed = gesture.State;
         if (!gesture.State)
-            return null;
+            return;
 
-        return (HandleRepeating || wasPressed) ? SimpleInputGestureData.FromGesture(gesture) : null;
+        if (HandleRepeating || wasPressed)
+            Invoke(SimpleInputGestureData.FromGesture(gesture));
     }
 }

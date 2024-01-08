@@ -4,8 +4,8 @@ using System.ComponentModel;
 namespace MultiFunPlayer.Shortcut;
 
 [DisplayName("Button Click")]
-public sealed class ClickShortcut(ISimpleInputGestureDescriptor gesture)
-    : AbstractShortcut<ISimpleInputGesture, ISimpleInputGestureData>(gesture)
+internal sealed class ClickShortcut(IShortcutActionResolver actionResolver, ISimpleInputGestureDescriptor gesture)
+    : AbstractShortcut<ISimpleInputGesture, ISimpleInputGestureData>(actionResolver, gesture)
 {
     private int _stateCounter;
     private int _lastClickTime;
@@ -13,7 +13,7 @@ public sealed class ClickShortcut(ISimpleInputGestureDescriptor gesture)
     public int ClickCount { get; set; } = 2;
     public int MaximumClickInterval { get; set; } = 200;
 
-    protected override ISimpleInputGestureData CreateData(ISimpleInputGesture gesture)
+    protected override void Update(ISimpleInputGesture gesture)
     {
         if (gesture.State && _stateCounter == 0)
         {
@@ -22,19 +22,19 @@ public sealed class ClickShortcut(ISimpleInputGestureDescriptor gesture)
         else if (gesture.State && _stateCounter > 0)
         {
             if (_stateCounter % 2 == 1) //consecutive press
-                return null;
+                return;
 
             _stateCounter++;
             if (Environment.TickCount - _lastClickTime > MaximumClickInterval)
             {
                 ResetState();
-                return null;
+                return;
             }
         }
         else if (!gesture.State && _stateCounter > 0)
         {
             if (_stateCounter % 2 == 0) //consecutive release
-                return null;
+                return;
 
             _stateCounter++;
             _lastClickTime = Environment.TickCount;
@@ -43,10 +43,8 @@ public sealed class ClickShortcut(ISimpleInputGestureDescriptor gesture)
         if (_stateCounter == 2 * ClickCount)
         {
             ResetState();
-            return SimpleInputGestureData.FromGesture(gesture);
+            Invoke(SimpleInputGestureData.FromGesture(gesture));
         }
-
-        return null;
     }
 
     private void ResetState()

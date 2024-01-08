@@ -4,34 +4,36 @@ using System.ComponentModel;
 namespace MultiFunPlayer.Shortcut;
 
 [DisplayName("Axis Drive")]
-public sealed class DriveShortcut(IAxisInputGestureDescriptor gesture)
-    : AbstractShortcut<IAxisInputGesture, IAxisInputGestureData>(gesture)
+internal sealed class DriveShortcut(IShortcutActionResolver actionResolver, IAxisInputGestureDescriptor gesture)
+    : AbstractShortcut<IAxisInputGesture, IAxisInputGestureData>(actionResolver, gesture)
 {
     public DriveShortcutMode DriveMode { get; set; } = DriveShortcutMode.Relative;
     public bool Invert { get; set; } = false;
 
-    protected override IAxisInputGestureData CreateData(IAxisInputGesture gesture)
+    protected override void Update(IAxisInputGesture gesture)
     {
-        if (DriveMode == DriveShortcutMode.Relative)
-            return AxisInputGestureData.FromGestureRelative(gesture, invertDelta: Invert);
-        if (DriveMode == DriveShortcutMode.Absolute)
-            return AxisInputGestureData.FromGestureAbsolute(gesture, invertValue: Invert);
-
-        if (DriveMode == DriveShortcutMode.RelativeNegativeOnly)
-            return gesture.Delta < 0 ? AxisInputGestureData.FromGestureRelative(gesture, invertDelta: Invert) : null;
-        if (DriveMode == DriveShortcutMode.RelativePositiveOnly)
-            return gesture.Delta > 0 ? AxisInputGestureData.FromGestureRelative(gesture, invertDelta: Invert) : null;
-
-        if (DriveMode == DriveShortcutMode.RelativeJoystick)
+        switch (DriveMode)
         {
-            if (gesture.Value > 0.5 && gesture.Delta < 0)
-                return null;
-            if (gesture.Value < 0.5 && gesture.Delta > 0)
-                return null;
-            return AxisInputGestureData.FromGestureRelative(gesture, invertDelta: Invert);
+            case DriveShortcutMode.Relative:
+                Invoke(AxisInputGestureData.FromGestureRelative(gesture, invertDelta: Invert));
+                break;
+            case DriveShortcutMode.Absolute:
+                Invoke(AxisInputGestureData.FromGestureAbsolute(gesture, invertValue: Invert));
+                break;
+            case DriveShortcutMode.RelativeNegativeOnly when gesture.Delta < 0:
+                Invoke(AxisInputGestureData.FromGestureRelative(gesture, invertDelta: Invert));
+                break;
+            case DriveShortcutMode.RelativePositiveOnly when gesture.Delta > 0:
+                Invoke(AxisInputGestureData.FromGestureRelative(gesture, invertDelta: Invert));
+                break;
+            case DriveShortcutMode.RelativeJoystick:
+                if (gesture.Value > 0.5 && gesture.Delta < 0)
+                    break;
+                if (gesture.Value < 0.5 && gesture.Delta > 0)
+                    break;
+                Invoke(AxisInputGestureData.FromGestureRelative(gesture, invertDelta: Invert));
+                break;
         }
-
-        return null;
     }
 }
 public enum DriveShortcutMode

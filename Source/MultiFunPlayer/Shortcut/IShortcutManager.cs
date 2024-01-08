@@ -5,7 +5,13 @@ using NLog;
 
 namespace MultiFunPlayer.Shortcut;
 
-internal interface IShortcutManager : IDisposable
+internal interface IShortcutActionResolver
+{
+    IShortcutAction GetAction(string actionName);
+    bool TryGetAction(string actionName, out IShortcutAction action);
+}
+
+internal interface IShortcutManager : IShortcutActionResolver, IDisposable
 {
     bool HandleGestures { get; set; }
     IReadOnlyObservableConcurrentCollection<string> AvailableActions { get; }
@@ -136,6 +142,11 @@ internal sealed class ShortcutManager : IShortcutManager
     public void ClearShortcuts()
         => _shortcuts.Clear();
 
+    public IShortcutAction GetAction(string actionName)
+        => TryGetAction(actionName, out var action) ? action : null;
+    public bool TryGetAction(string actionName, out IShortcutAction action)
+        => _actions.TryGetValue(actionName, out action);
+
     public void RegisterAction(string actionName, Action action)
     {
         _actions.Add(actionName, new ShortcutAction(action));
@@ -254,7 +265,7 @@ internal sealed class ShortcutManager : IShortcutManager
 
     public bool ActionAcceptsGestureData(string actionName, Type gestureDataType)
     {
-        if (!_actions.TryGetValue(actionName, out var action))
+        if (!TryGetAction(actionName, out var action))
             return false;
 
         return action.AcceptsGestureData(gestureDataType);
@@ -271,58 +282,56 @@ internal sealed class ShortcutManager : IShortcutManager
     public void Invoke(string actionName, params object[] arguments)
     {
         Logger.Trace("Invoking \"{name}\" action [Arguments: \"{arguments}\"]", actionName, arguments);
-        if (_actions.TryGetValue(actionName, out var action))
+        if (TryGetAction(actionName, out var action))
             action.Invoke(arguments);
     }
 
     public void Invoke(IShortcutActionConfiguration actionConfiguration, IInputGestureData gestureData)
     {
         Logger.Trace(() => $"Invoking \"{actionConfiguration.Name}\" action [Configuration: \"{string.Join(", ", actionConfiguration.Settings.Select(s => s.ToString()))}\", Gesture: {gestureData}]");
-        if (!_actions.TryGetValue(actionConfiguration.Name, out var action))
-            return;
-
-        action.Invoke(actionConfiguration, gestureData);
+        if (TryGetAction(actionConfiguration.Name, out var action))
+            action.Invoke(actionConfiguration, gestureData);
     }
 
     public void Invoke(string actionName)
     {
         Logger.Trace("Invoking \"{0}\" action", actionName);
-        if (_actions.TryGetValue(actionName, out var action) && action is ShortcutAction concreteAction)
+        if (TryGetAction(actionName, out var action) && action is ShortcutAction concreteAction)
             concreteAction.Invoke();
     }
 
     public void Invoke<T0>(string actionName, T0 arg0)
     {
         Logger.Trace("Invoking \"{0}\" action [Arguments: \"{1}\"]", actionName, arg0);
-        if (_actions.TryGetValue(actionName, out var action) && action is ShortcutAction<T0> concreteAction)
+        if (TryGetAction(actionName, out var action) && action is ShortcutAction<T0> concreteAction)
             concreteAction.Invoke(arg0);
     }
 
     public void Invoke<T0, T1>(string actionName, T0 arg0, T1 arg1)
     {
         Logger.Trace("Invoking \"{0}\" action [Arguments: \"{1}, {2}\"]", actionName, arg0, arg1);
-        if (_actions.TryGetValue(actionName, out var action) && action is ShortcutAction<T0, T1> concreteAction)
+        if (TryGetAction(actionName, out var action) && action is ShortcutAction<T0, T1> concreteAction)
             concreteAction.Invoke(arg0, arg1);
     }
 
     public void Invoke<T0, T1, T2>(string actionName, T0 arg0, T1 arg1, T2 arg2)
     {
         Logger.Trace("Invoking \"{0}\" action [Arguments: \"{1}, {2}, {3}\"]", actionName, arg0, arg1, arg2);
-        if (_actions.TryGetValue(actionName, out var action) && action is ShortcutAction<T0, T1, T2> concreteAction)
+        if (TryGetAction(actionName, out var action) && action is ShortcutAction<T0, T1, T2> concreteAction)
             concreteAction.Invoke(arg0, arg1, arg2);
     }
 
     public void Invoke<T0, T1, T2, T3>(string actionName, T0 arg0, T1 arg1, T2 arg2, T3 arg3)
     {
         Logger.Trace("Invoking \"{0}\" action [Arguments: \"{1}, {2}, {3}, {4}\"]", actionName, arg0, arg1, arg2, arg3);
-        if (_actions.TryGetValue(actionName, out var action) && action is ShortcutAction<T0, T1, T2, T3> concreteAction)
+        if (TryGetAction(actionName, out var action) && action is ShortcutAction<T0, T1, T2, T3> concreteAction)
             concreteAction.Invoke(arg0, arg1, arg2, arg3);
     }
 
     public void Invoke<T0, T1, T2, T3, T4>(string actionName, T0 arg0, T1 arg1, T2 arg2, T3 arg3, T4 arg4)
     {
         Logger.Trace("Invoking \"{0}\" action [Arguments: \"{1}, {2}, {3}, {4}, {5}\"]", actionName, arg0, arg1, arg2, arg3, arg4);
-        if (_actions.TryGetValue(actionName, out var action) && action is ShortcutAction<T0, T1, T2, T3, T4> concreteAction)
+        if (TryGetAction(actionName, out var action) && action is ShortcutAction<T0, T1, T2, T3, T4> concreteAction)
             concreteAction.Invoke(arg0, arg1, arg2, arg3, arg4);
     }
 
@@ -332,20 +341,7 @@ internal sealed class ShortcutManager : IShortcutManager
             return;
 
         foreach (var shortcut in _shortcuts)
-        {
-            if (shortcut.Configurations.Count == 0)
-                continue;
-            if (!shortcut.Enabled)
-                continue;
-
-            var gestureData = shortcut.CreateData(gesture);
-            if (gestureData == null)
-                continue;
-
-            Logger.Trace("Invoking shortcut actions [Type: {0}, Gesture: {1}]", shortcut, shortcut.Gesture);
-            foreach (var configuration in shortcut.Configurations)
-                Invoke(configuration, gestureData);
-        }
+            shortcut.Update(gesture);
     }
 
     private void Dispose(bool disposing)

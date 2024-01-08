@@ -5,13 +5,13 @@ using System.Diagnostics;
 namespace MultiFunPlayer.Shortcut;
 
 [DisplayName("Axis Threshold")]
-public sealed class ThresholdShortcut(IAxisInputGestureDescriptor gesture)
-    : AbstractShortcut<IAxisInputGesture, ISimpleInputGestureData>(gesture)
+internal sealed class ThresholdShortcut(IShortcutActionResolver actionResolver, IAxisInputGestureDescriptor gesture)
+    : AbstractShortcut<IAxisInputGesture, ISimpleInputGestureData>(actionResolver, gesture)
 {
     public double Threshold { get; set; } = 0.5;
     public ThresholdTriggerMode TriggerMode { get; set; } = ThresholdTriggerMode.Rising;
 
-    protected override ISimpleInputGestureData CreateData(IAxisInputGesture gesture)
+    protected override void Update(IAxisInputGesture gesture)
     {
         var isRising = gesture.Delta > 0 && gesture.Value >= Threshold && gesture.Value - gesture.Delta < Threshold;
         var isFalling = gesture.Delta < 0 && gesture.Value <= Threshold && gesture.Value - gesture.Delta > Threshold;
@@ -25,9 +25,9 @@ public sealed class ThresholdShortcut(IAxisInputGestureDescriptor gesture)
         };
 
         if (!didTrigger)
-            return null;
+            return;
 
-        return SimpleInputGestureData.FromGesture(gesture);
+        Invoke(SimpleInputGestureData.FromGesture(gesture));
     }
 }
 
