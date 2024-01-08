@@ -44,6 +44,6 @@ public abstract partial class AbstractShortcut<TGesture, TData>(IInputGestureDes
 
     protected abstract TData CreateData(TGesture gesture);
 
-    IInputGestureData IShortcut.CreateData(IInputGesture inputGesture)
-        => inputGesture is TGesture input && input.Descriptor.Equals(Gesture) ? CreateData(input) : null;
+    IInputGestureData IShortcut.CreateData(IInputGesture gesture)
+        => gesture is TGesture input && input.Descriptor.Equals(Gesture) ? CreateData(input) : null;
 }
