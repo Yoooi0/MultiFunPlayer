@@ -7,6 +7,8 @@ namespace MultiFunPlayer.Settings.Converters;
 
 internal sealed class ShortcutConverter(IShortcutActionResolver actionResolver) : JsonConverter<IShortcut>
 {
+    public override bool CanWrite => false;
+
     public override IShortcut ReadJson(JsonReader reader, Type objectType, IShortcut existingValue, bool hasExistingValue, JsonSerializer serializer)
     {
         var o = JToken.ReadFrom(reader) as JObject;
@@ -20,5 +22,5 @@ internal sealed class ShortcutConverter(IShortcutActionResolver actionResolver) 
     }
 
     public override void WriteJson(JsonWriter writer, IShortcut value, JsonSerializer serializer)
-        => serializer.Serialize(writer, value);
+        => throw new NotImplementedException();
 }
