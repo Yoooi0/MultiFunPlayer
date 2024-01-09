@@ -19,6 +19,6 @@ internal sealed class PressShortcut(IShortcutActionResolver actionResolver, ISim
             return;
 
         if (HandleRepeating || wasPressed)
-            Invoke(SimpleInputGestureData.FromGesture(gesture));
+            Invoke(SimpleInputGestureData.Default);
     }
 }

@@ -28,7 +28,7 @@ internal sealed class LongPressShortcut(IShortcutActionResolver actionResolver, 
             if (MaximumHoldDuration > MinimumHoldDuration && duration > MaximumHoldDuration)
                 return;
 
-            Invoke(SimpleInputGestureData.FromGesture(gesture));
+            Invoke(SimpleInputGestureData.Default);
         }
     }
 }

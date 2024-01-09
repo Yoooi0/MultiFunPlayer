@@ -24,7 +24,7 @@ internal sealed class ClickShortcut(IShortcutActionResolver actionResolver, ISim
             _stateCounter++;
             ScheduleTask(MaximumClickInterval, () => {
                 if (_stateCounter == 2 * ClickCount)
-                    Invoke(SimpleInputGestureData.FromGesture(gesture));
+                    Invoke(SimpleInputGestureData.Default);
 
                 _stateCounter = 0;
             });

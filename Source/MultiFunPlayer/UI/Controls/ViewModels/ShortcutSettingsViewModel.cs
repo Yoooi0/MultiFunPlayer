@@ -105,8 +105,7 @@ internal sealed class ShortcutSettingsViewModel : Screen, IHandle<SettingsMessag
     {
         if (!IsCapturingGestures)
             return;
-        
-        //TODO: rework filtering to be dynamic
+
         switch (gesture)
         {
             case KeyboardGesture when !IsKeyboardKeysGestureEnabled:
@@ -267,7 +266,7 @@ internal sealed class ShortcutSettingsViewModel : Screen, IHandle<SettingsMessag
                 IsGamepadButtonGestureEnabled = isGamepadButtonGestureEnabled;
             if (settings.TryGetValue<bool>(nameof(IsTCodeButtonGestureEnabled), out var isTCodeButtonGestureEnabled))
                 IsTCodeButtonGestureEnabled = isTCodeButtonGestureEnabled;
-            
+
             if (settings.TryGetValue<List<IShortcut>>(nameof(Shortcuts), new JsonSerializerSettings() { TypeNameHandling = TypeNameHandling.Objects }, out var shortcuts))
             {
                 _shortcutManager.ClearShortcuts();
@@ -285,7 +284,7 @@ internal sealed class ShortcutSettingsViewModel : Screen, IHandle<SettingsMessag
             s => s.WithLabel("Target shortcut").WithItemsSource(Shortcuts, true),
             s => s.WithLabel("Enabled"),
             (shortcut, enabled) => shortcut.Enabled = enabled);
-        
+
         s.RegisterAction<IShortcut>("Shortcut::Enabled::Toggle",
             s => s.WithLabel("Target shortcut").WithItemsSource(Shortcuts, true),
             shortcut => shortcut.Enabled = !shortcut.Enabled);

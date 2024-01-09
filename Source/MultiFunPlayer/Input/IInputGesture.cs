@@ -1,4 +1,4 @@
-﻿namespace MultiFunPlayer.Input;
+namespace MultiFunPlayer.Input;
 
 public interface IInputGesture
 {
@@ -51,10 +51,7 @@ public interface IAxisInputGestureData : IInputGestureData
 
 public sealed class SimpleInputGestureData : ISimpleInputGestureData
 {
-    private static readonly SimpleInputGestureData _default = new();
-
-    public static SimpleInputGestureData FromGesture(ISimpleInputGesture gesture) => _default;
-    public static SimpleInputGestureData FromGesture(IAxisInputGesture gesture) => _default;
+    public static readonly SimpleInputGestureData Default = new();
 }
 
 public sealed class AxisInputGestureData(double value, double deltaTime, bool isAbsolute) : IAxisInputGestureData

@@ -27,7 +27,7 @@ public sealed class GamepadButtonGesture(GamepadButtonGestureDescriptor descript
     public int UserIndex => descriptor.UserIndex;
     public IEnumerable<GamepadVirtualKey> Buttons => descriptor.Buttons;
 
-    public override string ToString() => $"[Gamepad Button: {UserIndex}/{string.Join(", ", Buttons)}, State: {state}]";
+    public override string ToString() => $"[Gamepad Button: {UserIndex}/{string.Join(", ", Buttons)}, State: {State}]";
 
     internal static GamepadButtonGesture Create(int userIndex, IEnumerable<GamepadVirtualKey> buttons, bool state) => new(new(userIndex, buttons), state);
 }

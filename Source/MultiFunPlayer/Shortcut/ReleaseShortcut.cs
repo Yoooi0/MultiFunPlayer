@@ -19,6 +19,6 @@ internal sealed class ReleaseShortcut(IShortcutActionResolver actionResolver, IS
             return;
 
         if (HandleRepeating || wasReleased)
-            Invoke(SimpleInputGestureData.FromGesture(gesture));
+            Invoke(SimpleInputGestureData.Default);
     }
 }

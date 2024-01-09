@@ -27,7 +27,7 @@ internal sealed class ThresholdShortcut(IShortcutActionResolver actionResolver, 
         if (!didTrigger)
             return;
 
-        Invoke(SimpleInputGestureData.FromGesture(gesture));
+        Invoke(SimpleInputGestureData.Default);
     }
 }
 

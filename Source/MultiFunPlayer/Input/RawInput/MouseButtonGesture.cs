@@ -11,7 +11,7 @@ public sealed class MouseButtonGesture(MouseButtonGestureDescriptor descriptor, 
 {
     public MouseButton Button => descriptor.Button;
 
-    public override string ToString() => $"[Mouse Button: {Button}, State: {state}]";
+    public override string ToString() => $"[Mouse Button: {Button}, State: {State}]";
 
     public static MouseButtonGesture Create(MouseButton button, bool state) => new(new(button), state);
 }

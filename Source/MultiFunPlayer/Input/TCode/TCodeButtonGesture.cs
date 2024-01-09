@@ -9,7 +9,7 @@ public sealed class TCodeButtonGesture(TCodeButtonGestureDescriptor descriptor, 
 {
     public string Button => descriptor.Button;
 
-    public override string ToString() => $"[TCode Button: {Button}, State: {state}]";
+    public override string ToString() => $"[TCode Button: {Button}, State: {State}]";
 
     public static TCodeButtonGesture Create(string button, bool state) => new(new(button), state);
 }
