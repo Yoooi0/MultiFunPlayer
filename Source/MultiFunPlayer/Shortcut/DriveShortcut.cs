@@ -1,5 +1,6 @@
-﻿using MultiFunPlayer.Input;
+using MultiFunPlayer.Input;
 using System.ComponentModel;
+using System.Text;
 
 namespace MultiFunPlayer.Shortcut;
 
@@ -34,6 +35,13 @@ internal sealed class DriveShortcut(IShortcutActionResolver actionResolver, IAxi
                 Invoke(AxisInputGestureData.FromGestureRelative(gesture, invertDelta: Invert));
                 break;
         }
+    }
+
+    protected override void PrintMembers(StringBuilder builder)
+    {
+        base.PrintMembers(builder);
+        PrintProperty(builder, () => DriveMode);
+        PrintProperty(builder, () => Invert);
     }
 }
 public enum DriveShortcutMode

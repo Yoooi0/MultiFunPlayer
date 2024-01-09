@@ -2,6 +2,11 @@ using MultiFunPlayer.Common;
 using MultiFunPlayer.Input;
 using Newtonsoft.Json;
 using PropertyChanged;
+using Stylet;
+using System.ComponentModel;
+using System.Linq.Expressions;
+using System.Reflection;
+using System.Text;
 
 namespace MultiFunPlayer.Shortcut;
 
@@ -81,5 +86,30 @@ internal abstract partial class AbstractShortcut<TGesture, TData>(IShortcutActio
             lock(SyncRoot)
                 Update(input);
         }
+    }
+
+    public override string ToString()
+    {
+        var stringBuilder = new StringBuilder();
+        stringBuilder.Append(GetType().GetCustomAttribute<DisplayNameAttribute>(inherit: false).DisplayName);
+        stringBuilder.Append(" [");
+        PrintMembers(stringBuilder);
+
+        stringBuilder.Length -= 2;
+        stringBuilder.Append(']');
+        return stringBuilder.ToString();
+    }
+
+    protected virtual void PrintMembers(StringBuilder builder)
+    {
+        PrintProperty(builder, () => Gesture);
+    }
+
+    protected void PrintProperty<T>(StringBuilder builder, Expression<Func<T>> property)
+    {
+        builder.Append(property.NameForProperty());
+        builder.Append(": ");
+        builder.Append(property.Compile()());
+        builder.Append(", ");
     }
 }

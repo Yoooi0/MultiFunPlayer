@@ -1,5 +1,6 @@
 ﻿using MultiFunPlayer.Input;
 using System.ComponentModel;
+using System.Text;
 
 namespace MultiFunPlayer.Shortcut;
 
@@ -29,5 +30,12 @@ internal sealed class ClickShortcut(IShortcutActionResolver actionResolver, ISim
                 _stateCounter = 0;
             });
         }
+    }
+
+    protected override void PrintMembers(StringBuilder builder)
+    {
+        base.PrintMembers(builder);
+        PrintProperty(builder, () => ClickCount);
+        PrintProperty(builder, () => MaximumClickInterval);
     }
 }

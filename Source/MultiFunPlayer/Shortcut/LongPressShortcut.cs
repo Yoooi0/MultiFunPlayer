@@ -1,5 +1,6 @@
 ﻿using MultiFunPlayer.Input;
 using System.ComponentModel;
+using System.Text;
 
 namespace MultiFunPlayer.Shortcut;
 
@@ -30,5 +31,12 @@ internal sealed class LongPressShortcut(IShortcutActionResolver actionResolver, 
 
             Invoke(SimpleInputGestureData.Default);
         }
+    }
+
+    protected override void PrintMembers(StringBuilder builder)
+    {
+        base.PrintMembers(builder);
+        PrintProperty(builder, () => MinimumHoldDuration);
+        PrintProperty(builder, () => MaximumHoldDuration);
     }
 }

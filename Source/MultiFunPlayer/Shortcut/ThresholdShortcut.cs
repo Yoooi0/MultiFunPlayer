@@ -1,6 +1,8 @@
 ﻿using MultiFunPlayer.Input;
+using System;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Text;
 
 namespace MultiFunPlayer.Shortcut;
 
@@ -28,6 +30,13 @@ internal sealed class ThresholdShortcut(IShortcutActionResolver actionResolver, 
             return;
 
         Invoke(SimpleInputGestureData.Default);
+    }
+
+    protected override void PrintMembers(StringBuilder builder)
+    {
+        base.PrintMembers(builder);
+        PrintProperty(builder, () => Threshold);
+        PrintProperty(builder, () => TriggerMode);
     }
 }
 

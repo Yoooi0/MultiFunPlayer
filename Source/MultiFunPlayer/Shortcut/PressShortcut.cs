@@ -1,5 +1,6 @@
 ﻿using MultiFunPlayer.Input;
 using System.ComponentModel;
+using System.Text;
 
 namespace MultiFunPlayer.Shortcut;
 
@@ -20,5 +21,11 @@ internal sealed class PressShortcut(IShortcutActionResolver actionResolver, ISim
 
         if (HandleRepeating || wasPressed)
             Invoke(SimpleInputGestureData.Default);
+    }
+
+    protected override void PrintMembers(StringBuilder builder)
+    {
+        base.PrintMembers(builder);
+        PrintProperty(builder, () => HandleRepeating);
     }
 }
