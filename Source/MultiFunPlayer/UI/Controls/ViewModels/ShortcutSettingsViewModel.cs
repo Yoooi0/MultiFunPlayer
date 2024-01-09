@@ -278,7 +278,6 @@ internal sealed class ShortcutSettingsViewModel : Screen, IHandle<SettingsMessag
 
     private void RegisterActions(IShortcutManager s)
     {
-        //TODO: custom to string, or use by index
         #region Shortcut::Enabled
         s.RegisterAction<IShortcut, bool>("Shortcut::Enabled::Set",
             s => s.WithLabel("Target shortcut").WithItemsSource(Shortcuts, true),

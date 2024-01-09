@@ -39,6 +39,7 @@ internal abstract partial class AbstractShortcut<TGesture, TData>(IShortcutActio
 {
     private Timer _taskTimer;
 
+    [JsonIgnore]
     protected object SyncRoot { get; } = new();
 
     [JsonProperty(TypeNameHandling = TypeNameHandling.Objects)]
