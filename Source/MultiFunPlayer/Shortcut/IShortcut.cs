@@ -1,7 +1,6 @@
 using MultiFunPlayer.Common;
 using MultiFunPlayer.Input;
 using Newtonsoft.Json;
-using NLog;
 using PropertyChanged;
 
 namespace MultiFunPlayer.Shortcut;
@@ -33,8 +32,6 @@ internal interface IShortcut
 internal abstract partial class AbstractShortcut<TGesture, TData>(IShortcutActionResolver actionResolver, IInputGestureDescriptor gesture)
     : IShortcut where TGesture : IInputGesture where TData : IInputGestureData
 {
-    protected static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-
     [JsonProperty(TypeNameHandling = TypeNameHandling.Objects)]
     public IInputGestureDescriptor Gesture { get; } = gesture;
 
@@ -45,13 +42,11 @@ internal abstract partial class AbstractShortcut<TGesture, TData>(IShortcutActio
     [JsonIgnore]
     public Type OutputDataType { get; } = typeof(TData);
 
-
     protected void Invoke(TData gestureData)
     {
         if (Configurations.Count == 0)
             return;
 
-        Logger.Trace("Invoking shortcut actions [Gesture: {0}]", Gesture);
         foreach (var configuration in Configurations)
             if (actionResolver.TryGetAction(configuration.Name, out var action))
                 action.Invoke(configuration, gestureData);

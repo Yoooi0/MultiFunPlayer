@@ -20,7 +20,7 @@ public sealed class KeyboardGesture(KeyboardGestureDescriptor descriptor, bool s
 {
     public IReadOnlyCollection<Key> Keys => descriptor.Keys;
 
-    public override string ToString() => $"[Keyboard Keys: {string.Join(", ", Keys)}]";
+    public override string ToString() => $"[Keyboard Keys: {string.Join(", ", Keys)}, State: {state}]";
 
     public static KeyboardGesture Create(IEnumerable<Key> keys, bool state) => new(new(keys), state);
 }
