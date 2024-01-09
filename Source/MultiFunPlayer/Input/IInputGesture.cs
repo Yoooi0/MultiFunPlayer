@@ -1,23 +1,23 @@
 namespace MultiFunPlayer.Input;
 
-public interface IInputGesture
+internal interface IInputGesture
 {
     IInputGestureDescriptor Descriptor { get; }
 }
 
-public interface ISimpleInputGesture : IInputGesture
+internal interface ISimpleInputGesture : IInputGesture
 {
     bool State { get; }
 }
 
-public interface IAxisInputGesture : IInputGesture
+internal interface IAxisInputGesture : IInputGesture
 {
     public double Value { get; }
     public double Delta { get; }
     public double DeltaTime { get; }
 }
 
-public abstract class AbstractSimpleInputGesture(ISimpleInputGestureDescriptor descriptor, bool state) : ISimpleInputGesture
+internal abstract class AbstractSimpleInputGesture(ISimpleInputGestureDescriptor descriptor, bool state) : ISimpleInputGesture
 {
     public IInputGestureDescriptor Descriptor { get; } = descriptor;
     public bool State { get; } = state;
@@ -26,7 +26,7 @@ public abstract class AbstractSimpleInputGesture(ISimpleInputGestureDescriptor d
     public override int GetHashCode() => HashCode.Combine(Descriptor);
 }
 
-public abstract class AbstractAxisInputGesture(IAxisInputGestureDescriptor descriptor, double value, double delta, double deltaTime) : IAxisInputGesture
+internal abstract class AbstractAxisInputGesture(IAxisInputGestureDescriptor descriptor, double value, double delta, double deltaTime) : IAxisInputGesture
 {
     public IInputGestureDescriptor Descriptor { get; } = descriptor;
     public double Value { get; } = value;
@@ -49,12 +49,12 @@ public interface IAxisInputGestureData : IInputGestureData
     public double ApplyTo(double value, double deltaModifier = 1);
 }
 
-public sealed class SimpleInputGestureData : ISimpleInputGestureData
+internal sealed class SimpleInputGestureData : ISimpleInputGestureData
 {
     public static readonly SimpleInputGestureData Default = new();
 }
 
-public sealed class AxisInputGestureData(double value, double deltaTime, bool isAbsolute) : IAxisInputGestureData
+internal sealed class AxisInputGestureData(double value, double deltaTime, bool isAbsolute) : IAxisInputGestureData
 {
     public double ValueOrDelta { get; } = value;
     public double DeltaTime { get; } = deltaTime;

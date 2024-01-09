@@ -1,11 +1,11 @@
 ﻿namespace MultiFunPlayer.Input.TCode;
 
-public record TCodeAxisGestureDescriptor(string Axis) : IAxisInputGestureDescriptor
+internal sealed record TCodeAxisGestureDescriptor(string Axis) : IAxisInputGestureDescriptor
 {
     public override string ToString() => $"[TCode Axis: {Axis}]";
 }
 
-public class TCodeAxisGesture(TCodeAxisGestureDescriptor descriptor, double value, double delta, double deltaTime) : IAxisInputGesture
+internal sealed class TCodeAxisGesture(TCodeAxisGestureDescriptor descriptor, double value, double delta, double deltaTime) : IAxisInputGesture
 {
     public double Value { get; } = value;
     public double Delta { get; } = delta;
