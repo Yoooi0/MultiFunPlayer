@@ -32,6 +32,10 @@ internal interface IShortcut
 internal abstract partial class AbstractShortcut<TGesture, TData>(IShortcutActionResolver actionResolver, IInputGestureDescriptor gesture)
     : IShortcut where TGesture : IInputGesture where TData : IInputGestureData
 {
+    private Timer _taskTimer;
+
+    protected object SyncRoot { get; } = new();
+
     [JsonProperty(TypeNameHandling = TypeNameHandling.Objects)]
     public IInputGestureDescriptor Gesture { get; } = gesture;
 
@@ -52,11 +56,30 @@ internal abstract partial class AbstractShortcut<TGesture, TData>(IShortcutActio
                 action.Invoke(configuration, gestureData);
     }
 
+    protected void ScheduleTask(int milisecondsDelay, Action action)
+        => ScheduleTask(TimeSpan.FromMilliseconds(milisecondsDelay), action);
+    protected void ScheduleTask(TimeSpan delay, Action action)
+    {
+        CancelTask();
+        _taskTimer = new Timer(TimerCallback, action, delay, Timeout.InfiniteTimeSpan);
+    }
+
+    protected void CancelTask() => _taskTimer?.Dispose();
+
+    private void TimerCallback(object state)
+    {
+        lock(SyncRoot)
+            ((Action)state)();
+    }
+
     protected abstract void Update(TGesture gesture);
 
     void IShortcut.Update(IInputGesture gesture)
     {
         if (Enabled && gesture is TGesture input && input.Descriptor.Equals(Gesture))
-            Update(input);
+        {
+            lock(SyncRoot)
+                Update(input);
+        }
     }
 }
