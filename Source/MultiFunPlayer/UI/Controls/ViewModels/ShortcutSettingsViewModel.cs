@@ -10,6 +10,7 @@ using Newtonsoft.Json.Linq;
 using NLog;
 using Stylet;
 using System.ComponentModel;
+using System.Reflection;
 using System.Threading.Channels;
 using System.Windows;
 using System.Windows.Data;
@@ -59,7 +60,9 @@ internal sealed class ShortcutSettingsViewModel : Screen, IHandle<SettingsMessag
         eventAggregator.Subscribe(this);
 
         CapturedGestures = [];
-        ShortcutTypes = ReflectionUtils.FindImplementations<IShortcut>().ToList();
+        ShortcutTypes = ReflectionUtils.FindImplementations<IShortcut>()
+                                       .OrderBy(x => x.GetCustomAttribute<DisplayNameAttribute>().DisplayName)
+                                       .ToList();
 
         AvailableActionsView = CollectionViewSource.GetDefaultView(AvailableActions);
         AvailableActionsView.Filter = o =>
