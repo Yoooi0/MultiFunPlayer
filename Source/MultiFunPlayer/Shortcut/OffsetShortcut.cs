@@ -33,7 +33,7 @@ internal sealed class OffsetShortcut(IShortcutActionResolver actionResolver, IAx
             Repeat(TimeSpan.FromSeconds(DeltaTime), InvokeOffset);
     }
 
-    private void InvokeOffset() => Invoke(new AxisInputGestureData(_offset, DeltaTime, false));
+    private void InvokeOffset() => Invoke(AxisInputGestureData.Relative(_offset, DeltaTime));
 
     protected override void PrintMembers(StringBuilder builder)
     {
