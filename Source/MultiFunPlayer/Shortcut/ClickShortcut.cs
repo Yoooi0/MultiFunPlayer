@@ -1,6 +1,5 @@
 ﻿using MultiFunPlayer.Input;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Text;
 
 namespace MultiFunPlayer.Shortcut;
