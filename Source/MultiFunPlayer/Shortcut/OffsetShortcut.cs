@@ -13,7 +13,6 @@ internal sealed class OffsetShortcut(IShortcutActionResolver actionResolver, IAx
     private double _offset;
 
     public OffsetShortcutMode OffsetMode { get; set; } = OffsetShortcutMode.AbsoluteJoystick;
-    public double Deadzone { get; set; } = 0.05;
     public double Speed { get; set; } = 0.1;
     public bool Invert { get; set; } = false;
 
@@ -22,9 +21,9 @@ internal sealed class OffsetShortcut(IShortcutActionResolver actionResolver, IAx
         var sign = Invert ? -1 : 1;
         _offset = (OffsetMode, gesture.Value) switch
         {
-            (OffsetShortcutMode.Absolute, double v) when v >= Deadzone => MathUtils.Map(gesture.Value, Deadzone, 1, 0, 1) * Speed * sign,
-            (OffsetShortcutMode.AbsoluteJoystick, double v) when v >= 0.5 + Deadzone => MathUtils.Map(v, 0.5 + Deadzone, 1, 0, 1) * Speed * sign,
-            (OffsetShortcutMode.AbsoluteJoystick, double v) when v <= 0.5 - Deadzone => MathUtils.Map(v, 0.5 - Deadzone, 0, 0, -1) * Speed * sign,
+            (OffsetShortcutMode.Absolute, double v) => gesture.Value * Speed * sign,
+            (OffsetShortcutMode.AbsoluteJoystick, double v) when v >= 0.5 => MathUtils.Map(v, 0.5, 1, 0, 1) * Speed * sign,
+            (OffsetShortcutMode.AbsoluteJoystick, double v) when v <= 0.5 => MathUtils.Map(v, 0.5, 0, 0, -1) * Speed * sign,
             _ => 0
         };
 
@@ -40,7 +39,6 @@ internal sealed class OffsetShortcut(IShortcutActionResolver actionResolver, IAx
     {
         base.PrintMembers(builder);
         PrintProperty(builder, () => OffsetMode);
-        PrintProperty(builder, () => Deadzone);
         PrintProperty(builder, () => Speed);
         PrintProperty(builder, () => Invert);
     }
