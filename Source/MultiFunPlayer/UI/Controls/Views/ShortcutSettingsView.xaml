@@ -1,4 +1,4 @@
-﻿<UserControl x:Class="MultiFunPlayer.UI.Controls.Views.ShortcutSettingsView"
+<UserControl x:Class="MultiFunPlayer.UI.Controls.Views.ShortcutSettingsView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:metro="http://metro.mahapps.com/winfx/xaml/controls"
              xmlns:material="http://materialdesigninxaml.net/winfx/xaml/themes"
@@ -722,12 +722,30 @@
                                             <StackPanel Orientation="Vertical"
                                                         Margin="5 0 0 0"
                                                         Height="24">
-                                                <TextBlock Text="{Binding Converter={StaticResource DisplayNameConverter}}"
-                                                           VerticalAlignment="Center"
-                                                           FontSize="11"
-                                                           FontWeight="Medium"
-                                                           Typography.Capitals="AllSmallCaps"
-                                                           Margin="0 -2 0 0"/>
+                                                <StackPanel Orientation="Horizontal"
+                                                            Margin="0 -2 0 0">
+                                                    <TextBlock Text="{Binding Converter={StaticResource DisplayNameConverter}}"
+                                                               VerticalAlignment="Center"
+                                                               FontSize="11"
+                                                               FontWeight="Medium"
+                                                               Typography.Capitals="AllSmallCaps"/>
+                                                    
+                                                    <TextBlock Text=":"
+                                                               Visibility="{Binding Name, Converter={StaticResource NullableToVisibilityConverter}}"
+                                                               VerticalAlignment="Center"
+                                                               FontSize="11"
+                                                               FontWeight="Bold"
+                                                               Typography.Capitals="AllSmallCaps"
+                                                               Margin="0 0 5 0"/>
+
+                                                    <TextBlock Text="{Binding Name}"
+                                                               Visibility="{Binding Name, Converter={StaticResource NullableToVisibilityConverter}}"
+                                                               VerticalAlignment="Center"
+                                                               FontSize="11"
+                                                               FontWeight="Bold"
+                                                               Typography.Capitals="AllSmallCaps"/>
+                                                </StackPanel>
+                                                
                                                 <ContentControl Content="{Binding Gesture}"
                                                                 VerticalAlignment="Center"/>
                                             </StackPanel>
@@ -762,6 +780,20 @@
                                        DockPanel.Dock="Top"
                                        Typography.Capitals="AllSmallCaps"
                                        FontWeight="Medium"/>
+
+                        <DockPanel DockPanel.Dock="Top"
+                                   LastChildFill="True"
+                                   Margin="5 0 5 0">
+                            <TextBlock Text="Name:"
+                                   DockPanel.Dock="Left"
+                                   Margin="0 0 10 0"
+                                   FontWeight="Bold"
+                                   VerticalAlignment="Center"
+                                   FontSize="12"/>
+                        
+                            <TextBox Text="{Binding SelectedShortcut.Name}"
+                                     DockPanel.Dock="Top"/>
+                        </DockPanel>
 
                         <ContentControl Content="{Binding SelectedShortcut}"
                                         Margin="5"/>

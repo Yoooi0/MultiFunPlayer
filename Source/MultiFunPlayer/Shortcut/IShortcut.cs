@@ -13,6 +13,7 @@ namespace MultiFunPlayer.Shortcut;
 
 internal interface IShortcut : IDisposable
 {
+    string Name { get; }
     IInputGestureDescriptor Gesture { get; }
     ObservableConcurrentCollection<IShortcutActionConfiguration> Configurations { get; }
     Type OutputDataType { get; }
@@ -43,6 +44,8 @@ internal abstract partial class AbstractShortcut<TGesture, TData>(IShortcutActio
 
     [JsonIgnore]
     protected object SyncRoot { get; } = new();
+
+    public string Name { get; set; } = null;
 
     [JsonProperty(TypeNameHandling = TypeNameHandling.Objects)]
     public IInputGestureDescriptor Gesture { get; } = gesture;

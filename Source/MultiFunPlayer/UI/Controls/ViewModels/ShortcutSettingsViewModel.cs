@@ -282,14 +282,22 @@ internal sealed class ShortcutSettingsViewModel : Screen, IHandle<SettingsMessag
     private void RegisterActions(IShortcutManager s)
     {
         #region Shortcut::Enabled
-        s.RegisterAction<IShortcut, bool>("Shortcut::Enabled::Set",
-            s => s.WithLabel("Target shortcut").WithItemsSource(Shortcuts, true),
-            s => s.WithLabel("Enabled"),
-            (shortcut, enabled) => shortcut.Enabled = enabled);
+        void UpdateSettings(string shortcutName, Action<IShortcut> callback)
+        {
+            var shortcut = Shortcuts.FirstOrDefault(x => string.Equals(x.Name, shortcutName, StringComparison.Ordinal));
+            if (shortcut == null)
+                return;
+            callback(shortcut);
+        }
 
-        s.RegisterAction<IShortcut>("Shortcut::Enabled::Toggle",
-            s => s.WithLabel("Target shortcut").WithItemsSource(Shortcuts, true),
-            shortcut => shortcut.Enabled = !shortcut.Enabled);
+        s.RegisterAction<string, bool>("Shortcut::Enabled::Set",
+            s => s.WithLabel("Target shortcut name"),
+            s => s.WithLabel("Enabled"),
+            (shortcutName, enabled) => UpdateSettings(shortcutName, s => s.Enabled = enabled));
+
+        s.RegisterAction<string>("Shortcut::Enabled::Toggle",
+            s => s.WithLabel("Target shortcut name"),
+            shortcutName => UpdateSettings(shortcutName, s => s.Enabled = !s.Enabled));
         #endregion
     }
 
