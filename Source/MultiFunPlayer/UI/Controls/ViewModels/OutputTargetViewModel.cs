@@ -1,6 +1,6 @@
 using MultiFunPlayer.Common;
-using MultiFunPlayer.Input;
 using MultiFunPlayer.OutputTarget;
+using MultiFunPlayer.Shortcut;
 using Newtonsoft.Json.Linq;
 using NLog;
 using Stylet;

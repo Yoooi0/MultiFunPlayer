@@ -1,6 +1,6 @@
 ﻿namespace MultiFunPlayer.Input.XInput;
 
-public enum GamepadAxis
+internal enum GamepadAxis
 {
     LeftTrigger,
     RightTrigger,
@@ -10,12 +10,12 @@ public enum GamepadAxis
     RightThumbY
 }
 
-public sealed record GamepadAxisGestureDescriptor(int UserIndex, GamepadAxis Axis) : IAxisInputGestureDescriptor
+internal sealed record GamepadAxisGestureDescriptor(int UserIndex, GamepadAxis Axis) : IAxisInputGestureDescriptor
 {
     public override string ToString() => $"[Gamepad Axis: {UserIndex}/{Axis}]";
 }
 
-public sealed class GamepadAxisGesture(GamepadAxisGestureDescriptor descriptor, double value, double delta, double deltaTime) : AbstractAxisInputGesture(descriptor, value, delta, deltaTime)
+internal sealed class GamepadAxisGesture(GamepadAxisGestureDescriptor descriptor, double value, double delta, double deltaTime) : AbstractAxisInputGesture(descriptor, value, delta, deltaTime)
 {
     public int UserIndex => descriptor.UserIndex;
     public GamepadAxis Axis => descriptor.Axis;

@@ -1,6 +1,6 @@
 ﻿using MultiFunPlayer.Common;
-using MultiFunPlayer.Input;
 using MultiFunPlayer.MediaSource;
+using MultiFunPlayer.Shortcut;
 using Newtonsoft.Json.Linq;
 using Stylet;
 

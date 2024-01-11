@@ -11,6 +11,7 @@ using MultiFunPlayer.Property;
 using MultiFunPlayer.Script.Repository;
 using MultiFunPlayer.Script.Repository.ViewModels;
 using MultiFunPlayer.Settings;
+using MultiFunPlayer.Shortcut;
 using MultiFunPlayer.UI;
 using MultiFunPlayer.UI.Controls.ViewModels;
 using Newtonsoft.Json;
@@ -63,8 +64,7 @@ internal sealed class Bootstrapper : Bootstrapper<RootViewModel>
 
         builder.Bind<IStyletLoggerManager>().To<StyletLoggerManager>().InSingletonScope();
         builder.Bind<IOutputTargetFactory>().To<OutputTargetFactory>().InSingletonScope();
-        builder.Bind<IShortcutManager>().To<ShortcutManager>().InSingletonScope();
-        builder.Bind<IShortcutBinder>().To<ShortcutBinder>().InSingletonScope();
+        builder.Bind<IShortcutManager>().And<IShortcutActionResolver>().To<ShortcutManager>().InSingletonScope();
         builder.Bind<IInputProcessorManager>().To<InputProcessorManager>().InSingletonScope();
         builder.Bind<IPropertyManager>().To<PropertyManager>().InSingletonScope();
         builder.Bind<IMotionProviderFactory>().To<MotionProviderFactory>().InSingletonScope();
@@ -86,6 +86,12 @@ internal sealed class Bootstrapper : Bootstrapper<RootViewModel>
         var dirty = ConfigureLoging(settings);
 
         var logger = LogManager.GetLogger(nameof(MultiFunPlayer));
+        var shortcutManager = Container.Get<IShortcutManager>();
+        shortcutManager.RegisterAction<LogLevel, string>("Debug::Log",
+            s => s.WithLabel("Log level").WithDefaultValue(LogLevel.Info).WithItemsSource(LogLevel.AllLoggingLevels),
+            s => s.WithLabel("Message"),
+            logger.Log);
+
         AppDomain.CurrentDomain.UnhandledException += (s, e) =>
         {
             logger.Fatal(e.ExceptionObject as Exception);

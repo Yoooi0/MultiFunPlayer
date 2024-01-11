@@ -1,4 +1,4 @@
-﻿using MultiFunPlayer.Input;
+﻿using MultiFunPlayer.Shortcut;
 using System.Collections;
 using System.Windows;
 using System.Windows.Controls;
