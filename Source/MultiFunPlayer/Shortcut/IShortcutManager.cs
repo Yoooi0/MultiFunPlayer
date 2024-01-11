@@ -347,6 +347,9 @@ internal sealed class ShortcutManager : IShortcutManager
     private void Dispose(bool disposing)
     {
         _inputManager.OnGesture -= HandleGesture;
+
+        foreach(var shortcut in _shortcuts)
+            shortcut.Dispose();
     }
 
     public void Dispose()

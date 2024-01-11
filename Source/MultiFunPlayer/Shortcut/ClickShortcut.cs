@@ -1,5 +1,6 @@
 ﻿using MultiFunPlayer.Input;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Text;
 
 namespace MultiFunPlayer.Shortcut;
@@ -18,12 +19,13 @@ internal sealed class ClickShortcut(IShortcutActionResolver actionResolver, ISim
         if (gesture.State && _stateCounter % 2 == 0)
         {
             _stateCounter++;
-            CancelTask();
+            CancelDelay();
         }
         else if (!gesture.State && _stateCounter % 2 == 1)
         {
             _stateCounter++;
-            ScheduleTask(MaximumClickInterval, () => {
+
+            Delay(MaximumClickInterval, () => {
                 if (_stateCounter == 2 * ClickCount)
                     Invoke(SimpleInputGestureData.Default);
 
