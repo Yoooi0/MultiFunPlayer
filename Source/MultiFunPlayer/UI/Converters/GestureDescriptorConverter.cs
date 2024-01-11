@@ -37,11 +37,7 @@ internal sealed class GestureDescriptorToBrushConverter : IValueConverter
 internal sealed class GestureDescriptorToPackIconConverter : IValueConverter
 {
     public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
-    {
-        if (value is string || value == null)
-            return null;
-
-        return value switch
+        => value switch
         {
             KeyboardGestureDescriptor => PackIconKind.KeyboardOutline,
             MouseAxisGestureDescriptor => PackIconKind.MouseMoveVertical,
@@ -50,9 +46,9 @@ internal sealed class GestureDescriptorToPackIconConverter : IValueConverter
             TCodeButtonGestureDescriptor => PackIconKind.AlphaTBoxOutline,
             GamepadAxisGestureDescriptor => PackIconKind.MicrosoftXboxController,
             GamepadButtonGestureDescriptor => PackIconKind.MicrosoftXboxController,
+            null or string => PackIconKind.Abacus,
             _ => throw new NotImplementedException()
         };
-    }
 
     public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
         => throw new NotImplementedException();
