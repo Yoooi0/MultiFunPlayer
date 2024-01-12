@@ -26,8 +26,7 @@
                     <Grid>
                         <AdornerDecorator>
                             <Grid>
-                                <Border Background="Transparent" 
-                                        CornerRadius="3"
+                                <Border Background="Transparent"
                                         x:Name="border"/>
                                 <ProgressBar x:Name="ProgressBar"
                                              Style="{DynamicResource MaterialDesignLinearProgressBar}"
@@ -105,8 +104,7 @@
                     <Grid>
                         <AdornerDecorator>
                             <Grid>
-                                <Border Background="Transparent" 
-                                        CornerRadius="3"
+                                <Border Background="Transparent"
                                         x:Name="border"/>
                             </Grid>
                         </AdornerDecorator>
@@ -192,8 +190,7 @@
 
                         <AdornerDecorator>
                             <Grid>
-                                <Border Background="Transparent" 
-                                        CornerRadius="3"
+                                <Border Background="Transparent"
                                         x:Name="border"/>
                             </Grid>
                         </AdornerDecorator>

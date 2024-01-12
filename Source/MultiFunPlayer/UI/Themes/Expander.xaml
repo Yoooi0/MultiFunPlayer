@@ -194,7 +194,6 @@
                                                 DockPanel.Dock="Left"/>
                             </DockPanel>
 
-
                             <Border Name="ContentSite"
                                     Visibility="Collapsed">
                                 <Border.LayoutTransform>

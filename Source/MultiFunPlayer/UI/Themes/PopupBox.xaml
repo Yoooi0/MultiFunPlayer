@@ -50,8 +50,7 @@
                     <Grid>
                         <AdornerDecorator>
                             <Grid>
-                                <Border Background="Transparent" 
-                                        CornerRadius="3"
+                                <Border Background="Transparent"
                                         x:Name="border"/>
                             </Grid>
                         </AdornerDecorator>
