@@ -10,8 +10,7 @@
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800"
              x:ClassModifier="internal">
-    <material:Card UniformCornerRadius="3" 
-                   material:ShadowAssist.ShadowDepth="Depth1"
+    <material:Card material:ShadowAssist.ShadowDepth="Depth1"
                    s:View.ActionTarget="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}">
         <material:Card.Background>
             <DrawingBrush Stretch="None" TileMode="Tile" Viewport="4 0 20 20" ViewportUnits="Absolute">
@@ -42,8 +41,7 @@
                                     Placement="Center"
                                     VerticalOffset="-40"
                                     AllowsTransparency="True">
-                <material:Card UniformCornerRadius="3" 
-                               material:ShadowAssist.ShadowDepth="Depth2"
+                <material:Card material:ShadowAssist.ShadowDepth="Depth2"
                                Padding="5" Margin="10">
                     <ContentControl Content="{Binding ToolTipContent, Mode=OneWay, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}">
                         <ContentControl.Resources>
