@@ -12,7 +12,6 @@
              x:ClassModifier="internal">
     <material:Card UniformCornerRadius="3" 
                    material:ShadowAssist.ShadowDepth="Depth1"
-                   ClipContent="True"
                    s:View.ActionTarget="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}">
         <material:Card.Background>
             <DrawingBrush Stretch="None" TileMode="Tile" Viewport="4 0 20 20" ViewportUnits="Absolute">

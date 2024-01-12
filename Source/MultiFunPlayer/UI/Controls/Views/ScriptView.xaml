@@ -306,7 +306,7 @@
                                                     </material:Card>
                                                 </material:PopupBox>
 
-                                                <material:Card material:ShadowAssist.ShadowDepth="Depth1" Margin="0 0 0 10" ClipContent="True">
+                                                <material:Card material:ShadowAssist.ShadowDepth="Depth1" Margin="0 0 0 10">
                                                     <ItemsControl DockPanel.Dock="Bottom"
                                                               ItemsSource="{Binding MediaPathModifiers}">
                                                         <ItemsControl.Template>

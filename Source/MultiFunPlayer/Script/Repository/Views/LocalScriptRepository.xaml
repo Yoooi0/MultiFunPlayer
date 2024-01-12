@@ -28,7 +28,7 @@
                    FontWeight="Bold"
                    Typography.Capitals="AllSmallCaps" Margin="0 0 0 10"/>
 
-        <material:Card material:ShadowAssist.ShadowDepth="Depth1" Margin="0 0 0 10" ClipContent="True">
+        <material:Card material:ShadowAssist.ShadowDepth="Depth1" Margin="0 0 0 10">
             <ScrollViewer HorizontalScrollBarVisibility="Disabled"
                           VerticalScrollBarVisibility="Auto"
                           MaxHeight="300">
