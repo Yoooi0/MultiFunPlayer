@@ -1,4 +1,4 @@
-﻿using MultiFunPlayer.Input;
+﻿using MultiFunPlayer.Shortcut;
 using Stylet;
 
 namespace MultiFunPlayer.UI.Dialogs.ViewModels;

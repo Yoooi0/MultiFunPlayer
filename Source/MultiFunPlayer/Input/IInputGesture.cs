@@ -1,27 +1,32 @@
 ﻿namespace MultiFunPlayer.Input;
 
-public interface IInputGesture
+internal interface IInputGesture
 {
     IInputGestureDescriptor Descriptor { get; }
 }
 
-public interface ISimpleInputGesture : IInputGesture { }
-public interface IAxisInputGesture : IInputGesture
+internal interface ISimpleInputGesture : IInputGesture
 {
-    double Value { get; }
-    double Delta { get; }
-    double DeltaTime { get; }
+    bool State { get; }
 }
 
-public abstract class AbstractSimpleInputGesture(ISimpleInputGestureDescriptor descriptor) : ISimpleInputGesture
+internal interface IAxisInputGesture : IInputGesture
+{
+    public double Value { get; }
+    public double Delta { get; }
+    public double DeltaTime { get; }
+}
+
+internal abstract class AbstractSimpleInputGesture(ISimpleInputGestureDescriptor descriptor, bool state) : ISimpleInputGesture
 {
     public IInputGestureDescriptor Descriptor { get; } = descriptor;
+    public bool State { get; } = state;
 
     public override bool Equals(object obj) => obj is ISimpleInputGesture gesture && Descriptor.Equals(gesture.Descriptor);
     public override int GetHashCode() => HashCode.Combine(Descriptor);
 }
 
-public abstract class AbstractAxisInputGesture(IAxisInputGestureDescriptor descriptor, double value, double delta, double deltaTime) : IAxisInputGesture
+internal abstract class AbstractAxisInputGesture(IAxisInputGestureDescriptor descriptor, double value, double delta, double deltaTime) : IAxisInputGesture
 {
     public IInputGestureDescriptor Descriptor { get; } = descriptor;
     public double Value { get; } = value;

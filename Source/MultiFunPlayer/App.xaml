@@ -41,6 +41,7 @@
                 <ResourceDictionary Source="pack://application:,,,/UI/Themes/Color.xaml" />
 
                 <ResourceDictionary Source="pack://application:,,,/UI/Themes/Button.xaml" />
+                <ResourceDictionary Source="pack://application:,,,/UI/Themes/Card.xaml" />
                 <ResourceDictionary Source="pack://application:,,,/UI/Themes/Expander.xaml" />
                 <ResourceDictionary Source="pack://application:,,,/UI/Themes/FocusVisual.xaml" />
                 <ResourceDictionary Source="pack://application:,,,/UI/Themes/Menu.xaml" />

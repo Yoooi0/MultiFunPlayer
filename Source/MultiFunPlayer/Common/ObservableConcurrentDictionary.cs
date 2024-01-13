@@ -6,7 +6,7 @@ using System.ComponentModel;
 
 namespace MultiFunPlayer.Common;
 
-public interface IReadOnlyObservableConcurrentDictionary<TKey, TValue> : IReadOnlyDictionary<TKey, TValue>, INotifyCollectionChanged, INotifyPropertyChanged { }
+public interface IReadOnlyObservableConcurrentDictionary<TKey, TValue> : IReadOnlyDictionary<TKey, TValue>, INotifyCollectionChanged, INotifyPropertyChanged;
 
 [DoNotNotify]
 public sealed class ObservableConcurrentDictionary<TKey, TValue> : IDictionary<TKey, TValue>, IReadOnlyObservableConcurrentDictionary<TKey, TValue>

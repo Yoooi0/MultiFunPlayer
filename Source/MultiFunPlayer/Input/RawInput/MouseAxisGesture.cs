@@ -1,6 +1,6 @@
 ﻿namespace MultiFunPlayer.Input.RawInput;
 
-public enum MouseAxis
+internal enum MouseAxis
 {
     X,
     Y,
@@ -8,12 +8,12 @@ public enum MouseAxis
     MouseHorizontalWheel
 }
 
-public sealed record MouseAxisGestureDescriptor(MouseAxis Axis) : IAxisInputGestureDescriptor
+internal sealed record MouseAxisGestureDescriptor(MouseAxis Axis) : IAxisInputGestureDescriptor
 {
     public override string ToString() => $"[Mouse Axis: {Axis}]";
 }
 
-public sealed class MouseAxisGesture(MouseAxisGestureDescriptor descriptor, double value, double delta, double deltaTime) : AbstractAxisInputGesture(descriptor, value, delta, deltaTime)
+internal sealed class MouseAxisGesture(MouseAxisGestureDescriptor descriptor, double value, double delta, double deltaTime) : AbstractAxisInputGesture(descriptor, value, delta, deltaTime)
 {
     public MouseAxis Axis => descriptor.Axis;
 

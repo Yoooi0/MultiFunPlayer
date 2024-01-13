@@ -1,4 +1,4 @@
-﻿namespace MultiFunPlayer.Input;
+﻿namespace MultiFunPlayer.Shortcut;
 
 public interface IShortcutSettingBuilder
 {

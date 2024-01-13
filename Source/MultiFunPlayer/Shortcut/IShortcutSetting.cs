@@ -1,7 +1,7 @@
 ﻿using PropertyChanged;
 using System.Collections;
 
-namespace MultiFunPlayer.Input;
+namespace MultiFunPlayer.Shortcut;
 
 public interface IShortcutSetting
 {

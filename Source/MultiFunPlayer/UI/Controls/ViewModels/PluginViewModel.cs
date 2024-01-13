@@ -1,6 +1,6 @@
 ﻿using MultiFunPlayer.Common;
-using MultiFunPlayer.Input;
 using MultiFunPlayer.Plugin;
+using MultiFunPlayer.Shortcut;
 using Stylet;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;

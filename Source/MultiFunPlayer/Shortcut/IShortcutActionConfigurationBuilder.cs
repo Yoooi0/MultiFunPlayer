@@ -1,4 +1,4 @@
-﻿namespace MultiFunPlayer.Input;
+﻿namespace MultiFunPlayer.Shortcut;
 
 internal interface IShortcutActionConfigurationBuilder
 {

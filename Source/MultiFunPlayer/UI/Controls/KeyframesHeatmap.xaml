@@ -24,9 +24,7 @@
                                            Margin="5"/>
         </local:AutoClosingPopup>
 
-        <material:Card UniformCornerRadius="3" 
-                       ClipContent="True"
-                       material:ShadowAssist.ShadowDepth="Depth1">
+        <material:Card material:ShadowAssist.ShadowDepth="Depth1">
             <material:Card.Background>
                 <DrawingBrush Stretch="None" TileMode="Tile" Viewport="4 8 20 20" ViewportUnits="Absolute">
                     <DrawingBrush.Drawing>

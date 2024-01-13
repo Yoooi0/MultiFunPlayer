@@ -1,5 +1,6 @@
 ﻿using MultiFunPlayer.Common;
 using MultiFunPlayer.Input;
+using MultiFunPlayer.Shortcut;
 using Newtonsoft.Json;
 using PropertyChanged;
 using Stylet;
@@ -63,9 +64,9 @@ internal abstract class AbstractMotionProvider : Screen, IMotionProvider
             s => s.WithLabel("Value").WithStringFormat("{}{0}%"),
             (axis, value) => UpdateProperty(axis, p => p.Speed = Math.Max(0.01, value / 100)));
 
-        s.RegisterAction<IAxisInputGesture, DeviceAxis>($"MotionProvider::{name}::Speed::Drive",
+        s.RegisterAction<IAxisInputGestureData, DeviceAxis>($"MotionProvider::{name}::Speed::Drive",
             s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All),
-            (gesture, axis) => UpdateProperty(axis, p => p.Speed = Math.Max(0.01, p.Speed + gesture.Delta)));
+            (data, axis) => UpdateProperty(axis, p => p.Speed = Math.Max(0.01, data.ApplyTo(p.Speed))));
         #endregion
 
         #region MotionProvider::Minimum
@@ -79,9 +80,9 @@ internal abstract class AbstractMotionProvider : Screen, IMotionProvider
             s => s.WithLabel("Value").WithStringFormat("{}{0}%"),
             (axis, value) => UpdateProperty(axis, p => p.Minimum = Math.Clamp(value, 0, 100)));
 
-        s.RegisterAction<IAxisInputGesture, DeviceAxis>($"MotionProvider::{name}::Minimum::Drive",
+        s.RegisterAction<IAxisInputGestureData, DeviceAxis>($"MotionProvider::{name}::Minimum::Drive",
             s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All),
-            (gesture, axis) => UpdateProperty(axis, p => p.Minimum = Math.Clamp(p.Minimum + gesture.Delta, 0, 100)));
+            (gesture, axis) => UpdateProperty(axis, p => p.Minimum = Math.Clamp(gesture.ApplyTo(p.Minimum), 0, 100)));
         #endregion
 
         #region MotionProvider::Maximum
@@ -95,9 +96,9 @@ internal abstract class AbstractMotionProvider : Screen, IMotionProvider
             s => s.WithLabel("Value").WithStringFormat("{}{0}%"),
             (axis, value) => UpdateProperty(axis, p => p.Maximum = Math.Clamp(value, 0, 100)));
 
-        s.RegisterAction<IAxisInputGesture, DeviceAxis>($"MotionProvider::{name}::Maximum::Drive",
+        s.RegisterAction<IAxisInputGestureData, DeviceAxis>($"MotionProvider::{name}::Maximum::Drive",
             s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All),
-            (gesture, axis) => UpdateProperty(axis, p => p.Maximum = Math.Clamp(p.Maximum + gesture.Delta, 0, 100)));
+            (gesture, axis) => UpdateProperty(axis, p => p.Maximum = Math.Clamp(gesture.ApplyTo(p.Maximum), 0, 100)));
         #endregion
     }
 }

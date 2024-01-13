@@ -8,7 +8,6 @@ internal sealed class TCodeInputProcessor : IInputProcessor
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-    private readonly Dictionary<string, bool> _buttonStates;
     private readonly Dictionary<string, int> _unsignedAxisStates;
     private readonly Dictionary<string, int> _signedAxisStates;
 
@@ -16,7 +15,6 @@ internal sealed class TCodeInputProcessor : IInputProcessor
 
     public TCodeInputProcessor()
     {
-        _buttonStates = [];
         _unsignedAxisStates = [];
         _signedAxisStates = [];
     }
@@ -37,10 +35,7 @@ internal sealed class TCodeInputProcessor : IInputProcessor
         {
             var button = match.Groups["button"].Value;
             var state = int.Parse(match.Groups["state"].Value) == 1;
-            if (!state && _buttonStates.TryGetValue(button, out var lastState) && lastState)
-                HandleGesture(TCodeButtonGesture.Create(button));
-
-            _buttonStates[button] = state;
+            HandleGesture(TCodeButtonGesture.Create(button, state));
         }
 
         void CreateAxisGesture(Dictionary<string, int> states, Match match, double minValue, double maxValue)

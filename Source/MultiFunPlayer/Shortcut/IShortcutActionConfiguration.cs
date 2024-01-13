@@ -1,10 +1,11 @@
-﻿using MultiFunPlayer.Settings;
+﻿using MultiFunPlayer.Input;
+using MultiFunPlayer.Settings;
 using NLog;
 using PropertyChanged;
 using Stylet;
 using System.ComponentModel;
 
-namespace MultiFunPlayer.Input;
+namespace MultiFunPlayer.Shortcut;
 
 public interface IShortcutActionConfiguration
 {
@@ -14,7 +15,7 @@ public interface IShortcutActionConfiguration
     void Populate(IEnumerable<object> values);
     void Populate(IEnumerable<TypedValue> values);
 
-    object[] GetActionParams(IInputGesture gesture = null);
+    object[] GetActionParams(IInputGestureData gestureData = null);
 }
 
 public sealed class ShortcutActionConfiguration : PropertyChangedBase, IShortcutActionConfiguration
@@ -76,13 +77,13 @@ public sealed class ShortcutActionConfiguration : PropertyChangedBase, IShortcut
         }
     }
 
-    public object[] GetActionParams(IInputGesture gesture = null)
+    public object[] GetActionParams(IInputGestureData gestureData = null)
     {
-        _valuesBuffer ??= new object[gesture == null ? _settings.Count : _settings.Count + 1];
+        _valuesBuffer ??= new object[gestureData == null ? _settings.Count : _settings.Count + 1];
 
         var i = 0;
-        if (gesture != null)
-            _valuesBuffer[i++] = gesture;
+        if (gestureData != null)
+            _valuesBuffer[i++] = gestureData;
         foreach (var setting in _settings)
             _valuesBuffer[i++] = setting.Value;
 

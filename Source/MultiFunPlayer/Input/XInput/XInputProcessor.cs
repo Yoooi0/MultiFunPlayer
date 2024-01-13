@@ -76,14 +76,15 @@ internal sealed class XInputProcessor : IInputProcessor
     {
         Logger.Trace("User: {0}, Keystroke: {1}, Flags: {2}", userIndex, keystroke.VirtualKey, keystroke.Flags);
 
-        if (keystroke.Flags == KeyStrokeFlags.KeyDown)
+        if (keystroke.Flags == KeyStrokeFlags.KeyDown || keystroke.Flags == KeyStrokeFlags.Repeat)
         {
             _pressedKeys.Add(keystroke.VirtualKey);
+            HandleGesture(GamepadButtonGesture.Create(userIndex, _pressedKeys, true));
         }
         else if (keystroke.Flags == KeyStrokeFlags.KeyUp)
         {
             if (_pressedKeys.Count > 0)
-                HandleGesture(GamepadButtonGesture.Create(userIndex, _pressedKeys));
+                HandleGesture(GamepadButtonGesture.Create(userIndex, _pressedKeys, false));
             _pressedKeys.Clear();
         }
     }

@@ -7,7 +7,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:metro="http://metro.mahapps.com/winfx/xaml/controls" 
              xmlns:ui="clr-namespace:MultiFunPlayer.UI"
-             xmlns:input="clr-namespace:MultiFunPlayer.Input"
+             xmlns:shortcut="clr-namespace:MultiFunPlayer.Shortcut"
              xmlns:controls="clr-namespace:MultiFunPlayer.UI.Controls"
              xmlns:common="clr-namespace:MultiFunPlayer.Common"
              mc:Ignorable="d" 
@@ -34,46 +34,46 @@
             <ItemsControl.Resources>
                 <ui:ShortcutSettingTemplateSelector x:Key="ShortcutSettingTemplateSelector"/>
 
-                <DataTemplate x:Key="BooleanTemplate" DataType="{x:Type input:IShortcutSetting}">
+                <DataTemplate x:Key="BooleanTemplate" DataType="{x:Type shortcut:IShortcutSetting}">
                     <DockPanel>
                         <CheckBox IsChecked="{Binding Value}" />
                     </DockPanel>
                 </DataTemplate>
-                <DataTemplate x:Key="Int32Template" DataType="{x:Type input:IShortcutSetting}">
+                <DataTemplate x:Key="Int32Template" DataType="{x:Type shortcut:IShortcutSetting}">
                     <DockPanel>
                         <metro:NumericUpDown Value="{Binding Value}" StringFormat="{Binding StringFormat}"/>
                     </DockPanel>
                 </DataTemplate>
-                <DataTemplate x:Key="SingleTemplate" DataType="{x:Type input:IShortcutSetting}">
+                <DataTemplate x:Key="SingleTemplate" DataType="{x:Type shortcut:IShortcutSetting}">
                     <DockPanel>
                         <metro:NumericUpDown Value="{Binding Value}" StringFormat="{Binding StringFormat}"/>
                     </DockPanel>
                 </DataTemplate>
-                <DataTemplate x:Key="DoubleTemplate" DataType="{x:Type input:IShortcutSetting}">
+                <DataTemplate x:Key="DoubleTemplate" DataType="{x:Type shortcut:IShortcutSetting}">
                     <DockPanel>
                         <metro:NumericUpDown Value="{Binding Value}" StringFormat="{Binding StringFormat}"/>
                     </DockPanel>
                 </DataTemplate>
-                <DataTemplate x:Key="StringTemplate" DataType="{x:Type input:IShortcutSetting}">
+                <DataTemplate x:Key="StringTemplate" DataType="{x:Type shortcut:IShortcutSetting}">
                     <DockPanel>
                         <TextBox Text="{Binding Value}"
                                  material:TextFieldAssist.HasClearButton="True" />
                     </DockPanel>
                 </DataTemplate>
-                <DataTemplate x:Key="OneOfDefaultTemplate" DataType="{x:Type input:IOneOfShortcutSetting}">
+                <DataTemplate x:Key="OneOfDefaultTemplate" DataType="{x:Type shortcut:IOneOfShortcutSetting}">
                     <DockPanel>
                         <ComboBox SelectedItem="{Binding Value}" 
                                   ItemsSource="{Binding ItemsSource}"
                                   material:TextFieldAssist.HasClearButton="True" />
                     </DockPanel>
                 </DataTemplate>
-                <DataTemplate x:Key="SmartLimitPointsTemplate" DataType="{x:Type input:IShortcutSetting}">
+                <DataTemplate x:Key="SmartLimitPointsTemplate" DataType="{x:Type shortcut:IShortcutSetting}">
                     <DockPanel>
                         <controls:SmartLimitPreview Points="{Binding Value}"
                                                     HorizontalAlignment="Center"/>
                     </DockPanel>
                 </DataTemplate>
-                <DataTemplate x:Key="CustomCurveMotionProviderPointsTemplate" DataType="{x:Type input:IShortcutSetting}">
+                <DataTemplate x:Key="CustomCurveMotionProviderPointsTemplate" DataType="{x:Type shortcut:IShortcutSetting}">
                     <StackPanel>
                         <DockPanel LastChildFill="True">
                             <TextBlock Text="Interpolation type:" 
@@ -109,7 +109,7 @@
                 </DataTemplate>
             </ItemsControl.Resources>
             <ItemsControl.ItemTemplate>
-                <DataTemplate DataType="{x:Type input:IShortcutSetting}">
+                <DataTemplate DataType="{x:Type shortcut:IShortcutSetting}">
                     <DockPanel LastChildFill="True">
                         <TextBlock Text="{Binding Label, StringFormat={}{0}:}"
                                    Visibility="{Binding Label, Converter={StaticResource NullableToVisibilityConverter}}"

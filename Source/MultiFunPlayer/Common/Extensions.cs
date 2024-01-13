@@ -103,8 +103,10 @@ public static class JsonExtensions
 
     public static Type GetTypeProperty(this JObject o)
     {
-        var (_, valueTypeName) = ReflectionUtils.SplitFullyQualifiedTypeName(o["$type"].ToString());
-        return Type.GetType(valueTypeName);
+        var (assemblyName, valueTypeName) = ReflectionUtils.SplitFullyQualifiedTypeName(o["$type"].ToString());
+        if (assemblyName == null)
+            return Type.GetType(valueTypeName);
+        return Type.GetType($"{valueTypeName}, {assemblyName}");
     }
 
     public static bool RenameProperty(this JObject o, string oldName, string newName)
