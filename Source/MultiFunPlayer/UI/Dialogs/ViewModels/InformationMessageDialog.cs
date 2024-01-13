@@ -1,5 +1,4 @@
 ﻿using MaterialDesignThemes.Wpf;
-using MultiFunPlayer.Common;
 using Stylet;
 using System.Diagnostics;
 

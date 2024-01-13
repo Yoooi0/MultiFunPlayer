@@ -5,7 +5,6 @@ using MultiFunPlayer.UI.Dialogs.ViewModels;
 using Newtonsoft.Json.Linq;
 using Stylet;
 using StyletIoC;
-using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Input;
 
