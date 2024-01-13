@@ -7,7 +7,7 @@ namespace MultiFunPlayer.UI.Dialogs.ViewModels;
 
 internal sealed class InformationMessageDialog(bool showCheckbox) : Screen
 {
-    public string VersionText => $"v{ReflectionUtils.AssemblyInformationalVersion}";
+    public string VersionText => $"v{GitVersionInformation.InformationalVersion}";
     public bool ShowCheckbox { get; } = showCheckbox;
     public bool DontShowAgain { get; set; }
 

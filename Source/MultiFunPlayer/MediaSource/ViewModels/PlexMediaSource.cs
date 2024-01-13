@@ -432,7 +432,7 @@ internal sealed class PlexMediaSource(IShortcutManager shortcutManager, IEventAg
         headers.TryAddWithoutValidation("X-Plex-Client-Identifier", ClientIdentifier);
         headers.TryAddWithoutValidation("X-Plex-Provides", "controller");
         headers.TryAddWithoutValidation("X-Plex-Product", nameof(MultiFunPlayer));
-        headers.TryAddWithoutValidation("X-Plex-Version", ReflectionUtils.AssemblyVersion.ToString());
+        headers.TryAddWithoutValidation("X-Plex-Version", GitVersionInformation.MajorMinorPatch);
         headers.TryAddWithoutValidation("X-Plex-Sync-Version", "2");
         headers.TryAddWithoutValidation("X-Plex-Features", "external-media");
         headers.TryAddWithoutValidation("X-Plex-Token", PlexToken);

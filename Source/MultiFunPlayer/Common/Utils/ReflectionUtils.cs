@@ -5,15 +5,9 @@ namespace MultiFunPlayer.Common;
 
 public static class ReflectionUtils
 {
-    public static Assembly Assembly => Assembly.GetEntryAssembly();
-    public static AssemblyName AssemblyName => Assembly.GetName();
-    public static Version AssemblyVersion => AssemblyName.Version;
-    public static string AssemblyFileVersion => Assembly.GetCustomAttribute<AssemblyFileVersionAttribute>().Version;
-    public static string AssemblyInformationalVersion => Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion;
-
     public static IEnumerable<Type> FindImplementations<T>() => FindImplementations(typeof(T));
     public static IEnumerable<Type> FindImplementations(Type type)
-        => Assembly.GetTypes().Where(t => t.IsClass && !t.IsAbstract && IsAssignableFromOrSubclass(type, t));
+        => Assembly.GetEntryAssembly().GetTypes().Where(t => t.IsClass && !t.IsAbstract && IsAssignableFromOrSubclass(type, t));
 
     public static bool IsAssignableFromOrSubclass(Type baseType, Type otherType)
         => baseType.IsInterface
