@@ -108,11 +108,7 @@ internal sealed class InformationViewModel : Screen
                     updateContent.Inlines.Add(releaseContent);
                 }
 
-                updateLabel = new Span() { BaselineAlignment = BaselineAlignment.Center };
-                updateLabel.Inlines.Add(new Run("Update: ") { FontWeight = FontWeights.Bold });
-                updateLabel.Inlines.Add(new Run($"v{GitVersionInformation.MajorMinorPatch}"));
-                updateLabel.Inlines.Add(new InlineUIContainer(new PackIcon() { Kind = PackIconKind.ArrowRightThin }));
-                updateLabel.Inlines.Add(CreateHyperlink(latestRelease["tag_name"].ToString(), updateUri));
+                updateLabel = CreateUpdateLabel($"v{GitVersionInformation.MajorMinorPatch}", $"v{latestRelease["tag_name"]}", updateUri);
             });
 
             Update = new UpdateData(updateUri, updateLabel, updateContent);
@@ -156,11 +152,7 @@ internal sealed class InformationViewModel : Screen
                     updateContent.Inlines.Add(commitContent);
                 }
 
-                updateLabel = new Span() { BaselineAlignment = BaselineAlignment.Center };
-                updateLabel.Inlines.Add(new Run("Update: ") { FontWeight = FontWeights.Bold });
-                updateLabel.Inlines.Add(new Run(GitVersionInformation.ShortSha));
-                updateLabel.Inlines.Add(new InlineUIContainer(new PackIcon() { Kind = PackIconKind.ArrowRightThin }));
-                updateLabel.Inlines.Add(CreateHyperlink(runSha[..7], updateUri));
+                updateLabel = CreateUpdateLabel(GitVersionInformation.ShortSha, runSha[..7], updateUri);
             });
 
             Update = new UpdateData(updateUri, updateLabel, updateContent);
@@ -171,6 +163,16 @@ internal sealed class InformationViewModel : Screen
             var hyperlink = new Hyperlink(new Run(text)) { NavigateUri = navigateUri };
             hyperlink.RequestNavigate += OnExternalNavigate;
             return hyperlink;
+        }
+
+        Span CreateUpdateLabel(string fromText, string toText, Uri navigateUri)
+        {
+            var span = new Span() { BaselineAlignment = BaselineAlignment.Center };
+            span.Inlines.Add(new Run("Update: ") { FontWeight = FontWeights.Bold });
+            span.Inlines.Add(new Run(fromText));
+            span.Inlines.Add(new InlineUIContainer(new PackIcon() { Kind = PackIconKind.ArrowRightThin }));
+            span.Inlines.Add(CreateHyperlink(toText, navigateUri));
+            return span;
         }
 
         static async Task<T> GitHubApiGet<T>(HttpClient client, Uri uri) where T : JToken
