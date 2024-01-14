@@ -17,6 +17,7 @@ internal sealed class RootViewModel : Conductor<IScreen>.Collection.AllActive, I
     [Inject] public OutputTargetViewModel OutputTarget { get; set; }
     [Inject] public SettingsViewModel Settings { get; set; }
     [Inject] public PluginViewModel Plugin { get; set; }
+    [Inject] public InformationViewModel Information { get; set; }
 
     public bool DisablePopup { get; set; }
     public int WindowHeight { get; set; }
@@ -43,7 +44,7 @@ internal sealed class RootViewModel : Conductor<IScreen>.Collection.AllActive, I
         base.OnActivate();
     }
 
-    public void OnInformationClick() => _ = DialogHelper.ShowOnUIThreadAsync(new InformationMessageDialog(showCheckbox: false), "RootDialog");
+    public void OnInformationClick() => _ = DialogHelper.ShowOnUIThreadAsync(Information, "RootDialog");
     public void OnSettingsClick() => _ = DialogHelper.ShowOnUIThreadAsync(Settings, "RootDialog");
     public void OnPluginClick() => _ = DialogHelper.ShowOnUIThreadAsync(Plugin, "RootDialog");
 
@@ -93,11 +94,8 @@ internal sealed class RootViewModel : Conductor<IScreen>.Collection.AllActive, I
             {
                 Execute.PostToUIThread(async () =>
                 {
-                    var result = await DialogHelper.ShowAsync(new InformationMessageDialog(showCheckbox: true), "RootDialog");
-                    if (result is not bool disablePopup)
-                        return;
-
-                    DisablePopup = disablePopup;
+                    await DialogHelper.ShowAsync(Information, "RootDialog");
+                    DisablePopup = true;
                 });
             }
         }
