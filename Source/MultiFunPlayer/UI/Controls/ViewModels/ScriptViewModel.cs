@@ -722,14 +722,14 @@ internal sealed class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDispo
     private double GetAxisPosition(DeviceAxis axis) => MediaPosition - GlobalOffset - AxisSettings[axis].Offset;
     public double GetValue(DeviceAxis axis) => MathUtils.Clamp01(AxisStates[axis].Value);
 
-    public (DeviceAxis, DeviceAxisScriptSnapshot) WaitForSnapshotAny(IEnumerable<DeviceAxis> axes, CancellationToken cancellationToken)
+    public (DeviceAxis, DeviceAxisScriptSnapshot) WaitForSnapshotAny(IReadOnlyList<DeviceAxis> axes, CancellationToken cancellationToken)
     {
         axes ??= DeviceAxis.All;
         var (index, snapshot) = BroadcastEvent<DeviceAxisScriptSnapshot>.WaitAny(axes.Select(a => AxisStates[a].ScriptSnapshotEvent).ToArray(), cancellationToken);
         return (axes.ElementAt(index), snapshot);
     }
 
-    public async ValueTask<(DeviceAxis, DeviceAxisScriptSnapshot)> WaitForSnapshotAnyAsync(IEnumerable<DeviceAxis> axes, CancellationToken cancellationToken)
+    public async ValueTask<(DeviceAxis, DeviceAxisScriptSnapshot)> WaitForSnapshotAnyAsync(IReadOnlyList<DeviceAxis> axes, CancellationToken cancellationToken)
     {
         axes ??= DeviceAxis.All;
         var (index, snapshot) = await BroadcastEvent<DeviceAxisScriptSnapshot>.WaitAnyAsync(axes.Select(a => AxisStates[a].ScriptSnapshotEvent).ToArray(), cancellationToken);

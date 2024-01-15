@@ -115,9 +115,9 @@ internal abstract class AbstractOutputTarget : Screen, IOutputTarget
         }
     }
 
-    protected (DeviceAxis, DeviceAxisScriptSnapshot) WaitForSnapshotAny(IEnumerable<DeviceAxis> axes, CancellationToken cancellationToken)
+    protected (DeviceAxis, DeviceAxisScriptSnapshot) WaitForSnapshotAny(IReadOnlyList<DeviceAxis> axes, CancellationToken cancellationToken)
         => _valueProvider.WaitForSnapshotAny(axes, cancellationToken);
-    protected ValueTask<(DeviceAxis, DeviceAxisScriptSnapshot)> WaitForSnapshotAnyAsync(IEnumerable<DeviceAxis> axes, CancellationToken cancellationToken)
+    protected ValueTask<(DeviceAxis, DeviceAxisScriptSnapshot)> WaitForSnapshotAnyAsync(IReadOnlyList<DeviceAxis> axes, CancellationToken cancellationToken)
         => _valueProvider.WaitForSnapshotAnyAsync(axes, cancellationToken);
     protected (bool, DeviceAxisScriptSnapshot) WaitForSnapshot(DeviceAxis axis, CancellationToken cancellationToken)
         => _valueProvider.WaitForSnapshot(axis, cancellationToken);
@@ -457,7 +457,7 @@ internal abstract class ThreadAbstractOutputTarget : AbstractOutputTarget
         }
     }
 
-    protected void PolledUpdate(IEnumerable<DeviceAxis> axes, Func<bool> condition, Action<DeviceAxis, DeviceAxisScriptSnapshot, double> body, CancellationToken cancellationToken)
+    protected void PolledUpdate(IReadOnlyList<DeviceAxis> axes, Func<bool> condition, Action<DeviceAxis, DeviceAxisScriptSnapshot, double> body, CancellationToken cancellationToken)
     {
         axes ??= DeviceAxis.All;
 
@@ -569,7 +569,7 @@ internal abstract class AsyncAbstractOutputTarget : AbstractOutputTarget
         timer.Dispose();
     }
 
-    protected async Task PolledUpdateAsync(IEnumerable<DeviceAxis> axes, Func<bool> condition, Action<DeviceAxis, DeviceAxisScriptSnapshot, double> body, CancellationToken cancellationToken)
+    protected async Task PolledUpdateAsync(IReadOnlyList<DeviceAxis> axes, Func<bool> condition, Action<DeviceAxis, DeviceAxisScriptSnapshot, double> body, CancellationToken cancellationToken)
     {
         axes ??= DeviceAxis.All;
 

@@ -1,11 +1,11 @@
-﻿namespace MultiFunPlayer.Common;
+namespace MultiFunPlayer.Common;
 
 public interface IDeviceAxisValueProvider
 {
     public double GetValue(DeviceAxis axis);
 
-    public (DeviceAxis, DeviceAxisScriptSnapshot) WaitForSnapshotAny(IEnumerable<DeviceAxis> axes, CancellationToken cancellationToken);
-    public ValueTask<(DeviceAxis, DeviceAxisScriptSnapshot)> WaitForSnapshotAnyAsync(IEnumerable<DeviceAxis> axes, CancellationToken cancellationToken);
+    public (DeviceAxis, DeviceAxisScriptSnapshot) WaitForSnapshotAny(IReadOnlyList<DeviceAxis> axes, CancellationToken cancellationToken);
+    public ValueTask<(DeviceAxis, DeviceAxisScriptSnapshot)> WaitForSnapshotAnyAsync(IReadOnlyList<DeviceAxis> axes, CancellationToken cancellationToken);
     public (bool, DeviceAxisScriptSnapshot) WaitForSnapshot(DeviceAxis axis, CancellationToken cancellationToken);
     public ValueTask<(bool, DeviceAxisScriptSnapshot)> WaitForSnapshotAsync(DeviceAxis axis, CancellationToken cancellationToken);
 }

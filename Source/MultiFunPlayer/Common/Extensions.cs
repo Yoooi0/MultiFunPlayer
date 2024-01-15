@@ -253,9 +253,6 @@ public static class CollectionExtensions
         => new(collection, selector, propertyName);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool ValidateIndex<T>(this ICollection<T> collection, int index)
-        => index >= 0 && index < collection.Count;
-
     public static bool ValidateIndex<T>(this IReadOnlyCollection<T> collection, int index)
         => index >= 0 && index < collection.Count;
 
