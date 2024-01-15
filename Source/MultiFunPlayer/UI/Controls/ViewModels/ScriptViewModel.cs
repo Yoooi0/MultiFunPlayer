@@ -722,25 +722,37 @@ internal sealed class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDispo
     private double GetAxisPosition(DeviceAxis axis) => MediaPosition - GlobalOffset - AxisSettings[axis].Offset;
     public double GetValue(DeviceAxis axis) => MathUtils.Clamp01(AxisStates[axis].Value);
 
-    public (DeviceAxis, DeviceAxisScriptSnapshot) WaitForSnapshotAny(IReadOnlyList<DeviceAxis> axes, CancellationToken cancellationToken)
+    public void BeginSnapshotPolling(object context)
     {
-        axes ??= DeviceAxis.All;
-        var (index, snapshot) = BroadcastEvent<DeviceAxisScriptSnapshot>.WaitAny(axes.Select(a => AxisStates[a].ScriptSnapshotEvent).ToArray(), cancellationToken);
-        return (axes.ElementAt(index), snapshot);
+        foreach (var (_, state) in AxisStates)
+            state.ScriptSnapshotEvent.RegisterContext(context);
     }
 
-    public async ValueTask<(DeviceAxis, DeviceAxisScriptSnapshot)> WaitForSnapshotAnyAsync(IReadOnlyList<DeviceAxis> axes, CancellationToken cancellationToken)
+    public void EndSnapshotPolling(object context)
     {
-        axes ??= DeviceAxis.All;
-        var (index, snapshot) = await BroadcastEvent<DeviceAxisScriptSnapshot>.WaitAnyAsync(axes.Select(a => AxisStates[a].ScriptSnapshotEvent).ToArray(), cancellationToken);
-        return (axes.ElementAt(index), snapshot);
+        foreach (var (_, state) in AxisStates)
+            state.ScriptSnapshotEvent.UnregisterContext(context);
     }
 
-    public (bool, DeviceAxisScriptSnapshot) WaitForSnapshot(DeviceAxis axis, CancellationToken cancellationToken)
-        => AxisStates[axis].ScriptSnapshotEvent.WaitOne(cancellationToken);
+    public (DeviceAxis, DeviceAxisScriptSnapshot) WaitForSnapshotAny(IReadOnlyList<DeviceAxis> axes, object context, CancellationToken cancellationToken)
+    {
+        axes ??= DeviceAxis.All;
+        var (index, snapshot) = BroadcastEvent<DeviceAxisScriptSnapshot>.WaitAny(axes.Select(a => AxisStates[a].ScriptSnapshotEvent).ToArray(), context, cancellationToken);
+        return (axes[index], snapshot);
+    }
 
-    public async ValueTask<(bool, DeviceAxisScriptSnapshot)> WaitForSnapshotAsync(DeviceAxis axis, CancellationToken cancellationToken)
-        => await AxisStates[axis].ScriptSnapshotEvent.WaitOneAsync(cancellationToken);
+    public async ValueTask<(DeviceAxis, DeviceAxisScriptSnapshot)> WaitForSnapshotAnyAsync(IReadOnlyList<DeviceAxis> axes, object context, CancellationToken cancellationToken)
+    {
+        axes ??= DeviceAxis.All;
+        var (index, snapshot) = await BroadcastEvent<DeviceAxisScriptSnapshot>.WaitAnyAsync(axes.Select(a => AxisStates[a].ScriptSnapshotEvent).ToArray(), context, cancellationToken);
+        return (axes[index], snapshot);
+    }
+
+    public (bool, DeviceAxisScriptSnapshot) WaitForSnapshot(DeviceAxis axis, object context, CancellationToken cancellationToken)
+        => AxisStates[axis].ScriptSnapshotEvent.WaitOne(context, cancellationToken);
+
+    public async ValueTask<(bool, DeviceAxisScriptSnapshot)> WaitForSnapshotAsync(DeviceAxis axis, object context, CancellationToken cancellationToken)
+        => await AxisStates[axis].ScriptSnapshotEvent.WaitOneAsync(context, cancellationToken);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private double GetSyncProgress(double time, double duration) => MathUtils.Clamp01(Math.Pow(2, -10 * MathUtils.Clamp01(time / duration)));
@@ -1921,9 +1933,6 @@ internal sealed class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDispo
 
         _cancellationSource = null;
         _updateThread = null;
-
-        foreach (var (_, state) in AxisStates)
-            state.ScriptSnapshotEvent.Dispose();
     }
 
     public void Dispose()
@@ -1954,7 +1963,7 @@ internal sealed partial class AxisState
     [DoNotNotify] public double Speed { get; set; } = double.NaN;
 
     [DoNotNotify] public AxisValueTransition ExternalTransition { get; } = new AxisValueTransition();
-    [DoNotNotify] public BroadcastEvent<DeviceAxisScriptSnapshot> ScriptSnapshotEvent { get; } = new BroadcastEvent<DeviceAxisScriptSnapshot>(false);
+    [DoNotNotify] public BroadcastEvent<DeviceAxisScriptSnapshot> ScriptSnapshotEvent { get; } = new BroadcastEvent<DeviceAxisScriptSnapshot>();
 
     [DoNotNotify] public int Index { get; set; } = InvalidIndex;
     [DoNotNotify] public bool Invalid => Index == InvalidIndex;
@@ -2088,7 +2097,7 @@ internal sealed class AxisStateUpdateContext(AxisModel model)
         if (LastIndex != Index)
         {
             var keyframes = _model.Script?.Keyframes;
-            _state.ScriptSnapshotEvent.Set(new DeviceAxisScriptSnapshot()
+            _state.ScriptSnapshotEvent.Set(new()
             {
                 KeyframeFrom = keyframes?.ValidateIndex(Index) == true ? keyframes[Index] : null,
                 KeyframeTo = keyframes?.ValidateIndex(Index + 1) == true ? keyframes[Index + 1] : null,

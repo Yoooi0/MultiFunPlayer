@@ -115,14 +115,18 @@ internal abstract class AbstractOutputTarget : Screen, IOutputTarget
         }
     }
 
+    protected void BeginSnapshotPolling()
+        => _valueProvider.BeginSnapshotPolling(Identifier);
+    protected void EndSnapshotPolling()
+        => _valueProvider.EndSnapshotPolling(Identifier);
     protected (DeviceAxis, DeviceAxisScriptSnapshot) WaitForSnapshotAny(IReadOnlyList<DeviceAxis> axes, CancellationToken cancellationToken)
-        => _valueProvider.WaitForSnapshotAny(axes, cancellationToken);
-    protected ValueTask<(DeviceAxis, DeviceAxisScriptSnapshot)> WaitForSnapshotAnyAsync(IReadOnlyList<DeviceAxis> axes, CancellationToken cancellationToken)
-        => _valueProvider.WaitForSnapshotAnyAsync(axes, cancellationToken);
+        => _valueProvider.WaitForSnapshotAny(axes, Identifier, cancellationToken);
+    protected ValueTask<(DeviceAxis, DeviceAxisScriptSnapshot)> WaitForSnapshotAnyAsync(IReadOnlyList<DeviceAxis> axes,  CancellationToken cancellationToken)
+        => _valueProvider.WaitForSnapshotAnyAsync(axes, Identifier, cancellationToken);
     protected (bool, DeviceAxisScriptSnapshot) WaitForSnapshot(DeviceAxis axis, CancellationToken cancellationToken)
-        => _valueProvider.WaitForSnapshot(axis, cancellationToken);
-    protected ValueTask<(bool, DeviceAxisScriptSnapshot)> WaitForSnapshotAsync(DeviceAxis axis, CancellationToken cancellationToken)
-        => _valueProvider.WaitForSnapshotAsync(axis, cancellationToken);
+        => _valueProvider.WaitForSnapshot(axis, Identifier, cancellationToken);
+    protected ValueTask<(bool, DeviceAxisScriptSnapshot)> WaitForSnapshotAsync(DeviceAxis axis,  CancellationToken cancellationToken)
+        => _valueProvider.WaitForSnapshotAsync(axis, Identifier, cancellationToken);
 
     protected virtual double CoerceProviderValue(DeviceAxis axis, double value)
     {
@@ -461,32 +465,49 @@ internal abstract class ThreadAbstractOutputTarget : AbstractOutputTarget
     {
         axes ??= DeviceAxis.All;
 
-        var stopwatches = axes.ToDictionary(a => a, _ => new Stopwatch());
-        while (condition())
+        try
         {
-            (var axis, var snapshot) = WaitForSnapshotAny(axes, cancellationToken);
+            BeginSnapshotPolling();
+            var stopwatches = axes.ToDictionary(a => a, _ => new Stopwatch());
+            while (condition())
+            {
+                (var axis, var snapshot) = WaitForSnapshotAny(axes, cancellationToken);
 
-            var stopwatch = stopwatches[axis];
-            var elapsed = stopwatch.ElapsedTicks / (double)Stopwatch.Frequency;
-            stopwatch.Restart();
+                var stopwatch = stopwatches[axis];
+                var elapsed = stopwatch.ElapsedTicks / (double)Stopwatch.Frequency;
+                stopwatch.Restart();
 
-            body(axis, snapshot, elapsed);
+                body(axis, snapshot, elapsed);
+            }
+        }
+        finally
+        {
+            EndSnapshotPolling();
         }
     }
 
     protected void PolledUpdate(DeviceAxis axis, Func<bool> condition, Action<DeviceAxisScriptSnapshot, double> body, CancellationToken cancellationToken)
     {
         var stopwatch = new Stopwatch();
-        while (condition())
+
+        try
         {
-            (var success, var snapshot) = WaitForSnapshot(axis, cancellationToken);
-            if (!success)
-                return;
+            BeginSnapshotPolling();
+            while (condition())
+            {
+                (var success, var snapshot) = WaitForSnapshot(axis, cancellationToken);
+                if (!success)
+                    return;
 
-            var elapsed = stopwatch.ElapsedTicks / (double)Stopwatch.Frequency;
-            stopwatch.Restart();
+                var elapsed = stopwatch.ElapsedTicks / (double)Stopwatch.Frequency;
+                stopwatch.Restart();
 
-            body(snapshot, elapsed);
+                body(snapshot, elapsed);
+            }
+        }
+        finally
+        {
+            EndSnapshotPolling();
         }
     }
 }
@@ -573,32 +594,48 @@ internal abstract class AsyncAbstractOutputTarget : AbstractOutputTarget
     {
         axes ??= DeviceAxis.All;
 
-        var stopwatches = axes.ToDictionary(a => a, _ => new Stopwatch());
-        while (condition())
+        try
         {
-            (var axis, var snapshot) = await WaitForSnapshotAnyAsync(axes, cancellationToken);
+            BeginSnapshotPolling();
+            var stopwatches = axes.ToDictionary(a => a, _ => new Stopwatch());
+            while (condition())
+            {
+                (var axis, var snapshot) = await WaitForSnapshotAnyAsync(axes, cancellationToken);
 
-            var stopwatch = stopwatches[axis];
-            var elapsed = stopwatch.ElapsedTicks / (double)Stopwatch.Frequency;
-            stopwatch.Restart();
+                var stopwatch = stopwatches[axis];
+                var elapsed = stopwatch.ElapsedTicks / (double)Stopwatch.Frequency;
+                stopwatch.Restart();
 
-            body(axis, snapshot, elapsed);
+                body(axis, snapshot, elapsed);
+            }
+        }
+        finally
+        {
+            EndSnapshotPolling();
         }
     }
 
     protected async Task PolledUpdateAsync(DeviceAxis axis, Func<bool> condition, Action<DeviceAxisScriptSnapshot, double> body, CancellationToken cancellationToken)
     {
         var stopwatch = new Stopwatch();
-        while (condition())
+        try
         {
-            (var success, var snapshot) = await WaitForSnapshotAsync(axis, cancellationToken);
-            if (!success)
-                return;
+            BeginSnapshotPolling();
+            while (condition())
+            {
+                (var success, var snapshot) = await WaitForSnapshotAsync(axis, cancellationToken);
+                if (!success)
+                    return;
 
-            var elapsed = stopwatch.ElapsedTicks / (double)Stopwatch.Frequency;
-            stopwatch.Restart();
+                var elapsed = stopwatch.ElapsedTicks / (double)Stopwatch.Frequency;
+                stopwatch.Restart();
 
-            body(snapshot, elapsed);
+                body(snapshot, elapsed);
+            }
+        }
+        finally
+        {
+            EndSnapshotPolling();
         }
     }
 }

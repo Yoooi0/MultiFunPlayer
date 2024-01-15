@@ -1,76 +1,103 @@
-﻿namespace MultiFunPlayer.Common;
+namespace MultiFunPlayer.Common;
 
-internal sealed class BroadcastEvent<T>(bool initialState) : IDisposable where T : class
+internal sealed class BroadcastEvent<T> where T : class
 {
-    private ManualResetEvent _waitHandle = new(initialState);
+    private readonly object _syncRoot = new();
+    private readonly Dictionary<object, ManualResetEvent> _waitHandles = [];
     private volatile T _value;
 
     public void Set(T value)
     {
-        _value = value;
-        _waitHandle.Set();
+        lock (_syncRoot)
+        {
+            _value = value;
+            foreach (var (_, waitHandle) in _waitHandles)
+                waitHandle.Set();
+        }
     }
 
-    private T Reset()
+    public void RegisterContext(object context)
     {
-        _waitHandle.Reset();
-        return _value;
+        lock (_syncRoot)
+        {
+            if (_waitHandles.ContainsKey(context))
+                throw new InvalidOperationException("Context can only be registered once");
+            _waitHandles[context] = new ManualResetEvent(false);
+        }
     }
 
-    public (bool Success, T Value) WaitOne() => (_waitHandle.WaitOne(), Reset());
-    public (bool Success, T Value) WaitOne(CancellationToken cancellationToken) => (_waitHandle.WaitOne(cancellationToken), Reset());
-    public (bool Success, T Value) WaitOne(int millisecondsTimeout, CancellationToken cancellationToken) => (_waitHandle.WaitOne(millisecondsTimeout, cancellationToken), Reset());
-    public (bool Success, T Value) WaitOne(TimeSpan timeout, CancellationToken cancellationToken) => (_waitHandle.WaitOne(timeout, cancellationToken), Reset());
-    public (bool Success, T Value) WaitOne(int millisecondsTimeout, bool exitContext, CancellationToken cancellationToken) => (_waitHandle.WaitOne(millisecondsTimeout, exitContext, cancellationToken), Reset());
-    public (bool Success, T Value) WaitOne(TimeSpan timeout, bool exitContext, CancellationToken cancellationToken) => (_waitHandle.WaitOne(timeout, exitContext, cancellationToken), Reset());
-    public (bool Success, T Value) WaitOne(int millisecondsTimeout) => (_waitHandle.WaitOne(millisecondsTimeout), Reset());
-    public (bool Success, T Value) WaitOne(int millisecondsTimeout, bool exitContext) => (_waitHandle.WaitOne(millisecondsTimeout, exitContext), Reset());
-    public (bool Success, T Value) WaitOne(TimeSpan timeout) => (_waitHandle.WaitOne(timeout), Reset());
-    public (bool Success, T Value) WaitOne(TimeSpan timeout, bool exitContext) => (_waitHandle.WaitOne(timeout, exitContext), Reset());
-
-    public async ValueTask<(bool Success, T Value)> WaitOneAsync(CancellationToken cancellationToken)
+    public void UnregisterContext(object context)
     {
-        if (_waitHandle.WaitOne(0, cancellationToken))
-            return (true, _value);
-
-        return (await _waitHandle.WaitOneAsync(cancellationToken), Reset());
+        lock (_syncRoot)
+            if (_waitHandles.Remove(context, out var waitHandle))
+                waitHandle.Dispose();
     }
 
-    public static (int Index, T Value) WaitAny(BroadcastEvent<T>[] events, CancellationToken cancellationToken)
+    public (bool Success, T Value) WaitOne(object context, CancellationToken cancellationToken)
     {
-        var waitHandles = events.Select(e => e._waitHandle).Append(cancellationToken.WaitHandle).ToArray();
+        var waitHandle = GetWaitHandle(context);
+        if (!waitHandle.WaitOne(cancellationToken))
+            return (false, default);
+
+        cancellationToken.ThrowIfCancellationRequested();
+        return (true, GetValueAndUpdateWaitHandle(context));
+    }
+
+    public async ValueTask<(bool Success, T Value)> WaitOneAsync(object context, CancellationToken cancellationToken)
+    {
+        var waitHandle = GetWaitHandle(context);
+        if (waitHandle.WaitOne(0))
+            return (true, GetValueAndUpdateWaitHandle(context));
+
+        if (!await waitHandle.WaitOneAsync(cancellationToken))
+            return (false, default);
+
+        cancellationToken.ThrowIfCancellationRequested();
+        return (true, GetValueAndUpdateWaitHandle(context));
+    }
+
+    private ManualResetEvent GetWaitHandle(object context)
+    {
+        lock (_syncRoot)
+            return _waitHandles[context];
+    }
+
+    private T GetValueAndUpdateWaitHandle(object context)
+    {
+        lock (_syncRoot)
+        {
+            _waitHandles[context].Dispose();
+            _waitHandles[context] = new ManualResetEvent(false);
+            return _value;
+        }
+    }
+
+    public static (int Index, T Value) WaitAny(BroadcastEvent<T>[] events, object context, CancellationToken cancellationToken)
+    {
+        var waitHandles = events.Select(p => p.GetWaitHandle(context)).Append(cancellationToken.WaitHandle).ToArray();
         var index = WaitHandle.WaitAny(waitHandles);
-        cancellationToken.ThrowIfCancellationRequested();
 
-        return (index, events[index].Reset());
+        cancellationToken.ThrowIfCancellationRequested();
+        return (index, events[index].GetValueAndUpdateWaitHandle(context));
     }
 
-    public static async ValueTask<(int Index, T Value)> WaitAnyAsync(BroadcastEvent<T>[] events, CancellationToken cancellationToken)
+    public static async ValueTask<(int Index, T Value)> WaitAnyAsync(BroadcastEvent<T>[] events, object context, CancellationToken cancellationToken)
     {
-        var waitHandles = events.Select(e => e._waitHandle).Append(cancellationToken.WaitHandle).ToArray();
+        var waitHandles = events.Select(p => p.GetWaitHandle(context)).Append(cancellationToken.WaitHandle).ToArray();
         var index = WaitHandle.WaitAny(waitHandles, 0);
+        if (index == WaitHandle.WaitTimeout)
+        {
+            using var tasksCancellationSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            var tasksCancellationToken = tasksCancellationSource.Token;
+            var tasks = waitHandles[..^1].Select(h => h.WaitOneAsync(tasksCancellationToken)).ToList();
+            var task = await Task.WhenAny(tasks);
+            tasksCancellationToken.ThrowIfCancellationRequested();
+            tasksCancellationSource.Cancel();
+
+            index = tasks.IndexOf(task);
+        }
+
         cancellationToken.ThrowIfCancellationRequested();
-
-        if (index != WaitHandle.WaitTimeout)
-            return (index, events[index].Reset());
-
-        var tasks = events.Select(e => e.WaitOneAsync(cancellationToken).AsTask()).ToList();
-        var task = await Task.WhenAny(tasks);
-        cancellationToken.ThrowIfCancellationRequested();
-
-        index = tasks.IndexOf(task);
-        return (index, events[index].Reset());
-    }
-
-    private void Dispose(bool disposing)
-    {
-        _waitHandle?.Dispose();
-        _waitHandle = null;
-    }
-
-    public void Dispose()
-    {
-        Dispose(disposing: true);
-        GC.SuppressFinalize(this);
+        return (index, events[index].GetValueAndUpdateWaitHandle(context));
     }
 }
