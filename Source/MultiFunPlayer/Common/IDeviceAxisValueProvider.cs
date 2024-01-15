@@ -1,6 +1,6 @@
-namespace MultiFunPlayer.Common;
+﻿namespace MultiFunPlayer.Common;
 
-public interface IDeviceAxisValueProvider
+internal interface IDeviceAxisValueProvider
 {
     public double GetValue(DeviceAxis axis);
 
@@ -10,7 +10,7 @@ public interface IDeviceAxisValueProvider
     public ValueTask<(bool, DeviceAxisScriptSnapshot)> WaitForSnapshotAsync(DeviceAxis axis, CancellationToken cancellationToken);
 }
 
-public class DeviceAxisScriptSnapshot
+internal sealed class DeviceAxisScriptSnapshot
 {
     public required Keyframe KeyframeFrom { get; init; }
     public required Keyframe KeyframeTo { get; init; }
