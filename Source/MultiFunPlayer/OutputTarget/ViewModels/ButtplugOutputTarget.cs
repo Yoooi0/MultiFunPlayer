@@ -160,7 +160,7 @@ internal sealed class ButtplugOutputTarget : AsyncAbstractOutputTarget
         var lastSentValuesPerDevice = new Dictionary<ButtplugDevice, Dictionary<DeviceAxis, double>>();
         bool CheckDirtyAndUpdate(ButtplugDeviceSettings settings)
         {
-            if (settings.UpdateType != ButtplugDeviceUpdateType.FixedUpdate)
+            if (settings.UpdateType != DeviceAxisUpdateType.FixedUpdate)
                 return false;
 
             var device = GetDeviceFromSettings(settings);
@@ -225,7 +225,7 @@ internal sealed class ButtplugOutputTarget : AsyncAbstractOutputTarget
         {
             Logger.Trace("Begin PolledUpdate [Axis: {0}, Index From: {1}, Index To: {2}, Duration: {3}, Elapsed: {4}]", axis, snapshot.IndexFrom, snapshot.IndexTo, snapshot.Duration, elapsed);
 
-            var settings = DeviceSettings.Where(x => x.SourceAxis == axis && x.UpdateType == ButtplugDeviceUpdateType.PolledUpdate);
+            var settings = DeviceSettings.Where(x => x.SourceAxis == axis && x.UpdateType == DeviceAxisUpdateType.PolledUpdate);
             var tasks = GetDeviceTasks(snapshot, settings, token);
 
             try
@@ -434,7 +434,7 @@ internal sealed class ButtplugOutputTarget : AsyncAbstractOutputTarget
             SourceAxis = SelectedDeviceAxis,
             ActuatorIndex = SelectedActuatorIndex.Value,
             ActuatorType = SelectedActuatorType.Value,
-            UpdateType = ButtplugDeviceUpdateType.PolledUpdate
+            UpdateType = DeviceAxisUpdateType.FixedUpdate
         });
 
         SelectedDevice = null;
@@ -461,11 +461,5 @@ internal sealed class ButtplugDeviceSettings : PropertyChangedBase
     [JsonProperty] public DeviceAxis SourceAxis { get; set; }
     [JsonProperty] public ActuatorType ActuatorType { get; set; }
     [JsonProperty] public uint ActuatorIndex { get; set; }
-    [JsonProperty] public ButtplugDeviceUpdateType UpdateType { get; set; }
-}
-
-internal enum ButtplugDeviceUpdateType
-{
-    FixedUpdate,
-    PolledUpdate
+    [JsonProperty] public DeviceAxisUpdateType UpdateType { get; set; }
 }

@@ -1,5 +1,11 @@
 ﻿namespace MultiFunPlayer.Common;
 
+internal enum DeviceAxisUpdateType
+{
+    FixedUpdate,
+    PolledUpdate
+}
+
 internal interface IDeviceAxisValueProvider
 {
     public double GetValue(DeviceAxis axis);
