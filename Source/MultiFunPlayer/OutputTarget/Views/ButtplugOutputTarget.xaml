@@ -6,6 +6,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:ui="clr-namespace:MultiFunPlayer.UI" 
              xmlns:common="clr-namespace:MultiFunPlayer.Common" 
              xmlns:converters="clr-namespace:MultiFunPlayer.UI.Converters"
              xmlns:controls="clr-namespace:MultiFunPlayer.UI.Controls"
@@ -14,7 +15,10 @@
              x:ClassModifier="internal">
     <UserControl.Resources>
         <converters:ButtplugDeviceConnectedConverter x:Key="ButtplugDeviceConnectedConverter"/>
+        <converters:MultiObjectEqualToBooleanConverter x:Key="MultiObjectEqualToBooleanConverter"/>
+        <converters:ItemIndexInContainerConverter x:Key="ItemIndexInContainerConverter"/>
     </UserControl.Resources>
+    
     <Expander material:ExpanderAssist.HorizontalHeaderPadding="0 0 6 0"
               Style="{StaticResource MaterialDesignToolBarExpander}"
               Background="{DynamicResource MaterialDesignToolBarBackground}"
@@ -257,114 +261,171 @@
                                        Typography.Capitals="AllSmallCaps"/>
                     </Expander.Header>
                     <StackPanel Margin="10 0 10 10">
-                        <ListView ItemsSource="{Binding DeviceSettings}"
-                                      material:ListViewAssist.ListViewItemPadding="0"
-                                      ScrollViewer.HorizontalScrollBarVisibility="Disabled">
-                            <ListView.ItemContainerStyle>
-                                <Style TargetType="ListViewItem" BasedOn="{StaticResource MaterialDesignGridViewItem}">
+                        <ListBox DockPanel.Dock="Top"
+                                 ItemsSource="{Binding DeviceSettings}"
+                                 ScrollViewer.VerticalScrollBarVisibility="Visible"
+                                 ScrollViewer.CanContentScroll="False"
+                                 BorderBrush="Transparent"
+                                 Background="{DynamicResource MaterialDesignPaper}"
+                                 MaxHeight="150">
+                            <ListBox.Resources>
+                                <Style TargetType="{x:Type ListBoxItem}" x:Key="ContainerStyle">
                                     <Setter Property="Focusable" Value="False"/>
-                                    <Setter Property="Height" Value="36"/>
-                                    <Setter Property="HorizontalContentAlignment" Value="Stretch" />
-                                    <Setter Property="VerticalContentAlignment" Value="Center" />
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="ListBoxItem">
+                                                <material:Card Name="Container"
+                                                               Margin="8 8 8 0"
+                                                               material:ShadowAssist.ShadowDepth="Depth1"
+                                                               Foreground="{DynamicResource MaterialDesignBody}">
+                                                    <ContentPresenter/>
+                                                </material:Card>
+
+                                                <ControlTemplate.Triggers>
+                                                    <DataTrigger Value="True">
+                                                        <DataTrigger.Binding>
+                                                            <MultiBinding Converter="{StaticResource MultiObjectEqualToBooleanConverter}">
+                                                                <MultiBinding.Bindings>
+                                                                    <Binding RelativeSource="{RelativeSource Self}" Converter="{StaticResource ItemIndexInContainerConverter}"/>
+                                                                    <Binding Path="DataContext.DeviceSettings.Count" 
+                                                                             RelativeSource="{RelativeSource FindAncestor, AncestorType={x:Type UserControl}}"
+                                                                             Converter="{StaticResource MathAddConverter}"
+                                                                             ConverterParameter="-1"/>
+                                                                </MultiBinding.Bindings>
+                                                            </MultiBinding>
+                                                        </DataTrigger.Binding>
+
+                                                        <DataTrigger.Setters>
+                                                            <Setter Property="Margin" TargetName="Container" Value="8 8 8 8"/>
+                                                        </DataTrigger.Setters>
+                                                    </DataTrigger>
+                                                </ControlTemplate.Triggers>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
                                 </Style>
-                            </ListView.ItemContainerStyle>
-                            <ListView.View>
-                                <GridView AllowsColumnReorder="False">
-                                    <GridView.ColumnHeaderContainerStyle>
-                                        <Style TargetType="{x:Type GridViewColumnHeader}">
-                                            <Setter Property="Template">
-                                                <Setter.Value>
-                                                    <ControlTemplate TargetType="{x:Type GridViewColumnHeader}">
-                                                        <TextBlock x:Name="ContentHeader" 
-                                                                       Text="{TemplateBinding Content}"
-                                                                       Padding="5 10 5 10"
-                                                                       HorizontalAlignment="Left"/>
-                                                    </ControlTemplate>
-                                                </Setter.Value>
-                                            </Setter>
-                                        </Style>
-                                    </GridView.ColumnHeaderContainerStyle>
 
-                                    <GridViewColumn Header="Axis"
-                                                    Width="60"
-                                                    DisplayMemberBinding="{Binding SourceAxis}"/>
-                                    <GridViewColumn Header="Device Name"
-                                                    Width="225">
-                                        <GridViewColumn.CellTemplate>
-                                            <DataTemplate>
-                                                <material:Badged BadgePlacementMode="TopRight"
-                                                                 Padding="0 0 10 0">
-                                                    <material:Badged.Resources>
-                                                        <Style TargetType="{x:Type material:Badged}">
-                                                            <Setter Property="BadgeBackground">
-                                                                <Setter.Value>
-                                                                    <SolidColorBrush Color="{DynamicResource MaterialDesignErrorColor}" Opacity="0.7"/>
-                                                                </Setter.Value>
-                                                            </Setter>
-                                                            <Setter Property="Badge">
-                                                                <Setter.Value>
-                                                                    <material:PackIcon Kind="PowerPlugOff" Width="12" Height="12"/>
-                                                                </Setter.Value>
-                                                            </Setter>
+                                <Style TargetType="ListBox">
+                                    <Setter Property="ItemContainerStyle" Value="{StaticResource ContainerStyle}"/>
+                                </Style>
+                            </ListBox.Resources>
 
-                                                            <Style.Triggers>
-                                                                <DataTrigger Value="True">
-                                                                    <DataTrigger.Binding>
-                                                                        <MultiBinding Converter="{StaticResource ButtplugDeviceConnectedConverter}">
-                                                                            <Binding Path=""/>
-                                                                            <Binding Path="DataContext.AvailableDevices" RelativeSource="{RelativeSource AncestorType={x:Type UserControl}}"/>
-                                                                        </MultiBinding>
-                                                                    </DataTrigger.Binding>
-                                                                    <Setter Property="BadgeBackground">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <Border>
+                                        <DockPanel LastChildFill="False">
+                                            <material:ColorZone DockPanel.Dock="Left"
+                                                                VerticalAlignment="Stretch"
+                                                                HorizontalAlignment="Stretch"
+                                                                VerticalContentAlignment="Center"
+                                                                HorizontalContentAlignment="Center"
+                                                                Padding="5 3 5 3"
+                                                                CornerRadius="4 0 0 4"
+                                                                Width="28"
+                                                                Height="24">
+
+                                                <material:ColorZone.Resources>
+                                                    <Style TargetType="{x:Type material:ColorZone}">
+                                                        <Setter Property="Background" Value="{DynamicResource MaterialDesignLightErrorBrush}"/>
+                                                        <Setter Property="Content">
+                                                            <Setter.Value>
+                                                                <material:PackIcon Kind="PowerPlugOff"/>
+                                                            </Setter.Value>
+                                                        </Setter>
+                                                        
+                                                        <Style.Triggers>
+                                                            <DataTrigger Value="True">
+                                                                <DataTrigger.Binding>
+                                                                    <MultiBinding Converter="{StaticResource ButtplugDeviceConnectedConverter}">
+                                                                        <Binding Path=""/>
+                                                                        <Binding Path="DataContext.AvailableDevices" RelativeSource="{RelativeSource AncestorType={x:Type UserControl}}"/>
+                                                                    </MultiBinding>
+                                                                </DataTrigger.Binding>
+                                                                <DataTrigger.Setters>
+                                                                    <Setter Property="Background" Value="{DynamicResource MaterialDesignLightSuccessBrush}"/>
+                                                                    <Setter Property="Content">
                                                                         <Setter.Value>
-                                                                            <SolidColorBrush Color="{DynamicResource MaterialDesignSuccessColor}" Opacity="0.5"/>
+                                                                            <material:PackIcon Kind="PowerPlug"/>
                                                                         </Setter.Value>
                                                                     </Setter>
-                                                                    <Setter Property="Badge">
-                                                                        <Setter.Value>
-                                                                            <material:PackIcon Kind="PowerPlug" Width="12" Height="12"/>
-                                                                        </Setter.Value>
-                                                                    </Setter>
-                                                                </DataTrigger>
-                                                            </Style.Triggers>
-                                                        </Style>
-                                                    </material:Badged.Resources>
+                                                                </DataTrigger.Setters>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </material:ColorZone.Resources>
+                                            </material:ColorZone>
 
-                                                    <StackPanel Orientation="Horizontal">
-                                                        <TextBlock Text="{Binding DeviceName}"/>
-                                                        <TextBlock Text="{Binding DeviceIndex, StringFormat=[{0}]}" />
+                                            <StackPanel Orientation="Horizontal"
+                                                        DockPanel.Dock="Left"
+                                                        Margin="10 0 0 0"
+                                                        Typography.Capitals="SmallCaps">
+                                                <TextBlock Text="{Binding SourceAxis}" FontWeight="Bold"
+                                                           VerticalAlignment="Center"/>
+                                                <material:PackIcon Kind="TransferRight" 
+                                                                   Margin="10 0 10 0"
+                                                                   VerticalAlignment="Center"/>
+
+                                                <StackPanel Orientation="Vertical"
+                                                            Height="24">
+                                                    <StackPanel Orientation="Horizontal"
+                                                                Margin="0 1 0 0">
+                                                        <TextBlock Text="Device:" 
+                                                                   Width="55"
+                                                                   FontSize="11"
+                                                                   FontWeight="Bold" 
+                                                                   Typography.Capitals="Normal" />
+                                                        <TextBlock FontSize="11" Text="{Binding DeviceName}"/>
+                                                        <TextBlock FontSize="11" Text="{Binding DeviceIndex, StringFormat=/{0}}" />
                                                     </StackPanel>
-                                                </material:Badged>
-                                            </DataTemplate>
-                                        </GridViewColumn.CellTemplate>
-                                    </GridViewColumn>
-                                    <GridViewColumn Header="Actuator Type"
-                                                    Width="140"
-                                                    DisplayMemberBinding="{Binding ActuatorType}"/>
-                                    <GridViewColumn Header="Index"
-                                                    Width="50"
-                                                    DisplayMemberBinding="{Binding ActuatorIndex}"/>
 
-                                    <GridViewColumn Header=""
-                                                        Width="50">
-                                        <GridViewColumn.CellTemplate>
-                                            <DataTemplate>
-                                                <Button Style="{StaticResource MaterialDesignFlatButton}"
-                                                        ToolTip="Remove"
-                                                        material:RippleAssist.Feedback="{DynamicResource MaterialDesignErrorBrush}"
-                                                        Foreground="{DynamicResource MaterialDesignErrorBrush}"
-                                                        Height="24" 
-                                                        Width="24" 
-                                                        Padding="0"
-                                                        Click="{s:Action OnSettingsDelete}" >
-                                                    <material:PackIcon Kind="Delete"/>
-                                                </Button>
-                                            </DataTemplate>
-                                        </GridViewColumn.CellTemplate>
-                                    </GridViewColumn>
-                                </GridView>
-                            </ListView.View>
-                        </ListView>
+                                                    <StackPanel Orientation="Horizontal"
+                                                                Margin="0 -3 0 0">
+                                                        <TextBlock Text="Actuator:"
+                                                                   Width="55"
+                                                                   FontSize="11"
+                                                                   FontWeight="Bold" 
+                                                                   Typography.Capitals="Normal"/>
+                                                        <TextBlock FontSize="11" Text="{Binding ActuatorType}"/>
+                                                        <TextBlock FontSize="11" Text="{Binding ActuatorIndex, StringFormat=/{0}}" />
+                                                    </StackPanel>
+                                                </StackPanel>
+                                            </StackPanel>
+
+                                            <Button Style="{StaticResource MaterialDesignFlatButton}"
+                                                    DockPanel.Dock="Right"
+                                                    ToolTip="Remove"
+                                                    material:RippleAssist.Feedback="{DynamicResource MaterialDesignErrorBrush}"
+                                                    Foreground="{DynamicResource MaterialDesignErrorBrush}"
+                                                    Height="18" 
+                                                    Width="18" 
+                                                    Padding="0"
+                                                    Margin="0 0 3 0"
+                                                    Click="{s:Action OnSettingsDelete}">
+                                                <material:PackIcon Kind="Delete"
+                                                                   Width="16" Height="16"/>
+                                            </Button>
+                                            
+                                            <ComboBox ItemsSource="{Binding Source={ui:EnumBindingSource {x:Type common:DeviceAxisUpdateType}}}"
+                                                      SelectedItem="{Binding UpdateType}"
+                                                      DockPanel.Dock="Right"
+                                                      VerticalAlignment="Center"
+                                                      Width="90"
+                                                      Padding="0"
+                                                      FontSize="12"
+                                                      Margin="0 3 10 0"
+                                                      material:TextFieldAssist.DecorationVisibility="Hidden"/>
+                                            
+                                            <TextBlock Text="Update:" 
+                                                       Margin="0 0 5 0"
+                                                       DockPanel.Dock="Right"
+                                                       FontSize="12"
+                                                       FontWeight="Bold"
+                                                       VerticalAlignment="Center"/>
+                                        </DockPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
 
                         <StackPanel Orientation="Horizontal"
                                     Margin="0 0 0 10">
