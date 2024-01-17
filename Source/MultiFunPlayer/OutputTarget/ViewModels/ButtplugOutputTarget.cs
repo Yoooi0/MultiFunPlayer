@@ -157,6 +157,7 @@ internal sealed class ButtplugOutputTarget : AsyncAbstractOutputTarget
 
     private async Task FixedUpdateAsync(ButtplugClient client, CancellationToken token)
     {
+        var currentValues = DeviceAxis.All.ToDictionary(a => a, _ => double.NaN);
         var lastSentValuesPerDevice = new Dictionary<ButtplugDevice, Dictionary<DeviceAxis, double>>();
         bool CheckDirtyAndUpdate(ButtplugDeviceSettings settings)
         {
@@ -172,7 +173,7 @@ internal sealed class ButtplugOutputTarget : AsyncAbstractOutputTarget
 
             var axis = settings.SourceAxis;
             var lastSentValues = lastSentValuesPerDevice[device];
-            var currentValue = Values[axis];
+            var currentValue = currentValues[axis];
             var lastValue = lastSentValues[axis];
 
             if (!double.IsFinite(currentValue))
@@ -193,7 +194,7 @@ internal sealed class ButtplugOutputTarget : AsyncAbstractOutputTarget
         await FixedUpdateAsync(() => !token.IsCancellationRequested && client.IsConnected, async elapsed =>
         {
             Logger.Trace("Begin FixedUpdate [Elapsed: {0}]", elapsed);
-            UpdateValues();
+            GetValues(currentValues, x => x < 0.005 ? 0 : x);
 
             foreach (var orphanedDevice in lastSentValuesPerDevice.Keys.Except(AvailableDevices))
                 lastSentValuesPerDevice.Remove(orphanedDevice);
@@ -205,7 +206,7 @@ internal sealed class ButtplugOutputTarget : AsyncAbstractOutputTarget
             }
 
             var dirtySettings = DeviceSettings.Where(CheckDirtyAndUpdate);
-            var tasks = GetDeviceTasks(elapsed * 1000, dirtySettings, token);
+            var tasks = GetDeviceTasks(currentValues, elapsed * 1000, dirtySettings, token);
 
             try
             {
@@ -247,16 +248,10 @@ internal sealed class ButtplugOutputTarget : AsyncAbstractOutputTarget
     private IEnumerable<ButtplugDeviceSettings> GetSettingsForDevice(ButtplugDevice device)
         => DeviceSettings.Where(s => string.Equals(s.DeviceName, device.Name, StringComparison.OrdinalIgnoreCase) && s.DeviceIndex == device.Index);
 
-    protected override double CoerceProviderValue(DeviceAxis axis, double value)
-    {
-        value = base.CoerceProviderValue(axis, value);
-        return value < 0.005 ? 0 : value;
-    }
-
-    private IEnumerable<Task> GetDeviceTasks(double interval, IEnumerable<ButtplugDeviceSettings> settings, CancellationToken token)
+    private IEnumerable<Task> GetDeviceTasks(Dictionary<DeviceAxis, double> values, double interval, IEnumerable<ButtplugDeviceSettings> settings, CancellationToken token)
         => GetDeviceTasks(settings, (s, a) =>
         {
-            var value = Values[s.SourceAxis];
+            var value = values[s.SourceAxis];
             if (a is ButtplugDeviceLinearActuator linearActuator)
             {
                 var duration = (uint)Math.Floor(interval + 0.75);

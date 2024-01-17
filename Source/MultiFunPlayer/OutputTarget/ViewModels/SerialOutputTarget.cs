@@ -168,11 +168,12 @@ internal sealed class SerialOutputTarget(int instanceIndex, IEventAggregator eve
             using var _ = inputManager.Register<TCodeInputProcessor>(out var tcodeInputProcessor);
 
             var receiveBuffer = new SplittingStringBuffer('\n');
+            var currentValues = DeviceAxis.All.ToDictionary(a => a, _ => double.NaN);
             var lastSentValues = DeviceAxis.All.ToDictionary(a => a, _ => double.NaN);
             FixedUpdate(() => !token.IsCancellationRequested && serialPort.IsOpen, elapsed =>
             {
                 Logger.Trace("Begin FixedUpdate [Elapsed: {0}]", elapsed);
-                UpdateValues();
+                GetValues(currentValues);
 
                 if (serialPort.IsOpen && serialPort.BytesToRead > 0)
                 {
@@ -184,7 +185,7 @@ internal sealed class SerialOutputTarget(int instanceIndex, IEventAggregator eve
                         tcodeInputProcessor.Parse(command);
                 }
 
-                var values = SendDirtyValuesOnly ? Values.Where(x => DeviceAxis.IsValueDirty(x.Value, lastSentValues[x.Key])) : Values;
+                var values = SendDirtyValuesOnly ? currentValues.Where(x => DeviceAxis.IsValueDirty(x.Value, lastSentValues[x.Key])) : currentValues;
                 values = values.Where(x => AxisSettings[x.Key].Enabled);
 
                 var commands = OffloadElapsedTime ? DeviceAxis.ToString(values) : DeviceAxis.ToString(values, elapsed * 1000);

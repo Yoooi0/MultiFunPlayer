@@ -45,7 +45,6 @@ internal abstract class AbstractOutputTarget : Screen, IOutputTarget
         }
     }
 
-    protected Dictionary<DeviceAxis, double> Values { get; }
     protected IEventAggregator EventAggregator { get; }
 
     protected AbstractOutputTarget(int instanceIndex, IEventAggregator eventAggregator, IDeviceAxisValueProvider valueProvider)
@@ -58,7 +57,6 @@ internal abstract class AbstractOutputTarget : Screen, IOutputTarget
             eventAggregator.Subscribe(handler);
 
         Name = GetType().GetCustomAttribute<DisplayNameAttribute>(inherit: false).DisplayName;
-        Values = DeviceAxis.All.ToDictionary(a => a, _ => double.NaN);
         AxisSettings = new ObservableConcurrentDictionary<DeviceAxis, DeviceAxisSettings>(DeviceAxis.All.ToDictionary(a => a, _ => new DeviceAxisSettings()));
         UpdateInterval = 10;
     }
@@ -115,6 +113,27 @@ internal abstract class AbstractOutputTarget : Screen, IOutputTarget
         }
     }
 
+    protected double GetValue(DeviceAxis axis)
+    {
+        var value = _valueProvider.GetValue(axis);
+        if (!double.IsFinite(value))
+            return axis.DefaultValue;
+        return value;
+    }
+
+    protected void GetValues(Dictionary<DeviceAxis, double> values, Func<double, double> coerceValue = null)
+    {
+        foreach (var axis in DeviceAxis.All)
+        {
+            var value = GetValue(axis);
+            if (coerceValue != null)
+                value = coerceValue(value);
+
+            var settings = AxisSettings[axis];
+            values[axis] = MathUtils.Lerp(settings.Minimum / 100, settings.Maximum / 100, value);
+        }
+    }
+
     protected void BeginSnapshotPolling()
         => _valueProvider.BeginSnapshotPolling(Identifier);
     protected void EndSnapshotPolling()
@@ -127,24 +146,6 @@ internal abstract class AbstractOutputTarget : Screen, IOutputTarget
         => _valueProvider.WaitForSnapshot(axis, Identifier, cancellationToken);
     protected ValueTask<(bool, DeviceAxisScriptSnapshot)> WaitForSnapshotAsync(DeviceAxis axis,  CancellationToken cancellationToken)
         => _valueProvider.WaitForSnapshotAsync(axis, Identifier, cancellationToken);
-
-    protected virtual double CoerceProviderValue(DeviceAxis axis, double value)
-    {
-        if (!double.IsFinite(value))
-            return axis.DefaultValue;
-
-        return value;
-    }
-
-    protected void UpdateValues()
-    {
-        foreach (var axis in DeviceAxis.All)
-        {
-            var value = CoerceProviderValue(axis, _valueProvider?.GetValue(axis) ?? double.NaN);
-            var settings = AxisSettings[axis];
-            Values[axis] = MathUtils.Lerp(settings.Minimum / 100, settings.Maximum / 100, value);
-        }
-    }
 
     protected void UpdateStats(double elapsed)
     {

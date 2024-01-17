@@ -66,15 +66,16 @@ internal sealed class FileOutputTarget : ThreadAbstractOutputTarget
         try
         {
             var currentTime = 0d;
+            var currentValues = DeviceAxis.All.ToDictionary(a => a, _ => double.NaN);
             var lastSavedValues = DeviceAxis.All.ToDictionary(a => a, _ => double.NaN);
             FixedUpdate(() => !token.IsCancellationRequested, elapsed =>
             {
                 Logger.Trace("Begin FixedUpdate [Elapsed: {0}]", elapsed);
-                UpdateValues();
+                GetValues(currentValues);
 
                 currentTime += elapsed;
 
-                var values = Values.Where(x => DeviceAxis.IsValueDirty(x.Value, lastSavedValues[x.Key], 1E-10));
+                var values = currentValues.Where(x => DeviceAxis.IsValueDirty(x.Value, lastSavedValues[x.Key], 1E-10));
                 values = values.Where(x => AxisSettings[x.Key].Enabled);
 
                 foreach (var (axis, value) in values)

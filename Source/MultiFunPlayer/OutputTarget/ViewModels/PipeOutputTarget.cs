@@ -55,13 +55,14 @@ internal sealed class PipeOutputTarget(int instanceIndex, IEventAggregator event
             EventAggregator.Publish(new SyncRequestMessage());
 
             var buffer = new byte[256];
+            var currentValues = DeviceAxis.All.ToDictionary(a => a, _ => double.NaN);
             var lastSentValues = DeviceAxis.All.ToDictionary(a => a, _ => double.NaN);
             FixedUpdate(() => !token.IsCancellationRequested && client?.IsConnected == true, elapsed =>
             {
                 Logger.Trace("Begin FixedUpdate [Elapsed: {0}]", elapsed);
-                UpdateValues();
+                GetValues(currentValues);
 
-                var values = SendDirtyValuesOnly ? Values.Where(x => DeviceAxis.IsValueDirty(x.Value, lastSentValues[x.Key])) : Values;
+                var values = SendDirtyValuesOnly ? currentValues.Where(x => DeviceAxis.IsValueDirty(x.Value, lastSentValues[x.Key])) : currentValues;
                 values = values.Where(x => AxisSettings[x.Key].Enabled);
 
                 var commands = OffloadElapsedTime ? DeviceAxis.ToString(values) : DeviceAxis.ToString(values, elapsed * 1000);
