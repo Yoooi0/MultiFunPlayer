@@ -14,7 +14,8 @@ using System.Text;
 namespace MultiFunPlayer.OutputTarget.ViewModels;
 
 [DisplayName("The Handy")]
-internal sealed class TheHandyOutputTarget : AsyncAbstractOutputTarget
+internal sealed class TheHandyOutputTarget(int instanceIndex, IEventAggregator eventAggregator, IDeviceAxisValueProvider valueProvider)
+    : AsyncAbstractOutputTarget(instanceIndex, eventAggregator, valueProvider)
 {
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
@@ -23,23 +24,19 @@ internal sealed class TheHandyOutputTarget : AsyncAbstractOutputTarget
 
     public override ConnectionStatus Status { get; protected set; }
 
-    public TheHandyOutputTarget(int instanceIndex, IEventAggregator eventAggregator, IDeviceAxisValueProvider valueProvider)
-        : base(instanceIndex, eventAggregator, valueProvider)
-    {
-        PropertyChanged += (s, e) =>
-        {
-            if (Status != ConnectionStatus.Connected || e.PropertyName != nameof(SourceAxis) || SourceAxis == null)
-                return;
-
-            EventAggregator.Publish(new SyncRequestMessage(SourceAxis));
-        };
-    }
-
     protected override IUpdateContext RegisterUpdateContext(DeviceAxisUpdateType updateType) => updateType switch
     {
         DeviceAxisUpdateType.PolledUpdate => new AsyncPolledUpdateContext(),
         _ => null,
     };
+
+    public void OnSourceAxisChanged()
+    {
+        if (Status != ConnectionStatus.Connected || SourceAxis == null)
+            return;
+
+        EventAggregator.Publish(new SyncRequestMessage(SourceAxis));
+    }
 
     public bool IsConnected => Status == ConnectionStatus.Connected;
     public bool IsConnectBusy => Status == ConnectionStatus.Connecting || Status == ConnectionStatus.Disconnecting;
