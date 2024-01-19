@@ -27,7 +27,7 @@ internal abstract class AbstractPolledUpdateContext : PropertyChangedBase, IUpda
         while(_errors.Count > 25)
             _errors.Dequeue();
 
-        AverageUpdateError = _errors.Average();
+        AverageUpdateError = _errors.Average() * 1000;
         _previousDuration[axis] = snapshot.Duration;
     }
 }

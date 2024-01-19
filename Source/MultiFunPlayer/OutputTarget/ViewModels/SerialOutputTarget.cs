@@ -25,6 +25,9 @@ internal sealed class SerialOutputTarget(int instanceIndex, IEventAggregator eve
 
     public override ConnectionStatus Status { get; protected set; }
 
+    public DeviceAxisUpdateType UpdateType { get; set; } = DeviceAxisUpdateType.FixedUpdate;
+    public bool CanChangeUpdateType => !IsConnectBusy && !IsConnected;
+
     public ObservableConcurrentCollection<SerialPortInfo> SerialPorts { get; set; } = [];
     public SerialPortInfo SelectedSerialPort { get; set; }
     public string SelectedSerialPortDeviceId { get; set; }
@@ -171,36 +174,77 @@ internal sealed class SerialOutputTarget(int instanceIndex, IEventAggregator eve
             EventAggregator.Publish(new SyncRequestMessage());
 
             using var _ = inputManager.Register<TCodeInputProcessor>(out var tcodeInputProcessor);
-
             var receiveBuffer = new SplittingStringBuffer('\n');
-            var currentValues = DeviceAxis.All.ToDictionary(a => a, _ => double.NaN);
-            var lastSentValues = DeviceAxis.All.ToDictionary(a => a, _ => double.NaN);
-            FixedUpdate<TCodeThreadFixedUpdateContext>(() => !token.IsCancellationRequested && serialPort.IsOpen, (context, elapsed) =>
+            if (UpdateType == DeviceAxisUpdateType.FixedUpdate)
             {
-                Logger.Trace("Begin FixedUpdate [Elapsed: {0}]", elapsed);
-                GetValues(currentValues);
-
-                if (serialPort.IsOpen && serialPort.BytesToRead > 0)
+                var currentValues = DeviceAxis.All.ToDictionary(a => a, _ => double.NaN);
+                var lastSentValues = DeviceAxis.All.ToDictionary(a => a, _ => double.NaN);
+                FixedUpdate<TCodeThreadFixedUpdateContext>(() => !token.IsCancellationRequested && serialPort.IsOpen, (context, elapsed) =>
                 {
-                    var receivedString = serialPort.ReadExisting();
-                    Logger.Debug("Received \"{0}\" from \"{1}\"", receivedString, SelectedSerialPortDeviceId);
+                    Logger.Trace("Begin FixedUpdate [Elapsed: {0}]", elapsed);
+                    GetValues(currentValues);
 
-                    receiveBuffer.Push(receivedString);
-                    foreach (var command in receiveBuffer.Consume())
-                        tcodeInputProcessor.Parse(command);
-                }
+                    if (serialPort.IsOpen && serialPort.BytesToRead > 0)
+                        ReadExisting();
 
-                var values = context.SendDirtyValuesOnly ? currentValues.Where(x => DeviceAxis.IsValueDirty(x.Value, lastSentValues[x.Key])) : currentValues;
-                values = values.Where(x => AxisSettings[x.Key].Enabled);
+                    var values = context.SendDirtyValuesOnly ? currentValues.Where(x => DeviceAxis.IsValueDirty(x.Value, lastSentValues[x.Key])) : currentValues;
+                    values = values.Where(x => AxisSettings[x.Key].Enabled);
 
-                var commands = context.OffloadElapsedTime ? DeviceAxis.ToString(values) : DeviceAxis.ToString(values, elapsed * 1000);
-                if (serialPort.IsOpen && !string.IsNullOrWhiteSpace(commands))
+                    var commands = context.OffloadElapsedTime ? DeviceAxis.ToString(values) : DeviceAxis.ToString(values, elapsed * 1000);
+                    if (serialPort.IsOpen && !string.IsNullOrWhiteSpace(commands))
+                    {
+                        Logger.Trace("Sending \"{0}\" to \"{1}\"", commands.Trim(), SelectedSerialPortDeviceId);
+
+                        serialPort.Write(commands);
+                        lastSentValues.Merge(values);
+                    }
+                });
+            }
+            else if (UpdateType == DeviceAxisUpdateType.PolledUpdate)
+            {
+                serialPort.DataReceived += OnDataReceived;
+                PolledUpdate(DeviceAxis.All, () => !token.IsCancellationRequested, (_, axis, snapshot, elapsed) =>
                 {
-                    Logger.Trace("Sending \"{0}\" to \"{1}\"", commands.Trim(), SelectedSerialPortDeviceId);
-                    serialPort.Write(commands);
-                    lastSentValues.Merge(values);
+                    Logger.Trace("Begin PolledUpdate [Axis: {0}, Index From: {1}, Index To: {2}, Duration: {3}, Elapsed: {4}]",
+                        axis, snapshot.IndexFrom, snapshot.IndexTo, snapshot.Duration, elapsed);
+
+                    var settings = AxisSettings[axis];
+                    if (!settings.Enabled)
+                        return;
+                    if (snapshot.KeyframeFrom == null || snapshot.KeyframeTo == null)
+                        return;
+
+                    var value = MathUtils.Lerp(settings.Minimum / 100, settings.Maximum / 100, snapshot.KeyframeTo.Value);
+                    var duration = snapshot.Duration;
+
+                    var command = DeviceAxis.ToString(axis, value, duration);
+                    if (serialPort.IsOpen && !string.IsNullOrWhiteSpace(command))
+                    {
+                        Logger.Trace("Sending \"{0}\" to \"{1}\"", command, SelectedSerialPortDeviceId);
+
+                        serialPort.Write($"{command}\n");
+                    }
+                }, token);
+                serialPort.DataReceived -= OnDataReceived;
+
+                void OnDataReceived(object sender, SerialDataReceivedEventArgs e)
+                {
+                    if (!serialPort.IsOpen || e.EventType == SerialData.Eof)
+                        return;
+
+                    ReadExisting();
                 }
-            });
+            }
+
+            void ReadExisting()
+            {
+                var receivedString = serialPort.ReadExisting();
+                Logger.Debug("Received \"{0}\" from \"{1}\"", receivedString, SelectedSerialPortDeviceId);
+
+                receiveBuffer.Push(receivedString);
+                foreach (var command in receiveBuffer.Consume())
+                    tcodeInputProcessor.Parse(command);
+            }
         }
         catch (Exception e) when (e is TimeoutException || e is IOException)
         {
@@ -219,6 +263,7 @@ internal sealed class SerialOutputTarget(int instanceIndex, IEventAggregator eve
 
         if (action == SettingsAction.Saving)
         {
+            settings[nameof(UpdateType)] = JToken.FromObject(UpdateType);
             settings[nameof(SelectedSerialPort)] = SelectedSerialPortDeviceId;
             settings[nameof(BaudRate)] = BaudRate;
             settings[nameof(Parity)] = JToken.FromObject(Parity);
@@ -234,6 +279,8 @@ internal sealed class SerialOutputTarget(int instanceIndex, IEventAggregator eve
         }
         else if (action == SettingsAction.Loading)
         {
+            if (settings.TryGetValue<DeviceAxisUpdateType>(nameof(UpdateType), out var updateType))
+                UpdateType = updateType;
             if (settings.TryGetValue<string>(nameof(SelectedSerialPort), out var selectedSerialPort))
                 SelectSerialPortByDeviceId(selectedSerialPort);
 
