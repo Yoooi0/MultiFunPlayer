@@ -19,13 +19,18 @@ internal sealed class PipeOutputTarget(int instanceIndex, IEventAggregator event
 
     public override ConnectionStatus Status { get; protected set; }
 
-    public bool OffloadElapsedTime { get; set; } = true;
-    public bool SendDirtyValuesOnly { get; set; } = true;
     public string PipeName { get; set; } = "mfp-pipe";
 
     public bool IsConnected => Status == ConnectionStatus.Connected;
     public bool IsConnectBusy => Status == ConnectionStatus.Connecting || Status == ConnectionStatus.Disconnecting;
     public bool CanToggleConnect => !IsConnectBusy;
+
+    protected override IUpdateContext RegisterUpdateContext(DeviceAxisUpdateType updateType) => updateType switch
+    {
+        DeviceAxisUpdateType.FixedUpdate => new TCodeThreadFixedUpdateContext(),
+        DeviceAxisUpdateType.PolledUpdate => new ThreadPolledUpdateContext(),
+        _ => null,
+    };
 
     protected override void Run(CancellationToken token)
     {
@@ -57,15 +62,15 @@ internal sealed class PipeOutputTarget(int instanceIndex, IEventAggregator event
             var buffer = new byte[256];
             var currentValues = DeviceAxis.All.ToDictionary(a => a, _ => double.NaN);
             var lastSentValues = DeviceAxis.All.ToDictionary(a => a, _ => double.NaN);
-            FixedUpdate(() => !token.IsCancellationRequested && client?.IsConnected == true, elapsed =>
+            FixedUpdate<TCodeThreadFixedUpdateContext>(() => !token.IsCancellationRequested && client?.IsConnected == true, (context, elapsed) =>
             {
                 Logger.Trace("Begin FixedUpdate [Elapsed: {0}]", elapsed);
                 GetValues(currentValues);
 
-                var values = SendDirtyValuesOnly ? currentValues.Where(x => DeviceAxis.IsValueDirty(x.Value, lastSentValues[x.Key])) : currentValues;
+                var values = context.SendDirtyValuesOnly ? currentValues.Where(x => DeviceAxis.IsValueDirty(x.Value, lastSentValues[x.Key])) : currentValues;
                 values = values.Where(x => AxisSettings[x.Key].Enabled);
 
-                var commands = OffloadElapsedTime ? DeviceAxis.ToString(values) : DeviceAxis.ToString(values, elapsed * 1000);
+                var commands = context.OffloadElapsedTime ? DeviceAxis.ToString(values) : DeviceAxis.ToString(values, elapsed * 1000);
                 if (client.IsConnected && !string.IsNullOrWhiteSpace(commands))
                 {
                     Logger.Trace("Sending \"{0}\" to \"{1}\"", commands.Trim(), PipeName);
@@ -95,17 +100,11 @@ internal sealed class PipeOutputTarget(int instanceIndex, IEventAggregator event
         if (action == SettingsAction.Saving)
         {
             settings[nameof(PipeName)] = PipeName;
-            settings[nameof(OffloadElapsedTime)] = OffloadElapsedTime;
-            settings[nameof(SendDirtyValuesOnly)] = SendDirtyValuesOnly;
         }
         else if (action == SettingsAction.Loading)
         {
             if (settings.TryGetValue<string>(nameof(PipeName), out var pipeName))
                 PipeName = pipeName;
-            if (settings.TryGetValue<bool>(nameof(OffloadElapsedTime), out var offloadElapsedTime))
-                OffloadElapsedTime = offloadElapsedTime;
-            if (settings.TryGetValue<bool>(nameof(SendDirtyValuesOnly), out var sendDirtyValuesOnly))
-                SendDirtyValuesOnly = sendDirtyValuesOnly;
         }
     }
 

@@ -19,13 +19,18 @@ internal sealed class TcpOutputTarget(int instanceIndex, IEventAggregator eventA
 
     public override ConnectionStatus Status { get; protected set; }
 
-    public bool OffloadElapsedTime { get; set; } = true;
-    public bool SendDirtyValuesOnly { get; set; } = true;
     public EndPoint Endpoint { get; set; } = new IPEndPoint(IPAddress.Loopback, 8080);
 
     public bool IsConnected => Status == ConnectionStatus.Connected;
     public bool IsConnectBusy => Status == ConnectionStatus.Connecting || Status == ConnectionStatus.Disconnecting;
     public bool CanToggleConnect => !IsConnectBusy;
+
+    protected override IUpdateContext RegisterUpdateContext(DeviceAxisUpdateType updateType) => updateType switch
+    {
+        DeviceAxisUpdateType.FixedUpdate => new TCodeThreadFixedUpdateContext(),
+        DeviceAxisUpdateType.PolledUpdate => new ThreadPolledUpdateContext(),
+        _ => null,
+    };
 
     protected override void Run(CancellationToken token)
     {
@@ -52,7 +57,7 @@ internal sealed class TcpOutputTarget(int instanceIndex, IEventAggregator eventA
             var stream = client.GetStream();
             var currentValues = DeviceAxis.All.ToDictionary(a => a, _ => double.NaN);
             var lastSentValues = DeviceAxis.All.ToDictionary(a => a, _ => double.NaN);
-            FixedUpdate(() => !token.IsCancellationRequested && client.Connected, elapsed =>
+            FixedUpdate<TCodeThreadFixedUpdateContext>(() => !token.IsCancellationRequested && client.Connected, (context, elapsed) =>
             {
                 Logger.Trace("Begin FixedUpdate [Elapsed: {0}]", elapsed);
                 GetValues(currentValues);
@@ -63,10 +68,10 @@ internal sealed class TcpOutputTarget(int instanceIndex, IEventAggregator eventA
                     Logger.Debug("Received \"{0}\" from \"{1}\"", message, $"tcp://{Endpoint}");
                 }
 
-                var values = SendDirtyValuesOnly ? currentValues.Where(x => DeviceAxis.IsValueDirty(x.Value, lastSentValues[x.Key])) : currentValues;
+                var values = context.SendDirtyValuesOnly ? currentValues.Where(x => DeviceAxis.IsValueDirty(x.Value, lastSentValues[x.Key])) : currentValues;
                 values = values.Where(x => AxisSettings[x.Key].Enabled);
 
-                var commands = OffloadElapsedTime ? DeviceAxis.ToString(values) : DeviceAxis.ToString(values, elapsed * 1000);
+                var commands = context.OffloadElapsedTime ? DeviceAxis.ToString(values) : DeviceAxis.ToString(values, elapsed * 1000);
                 if (client.Connected && !string.IsNullOrWhiteSpace(commands))
                 {
                     Logger.Trace("Sending \"{0}\" to \"{1}\"", commands.Trim(), $"tcp://{Endpoint}");
@@ -91,17 +96,11 @@ internal sealed class TcpOutputTarget(int instanceIndex, IEventAggregator eventA
         if (action == SettingsAction.Saving)
         {
             settings[nameof(Endpoint)] = Endpoint?.ToString();
-            settings[nameof(OffloadElapsedTime)] = OffloadElapsedTime;
-            settings[nameof(SendDirtyValuesOnly)] = SendDirtyValuesOnly;
         }
         else if (action == SettingsAction.Loading)
         {
             if (settings.TryGetValue<EndPoint>(nameof(Endpoint), out var endpoint))
                 Endpoint = endpoint;
-            if (settings.TryGetValue<bool>(nameof(OffloadElapsedTime), out var offloadElapsedTime))
-                OffloadElapsedTime = offloadElapsedTime;
-            if (settings.TryGetValue<bool>(nameof(SendDirtyValuesOnly), out var sendDirtyValuesOnly))
-                SendDirtyValuesOnly = sendDirtyValuesOnly;
         }
     }
 

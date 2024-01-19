@@ -1,4 +1,4 @@
-﻿using MultiFunPlayer.Common;
+using MultiFunPlayer.Common;
 using MultiFunPlayer.Shortcut;
 using MultiFunPlayer.UI;
 using Newtonsoft.Json.Linq;
@@ -11,24 +11,21 @@ using System.Text;
 namespace MultiFunPlayer.OutputTarget.ViewModels;
 
 [DisplayName("WebSocket")]
-internal sealed class WebSocketOutputTarget : AsyncAbstractOutputTarget
+internal sealed class WebSocketOutputTarget(int instanceIndex, IEventAggregator eventAggregator, IDeviceAxisValueProvider valueProvider)
+    : AsyncAbstractOutputTarget(instanceIndex, eventAggregator, valueProvider)
 {
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
     public override ConnectionStatus Status { get; protected set; }
 
-    public bool OffloadElapsedTime { get; set; } = true;
-    public bool SendDirtyValuesOnly { get; set; } = true;
     public Uri Uri { get; set; } = new Uri("ws://127.0.0.1/ws");
 
-    public WebSocketOutputTarget(int instanceIndex, IEventAggregator eventAggregator, IDeviceAxisValueProvider valueProvider)
-        : base(instanceIndex, eventAggregator, valueProvider)
+    protected override IUpdateContext RegisterUpdateContext(DeviceAxisUpdateType updateType) => updateType switch
     {
-        UpdateInterval = 16;
-    }
-
-    public override int MinimumUpdateInterval => 16;
-    public override int MaximumUpdateInterval => 200;
+        DeviceAxisUpdateType.FixedUpdate => new TCodeAsyncFixedUpdateContext() { UpdateInterval = 16, MinimumUpdateInterval = 16, MaximumUpdateInterval = 200 },
+        DeviceAxisUpdateType.PolledUpdate => new AsyncPolledUpdateContext(),
+        _ => null,
+    };
 
     public bool IsConnected => Status == ConnectionStatus.Connected;
     public bool IsConnectBusy => Status == ConnectionStatus.Connecting || Status == ConnectionStatus.Disconnecting;
@@ -76,15 +73,15 @@ internal sealed class WebSocketOutputTarget : AsyncAbstractOutputTarget
         {
             var currentValues = DeviceAxis.All.ToDictionary(a => a, _ => double.NaN);
             var lastSentValues = DeviceAxis.All.ToDictionary(a => a, _ => double.NaN);
-            await FixedUpdateAsync(() => !token.IsCancellationRequested && client.State == WebSocketState.Open, async elapsed =>
+            await FixedUpdateAsync<TCodeAsyncFixedUpdateContext>(() => !token.IsCancellationRequested && client.State == WebSocketState.Open, async (context, elapsed) =>
             {
                 Logger.Trace("Begin FixedUpdate [Elapsed: {0}]", elapsed);
                 GetValues(currentValues);
 
-                var values = SendDirtyValuesOnly ? currentValues.Where(x => DeviceAxis.IsValueDirty(x.Value, lastSentValues[x.Key])) : currentValues;
+                var values = context.SendDirtyValuesOnly ? currentValues.Where(x => DeviceAxis.IsValueDirty(x.Value, lastSentValues[x.Key])) : currentValues;
                 values = values.Where(x => AxisSettings[x.Key].Enabled);
 
-                var commands = OffloadElapsedTime ? DeviceAxis.ToString(values) : DeviceAxis.ToString(values, elapsed * 1000);
+                var commands = context.OffloadElapsedTime ? DeviceAxis.ToString(values) : DeviceAxis.ToString(values, elapsed * 1000);
                 if (client.State == WebSocketState.Open && !string.IsNullOrWhiteSpace(commands))
                 {
                     Logger.Trace("Sending \"{0}\" to \"{1}\"", commands.Trim(), Uri.ToString());
@@ -116,17 +113,11 @@ internal sealed class WebSocketOutputTarget : AsyncAbstractOutputTarget
         if (action == SettingsAction.Saving)
         {
             settings[nameof(Uri)] = Uri?.ToString();
-            settings[nameof(OffloadElapsedTime)] = OffloadElapsedTime;
-            settings[nameof(SendDirtyValuesOnly)] = SendDirtyValuesOnly;
         }
         else if (action == SettingsAction.Loading)
         {
             if (settings.TryGetValue<Uri>(nameof(Uri), out var uri))
                 Uri = uri;
-            if (settings.TryGetValue<bool>(nameof(OffloadElapsedTime), out var offloadElapsedTime))
-                OffloadElapsedTime = offloadElapsedTime;
-            if (settings.TryGetValue<bool>(nameof(SendDirtyValuesOnly), out var sendDirtyValuesOnly))
-                SendDirtyValuesOnly = sendDirtyValuesOnly;
         }
     }
 

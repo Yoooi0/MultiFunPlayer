@@ -23,9 +23,6 @@ internal sealed class ButtplugOutputTarget : AsyncAbstractOutputTarget
     private SemaphoreSlim _startScanSemaphore;
     private SemaphoreSlim _endScanSemaphore;
 
-    public override int MinimumUpdateInterval => 16;
-    public override int MaximumUpdateInterval => 200;
-
     public override ConnectionStatus Status { get; protected set; }
     public EndPoint Endpoint { get; set; } = new IPEndPoint(IPAddress.Loopback, 12345);
     public ObservableConcurrentCollection<ButtplugDevice> AvailableDevices { get; }
@@ -66,10 +63,16 @@ internal sealed class ButtplugOutputTarget : AsyncAbstractOutputTarget
     {
         AvailableDevices = [];
         DeviceSettings = [];
-        UpdateInterval = 50;
 
         AvailableDevices.CollectionChanged += (s, e) => DeviceSettings.Refresh();
     }
+
+    protected override IUpdateContext RegisterUpdateContext(DeviceAxisUpdateType updateType) => updateType switch
+    {
+        DeviceAxisUpdateType.FixedUpdate => new AsyncFixedUpdateContext() { UpdateInterval = 50, MinimumUpdateInterval = 16, MaximumUpdateInterval = 200 },
+        DeviceAxisUpdateType.PolledUpdate => new AsyncPolledUpdateContext(),
+        _ => throw new NotImplementedException(),
+    };
 
     public bool IsScanBusy { get; set; }
     public bool CanScan => IsConnected;
@@ -191,7 +194,7 @@ internal sealed class ButtplugOutputTarget : AsyncAbstractOutputTarget
             return shouldUpdate;
         }
 
-        await FixedUpdateAsync(() => !token.IsCancellationRequested && client.IsConnected, async elapsed =>
+        await FixedUpdateAsync(() => !token.IsCancellationRequested && client.IsConnected, async (_, elapsed) =>
         {
             Logger.Trace("Begin FixedUpdate [Elapsed: {0}]", elapsed);
             GetValues(currentValues, x => x < 0.005 ? 0 : x);
@@ -222,7 +225,7 @@ internal sealed class ButtplugOutputTarget : AsyncAbstractOutputTarget
 
     private async Task PolledUpdateAsync(ButtplugClient client, CancellationToken token)
     {
-        await PolledUpdateAsync(DeviceAxis.All, () => !token.IsCancellationRequested && client.IsConnected, async (axis, snapshot, elapsed) =>
+        await PolledUpdateAsync(DeviceAxis.All, () => !token.IsCancellationRequested && client.IsConnected, async (_, axis, snapshot, elapsed) =>
         {
             Logger.Trace("Begin PolledUpdate [Axis: {0}, Index From: {1}, Index To: {2}, Duration: {3}, Elapsed: {4}]", axis, snapshot.IndexFrom, snapshot.IndexTo, snapshot.Duration, elapsed);
 

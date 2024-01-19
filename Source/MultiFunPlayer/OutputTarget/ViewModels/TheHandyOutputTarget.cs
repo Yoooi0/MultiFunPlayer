@@ -26,8 +26,6 @@ internal sealed class TheHandyOutputTarget : AsyncAbstractOutputTarget
     public TheHandyOutputTarget(int instanceIndex, IEventAggregator eventAggregator, IDeviceAxisValueProvider valueProvider)
         : base(instanceIndex, eventAggregator, valueProvider)
     {
-        UpdateInterval = 100;
-
         PropertyChanged += (s, e) =>
         {
             if (Status != ConnectionStatus.Connected || e.PropertyName != nameof(SourceAxis) || SourceAxis == null)
@@ -37,8 +35,11 @@ internal sealed class TheHandyOutputTarget : AsyncAbstractOutputTarget
         };
     }
 
-    public override int MinimumUpdateInterval => 16;
-    public override int MaximumUpdateInterval => 200;
+    protected override IUpdateContext RegisterUpdateContext(DeviceAxisUpdateType updateType) => updateType switch
+    {
+        DeviceAxisUpdateType.PolledUpdate => new AsyncPolledUpdateContext(),
+        _ => null,
+    };
 
     public bool IsConnected => Status == ConnectionStatus.Connected;
     public bool IsConnectBusy => Status == ConnectionStatus.Connecting || Status == ConnectionStatus.Disconnecting;
@@ -109,7 +110,7 @@ internal sealed class TheHandyOutputTarget : AsyncAbstractOutputTarget
             Status = ConnectionStatus.Connected;
             EventAggregator.Publish(new SyncRequestMessage());
 
-            await PolledUpdateAsync(SourceAxis, () => !token.IsCancellationRequested, async (snapshot, elapsed) =>
+            await PolledUpdateAsync(SourceAxis, () => !token.IsCancellationRequested, async (_, snapshot, elapsed) =>
             {
                 Logger.Trace("Begin PolledUpdate [Index From: {0}, Index To: {1}, Duration: {2}, Elapsed: {3}]", snapshot.IndexFrom, snapshot.IndexTo, snapshot.Duration, elapsed);
                 if (snapshot.KeyframeFrom == null || snapshot.KeyframeTo == null)
@@ -122,7 +123,7 @@ internal sealed class TheHandyOutputTarget : AsyncAbstractOutputTarget
                 var duration = (int)Math.Floor(snapshot.Duration * 1000 + 0.75);
                 var content = $"{{ \"immediateResponse\": true, \"stopOnTarget\": true, \"duration\": {duration}, \"position\": {position.ToString(CultureInfo.InvariantCulture)} }}";
 
-                _ = await ApiPutAsync(client, "hdsp/xpt", content, token);
+                var result = await ApiPutAsync(client, "hdsp/xpt", content, token);
             }, token);
         }
         catch (OperationCanceledException) { }

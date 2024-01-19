@@ -25,8 +25,6 @@ internal sealed class SerialOutputTarget(int instanceIndex, IEventAggregator eve
 
     public override ConnectionStatus Status { get; protected set; }
 
-    public bool OffloadElapsedTime { get; set; } = true;
-    public bool SendDirtyValuesOnly { get; set; } = true;
     public ObservableConcurrentCollection<SerialPortInfo> SerialPorts { get; set; } = [];
     public SerialPortInfo SelectedSerialPort { get; set; }
     public string SelectedSerialPortDeviceId { get; set; }
@@ -44,6 +42,13 @@ internal sealed class SerialOutputTarget(int instanceIndex, IEventAggregator eve
     public int ReadBufferSize { get; set; } = 4096;
 
     public IReadOnlyCollection<int> AvailableBaudRates { get; } = [50, 75, 110, 134, 150, 200, 300, 600, 1200, 1800, 2400, 4800, 9600, 19200, 28800, 38400, 57600, 76800, 115200, 230400, 460800, 576000, 921600];
+
+    protected override IUpdateContext RegisterUpdateContext(DeviceAxisUpdateType updateType) => updateType switch
+    {
+        DeviceAxisUpdateType.FixedUpdate => new TCodeThreadFixedUpdateContext(),
+        DeviceAxisUpdateType.PolledUpdate => new ThreadPolledUpdateContext(),
+        _ => null,
+    };
 
     protected override void OnInitialActivate()
     {
@@ -170,7 +175,7 @@ internal sealed class SerialOutputTarget(int instanceIndex, IEventAggregator eve
             var receiveBuffer = new SplittingStringBuffer('\n');
             var currentValues = DeviceAxis.All.ToDictionary(a => a, _ => double.NaN);
             var lastSentValues = DeviceAxis.All.ToDictionary(a => a, _ => double.NaN);
-            FixedUpdate(() => !token.IsCancellationRequested && serialPort.IsOpen, elapsed =>
+            FixedUpdate<TCodeThreadFixedUpdateContext>(() => !token.IsCancellationRequested && serialPort.IsOpen, (context, elapsed) =>
             {
                 Logger.Trace("Begin FixedUpdate [Elapsed: {0}]", elapsed);
                 GetValues(currentValues);
@@ -181,14 +186,14 @@ internal sealed class SerialOutputTarget(int instanceIndex, IEventAggregator eve
                     Logger.Debug("Received \"{0}\" from \"{1}\"", receivedString, SelectedSerialPortDeviceId);
 
                     receiveBuffer.Push(receivedString);
-                    foreach(var command in receiveBuffer.Consume())
+                    foreach (var command in receiveBuffer.Consume())
                         tcodeInputProcessor.Parse(command);
                 }
 
-                var values = SendDirtyValuesOnly ? currentValues.Where(x => DeviceAxis.IsValueDirty(x.Value, lastSentValues[x.Key])) : currentValues;
+                var values = context.SendDirtyValuesOnly ? currentValues.Where(x => DeviceAxis.IsValueDirty(x.Value, lastSentValues[x.Key])) : currentValues;
                 values = values.Where(x => AxisSettings[x.Key].Enabled);
 
-                var commands = OffloadElapsedTime ? DeviceAxis.ToString(values) : DeviceAxis.ToString(values, elapsed * 1000);
+                var commands = context.OffloadElapsedTime ? DeviceAxis.ToString(values) : DeviceAxis.ToString(values, elapsed * 1000);
                 if (serialPort.IsOpen && !string.IsNullOrWhiteSpace(commands))
                 {
                     Logger.Trace("Sending \"{0}\" to \"{1}\"", commands.Trim(), SelectedSerialPortDeviceId);
@@ -215,8 +220,6 @@ internal sealed class SerialOutputTarget(int instanceIndex, IEventAggregator eve
         if (action == SettingsAction.Saving)
         {
             settings[nameof(SelectedSerialPort)] = SelectedSerialPortDeviceId;
-            settings[nameof(OffloadElapsedTime)] = OffloadElapsedTime;
-            settings[nameof(SendDirtyValuesOnly)] = SendDirtyValuesOnly;
             settings[nameof(BaudRate)] = BaudRate;
             settings[nameof(Parity)] = JToken.FromObject(Parity);
             settings[nameof(StopBits)] = JToken.FromObject(StopBits);
@@ -233,10 +236,6 @@ internal sealed class SerialOutputTarget(int instanceIndex, IEventAggregator eve
         {
             if (settings.TryGetValue<string>(nameof(SelectedSerialPort), out var selectedSerialPort))
                 SelectSerialPortByDeviceId(selectedSerialPort);
-            if (settings.TryGetValue<bool>(nameof(OffloadElapsedTime), out var offloadElapsedTime))
-                OffloadElapsedTime = offloadElapsedTime;
-            if (settings.TryGetValue<bool>(nameof(SendDirtyValuesOnly), out var sendDirtyValuesOnly))
-                SendDirtyValuesOnly = sendDirtyValuesOnly;
 
             if (settings.TryGetValue<int>(nameof(BaudRate), out var baudRate)) BaudRate = baudRate;
             if (settings.TryGetValue<Parity>(nameof(Parity), out var parity)) Parity = parity;
