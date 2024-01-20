@@ -30,9 +30,9 @@ jobs:
     - name: Install Dependencies
       run: dotnet restore
     - name: Build Framework Dependent
-      run: dotnet publish --self-contained false --configuration Release --property:PublishDir=.\bin\Release\win-x64\publish\framework-dependent /p:AssemblyVersion=${{ steps.gitversion.outputs.assemblySemVer }} /p:FileVersion=${{ steps.gitversion.outputs.assemblySemFileVer }} /p:InformationalVersion=${{ steps.gitversion.outputs.fullSemVer }}.${{ steps.gitversion.outputs.shortSha }}
+      run: dotnet publish --self-contained false --configuration Release --property:PublishDir=.\bin\Release\win-x64\publish\framework-dependent
     - name: Build Self Contained
-      run: dotnet publish --self-contained true --configuration Release --property:PublishDir=.\bin\Release\win-x64\publish\self-contained /p:AssemblyVersion=${{ steps.gitversion.outputs.assemblySemVer }} /p:FileVersion=${{ steps.gitversion.outputs.assemblySemFileVer }} /p:InformationalVersion=${{ steps.gitversion.outputs.fullSemVer }}.${{ steps.gitversion.outputs.shortSha }}
+      run: dotnet publish --self-contained true --configuration Release --property:PublishDir=.\bin\Release\win-x64\publish\self-contained
     - name: Setup NetBeauty
       run: dotnet tool install --global nulastudio.nbeauty
     - name: Run NetBeauty

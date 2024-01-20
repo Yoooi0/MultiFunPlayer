@@ -66,17 +66,62 @@
                 <Button Style="{StaticResource WindowButtonStyle}"
                         Click="{s:Action OnInformationClick}"
                         DockPanel.Dock="Right"
-                        Margin="0 -1 0 -1">
+                        Width="40"
+                        Height="32">
                     <material:PackIcon Foreground="{Binding BorderForegroundBrush, RelativeSource={RelativeSource AncestorType={x:Type controls:MaterialWindow}}}"
+                                       HorizontalAlignment="Center"
                                        Kind="HelpCircleOutline"
                                        Width="24"
                                        Height="24"
-                                       Margin="0"/>
+                                       Margin="0">
+                        <material:PackIcon.Style>
+                            <Style TargetType="{x:Type material:PackIcon}">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding DataContext.Information.Update, RelativeSource={RelativeSource AncestorType={x:Type controls:MaterialWindow}}, Converter={StaticResource InvertedNullableToBooleanConverter}}"
+                                                 Value="True">
+                                        <DataTrigger.EnterActions>
+                                            <BeginStoryboard x:Name="UpdateFoundStoryboard">
+                                                <Storyboard>
+                                                    <DoubleAnimation Storyboard.TargetProperty="Opacity"
+                                                                     From="1" To="0.5" Duration="0:0:0.750"
+                                                                     RepeatBehavior="Forever"
+                                                                     AutoReverse="True">
+                                                        <DoubleAnimation.EasingFunction>
+                                                            <CubicEase EasingMode="EaseIn"/>
+                                                        </DoubleAnimation.EasingFunction>
+                                                    </DoubleAnimation>
+                                                    <DoubleAnimation Storyboard.TargetProperty="Width"
+                                                                     From="26" To="24" Duration="0:0:0.750"
+                                                                     RepeatBehavior="Forever"
+                                                                     AutoReverse="True">
+                                                        <DoubleAnimation.EasingFunction>
+                                                            <CubicEase EasingMode="EaseIn"/>
+                                                        </DoubleAnimation.EasingFunction>
+                                                    </DoubleAnimation>
+                                                    <DoubleAnimation Storyboard.TargetProperty="Height"
+                                                                     From="26" To="24" Duration="0:0:0.750"
+                                                                     RepeatBehavior="Forever"
+                                                                     AutoReverse="True">
+                                                        <DoubleAnimation.EasingFunction>
+                                                            <CubicEase EasingMode="EaseIn"/>
+                                                        </DoubleAnimation.EasingFunction>
+                                                    </DoubleAnimation>
+                                                </Storyboard>
+                                            </BeginStoryboard>
+                                        </DataTrigger.EnterActions>
+                                        <DataTrigger.ExitActions>
+                                            <RemoveStoryboard BeginStoryboardName="UpdateFoundStoryboard" />
+                                        </DataTrigger.ExitActions>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </material:PackIcon.Style>
+                    </material:PackIcon>
                 </Button>
                 <Button Style="{StaticResource WindowButtonStyle}"
                         Click="{s:Action OnSettingsClick}"
                         DockPanel.Dock="Right"
-                        Margin="0 -1 0 -1">
+                        Height="32">
                     <material:PackIcon Foreground="{Binding BorderForegroundBrush, RelativeSource={RelativeSource AncestorType={x:Type controls:MaterialWindow}}}"
                                        Kind="Cog"
                                        Width="24"
@@ -86,7 +131,7 @@
                 <Button Style="{StaticResource WindowButtonStyle}"
                         Click="{s:Action OnPluginClick}"
                         DockPanel.Dock="Right"
-                        Margin="0 -1 0 -1">
+                        Height="32">
                     <material:PackIcon Foreground="{Binding BorderForegroundBrush, RelativeSource={RelativeSource AncestorType={x:Type controls:MaterialWindow}}}"
                                        Kind="PowerPlug"
                                        Width="24"

@@ -5,7 +5,6 @@ using MultiFunPlayer.UI.Dialogs.ViewModels;
 using Newtonsoft.Json.Linq;
 using Stylet;
 using StyletIoC;
-using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Input;
 
@@ -18,24 +17,15 @@ internal sealed class RootViewModel : Conductor<IScreen>.Collection.AllActive, I
     [Inject] public OutputTargetViewModel OutputTarget { get; set; }
     [Inject] public SettingsViewModel Settings { get; set; }
     [Inject] public PluginViewModel Plugin { get; set; }
+    [Inject] public InformationViewModel Information { get; set; }
 
     public bool DisablePopup { get; set; }
     public int WindowHeight { get; set; }
     public int WindowLeft { get; set; }
     public int WindowTop { get; set; }
 
-    public string WindowTitleVersion
-    {
-        get
-        {
-            var match = Regex.Match(ReflectionUtils.AssemblyInformationalVersion, @"^(?<version>\d+\.\d+\.\d+)(?:-(?<tag>.+))?\.(?<sha>.{7})$");
-            if (!match.Success)
-                return $"v{ReflectionUtils.AssemblyInformationalVersion}";
-            if (match.Groups["tag"].Success)
-                return $"v{match.Groups["version"]}.{match.Groups["sha"]}";
-            return $"v{match.Groups["version"]}";
-        }
-    }
+    public string WindowTitleVersion => GitVersionInformation.BranchName != "master" ? $"v{GitVersionInformation.MajorMinorPatch}.{GitVersionInformation.ShortSha}"
+                                                                                     : $"v{GitVersionInformation.MajorMinorPatch}";
 
     public RootViewModel(IEventAggregator eventAggregator)
     {
@@ -54,7 +44,7 @@ internal sealed class RootViewModel : Conductor<IScreen>.Collection.AllActive, I
         base.OnActivate();
     }
 
-    public void OnInformationClick() => _ = DialogHelper.ShowOnUIThreadAsync(new InformationMessageDialog(showCheckbox: false), "RootDialog");
+    public void OnInformationClick() => _ = DialogHelper.ShowOnUIThreadAsync(Information, "RootDialog");
     public void OnSettingsClick() => _ = DialogHelper.ShowOnUIThreadAsync(Settings, "RootDialog");
     public void OnPluginClick() => _ = DialogHelper.ShowOnUIThreadAsync(Plugin, "RootDialog");
 
@@ -104,11 +94,8 @@ internal sealed class RootViewModel : Conductor<IScreen>.Collection.AllActive, I
             {
                 Execute.PostToUIThread(async () =>
                 {
-                    var result = await DialogHelper.ShowAsync(new InformationMessageDialog(showCheckbox: true), "RootDialog");
-                    if (result is not bool disablePopup)
-                        return;
-
-                    DisablePopup = disablePopup;
+                    await DialogHelper.ShowAsync(Information, "RootDialog");
+                    DisablePopup = true;
                 });
             }
         }

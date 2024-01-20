@@ -384,7 +384,7 @@ internal sealed class ButtplugOutputTarget : AsyncAbstractOutputTarget
                 Endpoint = endpoint;
 
             if (settings.TryGetValue<List<ButtplugDeviceSettings>>(nameof(DeviceSettings), out var deviceSettings))
-                DeviceSettings.SetFrom(deviceSettings);
+                DeviceSettings.SetFrom(deviceSettings.Where(d => d.SourceAxis != null));
         }
     }
 
