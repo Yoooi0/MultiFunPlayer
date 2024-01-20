@@ -44,7 +44,7 @@ internal sealed class DriveShortcut(IShortcutActionResolver actionResolver, IAxi
         PrintProperty(builder, () => Invert);
     }
 }
-public enum DriveShortcutMode
+internal enum DriveShortcutMode
 {
     Absolute,
     Relative,

@@ -39,7 +39,7 @@ internal sealed class ThresholdShortcut(IShortcutActionResolver actionResolver, 
     }
 }
 
-public enum ThresholdTriggerMode
+internal enum ThresholdTriggerMode
 {
     Rising,
     Falling,

@@ -7,7 +7,7 @@ using System.ComponentModel;
 
 namespace MultiFunPlayer.Shortcut;
 
-public interface IShortcutActionConfiguration
+internal interface IShortcutActionConfiguration
 {
     string Name { get; }
     IReadOnlyList<IShortcutSetting> Settings { get; }
@@ -18,7 +18,7 @@ public interface IShortcutActionConfiguration
     object[] GetActionParams(IInputGestureData gestureData = null);
 }
 
-public sealed class ShortcutActionConfiguration : PropertyChangedBase, IShortcutActionConfiguration
+internal sealed class ShortcutActionConfiguration : PropertyChangedBase, IShortcutActionConfiguration
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
