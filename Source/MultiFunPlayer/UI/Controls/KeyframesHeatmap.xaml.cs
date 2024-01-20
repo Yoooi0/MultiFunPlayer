@@ -34,7 +34,7 @@ internal sealed partial class KeyframesHeatmap : UserControl
 
     public double ScrubberPosition => ShowScrubber ? Position / Duration * ActualWidth : 0;
     public bool ShowScrubber => double.IsFinite(Duration) && Duration > 0;
-    public DeviceAxis SelectedAxis => DeviceAxis.All.ElementAt(_selectedAxisIndex);
+    public DeviceAxis SelectedAxis => DeviceAxis.All[_selectedAxisIndex];
 
     public event EventHandler<SeekRequestEventArgs> SeekRequest;
 
@@ -268,7 +268,7 @@ internal sealed partial class KeyframesHeatmap : UserControl
     {
         base.OnMouseWheel(e);
 
-        _selectedAxisIndex = Math.Clamp(_selectedAxisIndex - Math.Sign(e.Delta), 0, DeviceAxis.All.Count - 1);
+        _selectedAxisIndex = Math.Clamp(_selectedAxisIndex - Math.Sign(e.Delta), 0, DeviceAxis.All.Length - 1);
 
         Refresh();
         if (ToolTipIsOpen)

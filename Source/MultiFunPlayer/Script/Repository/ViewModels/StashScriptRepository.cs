@@ -18,7 +18,7 @@ internal sealed class StashScriptRepository : AbstractScriptRepository
 
     [JsonProperty] public Uri ServerBaseUri { get; set; } = new Uri("http://127.0.0.1:9999");
     [JsonProperty] public StashVideoMatchType VideoMatchType { get; set; } = StashVideoMatchType.UseFirstMatchOnly;
-    [JsonProperty] public DeviceAxis ScriptMatchAxis { get; set; } = DeviceAxis.All.First();
+    [JsonProperty] public DeviceAxis ScriptMatchAxis { get; set; } = DeviceAxis.All.FirstOrDefault();
 
     public override async ValueTask<Dictionary<DeviceAxis, IScriptResource>> SearchForScriptsAsync(
         MediaResourceInfo mediaResource, IEnumerable<DeviceAxis> axes, ILocalScriptRepository localRepository, CancellationToken token)
