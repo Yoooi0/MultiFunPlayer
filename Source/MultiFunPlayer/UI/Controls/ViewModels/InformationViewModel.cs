@@ -1,4 +1,4 @@
-﻿using MaterialDesignThemes.Wpf;
+using MaterialDesignThemes.Wpf;
 using MultiFunPlayer.Common;
 using Newtonsoft.Json.Linq;
 using Stylet;
@@ -45,7 +45,7 @@ internal sealed class InformationViewModel : Screen
 
     private async Task CheckForUpdate()
     {
-        if (GitVersionInformation.UncommittedChanges == "0")
+        if (GitVersionInformation.UncommittedChanges != "0")
             return;
 
         using var client = NetUtils.CreateHttpClient();
