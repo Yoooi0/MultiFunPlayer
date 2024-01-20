@@ -1,6 +1,7 @@
 using MultiFunPlayer.Settings.Converters;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using System.Collections.Frozen;
 using System.Collections.Immutable;
 using System.ComponentModel;
 using System.Runtime.Serialization;
@@ -28,7 +29,7 @@ public sealed class DeviceAxis
     private static int _count;
     private static int _outputMaximum;
     private static string _outputFormat;
-    private static Dictionary<string, DeviceAxis> _axes;
+    private static FrozenDictionary<string, DeviceAxis> _axes;
     public static ImmutableArray<DeviceAxis> All { get; private set; }
 
     public static DeviceAxis Parse(string name) => _axes.GetValueOrDefault(name, null);
@@ -60,7 +61,7 @@ public sealed class DeviceAxis
 
         _outputMaximum = (int)(Math.Pow(10, precision) - 1);
         _outputFormat = $"{{0:{new string('0', precision)}}}";
-        _axes = axes.ToDictionary(a => a.Name, a => a);
+        _axes = axes.ToFrozenDictionary(a => a.Name, a => a);
         All = [.. axes];
     }
 }
