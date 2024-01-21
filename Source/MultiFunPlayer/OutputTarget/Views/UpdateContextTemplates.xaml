@@ -9,7 +9,7 @@
             <TextBlock DockPanel.Dock="Right" 
                        Text="{Binding AverageUpdateError, StringFormat={}{0:F2} ms}"
                        TextAlignment="Right"
-                       Width="60"/>
+                       Width="80"/>
         </DockPanel>
     </DataTemplate>
 
@@ -20,7 +20,7 @@
             <TextBlock DockPanel.Dock="Right" 
                        Text="{Binding AverageUpdateError, StringFormat={}{0:F2} ms}"
                        TextAlignment="Right"
-                       Width="60"/>
+                       Width="80"/>
         </DockPanel>
     </DataTemplate>
 
