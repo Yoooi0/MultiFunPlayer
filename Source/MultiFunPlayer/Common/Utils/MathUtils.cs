@@ -8,6 +8,9 @@ public static class MathUtils
     public static double Clamp01(double x) => Math.Clamp(x, 0, 1);
 
     [MethodImpl(MethodImplOptions.AggressiveOptimization | MethodImplOptions.AggressiveInlining)]
+    public static double ClampSafe(double x, double from, double to) => from <= to ? Math.Clamp(x, from, to) : Math.Clamp(x, to, from);
+
+    [MethodImpl(MethodImplOptions.AggressiveOptimization | MethodImplOptions.AggressiveInlining)]
     public static double Lerp(double from, double to, double t) => from + (to - from) * Math.Clamp(t, 0, 1);
 
     [MethodImpl(MethodImplOptions.AggressiveOptimization | MethodImplOptions.AggressiveInlining)]
