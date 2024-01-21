@@ -7,13 +7,13 @@ public static class MathUtils
     [MethodImpl(MethodImplOptions.AggressiveOptimization | MethodImplOptions.AggressiveInlining)]
     public static double Clamp01(double x) => Math.Clamp(x, 0, 1);
 
-    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
+    [MethodImpl(MethodImplOptions.AggressiveOptimization | MethodImplOptions.AggressiveInlining)]
     public static double Lerp(double from, double to, double t) => from + (to - from) * Math.Clamp(t, 0, 1);
 
-    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
+    [MethodImpl(MethodImplOptions.AggressiveOptimization | MethodImplOptions.AggressiveInlining)]
     public static double UnLerp(double from, double to, double t) => Math.Clamp((t - from) / (to - from), 0, 1);
 
-    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
+    [MethodImpl(MethodImplOptions.AggressiveOptimization | MethodImplOptions.AggressiveInlining)]
     public static double Map(double x, double from0, double to0, double from1, double to1) => Lerp(from1, to1, UnLerp(from0, to0, x));
 }
 
