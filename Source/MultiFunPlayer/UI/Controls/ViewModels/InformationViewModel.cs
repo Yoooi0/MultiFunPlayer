@@ -13,6 +13,8 @@ namespace MultiFunPlayer.UI.Controls.ViewModels;
 
 internal sealed class InformationViewModel : Screen
 {
+    private static readonly Uri GitHubApiBase = new("https://api.github.com/repos/Yoooi0/MultiFunPlayer/");
+
     public string VersionText => $"v{GitVersionInformation.InformationalVersion}";
     public UpdateData Update { get; private set; }
 
@@ -62,7 +64,7 @@ internal sealed class InformationViewModel : Screen
             if (!Version.TryParse(GitVersionInformation.MajorMinorPatch, out var currentVersion))
                 return;
 
-            var tagsUri = new Uri("https://api.github.com/repos/Yoooi0/MultiFunPlayer/git/matching-refs/tags");
+            var tagsUri = new Uri(GitHubApiBase, "git/matching-refs/tags");
             var tags = await GitHubApiGet<JArray>(client, tagsUri);
             var versions = tags.OfType<JObject>()
                                .Select(o => Regex.Match(o["ref"].ToString(), @"^refs\/tags\/(?<version>\d+\.\d+\.\d+)$"))
@@ -77,7 +79,7 @@ internal sealed class InformationViewModel : Screen
             if (versions.Count == 0)
                 return;
 
-            var releasesUri = new Uri("https://api.github.com/repos/Yoooi0/MultiFunPlayer/releases");
+            var releasesUri = new Uri(GitHubApiBase, "releases");
             var releases = await GitHubApiGet<JArray>(client, releasesUri);
             var releasesMap = new Dictionary<Version, JObject>();
             foreach(var release in releases.OfType<JObject>())
@@ -117,7 +119,7 @@ internal sealed class InformationViewModel : Screen
         {
             var commitSha = GitVersionInformation.Sha;
 
-            var runsUri = new Uri($"https://api.github.com/repos/Yoooi0/MultiFunPlayer/actions/runs?per_page=1&branch={GitVersionInformation.EscapedBranchName}&status=success");
+            var runsUri = new Uri(GitHubApiBase, $"actions/runs?per_page=1&branch={GitVersionInformation.EscapedBranchName}&status=success");
             var runs = await GitHubApiGet<JObject>(client, runsUri);
             if (runs["total_count"].ToObject<int>() == 0)
                 return;
@@ -127,7 +129,7 @@ internal sealed class InformationViewModel : Screen
             if (runSha == commitSha)
                 return;
 
-            var compareUri = new Uri($"https://api.github.com/repos/Yoooi0/MultiFunPlayer/compare/{commitSha}...{runSha}");
+            var compareUri = new Uri(GitHubApiBase, $"compare/{commitSha}...{runSha}");
             var compare = await GitHubApiGet<JObject>(client, compareUri);
             if (compare["status"].ToString() != "ahead")
                 return;
