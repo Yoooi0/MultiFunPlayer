@@ -143,12 +143,16 @@ internal sealed class InformationViewModel : Screen
                 updateContent = new Span() { BaselineAlignment = BaselineAlignment.Center };
                 foreach (var commit in compare["commits"].OfType<JObject>())
                 {
+                    var commitMessage = commit["commit"]["message"].ToString().Trim();
+                    if (string.Equals(commitMessage, "cleanup", StringComparison.OrdinalIgnoreCase))
+                        continue;
+
                     var commitContent = new Span() { BaselineAlignment = BaselineAlignment.Center };
 
                     commitContent.Inlines.Add(new Run($"{commit["commit"]["author"]["date"].ToObject<DateTime>():yyyy/MM/dd} ("));
                     commitContent.Inlines.Add(CreateHyperlink(commit["sha"].ToString()[..7], new Uri(commit["html_url"].ToString())));
                     commitContent.Inlines.Add(new Run("): "));
-                    commitContent.Inlines.Add(new Run(commit["commit"]["message"].ToString()));
+                    commitContent.Inlines.Add(new Run(commitMessage));
                     commitContent.Inlines.Add(new LineBreak());
 
                     updateContent.Inlines.Add(commitContent);
