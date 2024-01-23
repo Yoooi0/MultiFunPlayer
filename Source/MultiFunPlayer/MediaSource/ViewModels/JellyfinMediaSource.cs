@@ -323,8 +323,8 @@ internal sealed class JellyfinMediaSource(IShortcutManager shortcutManager, IEve
         #region ServerBaseUri
         s.RegisterAction<string>($"{Name}::ServerBaseUri::Set", s => s.WithLabel("Endpoint").WithDescription("scheme://ipOrHost:port"), serverBaseUri =>
         {
-            if (Uri.TryCreate(serverBaseUri, UriKind.Absolute, out var endpoint))
-                ServerBaseUri = endpoint;
+            if (Uri.TryCreate(serverBaseUri, UriKind.Absolute, out var uri))
+                ServerBaseUri = uri;
         });
         #endregion
     }

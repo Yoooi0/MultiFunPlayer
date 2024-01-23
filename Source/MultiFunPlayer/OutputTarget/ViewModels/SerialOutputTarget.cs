@@ -255,8 +255,8 @@ internal sealed class SerialOutputTarget(int instanceIndex, IEventAggregator eve
     {
         base.RegisterActions(s);
 
-        #region ComPort
-        s.RegisterAction<string>($"{Identifier}::SerialPort::Set", s => s.WithLabel("Device ID"), deviceId => SelectSerialPortByDeviceId(deviceId));
+        #region SerialPort
+        s.RegisterAction<string>($"{Identifier}::SerialPort::Set", s => s.WithLabel("Device ID"), SelectSerialPortByDeviceId);
         #endregion
     }
 
