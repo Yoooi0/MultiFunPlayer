@@ -33,7 +33,7 @@ internal sealed class TcpOutputTarget(int instanceIndex, IEventAggregator eventA
 
         try
         {
-            Logger.Info("Connecting to {0} at \"{1}\"", Identifier, $"tcp://{Endpoint}");
+            Logger.Info("Connecting to {0} at \"{1}\"", Identifier, $"tcp://{Endpoint.ToUriString()}");
             client.Connect(Endpoint);
             Status = ConnectionStatus.Connected;
         }
@@ -59,7 +59,7 @@ internal sealed class TcpOutputTarget(int instanceIndex, IEventAggregator eventA
                 if (client.Connected && client.Available > 0)
                 {
                     var message = Encoding.UTF8.GetString(stream.ReadBytes(client.Available));
-                    Logger.Debug("Received \"{0}\" from \"{1}\"", message, $"tcp://{Endpoint}");
+                    Logger.Debug("Received \"{0}\" from \"{1}\"", message, $"tcp://{Endpoint.ToUriString()}");
                 }
 
                 var values = SendDirtyValuesOnly ? Values.Where(x => DeviceAxis.IsValueDirty(x.Value, lastSentValues[x.Key])) : Values;
@@ -68,7 +68,7 @@ internal sealed class TcpOutputTarget(int instanceIndex, IEventAggregator eventA
                 var commands = OffloadElapsedTime ? DeviceAxis.ToString(values) : DeviceAxis.ToString(values, elapsed * 1000);
                 if (client.Connected && !string.IsNullOrWhiteSpace(commands))
                 {
-                    Logger.Trace("Sending \"{0}\" to \"{1}\"", commands.Trim(), $"tcp://{Endpoint}");
+                    Logger.Trace("Sending \"{0}\" to \"{1}\"", commands.Trim(), $"tcp://{Endpoint.ToUriString()}");
 
                     var encoded = Encoding.UTF8.GetBytes(commands, buffer);
                     stream.Write(buffer, 0, encoded);
@@ -89,7 +89,7 @@ internal sealed class TcpOutputTarget(int instanceIndex, IEventAggregator eventA
 
         if (action == SettingsAction.Saving)
         {
-            settings[nameof(Endpoint)] = Endpoint?.ToString();
+            settings[nameof(Endpoint)] = Endpoint?.ToUriString();
             settings[nameof(OffloadElapsedTime)] = OffloadElapsedTime;
             settings[nameof(SendDirtyValuesOnly)] = SendDirtyValuesOnly;
         }

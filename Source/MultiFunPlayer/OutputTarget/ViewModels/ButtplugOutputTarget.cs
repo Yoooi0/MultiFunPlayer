@@ -122,8 +122,8 @@ internal sealed class ButtplugOutputTarget : AsyncAbstractOutputTarget
 
         try
         {
-            Logger.Info("Connecting to {0} at \"{1}\"", Identifier, $"ws://{Endpoint}");
-            await client.ConnectAsync(new Uri($"ws://{Endpoint}"), token);
+            Logger.Info("Connecting to {0} at \"{1}\"", Identifier, $"ws://{Endpoint.ToUriString()}");
+            await client.ConnectAsync(new Uri($"ws://{Endpoint.ToUriString()}"), token);
             Status = ConnectionStatus.Connected;
         }
         catch (Exception e)
@@ -313,7 +313,7 @@ internal sealed class ButtplugOutputTarget : AsyncAbstractOutputTarget
 
         if (action == SettingsAction.Saving)
         {
-            settings[nameof(Endpoint)] = Endpoint?.ToString();
+            settings[nameof(Endpoint)] = Endpoint?.ToUriString();
             settings[nameof(DeviceSettings)] = JArray.FromObject(DeviceSettings);
         }
         else if (action == SettingsAction.Loading)
@@ -350,7 +350,7 @@ internal sealed class ButtplugOutputTarget : AsyncAbstractOutputTarget
         try
         {
             using var client = new ClientWebSocket();
-            await client.ConnectAsync(new Uri($"ws://{Endpoint}"), token);
+            await client.ConnectAsync(new Uri($"ws://{Endpoint.ToUriString()}"), token);
             var result = client.State == WebSocketState.Open;
             await client.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, null, token);
             return result;

@@ -1,4 +1,4 @@
-﻿using MultiFunPlayer.Common;
+using MultiFunPlayer.Common;
 using MultiFunPlayer.Input;
 using MultiFunPlayer.Input.TCode;
 using MultiFunPlayer.Shortcut;
@@ -35,7 +35,7 @@ internal sealed class UdpOutputTarget(int instanceIndex, IEventAggregator eventA
 
         try
         {
-            Logger.Info("Connecting to {0} at \"{1}\"", Identifier, $"udp://{Endpoint}");
+            Logger.Info("Connecting to {0} at \"{1}\"", Identifier, $"udp://{Endpoint.ToUriString()}");
 
             const int SIO_UDP_CONNRESET = -1744830452;
             client.Client.IOControl((IOControlCode)SIO_UDP_CONNRESET, [0, 0, 0, 0], null);
@@ -68,7 +68,7 @@ internal sealed class UdpOutputTarget(int instanceIndex, IEventAggregator eventA
                 {
                     var endpoint = new IPEndPoint(IPAddress.Any, 0);
                     var message = Encoding.UTF8.GetString(client.Receive(ref endpoint));
-                    Logger.Debug("Received \"{0}\" from \"{1}\"", message, $"udp://{endpoint}");
+                    Logger.Debug("Received \"{0}\" from \"{1}\"", message, $"udp://{endpoint.ToUriString()}");
 
                     receiveBuffer.Push(message);
                     foreach (var command in receiveBuffer.Consume())
@@ -81,7 +81,7 @@ internal sealed class UdpOutputTarget(int instanceIndex, IEventAggregator eventA
                 var commands = OffloadElapsedTime ? DeviceAxis.ToString(values) : DeviceAxis.ToString(values, elapsed * 1000);
                 if (!string.IsNullOrWhiteSpace(commands))
                 {
-                    Logger.Trace("Sending \"{0}\" to \"{1}\"", commands.Trim(), $"udp://{Endpoint}");
+                    Logger.Trace("Sending \"{0}\" to \"{1}\"", commands.Trim(), $"udp://{Endpoint.ToUriString()}");
 
                     var encoded = Encoding.UTF8.GetBytes(commands, buffer);
                     client.Send(buffer, encoded);
@@ -102,7 +102,7 @@ internal sealed class UdpOutputTarget(int instanceIndex, IEventAggregator eventA
 
         if (action == SettingsAction.Saving)
         {
-            settings[nameof(Endpoint)] = Endpoint?.ToString();
+            settings[nameof(Endpoint)] = Endpoint?.ToUriString();
             settings[nameof(OffloadElapsedTime)] = OffloadElapsedTime;
             settings[nameof(SendDirtyValuesOnly)] = SendDirtyValuesOnly;
         }

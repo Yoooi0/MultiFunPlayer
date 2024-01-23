@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using PropertyChanged;
 using System.IO;
 using System.Net;
@@ -18,7 +18,7 @@ internal sealed class UriToLocalMediaPathModifier : AbstractMediaPathModifier
     private readonly HttpClient _client;
 
     [DependsOn(nameof(UriEndpoint))]
-    public override string Description => UriEndpoint?.ToString();
+    public override string Description => UriEndpoint?.ToUriString();
 
     [JsonProperty] public DirectoryInfo MediaDirectory { get; set; }
     [JsonProperty] public EndPoint UriEndpoint { get; set; }

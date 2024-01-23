@@ -32,7 +32,7 @@ internal sealed class HereSphereMediaSource(IShortcutManager shortcutManager, IE
     {
         try
         {
-            Logger.Info("Connecting to {0} at \"{1}\"", Name, Endpoint);
+            Logger.Info("Connecting to {0} at \"{1}\"", Name, Endpoint.ToUriString());
             if (Endpoint == null)
                 throw new Exception("Endpoint cannot be null.");
 
@@ -215,7 +215,7 @@ internal sealed class HereSphereMediaSource(IShortcutManager shortcutManager, IE
 
         if (action == SettingsAction.Saving)
         {
-            settings[nameof(Endpoint)] = Endpoint?.ToString();
+            settings[nameof(Endpoint)] = Endpoint?.ToUriString();
         }
         else if (action == SettingsAction.Loading)
         {
