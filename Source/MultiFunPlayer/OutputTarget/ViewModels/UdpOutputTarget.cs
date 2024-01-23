@@ -24,7 +24,7 @@ internal sealed class UdpOutputTarget(int instanceIndex, IEventAggregator eventA
     public DeviceAxisUpdateType UpdateType { get; set; } = DeviceAxisUpdateType.FixedUpdate;
     public bool CanChangeUpdateType => !IsConnectBusy && !IsConnected;
 
-    public EndPoint Endpoint { get; set; } = new IPEndPoint(IPAddress.Loopback, 8080);
+    public EndPoint Endpoint { get; set; } = new IPEndPoint(IPAddress.Loopback, 8000);
 
     public bool IsConnected => Status == ConnectionStatus.Connected;
     public bool IsConnectBusy => Status == ConnectionStatus.Connecting || Status == ConnectionStatus.Disconnecting;
@@ -43,7 +43,7 @@ internal sealed class UdpOutputTarget(int instanceIndex, IEventAggregator eventA
 
         try
         {
-            Logger.Info("Connecting to {0} at \"{1}\"", Identifier, $"udp://{Endpoint}");
+            Logger.Info("Connecting to {0} at \"{1}\"", Identifier, $"udp://{Endpoint.ToUriString()}");
 
             const int SIO_UDP_CONNRESET = -1744830452;
             client.Client.IOControl((IOControlCode)SIO_UDP_CONNRESET, [0, 0, 0, 0], null);
@@ -87,7 +87,7 @@ internal sealed class UdpOutputTarget(int instanceIndex, IEventAggregator eventA
                     var commands = context.OffloadElapsedTime ? DeviceAxis.ToString(values) : DeviceAxis.ToString(values, elapsed * 1000);
                     if (!string.IsNullOrWhiteSpace(commands))
                     {
-                        Logger.Trace("Sending \"{0}\" to \"{1}\"", commands.Trim(), $"udp://{Endpoint}");
+                        Logger.Trace("Sending \"{0}\" to \"{1}\"", commands.Trim(), $"udp://{Endpoint.ToUriString()}");
 
                         var encoded = Encoding.UTF8.GetBytes(commands, buffer);
                         client.Send(buffer, encoded);
@@ -115,7 +115,7 @@ internal sealed class UdpOutputTarget(int instanceIndex, IEventAggregator eventA
                     var command = DeviceAxis.ToString(axis, value, duration);
                     if (!string.IsNullOrWhiteSpace(command))
                     {
-                        Logger.Trace("Sending \"{0}\" to \"{1}\"", command, $"tcp://{Endpoint}");
+                        Logger.Trace("Sending \"{0}\" to \"{1}\"", command, $"tcp://{Endpoint.ToUriString()}");
 
                         var encoded = Encoding.UTF8.GetBytes($"{command}\n", buffer);
                         client.Send(buffer, encoded);
@@ -133,7 +133,7 @@ internal sealed class UdpOutputTarget(int instanceIndex, IEventAggregator eventA
             void OnDataReceived(byte[] bytes, IPEndPoint endpoint)
             {
                 var message = Encoding.UTF8.GetString(bytes);
-                Logger.Debug("Received \"{0}\" from \"{1}\"", message, $"udp://{endpoint}");
+                Logger.Debug("Received \"{0}\" from \"{1}\"", message, $"udp://{endpoint.ToUriString()}");
 
                 receiveBuffer.Push(message);
                 foreach (var command in receiveBuffer.Consume())
@@ -154,7 +154,7 @@ internal sealed class UdpOutputTarget(int instanceIndex, IEventAggregator eventA
         if (action == SettingsAction.Saving)
         {
             settings[nameof(UpdateType)] = JToken.FromObject(UpdateType);
-            settings[nameof(Endpoint)] = Endpoint?.ToString();
+            settings[nameof(Endpoint)] = Endpoint?.ToUriString();
         }
         else if (action == SettingsAction.Loading)
         {
@@ -170,7 +170,7 @@ internal sealed class UdpOutputTarget(int instanceIndex, IEventAggregator eventA
         base.RegisterActions(s);
 
         #region Endpoint
-        s.RegisterAction<string>($"{Identifier}::Endpoint::Set", s => s.WithLabel("Endpoint").WithDescription("ip/host:port"), endpointString =>
+        s.RegisterAction<string>($"{Identifier}::Endpoint::Set", s => s.WithLabel("Endpoint").WithDescription("ipOrHost:port"), endpointString =>
         {
             if (NetUtils.TryParseEndpoint(endpointString, out var endpoint))
                 Endpoint = endpoint;

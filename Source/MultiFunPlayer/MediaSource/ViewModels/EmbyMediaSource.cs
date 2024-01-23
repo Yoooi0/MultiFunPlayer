@@ -326,8 +326,8 @@ internal sealed class EmbyMediaSource(IShortcutManager shortcutManager, IEventAg
         #region ServerBaseUri
         s.RegisterAction<string>($"{Name}::ServerBaseUri::Set", s => s.WithLabel("Endpoint").WithDescription("schema://ipOrHost:port"), serverBaseUri =>
         {
-            if (Uri.TryCreate(serverBaseUri, UriKind.Absolute, out var endpoint))
-                ServerBaseUri = endpoint;
+            if (Uri.TryCreate(serverBaseUri, UriKind.Absolute, out var uri))
+                ServerBaseUri = uri;
         });
         #endregion
     }

@@ -28,7 +28,7 @@ internal sealed class MpcMediaSource(IShortcutManager shortcutManager, IEventAgg
     {
         try
         {
-            Logger.Info("Connecting to {0} at \"{1}\"", Name, Endpoint);
+            Logger.Info("Connecting to {0} at \"{1}\"", Name, Endpoint.ToUriString());
             if (Endpoint == null)
                 throw new Exception("Endpoint cannot be null.");
 
@@ -171,7 +171,7 @@ internal sealed class MpcMediaSource(IShortcutManager shortcutManager, IEventAgg
 
         if (action == SettingsAction.Saving)
         {
-            settings[nameof(Endpoint)] = Endpoint?.ToString();
+            settings[nameof(Endpoint)] = Endpoint?.ToUriString();
         }
         else if (action == SettingsAction.Loading)
         {
@@ -232,7 +232,7 @@ internal sealed class MpcMediaSource(IShortcutManager shortcutManager, IEventAgg
         base.RegisterActions(s);
 
         #region Endpoint
-        s.RegisterAction<string>($"{Name}::Endpoint::Set", s => s.WithLabel("Endpoint").WithDescription("ip/host:port"), endpointString =>
+        s.RegisterAction<string>($"{Name}::Endpoint::Set", s => s.WithLabel("Endpoint").WithDescription("ipOrHost:port"), endpointString =>
         {
             if (NetUtils.TryParseEndpoint(endpointString, out var endpoint))
                 Endpoint = endpoint;

@@ -39,10 +39,10 @@ internal sealed class Migration0024 : AbstractConfigMigration
             if (property.Parent is not JObject parent)
                 continue;
 
-            var oldValue = token.Value<string>();
-            if (oldValue.StartsWith("http://"))
+            if (!NetUtils.TryParseEndpoint(token.Value<string>(), out var endpoint))
                 continue;
 
+            var oldValue = endpoint.ToUriString();
             var newValue = $"http://{oldValue}";
             property.Value = newValue;
             Logger.Info("Changed \"{0}\" value from \"{1}\" to \"{2}\"", path, oldValue, newValue);

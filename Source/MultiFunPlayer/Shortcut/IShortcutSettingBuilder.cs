@@ -2,22 +2,22 @@
 
 public interface IShortcutSettingBuilder
 {
-    public IShortcutSetting Build();
+    internal IShortcutSetting Build();
 }
 
 public interface IShortcutSettingBuilder<T> : IShortcutSettingBuilder
 {
-    public new IShortcutSetting<T> Build();
-    public IShortcutSettingBuilder<T> WithDefaultValue(T defaultValue);
-    public IShortcutSettingBuilder<T> WithLabel(string label);
-    public IShortcutSettingBuilder<T> WithDescription(string description);
-    public IShortcutSettingBuilder<T> WithItemsSource<TItemsSource>(TItemsSource itemsSource, bool bindsDirectlyToItemsSource = false) where TItemsSource : IEnumerable<T>;
-    public IShortcutSettingBuilder<T> WithStringFormat(string stringFormat);
-    public IShortcutSettingBuilder<T> WithTemplateName(string templateName);
-    public IShortcutSettingBuilder<T> WithCustomToString(Func<T, string> toString);
+    internal new IShortcutSetting<T> Build();
+    IShortcutSettingBuilder<T> WithDefaultValue(T defaultValue);
+    IShortcutSettingBuilder<T> WithLabel(string label);
+    IShortcutSettingBuilder<T> WithDescription(string description);
+    IShortcutSettingBuilder<T> WithItemsSource<TItemsSource>(TItemsSource itemsSource, bool bindsDirectlyToItemsSource = false) where TItemsSource : IEnumerable<T>;
+    IShortcutSettingBuilder<T> WithStringFormat(string stringFormat);
+    IShortcutSettingBuilder<T> WithTemplateName(string templateName);
+    IShortcutSettingBuilder<T> WithCustomToString(Func<T, string> toString);
 }
 
-public sealed class ShortcutSettingBuilder<T> : IShortcutSettingBuilder<T>
+internal sealed class ShortcutSettingBuilder<T> : IShortcutSettingBuilder<T>
 {
     private T _defaultValue;
     private string _description;

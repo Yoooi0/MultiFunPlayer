@@ -68,7 +68,7 @@ internal abstract partial class AbstractShortcut<TGesture, TData>(IShortcutActio
     }
 
     protected void Delay(int milisecondsDelay, Action action, string key = "")
-        => Delay(TimeSpan.FromMilliseconds(milisecondsDelay), action);
+        => Delay(TimeSpan.FromMilliseconds(milisecondsDelay), action, key);
     protected void Delay(TimeSpan delay, Action action, string key = "")
     {
         CancelDelay(key);
@@ -77,7 +77,7 @@ internal abstract partial class AbstractShortcut<TGesture, TData>(IShortcutActio
     }
 
     protected void Repeat(int milisecondsPeriod, Action action, string key = "")
-        => Repeat(TimeSpan.FromMilliseconds(milisecondsPeriod), action);
+        => Repeat(TimeSpan.FromMilliseconds(milisecondsPeriod), action, key);
     protected void Repeat(TimeSpan period, Action action, string key = "")
     {
         CancelRepeat(key);

@@ -41,7 +41,7 @@ internal sealed class TcpOutputTarget(int instanceIndex, IEventAggregator eventA
 
         try
         {
-            Logger.Info("Connecting to {0} at \"{1}\"", Identifier, $"tcp://{Endpoint}");
+            Logger.Info("Connecting to {0} at \"{1}\"", Identifier, $"tcp://{Endpoint.ToUriString()}");
             client.Connect(Endpoint);
             Status = ConnectionStatus.Connected;
         }
@@ -70,7 +70,7 @@ internal sealed class TcpOutputTarget(int instanceIndex, IEventAggregator eventA
                     if (client.Connected && client.Available > 0)
                     {
                         var message = Encoding.UTF8.GetString(stream.ReadBytes(client.Available));
-                        Logger.Debug("Received \"{0}\" from \"{1}\"", message, $"tcp://{Endpoint}");
+                        Logger.Debug("Received \"{0}\" from \"{1}\"", message, $"tcp://{Endpoint.ToUriString()}");
                     }
 
                     var values = context.SendDirtyValuesOnly ? currentValues.Where(x => DeviceAxis.IsValueDirty(x.Value, lastSentValues[x.Key])) : currentValues;
@@ -79,7 +79,7 @@ internal sealed class TcpOutputTarget(int instanceIndex, IEventAggregator eventA
                     var commands = context.OffloadElapsedTime ? DeviceAxis.ToString(values) : DeviceAxis.ToString(values, elapsed * 1000);
                     if (client.Connected && !string.IsNullOrWhiteSpace(commands))
                     {
-                        Logger.Trace("Sending \"{0}\" to \"{1}\"", commands.Trim(), $"tcp://{Endpoint}");
+                        Logger.Trace("Sending \"{0}\" to \"{1}\"", commands.Trim(), $"tcp://{Endpoint.ToUriString()}");
 
                         var encoded = Encoding.UTF8.GetBytes(commands, buffer);
                         stream.Write(buffer, 0, encoded);
@@ -106,7 +106,7 @@ internal sealed class TcpOutputTarget(int instanceIndex, IEventAggregator eventA
                     var command = DeviceAxis.ToString(axis, value, duration);
                     if (client.Connected && !string.IsNullOrWhiteSpace(command))
                     {
-                        Logger.Trace("Sending \"{0}\" to \"{1}\"", command, $"tcp://{Endpoint}");
+                        Logger.Trace("Sending \"{0}\" to \"{1}\"", command, $"tcp://{Endpoint.ToUriString()}");
 
                         var encoded = Encoding.UTF8.GetBytes($"{command}\n", buffer);
                         stream.Write(buffer, 0, encoded);
@@ -128,7 +128,7 @@ internal sealed class TcpOutputTarget(int instanceIndex, IEventAggregator eventA
         if (action == SettingsAction.Saving)
         {
             settings[nameof(UpdateType)] = JToken.FromObject(UpdateType);
-            settings[nameof(Endpoint)] = Endpoint?.ToString();
+            settings[nameof(Endpoint)] = Endpoint?.ToUriString();
         }
         else if (action == SettingsAction.Loading)
         {
@@ -144,7 +144,7 @@ internal sealed class TcpOutputTarget(int instanceIndex, IEventAggregator eventA
         base.RegisterActions(s);
 
         #region Endpoint
-        s.RegisterAction<string>($"{Identifier}::Endpoint::Set", s => s.WithLabel("Endpoint").WithDescription("ip/host:port"), endpointString =>
+        s.RegisterAction<string>($"{Identifier}::Endpoint::Set", s => s.WithLabel("Endpoint").WithDescription("ipOrHost:port"), endpointString =>
         {
             if (NetUtils.TryParseEndpoint(endpointString, out var endpoint))
                 Endpoint = endpoint;

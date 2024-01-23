@@ -44,7 +44,7 @@ internal sealed class OffsetShortcut(IShortcutActionResolver actionResolver, IAx
     }
 }
 
-public enum OffsetShortcutMode
+internal enum OffsetShortcutMode
 {
     Absolute,
     AbsoluteJoystick

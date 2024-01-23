@@ -31,7 +31,7 @@ internal sealed class WhirligigMediaSource(IShortcutManager shortcutManager, IEv
     {
         try
         {
-            Logger.Info("Connecting to {0} at \"{1}\"", Name, Endpoint);
+            Logger.Info("Connecting to {0} at \"{1}\"", Name, Endpoint.ToUriString());
 
             if (Endpoint.IsLocalhost())
                 if (!Process.GetProcesses().Any(p => Regex.IsMatch(p.ProcessName, "(?i)whirligig")))
@@ -102,7 +102,7 @@ internal sealed class WhirligigMediaSource(IShortcutManager shortcutManager, IEv
 
         if (action == SettingsAction.Saving)
         {
-            settings[nameof(Endpoint)] = Endpoint?.ToString();
+            settings[nameof(Endpoint)] = Endpoint?.ToUriString();
         }
         else if (action == SettingsAction.Loading)
         {
@@ -145,7 +145,7 @@ internal sealed class WhirligigMediaSource(IShortcutManager shortcutManager, IEv
         base.RegisterActions(s);
 
         #region Endpoint
-        s.RegisterAction<string>($"{Name}::Endpoint::Set", s => s.WithLabel("Endpoint").WithDescription("ip/host:port"), endpointString =>
+        s.RegisterAction<string>($"{Name}::Endpoint::Set", s => s.WithLabel("Endpoint").WithDescription("ipOrHost:port"), endpointString =>
         {
             if (NetUtils.TryParseEndpoint(endpointString, out var endpoint))
                 Endpoint = endpoint;
