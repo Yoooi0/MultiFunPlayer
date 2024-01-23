@@ -23,7 +23,7 @@ internal sealed class UdpOutputTarget(int instanceIndex, IEventAggregator eventA
 
     public bool OffloadElapsedTime { get; set; } = true;
     public bool SendDirtyValuesOnly { get; set; } = false;
-    public EndPoint Endpoint { get; set; } = new IPEndPoint(IPAddress.Loopback, 8080);
+    public EndPoint Endpoint { get; set; } = new IPEndPoint(IPAddress.Loopback, 8000);
 
     public bool IsConnected => Status == ConnectionStatus.Connected;
     public bool IsConnectBusy => Status == ConnectionStatus.Connecting || Status == ConnectionStatus.Disconnecting;
