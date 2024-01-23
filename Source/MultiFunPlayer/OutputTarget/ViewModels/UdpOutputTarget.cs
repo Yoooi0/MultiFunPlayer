@@ -115,7 +115,7 @@ internal sealed class UdpOutputTarget(int instanceIndex, IEventAggregator eventA
                     var command = DeviceAxis.ToString(axis, value, duration);
                     if (!string.IsNullOrWhiteSpace(command))
                     {
-                        Logger.Trace("Sending \"{0}\" to \"{1}\"", command, $"tcp://{Endpoint.ToUriString()}");
+                        Logger.Trace("Sending \"{0}\" to \"{1}\"", command, $"udp://{Endpoint.ToUriString()}");
 
                         var encoded = Encoding.UTF8.GetBytes($"{command}\n", buffer);
                         client.Send(buffer, encoded);
