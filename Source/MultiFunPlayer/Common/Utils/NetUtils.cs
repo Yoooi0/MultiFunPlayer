@@ -1,9 +1,10 @@
 ﻿using System.Net;
 using System.Net.Http;
+using System.Text.RegularExpressions;
 
 namespace MultiFunPlayer.Common;
 
-public static class NetUtils
+public static partial class NetUtils
 {
     private static readonly SocketsHttpHandler _handler = new()
     {
@@ -19,19 +20,21 @@ public static class NetUtils
         if (string.IsNullOrWhiteSpace(endpointString))
             return null;
 
-        var parts = endpointString.Split(':');
-        if (parts.Length != 2)
+        var match = EndpointRegex().Match(endpointString);
+        if (!match.Success)
             return null;
 
-        var hostOrIPAddress = parts[0];
-        if (!int.TryParse(parts[1], out var port))
-            return null;
+        var ipOrHost = match.Groups["ipOrHost"].Value;
+        var port = int.Parse(match.Groups["port"].Value);
 
-        return Uri.CheckHostName(hostOrIPAddress) switch
+        if (match.Groups["family"].Success)
+            return new DnsEndPoint(ipOrHost, port);
+
+        return Uri.CheckHostName(ipOrHost) switch
         {
-            UriHostNameType.IPv4 or UriHostNameType.IPv6 when IPAddress.TryParse(hostOrIPAddress, out var ipAddress) => new IPEndPoint(ipAddress, port),
-            UriHostNameType.Dns => new DnsEndPoint(hostOrIPAddress, port),
-            _ => default
+            UriHostNameType.IPv4 or UriHostNameType.IPv6 when IPAddress.TryParse(ipOrHost, out var ipAddress) => new IPEndPoint(ipAddress, port),
+            UriHostNameType.Dns => new DnsEndPoint(ipOrHost, port),
+            _ => null
         };
     }
 
@@ -40,4 +43,7 @@ public static class NetUtils
         endpoint = ParseEndpoint(endpointString);
         return endpoint != null;
     }
+
+    [GeneratedRegex(@"^(?:(?<family>InterNetwork|InterNetworkV6|Unspecified)\/)?(?<ipOrHost>.+):(?<port>\d+)$")]
+    private static partial Regex EndpointRegex();
 }
