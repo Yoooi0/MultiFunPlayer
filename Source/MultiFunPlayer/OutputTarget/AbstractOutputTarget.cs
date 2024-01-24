@@ -587,9 +587,9 @@ internal abstract class AsyncAbstractOutputTarget : AbstractOutputTarget
         timer.Dispose();
     }
 
-    protected Task PolledUpdateAsync(IReadOnlyList<DeviceAxis> axes, Func<bool> condition, Action<AsyncPolledUpdateContext, DeviceAxis, DeviceAxisScriptSnapshot, double> body, CancellationToken cancellationToken)
+    protected Task PolledUpdateAsync(IReadOnlyList<DeviceAxis> axes, Func<bool> condition, Func<AsyncPolledUpdateContext, DeviceAxis, DeviceAxisScriptSnapshot, double, Task> body, CancellationToken cancellationToken)
         => PolledUpdateAsync<AsyncPolledUpdateContext>(axes, condition, body, cancellationToken);
-    protected async Task PolledUpdateAsync<T>(IReadOnlyList<DeviceAxis> axes, Func<bool> condition, Action<T, DeviceAxis, DeviceAxisScriptSnapshot, double> body, CancellationToken cancellationToken) where T : AsyncPolledUpdateContext
+    protected async Task PolledUpdateAsync<T>(IReadOnlyList<DeviceAxis> axes, Func<bool> condition, Func<T, DeviceAxis, DeviceAxisScriptSnapshot, double, Task> body, CancellationToken cancellationToken) where T : AsyncPolledUpdateContext
     {
         axes ??= DeviceAxis.All;
 
@@ -607,7 +607,7 @@ internal abstract class AsyncAbstractOutputTarget : AbstractOutputTarget
                 var elapsed = stopwatch.ElapsedTicks / (double)Stopwatch.Frequency;
                 stopwatch.Restart();
 
-                body(context, axis, snapshot, elapsed);
+                await body(context, axis, snapshot, elapsed);
                 context.UpdateStats(axis, snapshot, elapsed);
             }
         }
@@ -617,9 +617,9 @@ internal abstract class AsyncAbstractOutputTarget : AbstractOutputTarget
         }
     }
 
-    protected Task PolledUpdateAsync(DeviceAxis axis, Func<bool> condition, Action<AsyncPolledUpdateContext, DeviceAxisScriptSnapshot, double> body, CancellationToken cancellationToken)
+    protected Task PolledUpdateAsync(DeviceAxis axis, Func<bool> condition, Func<AsyncPolledUpdateContext, DeviceAxisScriptSnapshot, double, Task> body, CancellationToken cancellationToken)
         => PolledUpdateAsync<AsyncPolledUpdateContext>(axis, condition, body, cancellationToken);
-    protected async Task PolledUpdateAsync<T>(DeviceAxis axis, Func<bool> condition, Action<T, DeviceAxisScriptSnapshot, double> body, CancellationToken cancellationToken) where T : AsyncPolledUpdateContext
+    protected async Task PolledUpdateAsync<T>(DeviceAxis axis, Func<bool> condition, Func<T, DeviceAxisScriptSnapshot, double, Task> body, CancellationToken cancellationToken) where T : AsyncPolledUpdateContext
     {
         try
         {
@@ -636,7 +636,7 @@ internal abstract class AsyncAbstractOutputTarget : AbstractOutputTarget
                 var elapsed = stopwatch.ElapsedTicks / (double)Stopwatch.Frequency;
                 stopwatch.Restart();
 
-                body(context, snapshot, elapsed);
+                await body(context, snapshot, elapsed);
                 context.UpdateStats(axis, snapshot, elapsed);
             }
         }
