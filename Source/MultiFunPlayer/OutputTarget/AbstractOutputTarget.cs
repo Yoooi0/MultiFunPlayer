@@ -8,16 +8,12 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Reflection;
 using System.Threading.Channels;
-using System.Windows.Media;
 
 namespace MultiFunPlayer.OutputTarget;
 
 internal abstract class AbstractOutputTarget : Screen, IOutputTarget
 {
     private readonly IDeviceAxisValueProvider _valueProvider;
-    private double _statsTime;
-    private int _statsCount;
-    private int _statsJitter = int.MinValue;
 
     public string Name { get; init; }
     public string Identifier => $"{Name}/{InstanceIndex}";
@@ -28,24 +24,9 @@ internal abstract class AbstractOutputTarget : Screen, IOutputTarget
     public bool AutoConnectEnabled { get; set; } = false;
 
     public ObservableConcurrentDictionary<DeviceAxis, DeviceAxisSettings> AxisSettings { get; protected set; }
-    public int UpdateInterval { get; set; }
-    public virtual int MinimumUpdateInterval { get; } = 3;
-    public virtual int MaximumUpdateInterval { get; } = 33;
-    public int AverageUpdateRate { get; private set; }
-    public int UpdateRateJitter { get; private set; }
-    public virtual DoubleCollection UpdateIntervalTicks
-    {
-        get
-        {
-            var ticks = new DoubleCollection();
-            for (var i = MaximumUpdateInterval; i >= MinimumUpdateInterval; i--)
-                ticks.Add(i);
+    public Dictionary<DeviceAxisUpdateType, IUpdateContext> UpdateContexts { get; }
+    public IReadOnlyCollection<DeviceAxisUpdateType> AvailableUpdateTypes => UpdateContexts.Keys;
 
-            return ticks;
-        }
-    }
-
-    protected Dictionary<DeviceAxis, double> Values { get; }
     protected IEventAggregator EventAggregator { get; }
 
     protected AbstractOutputTarget(int instanceIndex, IEventAggregator eventAggregator, IDeviceAxisValueProvider valueProvider)
@@ -58,10 +39,14 @@ internal abstract class AbstractOutputTarget : Screen, IOutputTarget
             eventAggregator.Subscribe(handler);
 
         Name = GetType().GetCustomAttribute<DisplayNameAttribute>(inherit: false).DisplayName;
-        Values = DeviceAxis.All.ToDictionary(a => a, _ => double.NaN);
         AxisSettings = new ObservableConcurrentDictionary<DeviceAxis, DeviceAxisSettings>(DeviceAxis.All.ToDictionary(a => a, _ => new DeviceAxisSettings()));
-        UpdateInterval = 10;
+        UpdateContexts = [];
+
+        RegisterUpdateContexts();
     }
+
+    protected abstract void RegisterUpdateContexts();
+    protected abstract IUpdateContext RegisterUpdateContext(DeviceAxisUpdateType updateType);
 
     public abstract Task ConnectAsync();
     public async Task DisconnectAsync()
@@ -115,60 +100,62 @@ internal abstract class AbstractOutputTarget : Screen, IOutputTarget
         }
     }
 
-    protected virtual double CoerceProviderValue(DeviceAxis axis, double value)
+    protected double GetValue(DeviceAxis axis)
     {
+        var value = _valueProvider.GetValue(axis);
         if (!double.IsFinite(value))
             return axis.DefaultValue;
-
         return value;
     }
 
-    protected void UpdateValues()
+    protected void GetValues(Dictionary<DeviceAxis, double> values, Func<double, double> coerceValue = null)
     {
         foreach (var axis in DeviceAxis.All)
         {
-            var value = CoerceProviderValue(axis, _valueProvider?.GetValue(axis) ?? double.NaN);
+            var value = GetValue(axis);
+            if (coerceValue != null)
+                value = coerceValue(value);
+
             var settings = AxisSettings[axis];
-            Values[axis] = MathUtils.Lerp(settings.Minimum / 100, settings.Maximum / 100, value);
+            values[axis] = MathUtils.Lerp(settings.Minimum / 100, settings.Maximum / 100, value);
         }
     }
 
-    protected void UpdateStats(double elapsed)
-    {
-        _statsTime += elapsed;
-        _statsCount++;
-
-        var updateRateDiff = (int)Math.Round(Math.Abs(1000d / UpdateInterval - 1 / elapsed));
-        _statsJitter = Math.Max(_statsJitter, updateRateDiff);
-
-        if (_statsTime > 0.25)
-        {
-            UpdateRateJitter = _statsJitter;
-            AverageUpdateRate = (int)Math.Round(1 / (_statsTime / _statsCount));
-            _statsTime = 0;
-            _statsCount = 0;
-            _statsJitter = int.MinValue;
-        }
-    }
+    protected void BeginSnapshotPolling()
+        => _valueProvider.BeginSnapshotPolling(Identifier);
+    protected void EndSnapshotPolling()
+        => _valueProvider.EndSnapshotPolling(Identifier);
+    protected (DeviceAxis, DeviceAxisScriptSnapshot) WaitForSnapshotAny(IReadOnlyList<DeviceAxis> axes, CancellationToken cancellationToken)
+        => _valueProvider.WaitForSnapshotAny(axes, Identifier, cancellationToken);
+    protected ValueTask<(DeviceAxis, DeviceAxisScriptSnapshot)> WaitForSnapshotAnyAsync(IReadOnlyList<DeviceAxis> axes,  CancellationToken cancellationToken)
+        => _valueProvider.WaitForSnapshotAnyAsync(axes, Identifier, cancellationToken);
+    protected (bool, DeviceAxisScriptSnapshot) WaitForSnapshot(DeviceAxis axis, CancellationToken cancellationToken)
+        => _valueProvider.WaitForSnapshot(axis, Identifier, cancellationToken);
+    protected ValueTask<(bool, DeviceAxisScriptSnapshot)> WaitForSnapshotAsync(DeviceAxis axis,  CancellationToken cancellationToken)
+        => _valueProvider.WaitForSnapshotAsync(axis, Identifier, cancellationToken);
 
     public virtual void HandleSettings(JObject settings, SettingsAction action)
     {
         if (action == SettingsAction.Saving)
         {
-            settings[nameof(UpdateInterval)] = UpdateInterval;
             settings[nameof(AutoConnectEnabled)] = AutoConnectEnabled;
             settings[nameof(AxisSettings)] = JObject.FromObject(AxisSettings);
+
+            //TODO: move to separate object per update type
+            foreach (var (_, context) in UpdateContexts)
+                settings.Merge(JObject.FromObject(context), new JsonMergeSettings() { MergeArrayHandling = MergeArrayHandling.Replace });
         }
         else if (action == SettingsAction.Loading)
         {
-            if (settings.TryGetValue<int>(nameof(UpdateInterval), out var updateInterval))
-                UpdateInterval = updateInterval;
             if (settings.TryGetValue<bool>(nameof(AutoConnectEnabled), out var autoConnectEnabled))
                 AutoConnectEnabled = autoConnectEnabled;
-
             if (settings.TryGetValue<Dictionary<DeviceAxis, JObject>>(nameof(AxisSettings), out var axisSettingsMap))
                 foreach (var (axis, axisSettingsToken) in axisSettingsMap)
                     axisSettingsToken.Populate(AxisSettings[axis]);
+
+            //TODO: move to separate object per update type
+            foreach (var (_, context) in UpdateContexts)
+                settings.Populate(context);
         }
     }
 
@@ -235,14 +222,6 @@ internal abstract class AbstractOutputTarget : Screen, IOutputTarget
             settings.Minimum = MathUtils.ClampSafe(newMinimum, minimumLimit, maximumLimit - 1);
             settings.Maximum = MathUtils.ClampSafe(newMaximum, minimumLimit + 1, maximumLimit);
         }
-
-        #region UpdateRate
-        s.RegisterAction<int>($"{Identifier}::UpdateRate::Set", s => s.WithLabel("Update rate").WithDescription("Will be set to closest\npossible value.").WithStringFormat("{}{0} Hz"), updateRate =>
-        {
-            var interval = 1000d / updateRate;
-            UpdateInterval = (int)UpdateIntervalTicks.OrderBy(x => Math.Abs(interval - x)).First();
-        });
-        #endregion
 
         #region AutoConnectEnabled
         s.RegisterAction<bool>($"{Identifier}::AutoConnectEnabled::Set", s => s.WithLabel("Enable auto connect"), enabled => AutoConnectEnabled = enabled);
@@ -328,7 +307,6 @@ internal abstract class AbstractOutputTarget : Screen, IOutputTarget
 
     public virtual void UnregisterActions(IShortcutManager s)
     {
-        s.UnregisterAction($"{Identifier}::UpdateRate::Set");
         s.UnregisterAction($"{Identifier}::AutoConnectEnabled::Set");
         s.UnregisterAction($"{Identifier}::AutoConnectEnabled::Toggle");
         s.UnregisterAction($"{Identifier}::Axis::Range::Minimum::Offset");
@@ -364,12 +342,27 @@ internal abstract class ThreadAbstractOutputTarget : AbstractOutputTarget
     private CancellationTokenSource _cancellationSource;
     private Thread _thread;
 
-    public bool UsePreciseSleep { get; set; }
-
     protected ThreadAbstractOutputTarget(int instanceIndex, IEventAggregator eventAggregator, IDeviceAxisValueProvider valueProvider)
         : base(instanceIndex, eventAggregator, valueProvider) { }
 
     protected abstract void Run(CancellationToken token);
+
+    protected sealed override void RegisterUpdateContexts()
+    {
+        foreach(var updateType in Enum.GetValues<DeviceAxisUpdateType>())
+        {
+            var context = RegisterUpdateContext(updateType);
+            if (context == null)
+                continue;
+
+            if (updateType == DeviceAxisUpdateType.FixedUpdate && context is not ThreadFixedUpdateContext)
+                throw new UnreachableException();
+            if (updateType == DeviceAxisUpdateType.PolledUpdate && context is not ThreadPolledUpdateContext)
+                throw new UnreachableException();
+
+            UpdateContexts[updateType] = context;
+        }
+    }
 
     public override async Task ConnectAsync()
     {
@@ -415,36 +408,83 @@ internal abstract class ThreadAbstractOutputTarget : AbstractOutputTarget
         return ValueTask.CompletedTask;
     }
 
-    public override void HandleSettings(JObject settings, SettingsAction action)
-    {
-        base.HandleSettings(settings, action);
-
-        if (action == SettingsAction.Saving)
-        {
-            settings[nameof(UsePreciseSleep)] = UsePreciseSleep;
-        }
-        else if (action == SettingsAction.Loading)
-        {
-            if (settings.TryGetValue<bool>(nameof(UsePreciseSleep), out var usePreciseSleep))
-                UsePreciseSleep = usePreciseSleep;
-        }
-    }
-
-    protected void FixedUpdate(Func<bool> condition, Action<double> body)
+    protected void FixedUpdate(Func<bool> condition, Action<ThreadFixedUpdateContext, double> body)
+        => FixedUpdate<ThreadFixedUpdateContext>(condition, body);
+    protected void FixedUpdate<T>(Func<bool> condition, Action<T, double> body) where T : ThreadFixedUpdateContext
     {
         var stopwatch = Stopwatch.StartNew();
+        var context = (T)UpdateContexts[DeviceAxisUpdateType.FixedUpdate];
         while (condition())
         {
             var elapsed = stopwatch.ElapsedTicks / (double)Stopwatch.Frequency;
             stopwatch.Restart();
 
-            body(elapsed);
-            UpdateStats(elapsed);
+            body(context, elapsed);
+            context.UpdateStats(elapsed);
 
-            if (!UsePreciseSleep)
-                Thread.Sleep((int)Math.Max(1, UpdateInterval - stopwatch.ElapsedTicks / (double)Stopwatch.Frequency * 1000));
+            if (!context.UsePreciseSleep)
+                Thread.Sleep((int)Math.Max(1, context.UpdateInterval - stopwatch.ElapsedTicks / (double)Stopwatch.Frequency * 1000));
             else
-                stopwatch.SleepPrecise(UpdateInterval);
+                stopwatch.SleepPrecise(context.UpdateInterval);
+        }
+    }
+    protected void PolledUpdate(IReadOnlyList<DeviceAxis> axes, Func<bool> condition, Action<ThreadPolledUpdateContext, DeviceAxis, DeviceAxisScriptSnapshot, double> body, CancellationToken cancellationToken)
+        => PolledUpdate<ThreadPolledUpdateContext>(axes, condition, body, cancellationToken);
+    protected void PolledUpdate<T>(IReadOnlyList<DeviceAxis> axes, Func<bool> condition, Action<T, DeviceAxis, DeviceAxisScriptSnapshot, double> body, CancellationToken cancellationToken) where T : ThreadPolledUpdateContext
+    {
+        axes ??= DeviceAxis.All;
+
+        try
+        {
+            BeginSnapshotPolling();
+
+            var context = (T)UpdateContexts[DeviceAxisUpdateType.PolledUpdate];
+            var stopwatches = axes.ToDictionary(a => a, _ => new Stopwatch());
+            while (condition())
+            {
+                (var axis, var snapshot) = WaitForSnapshotAny(axes, cancellationToken);
+
+                var stopwatch = stopwatches[axis];
+                var elapsed = stopwatch.ElapsedTicks / (double)Stopwatch.Frequency;
+                stopwatch.Restart();
+
+                body(context, axis, snapshot, elapsed);
+                context.UpdateStats(axis, snapshot, elapsed);
+            }
+        }
+        finally
+        {
+            EndSnapshotPolling();
+        }
+    }
+
+    protected void PolledUpdate(DeviceAxis axis, Func<bool> condition, Action<ThreadPolledUpdateContext, DeviceAxisScriptSnapshot, double> body, CancellationToken cancellationToken)
+        => PolledUpdate<ThreadPolledUpdateContext>(axis, condition, body, cancellationToken);
+    protected void PolledUpdate<T>(DeviceAxis axis, Func<bool> condition, Action<T, DeviceAxisScriptSnapshot, double> body, CancellationToken cancellationToken) where T : ThreadPolledUpdateContext
+    {
+        var stopwatch = new Stopwatch();
+
+        try
+        {
+            BeginSnapshotPolling();
+
+            var context = (T)UpdateContexts[DeviceAxisUpdateType.PolledUpdate];
+            while (condition())
+            {
+                (var success, var snapshot) = WaitForSnapshot(axis, cancellationToken);
+                if (!success)
+                    return;
+
+                var elapsed = stopwatch.ElapsedTicks / (double)Stopwatch.Frequency;
+                stopwatch.Restart();
+
+                body(context, snapshot, elapsed);
+                context.UpdateStats(axis, snapshot, elapsed);
+            }
+        }
+        finally
+        {
+            EndSnapshotPolling();
         }
     }
 }
@@ -458,6 +498,23 @@ internal abstract class AsyncAbstractOutputTarget : AbstractOutputTarget
         : base(instanceIndex, eventAggregator, valueProvider) { }
 
     protected abstract Task RunAsync(CancellationToken token);
+
+    protected sealed override void RegisterUpdateContexts()
+    {
+        foreach (var updateType in Enum.GetValues<DeviceAxisUpdateType>())
+        {
+            var context = RegisterUpdateContext(updateType);
+            if (context == null)
+                continue;
+
+            if (updateType == DeviceAxisUpdateType.FixedUpdate && context is not AsyncFixedUpdateContext)
+                throw new UnreachableException();
+            if (updateType == DeviceAxisUpdateType.PolledUpdate && context is not AsyncPolledUpdateContext)
+                throw new UnreachableException();
+
+            UpdateContexts[updateType] = context;
+        }
+    }
 
     public override async Task ConnectAsync()
     {
@@ -500,10 +557,13 @@ internal abstract class AsyncAbstractOutputTarget : AbstractOutputTarget
         Interlocked.Decrement(ref _isDisconnectingFlag);
     }
 
-    protected async Task FixedUpdateAsync(Func<bool> condition, Func<double, Task> body, CancellationToken token)
+    protected Task FixedUpdateAsync(Func<bool> condition, Func<AsyncFixedUpdateContext, double, Task> body, CancellationToken token)
+        => FixedUpdateAsync<AsyncFixedUpdateContext>(condition, body, token);
+    protected async Task FixedUpdateAsync<T>(Func<bool> condition, Func<T, double, Task> body, CancellationToken token) where T : AsyncFixedUpdateContext
     {
-        var timer = new PeriodicTimer(TimeSpan.FromMilliseconds(UpdateInterval));
-        var timerInterval = UpdateInterval;
+        var context = (T)UpdateContexts[DeviceAxisUpdateType.FixedUpdate];
+        var timer = new PeriodicTimer(TimeSpan.FromMilliseconds(context.UpdateInterval));
+        var timerInterval = context.UpdateInterval;
 
         var stopwatch = Stopwatch.StartNew();
         while (condition())
@@ -511,19 +571,78 @@ internal abstract class AsyncAbstractOutputTarget : AbstractOutputTarget
             var elapsed = stopwatch.ElapsedTicks / (double)Stopwatch.Frequency;
             stopwatch.Restart();
 
-            await body(elapsed);
-            UpdateStats(elapsed);
+            await body(context, elapsed);
+            context.UpdateStats(elapsed);
 
             _ = await timer.WaitForNextTickAsync(token);
 
-            if (UpdateInterval != timerInterval)
+            if (context.UpdateInterval != timerInterval)
             {
                 timer.Dispose();
-                timer = new PeriodicTimer(TimeSpan.FromMilliseconds(UpdateInterval));
-                timerInterval = UpdateInterval;
+                timer = new PeriodicTimer(TimeSpan.FromMilliseconds(context.UpdateInterval));
+                timerInterval = context.UpdateInterval;
             }
         }
 
         timer.Dispose();
+    }
+
+    protected Task PolledUpdateAsync(IReadOnlyList<DeviceAxis> axes, Func<bool> condition, Func<AsyncPolledUpdateContext, DeviceAxis, DeviceAxisScriptSnapshot, double, Task> body, CancellationToken cancellationToken)
+        => PolledUpdateAsync<AsyncPolledUpdateContext>(axes, condition, body, cancellationToken);
+    protected async Task PolledUpdateAsync<T>(IReadOnlyList<DeviceAxis> axes, Func<bool> condition, Func<T, DeviceAxis, DeviceAxisScriptSnapshot, double, Task> body, CancellationToken cancellationToken) where T : AsyncPolledUpdateContext
+    {
+        axes ??= DeviceAxis.All;
+
+        try
+        {
+            BeginSnapshotPolling();
+
+            var context = (T)UpdateContexts[DeviceAxisUpdateType.PolledUpdate];
+            var stopwatches = axes.ToDictionary(a => a, _ => new Stopwatch());
+            while (condition())
+            {
+                (var axis, var snapshot) = await WaitForSnapshotAnyAsync(axes, cancellationToken);
+
+                var stopwatch = stopwatches[axis];
+                var elapsed = stopwatch.ElapsedTicks / (double)Stopwatch.Frequency;
+                stopwatch.Restart();
+
+                await body(context, axis, snapshot, elapsed);
+                context.UpdateStats(axis, snapshot, elapsed);
+            }
+        }
+        finally
+        {
+            EndSnapshotPolling();
+        }
+    }
+
+    protected Task PolledUpdateAsync(DeviceAxis axis, Func<bool> condition, Func<AsyncPolledUpdateContext, DeviceAxisScriptSnapshot, double, Task> body, CancellationToken cancellationToken)
+        => PolledUpdateAsync<AsyncPolledUpdateContext>(axis, condition, body, cancellationToken);
+    protected async Task PolledUpdateAsync<T>(DeviceAxis axis, Func<bool> condition, Func<T, DeviceAxisScriptSnapshot, double, Task> body, CancellationToken cancellationToken) where T : AsyncPolledUpdateContext
+    {
+        try
+        {
+            BeginSnapshotPolling();
+
+            var stopwatch = new Stopwatch();
+            var context = (T)UpdateContexts[DeviceAxisUpdateType.PolledUpdate];
+            while (condition())
+            {
+                (var success, var snapshot) = await WaitForSnapshotAsync(axis, cancellationToken);
+                if (!success)
+                    return;
+
+                var elapsed = stopwatch.ElapsedTicks / (double)Stopwatch.Frequency;
+                stopwatch.Restart();
+
+                await body(context, snapshot, elapsed);
+                context.UpdateStats(axis, snapshot, elapsed);
+            }
+        }
+        finally
+        {
+            EndSnapshotPolling();
+        }
     }
 }

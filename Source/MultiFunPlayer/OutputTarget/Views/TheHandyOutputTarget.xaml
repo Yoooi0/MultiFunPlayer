@@ -12,15 +12,21 @@
              d:DesignHeight="450" d:DesignWidth="800"
              x:ClassModifier="internal">
     <UserControl.Resources>
-        <converters:UriToStringConverter x:Key="UriToStringConverter"/>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="UpdateContextTemplates.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+            <converters:UriToStringConverter x:Key="UriToStringConverter"/>
+        </ResourceDictionary>
     </UserControl.Resources>
+    
     <Expander material:ExpanderAssist.HorizontalHeaderPadding="0 0 6 0"
               Style="{StaticResource MaterialDesignToolBarExpander}"
               Background="{DynamicResource MaterialDesignToolBarBackground}"
               IsExpanded="{Binding DataContext.ContentVisible, RelativeSource={RelativeSource FindAncestor, AncestorLevel=2, AncestorType={x:Type UserControl}}}">
         <Expander.Header>
-            <StackPanel Orientation="Horizontal"
-                        Height="36">
+            <DockPanel Height="36"
+                       LastChildFill="False">
                 <Button DockPanel.Dock="Left"
                         Command="{s:Action ToggleConnectAsync}"
                         CommandParameter="{Binding}"
@@ -69,7 +75,26 @@
                         <material:PackIcon Kind="MotionPlayOutline" Width="20" Height="20"/>
                     </material:ToggleButtonAssist.OnContent>
                 </ToggleButton>
-            </StackPanel>
+
+                <material:PopupBox DockPanel.Dock="Right"
+                                   StaysOpen="True" 
+                                   Style="{StaticResource MaterialDesignToolBarPopupBox}"
+                                   PlacementMode="BottomAndAlignRightEdges"
+                                   ToolTip="Update settings">
+                    <material:PopupBox.ToggleContent>
+                        <material:PackIcon Kind="TimerCogOutline" 
+                                           Width="20" 
+                                           Height="20"/>
+                    </material:PopupBox.ToggleContent>
+                    <StackPanel Width="250" 
+                                Margin="10 0 10 0">
+                        <TextBlock Text="Polled Update" 
+                                   FontWeight="Bold"
+                                   Typography.Capitals="AllSmallCaps"/>
+                        <ContentControl Content="{Binding UpdateContexts[PolledUpdate]}"/>
+                    </StackPanel>
+                </material:PopupBox>
+            </DockPanel>
         </Expander.Header>
 
         <StackPanel Margin="20">
@@ -83,6 +108,17 @@
 
             <DockPanel LastChildFill="True" Margin="0 0 0 10">
                 <DockPanel DockPanel.Dock="Left">
+                    <DockPanel.Resources>
+                        <Style TargetType="{x:Type DockPanel}">
+                            <Setter Property="IsEnabled" Value="False" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding Status}" Value="Disconnected">
+                                    <Setter Property="IsEnabled" Value="True" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </DockPanel.Resources>
+
                     <TextBlock VerticalAlignment="Center" Text="Source axis:" Margin="0 0 10 0"/>
                     <ComboBox Width="50"
                               material:TextFieldAssist.HasClearButton="True"
@@ -90,70 +126,6 @@
                               ItemsSource="{Binding Source={x:Static common:DeviceAxis.All}}" 
                               SelectedItem="{Binding SourceAxis}"/>
                 </DockPanel>
-
-                <StackPanel DockPanel.Dock="Right" 
-                            Orientation="Horizontal" 
-                            HorizontalAlignment="Right"
-                            VerticalAlignment="Center">
-                    <TextBlock VerticalAlignment="Center" Text="Update rate:" Margin="0 0 10 0"/>
-                    <Slider Value="{Binding UpdateInterval, Mode=TwoWay}"
-                            Style="{StaticResource MaterialDesignReversedSlider}"
-                            HorizontalAlignment="Stretch"
-                            VerticalAlignment="Top"
-                            Margin="0 0 10 0"
-                            Width="100"
-                            Minimum="{Binding MinimumUpdateInterval}" 
-                            Maximum="{Binding MaximumUpdateInterval}" 
-                            Ticks="{Binding UpdateIntervalTicks}" 
-                            IsDirectionReversed="True"
-                            IsSnapToTickEnabled="True" 
-                            Orientation="Horizontal"
-                            material:SliderAssist.OnlyShowFocusVisualWhileDragging="True"/>
-                    <TextBlock VerticalAlignment="Center" 
-                               HorizontalAlignment="Right" 
-                               Margin="0 0 5 0"
-                               TextAlignment="Right"
-                               Width="40"
-                               Text="{Binding UpdateInterval, Converter={StaticResource MsToHzConverter}, StringFormat={}{0} hz}"/>
-
-                    <material:PopupBox PlacementMode="TopAndAlignRightEdges"
-                                       PopupMode="Click"
-                                       StaysOpen="True"
-                                       ToolTip="Update settings">
-                        <StackPanel Margin="10">
-                            <DockPanel Width="100" HorizontalAlignment="Left">
-                                <TextBlock DockPanel.Dock="Left"
-                                           Text="Average:"/>
-                                <TextBlock DockPanel.Dock="Right" 
-                                           Text="{Binding AverageUpdateRate, StringFormat={}{0} hz}"
-                                           TextAlignment="Right"/>
-                            </DockPanel>
-
-                            <DockPanel Width="100" HorizontalAlignment="Left">
-                                <TextBlock DockPanel.Dock="Left"
-                                           Text="Jitter:"/>
-                                <TextBlock DockPanel.Dock="Right" 
-                                           Text="{Binding UpdateRateJitter, StringFormat={}{0} hz}"
-                                           TextAlignment="Right"/>
-                            </DockPanel>
-                        </StackPanel>
-
-                        <material:PopupBox.ToggleContent>
-                            <material:ColorZone VerticalAlignment="Center"
-                                                CornerRadius="10"
-                                                Mode="PrimaryMid"
-                                                Width="20"
-                                                Height="20"
-                                                material:ShadowAssist.ShadowDepth="Depth2">
-                                <material:PackIcon Kind="Cog"
-                                                   Width="16"
-                                                   Height="16"
-                                                   HorizontalAlignment="Center"
-                                                   VerticalAlignment="Center"/>
-                            </material:ColorZone>
-                        </material:PopupBox.ToggleContent>
-                    </material:PopupBox>
-                </StackPanel>
             </DockPanel>
             
             <DockPanel LastChildFill="True" Margin="0 0 0 20">
