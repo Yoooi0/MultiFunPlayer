@@ -333,16 +333,16 @@ internal sealed partial class KeyframesHeatmap : UserControl
 
         AddStop(Color.FromRgb(0, 0, 0), 0);
 
-        var maxLength = buckets.Length > 0 ? buckets[0].TotalLength : 0;
+        var maxLength = buckets.Length > 0 ? buckets[0].Heat : 0;
         for (var i = 1; i < buckets.Length; i++)
-            maxLength = Math.Max(maxLength, buckets[i].TotalLength);
+            maxLength = Math.Max(maxLength, buckets[i].Heat);
 
         var normalizationFactor = 1d / maxLength;
         if (double.IsFinite(normalizationFactor))
         {
             for (var i = 0; i < buckets.Length; i++)
             {
-                var heat = MathUtils.Clamp01(buckets[i].TotalLength * normalizationFactor);
+                var heat = MathUtils.Clamp01(buckets[i].Heat * normalizationFactor);
                 var color = heat < 0.001 ? Color.FromRgb(0, 0, 0) : _colors[(int)Math.Round(heat * (_colors.Length - 1))];
 
                 AddStop(color, i * bucketSize / Duration);
@@ -365,9 +365,6 @@ internal sealed partial class KeyframesHeatmap : UserControl
                 var prev = keyframes[i];
                 var next = keyframes[j];
 
-                if (next.Position < 0 || prev.Position < 0)
-                    continue;
-
                 var dx = next.Position - prev.Position;
                 var dy = next.Value - prev.Value;
                 var adx = Math.Abs(dx);
@@ -383,7 +380,7 @@ internal sealed partial class KeyframesHeatmap : UserControl
                     var positionFrom = Math.Max(index * bucketSize, prev.Position);
                     var positionTo = Math.Min((index + 1) * bucketSize, next.Position);
 
-                    buckets[index].TotalLength += ady * (positionTo - positionFrom) / adx;
+                    buckets[index].AddHeat(ady * (positionTo - positionFrom) / adx);
                 }
             }
         }
@@ -403,76 +400,66 @@ internal sealed partial class KeyframesHeatmap : UserControl
             AddPoint(ActualWidth, 0);
             AddPoint(ActualWidth, ActualHeight);
             AddPoint(0, ActualHeight);
-
-            return;
         }
-
-        for (int i = 0, j = 1; j < keyframes.Count; i = j++)
+        else
         {
-            var prev = keyframes[i];
-            var next = keyframes[j];
-            var direction = Math.Sign(keyframes[j].Value - keyframes[i].Value);
-
-            var startBucket = (int)Math.Floor(prev.Position / bucketSize);
-            var endBucket = (int)Math.Floor(next.Position / bucketSize);
-            for (var index = startBucket; index < buckets.Length && index <= endBucket; index++)
+            for (int i = 0, j = 1; j < keyframes.Count; i = j++)
             {
-                var positionFrom = Math.Max(index * bucketSize, prev.Position);
-                var positionTo = Math.Min((index + 1) * bucketSize, next.Position);
-                var valueFrom = MathUtils.Map(positionFrom, prev.Position, next.Position, prev.Value, next.Value);
-                var valueTo = MathUtils.Map(positionTo, prev.Position, next.Position, prev.Value, next.Value);
+                var prev = keyframes[i];
+                var next = keyframes[j];
 
-                if (direction > 0)
+                var startBucket = (int)Math.Floor(prev.Position / bucketSize);
+                var endBucket = (int)Math.Floor(next.Position / bucketSize);
+                for (var index = startBucket; index < buckets.Length && index <= endBucket; index++)
                 {
-                    buckets[index].Bottom.Add(valueFrom);
-                    buckets[index].Top.Add(valueTo);
-                }
-                else if (direction < 0)
-                {
-                    buckets[index].Top.Add(valueFrom);
-                    buckets[index].Bottom.Add(valueTo);
-                }
-                else
-                {
-                    buckets[index].Top.Add((valueFrom + valueTo) / 2);
-                    buckets[index].Bottom.Add((valueFrom + valueTo) / 2);
+                    var positionFrom = Math.Max(index * bucketSize, prev.Position);
+                    var positionTo = Math.Min((index + 1) * bucketSize, next.Position);
+                    var valueFrom = MathUtils.Map(positionFrom, prev.Position, next.Position, prev.Value, next.Value);
+                    var valueTo = MathUtils.Map(positionTo, prev.Position, next.Position, prev.Value, next.Value);
+
+                    buckets[index].AddRange(valueFrom, valueTo);
                 }
             }
+
+            for (var i = 0; i < buckets.Length; i++)
+                AddPointForBucket(i, buckets[i].HasRange ? buckets[i].RangeMax : SelectedAxis.DefaultValue);
+
+            for (var i = buckets.Length - 1; i >= 0; i--)
+                AddPointForBucket(i, buckets[i].HasRange ? buckets[i].RangeMin : SelectedAxis.DefaultValue);
         }
-
-        for (var i = 0; i < buckets.Length; i++)
-            AddPointForBucket(i, buckets[i].Top.Count > 0 ? buckets[i].Top.Average : SelectedAxis.DefaultValue);
-
-        for (var i = buckets.Length - 1; i >= 0; i--)
-            AddPointForBucket(i, buckets[i].Bottom.Count > 0 ? buckets[i].Bottom.Average : SelectedAxis.DefaultValue);
-
-        AddPointForBucket(0, buckets[0].Top.Count > 0 ? buckets[0].Top.Average : SelectedAxis.DefaultValue);
     }
 
     private struct HeatmapBucket
     {
-        public double TotalLength;
-        public HeatmapBucketValue Top;
-        public HeatmapBucketValue Bottom;
+        public bool HasHeat { get; private set; }
+        public double Heat { get; private set; }
+
+        public bool HasRange { get; private set; }
+        public double RangeMin { get; private set; }
+        public double RangeMax { get; private set; }
+
+        public HeatmapBucket() => Clear();
 
         public void Clear()
         {
-            TotalLength = 0;
-            Top = new();
-            Bottom = new();
+            Heat = 0;
+            RangeMin = double.MaxValue;
+            RangeMax = double.MinValue;
+            HasRange = false;
+            HasHeat = false;
         }
 
-        public struct HeatmapBucketValue
+        public void AddHeat(double heat)
         {
-            public double Total { get; private set; }
-            public int Count { get; private set; }
-            public readonly double Average => Total / Count;
+            Heat += heat;
+            HasHeat = true;
+        }
 
-            public void Add(double value)
-            {
-                Total += value;
-                Count++;
-            }
+        public void AddRange(double valueFrom, double valueTo)
+        {
+            RangeMin = Math.Min(Math.Min(valueFrom, valueTo), RangeMin);
+            RangeMax = Math.Max(Math.Max(valueFrom, valueTo), RangeMax);
+            HasRange = true;
         }
     }
 
