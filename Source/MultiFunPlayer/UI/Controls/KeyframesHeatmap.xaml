@@ -24,7 +24,8 @@
                                            Margin="5"/>
         </local:AutoClosingPopup>
 
-        <material:Card material:ShadowAssist.ShadowDepth="Depth1">
+        <material:Card material:ShadowAssist.ShadowDepth="Depth1"
+                       ClipContent="False">
             <material:Card.Background>
                 <DrawingBrush Stretch="None" TileMode="Tile" Viewport="4 8 20 20" ViewportUnits="Absolute">
                     <DrawingBrush.Drawing>
@@ -47,10 +48,11 @@
                     </DrawingBrush.Drawing>
                 </DrawingBrush>
             </material:Card.Background>
-            <Canvas ClipToBounds="True">
+            <Canvas>
                 <Polygon Points="{Binding Points, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}"
                          Visibility="{Binding ShowRange, Converter={StaticResource BooleanToVisibilityConverter}, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}"
                          StrokeThickness="0.5"
+                         StrokeLineJoin="Round"
                          Stroke="{DynamicResource MaterialDesignBody}">
                     <Polygon.Fill>
                         <LinearGradientBrush StartPoint="0,0" EndPoint="1,0"

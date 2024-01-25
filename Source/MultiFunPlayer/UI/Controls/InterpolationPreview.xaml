@@ -10,7 +10,8 @@
              mc:Ignorable="d" 
              d:DesignHeight="800" d:DesignWidth="800"
              x:ClassModifier="internal">
-    <material:Card material:ShadowAssist.ShadowDepth="Depth1">
+    <material:Card material:ShadowAssist.ShadowDepth="Depth1"
+                   ClipContent="False">
         <material:Card.Background>
             <DrawingBrush Stretch="None" TileMode="Tile" Viewport="4 8 20 20" ViewportUnits="Absolute">
                 <DrawingBrush.Drawing>
@@ -33,7 +34,7 @@
                 </DrawingBrush.Drawing>
             </DrawingBrush>
         </material:Card.Background>
-        <Canvas ClipToBounds="True">
+        <Canvas>
             <Polyline Points="{Binding CurvePoints, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}"
                       StrokeThickness="1.5" 
                       Stroke="{DynamicResource MaterialDesignBody}"/>

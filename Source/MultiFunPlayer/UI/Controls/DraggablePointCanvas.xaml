@@ -7,7 +7,8 @@
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800"
              SizeChanged="OnSizeChanged">
-    <material:Card material:ShadowAssist.ShadowDepth="Depth1">
+    <material:Card material:ShadowAssist.ShadowDepth="Depth1"
+                   ClipContent="False">
         <material:Card.Background>
             <DrawingBrush Stretch="None" TileMode="Tile" Viewport="4 8 20 20" ViewportUnits="Absolute">
                 <DrawingBrush.Drawing>
@@ -49,7 +50,8 @@
             <Canvas>
                 <Polyline Points="{Binding LinePoints, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}"
                           IsHitTestVisible="False"
-                          StrokeThickness="1.5" 
+                          StrokeThickness="1.5"
+                          StrokeLineJoin="Round"
                           Stroke="{DynamicResource MaterialDesignBody}"/>
             </Canvas>
 

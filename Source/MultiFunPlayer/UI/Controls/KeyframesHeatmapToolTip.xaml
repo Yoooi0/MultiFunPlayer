@@ -7,11 +7,11 @@
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800"
              x:ClassModifier="internal">
-    <material:Card material:ShadowAssist.ShadowDepth="Depth2"
-                   Padding="5">
+    <material:Card material:ShadowAssist.ShadowDepth="Depth2">
         <DockPanel>
             <material:Card DockPanel.Dock="Top"
-                           Margin="0 0 0 5"
+                           Margin="5"
+                           ClipContent="False"
                            Visibility="{Binding EnablePreview, Converter={StaticResource BooleanToVisibilityConverter}, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}">
                 <material:Card.Background>
                     <DrawingBrush Stretch="None" TileMode="Tile" Viewport="4 8 20 20" ViewportUnits="Absolute">
@@ -36,12 +36,12 @@
                     </DrawingBrush>
                 </material:Card.Background>
 
-                <Canvas ClipToBounds="True"
-                        Width="{Binding CanvasWidth, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}"
+                <Canvas Width="{Binding CanvasWidth, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}"
                         Height="{Binding CanvasHeight, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}">
                     <Polyline Points="{Binding Points, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}"
                               StrokeThickness="1.5" 
-                              Stroke="{DynamicResource MaterialDesignBody}">
+                              Stroke="{DynamicResource MaterialDesignBody}"
+                              StrokeLineJoin="Round">
                     </Polyline>
                     <Border Background="{DynamicResource MaterialDesignCardBackground}"
                             BorderBrush="{DynamicResource MaterialDesignBody}"
