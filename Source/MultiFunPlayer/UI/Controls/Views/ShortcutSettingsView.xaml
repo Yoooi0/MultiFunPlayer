@@ -609,7 +609,7 @@
                                            VerticalAlignment="Center"
                                            FontSize="12"/>
 
-                                <TextBox Text="{Binding SelectedShortcut.Name, Converter={StaticResource EmptyStringToNullConverter}, UpdateSourceTrigger=PropertyChanged, TargetNullValue={x:Null}}"
+                                <TextBox Text="{Binding SelectedShortcut.Name, Converter={StaticResource EmptyStringToNullConverter}, UpdateSourceTrigger=PropertyChanged}"
                                          material:TextFieldAssist.HasClearButton="True"
                                          DockPanel.Dock="Top"/>
                             </DockPanel>

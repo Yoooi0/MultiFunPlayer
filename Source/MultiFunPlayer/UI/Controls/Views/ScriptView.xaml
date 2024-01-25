@@ -585,9 +585,9 @@
                         <MenuItem.HeaderTemplate>
                             <DataTemplate>
                                 <Slider Minimum="100"
-                                                    Maximum="{Binding Source={x:Static controls:KeyframesHeatmap.MaxBucketCount}}"
-                                                    Value="{Binding PlacementTarget.DataContext.HeatmapBucketCount, RelativeSource={RelativeSource FindAncestor, AncestorType=ContextMenu}}"
-                                                    material:SliderAssist.OnlyShowFocusVisualWhileDragging="True"/>
+                                        Maximum="{Binding Source={x:Static controls:KeyframesHeatmap.MaxBucketCount}}"
+                                        Value="{Binding PlacementTarget.DataContext.HeatmapBucketCount, RelativeSource={RelativeSource FindAncestor, AncestorType=ContextMenu}}"
+                                        material:SliderAssist.OnlyShowFocusVisualWhileDragging="True"/>
                             </DataTemplate>
                         </MenuItem.HeaderTemplate>
                     </MenuItem>
