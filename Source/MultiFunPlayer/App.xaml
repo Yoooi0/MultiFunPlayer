@@ -1,22 +1,22 @@
 ﻿<Application x:Class="MultiFunPlayer.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:s="https://github.com/canton7/Stylet"
+             xmlns:converters="clr-namespace:MultiFunPlayer.UI.Converters"
              xmlns:local="clr-namespace:MultiFunPlayer"
              xmlns:material="http://materialdesigninxaml.net/winfx/xaml/themes"
-             xmlns:converters="clr-namespace:MultiFunPlayer.UI.Converters"
+             xmlns:s="https://github.com/canton7/Stylet"
              x:ClassModifier="internal">
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
-                <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Controls.xaml" />
-                <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Fonts.xaml" />
-                <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Themes/Light.Steel.xaml" />
+                <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Controls.xaml"/>
+                <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Fonts.xaml"/>
+                <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Themes/Light.Steel.xaml"/>
 
-                <ResourceDictionary Source="pack://application:,,,/MaterialDesignThemes.Wpf;component/Themes/MaterialDesignTheme.Light.xaml" />
-                <ResourceDictionary Source="pack://application:,,,/MaterialDesignThemes.Wpf;component/Themes/MaterialDesignTheme.Defaults.xaml" />
-                <ResourceDictionary Source="pack://application:,,,/MaterialDesignThemes.Wpf;component/Themes/MaterialDesignTheme.PopupBox.xaml" />
-                <ResourceDictionary Source="pack://application:,,,/MaterialDesignColors;component/Themes/Recommended/Primary/MaterialDesignColor.BlueGrey.xaml" />
+                <ResourceDictionary Source="pack://application:,,,/MaterialDesignThemes.Wpf;component/Themes/MaterialDesignTheme.Light.xaml"/>
+                <ResourceDictionary Source="pack://application:,,,/MaterialDesignThemes.Wpf;component/Themes/MaterialDesignTheme.Defaults.xaml"/>
+                <ResourceDictionary Source="pack://application:,,,/MaterialDesignThemes.Wpf;component/Themes/MaterialDesignTheme.PopupBox.xaml"/>
+                <ResourceDictionary Source="pack://application:,,,/MaterialDesignColors;component/Themes/Recommended/Primary/MaterialDesignColor.BlueGrey.xaml"/>
 
                 <ResourceDictionary Source="pack://application:,,,/MaterialDesignThemes.MahApps;component/Themes/MaterialDesignTheme.MahApps.Defaults.xaml"/>
 
@@ -27,32 +27,32 @@
 
                     <converters:DisplayNameConverter x:Key="DisplayNameConverter"/>
                     <converters:DescriptionConverter x:Key="DescriptionConverter"/>
-                    <converters:NullableToBooleanConverter x:Key="NullableToBooleanConverter" />
-                    <converters:InvertedNullableToBooleanConverter x:Key="InvertedNullableToBooleanConverter" />
-                    <converters:BooleanAndConverter x:Key="BooleanAndConverter" />
-                    <converters:BooleanOrConverter x:Key="BooleanOrConverter" />
+                    <converters:NullableToBooleanConverter x:Key="NullableToBooleanConverter"/>
+                    <converters:InvertedNullableToBooleanConverter x:Key="InvertedNullableToBooleanConverter"/>
+                    <converters:BooleanAndConverter x:Key="BooleanAndConverter"/>
+                    <converters:BooleanOrConverter x:Key="BooleanOrConverter"/>
                     <converters:MsToHzConverter x:Key="MsToHzConverter"/>
 
-                    <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+                    <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
                     <material:NotConverter x:Key="NotConverter"/>
                 </ResourceDictionary>
-                
-                <ResourceDictionary Source="pack://application:,,,/UI/Themes/Color.Light.xaml" />
-                <ResourceDictionary Source="pack://application:,,,/UI/Themes/Color.xaml" />
 
-                <ResourceDictionary Source="pack://application:,,,/UI/Themes/Button.xaml" />
-                <ResourceDictionary Source="pack://application:,,,/UI/Themes/Card.xaml" />
-                <ResourceDictionary Source="pack://application:,,,/UI/Themes/Expander.xaml" />
-                <ResourceDictionary Source="pack://application:,,,/UI/Themes/FocusVisual.xaml" />
-                <ResourceDictionary Source="pack://application:,,,/UI/Themes/Menu.xaml" />
-                <ResourceDictionary Source="pack://application:,,,/UI/Themes/PopupBox.xaml" />
-                <ResourceDictionary Source="pack://application:,,,/UI/Themes/RangeSlider.xaml" />
-                <ResourceDictionary Source="pack://application:,,,/UI/Themes/ScrollViewer.xaml" />
-                <ResourceDictionary Source="pack://application:,,,/UI/Themes/TabControl.xaml" />
-                <ResourceDictionary Source="pack://application:,,,/UI/Themes/Slider.xaml" />
-                <ResourceDictionary Source="pack://application:,,,/UI/Themes/TextBlock.xaml" />
-                <ResourceDictionary Source="pack://application:,,,/UI/Themes/ToolTip.xaml" />
-                <ResourceDictionary Source="pack://application:,,,/UI/Themes/Window.xaml" />
+                <ResourceDictionary Source="pack://application:,,,/UI/Themes/Color.Light.xaml"/>
+                <ResourceDictionary Source="pack://application:,,,/UI/Themes/Color.xaml"/>
+
+                <ResourceDictionary Source="pack://application:,,,/UI/Themes/Button.xaml"/>
+                <ResourceDictionary Source="pack://application:,,,/UI/Themes/Card.xaml"/>
+                <ResourceDictionary Source="pack://application:,,,/UI/Themes/Expander.xaml"/>
+                <ResourceDictionary Source="pack://application:,,,/UI/Themes/FocusVisual.xaml"/>
+                <ResourceDictionary Source="pack://application:,,,/UI/Themes/Menu.xaml"/>
+                <ResourceDictionary Source="pack://application:,,,/UI/Themes/PopupBox.xaml"/>
+                <ResourceDictionary Source="pack://application:,,,/UI/Themes/RangeSlider.xaml"/>
+                <ResourceDictionary Source="pack://application:,,,/UI/Themes/ScrollViewer.xaml"/>
+                <ResourceDictionary Source="pack://application:,,,/UI/Themes/TabControl.xaml"/>
+                <ResourceDictionary Source="pack://application:,,,/UI/Themes/Slider.xaml"/>
+                <ResourceDictionary Source="pack://application:,,,/UI/Themes/TextBlock.xaml"/>
+                <ResourceDictionary Source="pack://application:,,,/UI/Themes/ToolTip.xaml"/>
+                <ResourceDictionary Source="pack://application:,,,/UI/Themes/Window.xaml"/>
 
                 <s:ApplicationLoader>
                     <s:ApplicationLoader.Bootstrapper>

@@ -1,20 +1,21 @@
 ﻿<UserControl x:Class="MultiFunPlayer.UI.Controls.Views.ShortcutSettingsView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:metro="http://metro.mahapps.com/winfx/xaml/controls"
-             xmlns:material="http://materialdesigninxaml.net/winfx/xaml/themes"
-             xmlns:s="https://github.com/canton7/Stylet"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
-             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:converters="clr-namespace:MultiFunPlayer.UI.Converters"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:material="http://materialdesigninxaml.net/winfx/xaml/themes"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:metro="http://metro.mahapps.com/winfx/xaml/controls"
              xmlns:rawinput="clr-namespace:MultiFunPlayer.Input.RawInput"
-             xmlns:xinput="clr-namespace:MultiFunPlayer.Input.XInput"
-             xmlns:tcode="clr-namespace:MultiFunPlayer.Input.TCode"
+             xmlns:s="https://github.com/canton7/Stylet"
              xmlns:shortcut="clr-namespace:MultiFunPlayer.Shortcut"
+             xmlns:tcode="clr-namespace:MultiFunPlayer.Input.TCode"
              xmlns:ui="clr-namespace:MultiFunPlayer.UI"
-             mc:Ignorable="d" 
-             d:DesignHeight="450" d:DesignWidth="800"
-             x:ClassModifier="internal">
+             xmlns:xinput="clr-namespace:MultiFunPlayer.Input.XInput"
+             d:DesignHeight="450"
+             d:DesignWidth="800"
+             x:ClassModifier="internal"
+             mc:Ignorable="d">
     <UserControl.Resources>
         <converters:MultiObjectEqualToBooleanConverter x:Key="MultiObjectEqualToBooleanConverter"/>
         <converters:ItemIndexInContainerConverter x:Key="ItemIndexInContainerConverter"/>
@@ -24,168 +25,155 @@
 
         <DataTemplate DataType="{x:Type shortcut:ReleaseShortcut}">
             <DockPanel LastChildFill="False">
-                <DockPanel DockPanel.Dock="Top"
-                           LastChildFill="True">
-                    <TextBlock Text="Handle repeating:"
-                               DockPanel.Dock="Left"
+                <DockPanel DockPanel.Dock="Top" LastChildFill="True">
+                    <TextBlock DockPanel.Dock="Left"
                                Margin="0 0 5 0"
                                VerticalAlignment="Center"
-                               FontSize="12"/>
+                               FontSize="12"
+                               Text="Handle repeating:"/>
 
-                    <CheckBox IsChecked="{Binding HandleRepeating}"
-                              DockPanel.Dock="Left"/>
+                    <CheckBox DockPanel.Dock="Left" IsChecked="{Binding HandleRepeating}"/>
                 </DockPanel>
             </DockPanel>
         </DataTemplate>
 
         <DataTemplate DataType="{x:Type shortcut:PressShortcut}">
             <DockPanel LastChildFill="False">
-                <DockPanel DockPanel.Dock="Top"
-                           LastChildFill="True">
-                    <TextBlock Text="Handle repeating:"
-                               DockPanel.Dock="Left"
+                <DockPanel DockPanel.Dock="Top" LastChildFill="True">
+                    <TextBlock DockPanel.Dock="Left"
                                Margin="0 0 5 0"
                                VerticalAlignment="Center"
-                               FontSize="12"/>
+                               FontSize="12"
+                               Text="Handle repeating:"/>
 
-                    <CheckBox IsChecked="{Binding HandleRepeating}"
-                              DockPanel.Dock="Left"/>
+                    <CheckBox DockPanel.Dock="Left" IsChecked="{Binding HandleRepeating}"/>
                 </DockPanel>
             </DockPanel>
         </DataTemplate>
 
         <DataTemplate DataType="{x:Type shortcut:LongPressShortcut}">
             <DockPanel LastChildFill="False">
-                <DockPanel DockPanel.Dock="Top"
-                           LastChildFill="False">
-                    <TextBlock Text="Minimum duration:"
-                               DockPanel.Dock="Left"
+                <DockPanel DockPanel.Dock="Top" LastChildFill="False">
+                    <TextBlock DockPanel.Dock="Left"
                                Margin="0 0 10 0"
                                VerticalAlignment="Center"
-                               FontSize="12"/>
+                               FontSize="12"
+                               Text="Minimum duration:"/>
 
-                    <metro:NumericUpDown Value="{Binding MinimumHoldDuration}"
-                                         DockPanel.Dock="Left"
-                                         Minimum="1"
+                    <metro:NumericUpDown DockPanel.Dock="Left"
                                          Width="120"
+                                         VerticalAlignment="Center"
+                                         Minimum="1"
                                          StringFormat="{}{0}ms"
-                                         VerticalAlignment="Center"/>
+                                         Value="{Binding MinimumHoldDuration}"/>
                 </DockPanel>
 
-                <DockPanel DockPanel.Dock="Top"
-                           LastChildFill="False">
-                    <TextBlock Text="Maximum duration:"
-                               DockPanel.Dock="Left"
+                <DockPanel DockPanel.Dock="Top" LastChildFill="False">
+                    <TextBlock DockPanel.Dock="Left"
                                Margin="0 0 10 0"
                                VerticalAlignment="Center"
-                               FontSize="12"/>
+                               FontSize="12"
+                               Text="Maximum duration:"/>
 
-                    <metro:NumericUpDown Value="{Binding MaximumHoldDuration}"
-                                         DockPanel.Dock="Left"
-                                         Minimum="-1"
+                    <metro:NumericUpDown DockPanel.Dock="Left"
                                          Width="120"
+                                         VerticalAlignment="Center"
+                                         Minimum="-1"
                                          StringFormat="{}{0}ms"
-                                         VerticalAlignment="Center"/>
+                                         Value="{Binding MaximumHoldDuration}"/>
                 </DockPanel>
             </DockPanel>
         </DataTemplate>
 
         <DataTemplate DataType="{x:Type shortcut:ClickShortcut}">
             <DockPanel LastChildFill="False">
-                <DockPanel DockPanel.Dock="Top"
-                           LastChildFill="False">
-                    <TextBlock Text="Click count:"
-                               DockPanel.Dock="Left"
+                <DockPanel DockPanel.Dock="Top" LastChildFill="False">
+                    <TextBlock DockPanel.Dock="Left"
                                Margin="0 0 10 0"
                                VerticalAlignment="Center"
-                               FontSize="12"/>
+                               FontSize="12"
+                               Text="Click count:"/>
 
-                    <metro:NumericUpDown Value="{Binding ClickCount}"
-                                         DockPanel.Dock="Left"
-                                         Minimum="1"
+                    <metro:NumericUpDown DockPanel.Dock="Left"
                                          Width="80"
-                                         VerticalAlignment="Center"/>
+                                         VerticalAlignment="Center"
+                                         Minimum="1"
+                                         Value="{Binding ClickCount}"/>
 
                 </DockPanel>
-                <DockPanel DockPanel.Dock="Top"
-                           LastChildFill="False">
-                    <TextBlock Text="Maximum click interval:"
-                               DockPanel.Dock="Left"
+                <DockPanel DockPanel.Dock="Top" LastChildFill="False">
+                    <TextBlock DockPanel.Dock="Left"
                                Margin="0 0 10 0"
                                VerticalAlignment="Center"
-                               FontSize="12"/>
+                               FontSize="12"
+                               Text="Maximum click interval:"/>
 
-                    <metro:NumericUpDown Value="{Binding MaximumClickInterval}"
-                                         DockPanel.Dock="Left"
-                                         Minimum="1"
+                    <metro:NumericUpDown DockPanel.Dock="Left"
                                          Width="150"
+                                         VerticalAlignment="Center"
+                                         Minimum="1"
                                          StringFormat="{}{0}ms"
-                                         VerticalAlignment="Center"/>
+                                         Value="{Binding MaximumClickInterval}"/>
                 </DockPanel>
             </DockPanel>
         </DataTemplate>
 
         <DataTemplate DataType="{x:Type shortcut:DriveShortcut}">
             <DockPanel LastChildFill="False">
-                <DockPanel DockPanel.Dock="Top"
-                           LastChildFill="False">
-                    <TextBlock Text="Mode:"
-                               DockPanel.Dock="Left"
+                <DockPanel DockPanel.Dock="Top" LastChildFill="False">
+                    <TextBlock DockPanel.Dock="Left"
                                Margin="0 0 10 0"
                                VerticalAlignment="Center"
-                               FontSize="12"/>
+                               FontSize="12"
+                               Text="Mode:"/>
 
-                    <ComboBox ItemsSource="{Binding Source={ui:EnumBindingSource {x:Type shortcut:DriveShortcutMode}}}"
+                    <ComboBox DockPanel.Dock="Left"
+                              ItemsSource="{Binding Source={ui:EnumBindingSource {x:Type shortcut:DriveShortcutMode}}}"
                               SelectedItem="{Binding DriveMode}"
-                              DockPanel.Dock="Left"
                               Width="150"
                               VerticalAlignment="Center"
                               FontSize="12"/>
                 </DockPanel>
-                <DockPanel DockPanel.Dock="Top"
-                           LastChildFill="False">
-                    <TextBlock Text="Invert:"
-                               DockPanel.Dock="Left"
+                <DockPanel DockPanel.Dock="Top" LastChildFill="False">
+                    <TextBlock DockPanel.Dock="Left"
                                Margin="0 0 5 0"
                                VerticalAlignment="Center"
-                               FontSize="12"/>
+                               FontSize="12"
+                               Text="Invert:"/>
 
-                    <CheckBox IsChecked="{Binding Invert}"
-                              DockPanel.Dock="Left"/>
+                    <CheckBox DockPanel.Dock="Left" IsChecked="{Binding Invert}"/>
                 </DockPanel>
             </DockPanel>
         </DataTemplate>
 
         <DataTemplate DataType="{x:Type shortcut:ThresholdShortcut}">
             <DockPanel LastChildFill="False">
-                <DockPanel DockPanel.Dock="Top"
-                           LastChildFill="False">
-                    <TextBlock Text="Trigger value:"
-                               DockPanel.Dock="Left"
+                <DockPanel DockPanel.Dock="Top" LastChildFill="False">
+                    <TextBlock DockPanel.Dock="Left"
                                Margin="0 0 10 0"
                                VerticalAlignment="Center"
-                               FontSize="12"/>
+                               FontSize="12"
+                               Text="Trigger value:"/>
 
-                    <metro:NumericUpDown Value="{Binding Threshold}"
-                                         DockPanel.Dock="Left"
-                                         Minimum="0"
-                                         Maximum="1"
+                    <metro:NumericUpDown DockPanel.Dock="Left"
                                          Width="100"
+                                         VerticalAlignment="Center"
+                                         Maximum="1"
+                                         Minimum="0"
                                          StringFormat="P0"
-                                         VerticalAlignment="Center"/>
+                                         Value="{Binding Threshold}"/>
 
                 </DockPanel>
-                <DockPanel DockPanel.Dock="Top"
-                           LastChildFill="False">
-                    <TextBlock Text="Mode:"
-                               DockPanel.Dock="Left"
+                <DockPanel DockPanel.Dock="Top" LastChildFill="False">
+                    <TextBlock DockPanel.Dock="Left"
                                Margin="0 0 10 0"
                                VerticalAlignment="Center"
-                               FontSize="12"/>
+                               FontSize="12"
+                               Text="Mode:"/>
 
-                    <ComboBox ItemsSource="{Binding Source={ui:EnumBindingSource {x:Type shortcut:ThresholdTriggerMode}}}"
+                    <ComboBox DockPanel.Dock="Left"
+                              ItemsSource="{Binding Source={ui:EnumBindingSource {x:Type shortcut:ThresholdTriggerMode}}}"
                               SelectedItem="{Binding TriggerMode}"
-                              DockPanel.Dock="Left"
                               Width="100"
                               VerticalAlignment="Center"
                               FontSize="12"/>
@@ -195,78 +183,74 @@
 
         <DataTemplate DataType="{x:Type shortcut:OffsetShortcut}">
             <DockPanel LastChildFill="False">
-                <DockPanel DockPanel.Dock="Top"
-                           LastChildFill="False">
-                    <TextBlock Text="Mode:"
-                               DockPanel.Dock="Left"
+                <DockPanel DockPanel.Dock="Top" LastChildFill="False">
+                    <TextBlock DockPanel.Dock="Left"
                                Margin="0 0 10 0"
                                VerticalAlignment="Center"
-                               FontSize="12"/>
+                               FontSize="12"
+                               Text="Mode:"/>
 
-                    <ComboBox ItemsSource="{Binding Source={ui:EnumBindingSource {x:Type shortcut:OffsetShortcutMode}}}"
+                    <ComboBox DockPanel.Dock="Left"
+                              ItemsSource="{Binding Source={ui:EnumBindingSource {x:Type shortcut:OffsetShortcutMode}}}"
                               SelectedItem="{Binding OffsetMode}"
-                              DockPanel.Dock="Left"
                               Width="130"
                               VerticalAlignment="Center"
                               FontSize="12"/>
                 </DockPanel>
-                <DockPanel DockPanel.Dock="Top"
-                           LastChildFill="False">
-                    <TextBlock Text="Speed:"
-                               DockPanel.Dock="Left"
+                <DockPanel DockPanel.Dock="Top" LastChildFill="False">
+                    <TextBlock DockPanel.Dock="Left"
                                Margin="0 0 10 0"
                                VerticalAlignment="Center"
-                               FontSize="12"/>
+                               FontSize="12"
+                               Text="Speed:"/>
 
-                    <metro:NumericUpDown Value="{Binding Speed}"
-                                         DockPanel.Dock="Left"
-                                         Minimum="0"
-                                         Maximum="1"
+                    <metro:NumericUpDown DockPanel.Dock="Left"
                                          Width="100"
+                                         VerticalAlignment="Center"
+                                         Maximum="1"
+                                         Minimum="0"
                                          StringFormat="P0"
-                                         VerticalAlignment="Center"/>
+                                         Value="{Binding Speed}"/>
 
                 </DockPanel>
-                <DockPanel DockPanel.Dock="Top"
-                           LastChildFill="False">
-                    <TextBlock Text="Invert:"
-                               DockPanel.Dock="Left"
+                <DockPanel DockPanel.Dock="Top" LastChildFill="False">
+                    <TextBlock DockPanel.Dock="Left"
                                Margin="0 0 5 0"
                                VerticalAlignment="Center"
-                               FontSize="12"/>
+                               FontSize="12"
+                               Text="Invert:"/>
 
-                    <CheckBox IsChecked="{Binding Invert}"
-                              DockPanel.Dock="Left"/>
+                    <CheckBox DockPanel.Dock="Left" IsChecked="{Binding Invert}"/>
                 </DockPanel>
             </DockPanel>
         </DataTemplate>
 
         <DataTemplate DataType="{x:Type xinput:GamepadButtonGestureDescriptor}">
             <DockPanel LastChildFill="True">
-                <TextBlock Text="User:"
-                           Margin="0 0 0 0"
+                <TextBlock Margin="0 0 0 0"
                            VerticalAlignment="Center"
                            FontSize="12"
+                           Text="User:"
                            Typography.Capitals="AllSmallCaps"/>
-                    
-                <TextBlock Text="{Binding UserIndex}"
-                           Margin="5 0 0 0"
+
+                <TextBlock Margin="5 0 0 0"
                            VerticalAlignment="Center"
                            FontSize="12"
                            FontWeight="Bold"
+                           Text="{Binding UserIndex}"
                            Typography.Capitals="AllSmallCaps"/>
-                
-                <TextBlock Text="Buttons:"
-                           Margin="10 0 0 0"
+
+                <TextBlock Margin="10 0 0 0"
                            VerticalAlignment="Center"
                            FontSize="12"
+                           Text="Buttons:"
                            Typography.Capitals="AllSmallCaps"/>
 
                 <ItemsControl DockPanel.Dock="Left"
-                              Margin="5 0 0 0"
                               ItemsSource="{Binding Buttons}"
-                              AlternationCount="{Binding RelativeSource={RelativeSource Self}, Path=Items.Count}"
-                              VerticalAlignment="Center">
+                              Margin="5 0 0 0"
+                              VerticalAlignment="Center"
+                              AlternationCount="{Binding RelativeSource={RelativeSource Self}, Path=Items.Count}">
                     <ItemsControl.Resources>
                         <converters:GamepadKeyToStringConverter x:Key="GamepadKeyToStringConverter"/>
                     </ItemsControl.Resources>
@@ -278,21 +262,22 @@
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
                             <StackPanel Orientation="Horizontal">
-                                <TextBlock x:Name="Separator" Text=", "
+                                <TextBlock x:Name="Separator"
                                            VerticalAlignment="Center"
                                            FontSize="12"
                                            FontWeight="Bold"
+                                           Text=", "
                                            Typography.Capitals="AllSmallCaps"/>
-                                <TextBlock Text="{Binding Mode=OneWay, Converter={StaticResource GamepadKeyToStringConverter}}"
-                                           VerticalAlignment="Center"
+                                <TextBlock VerticalAlignment="Center"
                                            FontSize="12"
                                            FontWeight="Bold"
+                                           Text="{Binding Mode=OneWay, Converter={StaticResource GamepadKeyToStringConverter}}"
                                            Typography.Capitals="AllSmallCaps"/>
                             </StackPanel>
 
                             <DataTemplate.Triggers>
                                 <Trigger Property="ItemsControl.AlternationIndex" Value="0">
-                                    <Setter Property="Visibility" TargetName="Separator" Value="Collapsed" />
+                                    <Setter TargetName="Separator" Property="Visibility" Value="Collapsed"/>
                                 </Trigger>
                             </DataTemplate.Triggers>
                         </DataTemplate>
@@ -303,96 +288,96 @@
 
         <DataTemplate DataType="{x:Type xinput:GamepadAxisGestureDescriptor}">
             <DockPanel LastChildFill="True">
-                <TextBlock Text="Axis:"
-                           Margin="0 0 5 0"
+                <TextBlock Margin="0 0 5 0"
                            VerticalAlignment="Center"
                            FontSize="12"
+                           Text="Axis:"
                            Typography.Capitals="AllSmallCaps"/>
 
-                <TextBlock Text="{Binding Axis, StringFormat={}{0}}"
-                           VerticalAlignment="Center"
+                <TextBlock VerticalAlignment="Center"
                            FontSize="12"
                            FontWeight="Bold"
+                           Text="{Binding Axis, StringFormat={}{0}}"
                            Typography.Capitals="AllSmallCaps"/>
             </DockPanel>
         </DataTemplate>
 
         <DataTemplate DataType="{x:Type tcode:TCodeButtonGestureDescriptor}">
             <DockPanel LastChildFill="True">
-                <TextBlock Text="Button:"
-                           Margin="0 0 5 0"
+                <TextBlock Margin="0 0 5 0"
                            VerticalAlignment="Center"
                            FontSize="12"
+                           Text="Button:"
                            Typography.Capitals="AllSmallCaps"/>
 
-                <TextBlock Text="{Binding Button, StringFormat={}{0}}"
-                           VerticalAlignment="Center"
+                <TextBlock VerticalAlignment="Center"
                            FontSize="12"
                            FontWeight="Bold"
+                           Text="{Binding Button, StringFormat={}{0}}"
                            Typography.Capitals="AllSmallCaps"/>
             </DockPanel>
         </DataTemplate>
 
         <DataTemplate DataType="{x:Type tcode:TCodeAxisGestureDescriptor}">
             <DockPanel LastChildFill="True">
-                <TextBlock Text="Axis:"
-                           Margin="0 0 5 0"
+                <TextBlock Margin="0 0 5 0"
                            VerticalAlignment="Center"
                            FontSize="12"
+                           Text="Axis:"
                            Typography.Capitals="AllSmallCaps"/>
 
-                <TextBlock Text="{Binding Axis, StringFormat={}{0}}"
-                           VerticalAlignment="Center"
+                <TextBlock VerticalAlignment="Center"
                            FontSize="12"
                            FontWeight="Bold"
+                           Text="{Binding Axis, StringFormat={}{0}}"
                            Typography.Capitals="AllSmallCaps"/>
             </DockPanel>
         </DataTemplate>
 
         <DataTemplate DataType="{x:Type rawinput:MouseButtonGestureDescriptor}">
             <DockPanel LastChildFill="True">
-                <TextBlock Text="Button:"
-                           Margin="0 0 5 0"
+                <TextBlock Margin="0 0 5 0"
                            VerticalAlignment="Center"
                            FontSize="12"
+                           Text="Button:"
                            Typography.Capitals="AllSmallCaps"/>
 
-                <TextBlock Text="{Binding Button, StringFormat={}{0}}"
-                           VerticalAlignment="Center"
+                <TextBlock VerticalAlignment="Center"
                            FontSize="12"
                            FontWeight="Bold"
+                           Text="{Binding Button, StringFormat={}{0}}"
                            Typography.Capitals="AllSmallCaps"/>
             </DockPanel>
         </DataTemplate>
 
         <DataTemplate DataType="{x:Type rawinput:MouseAxisGestureDescriptor}">
             <DockPanel LastChildFill="True">
-                <TextBlock Text="Axis:"
-                           Margin="0 0 5 0"
+                <TextBlock Margin="0 0 5 0"
                            VerticalAlignment="Center"
                            FontSize="12"
+                           Text="Axis:"
                            Typography.Capitals="AllSmallCaps"/>
 
-                <TextBlock Text="{Binding Axis, StringFormat={}{0}}"
-                           VerticalAlignment="Center"
+                <TextBlock VerticalAlignment="Center"
                            FontSize="12"
                            FontWeight="Bold"
+                           Text="{Binding Axis, StringFormat={}{0}}"
                            Typography.Capitals="AllSmallCaps"/>
             </DockPanel>
         </DataTemplate>
 
         <DataTemplate DataType="{x:Type rawinput:KeyboardGestureDescriptor}">
             <DockPanel LastChildFill="True">
-                <TextBlock Text="Keys:"
-                           Margin="0 0 5 0"
+                <TextBlock Margin="0 0 5 0"
                            VerticalAlignment="Center"
                            FontSize="12"
+                           Text="Keys:"
                            Typography.Capitals="AllSmallCaps"/>
 
                 <ItemsControl DockPanel.Dock="Left"
                               ItemsSource="{Binding Keys}"
-                              AlternationCount="{Binding RelativeSource={RelativeSource Self}, Path=Items.Count}"
-                              VerticalAlignment="Center">
+                              VerticalAlignment="Center"
+                              AlternationCount="{Binding RelativeSource={RelativeSource Self}, Path=Items.Count}">
                     <ItemsControl.Resources>
                         <converters:KeyToStringConverter x:Key="KeyToStringConverter"/>
                     </ItemsControl.Resources>
@@ -404,21 +389,22 @@
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
                             <StackPanel Orientation="Horizontal">
-                                <TextBlock x:Name="Separator" Text=", "
+                                <TextBlock x:Name="Separator"
                                            VerticalAlignment="Center"
                                            FontSize="12"
                                            FontWeight="Bold"
+                                           Text=", "
                                            Typography.Capitals="AllSmallCaps"/>
-                                <TextBlock Text="{Binding Mode=OneWay, Converter={StaticResource KeyToStringConverter}}"
-                                           VerticalAlignment="Center"
+                                <TextBlock VerticalAlignment="Center"
                                            FontSize="12"
                                            FontWeight="Bold"
+                                           Text="{Binding Mode=OneWay, Converter={StaticResource KeyToStringConverter}}"
                                            Typography.Capitals="AllSmallCaps"/>
                             </StackPanel>
 
                             <DataTemplate.Triggers>
                                 <Trigger Property="ItemsControl.AlternationIndex" Value="0">
-                                    <Setter Property="Visibility" TargetName="Separator" Value="Collapsed" />
+                                    <Setter TargetName="Separator" Property="Visibility" Value="Collapsed"/>
                                 </Trigger>
                             </DataTemplate.Triggers>
                         </DataTemplate>
@@ -428,44 +414,48 @@
         </DataTemplate>
     </UserControl.Resources>
 
-    <Grid Width="550" MinHeight="300" Height="750" Margin="20">
+    <Grid Width="550"
+          Height="750"
+          MinHeight="300"
+          Margin="20">
         <DockPanel LastChildFill="True">
             <material:Card DockPanel.Dock="Top"
+                           Margin="0 0 0 10"
                            material:ShadowAssist.ShadowDepth="Depth1"
-                           IsEnabled="{Binding IsCapturingGestures, Converter={StaticResource NotConverter}}"
-                           Margin="0 0 0 10">
+                           IsEnabled="{Binding IsCapturingGestures, Converter={StaticResource NotConverter}}">
                 <DockPanel Margin="5">
-                    <DockPanel DockPanel.Dock="Top"
-                               LastChildFill="True">
+                    <DockPanel DockPanel.Dock="Top" LastChildFill="True">
                         <TextBlock DockPanel.Dock="Left"
-                                   Text="Shortcut:"
                                    Margin="5 0 10 0"
-                                   VerticalAlignment="Center"/>
+                                   VerticalAlignment="Center"
+                                   Text="Shortcut:"/>
 
                         <Button DockPanel.Dock="Right"
                                 Style="{StaticResource MaterialDesignFlatButton}"
+                                Width="32"
+                                Height="32"
+                                Margin="0"
+                                Padding="0"
+                                VerticalAlignment="Center"
                                 Click="{s:Action AddShortcut}"
                                 Foreground="{DynamicResource MaterialDesignSuccessBrush}"
-                                ToolTip="Add shortcut"
-                                VerticalAlignment="Center"
-                                Width="32" 
-                                Height="32"
-                                Margin="0" 
-                                Padding="0">
-                            <material:PackIcon Kind="Plus" Width="28" Height="28" />
+                                ToolTip="Add shortcut">
+                            <material:PackIcon Width="28"
+                                               Height="28"
+                                               Kind="Plus"/>
                             <Button.IsEnabled>
                                 <MultiBinding Converter="{StaticResource BooleanAndConverter}">
-                                    <Binding Path="SelectedShortcutType" Converter="{StaticResource InvertedNullableToBooleanConverter}"/>
-                                    <Binding Path="SelectedCapturedGesture" Converter="{StaticResource InvertedNullableToBooleanConverter}"/>
+                                    <Binding Converter="{StaticResource InvertedNullableToBooleanConverter}" Path="SelectedShortcutType"/>
+                                    <Binding Converter="{StaticResource InvertedNullableToBooleanConverter}" Path="SelectedCapturedGesture"/>
                                 </MultiBinding>
                             </Button.IsEnabled>
                         </Button>
 
-                        <ComboBox ItemsSource="{Binding ShortcutTypes}"
+                        <ComboBox DockPanel.Dock="Left"
+                                  ItemsSource="{Binding ShortcutTypes}"
                                   SelectedItem="{Binding SelectedShortcutType}"
-                                  material:TextFieldAssist.HasClearButton="True"
-                                  DockPanel.Dock="Left"
-                                  Margin="0 0 10 0">
+                                  Margin="0 0 10 0"
+                                  material:TextFieldAssist.HasClearButton="True">
                             <ComboBox.ItemTemplate>
                                 <DataTemplate>
                                     <TextBlock Text="{Binding Converter={StaticResource DisplayNameConverter}}"/>
@@ -474,32 +464,32 @@
                         </ComboBox>
                     </DockPanel>
 
-                    <DockPanel LastChildFill="True"
-                               DockPanel.Dock="Top"
-                               IsEnabled="{Binding SelectedShortcutType, Converter={StaticResource InvertedNullableToBooleanConverter}}">
+                    <DockPanel DockPanel.Dock="Top"
+                               IsEnabled="{Binding SelectedShortcutType, Converter={StaticResource InvertedNullableToBooleanConverter}}"
+                               LastChildFill="True">
                         <material:PopupBox DockPanel.Dock="Right"
                                            Style="{StaticResource MaterialDesignToolBarPopupBox}"
-                                           VerticalAlignment="Center"
-                                           StaysOpen="True"
-                                           PlacementMode="BottomAndAlignRightEdges"
-                                           ToolTip="Filter"
+                                           Width="32"
                                            Height="32"
-                                           Width="32">
+                                           VerticalAlignment="Center"
+                                           PlacementMode="BottomAndAlignRightEdges"
+                                           StaysOpen="True"
+                                           ToolTip="Filter">
                             <material:PopupBox.ToggleContent>
-                                <material:PackIcon Kind="FormatListBulleted" 
-                                                   Width="24" 
-                                                   Height="24"/>
+                                <material:PackIcon Width="24"
+                                                   Height="24"
+                                                   Kind="FormatListBulleted"/>
                             </material:PopupBox.ToggleContent>
                             <Grid Width="150" Margin="10">
                                 <StackPanel>
                                     <StackPanel>
-                                        <CheckBox IsChecked="{Binding IsKeyboardKeysGestureEnabled}" Content="Keyboard keys"/>
-                                        <CheckBox IsChecked="{Binding IsMouseAxisGestureEnabled}" Content="Mouse axis"/>
-                                        <CheckBox IsChecked="{Binding IsMouseButtonGestureEnabled}" Content="Mouse button"/>
-                                        <CheckBox IsChecked="{Binding IsGamepadAxisGestureEnabled}" Content="Gamepad axis"/>
-                                        <CheckBox IsChecked="{Binding IsGamepadButtonGestureEnabled}" Content="Gamepad button"/>
-                                        <CheckBox IsChecked="{Binding IsTCodeAxisGestureEnabled}" Content="TCode axis"/>
-                                        <CheckBox IsChecked="{Binding IsTCodeButtonGestureEnabled}" Content="TCode button"/>
+                                        <CheckBox Content="Keyboard keys" IsChecked="{Binding IsKeyboardKeysGestureEnabled}"/>
+                                        <CheckBox Content="Mouse axis" IsChecked="{Binding IsMouseAxisGestureEnabled}"/>
+                                        <CheckBox Content="Mouse button" IsChecked="{Binding IsMouseButtonGestureEnabled}"/>
+                                        <CheckBox Content="Gamepad axis" IsChecked="{Binding IsGamepadAxisGestureEnabled}"/>
+                                        <CheckBox Content="Gamepad button" IsChecked="{Binding IsGamepadButtonGestureEnabled}"/>
+                                        <CheckBox Content="TCode axis" IsChecked="{Binding IsTCodeAxisGestureEnabled}"/>
+                                        <CheckBox Content="TCode button" IsChecked="{Binding IsTCodeButtonGestureEnabled}"/>
                                     </StackPanel>
                                 </StackPanel>
                             </Grid>
@@ -507,31 +497,33 @@
 
                         <Button DockPanel.Dock="Right"
                                 Style="{StaticResource MaterialDesignFlatButton}"
-                                Click="{s:Action CaptureGestures}"
+                                Width="32"
+                                Height="32"
+                                Margin="0"
+                                Padding="0"
+                                VerticalAlignment="Center"
                                 material:ButtonProgressAssist.IsIndeterminate="True"
                                 material:ButtonProgressAssist.IsIndicatorVisible="{Binding IsCapturingGestures}"
-                                ToolTip="Start capturing"
-                                VerticalAlignment="Center"
-                                Width="32" 
-                                Height="32"
-                                Margin="0" 
-                                Padding="0">
-                            <material:PackIcon Kind="Input" Width="28" Height="28" />
+                                Click="{s:Action CaptureGestures}"
+                                ToolTip="Start capturing">
+                            <material:PackIcon Width="28"
+                                               Height="28"
+                                               Kind="Input"/>
                         </Button>
 
                         <TextBlock DockPanel.Dock="Left"
-                                   Text="Gesture:"
                                    Margin="5 0 14 0"
-                                   VerticalAlignment="Center"/>
+                                   VerticalAlignment="Center"
+                                   Text="Gesture:"/>
 
                         <ComboBox ItemsSource="{Binding CapturedGestures}"
                                   SelectedItem="{Binding SelectedCapturedGesture}"
-                                  IsEnabled="{Binding CapturedGestures.Count, Mode=OneWay, Converter={StaticResource NotZeroConverter}}"
-                                  material:TextFieldAssist.HasClearButton="True"
                                   Height="33"
-                                  Margin="0 0 10 0">
+                                  Margin="0 0 10 0"
+                                  material:TextFieldAssist.HasClearButton="True"
+                                  IsEnabled="{Binding CapturedGestures.Count, Mode=OneWay, Converter={StaticResource NotZeroConverter}}">
                             <ComboBox.ItemContainerStyle>
-                                <Style TargetType="{x:Type ComboBoxItem}" BasedOn="{StaticResource MaterialDesignComboBoxItemStyle}">
+                                <Style BasedOn="{StaticResource MaterialDesignComboBoxItemStyle}" TargetType="{x:Type ComboBoxItem}">
                                     <Setter Property="Padding" Value="5"/>
                                 </Style>
                             </ComboBox.ItemContainerStyle>
@@ -539,23 +531,22 @@
                                 <DataTemplate>
                                     <material:Card material:ShadowAssist.ShadowDepth="Depth1">
                                         <StackPanel Orientation="Horizontal">
-                                            <material:ColorZone Background="{Binding Converter={StaticResource GestureDescriptorToBrushConverter}}"
-                                                                VerticalAlignment="Stretch"
+                                            <material:ColorZone Width="28"
+                                                                Height="24"
                                                                 HorizontalAlignment="Stretch"
-                                                                CornerRadius="4 0 0 4"
-                                                                Width="28"
-                                                                Height="24">
+                                                                VerticalAlignment="Stretch"
+                                                                Background="{Binding Converter={StaticResource GestureDescriptorToBrushConverter}}"
+                                                                CornerRadius="4 0 0 4">
                                                 <material:PackIcon DockPanel.Dock="Left"
-                                                                   Foreground="Black"
-                                                                   Kind="{Binding Converter={StaticResource GestureDescriptorToPackIconConverter}}"
-                                                                   VerticalAlignment="Center"
-                                                                   HorizontalAlignment="Center"
                                                                    Width="24"
-                                                                   Height="20"/>
+                                                                   Height="20"
+                                                                   HorizontalAlignment="Center"
+                                                                   VerticalAlignment="Center"
+                                                                   Foreground="Black"
+                                                                   Kind="{Binding Converter={StaticResource GestureDescriptorToPackIconConverter}}"/>
                                             </material:ColorZone>
-                                            
-                                            <ContentControl Content="{Binding}"
-                                                            Margin="5 0 0 0"/>
+
+                                            <ContentControl Margin="5 0 0 0" Content="{Binding}"/>
                                         </StackPanel>
                                     </material:Card>
                                 </DataTemplate>
@@ -566,8 +557,8 @@
             </material:Card>
 
             <material:Card DockPanel.Dock="Bottom"
-                           material:ShadowAssist.ShadowDepth="Depth1"
-                           MaxHeight="350">
+                           MaxHeight="350"
+                           material:ShadowAssist.ShadowDepth="Depth1">
                 <Expander DockPanel.Dock="Bottom"
                           Style="{StaticResource MaterialDesignToolBarExpander}"
                           Background="{DynamicResource MaterialDesignCardBackground}"
@@ -579,13 +570,12 @@
                                     material:ColorZoneAssist.Background="{DynamicResource MaterialDesignCardBackground}"
                                     material:ColorZoneAssist.Foreground="{DynamicResource PrimaryHueMidBrush}"
                                     material:ColorZoneAssist.Mode="Custom">
-                            <TabItem Header="Actions" Width="100"/>
-                            <TabItem Header="Settings" Width="100"/>
+                            <TabItem Width="100" Header="Actions"/>
+                            <TabItem Width="100" Header="Settings"/>
                         </TabControl>
                     </Expander.Header>
 
-                    <Grid DockPanel.Dock="Top"
-                          Height="300">
+                    <Grid DockPanel.Dock="Top" Height="300">
                         <DockPanel LastChildFill="True">
                             <DockPanel.Style>
                                 <Style TargetType="{x:Type DockPanel}">
@@ -601,22 +591,22 @@
                             </DockPanel.Style>
 
                             <DockPanel DockPanel.Dock="Top"
-                                       LastChildFill="True"
-                                       Margin="10 10 10 0">
-                                <TextBlock Text="Name:"
-                                           DockPanel.Dock="Left"
+                                       Margin="10 10 10 0"
+                                       LastChildFill="True">
+                                <TextBlock DockPanel.Dock="Left"
                                            Margin="0 0 10 0"
                                            VerticalAlignment="Center"
-                                           FontSize="12"/>
+                                           FontSize="12"
+                                           Text="Name:"/>
 
-                                <TextBox Text="{Binding SelectedShortcut.Name, Converter={StaticResource EmptyStringToNullConverter}, UpdateSourceTrigger=PropertyChanged}"
+                                <TextBox DockPanel.Dock="Top"
                                          material:TextFieldAssist.HasClearButton="True"
-                                         DockPanel.Dock="Top"/>
+                                         Text="{Binding SelectedShortcut.Name, Converter={StaticResource EmptyStringToNullConverter}, UpdateSourceTrigger=PropertyChanged}"/>
                             </DockPanel>
 
-                            <ContentControl Content="{Binding SelectedShortcut}"
+                            <ContentControl DockPanel.Dock="Top"
                                             Margin="10"
-                                            DockPanel.Dock="Top"/>
+                                            Content="{Binding SelectedShortcut}"/>
                         </DockPanel>
 
                         <DockPanel LastChildFill="True">
@@ -635,125 +625,123 @@
 
                             <ItemsControl DockPanel.Dock="Top"
                                           ItemsSource="{Binding SelectedShortcut.Configurations}"
-                                          Margin="10 10 0 0"
                                           Height="100"
                                           MaxHeight="100"
+                                          Margin="10 10 0 0"
                                           VirtualizingStackPanel.IsVirtualizing="True"
                                           VirtualizingStackPanel.VirtualizationMode="Recycling">
                                 <ItemsControl.Template>
                                     <ControlTemplate TargetType="ItemsControl">
-                                        <ScrollViewer CanContentScroll="True" 
-                                                      Focusable="False">
+                                        <ScrollViewer CanContentScroll="True" Focusable="False">
                                             <ItemsPresenter/>
                                         </ScrollViewer>
                                     </ControlTemplate>
                                 </ItemsControl.Template>
                                 <ItemsControl.ItemsPanel>
                                     <ItemsPanelTemplate>
-                                        <VirtualizingStackPanel IsVirtualizing="True"
-                                                                VirtualizationMode="Recycling" />
+                                        <VirtualizingStackPanel IsVirtualizing="True" VirtualizationMode="Recycling"/>
                                     </ItemsPanelTemplate>
                                 </ItemsControl.ItemsPanel>
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
                                         <DockPanel>
-                                            <Button DockPanel.Dock="Right"   
+                                            <Button DockPanel.Dock="Right"
                                                     Style="{StaticResource MaterialDesignFlatButton}"
-                                                    Click="{s:Action RemoveAssignedAction}"
-                                                    ToolTip="Remove"
-                                                    material:RippleAssist.Feedback="{DynamicResource MaterialDesignErrorBrush}"
-                                                    Foreground="{DynamicResource MaterialDesignErrorBrush}"
+                                                    Width="24"
+                                                    Height="24"
                                                     Margin="0 0 5 0"
-                                                    Height="24" 
-                                                    Width="24" 
-                                                    Padding="0">
+                                                    Padding="0"
+                                                    material:RippleAssist.Feedback="{DynamicResource MaterialDesignErrorBrush}"
+                                                    Click="{s:Action RemoveAssignedAction}"
+                                                    Foreground="{DynamicResource MaterialDesignErrorBrush}"
+                                                    ToolTip="Remove">
                                                 <material:PackIcon Kind="Delete"/>
                                             </Button>
 
-                                            <Button DockPanel.Dock="Right"   
+                                            <Button DockPanel.Dock="Right"
                                                     Style="{StaticResource MaterialDesignFlatButton}"
+                                                    Width="24"
+                                                    Height="24"
+                                                    Padding="0"
                                                     Click="{s:Action MoveAssignedActionUp}"
-                                                    ToolTip="Move Up"
-                                                    Height="24" 
-                                                    Width="24" 
-                                                    Padding="0">
+                                                    ToolTip="Move Up">
                                                 <material:PackIcon Kind="ArrowUp"/>
                                             </Button>
-                                            <Button DockPanel.Dock="Right"   
+                                            <Button DockPanel.Dock="Right"
                                                     Style="{StaticResource MaterialDesignFlatButton}"
+                                                    Width="24"
+                                                    Height="24"
+                                                    Padding="0"
                                                     Click="{s:Action MoveAssignedActionDown}"
-                                                    ToolTip="Move Down"
-                                                    Height="24" 
-                                                    Width="24" 
-                                                    Padding="0">
+                                                    ToolTip="Move Down">
                                                 <material:PackIcon Kind="ArrowDown"/>
                                             </Button>
 
-                                            <Button DockPanel.Dock="Right"   
+                                            <Button DockPanel.Dock="Right"
                                                     Style="{StaticResource MaterialDesignFlatButton}"
+                                                    Width="22"
+                                                    Height="22"
+                                                    Padding="0"
                                                     Click="{s:Action ConfigureAssignedAction}"
-                                                    Visibility="{Binding Settings.Count, Converter={StaticResource NotZeroToVisibilityConverter}}"
                                                     ToolTip="Configure"
-                                                    Height="22" 
-                                                    Width="22" 
-                                                    Padding="0">
-                                                <material:PackIcon Kind="Wrench" Width="14" Height="14"/>
+                                                    Visibility="{Binding Settings.Count, Converter={StaticResource NotZeroToVisibilityConverter}}">
+                                                <material:PackIcon Width="14"
+                                                                   Height="14"
+                                                                   Kind="Wrench"/>
                                             </Button>
 
-                                            <TextBlock Text="{Binding DisplayName}"
+                                            <TextBlock DockPanel.Dock="Left"
+                                                       Margin="0"
                                                        VerticalAlignment="Center"
-                                                       DockPanel.Dock="Left"
-                                                       Margin="0"/>
+                                                       Text="{Binding DisplayName}"/>
                                         </DockPanel>
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
 
                             <TextBox DockPanel.Dock="Top"
-                                     Text="{Binding ActionsFilter, UpdateSourceTrigger=PropertyChanged, Delay=200}"
                                      Style="{StaticResource MaterialDesignFloatingHintTextBox}"
                                      Margin="10 0 10 0"
-                                     material:HintAssist.Hint="Filter actions"/>
+                                     material:HintAssist.Hint="Filter actions"
+                                     Text="{Binding ActionsFilter, UpdateSourceTrigger=PropertyChanged, Delay=200}"/>
 
                             <ItemsControl DockPanel.Dock="Top"
                                           ItemsSource="{Binding AvailableActionsView}"
-                                          Margin="10 10 0 0"
                                           MaxHeight="150"
+                                          Margin="10 10 0 0"
+                                          ScrollViewer.VerticalScrollBarVisibility="Visible"
                                           VirtualizingStackPanel.IsVirtualizing="True"
-                                          VirtualizingStackPanel.VirtualizationMode="Recycling"
-                                          ScrollViewer.VerticalScrollBarVisibility="Visible">
+                                          VirtualizingStackPanel.VirtualizationMode="Recycling">
                                 <ItemsControl.Template>
                                     <ControlTemplate TargetType="ItemsControl">
-                                        <ScrollViewer CanContentScroll="True" 
-                                                      Focusable="False">
+                                        <ScrollViewer CanContentScroll="True" Focusable="False">
                                             <ItemsPresenter/>
                                         </ScrollViewer>
                                     </ControlTemplate>
                                 </ItemsControl.Template>
                                 <ItemsControl.ItemsPanel>
                                     <ItemsPanelTemplate>
-                                        <VirtualizingStackPanel IsVirtualizing="True"
-                                                                VirtualizationMode="Recycling" />
+                                        <VirtualizingStackPanel IsVirtualizing="True" VirtualizationMode="Recycling"/>
                                     </ItemsPanelTemplate>
                                 </ItemsControl.ItemsPanel>
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
                                         <DockPanel>
-                                            <Button DockPanel.Dock="Right"   
+                                            <Button DockPanel.Dock="Right"
                                                     Style="{StaticResource MaterialDesignFlatButton}"
-                                                    Click="{s:Action AssignAction}"
-                                                    ToolTip="Assign action"
+                                                    Width="24"
+                                                    Height="24"
                                                     Margin="0 0 5 0"
-                                                    Height="24" 
-                                                    Width="24" 
-                                                    Padding="0">
+                                                    Padding="0"
+                                                    Click="{s:Action AssignAction}"
+                                                    ToolTip="Assign action">
                                                 <material:PackIcon Kind="Plus"/>
                                             </Button>
 
-                                            <TextBlock Text="{Binding}"
-                                                       DockPanel.Dock="Left"
+                                            <TextBlock DockPanel.Dock="Left"
+                                                       Margin="0"
                                                        VerticalAlignment="Center"
-                                                       Margin="0"/>
+                                                       Text="{Binding}"/>
                                         </DockPanel>
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>
@@ -762,20 +750,20 @@
                     </Grid>
                 </Expander>
             </material:Card>
-            
-            <material:Card material:ShadowAssist.ShadowDepth="Depth1"
+
+            <material:Card DockPanel.Dock="Top"
                            Margin="0 0 0 10"
-                           DockPanel.Dock="Top">
+                           material:ShadowAssist.ShadowDepth="Depth1">
                 <DockPanel LastChildFill="True">
                     <ListBox DockPanel.Dock="Top"
                              ItemsSource="{Binding Shortcuts}"
                              SelectedItem="{Binding SelectedShortcut}"
-                             ScrollViewer.VerticalScrollBarVisibility="Visible"
-                             ScrollViewer.CanContentScroll="False"
+                             Background="{DynamicResource MaterialDesignCardBackground}"
                              BorderBrush="Transparent"
-                             Background="{DynamicResource MaterialDesignCardBackground}">
+                             ScrollViewer.CanContentScroll="False"
+                             ScrollViewer.VerticalScrollBarVisibility="Visible">
                         <ListBox.Resources>
-                            <Style TargetType="{x:Type ListBoxItem}" x:Key="ContainerStyle">
+                            <Style x:Key="ContainerStyle" TargetType="{x:Type ListBoxItem}">
                                 <Setter Property="Template">
                                     <Setter.Value>
                                         <ControlTemplate TargetType="ListBoxItem">
@@ -791,26 +779,27 @@
                                                     <DataTrigger.Binding>
                                                         <MultiBinding Converter="{StaticResource MultiObjectEqualToBooleanConverter}">
                                                             <MultiBinding.Bindings>
-                                                                <Binding RelativeSource="{RelativeSource Self}" Converter="{StaticResource ItemIndexInContainerConverter}"/>
-                                                                <Binding Path="DataContext.Shortcuts.Count" 
-                                                                         RelativeSource="{RelativeSource FindAncestor, AncestorType={x:Type UserControl}}"
-                                                                         Converter="{StaticResource MathAddConverter}"
-                                                                         ConverterParameter="-1"/>
+                                                                <Binding Converter="{StaticResource ItemIndexInContainerConverter}" RelativeSource="{RelativeSource Self}"/>
+                                                                <Binding Converter="{StaticResource MathAddConverter}"
+                                                                         ConverterParameter="-1"
+                                                                         Path="DataContext.Shortcuts.Count"
+                                                                         RelativeSource="{RelativeSource FindAncestor,
+                                                                                                         AncestorType={x:Type UserControl}}"/>
                                                             </MultiBinding.Bindings>
                                                         </MultiBinding>
                                                     </DataTrigger.Binding>
 
                                                     <DataTrigger.Setters>
-                                                        <Setter Property="Margin" TargetName="Container" Value="8 8 8 8"/>
+                                                        <Setter TargetName="Container" Property="Margin" Value="8 8 8 8"/>
                                                     </DataTrigger.Setters>
                                                 </DataTrigger>
 
                                                 <Trigger Property="UIElement.IsMouseOver" Value="True">
-                                                    <Setter Property="Panel.Background" TargetName="Container" Value="{DynamicResource MaterialDesignCardBackgroundHover}"/>
+                                                    <Setter TargetName="Container" Property="Panel.Background" Value="{DynamicResource MaterialDesignCardBackgroundHover}"/>
                                                 </Trigger>
                                                 <Trigger Property="IsSelected" Value="True">
-                                                    <Setter Property="Background" TargetName="Container" Value="{DynamicResource MaterialDesignCardBackgroundSelected}"/>
-                                                    <Setter Property="material:ShadowAssist.ShadowDepth" TargetName="Container" Value="Depth2"/>
+                                                    <Setter TargetName="Container" Property="Background" Value="{DynamicResource MaterialDesignCardBackgroundSelected}"/>
+                                                    <Setter TargetName="Container" Property="material:ShadowAssist.ShadowDepth" Value="Depth2"/>
                                                 </Trigger>
                                             </ControlTemplate.Triggers>
                                         </ControlTemplate>
@@ -827,24 +816,24 @@
                             <DataTemplate>
                                 <Border>
                                     <DockPanel LastChildFill="True">
-                                        <Button DockPanel.Dock="Right"   
+                                        <Button DockPanel.Dock="Right"
                                                 Style="{StaticResource MaterialDesignFlatButton}"
-                                                Click="{s:Action RemoveShortcut}"
-                                                ToolTip="Remove"
-                                                material:RippleAssist.Feedback="{DynamicResource MaterialDesignErrorBrush}"
-                                                Foreground="{DynamicResource MaterialDesignErrorBrush}"
+                                                Width="24"
+                                                Height="24"
                                                 Margin="0 0 5 0"
-                                                Height="24" 
-                                                Width="24" 
-                                                Padding="0">
+                                                Padding="0"
+                                                material:RippleAssist.Feedback="{DynamicResource MaterialDesignErrorBrush}"
+                                                Click="{s:Action RemoveShortcut}"
+                                                Foreground="{DynamicResource MaterialDesignErrorBrush}"
+                                                ToolTip="Remove">
                                             <material:PackIcon Kind="Delete"/>
                                         </Button>
 
-                                        <ToggleButton IsChecked="{Binding Enabled}"
-                                                        DockPanel.Dock="Right"
-                                                        Height="14">
+                                        <ToggleButton DockPanel.Dock="Right"
+                                                      Height="14"
+                                                      IsChecked="{Binding Enabled}">
                                             <ToggleButton.Resources>
-                                                <Style TargetType="{x:Type ToggleButton}" BasedOn="{StaticResource MaterialDesignSwitchToggleButton}">
+                                                <Style BasedOn="{StaticResource MaterialDesignSwitchToggleButton}" TargetType="{x:Type ToggleButton}">
                                                     <Setter Property="ToolTip" Value="Enable"/>
                                                     <Style.Triggers>
                                                         <Trigger Property="IsChecked" Value="True">
@@ -855,57 +844,55 @@
                                             </ToggleButton.Resources>
                                         </ToggleButton>
 
-                                        <TextBlock Text="{Binding Configurations.Count, StringFormat=Actions: {0}}"
-                                                   DockPanel.Dock="Right"
-                                                   VerticalAlignment="Center"
+                                        <TextBlock DockPanel.Dock="Right"
                                                    Margin="5 0 10 0"
+                                                   VerticalAlignment="Center"
                                                    FontWeight="Medium"
+                                                   Text="{Binding Configurations.Count, StringFormat=Actions: {0}}"
                                                    Typography.Capitals="AllSmallCaps"/>
 
-                                        <material:ColorZone Background="{Binding Gesture, Converter={StaticResource GestureDescriptorToBrushConverter}}"
-                                                            VerticalAlignment="Stretch"
+                                        <material:ColorZone Width="34"
+                                                            Height="30"
                                                             HorizontalAlignment="Stretch"
-                                                            CornerRadius="4 0 0 4"
-                                                            Width="34"
-                                                            Height="30">
+                                                            VerticalAlignment="Stretch"
+                                                            Background="{Binding Gesture, Converter={StaticResource GestureDescriptorToBrushConverter}}"
+                                                            CornerRadius="4 0 0 4">
                                             <material:PackIcon DockPanel.Dock="Left"
-                                                               Foreground="Black"
-                                                               Kind="{Binding Gesture, Converter={StaticResource GestureDescriptorToPackIconConverter}}"
-                                                               VerticalAlignment="Center"
-                                                               HorizontalAlignment="Center"
                                                                Width="28"
-                                                               Height="24"/>
+                                                               Height="24"
+                                                               HorizontalAlignment="Center"
+                                                               VerticalAlignment="Center"
+                                                               Foreground="Black"
+                                                               Kind="{Binding Gesture, Converter={StaticResource GestureDescriptorToPackIconConverter}}"/>
                                         </material:ColorZone>
 
-                                        <StackPanel Orientation="Vertical"
+                                        <StackPanel Height="24"
                                                     Margin="5 0 0 0"
-                                                    Height="24">
-                                            <StackPanel Orientation="Horizontal"
-                                                        Margin="0 -2 0 0">
-                                                <TextBlock Text="{Binding Converter={StaticResource DisplayNameConverter}}"
-                                                           VerticalAlignment="Center"
+                                                    Orientation="Vertical">
+                                            <StackPanel Margin="0 -2 0 0" Orientation="Horizontal">
+                                                <TextBlock VerticalAlignment="Center"
                                                            FontSize="11"
                                                            FontWeight="Medium"
+                                                           Text="{Binding Converter={StaticResource DisplayNameConverter}}"
                                                            Typography.Capitals="AllSmallCaps"/>
 
-                                                <TextBlock Text=":"
-                                                           Visibility="{Binding Name, Converter={StaticResource NullableToVisibilityConverter}}"
+                                                <TextBlock Margin="0 0 5 0"
                                                            VerticalAlignment="Center"
                                                            FontSize="11"
                                                            FontWeight="Bold"
+                                                           Text=":"
                                                            Typography.Capitals="AllSmallCaps"
-                                                           Margin="0 0 5 0"/>
+                                                           Visibility="{Binding Name, Converter={StaticResource NullableToVisibilityConverter}}"/>
 
-                                                <TextBlock Text="{Binding Name}"
-                                                           Visibility="{Binding Name, Converter={StaticResource NullableToVisibilityConverter}}"
-                                                           VerticalAlignment="Center"
+                                                <TextBlock VerticalAlignment="Center"
                                                            FontSize="11"
                                                            FontWeight="Bold"
-                                                           Typography.Capitals="AllSmallCaps"/>
+                                                           Text="{Binding Name}"
+                                                           Typography.Capitals="AllSmallCaps"
+                                                           Visibility="{Binding Name, Converter={StaticResource NullableToVisibilityConverter}}"/>
                                             </StackPanel>
 
-                                            <ContentControl Content="{Binding Gesture}"
-                                                            VerticalAlignment="Center"/>
+                                            <ContentControl VerticalAlignment="Center" Content="{Binding Gesture}"/>
                                         </StackPanel>
                                     </DockPanel>
                                 </Border>

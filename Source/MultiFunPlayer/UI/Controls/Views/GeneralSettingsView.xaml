@@ -1,98 +1,89 @@
 ﻿<UserControl x:Class="MultiFunPlayer.UI.Controls.Views.GeneralSettingsView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:material="http://materialdesigninxaml.net/winfx/xaml/themes"
-             xmlns:s="https://github.com/canton7/Stylet"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
-             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:ui="clr-namespace:MultiFunPlayer.UI"
-             mc:Ignorable="d" 
-             d:DesignHeight="450" d:DesignWidth="800"
-             x:ClassModifier="internal">
+             d:DesignHeight="450"
+             d:DesignWidth="800"
+             x:ClassModifier="internal"
+             mc:Ignorable="d">
     <Grid Margin="20">
         <DockPanel LastChildFill="True">
-            <DockPanel LastChildFill="False"
-                       DockPanel.Dock="Top">
-                <TextBlock Text="Always on top:" 
-                           DockPanel.Dock="Left"
-                           Margin="0 0 10 0" 
-                           VerticalAlignment="Center"/>
-
-                <CheckBox IsChecked="{Binding AlwaysOnTop}"
-                          DockPanel.Dock="Left"
-                          Margin="0 0 10 0"/>
-            </DockPanel>
-            
-            <DockPanel LastChildFill="False"
-                       DockPanel.Dock="Top">
-                <TextBlock Text="Allow window resize:" 
-                           DockPanel.Dock="Left"
-                           Margin="0 0 10 0" 
-                           VerticalAlignment="Center"/>
-
-                <CheckBox IsChecked="{Binding AllowWindowResize}"
-                          DockPanel.Dock="Left"
-                          Margin="0 0 10 0"/>
-            </DockPanel>
-
-            <DockPanel LastChildFill="False"
-                       DockPanel.Dock="Top">
-                <TextBlock Text="Remember window location:" 
-                           DockPanel.Dock="Left"
-                           Margin="0 0 10 0" 
-                           VerticalAlignment="Center"/>
-
-                <CheckBox IsChecked="{Binding RememberWindowLocation}"
-                          DockPanel.Dock="Left"
-                          Margin="0 0 10 0"/>
-            </DockPanel>
-
-            <DockPanel LastChildFill="False"
-                       DockPanel.Dock="Top">
-                <TextBlock Text="App Orientation:"
-                           DockPanel.Dock="Left"
+            <DockPanel DockPanel.Dock="Top" LastChildFill="False">
+                <TextBlock DockPanel.Dock="Left"
+                           Margin="0 0 10 0"
                            VerticalAlignment="Center"
-                           Margin="0 0 10 0"/>
+                           Text="Always on top:"/>
 
-                <ComboBox SelectedItem="{Binding AppOrientation}"
-                          ItemsSource="{Binding Source={ui:EnumBindingSource {x:Type Orientation}}}"/>
+                <CheckBox DockPanel.Dock="Left"
+                          Margin="0 0 10 0"
+                          IsChecked="{Binding AlwaysOnTop}"/>
             </DockPanel>
 
-            <DockPanel LastChildFill="False"
-                       DockPanel.Dock="Top">
-                <TextBlock Text="Show error dialogs:" 
-                           DockPanel.Dock="Left"
-                           Margin="0 0 10 0" 
-                           VerticalAlignment="Center"/>
+            <DockPanel DockPanel.Dock="Top" LastChildFill="False">
+                <TextBlock DockPanel.Dock="Left"
+                           Margin="0 0 10 0"
+                           VerticalAlignment="Center"
+                           Text="Allow window resize:"/>
 
-                <CheckBox IsChecked="{Binding ShowErrorDialogs}"
-                          DockPanel.Dock="Left"
-                          Margin="0 0 10 0"/>
+                <CheckBox DockPanel.Dock="Left"
+                          Margin="0 0 10 0"
+                          IsChecked="{Binding AllowWindowResize}"/>
             </DockPanel>
 
-            <DockPanel LastChildFill="False"
-                       DockPanel.Dock="Top">
-                <TextBlock Text="Log level:" 
-                           DockPanel.Dock="Left"
-                           Margin="0 0 10 0" 
-                           VerticalAlignment="Center"/>
+            <DockPanel DockPanel.Dock="Top" LastChildFill="False">
+                <TextBlock DockPanel.Dock="Left"
+                           Margin="0 0 10 0"
+                           VerticalAlignment="Center"
+                           Text="Remember window location:"/>
 
-                <ComboBox ItemsSource="{Binding LogLevels}"
+                <CheckBox DockPanel.Dock="Left"
+                          Margin="0 0 10 0"
+                          IsChecked="{Binding RememberWindowLocation}"/>
+            </DockPanel>
+
+            <DockPanel DockPanel.Dock="Top" LastChildFill="False">
+                <TextBlock DockPanel.Dock="Left"
+                           Margin="0 0 10 0"
+                           VerticalAlignment="Center"
+                           Text="App Orientation:"/>
+
+                <ComboBox ItemsSource="{Binding Source={ui:EnumBindingSource {x:Type Orientation}}}" SelectedItem="{Binding AppOrientation}"/>
+            </DockPanel>
+
+            <DockPanel DockPanel.Dock="Top" LastChildFill="False">
+                <TextBlock DockPanel.Dock="Left"
+                           Margin="0 0 10 0"
+                           VerticalAlignment="Center"
+                           Text="Show error dialogs:"/>
+
+                <CheckBox DockPanel.Dock="Left"
+                          Margin="0 0 10 0"
+                          IsChecked="{Binding ShowErrorDialogs}"/>
+            </DockPanel>
+
+            <DockPanel DockPanel.Dock="Top" LastChildFill="False">
+                <TextBlock DockPanel.Dock="Left"
+                           Margin="0 0 10 0"
+                           VerticalAlignment="Center"
+                           Text="Log level:"/>
+
+                <ComboBox DockPanel.Dock="Left"
+                          ItemsSource="{Binding LogLevels}"
                           SelectedItem="{Binding SelectedLogLevel}"
-                          DockPanel.Dock="Left"
                           Width="100"/>
             </DockPanel>
 
-            <DockPanel LastChildFill="False"
-                       DockPanel.Dock="Top">
-                <TextBlock Text="Enable UI logging:" 
-                           DockPanel.Dock="Left"
-                           Margin="0 0 10 0" 
-                           VerticalAlignment="Center"/>
+            <DockPanel DockPanel.Dock="Top" LastChildFill="False">
+                <TextBlock DockPanel.Dock="Left"
+                           Margin="0 0 10 0"
+                           VerticalAlignment="Center"
+                           Text="Enable UI logging:"/>
 
-                <CheckBox IsChecked="{Binding EnableUILogging}"
-                          DockPanel.Dock="Left"
-                          Margin="0 0 10 0"/>
+                <CheckBox DockPanel.Dock="Left"
+                          Margin="0 0 10 0"
+                          IsChecked="{Binding EnableUILogging}"/>
             </DockPanel>
         </DockPanel>
     </Grid>

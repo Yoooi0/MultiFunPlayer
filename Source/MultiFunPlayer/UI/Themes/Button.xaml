@@ -17,48 +17,46 @@
         <Setter Property="material:ShadowAssist.ShadowDepth" Value="Depth0"/>
         <Setter Property="material:TransitionAssist.DisableTransitions" Value="True"/>
         <Setter Property="material:RippleAssist.Feedback" Value="{DynamicResource MaterialDesignFlatButtonRipple}"/>
-        <Setter Property="material:ButtonProgressAssist.IndicatorForeground" Value="{DynamicResource PrimaryHueLightForegroundBrush}" />
-        <Setter Property="material:ButtonProgressAssist.IndicatorBackground" Value="{DynamicResource PrimaryHueLightBrush}" />
-        <Setter Property="material:ButtonProgressAssist.Opacity" Value=".4" />
+        <Setter Property="material:ButtonProgressAssist.IndicatorForeground" Value="{DynamicResource PrimaryHueLightForegroundBrush}"/>
+        <Setter Property="material:ButtonProgressAssist.IndicatorBackground" Value="{DynamicResource PrimaryHueLightBrush}"/>
+        <Setter Property="material:ButtonProgressAssist.Opacity" Value=".4"/>
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type ButtonBase}">
                     <Grid>
                         <AdornerDecorator>
                             <Grid>
-                                <Border Background="Transparent"
-                                        x:Name="border"/>
+                                <Border x:Name="border" Background="Transparent"/>
                                 <ProgressBar x:Name="ProgressBar"
                                              Style="{DynamicResource MaterialDesignLinearProgressBar}"
-                                             Minimum="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=(material:ButtonProgressAssist.Minimum)}"
-                                             Maximum="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=(material:ButtonProgressAssist.Maximum)}"
-                                             Foreground="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=(material:ButtonProgressAssist.IndicatorForeground)}"
-                                             Background="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=(material:ButtonProgressAssist.IndicatorBackground)}"
-                                             Value="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=(material:ButtonProgressAssist.Value)}"
-                                             IsIndeterminate="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=(material:ButtonProgressAssist.IsIndeterminate)}"
-                                             Visibility="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=(material:ButtonProgressAssist.IsIndicatorVisible), Converter={StaticResource BooleanToVisibilityConverter}}"
-                                             Height="{TemplateBinding Height}"
                                              Width="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ButtonBase}}, Path=ActualWidth}"
-                                             Opacity="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=(material:ButtonProgressAssist.Opacity)}"
+                                             Height="{TemplateBinding Height}"
                                              HorizontalAlignment="Left"
-                                             VerticalAlignment="Center">
-                                </ProgressBar>
+                                             VerticalAlignment="Center"
+                                             Background="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=(material:ButtonProgressAssist.IndicatorBackground)}"
+                                             Foreground="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=(material:ButtonProgressAssist.IndicatorForeground)}"
+                                             IsIndeterminate="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=(material:ButtonProgressAssist.IsIndeterminate)}"
+                                             Maximum="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=(material:ButtonProgressAssist.Maximum)}"
+                                             Minimum="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=(material:ButtonProgressAssist.Minimum)}"
+                                             Opacity="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=(material:ButtonProgressAssist.Opacity)}"
+                                             Visibility="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=(material:ButtonProgressAssist.IsIndicatorVisible), Converter={StaticResource BooleanToVisibilityConverter}}"
+                                             Value="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=(material:ButtonProgressAssist.Value)}"/>
                             </Grid>
                         </AdornerDecorator>
-                        <material:Ripple Content="{TemplateBinding Content}" 
-                                         ContentTemplate="{TemplateBinding ContentTemplate}" 
-                                         Focusable="False"
-                                         ContentStringFormat="{TemplateBinding ContentStringFormat}"
+                        <material:Ripple Padding="{TemplateBinding Padding}"
                                          HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
                                          VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}"
-                                         Padding="{TemplateBinding Padding}"
+                                         Content="{TemplateBinding Content}"
+                                         ContentStringFormat="{TemplateBinding ContentStringFormat}"
+                                         ContentTemplate="{TemplateBinding ContentTemplate}"
+                                         Focusable="False"
                                          SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}">
                             <material:Ripple.Clip>
                                 <MultiBinding Converter="{StaticResource BorderClipConverter}">
-                                    <Binding ElementName="border" Path="ActualWidth" />
-                                    <Binding ElementName="border" Path="ActualHeight" />
-                                    <Binding ElementName="border" Path="CornerRadius" />
-                                    <Binding ElementName="border" Path="BorderThickness" />
+                                    <Binding ElementName="border" Path="ActualWidth"/>
+                                    <Binding ElementName="border" Path="ActualHeight"/>
+                                    <Binding ElementName="border" Path="CornerRadius"/>
+                                    <Binding ElementName="border" Path="BorderThickness"/>
                                 </MultiBinding>
                             </material:Ripple.Clip>
                         </material:Ripple>
@@ -68,16 +66,18 @@
                             <Setter Property="Opacity" Value=".56"/>
                         </Trigger>
                         <Trigger Property="IsMouseOver" Value="true">
-                            <Setter Property="BorderBrush" TargetName="border" Value="{DynamicResource MaterialDesignFlatButtonClick}"/>
-                            <Setter Property="Background" TargetName="border" Value="{DynamicResource MaterialDesignFlatButtonClick}"/>
+                            <Setter TargetName="border" Property="BorderBrush" Value="{DynamicResource MaterialDesignFlatButtonClick}"/>
+                            <Setter TargetName="border" Property="Background" Value="{DynamicResource MaterialDesignFlatButtonClick}"/>
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
     </Style>
-    
-    <Style x:Key="MaterialDesignToolBarButton" BasedOn="{StaticResource {x:Static ToolBar.ButtonStyleKey}}" TargetType="{x:Type Button}">
+
+    <Style x:Key="MaterialDesignToolBarButton"
+           BasedOn="{StaticResource {x:Static ToolBar.ButtonStyleKey}}"
+           TargetType="{x:Type Button}">
         <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
         <Setter Property="Cursor" Value="Hand"/>
     </Style>
@@ -97,32 +97,31 @@
         <Setter Property="TextBlock.FontWeight" Value="DemiBold"/>
         <Setter Property="material:ShadowAssist.ShadowDepth" Value="Depth0"/>
         <Setter Property="material:RippleAssist.Feedback" Value="{DynamicResource MaterialDesignFlatButtonRipple}"/>
-        <Setter Property="Focusable" Value="True" />
+        <Setter Property="Focusable" Value="True"/>
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type ToggleButton}">
                     <Grid>
                         <AdornerDecorator>
                             <Grid>
-                                <Border Background="Transparent"
-                                        x:Name="border"/>
+                                <Border x:Name="border" Background="Transparent"/>
                             </Grid>
                         </AdornerDecorator>
-                        <material:Ripple x:Name="ContentPresenter" 
-                                         Content="{TemplateBinding Content}"
-                                         ContentTemplate="{TemplateBinding ContentTemplate}" 
-                                         Focusable="False"
-                                         ContentStringFormat="{TemplateBinding ContentStringFormat}"
+                        <material:Ripple x:Name="ContentPresenter"
+                                         Padding="{TemplateBinding Padding}"
                                          HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
                                          VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}"
-                                         Padding="{TemplateBinding Padding}"
+                                         Content="{TemplateBinding Content}"
+                                         ContentStringFormat="{TemplateBinding ContentStringFormat}"
+                                         ContentTemplate="{TemplateBinding ContentTemplate}"
+                                         Focusable="False"
                                          SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}">
                             <material:Ripple.Clip>
                                 <MultiBinding Converter="{StaticResource BorderClipConverter}">
-                                    <Binding ElementName="border" Path="ActualWidth" />
-                                    <Binding ElementName="border" Path="ActualHeight" />
-                                    <Binding ElementName="border" Path="CornerRadius" />
-                                    <Binding ElementName="border" Path="BorderThickness" />
+                                    <Binding ElementName="border" Path="ActualWidth"/>
+                                    <Binding ElementName="border" Path="ActualHeight"/>
+                                    <Binding ElementName="border" Path="CornerRadius"/>
+                                    <Binding ElementName="border" Path="BorderThickness"/>
                                 </MultiBinding>
                             </material:Ripple.Clip>
                         </material:Ripple>
@@ -130,18 +129,18 @@
                     <ControlTemplate.Triggers>
                         <MultiTrigger>
                             <MultiTrigger.Conditions>
-                                <Condition Property="IsChecked" Value="True" />
-                                <Condition Property="material:ToggleButtonAssist.HasOnContent" Value="True" />
+                                <Condition Property="IsChecked" Value="True"/>
+                                <Condition Property="material:ToggleButtonAssist.HasOnContent" Value="True"/>
                             </MultiTrigger.Conditions>
-                            <Setter TargetName="ContentPresenter" Property="Content" Value="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=(material:ToggleButtonAssist.OnContent)}" />
-                            <Setter TargetName="ContentPresenter" Property="ContentTemplate" Value="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=(material:ToggleButtonAssist.OnContentTemplate)}" />
+                            <Setter TargetName="ContentPresenter" Property="Content" Value="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=(material:ToggleButtonAssist.OnContent)}"/>
+                            <Setter TargetName="ContentPresenter" Property="ContentTemplate" Value="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=(material:ToggleButtonAssist.OnContentTemplate)}"/>
                         </MultiTrigger>
                         <Trigger Property="IsEnabled" Value="false">
                             <Setter Property="Opacity" Value=".56"/>
                         </Trigger>
                         <Trigger Property="IsMouseOver" Value="true">
-                            <Setter Property="BorderBrush" TargetName="border" Value="{DynamicResource MaterialDesignFlatButtonClick}"/>
-                            <Setter Property="Background" TargetName="border" Value="{DynamicResource MaterialDesignFlatButtonClick}"/>
+                            <Setter TargetName="border" Property="BorderBrush" Value="{DynamicResource MaterialDesignFlatButtonClick}"/>
+                            <Setter TargetName="border" Property="Background" Value="{DynamicResource MaterialDesignFlatButtonClick}"/>
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
@@ -164,11 +163,40 @@
         <Setter Property="TextBlock.FontWeight" Value="DemiBold"/>
         <Setter Property="material:ShadowAssist.ShadowDepth" Value="Depth0"/>
         <Setter Property="material:RippleAssist.Feedback" Value="{DynamicResource MaterialDesignFlatButtonRipple}"/>
-        <Setter Property="Focusable" Value="True" />
+        <Setter Property="Focusable" Value="True"/>
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type ToggleButton}">
                     <Grid>
+                        <AdornerDecorator>
+                            <Grid>
+                                <Border x:Name="border" Background="Transparent"/>
+                            </Grid>
+                        </AdornerDecorator>
+                        <material:Ripple x:Name="ContentPresenter"
+                                         Padding="{TemplateBinding Padding}"
+                                         HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                         VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}"
+                                         ContentStringFormat="{TemplateBinding ContentStringFormat}"
+                                         ContentTemplate="{TemplateBinding ContentTemplate}"
+                                         Focusable="False"
+                                         SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}">
+                            <material:Ripple.Content>
+                                <ContentControl Content="{TemplateBinding Content}" RenderTransformOrigin="0.5 0.5">
+                                    <ContentControl.RenderTransform>
+                                        <RotateTransform x:Name="ExpandPathRotateTransform"/>
+                                    </ContentControl.RenderTransform>
+                                </ContentControl>
+                            </material:Ripple.Content>
+                            <material:Ripple.Clip>
+                                <MultiBinding Converter="{StaticResource BorderClipConverter}">
+                                    <Binding ElementName="border" Path="ActualWidth"/>
+                                    <Binding ElementName="border" Path="ActualHeight"/>
+                                    <Binding ElementName="border" Path="CornerRadius"/>
+                                    <Binding ElementName="border" Path="BorderThickness"/>
+                                </MultiBinding>
+                            </material:Ripple.Clip>
+                        </material:Ripple>
                         <VisualStateManager.VisualStateGroups>
                             <VisualStateGroup x:Name="CheckStates">
                                 <VisualState x:Name="Checked">
@@ -187,54 +215,22 @@
                                 </VisualState>
                             </VisualStateGroup>
                         </VisualStateManager.VisualStateGroups>
-
-                        <AdornerDecorator>
-                            <Grid>
-                                <Border Background="Transparent"
-                                        x:Name="border"/>
-                            </Grid>
-                        </AdornerDecorator>
-                        <material:Ripple x:Name="ContentPresenter" 
-                                         ContentTemplate="{TemplateBinding ContentTemplate}" 
-                                         Focusable="False"
-                                         ContentStringFormat="{TemplateBinding ContentStringFormat}"
-                                         HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
-                                         VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}"
-                                         Padding="{TemplateBinding Padding}"
-                                         SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}">
-                            <material:Ripple.Content>
-                                <ContentControl Content="{TemplateBinding Content}"
-                                                RenderTransformOrigin="0.5 0.5">
-                                    <ContentControl.RenderTransform>
-                                        <RotateTransform x:Name="ExpandPathRotateTransform"/>
-                                    </ContentControl.RenderTransform>
-                                </ContentControl>
-                            </material:Ripple.Content>
-                            <material:Ripple.Clip>
-                                <MultiBinding Converter="{StaticResource BorderClipConverter}">
-                                    <Binding ElementName="border" Path="ActualWidth" />
-                                    <Binding ElementName="border" Path="ActualHeight" />
-                                    <Binding ElementName="border" Path="CornerRadius" />
-                                    <Binding ElementName="border" Path="BorderThickness" />
-                                </MultiBinding>
-                            </material:Ripple.Clip>
-                        </material:Ripple>
                     </Grid>
                     <ControlTemplate.Triggers>
                         <MultiTrigger>
                             <MultiTrigger.Conditions>
-                                <Condition Property="IsChecked" Value="True" />
-                                <Condition Property="material:ToggleButtonAssist.HasOnContent" Value="True" />
+                                <Condition Property="IsChecked" Value="True"/>
+                                <Condition Property="material:ToggleButtonAssist.HasOnContent" Value="True"/>
                             </MultiTrigger.Conditions>
-                            <Setter TargetName="ContentPresenter" Property="Content" Value="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=(material:ToggleButtonAssist.OnContent)}" />
-                            <Setter TargetName="ContentPresenter" Property="ContentTemplate" Value="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=(material:ToggleButtonAssist.OnContentTemplate)}" />
+                            <Setter TargetName="ContentPresenter" Property="Content" Value="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=(material:ToggleButtonAssist.OnContent)}"/>
+                            <Setter TargetName="ContentPresenter" Property="ContentTemplate" Value="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=(material:ToggleButtonAssist.OnContentTemplate)}"/>
                         </MultiTrigger>
                         <Trigger Property="IsEnabled" Value="false">
                             <Setter Property="Opacity" Value=".56"/>
                         </Trigger>
                         <Trigger Property="IsMouseOver" Value="true">
-                            <Setter Property="BorderBrush" TargetName="border" Value="{DynamicResource MaterialDesignFlatButtonClick}"/>
-                            <Setter Property="Background" TargetName="border" Value="{DynamicResource MaterialDesignFlatButtonClick}"/>
+                            <Setter TargetName="border" Property="BorderBrush" Value="{DynamicResource MaterialDesignFlatButtonClick}"/>
+                            <Setter TargetName="border" Property="Background" Value="{DynamicResource MaterialDesignFlatButtonClick}"/>
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>

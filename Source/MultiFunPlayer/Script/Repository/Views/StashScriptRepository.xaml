@@ -1,52 +1,52 @@
 <UserControl x:Class="MultiFunPlayer.Script.Repository.Views.StashScriptRepository"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-             xmlns:ui="clr-namespace:MultiFunPlayer.UI"
              xmlns:common="clr-namespace:MultiFunPlayer.Common"
              xmlns:controls="clr-namespace:MultiFunPlayer.UI.Controls"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:repository="clr-namespace:MultiFunPlayer.Script.Repository.ViewModels"
-             mc:Ignorable="d" 
-             d:DesignHeight="450" d:DesignWidth="800"
-             x:ClassModifier="internal">
+             xmlns:ui="clr-namespace:MultiFunPlayer.UI"
+             d:DesignHeight="450"
+             d:DesignWidth="800"
+             x:ClassModifier="internal"
+             mc:Ignorable="d">
     <StackPanel Margin="20">
-        <DockPanel LastChildFill="False"
-                   Margin="0 0 0 20">
-            <TextBlock Text="Endpoint:"
-                       DockPanel.Dock="Left"
+        <DockPanel Margin="0 0 0 20" LastChildFill="False">
+            <TextBlock DockPanel.Dock="Left"
                        Margin="0 0 10 0"
-                       VerticalAlignment="Center"/>
+                       VerticalAlignment="Center"
+                       Text="Endpoint:"/>
 
-            <controls:UriBox Uri="{Binding ServerBaseUri}"
-                             DockPanel.Dock="Left"
+            <controls:UriBox DockPanel.Dock="Left"
+                             AvailableSchemes="http https"
                              ShowPathAndQuery="False"
-                             AvailableSchemes="http https"/>
+                             Uri="{Binding ServerBaseUri}"/>
         </DockPanel>
 
         <DockPanel LastChildFill="False">
-            <TextBlock Text="Video match type:"
-                       DockPanel.Dock="Left"
+            <TextBlock DockPanel.Dock="Left"
                        Margin="0 0 10 0"
-                       VerticalAlignment="Center"/>
+                       VerticalAlignment="Center"
+                       Text="Video match type:"/>
 
-            <ComboBox ItemsSource="{Binding Source={ui:EnumBindingSource {x:Type repository:StashVideoMatchType}}}"
+            <ComboBox DockPanel.Dock="Left"
+                      ItemsSource="{Binding Source={ui:EnumBindingSource {x:Type repository:StashVideoMatchType}}}"
                       SelectedItem="{Binding VideoMatchType}"
-                      ToolTip="{Binding SelectedItem, RelativeSource={RelativeSource Self}, Converter={StaticResource DescriptionConverter}}"
-                      DockPanel.Dock="Left"/>
+                      ToolTip="{Binding SelectedItem, RelativeSource={RelativeSource Self}, Converter={StaticResource DescriptionConverter}}"/>
         </DockPanel>
 
 
         <DockPanel LastChildFill="False">
-            <TextBlock Text="Script match axis:" 
-                       DockPanel.Dock="Left"
-                       Margin="0 0 10 0" 
-                       VerticalAlignment="Center"/>
+            <TextBlock DockPanel.Dock="Left"
+                       Margin="0 0 10 0"
+                       VerticalAlignment="Center"
+                       Text="Script match axis:"/>
             <ComboBox DockPanel.Dock="Left"
-                      Margin="0 0 10 0" 
-                      Width="50" 
-                      ItemsSource="{Binding Source={x:Static common:DeviceAxis.All}}" 
-                      SelectedItem="{Binding ScriptMatchAxis}"/>
+                      ItemsSource="{Binding Source={x:Static common:DeviceAxis.All}}"
+                      SelectedItem="{Binding ScriptMatchAxis}"
+                      Width="50"
+                      Margin="0 0 10 0"/>
         </DockPanel>
     </StackPanel>
 </UserControl>

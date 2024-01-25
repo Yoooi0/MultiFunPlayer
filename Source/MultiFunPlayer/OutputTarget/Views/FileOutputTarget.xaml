@@ -1,17 +1,18 @@
 <UserControl x:Class="MultiFunPlayer.OutputTarget.Views.FileOutputTarget"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:converters="clr-namespace:MultiFunPlayer.UI.Converters"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:material="http://materialdesigninxaml.net/winfx/xaml/themes"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:metro="http://metro.mahapps.com/winfx/xaml/controls"
              xmlns:s="https://github.com/canton7/Stylet"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
-             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-             xmlns:ui="clr-namespace:MultiFunPlayer.UI"
              xmlns:script="clr-namespace:MultiFunPlayer.Script"
-             xmlns:converters="clr-namespace:MultiFunPlayer.UI.Converters"
-             mc:Ignorable="d" 
-             d:DesignHeight="450" d:DesignWidth="800"
-             x:ClassModifier="internal">
+             xmlns:ui="clr-namespace:MultiFunPlayer.UI"
+             d:DesignHeight="450"
+             d:DesignWidth="800"
+             x:ClassModifier="internal"
+             mc:Ignorable="d">
     <UserControl.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
@@ -20,43 +21,45 @@
             <converters:FileSystemInfoToStringConverter x:Key="FileSystemInfoToStringConverter"/>
         </ResourceDictionary>
     </UserControl.Resources>
-    
-    <Expander material:ExpanderAssist.HorizontalHeaderPadding="0 0 6 0"
-              Style="{StaticResource MaterialDesignToolBarExpander}"
+
+    <Expander Style="{StaticResource MaterialDesignToolBarExpander}"
+              material:ExpanderAssist.HorizontalHeaderPadding="0 0 6 0"
               Background="{DynamicResource MaterialDesignToolBarBackground}"
               IsExpanded="{Binding DataContext.ContentVisible, RelativeSource={RelativeSource FindAncestor, AncestorLevel=2, AncestorType={x:Type UserControl}}}">
         <Expander.Header>
-            <DockPanel Height="36"
-                       LastChildFill="False">
-                <Button DockPanel.Dock="Left"
-                        Command="{s:Action ToggleConnectAsync}"
-                        CommandParameter="{Binding}"
-                        s:View.ActionTarget="{Binding DataContext.Parent, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}"
-                        IsEnabled="{Binding CanToggleConnect}"
+            <DockPanel Height="36" LastChildFill="False">
+                <Button s:View.ActionTarget="{Binding DataContext.Parent, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}"
+                        DockPanel.Dock="Left"
+                        material:ButtonProgressAssist.IsIndeterminate="True"
                         material:ButtonProgressAssist.IsIndicatorVisible="{Binding IsConnectBusy}"
                         material:ButtonProgressAssist.Value="-1"
-                        material:ButtonProgressAssist.IsIndeterminate="True">
+                        Command="{s:Action ToggleConnectAsync}"
+                        CommandParameter="{Binding}"
+                        IsEnabled="{Binding CanToggleConnect}">
                     <Button.Style>
-                        <Style TargetType="{x:Type ButtonBase}" BasedOn="{StaticResource MaterialDesignProgressToolBarButton}">
-                            <Setter Property="ToolTip" Value="Connect" />
+                        <Style BasedOn="{StaticResource MaterialDesignProgressToolBarButton}" TargetType="{x:Type ButtonBase}">
+                            <Setter Property="ToolTip" Value="Connect"/>
                             <Style.Triggers>
                                 <DataTrigger Binding="{Binding IsConnected}" Value="True">
-                                    <Setter Property="ToolTip" Value="Disconnect" />
+                                    <Setter Property="ToolTip" Value="Disconnect"/>
                                 </DataTrigger>
                             </Style.Triggers>
                         </Style>
                     </Button.Style>
                     <material:PackIcon Width="19" Height="19">
                         <material:PackIcon.Style>
-                            <Style TargetType="material:PackIcon" BasedOn="{StaticResource {x:Type material:PackIcon}}">
-                                <Setter Property="Kind" Value="Play" />
+                            <Style BasedOn="{StaticResource {x:Type material:PackIcon}}" TargetType="material:PackIcon">
+                                <Setter Property="Kind" Value="Play"/>
                                 <Style.Triggers>
                                     <DataTrigger Binding="{Binding IsConnected}" Value="True">
-                                        <Setter Property="Kind" Value="Stop" />
+                                        <Setter Property="Kind" Value="Stop"/>
                                         <DataTrigger.EnterActions>
                                             <BeginStoryboard>
                                                 <Storyboard>
-                                                    <DoubleAnimation Storyboard.TargetProperty="Opacity" From="0" To="1" Duration="0:0:0.8" />
+                                                    <DoubleAnimation Storyboard.TargetProperty="Opacity"
+                                                                     From="0"
+                                                                     To="1"
+                                                                     Duration="0:0:0.8"/>
                                                 </Storyboard>
                                             </BeginStoryboard>
                                         </DataTrigger.EnterActions>
@@ -68,19 +71,18 @@
                 </Button>
 
                 <material:PopupBox DockPanel.Dock="Right"
-                                   StaysOpen="True" 
                                    Style="{StaticResource MaterialDesignToolBarPopupBox}"
                                    PlacementMode="BottomAndAlignRightEdges"
+                                   StaysOpen="True"
                                    ToolTip="Update settings">
                     <material:PopupBox.ToggleContent>
-                        <material:PackIcon Kind="TimerCogOutline" 
-                                           Width="20" 
-                                           Height="20"/>
+                        <material:PackIcon Width="20"
+                                           Height="20"
+                                           Kind="TimerCogOutline"/>
                     </material:PopupBox.ToggleContent>
-                    <StackPanel Width="250" 
-                                Margin="10 0 10 0">
-                        <TextBlock Text="Fixed Update" 
-                                   FontWeight="Bold"
+                    <StackPanel Width="250" Margin="10 0 10 0">
+                        <TextBlock FontWeight="Bold"
+                                   Text="Fixed Update"
                                    Typography.Capitals="AllSmallCaps"/>
                         <ContentControl Content="{Binding UpdateContexts[FixedUpdate]}"/>
                     </StackPanel>
@@ -92,10 +94,10 @@
             <StackPanel Margin="0 0 0 20">
                 <StackPanel.Resources>
                     <Style TargetType="{x:Type StackPanel}">
-                        <Setter Property="IsEnabled" Value="False" />
+                        <Setter Property="IsEnabled" Value="False"/>
                         <Style.Triggers>
                             <DataTrigger Binding="{Binding Status}" Value="Disconnected">
-                                <Setter Property="IsEnabled" Value="True" />
+                                <Setter Property="IsEnabled" Value="True"/>
                             </DataTrigger>
                         </Style.Triggers>
                     </Style>
@@ -103,116 +105,115 @@
 
                 <DockPanel>
                     <DockPanel LastChildFill="False">
-                        <TextBlock Text="Output format:"
-                                   DockPanel.Dock="Left"
+                        <TextBlock DockPanel.Dock="Left"
                                    Margin="0 0 10 0"
-                                   VerticalAlignment="Center"/>
+                                   VerticalAlignment="Center"
+                                   Text="Output format:"/>
 
-                        <ComboBox ItemsSource="{Binding Source={ui:EnumBindingSource {x:Type script:ScriptType}}}"
+                        <ComboBox DockPanel.Dock="Left"
+                                  ItemsSource="{Binding Source={ui:EnumBindingSource {x:Type script:ScriptType}}}"
                                   SelectedItem="{Binding ScriptType}"
-                                  DockPanel.Dock="Left"
                                   Width="150"/>
                     </DockPanel>
                 </DockPanel>
 
-                <DockPanel LastChildFill="True"
-                           Margin="0 5 0 0">
-                    <TextBlock Text="Output directory:"
-                               DockPanel.Dock="Left"
+                <DockPanel Margin="0 5 0 0" LastChildFill="True">
+                    <TextBlock DockPanel.Dock="Left"
                                Margin="0 0 10 0"
-                               VerticalAlignment="Center"/>
+                               VerticalAlignment="Center"
+                               Text="Output directory:"/>
 
-                    <Button Style="{StaticResource MaterialDesignFloatingActionMiniButton}"
-                            Click="{s:Action OnSetOutputDirectory}"
-                            DockPanel.Dock="Right"
-                            ToolTip="Set output directory"
+                    <Button DockPanel.Dock="Right"
+                            Style="{StaticResource MaterialDesignFloatingActionMiniButton}"
                             Width="20"
-                            Height="20">
-                        <material:PackIcon Kind="Folder"
-                                           Width="14"
+                            Height="20"
+                            Click="{s:Action OnSetOutputDirectory}"
+                            ToolTip="Set output directory">
+                        <material:PackIcon Width="14"
                                            Height="14"
                                            HorizontalAlignment="Center"
-                                           VerticalAlignment="Center"/>
+                                           VerticalAlignment="Center"
+                                           Kind="Folder"/>
                     </Button>
 
-                    <TextBox IsReadOnly="True"
-                             Text="{Binding OutputDirectory, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource FileSystemInfoToStringConverter}}"
-                             material:TextFieldAssist.HasClearButton="True"
-                             DockPanel.Dock="Left"
+                    <TextBox DockPanel.Dock="Left"
                              Margin="0 0 10 0"
-                             VerticalAlignment="Center"/>
+                             VerticalAlignment="Center"
+                             material:TextFieldAssist.HasClearButton="True"
+                             IsReadOnly="True"
+                             Text="{Binding OutputDirectory, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource FileSystemInfoToStringConverter}}"/>
                 </DockPanel>
             </StackPanel>
 
-            <TextBlock Text="Output Range"
-                       Typography.Capitals="AllSmallCaps"
-                       FontWeight="Bold"
+            <TextBlock HorizontalAlignment="Left"
                        VerticalAlignment="Center"
-                       HorizontalAlignment="Left"/>
+                       FontWeight="Bold"
+                       Text="Output Range"
+                       Typography.Capitals="AllSmallCaps"/>
             <ItemsControl ItemsSource="{Binding AxisSettings}">
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>
-                        <UniformGrid Columns="3" IsItemsHost="True" Margin="0 0 -13 0"/>
+                        <UniformGrid Margin="0 0 -13 0"
+                                     Columns="3"
+                                     IsItemsHost="True"/>
                     </ItemsPanelTemplate>
                 </ItemsControl.ItemsPanel>
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
-                        <DockPanel LastChildFill="True"
-                                   Margin="0 0 20 1">
-                            <ToggleButton DockPanel.Dock="Left" 
+                        <DockPanel Margin="0 0 20 1" LastChildFill="True">
+                            <ToggleButton DockPanel.Dock="Left"
+                                          Width="20"
+                                          Height="14"
+                                          Padding="0"
                                           VerticalAlignment="Center"
                                           IsChecked="{Binding Value.Enabled}"
-                                          IsEnabled="{Binding DataContext.IsConnected, Converter={StaticResource NotConverter}, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}"
-                                          Height="14"
-                                          Width="20"
-                                          Padding="0">
+                                          IsEnabled="{Binding DataContext.IsConnected, Converter={StaticResource NotConverter}, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}">
                                 <ToggleButton.Resources>
-                                    <Style TargetType="{x:Type ToggleButton}" BasedOn="{StaticResource MaterialDesignPaperButton}">
+                                    <Style BasedOn="{StaticResource MaterialDesignPaperButton}" TargetType="{x:Type ToggleButton}">
                                         <Setter Property="material:ElevationAssist.Elevation" Value="Dp0"/>
                                         <Style.Triggers>
                                             <Trigger Property="IsChecked" Value="True">
                                                 <Setter Property="Background" Value="{DynamicResource PrimaryHueMidBrush}"/>
                                                 <Setter Property="Foreground" Value="{DynamicResource PrimaryHueMidForegroundBrush}"/>
-                                                <Setter Property="material:RippleAssist.Feedback" Value="{DynamicResource PrimaryHueMidForegroundBrush}" />
+                                                <Setter Property="material:RippleAssist.Feedback" Value="{DynamicResource PrimaryHueMidForegroundBrush}"/>
                                             </Trigger>
                                         </Style.Triggers>
                                     </Style>
                                 </ToggleButton.Resources>
 
-                                <TextBlock Text="{Binding Key}"
-                                           FontSize="10"
-                                           FontWeight="Bold"/>
+                                <TextBlock FontSize="10"
+                                           FontWeight="Bold"
+                                           Text="{Binding Key}"/>
                             </ToggleButton>
 
-                            <Canvas DockPanel.Dock="Right" 
-                                    HorizontalAlignment="Stretch">
-                                <metro:RangeSlider Style="{StaticResource MaterialDesignCompactRangeSlider}" 
+                            <Canvas DockPanel.Dock="Right" HorizontalAlignment="Stretch">
+                                <metro:RangeSlider Style="{StaticResource MaterialDesignCompactRangeSlider}"
                                                    Width="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType={x:Type Canvas}}}"
-                                                   Minimum="0" 
-                                                   Maximum="100" 
-                                                   MinRangeWidth="10" 
+                                                   AutoToolTipPlacement="TopLeft"
+                                                   IsEnabled="{Binding Value.Enabled}"
+                                                   LowerValue="{Binding Value.Minimum, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                   Maximum="100"
                                                    MinRange="1"
-                                                   AutoToolTipPlacement="TopLeft" 
-                                                   UseLayoutRounding="False"
-                                                   LowerValue="{Binding Value.Minimum, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
+                                                   MinRangeWidth="10"
+                                                   Minimum="0"
                                                    UpperValue="{Binding Value.Maximum, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                                   IsEnabled="{Binding Value.Enabled}">
+                                                   UseLayoutRounding="False">
                                     <metro:RangeSlider.AutoToolTipLowerValueTemplate>
                                         <DataTemplate>
-                                            <TextBlock HorizontalAlignment="Right" Text="{Binding StringFormat='{}{0:D}%'}" />
+                                            <TextBlock HorizontalAlignment="Right" Text="{Binding StringFormat='{}{0:D}%'}"/>
                                         </DataTemplate>
                                     </metro:RangeSlider.AutoToolTipLowerValueTemplate>
                                     <metro:RangeSlider.AutoToolTipUpperValueTemplate>
                                         <DataTemplate>
-                                            <TextBlock HorizontalAlignment="Right" Text="{Binding StringFormat='{}{0:D}%'}" />
+                                            <TextBlock HorizontalAlignment="Right" Text="{Binding StringFormat='{}{0:D}%'}"/>
                                         </DataTemplate>
                                     </metro:RangeSlider.AutoToolTipUpperValueTemplate>
                                     <metro:RangeSlider.AutoToolTipRangeValuesTemplate>
                                         <DataTemplate DataType="mah:RangeSliderAutoTooltipValues">
                                             <StackPanel Orientation="Horizontal">
-                                                <TextBlock Text="{Binding LowerValue, StringFormat='{}{0:D}%'}" />
-                                                <TextBlock Text=" - " />
-                                                <TextBlock Text="{Binding UpperValue, StringFormat='{}{0:D}%'}" />
+                                                <TextBlock Text="{Binding LowerValue, StringFormat='{}{0:D}%'}"/>
+                                                <TextBlock Text=" - "/>
+                                                <TextBlock Text="{Binding UpperValue, StringFormat='{}{0:D}%'}"/>
                                             </StackPanel>
                                         </DataTemplate>
                                     </metro:RangeSlider.AutoToolTipRangeValuesTemplate>
