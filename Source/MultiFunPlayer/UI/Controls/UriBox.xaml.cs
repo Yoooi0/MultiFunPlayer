@@ -1,4 +1,4 @@
-using PropertyChanged;
+﻿using PropertyChanged;
 using System.ComponentModel;
 using System.Net;
 using System.Windows;
@@ -261,6 +261,8 @@ public sealed partial class UriBox : UserControl
         {
             if (string.IsNullOrWhiteSpace(HostOrIPAddress))
                 SetValue(HostOrIPAddressProperty, DefaultHostOrIPAddress);
+            if (PathAndQuery?.StartsWith('/') != true)
+                PathAndQuery = $"/{PathAndQuery}";
 
             if (!Uri.TryCreate($"{Scheme}://{HostOrIPAddress}:{Port}{PathAndQuery}", UriKind.Absolute, out var uri))
             {
