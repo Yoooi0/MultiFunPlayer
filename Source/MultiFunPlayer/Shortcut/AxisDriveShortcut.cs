@@ -27,13 +27,6 @@ internal sealed class AxisDriveShortcut(IShortcutActionResolver actionResolver, 
             _ => null
         });
     }
-
-    protected override void PrintMembers(StringBuilder builder)
-    {
-        base.PrintMembers(builder);
-        PrintProperty(builder, () => DriveMode);
-        PrintProperty(builder, () => Invert);
-    }
 }
 internal enum AxisDriveShortcutMode
 {

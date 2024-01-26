@@ -135,31 +135,6 @@ internal abstract partial class AbstractShortcut<TGesture, TData>(IShortcutActio
         }
     }
 
-    public override string ToString()
-    {
-        var stringBuilder = new StringBuilder();
-        stringBuilder.Append(GetType().GetCustomAttribute<DisplayNameAttribute>(inherit: false).DisplayName);
-        stringBuilder.Append(" [");
-        PrintMembers(stringBuilder);
-
-        stringBuilder.Length -= 2;
-        stringBuilder.Append(']');
-        return stringBuilder.ToString();
-    }
-
-    protected virtual void PrintMembers(StringBuilder builder)
-    {
-        PrintProperty(builder, () => Gesture);
-    }
-
-    protected void PrintProperty<T>(StringBuilder builder, Expression<Func<T>> property)
-    {
-        builder.Append(property.NameForProperty());
-        builder.Append(": ");
-        builder.Append(property.Compile()());
-        builder.Append(", ");
-    }
-
     protected virtual void Dispose(bool disposing)
     {
         foreach (var (key, _) in _actions)

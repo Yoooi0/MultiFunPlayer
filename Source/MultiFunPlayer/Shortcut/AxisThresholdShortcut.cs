@@ -30,13 +30,6 @@ internal sealed class AxisThresholdShortcut(IShortcutActionResolver actionResolv
 
         Invoke(SimpleInputGestureData.Default);
     }
-
-    protected override void PrintMembers(StringBuilder builder)
-    {
-        base.PrintMembers(builder);
-        PrintProperty(builder, () => Threshold);
-        PrintProperty(builder, () => TriggerMode);
-    }
 }
 
 internal enum AxisThresholdTriggerMode

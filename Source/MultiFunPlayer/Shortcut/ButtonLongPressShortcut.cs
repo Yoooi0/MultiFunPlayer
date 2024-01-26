@@ -32,11 +32,4 @@ internal sealed class ButtonLongPressShortcut(IShortcutActionResolver actionReso
             Invoke(SimpleInputGestureData.Default);
         }
     }
-
-    protected override void PrintMembers(StringBuilder builder)
-    {
-        base.PrintMembers(builder);
-        PrintProperty(builder, () => MinimumHoldDuration);
-        PrintProperty(builder, () => MaximumHoldDuration);
-    }
 }

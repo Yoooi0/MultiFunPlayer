@@ -22,10 +22,4 @@ internal sealed class ButtonPressShortcut(IShortcutActionResolver actionResolver
         if (HandleRepeating || wasPressed)
             Invoke(SimpleInputGestureData.Default);
     }
-
-    protected override void PrintMembers(StringBuilder builder)
-    {
-        base.PrintMembers(builder);
-        PrintProperty(builder, () => HandleRepeating);
-    }
 }

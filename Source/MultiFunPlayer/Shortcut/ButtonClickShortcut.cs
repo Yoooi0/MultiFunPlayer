@@ -32,11 +32,4 @@ internal sealed class ButtonClickShortcut(IShortcutActionResolver actionResolver
             });
         }
     }
-
-    protected override void PrintMembers(StringBuilder builder)
-    {
-        base.PrintMembers(builder);
-        PrintProperty(builder, () => ClickCount);
-        PrintProperty(builder, () => MaximumClickInterval);
-    }
 }

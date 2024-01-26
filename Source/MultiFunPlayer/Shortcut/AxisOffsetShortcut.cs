@@ -34,14 +34,6 @@ internal sealed class AxisOffsetShortcut(IShortcutActionResolver actionResolver,
     }
 
     private void InvokeOffset() => Invoke(AxisInputGestureData.Relative(_offset, DeltaTime));
-
-    protected override void PrintMembers(StringBuilder builder)
-    {
-        base.PrintMembers(builder);
-        PrintProperty(builder, () => OffsetMode);
-        PrintProperty(builder, () => Speed);
-        PrintProperty(builder, () => Invert);
-    }
 }
 
 internal enum AxisOffsetShortcutMode
