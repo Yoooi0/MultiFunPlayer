@@ -24,6 +24,11 @@ internal sealed class ButtplugOutputTarget : AsyncAbstractOutputTarget
     private SemaphoreSlim _endScanSemaphore;
 
     public override ConnectionStatus Status { get; protected set; }
+    public bool IsConnected => Status == ConnectionStatus.Connected;
+    public bool IsDisconnected => Status == ConnectionStatus.Disconnected;
+    public bool IsConnectBusy => Status == ConnectionStatus.Connecting || Status == ConnectionStatus.Disconnecting;
+    public bool CanToggleConnect => !IsConnectBusy;
+
     public EndPoint Endpoint { get; set; } = new IPEndPoint(IPAddress.Loopback, 12345);
     public ObservableConcurrentCollection<ButtplugDevice> AvailableDevices { get; }
 
@@ -83,10 +88,6 @@ internal sealed class ButtplugOutputTarget : AsyncAbstractOutputTarget
         else if (_startScanSemaphore?.CurrentCount == 0)
             _startScanSemaphore.Release();
     }
-
-    public bool IsConnected => Status == ConnectionStatus.Connected;
-    public bool IsConnectBusy => Status == ConnectionStatus.Connecting || Status == ConnectionStatus.Disconnecting;
-    public bool CanToggleConnect => !IsConnectBusy;
 
     protected override async Task RunAsync(CancellationToken token)
     {

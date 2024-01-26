@@ -22,14 +22,14 @@ internal sealed class MpvMediaSource(IShortcutManager shortcutManager, IEventAgg
     private readonly string _pipeName = "multifunplayer-mpv";
 
     public override ConnectionStatus Status { get; protected set; }
+    public bool IsConnected => Status == ConnectionStatus.Connected;
+    public bool IsDisconnected => Status == ConnectionStatus.Disconnected;
+    public bool IsConnectBusy => Status == ConnectionStatus.Connecting || Status == ConnectionStatus.Disconnecting;
+    public bool CanToggleConnect => !IsConnectBusy && !IsDownloading;
 
     public FileInfo Executable { get; set; } = null;
     public string Arguments { get; set; } = "--keep-open --pause";
     public bool AutoStartEnabled { get; set; } = false;
-
-    public bool IsConnected => Status == ConnectionStatus.Connected;
-    public bool IsConnectBusy => Status == ConnectionStatus.Connecting || Status == ConnectionStatus.Disconnecting;
-    public bool CanToggleConnect => !IsConnectBusy;
 
     protected override async Task RunAsync(CancellationToken token)
     {
@@ -232,7 +232,7 @@ internal sealed class MpvMediaSource(IShortcutManager shortcutManager, IEventAgg
         Executable = new FileInfo(dialog.FileName);
     }
 
-    public bool IsDownloading { get; set; } = false;
+    public bool IsDownloading { get; private set; }
     public async void OnDownloadExecutable()
     {
         IsDownloading = true;

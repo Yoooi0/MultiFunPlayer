@@ -130,17 +130,9 @@
 
         <StackPanel Margin="20">
             <DockPanel Margin="0 0 0 20" LastChildFill="True">
-                <DockPanel DockPanel.Dock="Left" LastChildFill="False">
-                    <DockPanel.Resources>
-                        <Style TargetType="{x:Type DockPanel}">
-                            <Setter Property="IsEnabled" Value="False"/>
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding Status}" Value="Disconnected">
-                                    <Setter Property="IsEnabled" Value="True"/>
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </DockPanel.Resources>
+                <DockPanel DockPanel.Dock="Left"
+                           IsEnabled="{Binding IsDisconnected}"
+                           LastChildFill="False">
                     <controls:EndPointBox DockPanel.Dock="Left"
                                           Margin="0 0 20 0"
                                           VerticalAlignment="Center"

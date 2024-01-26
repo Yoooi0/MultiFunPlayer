@@ -76,7 +76,7 @@
             </StackPanel>
         </Expander.Header>
 
-        <StackPanel Margin="20" IsEnabled="{Binding IsConnected, Converter={StaticResource NotConverter}}">
+        <StackPanel Margin="20" IsEnabled="{Binding IsDisconnected}">
             <DockPanel Margin="0 0 0 20" LastChildFill="True">
                 <DockPanel DockPanel.Dock="Left" LastChildFill="True">
                     <TextBlock DockPanel.Dock="Left"

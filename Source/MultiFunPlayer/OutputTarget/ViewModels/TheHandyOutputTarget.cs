@@ -23,6 +23,10 @@ internal sealed class TheHandyOutputTarget(int instanceIndex, IEventAggregator e
     public DeviceAxis SourceAxis { get; set; } = null;
 
     public override ConnectionStatus Status { get; protected set; }
+    public bool IsConnected => Status == ConnectionStatus.Connected;
+    public bool IsDisconnected => Status == ConnectionStatus.Disconnected;
+    public bool IsConnectBusy => Status == ConnectionStatus.Connecting || Status == ConnectionStatus.Disconnecting;
+    public bool CanToggleConnect => !IsConnectBusy && SourceAxis != null;
 
     protected override IUpdateContext RegisterUpdateContext(DeviceAxisUpdateType updateType) => updateType switch
     {
@@ -37,10 +41,6 @@ internal sealed class TheHandyOutputTarget(int instanceIndex, IEventAggregator e
 
         EventAggregator.Publish(new SyncRequestMessage(SourceAxis));
     }
-
-    public bool IsConnected => Status == ConnectionStatus.Connected;
-    public bool IsConnectBusy => Status == ConnectionStatus.Connecting || Status == ConnectionStatus.Disconnecting;
-    public bool CanToggleConnect => !IsConnectBusy && SourceAxis != null;
 
     protected override async Task RunAsync(CancellationToken token)
     {

@@ -94,7 +94,13 @@
         </Expander.Header>
 
         <StackPanel Margin="20">
-            <DockPanel IsEnabled="{Binding IsDownloading, Converter={StaticResource NotConverter}}" LastChildFill="True">
+            <StackPanel.IsEnabled>
+                <MultiBinding Converter="{StaticResource BooleanAndConverter}">
+                    <Binding Path="IsDisconnected"/>
+                    <Binding Converter="{StaticResource NotConverter}" Path="IsDownloading"/>
+                </MultiBinding>
+            </StackPanel.IsEnabled>
+            <DockPanel LastChildFill="True">
                 <TextBlock DockPanel.Dock="Left"
                            Margin="0 0 10 0"
                            VerticalAlignment="Center"

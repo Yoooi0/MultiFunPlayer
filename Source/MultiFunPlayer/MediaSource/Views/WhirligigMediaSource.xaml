@@ -76,7 +76,7 @@
         </Expander.Header>
 
         <StackPanel Margin="20">
-            <DockPanel LastChildFill="True">
+            <DockPanel IsEnabled="{Binding IsDisconnected}" LastChildFill="True">
                 <TextBlock DockPanel.Dock="Left"
                            Margin="0 0 10 0"
                            VerticalAlignment="Center"

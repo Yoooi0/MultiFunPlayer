@@ -19,6 +19,10 @@ internal sealed class JellyfinMediaSource(IShortcutManager shortcutManager, IEve
     private JellyfinSession _currentSession;
 
     public override ConnectionStatus Status { get; protected set; }
+    public bool IsConnected => Status == ConnectionStatus.Connected;
+    public bool IsDisconnected => Status == ConnectionStatus.Disconnected;
+    public bool IsConnectBusy => Status == ConnectionStatus.Connecting || Status == ConnectionStatus.Disconnecting;
+    public bool CanToggleConnect => !IsConnectBusy;
 
     public Uri ServerBaseUri { get; set; } = new Uri("http://127.0.0.1:8096");
     public string ApiKey { get; set; }
@@ -26,6 +30,7 @@ internal sealed class JellyfinMediaSource(IShortcutManager shortcutManager, IEve
     public string SelectedDeviceId { get; set; }
     public ObservableConcurrentCollection<JellyfinDevice> Devices { get; set; } = [];
 
+    public bool CanChangeDevice => IsDisconnected && !IsRefreshBusy && !string.IsNullOrEmpty(ApiKey) && Devices.Count != 0;
     public void OnSelectedDeviceChanged() => SelectedDeviceId = SelectedDevice?.Id;
 
     protected override void OnInitialActivate()
@@ -33,11 +38,6 @@ internal sealed class JellyfinMediaSource(IShortcutManager shortcutManager, IEve
         base.OnInitialActivate();
         _ = RefreshDevices();
     }
-
-    public bool CanChangeDevice => !IsConnected && !IsConnectBusy;
-    public bool IsConnected => Status == ConnectionStatus.Connected;
-    public bool IsConnectBusy => Status == ConnectionStatus.Connecting || Status == ConnectionStatus.Disconnecting;
-    public bool CanToggleConnect => !IsConnectBusy;
 
     protected override async ValueTask<bool> OnConnectingAsync()
     {
@@ -186,7 +186,7 @@ internal sealed class JellyfinMediaSource(IShortcutManager shortcutManager, IEve
         catch (OperationCanceledException) { }
     }
 
-    public bool CanRefreshDevices => !IsRefreshBusy && !IsConnected && !IsConnectBusy && ServerBaseUri != null && ApiKey != null;
+    public bool CanRefreshDevices => !IsRefreshBusy && IsDisconnected && ServerBaseUri != null && !string.IsNullOrEmpty(ApiKey);
     public bool IsRefreshBusy { get; set; }
 
     private int _isRefreshingFlag;

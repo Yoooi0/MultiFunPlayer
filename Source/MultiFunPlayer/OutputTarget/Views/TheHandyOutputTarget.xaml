@@ -114,18 +114,7 @@
                        Typography.Capitals="AllSmallCaps"/>
 
             <DockPanel Margin="0 0 0 10" LastChildFill="True">
-                <DockPanel DockPanel.Dock="Left">
-                    <DockPanel.Resources>
-                        <Style TargetType="{x:Type DockPanel}">
-                            <Setter Property="IsEnabled" Value="False"/>
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding Status}" Value="Disconnected">
-                                    <Setter Property="IsEnabled" Value="True"/>
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </DockPanel.Resources>
-
+                <DockPanel DockPanel.Dock="Left" IsEnabled="{Binding IsDisconnected}">
                     <TextBlock Margin="0 0 10 0"
                                VerticalAlignment="Center"
                                Text="Source axis:"/>
@@ -138,18 +127,9 @@
             </DockPanel>
 
             <DockPanel Margin="0 0 0 20" LastChildFill="True">
-                <DockPanel DockPanel.Dock="Left" LastChildFill="True">
-                    <DockPanel.Resources>
-                        <Style TargetType="{x:Type DockPanel}">
-                            <Setter Property="IsEnabled" Value="False"/>
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding Status}" Value="Disconnected">
-                                    <Setter Property="IsEnabled" Value="True"/>
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </DockPanel.Resources>
-
+                <DockPanel DockPanel.Dock="Left"
+                           IsEnabled="{Binding IsDisconnected}"
+                           LastChildFill="True">
                     <TextBox DockPanel.Dock="Left"
                              Style="{StaticResource MaterialDesignFloatingHintTextBox}"
                              Margin="0 -12 0 0"

@@ -91,18 +91,7 @@
         </Expander.Header>
 
         <StackPanel Margin="20">
-            <StackPanel Margin="0 0 0 20">
-                <StackPanel.Resources>
-                    <Style TargetType="{x:Type StackPanel}">
-                        <Setter Property="IsEnabled" Value="False"/>
-                        <Style.Triggers>
-                            <DataTrigger Binding="{Binding Status}" Value="Disconnected">
-                                <Setter Property="IsEnabled" Value="True"/>
-                            </DataTrigger>
-                        </Style.Triggers>
-                    </Style>
-                </StackPanel.Resources>
-
+            <StackPanel Margin="0 0 0 20" IsEnabled="{Binding IsDisconnected}">
                 <DockPanel>
                     <DockPanel LastChildFill="False">
                         <TextBlock DockPanel.Dock="Left"

@@ -132,18 +132,8 @@
             <DockPanel Margin="0 0 0 20" LastChildFill="True">
                 <DockPanel DockPanel.Dock="Left"
                            VerticalAlignment="Center"
+                           IsEnabled="{Binding IsDisconnected}"
                            LastChildFill="False">
-                    <DockPanel.Resources>
-                        <Style TargetType="{x:Type DockPanel}">
-                            <Setter Property="IsEnabled" Value="False"/>
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding Status}" Value="Disconnected">
-                                    <Setter Property="IsEnabled" Value="True"/>
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </DockPanel.Resources>
-
                     <ComboBox DockPanel.Dock="Left"
                               Style="{StaticResource MaterialDesignFloatingHintComboBox}"
                               ItemsSource="{Binding SerialPorts}"

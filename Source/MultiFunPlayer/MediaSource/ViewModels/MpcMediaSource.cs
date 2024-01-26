@@ -17,12 +17,12 @@ internal sealed class MpcMediaSource(IShortcutManager shortcutManager, IEventAgg
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
     public override ConnectionStatus Status { get; protected set; }
-
-    public EndPoint Endpoint { get; set; } = new IPEndPoint(IPAddress.Loopback, 13579);
-
     public bool IsConnected => Status == ConnectionStatus.Connected;
+    public bool IsDisconnected => Status == ConnectionStatus.Disconnected;
     public bool IsConnectBusy => Status == ConnectionStatus.Connecting || Status == ConnectionStatus.Disconnecting;
     public bool CanToggleConnect => !IsConnectBusy;
+
+    public EndPoint Endpoint { get; set; } = new IPEndPoint(IPAddress.Loopback, 13579);
 
     protected override async Task RunAsync(CancellationToken token)
     {

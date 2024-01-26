@@ -24,6 +24,10 @@ internal sealed class SerialOutputTarget(int instanceIndex, IEventAggregator eve
     private CancellationTokenSource _refreshCancellationSource = new();
 
     public override ConnectionStatus Status { get; protected set; }
+    public bool IsConnected => Status == ConnectionStatus.Connected;
+    public bool IsDisconnected => Status == ConnectionStatus.Disconnected;
+    public bool IsConnectBusy => Status == ConnectionStatus.Connecting || Status == ConnectionStatus.Disconnecting;
+    public bool CanToggleConnect => !IsConnectBusy && !IsRefreshBusy && SelectedSerialPortDeviceId != null;
 
     public DeviceAxisUpdateType UpdateType { get; set; } = DeviceAxisUpdateType.FixedUpdate;
     public bool CanChangeUpdateType => !IsConnectBusy && !IsConnected;
@@ -130,10 +134,6 @@ internal sealed class SerialOutputTarget(int instanceIndex, IEventAggregator eve
     }
 
     public void OnSelectedSerialPortChanged() => SelectedSerialPortDeviceId = SelectedSerialPort?.DeviceID;
-
-    public bool IsConnected => Status == ConnectionStatus.Connected;
-    public bool IsConnectBusy => Status == ConnectionStatus.Connecting || Status == ConnectionStatus.Disconnecting;
-    public bool CanToggleConnect => !IsConnectBusy && !IsRefreshBusy && SelectedSerialPortDeviceId != null;
 
     protected override async ValueTask<bool> OnConnectingAsync()
     {

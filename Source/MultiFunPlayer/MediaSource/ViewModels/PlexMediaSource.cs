@@ -22,6 +22,10 @@ internal sealed class PlexMediaSource(IShortcutManager shortcutManager, IEventAg
     private long _commandId;
 
     public override ConnectionStatus Status { get; protected set; }
+    public bool IsConnected => Status == ConnectionStatus.Connected;
+    public bool IsDisconnected => Status == ConnectionStatus.Disconnected;
+    public bool IsConnectBusy => Status == ConnectionStatus.Connecting || Status == ConnectionStatus.Disconnecting;
+    public bool CanToggleConnect => !IsConnectBusy && SelectedClient != null && !string.IsNullOrWhiteSpace(PlexToken);
 
     public ObservableConcurrentCollection<PlexClient> Clients { get; } = [];
     public PlexClient SelectedClient { get; set; } = null;
@@ -30,6 +34,7 @@ internal sealed class PlexMediaSource(IShortcutManager shortcutManager, IEventAg
     public string PlexToken { get; set; } = null;
     private string ClientIdentifier { get; set; } = Guid.NewGuid().ToString();
 
+    public bool CanChangeClient => IsDisconnected && !IsRefreshBusy && !string.IsNullOrWhiteSpace(PlexToken) && Clients.Count != 0;
     public void OnSelectedClientChanged() => SelectedClientMachineIdentifier = SelectedClient?.MachineIdentifier;
 
     protected override void OnInitialActivate()
@@ -37,11 +42,6 @@ internal sealed class PlexMediaSource(IShortcutManager shortcutManager, IEventAg
         base.OnInitialActivate();
         _ = RefreshClients();
     }
-
-    public bool CanChangeClient => !IsConnected && !IsConnectBusy && !IsRefreshBusy && !string.IsNullOrWhiteSpace(PlexToken) && Clients.Count != 0;
-    public bool IsConnected => Status == ConnectionStatus.Connected;
-    public bool IsConnectBusy => Status == ConnectionStatus.Connecting || Status == ConnectionStatus.Disconnecting;
-    public bool CanToggleConnect => !IsConnectBusy && SelectedClient != null && !string.IsNullOrWhiteSpace(PlexToken);
 
     protected override async ValueTask<bool> OnConnectingAsync()
     {
@@ -290,7 +290,7 @@ internal sealed class PlexMediaSource(IShortcutManager shortcutManager, IEventAg
         catch (OperationCanceledException) { }
     }
 
-    public bool CanRefreshClients => !IsRefreshBusy && !IsConnected && !IsConnectBusy && ServerBaseUri != null && !string.IsNullOrWhiteSpace(PlexToken);
+    public bool CanRefreshClients => !IsRefreshBusy && IsDisconnected && ServerBaseUri != null && !string.IsNullOrWhiteSpace(PlexToken);
     public bool IsRefreshBusy { get; set; }
 
     private int _isRefreshingFlag;
