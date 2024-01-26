@@ -22,19 +22,19 @@
         </ResourceDictionary>
     </UserControl.Resources>
 
-    <Expander material:ExpanderAssist.HorizontalHeaderPadding="0 0 6 0"
+    <Expander Style="{StaticResource MaterialDesignToolBarExpander}"
+              material:ExpanderAssist.HorizontalHeaderPadding="0 0 6 0"
               Background="{DynamicResource MaterialDesignToolBarBackground}"
-              IsExpanded="{Binding DataContext.ContentVisible, RelativeSource={RelativeSource FindAncestor, AncestorLevel=2, AncestorType={x:Type UserControl}}}"
-              Style="{StaticResource MaterialDesignToolBarExpander}">
+              IsExpanded="{Binding DataContext.ContentVisible, RelativeSource={RelativeSource FindAncestor, AncestorLevel=2, AncestorType={x:Type UserControl}}}">
         <Expander.Header>
             <DockPanel Height="36" LastChildFill="False">
-                <Button material:ButtonProgressAssist.IsIndeterminate="True"
+                <Button s:View.ActionTarget="{Binding DataContext.Parent, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}"
+                        DockPanel.Dock="Left"
+                        material:ButtonProgressAssist.IsIndeterminate="True"
                         material:ButtonProgressAssist.IsIndicatorVisible="{Binding IsConnectBusy}"
                         material:ButtonProgressAssist.Value="-1"
-                        s:View.ActionTarget="{Binding DataContext.Parent, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}"
                         Command="{s:Action ToggleConnectAsync}"
                         CommandParameter="{Binding}"
-                        DockPanel.Dock="Left"
                         IsEnabled="{Binding CanToggleConnect}">
                     <Button.Style>
                         <Style BasedOn="{StaticResource MaterialDesignProgressToolBarButton}" TargetType="{x:Type ButtonBase}">
@@ -71,8 +71,8 @@
                 </Button>
 
                 <ToggleButton DockPanel.Dock="Left"
-                              IsChecked="{Binding AutoConnectEnabled}"
                               Style="{StaticResource MaterialDesignToolBarToggleButton}"
+                              IsChecked="{Binding AutoConnectEnabled}"
                               ToolTip="Auto-connect">
                     <material:PackIcon Width="20"
                                        Height="20"
@@ -86,9 +86,9 @@
                 </ToggleButton>
 
                 <material:PopupBox DockPanel.Dock="Right"
+                                   Style="{StaticResource MaterialDesignToolBarPopupBox}"
                                    PlacementMode="BottomAndAlignRightEdges"
                                    StaysOpen="True"
-                                   Style="{StaticResource MaterialDesignToolBarPopupBox}"
                                    ToolTip="Update settings">
                     <material:PopupBox.ToggleContent>
                         <material:PackIcon Width="20"
@@ -97,20 +97,20 @@
                     </material:PopupBox.ToggleContent>
                     <StackPanel Width="250" Margin="10 0 10 0">
                         <DockPanel>
-                            <TextBlock Margin="0 0 10 0"
+                            <TextBlock DockPanel.Dock="Left"
+                                       Margin="0 0 10 0"
                                        VerticalAlignment="Center"
-                                       DockPanel.Dock="Left"
                                        FontWeight="Bold"
                                        Text="Update type:"/>
 
-                            <ComboBox Margin="0 3 10 0"
+                            <ComboBox DockPanel.Dock="Left"
+                                      ItemsSource="{Binding AvailableUpdateTypes}"
+                                      SelectedItem="{Binding UpdateType}"
+                                      Margin="0 3 10 0"
                                       Padding="0"
                                       VerticalAlignment="Center"
                                       material:TextFieldAssist.DecorationVisibility="Hidden"
-                                      DockPanel.Dock="Left"
-                                      IsEnabled="{Binding CanChangeUpdateType}"
-                                      ItemsSource="{Binding AvailableUpdateTypes}"
-                                      SelectedItem="{Binding UpdateType}"/>
+                                      IsEnabled="{Binding CanChangeUpdateType}"/>
                         </DockPanel>
 
                         <Separator/>
@@ -141,10 +141,10 @@
                             </Style.Triggers>
                         </Style>
                     </DockPanel.Resources>
-                    <controls:UriBox Margin="0 -2 0 0"
+                    <controls:UriBox DockPanel.Dock="Left"
+                                     Margin="0 -2 0 0"
                                      VerticalAlignment="Center"
                                      AvailableSchemes="ws wss"
-                                     DockPanel.Dock="Left"
                                      ShowPathAndQuery="True"
                                      Uri="{Binding Uri}"/>
                 </DockPanel>
@@ -166,11 +166,11 @@
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
                         <DockPanel Margin="0 0 20 1" LastChildFill="True">
-                            <ToggleButton Width="20"
+                            <ToggleButton DockPanel.Dock="Left"
+                                          Width="20"
                                           Height="14"
                                           Padding="0"
                                           VerticalAlignment="Center"
-                                          DockPanel.Dock="Left"
                                           IsChecked="{Binding Value.Enabled}">
                                 <ToggleButton.Resources>
                                     <Style BasedOn="{StaticResource MaterialDesignPaperButton}" TargetType="{x:Type ToggleButton}">
@@ -190,8 +190,9 @@
                                            Text="{Binding Key}"/>
                             </ToggleButton>
 
-                            <Canvas HorizontalAlignment="Stretch" DockPanel.Dock="Right">
-                                <metro:RangeSlider Width="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType={x:Type Canvas}}}"
+                            <Canvas DockPanel.Dock="Right" HorizontalAlignment="Stretch">
+                                <metro:RangeSlider Style="{StaticResource MaterialDesignCompactRangeSlider}"
+                                                   Width="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType={x:Type Canvas}}}"
                                                    AutoToolTipPlacement="TopLeft"
                                                    IsEnabled="{Binding Value.Enabled}"
                                                    LowerValue="{Binding Value.Minimum, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
@@ -199,7 +200,6 @@
                                                    MinRange="1"
                                                    MinRangeWidth="10"
                                                    Minimum="0"
-                                                   Style="{StaticResource MaterialDesignCompactRangeSlider}"
                                                    UpperValue="{Binding Value.Maximum, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                                    UseLayoutRounding="False">
                                     <metro:RangeSlider.AutoToolTipLowerValueTemplate>

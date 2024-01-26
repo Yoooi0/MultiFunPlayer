@@ -9,17 +9,17 @@
              x:ClassModifier="internal"
              mc:Ignorable="d">
     <StackPanel>
-        <TextBox VerticalAlignment="Center"
+        <TextBox Style="{StaticResource MaterialDesignFloatingHintTextBox}"
+                 VerticalAlignment="Center"
                  material:HintAssist.Hint="Find"
                  FontFamily="Consolas"
-                 Style="{StaticResource MaterialDesignFloatingHintTextBox}"
                  Text="{Binding Find}"/>
 
-        <TextBox Margin="0 0 0 10"
+        <TextBox Style="{StaticResource MaterialDesignFloatingHintTextBox}"
+                 Margin="0 0 0 10"
                  VerticalAlignment="Center"
                  material:HintAssist.Hint="Replace"
                  FontFamily="Consolas"
-                 Style="{StaticResource MaterialDesignFloatingHintTextBox}"
                  Text="{Binding Replace}"/>
 
         <WrapPanel Margin="-10">
