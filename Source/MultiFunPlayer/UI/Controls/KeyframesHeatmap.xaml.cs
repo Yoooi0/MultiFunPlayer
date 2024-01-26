@@ -333,11 +333,11 @@ internal sealed partial class KeyframesHeatmap : UserControl
 
         AddStop(Color.FromRgb(0, 0, 0), 0);
 
-        var maxLength = buckets.Length > 0 ? buckets[0].Heat : 0;
+        var maxHeat = buckets.Length > 0 ? buckets[0].Heat : 0;
         for (var i = 1; i < buckets.Length; i++)
-            maxLength = Math.Max(maxLength, buckets[i].Heat);
+            maxHeat = Math.Max(maxHeat, buckets[i].Heat);
 
-        var normalizationFactor = 1d / maxLength;
+        var normalizationFactor = 1d / maxHeat;
         if (double.IsFinite(normalizationFactor))
         {
             for (var i = 0; i < buckets.Length; i++)

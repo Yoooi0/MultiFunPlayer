@@ -13,28 +13,19 @@ internal sealed class AxisDriveShortcut(IShortcutActionResolver actionResolver, 
 
     protected override void Update(IAxisInputGesture gesture)
     {
-        switch (DriveMode)
+        AxisInputGestureData Relative() => AxisInputGestureData.FromGestureRelative(gesture, invertDelta: Invert);
+        AxisInputGestureData Absolute() => AxisInputGestureData.FromGestureAbsolute(gesture, invertValue: Invert);
+
+        Invoke(DriveMode switch
         {
-            case AxisDriveShortcutMode.Relative:
-                Invoke(AxisInputGestureData.FromGestureRelative(gesture, invertDelta: Invert));
-                break;
-            case AxisDriveShortcutMode.Absolute:
-                Invoke(AxisInputGestureData.FromGestureAbsolute(gesture, invertValue: Invert));
-                break;
-            case AxisDriveShortcutMode.RelativeNegativeOnly when gesture.Delta < 0:
-                Invoke(AxisInputGestureData.FromGestureRelative(gesture, invertDelta: Invert));
-                break;
-            case AxisDriveShortcutMode.RelativePositiveOnly when gesture.Delta > 0:
-                Invoke(AxisInputGestureData.FromGestureRelative(gesture, invertDelta: Invert));
-                break;
-            case AxisDriveShortcutMode.RelativeJoystick:
-                if (gesture.Value > 0.5 && gesture.Delta < 0)
-                    break;
-                if (gesture.Value < 0.5 && gesture.Delta > 0)
-                    break;
-                Invoke(AxisInputGestureData.FromGestureRelative(gesture, invertDelta: Invert));
-                break;
-        }
+            AxisDriveShortcutMode.Absolute => Absolute(),
+            AxisDriveShortcutMode.Relative => Relative(),
+            AxisDriveShortcutMode.RelativeNegativeOnly when gesture.Delta < 0 => Relative(),
+            AxisDriveShortcutMode.RelativePositiveOnly when gesture.Delta > 0 => Relative(),
+            AxisDriveShortcutMode.RelativeJoystick when gesture.Value < 0.5 && gesture.Delta < 0 => Relative(),
+            AxisDriveShortcutMode.RelativeJoystick when gesture.Value > 0.5 && gesture.Delta > 0 => Relative(),
+            _ => null
+        });
     }
 
     protected override void PrintMembers(StringBuilder builder)

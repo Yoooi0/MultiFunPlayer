@@ -59,6 +59,8 @@ internal abstract partial class AbstractShortcut<TGesture, TData>(IShortcutActio
 
     protected void Invoke(TData gestureData)
     {
+        if (gestureData == null)
+            return;
         if (Configurations.Count == 0)
             return;
 
