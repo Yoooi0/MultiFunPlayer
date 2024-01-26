@@ -28,6 +28,7 @@ internal sealed class AxisDriveShortcut(IShortcutActionResolver actionResolver, 
         });
     }
 }
+
 internal enum AxisDriveShortcutMode
 {
     Absolute,
