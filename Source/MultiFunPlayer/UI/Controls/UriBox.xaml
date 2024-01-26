@@ -23,15 +23,17 @@
                                         Background="Transparent"
                                         BorderBrush="{DynamicResource MaterialDesignTextBoxBorder}"
                                         BorderThickness="0 0 0 1"
+                                        KeyboardNavigation.TabNavigation="Local"
                                         SnapsToDevicePixels="True">
-                                    <StackPanel Orientation="Horizontal">
+                                    <DockPanel LastChildFill="True">
                                         <ComboBox ItemsSource="{Binding AvailableSchemesList, RelativeSource={RelativeSource TemplatedParent}}"
                                                   SelectedItem="{Binding Scheme, RelativeSource={RelativeSource TemplatedParent}}"
-                                                  MinWidth="50"
+                                                  MinWidth="35"
                                                   material:HintAssist.HelperText="scheme"
                                                   material:TextFieldAssist.DecorationVisibility="Collapsed"
                                                   material:ValidationAssist.Suppress="True"
                                                   BorderThickness="0"
+                                                  IsTabStop="True"
                                                   Visibility="{Binding AvailableSchemesList, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource NullVisibilityConverter}}"/>
 
                                         <TextBlock VerticalAlignment="Center"
@@ -43,12 +45,12 @@
                                                    Text="://"/>
 
                                         <TextBox Height="24"
-                                                 MinWidth="50"
-                                                 MaxWidth="150"
+                                                 MinWidth="40"
                                                  material:HintAssist.HelperText="ip/host"
                                                  material:TextFieldAssist.DecorationVisibility="Collapsed"
                                                  material:ValidationAssist.Suppress="True"
                                                  BorderBrush="Transparent"
+                                                 IsTabStop="True"
                                                  Text="{Binding HostOrIPAddress, RelativeSource={RelativeSource TemplatedParent}}"/>
 
                                         <TextBlock Margin="5 0 5 2"
@@ -57,25 +59,24 @@
 
                                         <TextBox Height="24"
                                                  MinWidth="20"
-                                                 MaxWidth="40"
                                                  material:HintAssist.HelperText="port"
                                                  material:TextFieldAssist.DecorationVisibility="Collapsed"
                                                  material:ValidationAssist.Suppress="True"
                                                  BorderBrush="Transparent"
+                                                 IsTabStop="True"
                                                  Text="{Binding Port, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource PortToStringConverter}}"/>
 
-                                        <StackPanel Orientation="Horizontal" Visibility="{Binding ShowPathAndQuery, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource BooleanToVisibilityConverter}}">
-                                            <TextBox Height="24"
-                                                     MinWidth="50"
-                                                     MaxWidth="150"
-                                                     Margin="5 0 5 2"
-                                                     material:HintAssist.HelperText="path"
-                                                     material:TextFieldAssist.DecorationVisibility="Collapsed"
-                                                     material:ValidationAssist.Suppress="True"
-                                                     BorderBrush="Transparent"
-                                                     Text="{Binding PathAndQuery, RelativeSource={RelativeSource TemplatedParent}}"/>
-                                        </StackPanel>
-                                    </StackPanel>
+                                        <TextBox Height="24"
+                                                 MinWidth="20"
+                                                 Margin="5 0 5 2"
+                                                 material:HintAssist.HelperText="path"
+                                                 material:TextFieldAssist.DecorationVisibility="Collapsed"
+                                                 material:ValidationAssist.Suppress="True"
+                                                 BorderBrush="Transparent"
+                                                 IsTabStop="True"
+                                                 Text="{Binding PathAndQuery, RelativeSource={RelativeSource TemplatedParent}}"
+                                                 Visibility="{Binding ShowPathAndQuery, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                                    </DockPanel>
                                 </Border>
                             </AdornerDecorator>
 

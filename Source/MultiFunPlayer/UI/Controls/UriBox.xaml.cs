@@ -1,4 +1,4 @@
-﻿using PropertyChanged;
+using PropertyChanged;
 using System.ComponentModel;
 using System.Net;
 using System.Windows;
@@ -218,7 +218,7 @@ public sealed partial class UriBox : UserControl
 
     private void UpdateAvailableSchemes()
     {
-        if (AvailableSchemes == null)
+        if (string.IsNullOrEmpty(AvailableSchemes))
         {
             AvailableSchemesList = null;
             Scheme = DefaultScheme;
