@@ -42,8 +42,8 @@ internal sealed class ShortcutSettingsViewModel : Screen, IHandle<SettingsMessag
     public Type SelectedShortcutType { get; set; }
 
     [JsonProperty] public bool IsKeyboardKeysGestureEnabled { get; set; } = true;
-    [JsonProperty] public bool IsMouseAxisGestureEnabled { get; set; } = false;
-    [JsonProperty] public bool IsMouseButtonGestureEnabled { get; set; } = false;
+    [JsonProperty] public bool IsMouseAxisGestureEnabled { get; set; } = true;
+    [JsonProperty] public bool IsMouseButtonGestureEnabled { get; set; } = true;
     [JsonProperty] public bool IsGamepadAxisGestureEnabled { get; set; } = true;
     [JsonProperty] public bool IsGamepadButtonGestureEnabled { get; set; } = true;
     [JsonProperty] public bool IsTCodeButtonGestureEnabled { get; set; } = true;
