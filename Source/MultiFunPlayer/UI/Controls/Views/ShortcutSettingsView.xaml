@@ -23,7 +23,7 @@
         <converters:GestureDescriptorToBrushConverter x:Key="GestureDescriptorToBrushConverter"/>
         <converters:GestureDescriptorToPackIconConverter x:Key="GestureDescriptorToPackIconConverter"/>
 
-        <DataTemplate DataType="{x:Type shortcut:ReleaseShortcut}">
+        <DataTemplate DataType="{x:Type shortcut:ButtonReleaseShortcut}">
             <DockPanel LastChildFill="False">
                 <DockPanel DockPanel.Dock="Top" LastChildFill="True">
                     <TextBlock DockPanel.Dock="Left"
@@ -37,7 +37,7 @@
             </DockPanel>
         </DataTemplate>
 
-        <DataTemplate DataType="{x:Type shortcut:PressShortcut}">
+        <DataTemplate DataType="{x:Type shortcut:ButtonPressShortcut}">
             <DockPanel LastChildFill="False">
                 <DockPanel DockPanel.Dock="Top" LastChildFill="True">
                     <TextBlock DockPanel.Dock="Left"
@@ -51,7 +51,7 @@
             </DockPanel>
         </DataTemplate>
 
-        <DataTemplate DataType="{x:Type shortcut:LongPressShortcut}">
+        <DataTemplate DataType="{x:Type shortcut:ButtonLongPressShortcut}">
             <DockPanel LastChildFill="False">
                 <DockPanel DockPanel.Dock="Top" LastChildFill="False">
                     <TextBlock DockPanel.Dock="Left"
@@ -85,7 +85,7 @@
             </DockPanel>
         </DataTemplate>
 
-        <DataTemplate DataType="{x:Type shortcut:ClickShortcut}">
+        <DataTemplate DataType="{x:Type shortcut:ButtonClickShortcut}">
             <DockPanel LastChildFill="False">
                 <DockPanel DockPanel.Dock="Top" LastChildFill="False">
                     <TextBlock DockPanel.Dock="Left"
@@ -118,7 +118,7 @@
             </DockPanel>
         </DataTemplate>
 
-        <DataTemplate DataType="{x:Type shortcut:DriveShortcut}">
+        <DataTemplate DataType="{x:Type shortcut:AxisDriveShortcut}">
             <DockPanel LastChildFill="False">
                 <DockPanel DockPanel.Dock="Top" LastChildFill="False">
                     <TextBlock DockPanel.Dock="Left"
@@ -128,7 +128,7 @@
                                Text="Mode:"/>
 
                     <ComboBox DockPanel.Dock="Left"
-                              ItemsSource="{Binding Source={ui:EnumBindingSource {x:Type shortcut:DriveShortcutMode}}}"
+                              ItemsSource="{Binding Source={ui:EnumBindingSource {x:Type shortcut:AxisDriveShortcutMode}}}"
                               SelectedItem="{Binding DriveMode}"
                               Width="150"
                               VerticalAlignment="Center"
@@ -146,7 +146,7 @@
             </DockPanel>
         </DataTemplate>
 
-        <DataTemplate DataType="{x:Type shortcut:ThresholdShortcut}">
+        <DataTemplate DataType="{x:Type shortcut:AxisThresholdShortcut}">
             <DockPanel LastChildFill="False">
                 <DockPanel DockPanel.Dock="Top" LastChildFill="False">
                     <TextBlock DockPanel.Dock="Left"
@@ -172,7 +172,7 @@
                                Text="Mode:"/>
 
                     <ComboBox DockPanel.Dock="Left"
-                              ItemsSource="{Binding Source={ui:EnumBindingSource {x:Type shortcut:ThresholdTriggerMode}}}"
+                              ItemsSource="{Binding Source={ui:EnumBindingSource {x:Type shortcut:AxisThresholdTriggerMode}}}"
                               SelectedItem="{Binding TriggerMode}"
                               Width="100"
                               VerticalAlignment="Center"
@@ -181,7 +181,7 @@
             </DockPanel>
         </DataTemplate>
 
-        <DataTemplate DataType="{x:Type shortcut:OffsetShortcut}">
+        <DataTemplate DataType="{x:Type shortcut:AxisOffsetShortcut}">
             <DockPanel LastChildFill="False">
                 <DockPanel DockPanel.Dock="Top" LastChildFill="False">
                     <TextBlock DockPanel.Dock="Left"
@@ -191,7 +191,7 @@
                                Text="Mode:"/>
 
                     <ComboBox DockPanel.Dock="Left"
-                              ItemsSource="{Binding Source={ui:EnumBindingSource {x:Type shortcut:OffsetShortcutMode}}}"
+                              ItemsSource="{Binding Source={ui:EnumBindingSource {x:Type shortcut:AxisOffsetShortcutMode}}}"
                               SelectedItem="{Binding OffsetMode}"
                               Width="130"
                               VerticalAlignment="Center"

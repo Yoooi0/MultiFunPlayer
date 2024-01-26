@@ -6,11 +6,11 @@ using System.Text;
 namespace MultiFunPlayer.Shortcut;
 
 [DisplayName("Axis Threshold")]
-internal sealed class ThresholdShortcut(IShortcutActionResolver actionResolver, IAxisInputGestureDescriptor gesture)
+internal sealed class AxisThresholdShortcut(IShortcutActionResolver actionResolver, IAxisInputGestureDescriptor gesture)
     : AbstractShortcut<IAxisInputGesture, ISimpleInputGestureData>(actionResolver, gesture)
 {
     public double Threshold { get; set; } = 0.5;
-    public ThresholdTriggerMode TriggerMode { get; set; } = ThresholdTriggerMode.Rising;
+    public AxisThresholdTriggerMode TriggerMode { get; set; } = AxisThresholdTriggerMode.Rising;
 
     protected override void Update(IAxisInputGesture gesture)
     {
@@ -18,10 +18,10 @@ internal sealed class ThresholdShortcut(IShortcutActionResolver actionResolver, 
         var isFalling = gesture.Delta < 0 && gesture.Value <= Threshold && gesture.Value - gesture.Delta > Threshold;
         var didTrigger = (isRising, isFalling, TriggerMode) switch
         {
-            (true, false, ThresholdTriggerMode.Rising) => true,
-            (false, true, ThresholdTriggerMode.Falling) => true,
+            (true, false, AxisThresholdTriggerMode.Rising) => true,
+            (false, true, AxisThresholdTriggerMode.Falling) => true,
             (true, true, _) => throw new UnreachableException(),
-            (_, _, ThresholdTriggerMode.Both) => true,
+            (_, _, AxisThresholdTriggerMode.Both) => true,
             _ => false,
         };
 
@@ -39,7 +39,7 @@ internal sealed class ThresholdShortcut(IShortcutActionResolver actionResolver, 
     }
 }
 
-internal enum ThresholdTriggerMode
+internal enum AxisThresholdTriggerMode
 {
     Rising,
     Falling,

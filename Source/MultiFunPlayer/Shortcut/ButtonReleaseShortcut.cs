@@ -4,8 +4,8 @@ using System.Text;
 
 namespace MultiFunPlayer.Shortcut;
 
-[DisplayName("Button Press")]
-internal sealed class PressShortcut(IShortcutActionResolver actionResolver, ISimpleInputGestureDescriptor gesture)
+[DisplayName("Button Release")]
+internal sealed class ButtonReleaseShortcut(IShortcutActionResolver actionResolver, ISimpleInputGestureDescriptor gesture)
     : AbstractShortcut<ISimpleInputGesture, ISimpleInputGestureData>(actionResolver, gesture)
 {
     private bool _lastPressed;
@@ -14,12 +14,12 @@ internal sealed class PressShortcut(IShortcutActionResolver actionResolver, ISim
 
     protected override void Update(ISimpleInputGesture gesture)
     {
-        var wasPressed = !_lastPressed && gesture.State;
+        var wasReleased = _lastPressed && !gesture.State;
         _lastPressed = gesture.State;
-        if (!gesture.State)
+        if (gesture.State)
             return;
 
-        if (HandleRepeating || wasPressed)
+        if (HandleRepeating || wasReleased)
             Invoke(SimpleInputGestureData.Default);
     }
 

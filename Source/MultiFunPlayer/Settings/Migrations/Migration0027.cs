@@ -33,13 +33,13 @@ internal sealed class Migration0027 : AbstractConfigMigration
 
         var gestureToShortcutMap = new Dictionary<string, string>()
         {
-            ["MultiFunPlayer.Input.RawInput.KeyboardGestureDescriptor, MultiFunPlayer"] =    "MultiFunPlayer.Shortcut.ReleaseShortcut, MultiFunPlayer",
-            ["MultiFunPlayer.Input.RawInput.MouseButtonGestureDescriptor, MultiFunPlayer"] = "MultiFunPlayer.Shortcut.ReleaseShortcut, MultiFunPlayer",
-            ["MultiFunPlayer.Input.RawInput.MouseAxisGestureDescriptor, MultiFunPlayer"] =   "MultiFunPlayer.Shortcut.DriveShortcut, MultiFunPlayer",
-            ["MultiFunPlayer.Input.TCode.TCodeButtonGestureDescriptor, MultiFunPlayer"] =    "MultiFunPlayer.Shortcut.ReleaseShortcut, MultiFunPlayer",
-            ["MultiFunPlayer.Input.TCode.TCodeAxisGestureDescriptor, MultiFunPlayer"] =      "MultiFunPlayer.Shortcut.DriveShortcut, MultiFunPlayer",
-            ["MultiFunPlayer.Input.XInput.GamepadButtonGestureDescriptor, MultiFunPlayer"] = "MultiFunPlayer.Shortcut.ReleaseShortcut, MultiFunPlayer",
-            ["MultiFunPlayer.Input.XInput.GamepadAxisGestureDescriptor, MultiFunPlayer"] =   "MultiFunPlayer.Shortcut.DriveShortcut, MultiFunPlayer",
+            ["MultiFunPlayer.Input.RawInput.KeyboardGestureDescriptor, MultiFunPlayer"] =    "MultiFunPlayer.Shortcut.ButtonReleaseShortcut, MultiFunPlayer",
+            ["MultiFunPlayer.Input.RawInput.MouseButtonGestureDescriptor, MultiFunPlayer"] = "MultiFunPlayer.Shortcut.ButtonReleaseShortcut, MultiFunPlayer",
+            ["MultiFunPlayer.Input.RawInput.MouseAxisGestureDescriptor, MultiFunPlayer"] =   "MultiFunPlayer.Shortcut.AxisDriveShortcut, MultiFunPlayer",
+            ["MultiFunPlayer.Input.TCode.TCodeButtonGestureDescriptor, MultiFunPlayer"] =    "MultiFunPlayer.Shortcut.ButtonReleaseShortcut, MultiFunPlayer",
+            ["MultiFunPlayer.Input.TCode.TCodeAxisGestureDescriptor, MultiFunPlayer"] =      "MultiFunPlayer.Shortcut.AxisDriveShortcut, MultiFunPlayer",
+            ["MultiFunPlayer.Input.XInput.GamepadButtonGestureDescriptor, MultiFunPlayer"] = "MultiFunPlayer.Shortcut.ButtonReleaseShortcut, MultiFunPlayer",
+            ["MultiFunPlayer.Input.XInput.GamepadAxisGestureDescriptor, MultiFunPlayer"] =   "MultiFunPlayer.Shortcut.AxisDriveShortcut, MultiFunPlayer",
         };
 
         foreach(var shortcut in settings["Shortcuts"].OfType<JObject>())

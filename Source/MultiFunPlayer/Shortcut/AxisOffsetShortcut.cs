@@ -6,13 +6,13 @@ using System.Text;
 namespace MultiFunPlayer.Shortcut;
 
 [DisplayName("Axis Offset")]
-internal sealed class OffsetShortcut(IShortcutActionResolver actionResolver, IAxisInputGestureDescriptor gesture)
+internal sealed class AxisOffsetShortcut(IShortcutActionResolver actionResolver, IAxisInputGestureDescriptor gesture)
     : AbstractShortcut<IAxisInputGesture, IAxisInputGestureData>(actionResolver, gesture)
 {
     private const double DeltaTime = 0.1;
     private double _offset;
 
-    public OffsetShortcutMode OffsetMode { get; set; } = OffsetShortcutMode.AbsoluteJoystick;
+    public AxisOffsetShortcutMode OffsetMode { get; set; } = AxisOffsetShortcutMode.AbsoluteJoystick;
     public double Speed { get; set; } = 0.1;
     public bool Invert { get; set; } = false;
 
@@ -21,9 +21,9 @@ internal sealed class OffsetShortcut(IShortcutActionResolver actionResolver, IAx
         var sign = Invert ? -1 : 1;
         _offset = (OffsetMode, gesture.Value) switch
         {
-            (OffsetShortcutMode.Absolute, double v) => gesture.Value * Speed * sign,
-            (OffsetShortcutMode.AbsoluteJoystick, double v) when v >= 0.5 => MathUtils.Map(v, 0.5, 1, 0, 1) * Speed * sign,
-            (OffsetShortcutMode.AbsoluteJoystick, double v) when v <= 0.5 => MathUtils.Map(v, 0.5, 0, 0, -1) * Speed * sign,
+            (AxisOffsetShortcutMode.Absolute, double v) => gesture.Value * Speed * sign,
+            (AxisOffsetShortcutMode.AbsoluteJoystick, double v) when v >= 0.5 => MathUtils.Map(v, 0.5, 1, 0, 1) * Speed * sign,
+            (AxisOffsetShortcutMode.AbsoluteJoystick, double v) when v <= 0.5 => MathUtils.Map(v, 0.5, 0, 0, -1) * Speed * sign,
             _ => 0
         };
 
@@ -44,7 +44,7 @@ internal sealed class OffsetShortcut(IShortcutActionResolver actionResolver, IAx
     }
 }
 
-internal enum OffsetShortcutMode
+internal enum AxisOffsetShortcutMode
 {
     Absolute,
     AbsoluteJoystick
