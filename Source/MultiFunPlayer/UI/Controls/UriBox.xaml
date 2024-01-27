@@ -29,6 +29,7 @@
                                         <ComboBox ItemsSource="{Binding AvailableSchemesList, RelativeSource={RelativeSource TemplatedParent}}"
                                                   SelectedItem="{Binding Scheme, RelativeSource={RelativeSource TemplatedParent}}"
                                                   MinWidth="35"
+                                                  VerticalAlignment="Center"
                                                   material:HintAssist.HelperText="scheme"
                                                   material:TextFieldAssist.DecorationVisibility="Collapsed"
                                                   material:ValidationAssist.Suppress="True"
@@ -46,6 +47,7 @@
 
                                         <TextBox Height="24"
                                                  MinWidth="40"
+                                                 VerticalAlignment="Center"
                                                  material:HintAssist.HelperText="ip/host"
                                                  material:TextFieldAssist.DecorationVisibility="Collapsed"
                                                  material:ValidationAssist.Suppress="True"
@@ -59,6 +61,7 @@
 
                                         <TextBox Height="24"
                                                  MinWidth="20"
+                                                 VerticalAlignment="Center"
                                                  material:HintAssist.HelperText="port"
                                                  material:TextFieldAssist.DecorationVisibility="Collapsed"
                                                  material:ValidationAssist.Suppress="True"
@@ -68,7 +71,8 @@
 
                                         <TextBox Height="24"
                                                  MinWidth="20"
-                                                 Margin="5 0 5 2"
+                                                 Margin="5 0 0 0"
+                                                 VerticalAlignment="Center"
                                                  material:HintAssist.HelperText="path"
                                                  material:TextFieldAssist.DecorationVisibility="Collapsed"
                                                  material:ValidationAssist.Suppress="True"
