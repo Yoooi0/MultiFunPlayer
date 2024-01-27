@@ -118,7 +118,6 @@ internal sealed class ShortcutSettingsViewModel : Screen, IHandle<SettingsMessag
             case GamepadButtonGesture when !IsGamepadButtonGestureEnabled:
             case TCodeButtonGesture when !IsTCodeButtonGestureEnabled:
             case TCodeAxisGesture when !IsTCodeAxisGestureEnabled:
-            case IAxisInputGesture axisGesture when Math.Abs(axisGesture.Delta) < 0.05:
                 return;
         }
 
