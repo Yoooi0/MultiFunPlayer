@@ -133,8 +133,12 @@
                 <DockPanel DockPanel.Dock="Left"
                            IsEnabled="{Binding IsDisconnected}"
                            LastChildFill="False">
+                    <TextBlock DockPanel.Dock="Left"
+                               Margin="0 0 10 0"
+                               VerticalAlignment="Center"
+                               Text="Endpoint:"/>
+
                     <controls:UriBox DockPanel.Dock="Left"
-                                     Margin="0 -2 0 0"
                                      VerticalAlignment="Center"
                                      AvailableSchemes="ws wss"
                                      ShowPathAndQuery="True"

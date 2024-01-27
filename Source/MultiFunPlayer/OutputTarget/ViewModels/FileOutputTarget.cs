@@ -25,7 +25,6 @@ internal sealed class FileOutputTarget(int instanceIndex, IEventAggregator event
     public DirectoryInfo OutputDirectory { get; set; } = null;
     public ScriptType ScriptType { get; set; } = ScriptType.Funscript;
 
-
     protected override IUpdateContext RegisterUpdateContext(DeviceAxisUpdateType updateType) => updateType switch
     {
         DeviceAxisUpdateType.FixedUpdate => new ThreadFixedUpdateContext() { UpdateInterval = 20 },
