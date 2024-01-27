@@ -1,6 +1,6 @@
 using MultiFunPlayer.Common;
-using MultiFunPlayer.Input;
 using MultiFunPlayer.Script;
+using MultiFunPlayer.Shortcut;
 using MultiFunPlayer.UI;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -19,12 +19,13 @@ internal sealed class OfsMediaSource(IShortcutManager shortcutManager, IEventAgg
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
     public override ConnectionStatus Status { get; protected set; }
-
-    public Uri Uri { get; set; } = new Uri("ws://127.0.0.1:8080/ofs");
-
     public bool IsConnected => Status == ConnectionStatus.Connected;
+    public bool IsDisconnected => Status == ConnectionStatus.Disconnected;
     public bool IsConnectBusy => Status == ConnectionStatus.Connecting || Status == ConnectionStatus.Disconnecting;
     public bool CanToggleConnect => !IsConnectBusy;
+
+    public Uri Uri { get; set; } = new Uri("ws://127.0.0.1:8080/ofs");
+    public bool ForceSeek { get; set; } = false;
 
     protected override async Task RunAsync(CancellationToken token)
     {
@@ -94,7 +95,7 @@ internal sealed class OfsMediaSource(IShortcutManager shortcutManager, IEventAgg
                             break;
                         case "time_change":
                             if (dataToken.TryGetValue<double>("time", out var position) && position >= 0)
-                                PublishMessage(new MediaPositionChangedMessage(TimeSpan.FromSeconds(position), ForceSeek: true));
+                                PublishMessage(new MediaPositionChangedMessage(TimeSpan.FromSeconds(position), ForceSeek));
                             break;
                         case "playbackspeed_change":
                             if (dataToken.TryGetValue<double>("speed", out var speed) && speed > 0)
@@ -113,16 +114,9 @@ internal sealed class OfsMediaSource(IShortcutManager shortcutManager, IEventAgg
                                 if (!readerResult.IsSuccess)
                                     break;
 
-                                if (readerResult.IsMultiAxis)
-                                {
-                                    PublishMessage(new ChangeScriptMessage(readerResult.Resources));
-                                }
-                                else
-                                {
-                                    var axes = DeviceAxisUtils.FindAxesMatchingName(name);
-                                    if (axes.Any())
-                                        PublishMessage(new ChangeScriptMessage(axes.ToDictionary(a => a, _ => readerResult.Resource)));
-                                }
+                                var axes = DeviceAxisUtils.FindAxesMatchingName(name);
+                                if (axes.Any())
+                                    PublishMessage(new ChangeScriptMessage(axes.ToDictionary(a => a, _ => readerResult.Resource)));
                             }
 
                             break;
@@ -189,11 +183,14 @@ internal sealed class OfsMediaSource(IShortcutManager shortcutManager, IEventAgg
         if (action == SettingsAction.Saving)
         {
             settings[nameof(Uri)] = Uri?.ToString();
+            settings[nameof(ForceSeek)] = ForceSeek;
         }
         else if (action == SettingsAction.Loading)
         {
             if (settings.TryGetValue<Uri>(nameof(Uri), out var uri))
                 Uri = uri;
+            if (settings.TryGetValue<bool>(nameof(ForceSeek), out var forceSeek))
+                ForceSeek = forceSeek;
         }
     }
 

@@ -1,0 +1,11 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:material="http://materialdesigninxaml.net/winfx/xaml/themes">
+    <Style x:Key="MaterialDesignClipCard"
+           BasedOn="{StaticResource {x:Type material:Card}}"
+           TargetType="{x:Type material:Card}">
+        <Setter Property="ClipContent" Value="True"/>
+    </Style>
+
+    <Style BasedOn="{StaticResource MaterialDesignClipCard}" TargetType="{x:Type material:Card}"/>
+</ResourceDictionary>

@@ -1,0 +1,108 @@
+﻿<UserControl x:Class="MultiFunPlayer.UI.Controls.UriBox"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:converters="clr-namespace:MultiFunPlayer.UI.Converters"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:local="clr-namespace:MultiFunPlayer.UI.Controls"
+             xmlns:material="http://materialdesigninxaml.net/winfx/xaml/themes"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             d:DesignHeight="450"
+             d:DesignWidth="800"
+             mc:Ignorable="d">
+    <UserControl.Resources>
+        <converters:PortToStringConverter x:Key="PortToStringConverter"/>
+        <Style TargetType="{x:Type local:UriBox}">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type local:UriBox}">
+                        <Grid Margin="0">
+                            <AdornerDecorator VerticalAlignment="Center">
+                                <Border x:Name="Base"
+                                        material:BottomDashedLineAdorner.Brush="{DynamicResource MaterialDesignTextBoxBorder}"
+                                        material:BottomDashedLineAdorner.Thickness="0 0 0 1"
+                                        Background="Transparent"
+                                        BorderBrush="{DynamicResource MaterialDesignTextBoxBorder}"
+                                        BorderThickness="0 0 0 1"
+                                        KeyboardNavigation.TabNavigation="Local"
+                                        SnapsToDevicePixels="True">
+                                    <DockPanel LastChildFill="True">
+                                        <ComboBox ItemsSource="{Binding AvailableSchemesList, RelativeSource={RelativeSource TemplatedParent}}"
+                                                  SelectedItem="{Binding Scheme, RelativeSource={RelativeSource TemplatedParent}}"
+                                                  MinWidth="35"
+                                                  VerticalAlignment="Center"
+                                                  material:HintAssist.HelperText="scheme"
+                                                  material:TextFieldAssist.DecorationVisibility="Collapsed"
+                                                  material:ValidationAssist.Suppress="True"
+                                                  BorderThickness="0"
+                                                  IsTabStop="True"
+                                                  Visibility="{Binding AvailableSchemesList, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource NullVisibilityConverter}}"/>
+
+                                        <TextBlock VerticalAlignment="Center"
+                                                   Text="{Binding Scheme, RelativeSource={RelativeSource TemplatedParent}}"
+                                                   Visibility="{Binding AvailableSchemesList, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource InvertedNullVisibilityConverter}}"/>
+
+                                        <TextBlock Margin="5 0 5 2"
+                                                   VerticalAlignment="Center"
+                                                   Text="://"/>
+
+                                        <TextBox Height="24"
+                                                 MinWidth="40"
+                                                 VerticalAlignment="Center"
+                                                 material:HintAssist.HelperText="ip/host"
+                                                 material:TextFieldAssist.DecorationVisibility="Collapsed"
+                                                 material:ValidationAssist.Suppress="True"
+                                                 BorderBrush="Transparent"
+                                                 IsTabStop="True"
+                                                 Text="{Binding HostOrIPAddress, RelativeSource={RelativeSource TemplatedParent}}"/>
+
+                                        <TextBlock Margin="5 0 5 2"
+                                                   VerticalAlignment="Center"
+                                                   Text=":"/>
+
+                                        <TextBox Height="24"
+                                                 MinWidth="20"
+                                                 VerticalAlignment="Center"
+                                                 material:HintAssist.HelperText="port"
+                                                 material:TextFieldAssist.DecorationVisibility="Collapsed"
+                                                 material:ValidationAssist.Suppress="True"
+                                                 BorderBrush="Transparent"
+                                                 IsTabStop="True"
+                                                 Text="{Binding Port, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource PortToStringConverter}}"/>
+
+                                        <TextBox Height="24"
+                                                 MinWidth="20"
+                                                 Margin="5 0 0 0"
+                                                 VerticalAlignment="Center"
+                                                 material:HintAssist.HelperText="path"
+                                                 material:TextFieldAssist.DecorationVisibility="Collapsed"
+                                                 material:ValidationAssist.Suppress="True"
+                                                 BorderBrush="Transparent"
+                                                 IsTabStop="True"
+                                                 Text="{Binding PathAndQuery, RelativeSource={RelativeSource TemplatedParent}}"
+                                                 Visibility="{Binding ShowPathAndQuery, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                                    </DockPanel>
+                                </Border>
+                            </AdornerDecorator>
+
+                            <material:Underline x:Name="Underline" Visibility="Visible"/>
+                        </Grid>
+
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="Base" Property="Opacity" Value="0.42"/>
+                                <Setter TargetName="Base" Property="BorderBrush" Value="Transparent"/>
+                                <Setter TargetName="Base" Property="material:BottomDashedLineAdorner.IsAttached" Value="True"/>
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Base" Property="BorderBrush" Value="{DynamicResource PrimaryHueMidBrush}"/>
+                            </Trigger>
+                            <Trigger Property="IsKeyboardFocusWithin" Value="True">
+                                <Setter TargetName="Underline" Property="IsActive" Value="True"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </UserControl.Resources>
+</UserControl>

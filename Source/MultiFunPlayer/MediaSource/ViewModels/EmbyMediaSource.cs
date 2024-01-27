@@ -1,12 +1,11 @@
 using MultiFunPlayer.Common;
-using MultiFunPlayer.Input;
+using MultiFunPlayer.Shortcut;
 using MultiFunPlayer.UI;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NLog;
 using Stylet;
 using System.ComponentModel;
-using System.Net;
 using System.Net.Http;
 
 namespace MultiFunPlayer.MediaSource.ViewModels;
@@ -20,13 +19,18 @@ internal sealed class EmbyMediaSource(IShortcutManager shortcutManager, IEventAg
     private EmbySession _currentSession;
 
     public override ConnectionStatus Status { get; protected set; }
+    public bool IsConnected => Status == ConnectionStatus.Connected;
+    public bool IsDisconnected => Status == ConnectionStatus.Disconnected;
+    public bool IsConnectBusy => Status == ConnectionStatus.Connecting || Status == ConnectionStatus.Disconnecting;
+    public bool CanToggleConnect => !IsConnectBusy;
 
-    public EndPoint ServerEndpoint { get; set; } = new IPEndPoint(IPAddress.Loopback, 8096);
+    public Uri ServerBaseUri { get; set; } = new Uri("http://127.0.0.1:8096");
     public string ApiKey { get; set; }
     public EmbyDevice SelectedDevice { get; set; } = null;
     public string SelectedDeviceId { get; set; }
     public ObservableConcurrentCollection<EmbyDevice> Devices { get; set; } = [];
 
+    public bool CanChangeDevice => IsDisconnected && !IsRefreshBusy && !string.IsNullOrEmpty(ApiKey) && Devices.Count != 0;
     public void OnSelectedDeviceChanged() => SelectedDeviceId = SelectedDevice?.Id;
 
     protected override void OnInitialActivate()
@@ -35,12 +39,7 @@ internal sealed class EmbyMediaSource(IShortcutManager shortcutManager, IEventAg
         _ = RefreshDevices();
     }
 
-    public bool CanChangeDevice => !IsConnected && !IsConnectBusy;
-    public bool IsConnected => Status == ConnectionStatus.Connected;
-    public bool IsConnectBusy => Status == ConnectionStatus.Connecting || Status == ConnectionStatus.Disconnecting;
-    public bool CanToggleConnect => !IsConnectBusy;
-
-    protected override async Task<bool> OnConnectingAsync()
+    protected override async ValueTask<bool> OnConnectingAsync()
     {
         if (SelectedDeviceId == null)
             return false;
@@ -54,8 +53,8 @@ internal sealed class EmbyMediaSource(IShortcutManager shortcutManager, IEventAg
     {
         try
         {
-            Logger.Info("Connecting to {0} at \"{1}\"", Name, ServerEndpoint);
-            if (ServerEndpoint == null)
+            Logger.Info("Connecting to {0} at \"{1}\"", Name, ServerBaseUri);
+            if (ServerBaseUri == null)
                 throw new Exception("Endpoint cannot be null.");
             if (string.IsNullOrEmpty(ApiKey))
                 throw new Exception("Api key cannot be empty.");
@@ -63,7 +62,7 @@ internal sealed class EmbyMediaSource(IShortcutManager shortcutManager, IEventAg
             using var client = NetUtils.CreateHttpClient();
             client.Timeout = TimeSpan.FromMilliseconds(1000);
 
-            var uri = new Uri($"http://{ServerEndpoint.ToUriString()}/System/Ping");
+            var uri = new Uri(ServerBaseUri, "/System/Ping");
             var response = await UnwrapTimeout(() => client.GetAsync(uri, token));
             response.EnsureSuccessStatusCode();
 
@@ -102,7 +101,7 @@ internal sealed class EmbyMediaSource(IShortcutManager shortcutManager, IEventAg
                 if (SelectedDeviceId == null)
                     continue;
 
-                var sessionsUri = new Uri($"http://{ServerEndpoint.ToUriString()}/Sessions?api_key={ApiKey}&DeviceId={SelectedDeviceId}");
+                var sessionsUri = new Uri(ServerBaseUri, $"/Sessions?api_key={ApiKey}&DeviceId={SelectedDeviceId}");
                 var response = await UnwrapTimeout(() => client.GetAsync(sessionsUri, token));
                 if (response == null)
                     continue;
@@ -172,7 +171,7 @@ internal sealed class EmbyMediaSource(IShortcutManager shortcutManager, IEventAg
                 if (_currentSession == null)
                     continue;
 
-                var baseUri = new Uri($"http://{ServerEndpoint.ToUriString()}/Sessions/{_currentSession.Id}/Playing/");
+                var baseUri = new Uri(ServerBaseUri, $"/Sessions/{_currentSession.Id}/Playing/");
                 var uri = message switch
                 {
                     MediaPlayPauseMessage playPauseMessage => new Uri(baseUri, $"{(playPauseMessage.ShouldBePlaying ? "Unpause" : "Pause")}?api_key={ApiKey}"),
@@ -190,13 +189,13 @@ internal sealed class EmbyMediaSource(IShortcutManager shortcutManager, IEventAg
         catch (OperationCanceledException) { }
     }
 
-    public bool CanRefreshDevices => !IsRefreshBusy && !IsConnected && !IsConnectBusy && ServerEndpoint != null && ApiKey != null;
+    public bool CanRefreshDevices => !IsRefreshBusy && IsDisconnected && ServerBaseUri != null && !string.IsNullOrEmpty(ApiKey);
     public bool IsRefreshBusy { get; set; }
 
     private int _isRefreshingFlag;
     public async Task RefreshDevices()
     {
-        if (ServerEndpoint == null)
+        if (ServerBaseUri == null)
             return;
         if (string.IsNullOrEmpty(ApiKey))
             return;
@@ -229,7 +228,7 @@ internal sealed class EmbyMediaSource(IShortcutManager shortcutManager, IEventAg
             using var client = NetUtils.CreateHttpClient();
             client.Timeout = TimeSpan.FromMilliseconds(5000);
 
-            var uri = new Uri($"http://{ServerEndpoint.ToUriString()}/Devices?api_key={ApiKey}");
+            var uri = new Uri(ServerBaseUri, $"/Devices?api_key={ApiKey}");
             var response = await UnwrapTimeout(() => client.GetAsync(uri, token));
             var content = await response.Content.ReadAsStringAsync(token);
 
@@ -259,7 +258,7 @@ internal sealed class EmbyMediaSource(IShortcutManager shortcutManager, IEventAg
 
         if (action == SettingsAction.Saving)
         {
-            settings[nameof(ServerEndpoint)] = ServerEndpoint?.ToString();
+            settings[nameof(ServerBaseUri)] = ServerBaseUri?.ToString();
             settings[nameof(ApiKey)] = ApiKey;
             settings[nameof(SelectedDevice)] = SelectedDeviceId;
         }
@@ -269,8 +268,8 @@ internal sealed class EmbyMediaSource(IShortcutManager shortcutManager, IEventAg
                 SelectDeviceById(deviceId);
             if (settings.TryGetValue<string>(nameof(ApiKey), out var apiKey))
                 ApiKey = apiKey;
-            if (settings.TryGetValue<EndPoint>(nameof(ServerEndpoint), out var endpoint))
-                ServerEndpoint = endpoint;
+            if (settings.TryGetValue<Uri>(nameof(ServerBaseUri), out var serverBaseUri))
+                ServerBaseUri = serverBaseUri;
         }
     }
 
@@ -278,13 +277,13 @@ internal sealed class EmbyMediaSource(IShortcutManager shortcutManager, IEventAg
     {
         try
         {
-            if (ServerEndpoint == null)
+            if (ServerBaseUri == null)
                 return false;
 
             using var client = NetUtils.CreateHttpClient();
             client.Timeout = TimeSpan.FromMilliseconds(500);
 
-            var uri = new Uri($"http://{ServerEndpoint.ToUriString()}/System/Ping");
+            var uri = new Uri(ServerBaseUri, "/System/Ping");
             var response = await UnwrapTimeout(() => client.GetAsync(uri, token));
             response.EnsureSuccessStatusCode();
 
@@ -324,11 +323,11 @@ internal sealed class EmbyMediaSource(IShortcutManager shortcutManager, IEventAg
     {
         base.RegisterActions(s);
 
-        #region ServerEndpoint
-        s.RegisterAction<string>($"{Name}::Endpoint::Set", s => s.WithLabel("Endpoint").WithDescription("ip/host:port"), endpointString =>
+        #region ServerBaseUri
+        s.RegisterAction<string>($"{Name}::ServerBaseUri::Set", s => s.WithLabel("Endpoint").WithDescription("schema://ipOrHost:port"), serverBaseUri =>
         {
-            if (NetUtils.TryParseEndpoint(endpointString, out var endpoint))
-                ServerEndpoint = endpoint;
+            if (Uri.TryCreate(serverBaseUri, UriKind.Absolute, out var uri))
+                ServerBaseUri = uri;
         });
         #endregion
     }

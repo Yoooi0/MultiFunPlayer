@@ -2,125 +2,31 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:material="http://materialdesigninxaml.net/winfx/xaml/themes">
     <Style x:Key="MaterialDesignToolBarExpander" TargetType="{x:Type Expander}">
-        <Setter Property="BorderThickness" Value="0" />
-        <Setter Property="Background" Value="{DynamicResource MaterialDesignPaper}" />
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Background" Value="{DynamicResource MaterialDesignPaper}"/>
         <Setter Property="Foreground" Value="{Binding RelativeSource={RelativeSource AncestorType={x:Type FrameworkElement}}, Path=(TextElement.Foreground)}"/>
         <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
         <Setter Property="VerticalContentAlignment" Value="Top"/>
-        <Setter Property="material:ExpanderAssist.HeaderBackground" Value="Transparent" />
+        <Setter Property="material:ExpanderAssist.HeaderBackground" Value="Transparent"/>
         <Setter Property="ExpandDirection" Value="Down"/>
 
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type Expander}">
-                    <Border BorderThickness="{TemplateBinding BorderThickness}" BorderBrush="{TemplateBinding BorderBrush}">
-                        <VisualStateManager.VisualStateGroups>
-                            <VisualStateGroup x:Name="ExpansionStates">
-
-                                <VisualStateGroup.Transitions>
-                                    <VisualTransition To="Expanded">
-                                        <Storyboard>
-                                            <DoubleAnimation Storyboard.TargetProperty="Opacity" 
-                                                             Storyboard.TargetName="ContentPanel" 
-                                                             From="0" To="1"
-                                                             Duration="{StaticResource ExpandDuration}"/>
-                                            <DoubleAnimation Storyboard.TargetName="ContentSiteScaleTransform" 
-                                                             Storyboard.TargetProperty="(ScaleTransform.ScaleY)" 
-                                                             From="0" To="1"
-                                                             Duration="{StaticResource ExpandDuration}">
-                                                <DoubleAnimation.EasingFunction>
-                                                    <CubicEase EasingMode="EaseInOut"/>
-                                                </DoubleAnimation.EasingFunction>
-                                            </DoubleAnimation>
-
-                                            <ObjectAnimationUsingKeyFrames Storyboard.TargetName="ContentSite" 
-                                                                           Storyboard.TargetProperty="(UIElement.Visibility)"
-                                                                           Duration="{StaticResource ExpandDuration}">
-                                                <DiscreteObjectKeyFrame KeyTime="0" Value="{x:Static Visibility.Visible}"/>
-                                                <DiscreteObjectKeyFrame KeyTime="{StaticResource ExpandKeyTime}" Value="{x:Static Visibility.Visible}"/>
-                                            </ObjectAnimationUsingKeyFrames>
-                                        </Storyboard>
-                                    </VisualTransition>
-
-                                    <VisualTransition To="Collapsed">
-                                        <Storyboard>
-                                            <DoubleAnimation Storyboard.TargetProperty="Opacity" 
-                                                             Storyboard.TargetName="ContentPanel" 
-                                                             From="1" To="0" 
-                                                             Duration="{StaticResource CollapseDuration}"/>
-                                            <DoubleAnimation Storyboard.TargetName="ContentSiteScaleTransform" 
-                                                             Storyboard.TargetProperty="(ScaleTransform.ScaleY)" 
-                                                             From="1" To="0"
-                                                             Duration="{StaticResource CollapseDuration}">
-                                                <DoubleAnimation.EasingFunction>
-                                                    <CubicEase EasingMode="EaseInOut"/>
-                                                </DoubleAnimation.EasingFunction>
-                                            </DoubleAnimation>
-
-                                            <ObjectAnimationUsingKeyFrames Storyboard.TargetName="ContentSite" 
-                                                                           Storyboard.TargetProperty="(UIElement.Visibility)"
-                                                                           Duration="{StaticResource CollapseDuration}">
-                                                <DiscreteObjectKeyFrame KeyTime="0" Value="{x:Static Visibility.Visible}"/>
-                                                <DiscreteObjectKeyFrame KeyTime="{StaticResource CollapseKeyTime}" Value="{x:Static Visibility.Collapsed}"/>
-                                            </ObjectAnimationUsingKeyFrames>
-                                        </Storyboard>
-                                    </VisualTransition>
-                                </VisualStateGroup.Transitions>
-
-                                <VisualState x:Name="Expanded">
-                                    <Storyboard>
-                                        <DoubleAnimation Storyboard.TargetProperty="Opacity" 
-                                                         Storyboard.TargetName="ContentPanel" 
-                                                         To="1" 
-                                                         Duration="0"/>
-                                        <DoubleAnimation Storyboard.TargetName="ContentSiteScaleTransform" 
-                                                         Storyboard.TargetProperty="(ScaleTransform.ScaleY)" 
-                                                         To="1" 
-                                                         Duration="0" />
-
-                                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="ContentSite" 
-                                                                       Storyboard.TargetProperty="(UIElement.Visibility)"
-                                                                       Duration="0">
-                                            <DiscreteObjectKeyFrame KeyTime="0" Value="{x:Static Visibility.Visible}"/>
-                                        </ObjectAnimationUsingKeyFrames>
-                                    </Storyboard>
-                                </VisualState>
-
-                                <VisualState x:Name="Collapsed">
-                                    <Storyboard>
-                                        <DoubleAnimation Storyboard.TargetProperty="Opacity"
-                                                         Storyboard.TargetName="ContentPanel"
-                                                         To="0"
-                                                         Duration="0"/>
-                                        <DoubleAnimation Storyboard.TargetName="ContentSiteScaleTransform"
-                                                         Storyboard.TargetProperty="(ScaleTransform.ScaleY)"
-                                                         To="0"
-                                                         Duration="0" />
-
-                                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="ContentSite" 
-                                                                       Storyboard.TargetProperty="(UIElement.Visibility)"
-                                                                       Duration="0">
-                                            <DiscreteObjectKeyFrame KeyTime="0" Value="{x:Static Visibility.Collapsed}"/>
-                                        </ObjectAnimationUsingKeyFrames>
-                                    </Storyboard>
-                                </VisualState>
-
-                            </VisualStateGroup>
-                        </VisualStateManager.VisualStateGroups>
-
+                    <Border BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}">
                         <DockPanel Background="{TemplateBinding Background}">
-                            <DockPanel DockPanel.Dock="Top"
-                                       LastChildFill="True">
+                            <DockPanel DockPanel.Dock="Top" LastChildFill="True">
                                 <ToggleButton Name="HeaderSite"
-                                              Focusable="False"
-                                              IsTabStop="False"
                                               DockPanel.Dock="Right"
-                                              BorderThickness="0" Cursor="Hand"
-                                              IsChecked="{Binding Path=IsExpanded, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}"
-                                              TextElement.FontSize="{TemplateBinding material:ExpanderAssist.HeaderFontSize}"
-                                              Opacity="0.87"
+                                              Background="{TemplateBinding material:ExpanderAssist.HeaderBackground}"
+                                              BorderThickness="0"
+                                              Cursor="Hand"
+                                              Focusable="False"
                                               Foreground="{TemplateBinding Foreground}"
-                                              Background="{TemplateBinding material:ExpanderAssist.HeaderBackground}">
+                                              IsChecked="{Binding Path=IsExpanded, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}"
+                                              IsTabStop="False"
+                                              Opacity="0.87"
+                                              TextElement.FontSize="{TemplateBinding material:ExpanderAssist.HeaderFontSize}">
                                     <ToggleButton.Style>
                                         <Style TargetType="{x:Type ToggleButton}">
                                             <Setter Property="Background" Value="Transparent"/>
@@ -128,8 +34,7 @@
                                             <Setter Property="Template">
                                                 <Setter.Value>
                                                     <ControlTemplate TargetType="{x:Type ToggleButton}">
-                                                        <Border Background="{TemplateBinding Background}" 
-                                                                Padding="0">
+                                                        <Border Padding="0" Background="{TemplateBinding Background}">
                                                             <Grid>
                                                                 <Grid.ColumnDefinitions>
                                                                     <ColumnDefinition Width="*"/>
@@ -139,28 +44,30 @@
                                                                 <ContentPresenter Grid.Column="0"
                                                                                   VerticalAlignment="Center"
                                                                                   Content="{TemplateBinding Content}"
-                                                                                  ContentTemplate="{TemplateBinding ContentTemplate}"
                                                                                   ContentStringFormat="{TemplateBinding ContentStringFormat}"
+                                                                                  ContentTemplate="{TemplateBinding ContentTemplate}"
                                                                                   ContentTemplateSelector="{TemplateBinding ContentTemplateSelector}"/>
 
                                                                 <ToggleButton x:Name="ExpanderButton"
                                                                               Grid.Column="1"
-                                                                              VerticalAlignment="Center"
-                                                                              RenderTransformOrigin="0.5 0.5"
-                                                                              HorizontalAlignment="Center"
                                                                               Height="36"
+                                                                              HorizontalAlignment="Center"
+                                                                              VerticalAlignment="Center"
                                                                               Foreground="{TemplateBinding Foreground}"
-                                                                              IsChecked="{Binding Path=IsChecked, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}">
+                                                                              IsChecked="{Binding Path=IsChecked, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}"
+                                                                              RenderTransformOrigin="0.5 0.5">
                                                                     <ToggleButton.Style>
-                                                                        <Style TargetType="{x:Type ToggleButton}" BasedOn="{StaticResource MaterialDesignToolBarRotatingToggleButton}">
+                                                                        <Style BasedOn="{StaticResource MaterialDesignToolBarRotatingToggleButton}" TargetType="{x:Type ToggleButton}">
                                                                             <Setter Property="Content">
                                                                                 <Setter.Value>
-                                                                                    <material:PackIcon x:Name="ExpandPath" 
-                                                                                                       Kind="ChevronDown"
-                                                                                                       Opacity="0.38" Height="36" Width="24"
-                                                                                                       VerticalAlignment="Center"
+                                                                                    <material:PackIcon x:Name="ExpandPath"
+                                                                                                       Width="24"
+                                                                                                       Height="36"
                                                                                                        HorizontalAlignment="Center"
+                                                                                                       VerticalAlignment="Center"
                                                                                                        Foreground="{Binding RelativeSource={RelativeSource AncestorType={x:Type FrameworkElement}}, Path=(TextElement.Foreground)}"
+                                                                                                       Kind="ChevronDown"
+                                                                                                       Opacity="0.38"
                                                                                                        RenderTransformOrigin="0.5 0.5">
                                                                                         <material:PackIcon.RenderTransform>
                                                                                             <RotateTransform x:Name="ExpandPathRotateTransform"/>
@@ -187,19 +94,17 @@
                                     </ToggleButton.Style>
                                 </ToggleButton>
 
-                                <ContentControl Content="{TemplateBinding Header}"
-                                                ContentTemplate="{TemplateBinding HeaderTemplate}"
-                                                ContentTemplateSelector="{TemplateBinding HeaderTemplateSelector}"
+                                <ContentControl DockPanel.Dock="Left"
+                                                Content="{TemplateBinding Header}"
                                                 ContentStringFormat="{TemplateBinding HeaderStringFormat}"
-                                                DockPanel.Dock="Left"/>
+                                                ContentTemplate="{TemplateBinding HeaderTemplate}"
+                                                ContentTemplateSelector="{TemplateBinding HeaderTemplateSelector}"/>
                             </DockPanel>
 
-
-                            <Border Name="ContentSite"
-                                    Visibility="Collapsed">
+                            <Border Name="ContentSite" Visibility="Collapsed">
                                 <Border.LayoutTransform>
                                     <TransformGroup>
-                                        <ScaleTransform x:Name="ContentSiteScaleTransform" />
+                                        <ScaleTransform x:Name="ContentSiteScaleTransform"/>
                                     </TransformGroup>
                                 </Border.LayoutTransform>
 
@@ -209,17 +114,115 @@
                                       VerticalAlignment="{TemplateBinding VerticalContentAlignment}">
 
                                     <Border Background="{DynamicResource MaterialDesignCardBackground}"
-                                            BorderThickness="0 1 0 0"
-                                            BorderBrush="{DynamicResource PrimaryHueMidBrush}">
-                                        <ContentPresenter Name="PART_Content" Focusable="False"
-                                                      ContentTemplate="{TemplateBinding ContentTemplate}"
-                                                      ContentStringFormat="{TemplateBinding ContentStringFormat}"
-                                                      ContentTemplateSelector="{TemplateBinding ContentTemplateSelector}"/>
+                                            BorderBrush="{DynamicResource PrimaryHueMidBrush}"
+                                            BorderThickness="0 1 0 0">
+                                        <ContentPresenter Name="PART_Content"
+                                                          ContentStringFormat="{TemplateBinding ContentStringFormat}"
+                                                          ContentTemplate="{TemplateBinding ContentTemplate}"
+                                                          ContentTemplateSelector="{TemplateBinding ContentTemplateSelector}"
+                                                          Focusable="False"/>
                                     </Border>
                                 </Grid>
                             </Border>
 
                         </DockPanel>
+                        <VisualStateManager.VisualStateGroups>
+                            <VisualStateGroup x:Name="ExpansionStates">
+
+                                <VisualStateGroup.Transitions>
+                                    <VisualTransition To="Expanded">
+                                        <Storyboard>
+                                            <DoubleAnimation Storyboard.TargetName="ContentPanel"
+                                                             Storyboard.TargetProperty="Opacity"
+                                                             From="0"
+                                                             To="1"
+                                                             Duration="{StaticResource ExpandDuration}"/>
+                                            <DoubleAnimation Storyboard.TargetName="ContentSiteScaleTransform"
+                                                             Storyboard.TargetProperty="(ScaleTransform.ScaleY)"
+                                                             From="0"
+                                                             To="1"
+                                                             Duration="{StaticResource ExpandDuration}">
+                                                <DoubleAnimation.EasingFunction>
+                                                    <CubicEase EasingMode="EaseInOut"/>
+                                                </DoubleAnimation.EasingFunction>
+                                            </DoubleAnimation>
+
+                                            <ObjectAnimationUsingKeyFrames Storyboard.TargetName="ContentSite"
+                                                                           Storyboard.TargetProperty="(UIElement.Visibility)"
+                                                                           Duration="{StaticResource ExpandDuration}">
+                                                <DiscreteObjectKeyFrame KeyTime="0" Value="{x:Static Visibility.Visible}"/>
+                                                <DiscreteObjectKeyFrame KeyTime="{StaticResource ExpandKeyTime}" Value="{x:Static Visibility.Visible}"/>
+                                            </ObjectAnimationUsingKeyFrames>
+                                        </Storyboard>
+                                    </VisualTransition>
+
+                                    <VisualTransition To="Collapsed">
+                                        <Storyboard>
+                                            <DoubleAnimation Storyboard.TargetName="ContentPanel"
+                                                             Storyboard.TargetProperty="Opacity"
+                                                             From="1"
+                                                             To="0"
+                                                             Duration="{StaticResource CollapseDuration}"/>
+                                            <DoubleAnimation Storyboard.TargetName="ContentSiteScaleTransform"
+                                                             Storyboard.TargetProperty="(ScaleTransform.ScaleY)"
+                                                             From="1"
+                                                             To="0"
+                                                             Duration="{StaticResource CollapseDuration}">
+                                                <DoubleAnimation.EasingFunction>
+                                                    <CubicEase EasingMode="EaseInOut"/>
+                                                </DoubleAnimation.EasingFunction>
+                                            </DoubleAnimation>
+
+                                            <ObjectAnimationUsingKeyFrames Storyboard.TargetName="ContentSite"
+                                                                           Storyboard.TargetProperty="(UIElement.Visibility)"
+                                                                           Duration="{StaticResource CollapseDuration}">
+                                                <DiscreteObjectKeyFrame KeyTime="0" Value="{x:Static Visibility.Visible}"/>
+                                                <DiscreteObjectKeyFrame KeyTime="{StaticResource CollapseKeyTime}" Value="{x:Static Visibility.Collapsed}"/>
+                                            </ObjectAnimationUsingKeyFrames>
+                                        </Storyboard>
+                                    </VisualTransition>
+                                </VisualStateGroup.Transitions>
+
+                                <VisualState x:Name="Expanded">
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="ContentPanel"
+                                                         Storyboard.TargetProperty="Opacity"
+                                                         To="1"
+                                                         Duration="0"/>
+                                        <DoubleAnimation Storyboard.TargetName="ContentSiteScaleTransform"
+                                                         Storyboard.TargetProperty="(ScaleTransform.ScaleY)"
+                                                         To="1"
+                                                         Duration="0"/>
+
+                                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="ContentSite"
+                                                                       Storyboard.TargetProperty="(UIElement.Visibility)"
+                                                                       Duration="0">
+                                            <DiscreteObjectKeyFrame KeyTime="0" Value="{x:Static Visibility.Visible}"/>
+                                        </ObjectAnimationUsingKeyFrames>
+                                    </Storyboard>
+                                </VisualState>
+
+                                <VisualState x:Name="Collapsed">
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="ContentPanel"
+                                                         Storyboard.TargetProperty="Opacity"
+                                                         To="0"
+                                                         Duration="0"/>
+                                        <DoubleAnimation Storyboard.TargetName="ContentSiteScaleTransform"
+                                                         Storyboard.TargetProperty="(ScaleTransform.ScaleY)"
+                                                         To="0"
+                                                         Duration="0"/>
+
+                                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="ContentSite"
+                                                                       Storyboard.TargetProperty="(UIElement.Visibility)"
+                                                                       Duration="0">
+                                            <DiscreteObjectKeyFrame KeyTime="0" Value="{x:Static Visibility.Collapsed}"/>
+                                        </ObjectAnimationUsingKeyFrames>
+                                    </Storyboard>
+                                </VisualState>
+
+                            </VisualStateGroup>
+                        </VisualStateManager.VisualStateGroups>
                     </Border>
                 </ControlTemplate>
             </Setter.Value>

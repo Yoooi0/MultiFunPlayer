@@ -1,56 +1,68 @@
 ﻿<UserControl x:Class="MultiFunPlayer.OutputTarget.Views.ButtplugOutputTarget"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:common="clr-namespace:MultiFunPlayer.Common"
+             xmlns:controls="clr-namespace:MultiFunPlayer.UI.Controls"
+             xmlns:converters="clr-namespace:MultiFunPlayer.UI.Converters"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:material="http://materialdesigninxaml.net/winfx/xaml/themes"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:metro="http://metro.mahapps.com/winfx/xaml/controls"
              xmlns:s="https://github.com/canton7/Stylet"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
-             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-             xmlns:common="clr-namespace:MultiFunPlayer.Common" 
-             xmlns:converters="clr-namespace:MultiFunPlayer.UI.Converters"
-             xmlns:controls="clr-namespace:MultiFunPlayer.UI.Controls"
-             mc:Ignorable="d" 
-             d:DesignHeight="450" d:DesignWidth="800"
-             x:ClassModifier="internal">
+             xmlns:ui="clr-namespace:MultiFunPlayer.UI"
+             d:DesignHeight="450"
+             d:DesignWidth="800"
+             x:ClassModifier="internal"
+             mc:Ignorable="d">
     <UserControl.Resources>
-        <converters:ButtplugDeviceConnectedConverter x:Key="ButtplugDeviceConnectedConverter"/>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="UpdateContextTemplates.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+            <converters:ButtplugDeviceConnectedConverter x:Key="ButtplugDeviceConnectedConverter"/>
+            <converters:MultiObjectEqualToBooleanConverter x:Key="MultiObjectEqualToBooleanConverter"/>
+            <converters:ItemIndexInContainerConverter x:Key="ItemIndexInContainerConverter"/>
+        </ResourceDictionary>
     </UserControl.Resources>
-    <Expander material:ExpanderAssist.HorizontalHeaderPadding="0 0 6 0"
-              Style="{StaticResource MaterialDesignToolBarExpander}"
+
+    <Expander Style="{StaticResource MaterialDesignToolBarExpander}"
+              material:ExpanderAssist.HorizontalHeaderPadding="0 0 6 0"
               Background="{DynamicResource MaterialDesignToolBarBackground}"
               IsExpanded="{Binding DataContext.ContentVisible, RelativeSource={RelativeSource FindAncestor, AncestorLevel=2, AncestorType={x:Type UserControl}}}">
         <Expander.Header>
-            <StackPanel Orientation="Horizontal"
-                        Height="36">
-                <Button DockPanel.Dock="Left"
-                        Command="{s:Action ToggleConnectAsync}"
-                        CommandParameter="{Binding}"
-                        s:View.ActionTarget="{Binding DataContext.Parent, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}"
-                        IsEnabled="{Binding CanToggleConnect}"
+            <DockPanel Height="36" LastChildFill="False">
+                <Button s:View.ActionTarget="{Binding DataContext.Parent, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}"
+                        DockPanel.Dock="Left"
+                        material:ButtonProgressAssist.IsIndeterminate="True"
                         material:ButtonProgressAssist.IsIndicatorVisible="{Binding IsConnectBusy}"
                         material:ButtonProgressAssist.Value="-1"
-                        material:ButtonProgressAssist.IsIndeterminate="True">
+                        Command="{s:Action ToggleConnectAsync}"
+                        CommandParameter="{Binding}"
+                        IsEnabled="{Binding CanToggleConnect}">
                     <Button.Style>
-                        <Style TargetType="{x:Type ButtonBase}" BasedOn="{StaticResource MaterialDesignProgressToolBarButton}">
-                            <Setter Property="ToolTip" Value="Connect" />
+                        <Style BasedOn="{StaticResource MaterialDesignProgressToolBarButton}" TargetType="{x:Type ButtonBase}">
+                            <Setter Property="ToolTip" Value="Connect"/>
                             <Style.Triggers>
                                 <DataTrigger Binding="{Binding IsConnected}" Value="True">
-                                    <Setter Property="ToolTip" Value="Disconnect" />
+                                    <Setter Property="ToolTip" Value="Disconnect"/>
                                 </DataTrigger>
                             </Style.Triggers>
                         </Style>
                     </Button.Style>
                     <material:PackIcon Width="19" Height="19">
                         <material:PackIcon.Style>
-                            <Style TargetType="material:PackIcon" BasedOn="{StaticResource {x:Type material:PackIcon}}">
-                                <Setter Property="Kind" Value="Play" />
+                            <Style BasedOn="{StaticResource {x:Type material:PackIcon}}" TargetType="material:PackIcon">
+                                <Setter Property="Kind" Value="Play"/>
                                 <Style.Triggers>
                                     <DataTrigger Binding="{Binding IsConnected}" Value="True">
-                                        <Setter Property="Kind" Value="Stop" />
+                                        <Setter Property="Kind" Value="Stop"/>
                                         <DataTrigger.EnterActions>
                                             <BeginStoryboard>
                                                 <Storyboard>
-                                                    <DoubleAnimation Storyboard.TargetProperty="Opacity" From="0" To="1" Duration="0:0:0.8" />
+                                                    <DoubleAnimation Storyboard.TargetProperty="Opacity"
+                                                                     From="0"
+                                                                     To="1"
+                                                                     Duration="0:0:0.8"/>
                                                 </Storyboard>
                                             </BeginStoryboard>
                                         </DataTrigger.EnterActions>
@@ -62,181 +74,145 @@
                 </Button>
 
                 <ToggleButton DockPanel.Dock="Left"
-                              IsChecked="{Binding AutoConnectEnabled}"           
                               Style="{StaticResource MaterialDesignToolBarToggleButton}"
+                              IsChecked="{Binding AutoConnectEnabled}"
                               ToolTip="Auto-connect">
-                    <material:PackIcon Kind="MotionPlayOutline" Opacity=".56" Width="20" Height="20"/>
+                    <material:PackIcon Width="20"
+                                       Height="20"
+                                       Kind="MotionPlayOutline"
+                                       Opacity=".56"/>
                     <material:ToggleButtonAssist.OnContent>
-                        <material:PackIcon Kind="MotionPlayOutline" Width="20" Height="20"/>
+                        <material:PackIcon Width="20"
+                                           Height="20"
+                                           Kind="MotionPlayOutline"/>
                     </material:ToggleButtonAssist.OnContent>
                 </ToggleButton>
 
                 <Button DockPanel.Dock="Left"
-                        IsEnabled="{Binding CanScan}"
                         Style="{StaticResource MaterialDesignProgressToolBarButton}"
-                        Click="{s:Action ToggleScan}"
-                        ToolTip="Toggle Scan"
+                        material:ButtonProgressAssist.IsIndeterminate="True"
                         material:ButtonProgressAssist.IsIndicatorVisible="{Binding IsScanBusy}"
                         material:ButtonProgressAssist.Value="-1"
-                        material:ButtonProgressAssist.IsIndeterminate="True">
-                    <material:PackIcon Width="20" Height="20" Kind="MagnifyScan"/>
+                        Click="{s:Action ToggleScan}"
+                        IsEnabled="{Binding CanScan}"
+                        ToolTip="Toggle Scan">
+                    <material:PackIcon Width="20"
+                                       Height="20"
+                                       Kind="MagnifyScan"/>
                 </Button>
-            </StackPanel>
+
+                <material:PopupBox DockPanel.Dock="Right"
+                                   Style="{StaticResource MaterialDesignToolBarPopupBox}"
+                                   PlacementMode="BottomAndAlignRightEdges"
+                                   StaysOpen="True"
+                                   ToolTip="Update settings">
+                    <material:PopupBox.ToggleContent>
+                        <material:PackIcon Width="20"
+                                           Height="20"
+                                           Kind="TimerCogOutline"/>
+                    </material:PopupBox.ToggleContent>
+                    <StackPanel Width="250" Margin="10 0 10 0">
+                        <TextBlock FontWeight="Bold"
+                                   Text="Fixed Update"
+                                   Typography.Capitals="AllSmallCaps"/>
+                        <ContentControl Content="{Binding UpdateContexts[FixedUpdate]}"/>
+
+                        <Separator/>
+
+                        <TextBlock FontWeight="Bold"
+                                   Text="Polled Update"
+                                   Typography.Capitals="AllSmallCaps"/>
+                        <ContentControl Content="{Binding UpdateContexts[PolledUpdate]}"/>
+                    </StackPanel>
+                </material:PopupBox>
+            </DockPanel>
         </Expander.Header>
 
         <StackPanel Margin="20">
-            <DockPanel LastChildFill="True" Margin="0 0 0 20">
+            <DockPanel Margin="0 0 0 20" LastChildFill="True">
                 <DockPanel DockPanel.Dock="Left"
-                               LastChildFill="False">
-                    <DockPanel.Resources>
-                        <Style TargetType="{x:Type DockPanel}">
-                            <Setter Property="IsEnabled" Value="False" />
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding Status}" Value="Disconnected">
-                                    <Setter Property="IsEnabled" Value="True" />
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </DockPanel.Resources>
-                    <controls:EndPointBox EndPoint="{Binding Endpoint}"
-                                          DockPanel.Dock="Left"
+                           IsEnabled="{Binding IsDisconnected}"
+                           LastChildFill="False">
+                    <TextBlock DockPanel.Dock="Left"
+                               Margin="0 0 10 0"
+                               VerticalAlignment="Center"
+                               Text="Endpoint:"/>
+
+                    <controls:EndPointBox DockPanel.Dock="Left"
                                           Margin="0 0 20 0"
-                                          VerticalAlignment="Center"/>
+                                          VerticalAlignment="Center"
+                                          EndPoint="{Binding Endpoint}"/>
                 </DockPanel>
-
-                <StackPanel DockPanel.Dock="Right" 
-                            Orientation="Horizontal" 
-                            HorizontalAlignment="Right"
-                            VerticalAlignment="Center">
-                    <TextBlock VerticalAlignment="Center" Text="Update rate:" Margin="0 0 10 0"/>
-                    <Slider Value="{Binding UpdateInterval, Mode=TwoWay}"
-                            Style="{StaticResource MaterialDesignReversedSlider}"
-                            HorizontalAlignment="Stretch"
-                            VerticalAlignment="Top"
-                            Margin="0 0 10 0"
-                            Width="100"
-                            Minimum="{Binding MinimumUpdateInterval}" 
-                            Maximum="{Binding MaximumUpdateInterval}"
-                            Ticks="{Binding UpdateIntervalTicks}" 
-                            IsDirectionReversed="True"
-                            IsSnapToTickEnabled="True"
-                            Orientation="Horizontal"
-                            material:SliderAssist.OnlyShowFocusVisualWhileDragging="True"/>
-                    <TextBlock VerticalAlignment="Center" 
-                               HorizontalAlignment="Right" 
-                               Margin="0 0 5 0"
-                               TextAlignment="Right"
-                               Width="40"
-                               Text="{Binding UpdateInterval, Converter={StaticResource MsToHzConverter}, StringFormat={}{0} hz}"/>
-
-                    <material:PopupBox PlacementMode="TopAndAlignRightEdges"
-                                       PopupMode="Click"
-                                       StaysOpen="True"
-                                       ToolTip="Update settings">
-                        <StackPanel Margin="10">
-                            <DockPanel Width="100" HorizontalAlignment="Left">
-                                <TextBlock DockPanel.Dock="Left"
-                                           Text="Average:"/>
-                                <TextBlock DockPanel.Dock="Right" 
-                                           Text="{Binding AverageUpdateRate, StringFormat={}{0} hz}"
-                                           TextAlignment="Right"/>
-                            </DockPanel>
-
-                            <DockPanel Width="100" HorizontalAlignment="Left">
-                                <TextBlock DockPanel.Dock="Left"
-                                           Text="Jitter:"/>
-                                <TextBlock DockPanel.Dock="Right" 
-                                           Text="{Binding UpdateRateJitter, StringFormat={}{0} hz}"
-                                           TextAlignment="Right"/>
-                            </DockPanel>
-                        </StackPanel>
-
-                        <material:PopupBox.ToggleContent>
-                            <material:ColorZone VerticalAlignment="Center"
-                                                CornerRadius="10"
-                                                Mode="PrimaryMid"
-                                                Width="20"
-                                                Height="20"
-                                                material:ShadowAssist.ShadowDepth="Depth2">
-                                <material:PackIcon Kind="Cog"
-                                                   Width="16"
-                                                   Height="16"
-                                                   HorizontalAlignment="Center"
-                                                   VerticalAlignment="Center"/>
-                            </material:ColorZone>
-                        </material:PopupBox.ToggleContent>
-                    </material:PopupBox>
-                </StackPanel>
             </DockPanel>
 
-            <TextBlock Text="Output Range"
-                       Typography.Capitals="AllSmallCaps"
-                       FontWeight="Bold"
+            <TextBlock HorizontalAlignment="Left"
                        VerticalAlignment="Center"
-                       HorizontalAlignment="Left"/>
+                       FontWeight="Bold"
+                       Text="Output Range"
+                       Typography.Capitals="AllSmallCaps"/>
             <ItemsControl ItemsSource="{Binding AxisSettings}">
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>
-                        <UniformGrid Columns="3" IsItemsHost="True" Margin="0 0 -13 0"/>
+                        <UniformGrid Margin="0 0 -13 0"
+                                     Columns="3"
+                                     IsItemsHost="True"/>
                     </ItemsPanelTemplate>
                 </ItemsControl.ItemsPanel>
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
-                        <DockPanel LastChildFill="True"
-                                   Margin="0 0 20 1">
-                            <ToggleButton DockPanel.Dock="Left" 
-                                          VerticalAlignment="Center" 
-                                          IsChecked="{Binding Value.Enabled}"
-                                          Height="14"
+                        <DockPanel Margin="0 0 20 1" LastChildFill="True">
+                            <ToggleButton DockPanel.Dock="Left"
                                           Width="20"
-                                          Padding="0">
+                                          Height="14"
+                                          Padding="0"
+                                          VerticalAlignment="Center"
+                                          IsChecked="{Binding Value.Enabled}">
                                 <ToggleButton.Resources>
-                                    <Style TargetType="{x:Type ToggleButton}" BasedOn="{StaticResource MaterialDesignPaperButton}">
+                                    <Style BasedOn="{StaticResource MaterialDesignPaperButton}" TargetType="{x:Type ToggleButton}">
                                         <Setter Property="material:ElevationAssist.Elevation" Value="Dp0"/>
                                         <Style.Triggers>
                                             <Trigger Property="IsChecked" Value="True">
                                                 <Setter Property="Background" Value="{DynamicResource PrimaryHueMidBrush}"/>
                                                 <Setter Property="Foreground" Value="{DynamicResource PrimaryHueMidForegroundBrush}"/>
-                                                <Setter Property="material:RippleAssist.Feedback" Value="{DynamicResource PrimaryHueMidForegroundBrush}" />
+                                                <Setter Property="material:RippleAssist.Feedback" Value="{DynamicResource PrimaryHueMidForegroundBrush}"/>
                                             </Trigger>
                                         </Style.Triggers>
                                     </Style>
                                 </ToggleButton.Resources>
 
-                                <TextBlock Text="{Binding Key}"
-                                           FontSize="10"
-                                           FontWeight="Bold"/>
+                                <TextBlock FontSize="10"
+                                           FontWeight="Bold"
+                                           Text="{Binding Key}"/>
                             </ToggleButton>
 
-                            <Canvas DockPanel.Dock="Right" 
-                                    HorizontalAlignment="Stretch">
-                                <metro:RangeSlider Style="{StaticResource MaterialDesignCompactRangeSlider}" 
+                            <Canvas DockPanel.Dock="Right" HorizontalAlignment="Stretch">
+                                <metro:RangeSlider Style="{StaticResource MaterialDesignCompactRangeSlider}"
                                                    Width="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType={x:Type Canvas}}}"
-                                                   Minimum="0" 
-                                                   Maximum="100" 
-                                                   MinRangeWidth="10" 
+                                                   AutoToolTipPlacement="TopLeft"
+                                                   IsEnabled="{Binding Value.Enabled}"
+                                                   LowerValue="{Binding Value.Minimum, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                   Maximum="100"
                                                    MinRange="1"
-                                                   AutoToolTipPlacement="TopLeft" 
-                                                   UseLayoutRounding="False"
-                                                   LowerValue="{Binding Value.Minimum, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
+                                                   MinRangeWidth="10"
+                                                   Minimum="0"
                                                    UpperValue="{Binding Value.Maximum, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                                   IsEnabled="{Binding Value.Enabled}">
+                                                   UseLayoutRounding="False">
                                     <metro:RangeSlider.AutoToolTipLowerValueTemplate>
                                         <DataTemplate>
-                                            <TextBlock HorizontalAlignment="Right" Text="{Binding StringFormat='{}{0:D}%'}" />
+                                            <TextBlock HorizontalAlignment="Right" Text="{Binding StringFormat='{}{0:D}%'}"/>
                                         </DataTemplate>
                                     </metro:RangeSlider.AutoToolTipLowerValueTemplate>
                                     <metro:RangeSlider.AutoToolTipUpperValueTemplate>
                                         <DataTemplate>
-                                            <TextBlock HorizontalAlignment="Right" Text="{Binding StringFormat='{}{0:D}%'}" />
+                                            <TextBlock HorizontalAlignment="Right" Text="{Binding StringFormat='{}{0:D}%'}"/>
                                         </DataTemplate>
                                     </metro:RangeSlider.AutoToolTipUpperValueTemplate>
                                     <metro:RangeSlider.AutoToolTipRangeValuesTemplate>
                                         <DataTemplate DataType="mah:RangeSliderAutoTooltipValues">
                                             <StackPanel Orientation="Horizontal">
-                                                <TextBlock Text="{Binding LowerValue, StringFormat='{}{0:D}%'}" />
-                                                <TextBlock Text=" - " />
-                                                <TextBlock Text="{Binding UpperValue, StringFormat='{}{0:D}%'}" />
+                                                <TextBlock Text="{Binding LowerValue, StringFormat='{}{0:D}%'}"/>
+                                                <TextBlock Text=" - "/>
+                                                <TextBlock Text="{Binding UpperValue, StringFormat='{}{0:D}%'}"/>
                                             </StackPanel>
                                         </DataTemplate>
                                     </metro:RangeSlider.AutoToolTipRangeValuesTemplate>
@@ -247,177 +223,232 @@
                 </ItemsControl.ItemTemplate>
             </ItemsControl>
 
-            <material:Card material:ShadowAssist.ShadowDepth="Depth1" 
-                               Margin="0 20 0 0">
+            <material:Card Margin="0 20 0 0" material:ShadowAssist.ShadowDepth="Depth1">
                 <Expander material:ExpanderAssist.HorizontalHeaderPadding="24 6 6 6">
                     <Expander.Header>
-                        <TextBlock Text="Device map" 
-                                       FontSize="14"
-                                       FontWeight="Bold"
-                                       Typography.Capitals="AllSmallCaps"/>
+                        <TextBlock FontSize="14"
+                                   FontWeight="Bold"
+                                   Text="Device map"
+                                   Typography.Capitals="AllSmallCaps"/>
                     </Expander.Header>
                     <StackPanel Margin="10 0 10 10">
-                        <ListView ItemsSource="{Binding DeviceSettings}"
-                                      material:ListViewAssist.ListViewItemPadding="0"
-                                      ScrollViewer.HorizontalScrollBarVisibility="Disabled">
-                            <ListView.ItemContainerStyle>
-                                <Style TargetType="ListViewItem" BasedOn="{StaticResource MaterialDesignGridViewItem}">
+                        <ListBox DockPanel.Dock="Top"
+                                 ItemsSource="{Binding DeviceSettings}"
+                                 MaxHeight="150"
+                                 Background="{DynamicResource MaterialDesignPaper}"
+                                 BorderBrush="Transparent"
+                                 ScrollViewer.CanContentScroll="False"
+                                 ScrollViewer.VerticalScrollBarVisibility="Visible">
+                            <ListBox.Resources>
+                                <Style x:Key="ContainerStyle" TargetType="{x:Type ListBoxItem}">
                                     <Setter Property="Focusable" Value="False"/>
-                                    <Setter Property="Height" Value="36"/>
-                                    <Setter Property="HorizontalContentAlignment" Value="Stretch" />
-                                    <Setter Property="VerticalContentAlignment" Value="Center" />
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="ListBoxItem">
+                                                <material:Card Name="Container"
+                                                               Margin="8 8 8 0"
+                                                               material:ShadowAssist.ShadowDepth="Depth1"
+                                                               Foreground="{DynamicResource MaterialDesignBody}">
+                                                    <ContentPresenter/>
+                                                </material:Card>
+
+                                                <ControlTemplate.Triggers>
+                                                    <DataTrigger Value="True">
+                                                        <DataTrigger.Binding>
+                                                            <MultiBinding Converter="{StaticResource MultiObjectEqualToBooleanConverter}">
+                                                                <MultiBinding.Bindings>
+                                                                    <Binding Converter="{StaticResource ItemIndexInContainerConverter}" RelativeSource="{RelativeSource Self}"/>
+                                                                    <Binding Converter="{StaticResource MathAddConverter}"
+                                                                             ConverterParameter="-1"
+                                                                             Path="DataContext.DeviceSettings.Count"
+                                                                             RelativeSource="{RelativeSource FindAncestor,
+                                                                                                             AncestorType={x:Type UserControl}}"/>
+                                                                </MultiBinding.Bindings>
+                                                            </MultiBinding>
+                                                        </DataTrigger.Binding>
+
+                                                        <DataTrigger.Setters>
+                                                            <Setter TargetName="Container" Property="Margin" Value="8 8 8 8"/>
+                                                        </DataTrigger.Setters>
+                                                    </DataTrigger>
+                                                </ControlTemplate.Triggers>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
                                 </Style>
-                            </ListView.ItemContainerStyle>
-                            <ListView.View>
-                                <GridView AllowsColumnReorder="False">
-                                    <GridView.ColumnHeaderContainerStyle>
-                                        <Style TargetType="{x:Type GridViewColumnHeader}">
-                                            <Setter Property="Template">
-                                                <Setter.Value>
-                                                    <ControlTemplate TargetType="{x:Type GridViewColumnHeader}">
-                                                        <TextBlock x:Name="ContentHeader" 
-                                                                       Text="{TemplateBinding Content}"
-                                                                       Padding="5 10 5 10"
-                                                                       HorizontalAlignment="Left"/>
-                                                    </ControlTemplate>
-                                                </Setter.Value>
-                                            </Setter>
-                                        </Style>
-                                    </GridView.ColumnHeaderContainerStyle>
 
-                                    <GridViewColumn Header="Axis"
-                                                    Width="60"
-                                                    DisplayMemberBinding="{Binding SourceAxis}"/>
-                                    <GridViewColumn Header="Device Name"
-                                                    Width="225">
-                                        <GridViewColumn.CellTemplate>
-                                            <DataTemplate>
-                                                <material:Badged BadgePlacementMode="TopRight"
-                                                                 Padding="0 0 10 0">
-                                                    <material:Badged.Resources>
-                                                        <Style TargetType="{x:Type material:Badged}">
-                                                            <Setter Property="BadgeBackground">
-                                                                <Setter.Value>
-                                                                    <SolidColorBrush Color="{DynamicResource MaterialDesignErrorColor}" Opacity="0.7"/>
-                                                                </Setter.Value>
-                                                            </Setter>
-                                                            <Setter Property="Badge">
-                                                                <Setter.Value>
-                                                                    <material:PackIcon Kind="PowerPlugOff" Width="12" Height="12"/>
-                                                                </Setter.Value>
-                                                            </Setter>
+                                <Style TargetType="ListBox">
+                                    <Setter Property="ItemContainerStyle" Value="{StaticResource ContainerStyle}"/>
+                                </Style>
+                            </ListBox.Resources>
 
-                                                            <Style.Triggers>
-                                                                <DataTrigger Value="True">
-                                                                    <DataTrigger.Binding>
-                                                                        <MultiBinding Converter="{StaticResource ButtplugDeviceConnectedConverter}">
-                                                                            <Binding Path=""/>
-                                                                            <Binding Path="DataContext.AvailableDevices" RelativeSource="{RelativeSource AncestorType={x:Type UserControl}}"/>
-                                                                        </MultiBinding>
-                                                                    </DataTrigger.Binding>
-                                                                    <Setter Property="BadgeBackground">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <Border>
+                                        <DockPanel LastChildFill="False">
+                                            <material:ColorZone DockPanel.Dock="Left"
+                                                                Width="28"
+                                                                Height="24"
+                                                                Padding="5 3 5 3"
+                                                                HorizontalAlignment="Stretch"
+                                                                VerticalAlignment="Stretch"
+                                                                HorizontalContentAlignment="Center"
+                                                                VerticalContentAlignment="Center"
+                                                                CornerRadius="4 0 0 4">
+
+                                                <material:ColorZone.Resources>
+                                                    <Style TargetType="{x:Type material:ColorZone}">
+                                                        <Setter Property="Background" Value="{DynamicResource MaterialDesignLightErrorBrush}"/>
+                                                        <Setter Property="Content">
+                                                            <Setter.Value>
+                                                                <material:PackIcon Kind="PowerPlugOff"/>
+                                                            </Setter.Value>
+                                                        </Setter>
+
+                                                        <Style.Triggers>
+                                                            <DataTrigger Value="True">
+                                                                <DataTrigger.Binding>
+                                                                    <MultiBinding Converter="{StaticResource ButtplugDeviceConnectedConverter}">
+                                                                        <Binding Path=""/>
+                                                                        <Binding Path="DataContext.AvailableDevices" RelativeSource="{RelativeSource AncestorType={x:Type UserControl}}"/>
+                                                                    </MultiBinding>
+                                                                </DataTrigger.Binding>
+                                                                <DataTrigger.Setters>
+                                                                    <Setter Property="Background" Value="{DynamicResource MaterialDesignLightSuccessBrush}"/>
+                                                                    <Setter Property="Content">
                                                                         <Setter.Value>
-                                                                            <SolidColorBrush Color="{DynamicResource MaterialDesignSuccessColor}" Opacity="0.5"/>
+                                                                            <material:PackIcon Kind="PowerPlug"/>
                                                                         </Setter.Value>
                                                                     </Setter>
-                                                                    <Setter Property="Badge">
-                                                                        <Setter.Value>
-                                                                            <material:PackIcon Kind="PowerPlug" Width="12" Height="12"/>
-                                                                        </Setter.Value>
-                                                                    </Setter>
-                                                                </DataTrigger>
-                                                            </Style.Triggers>
-                                                        </Style>
-                                                    </material:Badged.Resources>
+                                                                </DataTrigger.Setters>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </material:ColorZone.Resources>
+                                            </material:ColorZone>
 
-                                                    <StackPanel Orientation="Horizontal">
-                                                        <TextBlock Text="{Binding DeviceName}"/>
-                                                        <TextBlock Text="{Binding DeviceIndex, StringFormat=[{0}]}" />
+                                            <StackPanel DockPanel.Dock="Left"
+                                                        Margin="10 0 0 0"
+                                                        Orientation="Horizontal"
+                                                        Typography.Capitals="SmallCaps">
+                                                <TextBlock VerticalAlignment="Center"
+                                                           FontWeight="Bold"
+                                                           Text="{Binding SourceAxis}"/>
+                                                <material:PackIcon Margin="10 0 10 0"
+                                                                   VerticalAlignment="Center"
+                                                                   Kind="TransferRight"/>
+
+                                                <StackPanel Height="24" Orientation="Vertical">
+                                                    <StackPanel Margin="0 1 0 0" Orientation="Horizontal">
+                                                        <TextBlock Width="55"
+                                                                   FontSize="11"
+                                                                   FontWeight="Bold"
+                                                                   Text="Device:"
+                                                                   Typography.Capitals="Normal"/>
+                                                        <TextBlock FontSize="11" Text="{Binding DeviceName}"/>
+                                                        <TextBlock FontSize="11" Text="{Binding DeviceIndex, StringFormat=/{0}}"/>
                                                     </StackPanel>
-                                                </material:Badged>
-                                            </DataTemplate>
-                                        </GridViewColumn.CellTemplate>
-                                    </GridViewColumn>
-                                    <GridViewColumn Header="Actuator Type"
-                                                    Width="140"
-                                                    DisplayMemberBinding="{Binding ActuatorType}"/>
-                                    <GridViewColumn Header="Index"
-                                                    Width="50"
-                                                    DisplayMemberBinding="{Binding ActuatorIndex}"/>
 
-                                    <GridViewColumn Header=""
-                                                        Width="50">
-                                        <GridViewColumn.CellTemplate>
-                                            <DataTemplate>
-                                                <Button Style="{StaticResource MaterialDesignFlatButton}"
-                                                        ToolTip="Remove"
-                                                        material:RippleAssist.Feedback="{DynamicResource MaterialDesignErrorBrush}"
-                                                        Foreground="{DynamicResource MaterialDesignErrorBrush}"
-                                                        Height="24" 
-                                                        Width="24" 
-                                                        Padding="0"
-                                                        Click="{s:Action OnSettingsDelete}" >
-                                                    <material:PackIcon Kind="Delete"/>
-                                                </Button>
-                                            </DataTemplate>
-                                        </GridViewColumn.CellTemplate>
-                                    </GridViewColumn>
-                                </GridView>
-                            </ListView.View>
-                        </ListView>
+                                                    <StackPanel Margin="0 -3 0 0" Orientation="Horizontal">
+                                                        <TextBlock Width="55"
+                                                                   FontSize="11"
+                                                                   FontWeight="Bold"
+                                                                   Text="Actuator:"
+                                                                   Typography.Capitals="Normal"/>
+                                                        <TextBlock FontSize="11" Text="{Binding ActuatorType}"/>
+                                                        <TextBlock FontSize="11" Text="{Binding ActuatorIndex, StringFormat=/{0}}"/>
+                                                    </StackPanel>
+                                                </StackPanel>
+                                            </StackPanel>
 
-                        <StackPanel Orientation="Horizontal"
-                                    Margin="0 0 0 10">
-                            <ComboBox Margin="5 0 10 0" 
+                                            <Button DockPanel.Dock="Right"
+                                                    Style="{StaticResource MaterialDesignFlatButton}"
+                                                    Width="18"
+                                                    Height="18"
+                                                    Margin="0 0 3 0"
+                                                    Padding="0"
+                                                    material:RippleAssist.Feedback="{DynamicResource MaterialDesignErrorBrush}"
+                                                    Click="{s:Action OnSettingsDelete}"
+                                                    Foreground="{DynamicResource MaterialDesignErrorBrush}"
+                                                    ToolTip="Remove">
+                                                <material:PackIcon Width="16"
+                                                                   Height="16"
+                                                                   Kind="Delete"/>
+                                            </Button>
+
+                                            <ComboBox DockPanel.Dock="Right"
+                                                      ItemsSource="{Binding Source={ui:EnumBindingSource {x:Type common:DeviceAxisUpdateType}}}"
+                                                      SelectedItem="{Binding UpdateType}"
+                                                      Width="90"
+                                                      Margin="0 3 10 0"
+                                                      Padding="0"
+                                                      VerticalAlignment="Center"
+                                                      material:TextFieldAssist.DecorationVisibility="Hidden"
+                                                      FontSize="12"/>
+
+                                            <TextBlock DockPanel.Dock="Right"
+                                                       Margin="0 0 5 0"
+                                                       VerticalAlignment="Center"
+                                                       FontSize="12"
+                                                       FontWeight="Bold"
+                                                       Text="Update:"/>
+                                        </DockPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+
+                        <StackPanel Margin="0 0 0 10" Orientation="Horizontal">
+                            <ComboBox ItemsSource="{Binding Source={x:Static common:DeviceAxis.All}}"
+                                      SelectedItem="{Binding SelectedDeviceAxis}"
                                       Width="50"
-                                      material:TextFieldAssist.HasClearButton="True"
-                                      material:HintAssist.HelperText="Axes"
+                                      Margin="5 0 10 0"
                                       HorizontalAlignment="Center"
-                                      ItemsSource="{Binding Source={x:Static common:DeviceAxis.All}}" 
-                                      SelectedItem="{Binding SelectedDeviceAxis}"/>
+                                      material:HintAssist.HelperText="Axes"
+                                      material:TextFieldAssist.HasClearButton="True"/>
 
-                            <ComboBox Margin="0 0 10 0"
-                                      Width="215"
-                                      material:TextFieldAssist.HasClearButton="True"
-                                      material:HintAssist.HelperText="Connected devices"
-                                      ItemsSource="{Binding AvailableDevices}" 
+                            <ComboBox ItemsSource="{Binding AvailableDevices}"
                                       SelectedItem="{Binding SelectedDevice}"
+                                      Width="215"
+                                      Margin="0 0 10 0"
+                                      material:HintAssist.HelperText="Connected devices"
+                                      material:TextFieldAssist.HasClearButton="True"
                                       IsEnabled="{Binding AvailableDevices.Count, Converter={StaticResource NotZeroConverter}}">
                                 <ComboBox.ItemTemplate>
                                     <DataTemplate>
                                         <StackPanel Orientation="Horizontal">
                                             <TextBlock Text="{Binding Name}"/>
-                                            <TextBlock Text="{Binding Index, StringFormat=[{0}]}" />
+                                            <TextBlock Text="{Binding Index, StringFormat=[{0}]}"/>
                                         </StackPanel>
                                     </DataTemplate>
                                 </ComboBox.ItemTemplate>
                             </ComboBox>
 
-                            <ComboBox Margin="0 0 10 0" 
-                                      Width="130"
-                                      material:TextFieldAssist.HasClearButton="True"
-                                      material:HintAssist.HelperText="Actuator types"
-                                      ItemsSource="{Binding AvailableActuatorTypes}" 
+                            <ComboBox ItemsSource="{Binding AvailableActuatorTypes}"
                                       SelectedItem="{Binding SelectedActuatorType}"
+                                      Width="130"
+                                      Margin="0 0 10 0"
+                                      material:HintAssist.HelperText="Actuator types"
+                                      material:TextFieldAssist.HasClearButton="True"
                                       IsEnabled="{Binding SelectedDevice, Converter={StaticResource InvertedNullableToBooleanConverter}}"/>
 
-                            <ComboBox Margin="0 0 10 0" 
-                                      Width="50"
-                                      material:TextFieldAssist.HasClearButton="True"
-                                      material:HintAssist.HelperText="Indices"
-                                      ItemsSource="{Binding AvailableActuatorIndices}" 
+                            <ComboBox ItemsSource="{Binding AvailableActuatorIndices}"
                                       SelectedItem="{Binding SelectedActuatorIndex}"
+                                      Width="50"
+                                      Margin="0 0 10 0"
+                                      material:HintAssist.HelperText="Indices"
+                                      material:TextFieldAssist.HasClearButton="True"
                                       IsEnabled="{Binding SelectedActuatorType, Converter={StaticResource InvertedNullableToBooleanConverter}}"/>
 
                             <Button Style="{StaticResource MaterialDesignFlatButton}"
-                                    ToolTip="Add"
-                                    material:RippleAssist.Feedback="{DynamicResource MaterialDesignSuccessBrush}"
-                                    Foreground="{DynamicResource MaterialDesignSuccessBrush}"
-                                    Height="24" 
-                                    Width="24" 
+                                    Width="24"
+                                    Height="24"
                                     Padding="0"
+                                    material:RippleAssist.Feedback="{DynamicResource MaterialDesignSuccessBrush}"
                                     Click="{s:Action OnSettingsAdd}"
-                                    IsEnabled="{Binding CanAddSelected}">
+                                    Foreground="{DynamicResource MaterialDesignSuccessBrush}"
+                                    IsEnabled="{Binding CanAddSelected}"
+                                    ToolTip="Add">
                                 <material:PackIcon Kind="Plus"/>
                             </Button>
                         </StackPanel>

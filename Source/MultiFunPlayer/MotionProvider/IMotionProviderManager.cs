@@ -1,7 +1,7 @@
 ﻿using MultiFunPlayer.Common;
-using MultiFunPlayer.Input;
 using MultiFunPlayer.MotionProvider.ViewModels;
 using MultiFunPlayer.Settings;
+using MultiFunPlayer.Shortcut;
 using Newtonsoft.Json.Linq;
 using NLog;
 using Stylet;
@@ -10,11 +10,12 @@ using System.Reflection;
 
 namespace MultiFunPlayer.MotionProvider;
 
-internal interface IMotionProviderManager : IDeviceAxisValueProvider
+internal interface IMotionProviderManager
 {
     IReadOnlyCollection<string> MotionProviderNames { get; }
 
     IMotionProvider GetMotionProvider(DeviceAxis axis, string motionProviderName);
+    double GetValue(DeviceAxis axis);
     void Update(DeviceAxis axis, string motionProviderName, double deltaTime);
     void RegisterActions(IShortcutManager shortcutManager);
 }

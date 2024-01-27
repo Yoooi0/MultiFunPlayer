@@ -1,15 +1,14 @@
 ﻿using MultiFunPlayer.Common;
-using MultiFunPlayer.Input;
 using MultiFunPlayer.UI;
 using NLog;
 using Stylet;
 using System.ComponentModel;
 using System.IO;
-using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Xml;
 using Newtonsoft.Json.Linq;
+using MultiFunPlayer.Shortcut;
 
 namespace MultiFunPlayer.MediaSource.ViewModels;
 
@@ -23,14 +22,19 @@ internal sealed class PlexMediaSource(IShortcutManager shortcutManager, IEventAg
     private long _commandId;
 
     public override ConnectionStatus Status { get; protected set; }
+    public bool IsConnected => Status == ConnectionStatus.Connected;
+    public bool IsDisconnected => Status == ConnectionStatus.Disconnected;
+    public bool IsConnectBusy => Status == ConnectionStatus.Connecting || Status == ConnectionStatus.Disconnecting;
+    public bool CanToggleConnect => !IsConnectBusy && SelectedClient != null && !string.IsNullOrWhiteSpace(PlexToken);
 
     public ObservableConcurrentCollection<PlexClient> Clients { get; } = [];
     public PlexClient SelectedClient { get; set; } = null;
     public string SelectedClientMachineIdentifier { get; set; } = null;
-    public EndPoint ServerEndpoint { get; set; } = new IPEndPoint(IPAddress.Loopback, 32400);
+    public Uri ServerBaseUri { get; set; } = new Uri("http://127.0.0.1:32400");
     public string PlexToken { get; set; } = null;
     private string ClientIdentifier { get; set; } = Guid.NewGuid().ToString();
 
+    public bool CanChangeClient => IsDisconnected && !IsRefreshBusy && !string.IsNullOrWhiteSpace(PlexToken) && Clients.Count != 0;
     public void OnSelectedClientChanged() => SelectedClientMachineIdentifier = SelectedClient?.MachineIdentifier;
 
     protected override void OnInitialActivate()
@@ -39,12 +43,7 @@ internal sealed class PlexMediaSource(IShortcutManager shortcutManager, IEventAg
         _ = RefreshClients();
     }
 
-    public bool CanChangeClient => !IsConnected && !IsConnectBusy && !IsRefreshBusy && !string.IsNullOrWhiteSpace(PlexToken) && Clients.Count != 0;
-    public bool IsConnected => Status == ConnectionStatus.Connected;
-    public bool IsConnectBusy => Status == ConnectionStatus.Connecting || Status == ConnectionStatus.Disconnecting;
-    public bool CanToggleConnect => !IsConnectBusy && SelectedClient != null && !string.IsNullOrWhiteSpace(PlexToken);
-
-    protected override async Task<bool> OnConnectingAsync()
+    protected override async ValueTask<bool> OnConnectingAsync()
     {
         if (SelectedClientMachineIdentifier == null)
             return false;
@@ -58,8 +57,8 @@ internal sealed class PlexMediaSource(IShortcutManager shortcutManager, IEventAg
     {
         try
         {
-            Logger.Info("Connecting to {0} at \"{1}\"", Name, ServerEndpoint);
-            if (ServerEndpoint == null)
+            Logger.Info("Connecting to {0} at \"{1}\"", Name, ServerBaseUri);
+            if (ServerBaseUri == null)
                 throw new Exception("Endpoint cannot be null.");
             if (string.IsNullOrEmpty(PlexToken))
                 throw new Exception("Plex token cannot be empty.");
@@ -97,7 +96,7 @@ internal sealed class PlexMediaSource(IShortcutManager shortcutManager, IEventAg
         {
             _commandId = 0L;
             var lastMetadataUri = default(Uri);
-            var basePollUri = new Uri($"http://{ServerEndpoint.ToUriString()}/player/timeline/poll");
+            var basePollUri = new Uri(ServerBaseUri, "/player/timeline/poll");
 
             while (!token.IsCancellationRequested)
             {
@@ -134,7 +133,7 @@ internal sealed class PlexMediaSource(IShortcutManager shortcutManager, IEventAg
 
             async Task<bool> UpdateMetadataIfNecessaryAsync(string metadataKey, int? streamId)
             {
-                var messageUri = new Uri($"http://{ServerEndpoint.ToUriString()}{metadataKey}");
+                var messageUri = new Uri(ServerBaseUri, metadataKey);
                 if (messageUri == lastMetadataUri)
                     return true;
 
@@ -263,7 +262,7 @@ internal sealed class PlexMediaSource(IShortcutManager shortcutManager, IEventAg
                 if (string.IsNullOrWhiteSpace(messageUriPath))
                     continue;
 
-                var messageUri = new Uri($"http://{ServerEndpoint.ToUriString()}{messageUriPath}");
+                var messageUri = new Uri(ServerBaseUri, messageUriPath);
                 Logger.Info("Sending \"{0}\" to \"{1}\"", messageUriPath, Name);
 
                 var requestMessage = new HttpRequestMessage(HttpMethod.Get, messageUri);
@@ -291,7 +290,7 @@ internal sealed class PlexMediaSource(IShortcutManager shortcutManager, IEventAg
         catch (OperationCanceledException) { }
     }
 
-    public bool CanRefreshClients => !IsRefreshBusy && !IsConnected && !IsConnectBusy && ServerEndpoint != null && !string.IsNullOrWhiteSpace(PlexToken);
+    public bool CanRefreshClients => !IsRefreshBusy && IsDisconnected && ServerBaseUri != null && !string.IsNullOrWhiteSpace(PlexToken);
     public bool IsRefreshBusy { get; set; }
 
     private int _isRefreshingFlag;
@@ -328,7 +327,7 @@ internal sealed class PlexMediaSource(IShortcutManager shortcutManager, IEventAg
             using var client = NetUtils.CreateHttpClient();
             client.Timeout = TimeSpan.FromMilliseconds(5000);
 
-            var message = new HttpRequestMessage(HttpMethod.Get, new Uri($"http://{ServerEndpoint.ToUriString()}/clients"));
+            var message = new HttpRequestMessage(HttpMethod.Get, new Uri(ServerBaseUri, "/clients"));
             AddDefaultHeaders(message.Headers);
 
             var response = await client.SendAsync(message, token);
@@ -379,7 +378,7 @@ internal sealed class PlexMediaSource(IShortcutManager shortcutManager, IEventAg
 
         if (action == SettingsAction.Saving)
         {
-            settings[nameof(ServerEndpoint)] = JToken.FromObject(ServerEndpoint);
+            settings[nameof(ServerBaseUri)] = JToken.FromObject(ServerBaseUri);
             settings[nameof(PlexToken)] = PlexToken;
             settings[nameof(ClientIdentifier)] = ClientIdentifier;
             settings[nameof(SelectedClient)] = SelectedClientMachineIdentifier;
@@ -388,8 +387,8 @@ internal sealed class PlexMediaSource(IShortcutManager shortcutManager, IEventAg
         {
             if (settings.TryGetValue<string>(nameof(SelectedClient), out var machineIdentifier))
                 SelectClientByMachineIdentifier(machineIdentifier);
-            if (settings.TryGetValue<EndPoint>(nameof(ServerEndpoint), out var endpoint))
-                ServerEndpoint = endpoint;
+            if (settings.TryGetValue<Uri>(nameof(ServerBaseUri), out var serverBaseUri))
+                ServerBaseUri = serverBaseUri;
             if (settings.TryGetValue<string>(nameof(PlexToken), out var plexToken))
                 PlexToken = plexToken;
             if (settings.TryGetValue<string>(nameof(ClientIdentifier), out var clientIdentifier))
@@ -401,11 +400,11 @@ internal sealed class PlexMediaSource(IShortcutManager shortcutManager, IEventAg
     {
         base.RegisterActions(s);
 
-        #region ServerEndpoint
-        s.RegisterAction<string>($"{Name}::Endpoint::Set", s => s.WithLabel("Endpoint").WithDescription("ip/host:port"), endpointString =>
+        #region ServerBaseUri
+        s.RegisterAction<string>($"{Name}::ServerBaseUri::Set", s => s.WithLabel("Endpoint").WithDescription("scheme://ipOrHost:port"), serverBaseUri =>
         {
-            if (NetUtils.TryParseEndpoint(endpointString, out var endpoint))
-                ServerEndpoint = endpoint;
+            if (Uri.TryCreate(serverBaseUri, UriKind.Absolute, out var uri))
+                ServerBaseUri = uri;
         });
         #endregion
 
@@ -433,7 +432,7 @@ internal sealed class PlexMediaSource(IShortcutManager shortcutManager, IEventAg
         headers.TryAddWithoutValidation("X-Plex-Client-Identifier", ClientIdentifier);
         headers.TryAddWithoutValidation("X-Plex-Provides", "controller");
         headers.TryAddWithoutValidation("X-Plex-Product", nameof(MultiFunPlayer));
-        headers.TryAddWithoutValidation("X-Plex-Version", ReflectionUtils.AssemblyVersion.ToString());
+        headers.TryAddWithoutValidation("X-Plex-Version", GitVersionInformation.MajorMinorPatch);
         headers.TryAddWithoutValidation("X-Plex-Sync-Version", "2");
         headers.TryAddWithoutValidation("X-Plex-Features", "external-media");
         headers.TryAddWithoutValidation("X-Plex-Token", PlexToken);
@@ -441,13 +440,13 @@ internal sealed class PlexMediaSource(IShortcutManager shortcutManager, IEventAg
 
     public override async ValueTask<bool> CanConnectAsync(CancellationToken token)
     {
-        if (ServerEndpoint == null)
+        if (ServerBaseUri == null)
             return false;
 
         using var client = NetUtils.CreateHttpClient();
         client.Timeout = TimeSpan.FromMilliseconds(5000);
 
-        var message = new HttpRequestMessage(HttpMethod.Head, new Uri($"http://{ServerEndpoint.ToUriString()}/clients"));
+        var message = new HttpRequestMessage(HttpMethod.Head, new Uri(ServerBaseUri, "/clients"));
         AddDefaultHeaders(message.Headers);
 
         var response = await client.SendAsync(message, token);

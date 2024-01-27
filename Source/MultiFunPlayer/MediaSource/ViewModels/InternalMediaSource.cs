@@ -1,6 +1,6 @@
 using MultiFunPlayer.Common;
-using MultiFunPlayer.Input;
 using MultiFunPlayer.Script;
+using MultiFunPlayer.Shortcut;
 using MultiFunPlayer.UI;
 using Newtonsoft.Json.Linq;
 using NLog;
@@ -28,15 +28,16 @@ internal sealed class InternalMediaSource(IShortcutManager shortcutManager, IEve
     private PlaylistItem _currentItem;
 
     public override ConnectionStatus Status { get; protected set; }
+    public bool IsConnected => Status == ConnectionStatus.Connected;
+    public bool IsDisconnected => Status == ConnectionStatus.Disconnected;
+    public bool IsConnectBusy => Status == ConnectionStatus.Connecting || Status == ConnectionStatus.Disconnecting;
+    public bool CanToggleConnect => !IsConnectBusy;
+
     public int PlaylistIndex { get; set; } = 0;
     public Playlist ScriptPlaylist { get; set; } = null;
 
     public bool IsShuffling { get; set; } = false;
     public bool IsLooping { get; set; } = false;
-
-    public bool IsConnected => Status == ConnectionStatus.Connected;
-    public bool IsConnectBusy => Status == ConnectionStatus.Connecting || Status == ConnectionStatus.Disconnecting;
-    public bool CanToggleConnect => !IsConnectBusy;
 
     protected override async Task RunAsync(CancellationToken token)
     {

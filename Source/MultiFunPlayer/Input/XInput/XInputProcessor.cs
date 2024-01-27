@@ -76,14 +76,15 @@ internal sealed class XInputProcessor : IInputProcessor
     {
         Logger.Trace("User: {0}, Keystroke: {1}, Flags: {2}", userIndex, keystroke.VirtualKey, keystroke.Flags);
 
-        if (keystroke.Flags == KeyStrokeFlags.KeyDown)
+        if (keystroke.Flags == KeyStrokeFlags.KeyDown || keystroke.Flags == KeyStrokeFlags.Repeat)
         {
             _pressedKeys.Add(keystroke.VirtualKey);
+            HandleGesture(GamepadButtonGesture.Create(userIndex, _pressedKeys, true));
         }
         else if (keystroke.Flags == KeyStrokeFlags.KeyUp)
         {
             if (_pressedKeys.Count > 0)
-                HandleGesture(GamepadButtonGesture.Create(userIndex, _pressedKeys));
+                HandleGesture(GamepadButtonGesture.Create(userIndex, _pressedKeys, false));
             _pressedKeys.Clear();
         }
     }
@@ -92,7 +93,7 @@ internal sealed class XInputProcessor : IInputProcessor
     {
         void CreateAxisGestureShort(short last, short current, GamepadAxis axis)
         {
-            if (current != last)
+            if (current == last)
                 return;
 
             var delta = MathUtils.UnLerp(-ushort.MaxValue, ushort.MaxValue, current - last);
@@ -102,7 +103,7 @@ internal sealed class XInputProcessor : IInputProcessor
 
         void CreateAxisGestureByte(byte last, byte current, GamepadAxis axis)
         {
-            if (current != last)
+            if (current == last)
                 return;
 
             var delta = MathUtils.UnLerp(-byte.MaxValue, byte.MaxValue, current - last);

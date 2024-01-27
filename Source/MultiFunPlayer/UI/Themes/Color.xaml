@@ -10,49 +10,89 @@
     <Color x:Key="Accent700">#455a64</Color>
     <Color x:Key="Accent700Foreground">#DDFFFFFF</Color>
 
-    <SolidColorBrush x:Key="InvertedPrimaryHueLightBrush" Color="{StaticResource Primary200}" po:Freeze="True" />
-    <SolidColorBrush x:Key="InvertedPrimaryHueLightForegroundBrush" Color="{StaticResource Primary200Foreground}" po:Freeze="True" />
-    <SolidColorBrush x:Key="InvertedPrimaryHueDarkBrush" Color="{StaticResource Primary700}" po:Freeze="True" />
-    <SolidColorBrush x:Key="InvertedPrimaryHueDarkForegroundBrush" Color="{StaticResource Primary700Foreground}" po:Freeze="True" />
+    <SolidColorBrush x:Key="InvertedPrimaryHueLightBrush"
+                     po:Freeze="True"
+                     Color="{StaticResource Primary200}"/>
+    <SolidColorBrush x:Key="InvertedPrimaryHueLightForegroundBrush"
+                     po:Freeze="True"
+                     Color="{StaticResource Primary200Foreground}"/>
+    <SolidColorBrush x:Key="InvertedPrimaryHueDarkBrush"
+                     po:Freeze="True"
+                     Color="{StaticResource Primary700}"/>
+    <SolidColorBrush x:Key="InvertedPrimaryHueDarkForegroundBrush"
+                     po:Freeze="True"
+                     Color="{StaticResource Primary700Foreground}"/>
 
-    <SolidColorBrush x:Key="SecondaryHueMidBrush" Color="{StaticResource Accent700}" po:Freeze="True" />
-    <SolidColorBrush x:Key="SecondaryHueMidForegroundBrush" Color="{StaticResource Accent700Foreground}" po:Freeze="True" />
+    <SolidColorBrush x:Key="SecondaryHueMidBrush"
+                     po:Freeze="True"
+                     Color="{StaticResource Accent700}"/>
+    <SolidColorBrush x:Key="SecondaryHueMidForegroundBrush"
+                     po:Freeze="True"
+                     Color="{StaticResource Accent700Foreground}"/>
 
-    <SolidColorBrush x:Key="MaterialDesignErrorBrush" Color="{StaticResource MaterialDesignErrorColor}" po:Freeze="True" />
-    <SolidColorBrush x:Key="MaterialDesignPendingBrush" Color="{StaticResource MaterialDesignPendingColor}" po:Freeze="True" />
-    <SolidColorBrush x:Key="MaterialDesignWarningBrush" Color="{StaticResource MaterialDesignWarningColor}" po:Freeze="True" />
-    <SolidColorBrush x:Key="MaterialDesignSuccessBrush" Color="{StaticResource MaterialDesignSuccessColor}" po:Freeze="True" />
+    <SolidColorBrush x:Key="MaterialDesignErrorBrush"
+                     po:Freeze="True"
+                     Color="{StaticResource MaterialDesignErrorColor}"/>
+    <SolidColorBrush x:Key="MaterialDesignPendingBrush"
+                     po:Freeze="True"
+                     Color="{StaticResource MaterialDesignPendingColor}"/>
+    <SolidColorBrush x:Key="MaterialDesignWarningBrush"
+                     po:Freeze="True"
+                     Color="{StaticResource MaterialDesignWarningColor}"/>
+    <SolidColorBrush x:Key="MaterialDesignSuccessBrush"
+                     po:Freeze="True"
+                     Color="{StaticResource MaterialDesignSuccessColor}"/>
 
-    <SolidColorBrush x:Key="MaterialDesignLightErrorBrush" Color="{StaticResource MaterialDesignLightErrorColor}" po:Freeze="True" />
-    <SolidColorBrush x:Key="MaterialDesignLightPendingBrush" Color="{StaticResource MaterialDesignLightPendingColor}" po:Freeze="True" />
-    <SolidColorBrush x:Key="MaterialDesignLightWarningBrush" Color="{StaticResource MaterialDesignLightWarningColor}" po:Freeze="True" />
-    <SolidColorBrush x:Key="MaterialDesignLightSuccessBrush" Color="{StaticResource MaterialDesignLightSuccessColor}" po:Freeze="True" />
+    <SolidColorBrush x:Key="MaterialDesignLightErrorBrush"
+                     po:Freeze="True"
+                     Color="{StaticResource MaterialDesignLightErrorColor}"/>
+    <SolidColorBrush x:Key="MaterialDesignLightPendingBrush"
+                     po:Freeze="True"
+                     Color="{StaticResource MaterialDesignLightPendingColor}"/>
+    <SolidColorBrush x:Key="MaterialDesignLightWarningBrush"
+                     po:Freeze="True"
+                     Color="{StaticResource MaterialDesignLightWarningColor}"/>
+    <SolidColorBrush x:Key="MaterialDesignLightSuccessBrush"
+                     po:Freeze="True"
+                     Color="{StaticResource MaterialDesignLightSuccessColor}"/>
 
-    <SolidColorBrush x:Key="MaterialDesignPrimaryCheckerboxBrush" Color="{StaticResource MaterialDesignPrimaryCheckerboxColor}" po:Freeze="True" />
-    <SolidColorBrush x:Key="MaterialDesignSecondaryCheckerboxBrush" Color="{StaticResource MaterialDesignSecondaryCheckerboxColor}" po:Freeze="True" />
+    <SolidColorBrush x:Key="MaterialDesignPrimaryCheckerboxBrush"
+                     po:Freeze="True"
+                     Color="{StaticResource MaterialDesignPrimaryCheckerboxColor}"/>
+    <SolidColorBrush x:Key="MaterialDesignSecondaryCheckerboxBrush"
+                     po:Freeze="True"
+                     Color="{StaticResource MaterialDesignSecondaryCheckerboxColor}"/>
 
-    <SolidColorBrush x:Key="MaterialDesignBodyDisabled" Color="{StaticResource MaterialDesignBodyDisabled}" po:Freeze="True" />
+    <SolidColorBrush x:Key="MaterialDesignBodyDisabled"
+                     po:Freeze="True"
+                     Color="{StaticResource MaterialDesignBodyDisabled}"/>
 
-    <SolidColorBrush x:Key="MaterialDesignCardBackgroundHover" Color="{StaticResource MaterialDesignCardBackgroundHover}" po:Freeze="True" />
-    <SolidColorBrush x:Key="MaterialDesignCardBackgroundSelected" Color="{StaticResource MaterialDesignCardBackgroundSelected}" po:Freeze="True" />
+    <SolidColorBrush x:Key="MaterialDesignCardBackgroundHover"
+                     po:Freeze="True"
+                     Color="{StaticResource MaterialDesignCardBackgroundHover}"/>
+    <SolidColorBrush x:Key="MaterialDesignCardBackgroundSelected"
+                     po:Freeze="True"
+                     Color="{StaticResource MaterialDesignCardBackgroundSelected}"/>
 
     <SolidColorBrush x:Key="HighlightBrush" Color="{DynamicResource Primary700}"/>
-    <SolidColorBrush x:Key="AccentBaseColorBrush" Color="{DynamicResource Primary600}" />
+    <SolidColorBrush x:Key="AccentBaseColorBrush" Color="{DynamicResource Primary600}"/>
     <SolidColorBrush x:Key="AccentColorBrush" Color="{DynamicResource Primary500}"/>
     <SolidColorBrush x:Key="AccentColorBrush2" Color="{DynamicResource Primary400}"/>
     <SolidColorBrush x:Key="AccentColorBrush3" Color="{DynamicResource Primary300}"/>
     <SolidColorBrush x:Key="AccentColorBrush4" Color="{DynamicResource Primary200}"/>
     <SolidColorBrush x:Key="WindowTitleColorBrush" Color="{DynamicResource Primary700}"/>
     <SolidColorBrush x:Key="AccentSelectedColorBrush" Color="{DynamicResource Primary500Foreground}"/>
-    <LinearGradientBrush x:Key="ProgressBrush" EndPoint="0.001,0.5" StartPoint="1.002,0.5">
-        <GradientStop Color="{DynamicResource Primary700}" Offset="0"/>
-        <GradientStop Color="{DynamicResource Primary300}" Offset="1"/>
+    <LinearGradientBrush x:Key="ProgressBrush" StartPoint="1.002,0.5" EndPoint="0.001,0.5">
+        <GradientStop Offset="0" Color="{DynamicResource Primary700}"/>
+        <GradientStop Offset="1" Color="{DynamicResource Primary300}"/>
     </LinearGradientBrush>
     <SolidColorBrush x:Key="CheckmarkFill" Color="{DynamicResource Primary500}"/>
     <SolidColorBrush x:Key="RightArrowFill" Color="{DynamicResource Primary500}"/>
     <SolidColorBrush x:Key="IdealForegroundColorBrush" Color="{DynamicResource Primary500Foreground}"/>
-    <SolidColorBrush x:Key="IdealForegroundDisabledBrush" Color="{DynamicResource Primary500}" Opacity="0.4"/>
-    <SolidColorBrush x:Key="MahApps.Metro.Brushes.ToggleSwitchButton.OnSwitchBrush.Win10" Color="{DynamicResource Primary500}" />
-    <SolidColorBrush x:Key="MahApps.Metro.Brushes.ToggleSwitchButton.OnSwitchMouseOverBrush.Win10" Color="{DynamicResource Primary400}" />
-    <SolidColorBrush x:Key="MahApps.Metro.Brushes.ToggleSwitchButton.ThumbIndicatorCheckedBrush.Win10" Color="{DynamicResource Primary500Foreground}" />
+    <SolidColorBrush x:Key="IdealForegroundDisabledBrush"
+                     Opacity="0.4"
+                     Color="{DynamicResource Primary500}"/>
+    <SolidColorBrush x:Key="MahApps.Metro.Brushes.ToggleSwitchButton.OnSwitchBrush.Win10" Color="{DynamicResource Primary500}"/>
+    <SolidColorBrush x:Key="MahApps.Metro.Brushes.ToggleSwitchButton.OnSwitchMouseOverBrush.Win10" Color="{DynamicResource Primary400}"/>
+    <SolidColorBrush x:Key="MahApps.Metro.Brushes.ToggleSwitchButton.ThumbIndicatorCheckedBrush.Win10" Color="{DynamicResource Primary500Foreground}"/>
 </ResourceDictionary>

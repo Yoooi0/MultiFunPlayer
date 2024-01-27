@@ -11,6 +11,8 @@ internal sealed class DisplayNameConverter : IValueConverter
     {
         if (value == null)
             return null;
+        if (value is string)
+            return null;
         if (value is Type type)
             return type.GetCustomAttribute<DisplayNameAttribute>().DisplayName;
 

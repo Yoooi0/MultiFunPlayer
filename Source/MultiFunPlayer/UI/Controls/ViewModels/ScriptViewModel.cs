@@ -23,6 +23,7 @@ using MultiFunPlayer.Property;
 using Microsoft.Win32;
 using MultiFunPlayer.Script;
 using MultiFunPlayer.Script.Repository;
+using MultiFunPlayer.Shortcut;
 
 namespace MultiFunPlayer.UI.Controls.ViewModels;
 
@@ -67,8 +68,9 @@ internal sealed class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDispo
     [JsonProperty] public bool ValuesContentVisible { get; set; } = false;
     [JsonProperty] public bool MediaContentVisible { get; set; } = false;
     [JsonProperty] public bool AxisContentVisible { get; set; } = false;
-    [JsonProperty] public bool HeatmapShowStrokeLength { get; set; } = true;
+    [JsonProperty] public bool HeatmapShowRange { get; set; } = true;
     [JsonProperty] public bool HeatmapEnablePreview { get; set; } = true;
+    [JsonProperty] public bool HeatmapCombineHeat { get; set; } = true;
     [JsonProperty] public int HeatmapBucketCount { get; set; } = 333;
     [JsonProperty] public bool HeatmapInvertY { get; set; } = false;
     [JsonProperty] public bool AutoSkipToScriptStartEnabled { get; set; } = true;
@@ -121,7 +123,7 @@ internal sealed class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDispo
         const double uiUpdateInterval = 1d / 60d;
         const double mediaLoopUpdateInterval = 1d / 10d;
 
-        var contexts = DeviceAxis.All.ToDictionary(a => a, a => new AxisStateUpdateContext(AxisStates[a]));
+        var contexts = DeviceAxis.All.ToDictionary(a => a, a => new AxisStateUpdateContext(AxisModels[a]));
 
         var uiUpdateTime = 0d;
         var mediaLoopUpdateTime = 0d;
@@ -150,10 +152,7 @@ internal sealed class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDispo
             }
 
             foreach (var axis in DeviceAxis.All)
-            {
-                Monitor.Enter(AxisStates[axis]);
                 contexts[axis].BeginUpdate();
-            }
 
             var dirty = false;
             foreach (var axis in DeviceAxis.All)
@@ -167,10 +166,7 @@ internal sealed class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDispo
             }
 
             foreach (var axis in DeviceAxis.All)
-            {
                 contexts[axis].EndUpdate(deltaTime);
-                Monitor.Exit(AxisStates[axis]);
-            }
 
             return dirty;
 
@@ -678,8 +674,10 @@ internal sealed class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDispo
             if (settings.TryGetValue<bool>(nameof(MediaContentVisible), out var mediaContentVisible)) MediaContentVisible = mediaContentVisible;
             if (settings.TryGetValue<bool>(nameof(AxisContentVisible), out var axisContentVisible)) AxisContentVisible = axisContentVisible;
             if (settings.TryGetValue<int>(nameof(HeatmapBucketCount), out var heatmapBucketCount)) HeatmapBucketCount = heatmapBucketCount;
+            if (settings.TryGetValue<bool>(nameof(HeatmapEnablePreview), out var heatmapEnablePreview)) HeatmapEnablePreview = heatmapEnablePreview;
+            if (settings.TryGetValue<bool>(nameof(HeatmapCombineHeat), out var heatmapCombineHeat)) HeatmapCombineHeat = heatmapCombineHeat;
             if (settings.TryGetValue<bool>(nameof(HeatmapInvertY), out var heatmapInvertY)) HeatmapInvertY = heatmapInvertY;
-            if (settings.TryGetValue<bool>(nameof(HeatmapShowStrokeLength), out var heatmapShowStrokeLength)) HeatmapShowStrokeLength = heatmapShowStrokeLength;
+            if (settings.TryGetValue<bool>(nameof(HeatmapShowRange), out var heatmapShowRange)) HeatmapShowRange = heatmapShowRange;
             if (settings.TryGetValue<bool>(nameof(AutoSkipToScriptStartEnabled), out var autoSkipToScriptStartEnabled)) AutoSkipToScriptStartEnabled = autoSkipToScriptStartEnabled;
             if (settings.TryGetValue<double>(nameof(AutoSkipToScriptStartOffset), out var autoSkipToScriptStartOffset)) AutoSkipToScriptStartOffset = autoSkipToScriptStartOffset;
 
@@ -723,6 +721,38 @@ internal sealed class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDispo
 
     private double GetAxisPosition(DeviceAxis axis) => MediaPosition - GlobalOffset - AxisSettings[axis].Offset;
     public double GetValue(DeviceAxis axis) => MathUtils.Clamp01(AxisStates[axis].Value);
+
+    public void BeginSnapshotPolling(object context)
+    {
+        foreach (var (_, state) in AxisStates)
+            state.ScriptSnapshotEvent.RegisterContext(context);
+    }
+
+    public void EndSnapshotPolling(object context)
+    {
+        foreach (var (_, state) in AxisStates)
+            state.ScriptSnapshotEvent.UnregisterContext(context);
+    }
+
+    public (DeviceAxis, DeviceAxisScriptSnapshot) WaitForSnapshotAny(IReadOnlyList<DeviceAxis> axes, object context, CancellationToken cancellationToken)
+    {
+        axes ??= DeviceAxis.All;
+        var (index, snapshot) = BroadcastEvent<DeviceAxisScriptSnapshot>.WaitAny(axes.Select(a => AxisStates[a].ScriptSnapshotEvent).ToArray(), context, cancellationToken);
+        return (axes[index], snapshot);
+    }
+
+    public async ValueTask<(DeviceAxis, DeviceAxisScriptSnapshot)> WaitForSnapshotAnyAsync(IReadOnlyList<DeviceAxis> axes, object context, CancellationToken cancellationToken)
+    {
+        axes ??= DeviceAxis.All;
+        var (index, snapshot) = await BroadcastEvent<DeviceAxisScriptSnapshot>.WaitAnyAsync(axes.Select(a => AxisStates[a].ScriptSnapshotEvent).ToArray(), context, cancellationToken);
+        return (axes[index], snapshot);
+    }
+
+    public (bool, DeviceAxisScriptSnapshot) WaitForSnapshot(DeviceAxis axis, object context, CancellationToken cancellationToken)
+        => AxisStates[axis].ScriptSnapshotEvent.WaitOne(context, cancellationToken);
+
+    public async ValueTask<(bool, DeviceAxisScriptSnapshot)> WaitForSnapshotAsync(DeviceAxis axis, object context, CancellationToken cancellationToken)
+        => await AxisStates[axis].ScriptSnapshotEvent.WaitOneAsync(context, cancellationToken);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private double GetSyncProgress(double time, double duration) => MathUtils.Clamp01(Math.Pow(2, -10 * MathUtils.Clamp01(time / duration)));
@@ -781,20 +811,18 @@ internal sealed class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDispo
         foreach (var axis in axes)
         {
             var model = AxisModels[axis];
-            if (model.Settings.LinkAxis == null)
+            if (model.Settings.LinkAxisHasPriority || model.Script == null || model.Script is LinkedScriptResource)
             {
-                if (model.Settings.LinkAxisHasPriority)
+                if (model.Settings.LinkAxis == null)
+                {
                     ResetAxes(axis);
-
-                continue;
+                }
+                else
+                {
+                    Logger.Debug("Linked {0} to {1}", axis, model.Settings.LinkAxis);
+                    SetScript(axis, ScriptResource.LinkTo(AxisModels[model.Settings.LinkAxis].Script));
+                }
             }
-
-            if (model.Script != null && !model.Settings.LinkAxisHasPriority && model.Script is not LinkedScriptResource)
-                continue;
-
-            Logger.Debug("Linked {0} to {1}", axis, model.Settings.LinkAxis);
-
-            SetScript(axis, ScriptResource.LinkTo(AxisModels[model.Settings.LinkAxis].Script));
         }
     }
 
@@ -866,6 +894,7 @@ internal sealed class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDispo
 
         ScriptRepositoryManager.BeginSearchForScripts(MediaResource, axesWithoutLinkPriority, scripts =>
             {
+                UpdateLinkScriptFor(axesWithoutLinkPriority.Except(scripts.Keys));
                 foreach (var (axis, resource) in scripts)
                     SetScript(axis, resource);
 
@@ -1519,9 +1548,9 @@ internal sealed class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDispo
             s => s.WithLabel("Duration").WithStringFormat("{}{0:0.00}s"),
             (axis, value, duration) => SetAxisTransition(axis, value, duration));
 
-        s.RegisterAction<IAxisInputGesture, DeviceAxis>("Axis::Value::Drive",
+        s.RegisterAction<IAxisInputGestureData, DeviceAxis>("Axis::Value::Drive",
             s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All),
-            (gesture, axis) => SetAxisTransition(axis, gesture.Delta, gesture.DeltaTime, offset: true));
+            (data, axis) => SetAxisTransition(axis, data.ValueOrDelta, data.DeltaTime, offset: data.IsRelative));
         #endregion
 
         #region Axis::Sync
@@ -1806,9 +1835,9 @@ internal sealed class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDispo
             s => s.WithLabel("Value").WithStringFormat("{}{0}%"),
             (axis, value) => UpdateSettings(axis, s => s.MotionProviderBlend = Math.Clamp(value, 0, 100)));
 
-        s.RegisterAction<IAxisInputGesture, DeviceAxis>("Axis::MotionProviderBlend::Drive",
+        s.RegisterAction<IAxisInputGestureData, DeviceAxis>("Axis::MotionProviderBlend::Drive",
             s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All),
-            (gesture, axis) => UpdateSettings(axis, s => s.MotionProviderBlend = Math.Clamp(s.MotionProviderBlend + gesture.Delta * 100, 0, 100)));
+            (data, axis) => UpdateSettings(axis, s => s.MotionProviderBlend = Math.Clamp(data.ApplyTo(s.MotionProviderBlend, 100), 0, 100)));
         #endregion
 
         #region Axis::MotionProviderFillGaps
@@ -1934,6 +1963,7 @@ internal sealed partial class AxisState
     [DoNotNotify] public double Speed { get; set; } = double.NaN;
 
     [DoNotNotify] public AxisValueTransition ExternalTransition { get; } = new AxisValueTransition();
+    [DoNotNotify] public BroadcastEvent<DeviceAxisScriptSnapshot> ScriptSnapshotEvent { get; } = new BroadcastEvent<DeviceAxisScriptSnapshot>();
 
     [DoNotNotify] public int Index { get; set; } = InvalidIndex;
     [DoNotNotify] public bool Invalid => Index == InvalidIndex;
@@ -1999,39 +2029,42 @@ internal sealed class AxisValueTransition
     }
 }
 
-internal sealed class AxisStateUpdateContext(AxisState state)
+internal sealed class AxisStateUpdateContext(AxisModel model)
 {
+    private readonly AxisModel _model = model;
+    private readonly AxisState _state = model.State;
+
     public int Index { get; set; }
     public bool Invalid => Index == AxisState.InvalidIndex;
     public bool BeforeScript => Index == AxisState.BeforeScriptIndex;
     public bool AfterScript => Index == AxisState.AfterScriptIndex;
     public bool InsideScript => Index >= 0 && Index != AxisState.AfterScriptIndex;
 
-    public int LastIndex => state.Index;
-    public bool LastInvalid => state.Invalid;
-    public bool LastBeforeScript => state.BeforeScript;
-    public bool LastAfterScript => state.AfterScript;
-    public bool LastInsideScript => state.InsideScript;
+    public int LastIndex => _state.Index;
+    public bool LastInvalid => _state.Invalid;
+    public bool LastBeforeScript => _state.BeforeScript;
+    public bool LastAfterScript => _state.AfterScript;
+    public bool LastInsideScript => _state.InsideScript;
 
     public double Value { get; set; }
     public double ScriptValue { get; set; }
     public double TransitionValue { get; set; }
     public double MotionProviderValue { get; set; }
 
-    public double LastValue => state.Value;
-    public double LastScriptValue => state.ScriptValue;
-    public double LastMotionProviderValue => state.MotionProviderValue;
-    public double LastTransitionValue => state.TransitionValue;
+    public double LastValue => _state.Value;
+    public double LastScriptValue => _state.ScriptValue;
+    public double LastMotionProviderValue => _state.MotionProviderValue;
+    public double LastTransitionValue => _state.TransitionValue;
 
     public bool InsideGap { get; set; }
     public bool IsAutoHoming { get; set; }
     public bool IsSpeedLimited { get; set; }
     public bool IsSmartLimited { get; set; }
 
-    public bool LastInsideGap => state.InsideGap;
-    public bool LastIsAutoHoming => state.IsAutoHoming;
-    public bool LastIsSpeedLimited => state.IsSpeedLimited;
-    public bool LastIsSmartLimited => state.IsSmartLimited;
+    public bool LastInsideGap => _state.InsideGap;
+    public bool LastIsAutoHoming => _state.IsAutoHoming;
+    public bool LastIsSpeedLimited => _state.IsSpeedLimited;
+    public bool LastIsSmartLimited => _state.IsSmartLimited;
 
     public bool IsDirty => ValueChanged(LastValue, Value, 0.000001);
     public bool IsScriptDirty => ValueChanged(LastScriptValue, ScriptValue, 0.000001);
@@ -2044,31 +2077,47 @@ internal sealed class AxisStateUpdateContext(AxisState state)
 
     public void BeginUpdate()
     {
+        Monitor.Enter(_state);
+
         Value = double.NaN;
         ScriptValue = double.NaN;
         TransitionValue = double.NaN;
         MotionProviderValue = double.NaN;
 
-        Index = state.Index;
+        Index = _state.Index;
     }
 
     public void EndUpdate(double deltaTime)
     {
-        state.IsDirty = IsDirty;
+        _state.IsDirty = IsDirty;
 
         if (double.IsFinite(Value) && double.IsFinite(LastValue))
-            state.Speed = (LastValue - Value) / deltaTime;
+            _state.Speed = (LastValue - Value) / deltaTime;
 
-        state.Index = Index;
-        state.Value = Value;
-        state.ScriptValue = ScriptValue;
-        state.TransitionValue = TransitionValue;
-        state.MotionProviderValue = MotionProviderValue;
+        if (LastIndex != Index)
+        {
+            var keyframes = _model.Script?.Keyframes;
+            _state.ScriptSnapshotEvent.Set(new()
+            {
+                KeyframeFrom = keyframes?.ValidateIndex(Index) == true ? keyframes[Index] : null,
+                KeyframeTo = keyframes?.ValidateIndex(Index + 1) == true ? keyframes[Index + 1] : null,
+                IndexFrom = Index,
+                IndexTo = Index + 1
+            });
+        }
 
-        state.InsideGap = InsideGap;
-        state.IsAutoHoming = IsAutoHoming;
-        state.IsSpeedLimited = IsSpeedLimited;
-        state.IsSmartLimited = IsSmartLimited;
+        _state.Index = Index;
+        _state.Value = Value;
+        _state.ScriptValue = ScriptValue;
+        _state.TransitionValue = TransitionValue;
+        _state.MotionProviderValue = MotionProviderValue;
+
+        _state.InsideGap = InsideGap;
+        _state.IsAutoHoming = IsAutoHoming;
+        _state.IsSpeedLimited = IsSpeedLimited;
+        _state.IsSmartLimited = IsSmartLimited;
+
+        Monitor.Exit(_state);
     }
 }
 

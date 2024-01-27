@@ -1,4 +1,4 @@
-﻿using MultiFunPlayer.Input;
+﻿using MultiFunPlayer.Shortcut;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 

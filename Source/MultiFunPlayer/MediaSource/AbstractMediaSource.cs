@@ -1,5 +1,5 @@
 using MultiFunPlayer.Common;
-using MultiFunPlayer.Input;
+using MultiFunPlayer.Shortcut;
 using Newtonsoft.Json.Linq;
 using PropertyChanged;
 using Stylet;
@@ -52,7 +52,7 @@ internal abstract class AbstractMediaSource : Screen, IMediaSource, IHandle<IMed
             await DisconnectAsync();
     }
 
-    protected virtual async Task<bool> OnConnectingAsync()
+    protected virtual async ValueTask<bool> OnConnectingAsync()
     {
         _cancellationSource = new CancellationTokenSource();
         _task = Task.Factory.StartNew(() => RunAsync(_cancellationSource.Token),
@@ -62,7 +62,7 @@ internal abstract class AbstractMediaSource : Screen, IMediaSource, IHandle<IMed
             .Unwrap();
         _ = _task.ContinueWith(_ => DisconnectAsync()).Unwrap();
 
-        return await Task.FromResult(true);
+        return await ValueTask.FromResult(true);
     }
 
     public async virtual Task DisconnectAsync()
@@ -71,24 +71,22 @@ internal abstract class AbstractMediaSource : Screen, IMediaSource, IHandle<IMed
             return;
 
         Status = ConnectionStatus.Disconnecting;
+        await Task.Delay(250);
         await OnDisconnectingAsync();
         Status = ConnectionStatus.Disconnected;
     }
 
     private int _isDisconnectingFlag;
-    protected virtual async Task OnDisconnectingAsync()
+    protected virtual async ValueTask OnDisconnectingAsync()
     {
         if (Interlocked.CompareExchange(ref _isDisconnectingFlag, 1, 0) != 0)
             return;
-
-        await Task.Delay(250);
 
         _cancellationSource?.Cancel();
         if (_task != null)
             await _task;
 
         _cancellationSource?.Dispose();
-
         _cancellationSource = null;
         _task = null;
 
@@ -178,7 +176,9 @@ internal abstract class AbstractMediaSource : Screen, IMediaSource, IHandle<IMed
 
     protected virtual void Dispose(bool disposing)
     {
-        OnDisconnectingAsync().GetAwaiter().GetResult();
+        var valueTask = OnDisconnectingAsync();
+        if (!valueTask.IsCompleted)
+            valueTask.AsTask().GetAwaiter().GetResult();
     }
 
     public void Dispose()

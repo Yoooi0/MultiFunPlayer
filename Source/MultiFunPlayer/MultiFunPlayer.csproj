@@ -30,6 +30,9 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+	<PackageReference Include="GitVersion.MsBuild" Version="5.*">
+	  <PrivateAssets>All</PrivateAssets>
+	</PackageReference>
     <PackageReference Include="MahApps.Metro" Version="2.4.9" />
     <PackageReference Include="MaterialDesignThemes" Version="4.7.0" />
     <PackageReference Include="MaterialDesignThemes.MahApps" Version="0.2.6" />

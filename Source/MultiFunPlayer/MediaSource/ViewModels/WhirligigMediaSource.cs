@@ -1,5 +1,5 @@
 ﻿using MultiFunPlayer.Common;
-using MultiFunPlayer.Input;
+using MultiFunPlayer.Shortcut;
 using MultiFunPlayer.UI;
 using Newtonsoft.Json.Linq;
 using NLog;
@@ -20,18 +20,18 @@ internal sealed class WhirligigMediaSource(IShortcutManager shortcutManager, IEv
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
     public override ConnectionStatus Status { get; protected set; }
-
-    public EndPoint Endpoint { get; set; } = new IPEndPoint(IPAddress.Loopback, 2000);
-
     public bool IsConnected => Status == ConnectionStatus.Connected;
+    public bool IsDisconnected => Status == ConnectionStatus.Disconnected;
     public bool IsConnectBusy => Status == ConnectionStatus.Connecting || Status == ConnectionStatus.Disconnecting;
     public bool CanToggleConnect => !IsConnectBusy;
+
+    public EndPoint Endpoint { get; set; } = new IPEndPoint(IPAddress.Loopback, 2000);
 
     protected override async Task RunAsync(CancellationToken token)
     {
         try
         {
-            Logger.Info("Connecting to {0} at \"{1}\"", Name, Endpoint);
+            Logger.Info("Connecting to {0} at \"{1}\"", Name, Endpoint.ToUriString());
 
             if (Endpoint.IsLocalhost())
                 if (!Process.GetProcesses().Any(p => Regex.IsMatch(p.ProcessName, "(?i)whirligig")))
@@ -102,7 +102,7 @@ internal sealed class WhirligigMediaSource(IShortcutManager shortcutManager, IEv
 
         if (action == SettingsAction.Saving)
         {
-            settings[nameof(Endpoint)] = Endpoint?.ToString();
+            settings[nameof(Endpoint)] = Endpoint?.ToUriString();
         }
         else if (action == SettingsAction.Loading)
         {
@@ -145,7 +145,7 @@ internal sealed class WhirligigMediaSource(IShortcutManager shortcutManager, IEv
         base.RegisterActions(s);
 
         #region Endpoint
-        s.RegisterAction<string>($"{Name}::Endpoint::Set", s => s.WithLabel("Endpoint").WithDescription("ip/host:port"), endpointString =>
+        s.RegisterAction<string>($"{Name}::Endpoint::Set", s => s.WithLabel("Endpoint").WithDescription("ipOrHost:port"), endpointString =>
         {
             if (NetUtils.TryParseEndpoint(endpointString, out var endpoint))
                 Endpoint = endpoint;

@@ -1,50 +1,53 @@
 ﻿<UserControl x:Class="MultiFunPlayer.MediaSource.Views.MpcMediaSource"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:material="http://materialdesigninxaml.net/winfx/xaml/themes"
-             xmlns:s="https://github.com/canton7/Stylet"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
-             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:controls="clr-namespace:MultiFunPlayer.UI.Controls"
-             mc:Ignorable="d" 
-             d:DesignHeight="450" d:DesignWidth="800"
-             x:ClassModifier="internal">
-    <Expander material:ExpanderAssist.HorizontalHeaderPadding="0 0 6 0"
-              Style="{StaticResource MaterialDesignToolBarExpander}"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:material="http://materialdesigninxaml.net/winfx/xaml/themes"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:s="https://github.com/canton7/Stylet"
+             d:DesignHeight="450"
+             d:DesignWidth="800"
+             x:ClassModifier="internal"
+             mc:Ignorable="d">
+    <Expander Style="{StaticResource MaterialDesignToolBarExpander}"
+              material:ExpanderAssist.HorizontalHeaderPadding="0 0 6 0"
               Background="{DynamicResource MaterialDesignToolBarBackground}"
               IsExpanded="{Binding DataContext.ContentVisible, RelativeSource={RelativeSource FindAncestor, AncestorLevel=2, AncestorType={x:Type UserControl}}}">
         <Expander.Header>
-            <StackPanel Orientation="Horizontal"
-                        Height="36">
-                <Button DockPanel.Dock="Left"
-                        Command="{s:Action ToggleConnectAsync}"
-                        CommandParameter="{Binding}"
-                        s:View.ActionTarget="{Binding DataContext.Parent, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}"
-                        IsEnabled="{Binding CanToggleConnect}"
+            <StackPanel Height="36" Orientation="Horizontal">
+                <Button s:View.ActionTarget="{Binding DataContext.Parent, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}"
+                        DockPanel.Dock="Left"
+                        material:ButtonProgressAssist.IsIndeterminate="True"
                         material:ButtonProgressAssist.IsIndicatorVisible="{Binding IsConnectBusy}"
                         material:ButtonProgressAssist.Value="-1"
-                        material:ButtonProgressAssist.IsIndeterminate="True">
+                        Command="{s:Action ToggleConnectAsync}"
+                        CommandParameter="{Binding}"
+                        IsEnabled="{Binding CanToggleConnect}">
                     <Button.Style>
-                        <Style TargetType="{x:Type ButtonBase}" BasedOn="{StaticResource MaterialDesignProgressToolBarButton}">
-                            <Setter Property="ToolTip" Value="Connect" />
+                        <Style BasedOn="{StaticResource MaterialDesignProgressToolBarButton}" TargetType="{x:Type ButtonBase}">
+                            <Setter Property="ToolTip" Value="Connect"/>
                             <Style.Triggers>
                                 <DataTrigger Binding="{Binding IsConnected}" Value="True">
-                                    <Setter Property="ToolTip" Value="Disconnect" />
+                                    <Setter Property="ToolTip" Value="Disconnect"/>
                                 </DataTrigger>
                             </Style.Triggers>
                         </Style>
                     </Button.Style>
                     <material:PackIcon Width="19" Height="19">
                         <material:PackIcon.Style>
-                            <Style TargetType="material:PackIcon" BasedOn="{StaticResource {x:Type material:PackIcon}}">
-                                <Setter Property="Kind" Value="Play" />
+                            <Style BasedOn="{StaticResource {x:Type material:PackIcon}}" TargetType="material:PackIcon">
+                                <Setter Property="Kind" Value="Play"/>
                                 <Style.Triggers>
                                     <DataTrigger Binding="{Binding IsConnected}" Value="True">
-                                        <Setter Property="Kind" Value="Stop" />
+                                        <Setter Property="Kind" Value="Stop"/>
                                         <DataTrigger.EnterActions>
                                             <BeginStoryboard>
                                                 <Storyboard>
-                                                    <DoubleAnimation Storyboard.TargetProperty="Opacity" From="0" To="1" Duration="0:0:0.8" />
+                                                    <DoubleAnimation Storyboard.TargetProperty="Opacity"
+                                                                     From="0"
+                                                                     To="1"
+                                                                     Duration="0:0:0.8"/>
                                                 </Storyboard>
                                             </BeginStoryboard>
                                         </DataTrigger.EnterActions>
@@ -56,27 +59,32 @@
                 </Button>
 
                 <ToggleButton DockPanel.Dock="Left"
-                              IsChecked="{Binding AutoConnectEnabled}"           
                               Style="{StaticResource MaterialDesignToolBarToggleButton}"
+                              IsChecked="{Binding AutoConnectEnabled}"
                               ToolTip="Auto-connect">
-                    <material:PackIcon Kind="MotionPlayOutline" Opacity=".56" Width="20" Height="20"/>
+                    <material:PackIcon Width="20"
+                                       Height="20"
+                                       Kind="MotionPlayOutline"
+                                       Opacity=".56"/>
                     <material:ToggleButtonAssist.OnContent>
-                        <material:PackIcon Kind="MotionPlayOutline" Width="20" Height="20"/>
+                        <material:PackIcon Width="20"
+                                           Height="20"
+                                           Kind="MotionPlayOutline"/>
                     </material:ToggleButtonAssist.OnContent>
                 </ToggleButton>
             </StackPanel>
         </Expander.Header>
 
         <StackPanel Margin="20">
-            <DockPanel LastChildFill="True">
-                <TextBlock Text="Endpoint:"
-                           DockPanel.Dock="Left"
+            <DockPanel IsEnabled="{Binding IsDisconnected}" LastChildFill="True">
+                <TextBlock DockPanel.Dock="Left"
                            Margin="0 0 10 0"
-                           VerticalAlignment="Center"/>
+                           VerticalAlignment="Center"
+                           Text="Endpoint:"/>
 
-                <controls:EndPointBox EndPoint="{Binding Endpoint}"
-                                      DockPanel.Dock="Left"
-                                      HorizontalAlignment="Left"/>
+                <controls:EndPointBox DockPanel.Dock="Left"
+                                      HorizontalAlignment="Left"
+                                      EndPoint="{Binding Endpoint}"/>
             </DockPanel>
         </StackPanel>
     </Expander>

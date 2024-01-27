@@ -1,15 +1,16 @@
 ﻿<UserControl x:Class="MultiFunPlayer.UI.Controls.Views.DeviceSettingsView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:material="http://materialdesigninxaml.net/winfx/xaml/themes"
-             xmlns:s="https://github.com/canton7/Stylet"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
-             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-             xmlns:metro="http://metro.mahapps.com/winfx/xaml/controls" 
-             xmlns:converters="clr-namespace:MultiFunPlayer.UI.Converters" 
-             mc:Ignorable="d" 
-             d:DesignHeight="450" d:DesignWidth="800"
-             x:ClassModifier="internal">
+             xmlns:converters="clr-namespace:MultiFunPlayer.UI.Converters"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:material="http://materialdesigninxaml.net/winfx/xaml/themes"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:metro="http://metro.mahapps.com/winfx/xaml/controls"
+             xmlns:s="https://github.com/canton7/Stylet"
+             d:DesignHeight="450"
+             d:DesignWidth="800"
+             x:ClassModifier="internal"
+             mc:Ignorable="d">
     <UserControl.Resources>
         <converters:StringListToStringConverter x:Key="StringListToStringConverter"/>
     </UserControl.Resources>
@@ -17,97 +18,94 @@
     <Grid Margin="20">
         <DockPanel LastChildFill="True">
             <material:Card DockPanel.Dock="Top"
-                           material:ShadowAssist.ShadowDepth="Depth1"
-                           Margin="0 0 0 20">
+                           Margin="0 0 0 20"
+                           material:ShadowAssist.ShadowDepth="Depth1">
                 <DockPanel Margin="10">
-                    <material:PackIcon Kind="ExclamationBold"
-                                       DockPanel.Dock="Left"
-                                       Foreground="{DynamicResource MaterialDesignErrorBrush}"
+                    <material:PackIcon DockPanel.Dock="Left"
                                        Width="24"
                                        Height="24"
                                        Margin="10 0 0 0"
                                        HorizontalAlignment="Center"
-                                       VerticalAlignment="Center"/>
+                                       VerticalAlignment="Center"
+                                       Foreground="{DynamicResource MaterialDesignErrorBrush}"
+                                       Kind="ExclamationBold"/>
 
                     <TextBlock DockPanel.Dock="Right"
+                               Margin="50 0 0 0"
                                HorizontalAlignment="Left"
-                               VerticalAlignment="Center"
-                               Margin="50 0 0 0">
-                        Changing device and removing or disabling axes will reset certain settings. <LineBreak/>
-                        All changes require application restart to apply.
-                    </TextBlock>
+                               VerticalAlignment="Center">
+                        Changing device and removing or disabling axes will reset certain settings.<LineBreak/>
+                        All changes require application restart to apply.</TextBlock>
                 </DockPanel>
             </material:Card>
 
-            <DockPanel DockPanel.Dock="Top"
-                       Margin="0 0 0 5">
-                <TextBlock Text="Selected device:" 
-                           DockPanel.Dock="Left"
-                           Margin="0 0 10 0" 
-                           VerticalAlignment="Center"/>
+            <DockPanel DockPanel.Dock="Top" Margin="0 0 0 5">
+                <TextBlock DockPanel.Dock="Left"
+                           Margin="0 0 10 0"
+                           VerticalAlignment="Center"
+                           Text="Selected device:"/>
 
-                <Button DockPanel.Dock="Right"   
+                <Button DockPanel.Dock="Right"
                         Style="{StaticResource MaterialDesignFlatButton}"
-                        ToolTip="Remove selected"
-                        material:RippleAssist.Feedback="{DynamicResource MaterialDesignErrorBrush}"
-                        Foreground="{DynamicResource MaterialDesignErrorBrush}"
-                        Height="24" 
-                        Width="24" 
+                        Width="24"
+                        Height="24"
                         Padding="0"
+                        material:RippleAssist.Feedback="{DynamicResource MaterialDesignErrorBrush}"
                         Click="{s:Action OnRemoveSelectedDevice}"
-                        IsEnabled="{Binding CanRemoveSelectedDevice}">
+                        Foreground="{DynamicResource MaterialDesignErrorBrush}"
+                        IsEnabled="{Binding CanRemoveSelectedDevice}"
+                        ToolTip="Remove selected">
                     <material:PackIcon Kind="Delete"/>
                 </Button>
-                <Button DockPanel.Dock="Right"   
+                <Button DockPanel.Dock="Right"
                         Style="{StaticResource MaterialDesignFlatButton}"
-                        ToolTip="Rename selected"
-                        Height="24" 
-                        Width="24" 
+                        Width="24"
+                        Height="24"
                         Padding="0"
                         Click="{s:Action OnRenameSelectedDevice}"
-                        IsEnabled="{Binding CanRenameSelectedDevice}">
+                        IsEnabled="{Binding CanRenameSelectedDevice}"
+                        ToolTip="Rename selected">
                     <material:PackIcon Kind="Pencil"/>
                 </Button>
-                <Button DockPanel.Dock="Right"   
+                <Button DockPanel.Dock="Right"
                         Style="{StaticResource MaterialDesignFlatButton}"
-                        ToolTip="Export selected to clipboard"
-                        Height="24" 
-                        Width="24" 
+                        Width="24"
+                        Height="24"
                         Padding="0"
                         Click="{s:Action OnExportSelectedDevice}"
-                        IsEnabled="{Binding CanExportSelectedDevice}">
+                        IsEnabled="{Binding CanExportSelectedDevice}"
+                        ToolTip="Export selected to clipboard">
                     <material:PackIcon Kind="Export"/>
                 </Button>
-                <Button DockPanel.Dock="Right"   
+                <Button DockPanel.Dock="Right"
                         Style="{StaticResource MaterialDesignFlatButton}"
-                        ToolTip="Create from clipboard"
-                        Height="24" 
-                        Width="24" 
+                        Width="24"
+                        Height="24"
                         Padding="0"
-                        Click="{s:Action OnImportDevice}">
+                        Click="{s:Action OnImportDevice}"
+                        ToolTip="Create from clipboard">
                     <material:PackIcon Kind="Import"/>
                 </Button>
-                <Button DockPanel.Dock="Right"   
+                <Button DockPanel.Dock="Right"
                         Style="{StaticResource MaterialDesignFlatButton}"
-                        ToolTip="Clone selected"
-                        Height="24" 
-                        Width="24" 
+                        Width="24"
+                        Height="24"
                         Padding="0"
-                        Click="{s:Action OnCloneDevice}">
+                        Click="{s:Action OnCloneDevice}"
+                        ToolTip="Clone selected">
                     <material:PackIcon Kind="ContentDuplicate"/>
                 </Button>
 
                 <ComboBox DockPanel.Dock="Left"
-                          Margin="0 0 10 0"
+                          ItemsSource="{Binding Devices}"
                           SelectedItem="{Binding SelectedDevice}"
-                          ItemsSource="{Binding Devices}">
+                          Margin="0 0 10 0">
                     <ComboBox.ItemTemplate>
                         <DataTemplate>
                             <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="{Binding Name}"
-                                           VerticalAlignment="Center">
+                                <TextBlock VerticalAlignment="Center" Text="{Binding Name}">
                                     <TextBlock.Resources>
-                                        <Style TargetType="{x:Type TextBlock}" BasedOn="{StaticResource MaterialDesignTextBlock}">
+                                        <Style BasedOn="{StaticResource MaterialDesignTextBlock}" TargetType="{x:Type TextBlock}">
                                             <Style.Triggers>
                                                 <DataTrigger Binding="{Binding IsDefault}" Value="True">
                                                     <DataTrigger.Setters>
@@ -118,10 +116,10 @@
                                         </Style>
                                     </TextBlock.Resources>
                                 </TextBlock>
-                                
-                                <TextBlock Text=" (default)"
-                                           VerticalAlignment="Center" 
+
+                                <TextBlock VerticalAlignment="Center"
                                            FontWeight="Bold"
+                                           Text=" (default)"
                                            Visibility="{Binding IsDefault, Converter={StaticResource BooleanToVisibilityConverter}}"/>
                             </StackPanel>
                         </DataTemplate>
@@ -130,54 +128,52 @@
             </DockPanel>
 
             <material:Card DockPanel.Dock="Top"
-                           material:ShadowAssist.ShadowDepth="Depth1"
                            Margin="0 0 0 10"
+                           material:ShadowAssist.ShadowDepth="Depth1"
                            Visibility="{Binding SelectedDevice.IsDefault, Converter={StaticResource BooleanToVisibilityConverter}}">
                 <DockPanel Margin="5">
-                    <material:PackIcon Kind="Alert"
-                                       DockPanel.Dock="Left"
-                                       Foreground="{DynamicResource MaterialDesignWarningBrush}"
+                    <material:PackIcon DockPanel.Dock="Left"
                                        Width="20"
                                        Height="20"
                                        Margin="17 0 2 0"
                                        HorizontalAlignment="Center"
-                                       VerticalAlignment="Center"/>
+                                       VerticalAlignment="Center"
+                                       Foreground="{DynamicResource MaterialDesignWarningBrush}"
+                                       Kind="Alert"/>
 
                     <TextBlock DockPanel.Dock="Right"
+                               Margin="50 0 0 0"
                                VerticalAlignment="Center"
-                               Margin="50 0 0 0">
-                        Clone this device to customize settings.
-                    </TextBlock>
+                               Text="Clone this device to customize settings."/>
                 </DockPanel>
             </material:Card>
 
-            <material:Card material:ShadowAssist.ShadowDepth="Depth1"
-                           DockPanel.Dock="Top"
+            <material:Card DockPanel.Dock="Top"
                            Margin="0 0 0 10"
+                           material:ShadowAssist.ShadowDepth="Depth1"
                            IsEnabled="{Binding SelectedDevice.IsDefault, Converter={StaticResource NotConverter}}">
                 <DockPanel DockPanel.Dock="Top"
-                               LastChildFill="False"
-                               Margin="10">
+                           Margin="10"
+                           LastChildFill="False">
 
-                    <DockPanel LastChildFill="False"
-                               DockPanel.Dock="Top">
-                        <TextBlock Text="Output precision:"
-                                       DockPanel.Dock="Left"
-                                       Margin="0 0 10 0" 
-                                       VerticalAlignment="Center"/>
+                    <DockPanel DockPanel.Dock="Top" LastChildFill="False">
+                        <TextBlock DockPanel.Dock="Left"
+                                   Margin="0 0 10 0"
+                                   VerticalAlignment="Center"
+                                   Text="Output precision:"/>
 
                         <metro:NumericUpDown DockPanel.Dock="Left"
-                                                 Minimum="1" 
-                                                 Maximum="10" 
-                                                 Value="{Binding SelectedDevice.OutputPrecision}" 
-                                                 HideUpDownButtons="True"
-                                                 Width="50"/>
+                                             Width="50"
+                                             HideUpDownButtons="True"
+                                             Maximum="10"
+                                             Minimum="1"
+                                             Value="{Binding SelectedDevice.OutputPrecision}"/>
                     </DockPanel>
                 </DockPanel>
             </material:Card>
 
-            <material:Card material:ShadowAssist.ShadowDepth="Depth1"
-                           DockPanel.Dock="Top"
+            <material:Card DockPanel.Dock="Top"
+                           material:ShadowAssist.ShadowDepth="Depth1"
                            IsEnabled="{Binding SelectedDevice.IsDefault, Converter={StaticResource NotConverter}}">
                 <DockPanel LastChildFill="True">
                     <Button DockPanel.Dock="Bottom"
@@ -187,40 +183,43 @@
                             Margin="0 10 0 10"
                             Padding="0"
                             Click="{s:Action OnAddAxis}">
-                        <material:PackIcon Kind="Plus"
-                                           Width="24"
-                                           Height="24"/>
+                        <material:PackIcon Width="24"
+                                           Height="24"
+                                           Kind="Plus"/>
                     </Button>
 
                     <DataGrid DockPanel.Dock="Top"
+                              ItemsSource="{Binding SelectedDevice.Axes}"
                               MaxHeight="400"
-                              CanUserReorderColumns="False"
-                              CanUserSortColumns="False"
-                              CanUserResizeColumns="True"
-                              CanUserResizeRows="False"
+                              material:DataGridAssist.CellPadding="10 5 10 5"
+                              AutoGenerateColumns="False"
+                              Background="{DynamicResource MaterialDesignCardBackground}"
                               CanUserAddRows="False"
                               CanUserDeleteRows="False"
-                              ItemsSource="{Binding SelectedDevice.Axes}"
-                              AutoGenerateColumns="False"
-                              material:DataGridAssist.CellPadding="10 5 10 5"
-                              Background="{DynamicResource MaterialDesignCardBackground}">
+                              CanUserReorderColumns="False"
+                              CanUserResizeColumns="True"
+                              CanUserResizeRows="False"
+                              CanUserSortColumns="False">
                         <DataGrid.Columns>
                             <DataGridTextColumn Binding="{Binding Name}"
-                                                Header="Name"
+                                                EditingElementStyle="{StaticResource MaterialDesignDataGridTextColumnEditingStyle}"
                                                 ElementStyle="{StaticResource MaterialDesignDataGridTextColumnStyle}"
-                                                EditingElementStyle="{StaticResource MaterialDesignDataGridTextColumnEditingStyle}"/>
+                                                Header="Name"/>
 
                             <DataGridTextColumn Binding="{Binding FriendlyName}"
-                                                Header="Friendly name"
+                                                EditingElementStyle="{StaticResource MaterialDesignDataGridTextColumnEditingStyle}"
                                                 ElementStyle="{StaticResource MaterialDesignDataGridTextColumnStyle}"
-                                                EditingElementStyle="{StaticResource MaterialDesignDataGridTextColumnEditingStyle}">
+                                                Header="Friendly name">
                                 <DataGridTextColumn.HeaderStyle>
-                                    <Style TargetType="{x:Type DataGridColumnHeader}" BasedOn="{StaticResource MaterialDesignDataGridColumnHeader}">
-                                        <Setter Property="HorizontalContentAlignment" Value="Right" />
+                                    <Style BasedOn="{StaticResource MaterialDesignDataGridColumnHeader}" TargetType="{x:Type DataGridColumnHeader}">
+                                        <Setter Property="HorizontalContentAlignment" Value="Right"/>
                                         <Setter Property="ContentTemplate">
                                             <Setter.Value>
                                                 <DataTemplate>
-                                                    <TextBlock TextWrapping="Wrap" Text="{Binding}" TextAlignment="Right" Width="50"/>
+                                                    <TextBlock Width="50"
+                                                               Text="{Binding}"
+                                                               TextAlignment="Right"
+                                                               TextWrapping="Wrap"/>
                                                 </DataTemplate>
                                             </Setter.Value>
                                         </Setter>
@@ -229,16 +228,19 @@
                             </DataGridTextColumn>
 
                             <DataGridTextColumn Binding="{Binding FunscriptNames, Converter={StaticResource StringListToStringConverter}}"
-                                                Header="Funscript names"
+                                                EditingElementStyle="{StaticResource MaterialDesignDataGridTextColumnEditingStyle}"
                                                 ElementStyle="{StaticResource MaterialDesignDataGridTextColumnStyle}"
-                                                EditingElementStyle="{StaticResource MaterialDesignDataGridTextColumnEditingStyle}">
+                                                Header="Funscript names">
                                 <DataGridTextColumn.HeaderStyle>
-                                    <Style TargetType="{x:Type DataGridColumnHeader}" BasedOn="{StaticResource MaterialDesignDataGridColumnHeader}">
-                                        <Setter Property="HorizontalContentAlignment" Value="Right" />
+                                    <Style BasedOn="{StaticResource MaterialDesignDataGridColumnHeader}" TargetType="{x:Type DataGridColumnHeader}">
+                                        <Setter Property="HorizontalContentAlignment" Value="Right"/>
                                         <Setter Property="ContentTemplate">
                                             <Setter.Value>
                                                 <DataTemplate>
-                                                    <TextBlock TextWrapping="Wrap" Text="{Binding}" TextAlignment="Right" Width="60"/>
+                                                    <TextBlock Width="60"
+                                                               Text="{Binding}"
+                                                               TextAlignment="Right"
+                                                               TextWrapping="Wrap"/>
                                                 </DataTemplate>
                                             </Setter.Value>
                                         </Setter>
@@ -247,16 +249,19 @@
                             </DataGridTextColumn>
 
                             <DataGridCheckBoxColumn Binding="{Binding LoadUnnamedScript, UpdateSourceTrigger=PropertyChanged}"
-                                                    Header="Load unnamed script"
+                                                    EditingElementStyle="{StaticResource MaterialDesignDataGridCheckBoxColumnEditingStyle}"
                                                     ElementStyle="{StaticResource MaterialDesignDataGridCheckBoxColumnStyle}"
-                                                    EditingElementStyle="{StaticResource MaterialDesignDataGridCheckBoxColumnEditingStyle}">
+                                                    Header="Load unnamed script">
                                 <DataGridCheckBoxColumn.HeaderStyle>
-                                    <Style TargetType="{x:Type DataGridColumnHeader}" BasedOn="{StaticResource MaterialDesignDataGridColumnHeader}">
-                                        <Setter Property="HorizontalContentAlignment" Value="Right" />
+                                    <Style BasedOn="{StaticResource MaterialDesignDataGridColumnHeader}" TargetType="{x:Type DataGridColumnHeader}">
+                                        <Setter Property="HorizontalContentAlignment" Value="Right"/>
                                         <Setter Property="ContentTemplate">
                                             <Setter.Value>
                                                 <DataTemplate>
-                                                    <TextBlock TextWrapping="Wrap" Text="{Binding}" TextAlignment="Right" Width="90"/>
+                                                    <TextBlock Width="90"
+                                                               Text="{Binding}"
+                                                               TextAlignment="Right"
+                                                               TextWrapping="Wrap"/>
                                                 </DataTemplate>
                                             </Setter.Value>
                                         </Setter>
@@ -264,19 +269,22 @@
                                 </DataGridCheckBoxColumn.HeaderStyle>
                             </DataGridCheckBoxColumn>
 
-                            <metro:DataGridNumericUpDownColumn Header="Default value"
-                                                               Minimum="0" 
-                                                               Maximum="1" 
-                                                               HideUpDownButtons="True" 
-                                                               Binding="{Binding DefaultValue}"
+                            <metro:DataGridNumericUpDownColumn Binding="{Binding DefaultValue}"
+                                                               Header="Default value"
+                                                               HideUpDownButtons="True"
+                                                               Maximum="1"
+                                                               Minimum="0"
                                                                StringFormat="{}{0:P0}">
                                 <metro:DataGridNumericUpDownColumn.HeaderStyle>
-                                    <Style TargetType="{x:Type DataGridColumnHeader}" BasedOn="{StaticResource MaterialDesignDataGridColumnHeader}">
-                                        <Setter Property="HorizontalContentAlignment" Value="Right" />
+                                    <Style BasedOn="{StaticResource MaterialDesignDataGridColumnHeader}" TargetType="{x:Type DataGridColumnHeader}">
+                                        <Setter Property="HorizontalContentAlignment" Value="Right"/>
                                         <Setter Property="ContentTemplate">
                                             <Setter.Value>
                                                 <DataTemplate>
-                                                    <TextBlock TextWrapping="Wrap" Text="{Binding}" TextAlignment="Right" Width="50"/>
+                                                    <TextBlock Width="50"
+                                                               Text="{Binding}"
+                                                               TextAlignment="Right"
+                                                               TextWrapping="Wrap"/>
                                                 </DataTemplate>
                                             </Setter.Value>
                                         </Setter>
@@ -285,23 +293,23 @@
                             </metro:DataGridNumericUpDownColumn>
 
                             <DataGridCheckBoxColumn Binding="{Binding Enabled, UpdateSourceTrigger=PropertyChanged}"
-                                                    Header="Enabled"
+                                                    EditingElementStyle="{StaticResource MaterialDesignDataGridCheckBoxColumnEditingStyle}"
                                                     ElementStyle="{StaticResource MaterialDesignDataGridCheckBoxColumnStyle}"
-                                                    EditingElementStyle="{StaticResource MaterialDesignDataGridCheckBoxColumnEditingStyle}"/>
+                                                    Header="Enabled"/>
 
                             <DataGridTemplateColumn>
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
-                                        <Button DockPanel.Dock="Right"   
+                                        <Button DockPanel.Dock="Right"
                                                 Style="{StaticResource MaterialDesignFlatButton}"
-                                                ToolTip="Remove"
-                                                material:RippleAssist.Feedback="{DynamicResource MaterialDesignErrorBrush}"
-                                                Foreground="{DynamicResource MaterialDesignErrorBrush}"
-                                                Height="20" 
-                                                Width="20" 
-                                                Padding="0"
+                                                Width="20"
+                                                Height="20"
                                                 Margin="0"
-                                                Click="{s:Action OnDeleteAxis}" >
+                                                Padding="0"
+                                                material:RippleAssist.Feedback="{DynamicResource MaterialDesignErrorBrush}"
+                                                Click="{s:Action OnDeleteAxis}"
+                                                Foreground="{DynamicResource MaterialDesignErrorBrush}"
+                                                ToolTip="Remove">
                                             <material:PackIcon Kind="Delete"/>
                                         </Button>
                                     </DataTemplate>

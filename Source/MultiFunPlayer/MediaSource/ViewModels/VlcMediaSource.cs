@@ -1,5 +1,5 @@
 using MultiFunPlayer.Common;
-using MultiFunPlayer.Input;
+using MultiFunPlayer.Shortcut;
 using MultiFunPlayer.UI;
 using Newtonsoft.Json.Linq;
 using NLog;
@@ -23,19 +23,19 @@ internal sealed class VlcMediaSource(IShortcutManager shortcutManager, IEventAgg
     private PlayerState _playerState;
 
     public override ConnectionStatus Status { get; protected set; }
+    public bool IsConnected => Status == ConnectionStatus.Connected;
+    public bool IsDisconnected => Status == ConnectionStatus.Disconnected;
+    public bool IsConnectBusy => Status == ConnectionStatus.Connecting || Status == ConnectionStatus.Disconnecting;
+    public bool CanToggleConnect => !IsConnectBusy && !string.IsNullOrEmpty(Password);
 
     public EndPoint Endpoint { get; set; } = new IPEndPoint(IPAddress.Loopback, 8080);
     public string Password { get; set; } = null;
-
-    public bool IsConnected => Status == ConnectionStatus.Connected;
-    public bool IsConnectBusy => Status == ConnectionStatus.Connecting || Status == ConnectionStatus.Disconnecting;
-    public bool CanToggleConnect => !IsConnectBusy;
 
     protected override async Task RunAsync(CancellationToken token)
     {
         try
         {
-            Logger.Info("Connecting to {0} at \"{1}\"", Name, Endpoint);
+            Logger.Info("Connecting to {0} at \"{1}\"", Name, Endpoint.ToUriString());
             if (Endpoint == null)
                 throw new Exception("Endpoint cannot be null.");
 
@@ -124,7 +124,13 @@ internal sealed class VlcMediaSource(IShortcutManager shortcutManager, IEventAgg
                         continue;
                     }
 
-                    PublishMessage(new MediaPathChangedMessage(Uri.UnescapeDataString(path)));
+                    if (Uri.TryCreate(path, UriKind.Absolute, out var uri) && uri.IsFile)
+                        PublishMessage(new MediaPathChangedMessage(uri.LocalPath));
+                    else if (Uri.TryCreate(path, UriKind.RelativeOrAbsolute, out uri))
+                        PublishMessage(new MediaPathChangedMessage(uri.ToString()));
+                    else
+                        PublishMessage(new MediaPathChangedMessage(Uri.UnescapeDataString(path)));
+
                     _playerState.PlaylistId = playlistId;
                 }
 
@@ -204,7 +210,7 @@ internal sealed class VlcMediaSource(IShortcutManager shortcutManager, IEventAgg
 
         if (action == SettingsAction.Saving)
         {
-            settings[nameof(Endpoint)] = Endpoint?.ToString();
+            settings[nameof(Endpoint)] = Endpoint?.ToUriString();
 
             try
             {
@@ -294,7 +300,7 @@ internal sealed class VlcMediaSource(IShortcutManager shortcutManager, IEventAgg
         base.RegisterActions(s);
 
         #region Endpoint
-        s.RegisterAction<string>($"{Name}::Endpoint::Set", s => s.WithLabel("Endpoint").WithDescription("ip/host:port"), endpointString =>
+        s.RegisterAction<string>($"{Name}::Endpoint::Set", s => s.WithLabel("Endpoint").WithDescription("ipOrHost:port"), endpointString =>
         {
             if (NetUtils.TryParseEndpoint(endpointString, out var endpoint))
                 Endpoint = endpoint;

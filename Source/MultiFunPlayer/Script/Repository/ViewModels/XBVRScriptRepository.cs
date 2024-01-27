@@ -3,7 +3,6 @@ using MultiFunPlayer.MediaSource.MediaResource;
 using Newtonsoft.Json;
 using NLog;
 using System.ComponentModel;
-using System.Net;
 using System.Net.Http;
 using System.Text.RegularExpressions;
 
@@ -15,14 +14,14 @@ internal sealed class XBVRScriptRepository : AbstractScriptRepository
 {
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
-    [JsonProperty] public EndPoint Endpoint { get; set; } = new IPEndPoint(IPAddress.Loopback, 9999);
+    [JsonProperty] public Uri ServerBaseUri { get; set; } = new Uri("http://127.0.0.1:9999");
     [JsonProperty] public XBVRVideoMatchType VideoMatchType { get; set; } = XBVRVideoMatchType.UseFirstMatchOnly;
     [JsonProperty] public XBVRScriptMatchType ScriptMatchType { get; set; } = XBVRScriptMatchType.MatchAllUseFirst;
 
     public override async ValueTask<Dictionary<DeviceAxis, IScriptResource>> SearchForScriptsAsync(
         MediaResourceInfo mediaResource, IEnumerable<DeviceAxis> axes, ILocalScriptRepository localRepository, CancellationToken token)
     {
-        if (Endpoint == null)
+        if (ServerBaseUri == null)
             return [];
 
         if (!TryGetSceneId(out var sceneId))
@@ -30,7 +29,7 @@ internal sealed class XBVRScriptRepository : AbstractScriptRepository
 
         using var client = NetUtils.CreateHttpClient();
         var result = new Dictionary<DeviceAxis, IScriptResource>();
-        var uri = new Uri($"http://{Endpoint.ToUriString()}/api/scene/{sceneId}");
+        var uri = new Uri(ServerBaseUri, $"/api/scene/{sceneId}");
         var response = await client.GetStringAsync(uri, token);
 
         var metadata = JsonConvert.DeserializeObject<SceneMetadata>(response);
@@ -51,18 +50,8 @@ internal sealed class XBVRScriptRepository : AbstractScriptRepository
             }
             else if (mediaResource.IsUrl)
             {
-                var ipOrHost = Endpoint switch
-                {
-                    IPEndPoint ipEndpoint => ipEndpoint.Address.ToString(),
-                    DnsEndPoint dnsEndpoint => dnsEndpoint.Host,
-                    _ => null
-                };
-
-                if (string.IsNullOrEmpty(ipOrHost))
-                    return false;
-
                 var mediaResourceUri = new Uri(mediaResource.IsModified ? mediaResource.ModifiedPath : mediaResource.OriginalPath);
-                if (string.Equals(mediaResourceUri.Host, ipOrHost, StringComparison.OrdinalIgnoreCase))
+                if (string.Equals(mediaResourceUri.Host, ServerBaseUri.Host, StringComparison.OrdinalIgnoreCase))
                     return false;
 
                 // <endpoint>/res?scene=<sceneId>
@@ -100,7 +89,7 @@ internal sealed class XBVRScriptRepository : AbstractScriptRepository
 
             if (VideoMatchType == XBVRVideoMatchType.UseFirstMatchOnly)
             {
-                result = searchResult;
+                result.Merge(searchResult);
                 return true;
             }
 
@@ -151,7 +140,7 @@ internal sealed class XBVRScriptRepository : AbstractScriptRepository
 
         foreach (var (axis, script) in matchedFiles)
         {
-            var scriptUri = new Uri($"http://{Endpoint.ToUriString()}/api/dms/file/{script.Id}");
+            var scriptUri = new Uri(ServerBaseUri, $"/api/dms/file/{script.Id}");
             Logger.Trace("Downloading {0} script file [Uri: {1}]", axis, scriptUri);
 
             var scriptStream = await client.GetStreamAsync(scriptUri, token);

@@ -1,0 +1,404 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:material="http://materialdesigninxaml.net/winfx/xaml/themes"
+                    xmlns:output="clr-namespace:MultiFunPlayer.OutputTarget">
+    <DataTemplate DataType="{x:Type output:ThreadPolledUpdateContext}">
+        <DockPanel DockPanel.Dock="Left" HorizontalAlignment="Left">
+            <TextBlock DockPanel.Dock="Left" Text="Error:"/>
+            <TextBlock DockPanel.Dock="Right"
+                       Width="80"
+                       Text="{Binding AverageUpdateError, StringFormat={}{0:F2} ms}"
+                       TextAlignment="Right"/>
+        </DockPanel>
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type output:AsyncPolledUpdateContext}">
+        <DockPanel DockPanel.Dock="Left" HorizontalAlignment="Left">
+            <TextBlock DockPanel.Dock="Left" Text="Error:"/>
+            <TextBlock DockPanel.Dock="Right"
+                       Width="80"
+                       Text="{Binding AverageUpdateError, StringFormat={}{0:F2} ms}"
+                       TextAlignment="Right"/>
+        </DockPanel>
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type output:ThreadFixedUpdateContext}">
+        <StackPanel>
+            <DockPanel LastChildFill="True">
+                <TextBlock DockPanel.Dock="Left"
+                           Margin="0 0 10 0"
+                           VerticalAlignment="Center"
+                           Text="Update rate:"/>
+                <TextBlock DockPanel.Dock="Right"
+                           Width="40"
+                           HorizontalAlignment="Right"
+                           VerticalAlignment="Center"
+                           Text="{Binding UpdateInterval, Converter={StaticResource MsToHzConverter}, StringFormat={}{0} hz}"
+                           TextAlignment="Right"/>
+                <Slider DockPanel.Dock="Right"
+                        Style="{StaticResource MaterialDesignReversedSlider}"
+                        Margin="0 0 10 0"
+                        HorizontalAlignment="Stretch"
+                        VerticalAlignment="Top"
+                        material:SliderAssist.OnlyShowFocusVisualWhileDragging="True"
+                        IsDirectionReversed="True"
+                        IsSnapToTickEnabled="True"
+                        Maximum="{Binding MaximumUpdateInterval}"
+                        Minimum="{Binding MinimumUpdateInterval}"
+                        Orientation="Horizontal"
+                        Ticks="{Binding UpdateIntervalTicks}"
+                        Value="{Binding UpdateInterval, Mode=TwoWay}"/>
+            </DockPanel>
+
+            <DockPanel Margin="0 0 0 15" LastChildFill="False">
+                <DockPanel DockPanel.Dock="Left"
+                           Width="100"
+                           HorizontalAlignment="Left">
+                    <TextBlock DockPanel.Dock="Left" Text="Average:"/>
+                    <TextBlock DockPanel.Dock="Right"
+                               Text="{Binding AverageUpdateRate, StringFormat={}{0} hz}"
+                               TextAlignment="Right"/>
+                </DockPanel>
+
+                <DockPanel DockPanel.Dock="Right"
+                           Width="80"
+                           HorizontalAlignment="Left">
+                    <TextBlock DockPanel.Dock="Left" Text="Jitter:"/>
+                    <TextBlock DockPanel.Dock="Right"
+                               Text="{Binding UpdateRateJitter, StringFormat={}{0} hz}"
+                               TextAlignment="Right"/>
+                </DockPanel>
+            </DockPanel>
+
+            <DockPanel HorizontalAlignment="Left">
+                <TextBlock DockPanel.Dock="Left"
+                           Margin="0 0 5 0"
+                           Text="Precise sleep:"/>
+                <ToggleButton DockPanel.Dock="Left"
+                              Style="{StaticResource MaterialDesignSwitchToggleButton}"
+                              Margin="0 0 5 0"
+                              IsChecked="{Binding UsePreciseSleep}"/>
+
+                <material:ColorZone DockPanel.Dock="Right"
+                                    Width="14"
+                                    Height="14"
+                                    VerticalAlignment="Center"
+                                    Background="{DynamicResource PrimaryHueLightBrush}"
+                                    CornerRadius="7"
+                                    Mode="Custom">
+                    <material:ColorZone.ToolTip>
+                        <TextBlock>
+                            Sacrifices processor time in exchange for<LineBreak/>
+                            more consistent update ticks (lower jitter)</TextBlock>
+                    </material:ColorZone.ToolTip>
+                    <material:PackIcon Width="10"
+                                       Height="10"
+                                       HorizontalAlignment="Center"
+                                       VerticalAlignment="Center"
+                                       Foreground="Black"
+                                       Kind="QuestionMark"/>
+                </material:ColorZone>
+            </DockPanel>
+        </StackPanel>
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type output:AsyncFixedUpdateContext}">
+        <StackPanel>
+            <DockPanel LastChildFill="True">
+                <TextBlock DockPanel.Dock="Left"
+                           Margin="0 0 10 0"
+                           VerticalAlignment="Center"
+                           Text="Update rate:"/>
+                <TextBlock DockPanel.Dock="Right"
+                           Width="40"
+                           HorizontalAlignment="Right"
+                           VerticalAlignment="Center"
+                           Text="{Binding UpdateInterval, Converter={StaticResource MsToHzConverter}, StringFormat={}{0} hz}"
+                           TextAlignment="Right"/>
+                <Slider DockPanel.Dock="Right"
+                        Style="{StaticResource MaterialDesignReversedSlider}"
+                        Margin="0 0 10 0"
+                        HorizontalAlignment="Stretch"
+                        VerticalAlignment="Top"
+                        material:SliderAssist.OnlyShowFocusVisualWhileDragging="True"
+                        IsDirectionReversed="True"
+                        IsSnapToTickEnabled="True"
+                        Maximum="{Binding MaximumUpdateInterval}"
+                        Minimum="{Binding MinimumUpdateInterval}"
+                        Orientation="Horizontal"
+                        Ticks="{Binding UpdateIntervalTicks}"
+                        Value="{Binding UpdateInterval, Mode=TwoWay}"/>
+            </DockPanel>
+
+            <DockPanel LastChildFill="False">
+                <DockPanel DockPanel.Dock="Left"
+                           Width="100"
+                           HorizontalAlignment="Left">
+                    <TextBlock DockPanel.Dock="Left" Text="Average:"/>
+                    <TextBlock DockPanel.Dock="Right"
+                               Text="{Binding AverageUpdateRate, StringFormat={}{0} hz}"
+                               TextAlignment="Right"/>
+                </DockPanel>
+
+                <DockPanel DockPanel.Dock="Right"
+                           Width="80"
+                           HorizontalAlignment="Left">
+                    <TextBlock DockPanel.Dock="Left" Text="Jitter:"/>
+                    <TextBlock DockPanel.Dock="Right"
+                               Text="{Binding UpdateRateJitter, StringFormat={}{0} hz}"
+                               TextAlignment="Right"/>
+                </DockPanel>
+            </DockPanel>
+        </StackPanel>
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type output:TCodeThreadFixedUpdateContext}">
+        <StackPanel>
+            <DockPanel LastChildFill="True">
+                <TextBlock DockPanel.Dock="Left"
+                           Margin="0 0 10 0"
+                           VerticalAlignment="Center"
+                           Text="Update rate:"/>
+                <TextBlock DockPanel.Dock="Right"
+                           Width="40"
+                           HorizontalAlignment="Right"
+                           VerticalAlignment="Center"
+                           Text="{Binding UpdateInterval, Converter={StaticResource MsToHzConverter}, StringFormat={}{0} hz}"
+                           TextAlignment="Right"/>
+                <Slider DockPanel.Dock="Right"
+                        Style="{StaticResource MaterialDesignReversedSlider}"
+                        Margin="0 0 10 0"
+                        HorizontalAlignment="Stretch"
+                        VerticalAlignment="Top"
+                        material:SliderAssist.OnlyShowFocusVisualWhileDragging="True"
+                        IsDirectionReversed="True"
+                        IsSnapToTickEnabled="True"
+                        Maximum="{Binding MaximumUpdateInterval}"
+                        Minimum="{Binding MinimumUpdateInterval}"
+                        Orientation="Horizontal"
+                        Ticks="{Binding UpdateIntervalTicks}"
+                        Value="{Binding UpdateInterval, Mode=TwoWay}"/>
+            </DockPanel>
+
+            <DockPanel Margin="0 0 0 15" LastChildFill="False">
+                <DockPanel DockPanel.Dock="Left"
+                           Width="100"
+                           HorizontalAlignment="Left">
+                    <TextBlock DockPanel.Dock="Left" Text="Average:"/>
+                    <TextBlock DockPanel.Dock="Right"
+                               Text="{Binding AverageUpdateRate, StringFormat={}{0} hz}"
+                               TextAlignment="Right"/>
+                </DockPanel>
+
+                <DockPanel DockPanel.Dock="Right"
+                           Width="80"
+                           HorizontalAlignment="Left">
+                    <TextBlock DockPanel.Dock="Left" Text="Jitter:"/>
+                    <TextBlock DockPanel.Dock="Right"
+                               Text="{Binding UpdateRateJitter, StringFormat={}{0} hz}"
+                               TextAlignment="Right"/>
+                </DockPanel>
+            </DockPanel>
+
+            <DockPanel HorizontalAlignment="Left">
+                <TextBlock DockPanel.Dock="Left"
+                           Margin="0 0 5 0"
+                           Text="Precise sleep:"/>
+                <ToggleButton DockPanel.Dock="Left"
+                              Style="{StaticResource MaterialDesignSwitchToggleButton}"
+                              Margin="0 0 5 0"
+                              IsChecked="{Binding UsePreciseSleep}"/>
+
+                <material:ColorZone DockPanel.Dock="Right"
+                                    Width="14"
+                                    Height="14"
+                                    VerticalAlignment="Center"
+                                    Background="{DynamicResource PrimaryHueLightBrush}"
+                                    CornerRadius="7"
+                                    Mode="Custom">
+                    <material:ColorZone.ToolTip>
+                        <TextBlock>
+                            Sacrifices processor time in exchange for<LineBreak/>
+                            more consistent update ticks (lower jitter)</TextBlock>
+                    </material:ColorZone.ToolTip>
+                    <material:PackIcon Width="10"
+                                       Height="10"
+                                       HorizontalAlignment="Center"
+                                       VerticalAlignment="Center"
+                                       Foreground="Black"
+                                       Kind="QuestionMark"/>
+                </material:ColorZone>
+            </DockPanel>
+
+            <DockPanel HorizontalAlignment="Left">
+                <TextBlock DockPanel.Dock="Left"
+                           Margin="0 0 5 0"
+                           Text="Offload elapsed time:"/>
+                <ToggleButton DockPanel.Dock="Left"
+                              Style="{StaticResource MaterialDesignSwitchToggleButton}"
+                              Margin="0 0 5 0"
+                              IsChecked="{Binding OffloadElapsedTime}"/>
+
+                <material:ColorZone DockPanel.Dock="Right"
+                                    Width="14"
+                                    Height="14"
+                                    VerticalAlignment="Center"
+                                    Background="{DynamicResource PrimaryHueLightBrush}"
+                                    CornerRadius="7"
+                                    Mode="Custom">
+                    <material:ColorZone.ToolTip>
+                        <TextBlock>
+                            If enabled: offloads update tick elapsed time calculation to the device<LineBreak/>
+                            If disabled: sends update tick elapsed time calculated by MultiFunPlayer</TextBlock>
+                    </material:ColorZone.ToolTip>
+                    <material:PackIcon Width="10"
+                                       Height="10"
+                                       HorizontalAlignment="Center"
+                                       VerticalAlignment="Center"
+                                       Foreground="Black"
+                                       Kind="QuestionMark"/>
+                </material:ColorZone>
+            </DockPanel>
+
+            <DockPanel HorizontalAlignment="Left">
+                <TextBlock DockPanel.Dock="Left"
+                           Margin="0 0 5 0"
+                           Text="Send dirty axes only:"/>
+                <ToggleButton DockPanel.Dock="Left"
+                              Style="{StaticResource MaterialDesignSwitchToggleButton}"
+                              Margin="0 0 5 0"
+                              IsChecked="{Binding SendDirtyValuesOnly}"/>
+
+                <material:ColorZone DockPanel.Dock="Right"
+                                    Width="14"
+                                    Height="14"
+                                    VerticalAlignment="Center"
+                                    Background="{DynamicResource PrimaryHueLightBrush}"
+                                    CornerRadius="7"
+                                    Mode="Custom">
+                    <material:ColorZone.ToolTip>
+                        <TextBlock>
+                            If enabled: only axes with changed values are sent on each update tick<LineBreak/>
+                            If disabled: all axes are sent on each update tick</TextBlock>
+                    </material:ColorZone.ToolTip>
+                    <material:PackIcon Width="10"
+                                       Height="10"
+                                       HorizontalAlignment="Center"
+                                       VerticalAlignment="Center"
+                                       Foreground="Black"
+                                       Kind="QuestionMark"/>
+                </material:ColorZone>
+            </DockPanel>
+        </StackPanel>
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type output:TCodeAsyncFixedUpdateContext}">
+        <StackPanel>
+            <DockPanel LastChildFill="True">
+                <TextBlock DockPanel.Dock="Left"
+                           Margin="0 0 10 0"
+                           VerticalAlignment="Center"
+                           Text="Update rate:"/>
+                <TextBlock DockPanel.Dock="Right"
+                           Width="40"
+                           HorizontalAlignment="Right"
+                           VerticalAlignment="Center"
+                           Text="{Binding UpdateInterval, Converter={StaticResource MsToHzConverter}, StringFormat={}{0} hz}"
+                           TextAlignment="Right"/>
+                <Slider DockPanel.Dock="Right"
+                        Style="{StaticResource MaterialDesignReversedSlider}"
+                        Margin="0 0 10 0"
+                        HorizontalAlignment="Stretch"
+                        VerticalAlignment="Top"
+                        material:SliderAssist.OnlyShowFocusVisualWhileDragging="True"
+                        IsDirectionReversed="True"
+                        IsSnapToTickEnabled="True"
+                        Maximum="{Binding MaximumUpdateInterval}"
+                        Minimum="{Binding MinimumUpdateInterval}"
+                        Orientation="Horizontal"
+                        Ticks="{Binding UpdateIntervalTicks}"
+                        Value="{Binding UpdateInterval, Mode=TwoWay}"/>
+            </DockPanel>
+
+            <DockPanel Margin="0 0 0 15" LastChildFill="False">
+                <DockPanel DockPanel.Dock="Left"
+                           Width="100"
+                           HorizontalAlignment="Left">
+                    <TextBlock DockPanel.Dock="Left" Text="Average:"/>
+                    <TextBlock DockPanel.Dock="Right"
+                               Text="{Binding AverageUpdateRate, StringFormat={}{0} hz}"
+                               TextAlignment="Right"/>
+                </DockPanel>
+
+                <DockPanel DockPanel.Dock="Right"
+                           Width="80"
+                           HorizontalAlignment="Left">
+                    <TextBlock DockPanel.Dock="Left" Text="Jitter:"/>
+                    <TextBlock DockPanel.Dock="Right"
+                               Text="{Binding UpdateRateJitter, StringFormat={}{0} hz}"
+                               TextAlignment="Right"/>
+                </DockPanel>
+            </DockPanel>
+
+            <DockPanel HorizontalAlignment="Left">
+                <TextBlock DockPanel.Dock="Left"
+                           Margin="0 0 5 0"
+                           Text="Offload elapsed time:"/>
+                <ToggleButton DockPanel.Dock="Left"
+                              Style="{StaticResource MaterialDesignSwitchToggleButton}"
+                              Margin="0 0 5 0"
+                              IsChecked="{Binding OffloadElapsedTime}"/>
+
+                <material:ColorZone DockPanel.Dock="Right"
+                                    Width="14"
+                                    Height="14"
+                                    VerticalAlignment="Center"
+                                    Background="{DynamicResource PrimaryHueLightBrush}"
+                                    CornerRadius="7"
+                                    Mode="Custom">
+                    <material:ColorZone.ToolTip>
+                        <TextBlock>
+                            If enabled: offloads update tick elapsed time calculation to the device<LineBreak/>
+                            If disabled: sends update tick elapsed time calculated by MultiFunPlayer</TextBlock>
+                    </material:ColorZone.ToolTip>
+                    <material:PackIcon Width="10"
+                                       Height="10"
+                                       HorizontalAlignment="Center"
+                                       VerticalAlignment="Center"
+                                       Foreground="Black"
+                                       Kind="QuestionMark"/>
+                </material:ColorZone>
+            </DockPanel>
+
+            <DockPanel HorizontalAlignment="Left">
+                <TextBlock DockPanel.Dock="Left"
+                           Margin="0 0 5 0"
+                           Text="Send dirty axes only:"/>
+                <ToggleButton DockPanel.Dock="Left"
+                              Style="{StaticResource MaterialDesignSwitchToggleButton}"
+                              Margin="0 0 5 0"
+                              IsChecked="{Binding SendDirtyValuesOnly}"/>
+
+                <material:ColorZone DockPanel.Dock="Right"
+                                    Width="14"
+                                    Height="14"
+                                    VerticalAlignment="Center"
+                                    Background="{DynamicResource PrimaryHueLightBrush}"
+                                    CornerRadius="7"
+                                    Mode="Custom">
+                    <material:ColorZone.ToolTip>
+                        <TextBlock>
+                            If enabled: only axes with changed values are sent on each update tick<LineBreak/>
+                            If disabled: all axes are sent on each update tick</TextBlock>
+                    </material:ColorZone.ToolTip>
+                    <material:PackIcon Width="10"
+                                       Height="10"
+                                       HorizontalAlignment="Center"
+                                       VerticalAlignment="Center"
+                                       Foreground="Black"
+                                       Kind="QuestionMark"/>
+                </material:ColorZone>
+            </DockPanel>
+        </StackPanel>
+    </DataTemplate>
+</ResourceDictionary>

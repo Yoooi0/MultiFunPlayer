@@ -20,7 +20,7 @@ internal sealed class GamepadKeyToStringConverter : IValueConverter
             GamepadVirtualKey.DirectionalPadUp    => "D-Pad Up",
             GamepadVirtualKey.DirectionalPadDown  => "D-Pad Down",
             GamepadVirtualKey.DirectionalPadLeft  => "D-Pad Left",
-            GamepadVirtualKey.DirectionalPadRight => "D-Pad Rigth",
+            GamepadVirtualKey.DirectionalPadRight => "D-Pad Right",
             GamepadVirtualKey.LeftThumbPress => "Left Thumb",
             GamepadVirtualKey.RightThumbPress => "Right Thumb",
             GamepadVirtualKey.LeftThumbUp => "Left Thumb Up",

@@ -1,98 +1,162 @@
-<controls:MaterialWindow 
-    x:Class="MultiFunPlayer.RootView"
-    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-    xmlns:material="http://materialdesigninxaml.net/winfx/xaml/themes"
-    xmlns:controls="clr-namespace:MultiFunPlayer.UI.Controls" 
-    xmlns:s="https://github.com/canton7/Stylet"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
-    mc:Ignorable="d"
-    Style="{StaticResource MaterialDesignWindow}"
-    x:ClassModifier="internal"
-    TextElement.Foreground="{DynamicResource MaterialDesignBody}"
-    TextElement.FontWeight="Regular"
-    TextElement.FontSize="13"
-    TextOptions.TextFormattingMode="Ideal"
-    TextOptions.TextRenderingMode="Auto"
-    Background="{DynamicResource MaterialDesignPaper}"
-    FontFamily="{DynamicResource MaterialDesignFont}"
-    BorderThickness="1"
-    Title="MultiFunPlayer"
-    MinHeight="300"
-    Width="600"
-    MinWidth="600"
-    MaxWidth="600"
-    ResizeMode="CanMinimize"
-    SizeToContent="Height"
-    Left="{Binding WindowLeft, Mode=TwoWay}"
-    Top="{Binding WindowTop, Mode=TwoWay}"
-    Height="{Binding WindowHeight, Mode=TwoWay}"
-    WindowStartupLocation="CenterScreen"
-    FadeContentIfInactive="False"
-    MouseDown="{s:Action OnMouseDown}">
+<controls:MaterialWindow x:Class="MultiFunPlayer.RootView"
+                         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                         xmlns:controls="clr-namespace:MultiFunPlayer.UI.Controls"
+                         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+                         xmlns:material="http://materialdesigninxaml.net/winfx/xaml/themes"
+                         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                         xmlns:s="https://github.com/canton7/Stylet"
+                         Title="MultiFunPlayer"
+                         Style="{StaticResource MaterialDesignWindow}"
+                         Width="600"
+                         Height="{Binding WindowHeight, Mode=TwoWay}"
+                         MinWidth="600"
+                         MinHeight="300"
+                         MaxWidth="600"
+                         x:ClassModifier="internal"
+                         Background="{DynamicResource MaterialDesignPaper}"
+                         BorderThickness="1"
+                         FadeContentIfInactive="False"
+                         FontFamily="{DynamicResource MaterialDesignFont}"
+                         Left="{Binding WindowLeft, Mode=TwoWay}"
+                         MouseDown="{s:Action OnMouseDown}"
+                         ResizeMode="CanMinimize"
+                         SizeToContent="Height"
+                         TextElement.FontSize="13"
+                         TextElement.FontWeight="Regular"
+                         TextElement.Foreground="{DynamicResource MaterialDesignBody}"
+                         TextOptions.TextFormattingMode="Ideal"
+                         TextOptions.TextRenderingMode="Auto"
+                         Top="{Binding WindowTop, Mode=TwoWay}"
+                         WindowStartupLocation="CenterScreen"
+                         mc:Ignorable="d">
     <controls:MaterialWindow.TitleTemplate>
         <DataTemplate>
-            <DockPanel Grid.Column="0" VerticalAlignment="Center" LastChildFill="False">
+            <DockPanel Grid.Column="0"
+                       VerticalAlignment="Center"
+                       LastChildFill="False">
                 <material:PackIcon DockPanel.Dock="Left"
-                                   Foreground="White"
-                                   Kind="Play" 
                                    Width="30"
                                    Height="30"
-                                   Margin="8 0 0 0"/>
+                                   Margin="8 0 0 0"
+                                   Foreground="White"
+                                   Kind="Play"/>
+
                 <TextBlock DockPanel.Dock="Left"
-                               Margin="8 0 0 0"
-                               Style="{StaticResource WindowTitleTextBlockStyle}" 
-                               Text="{Binding Title, RelativeSource={RelativeSource AncestorType={x:Type controls:MaterialWindow}}}"/>
+                           Style="{StaticResource WindowTitleTextBlockStyle}"
+                           Margin="8 0 0 0"
+                           Text="{Binding Title, RelativeSource={RelativeSource AncestorType={x:Type controls:MaterialWindow}}}"/>
 
-                <Border Width="1" 
-                        DockPanel.Dock="Right"
-                        VerticalAlignment="Stretch" 
-                        Margin="8,4,8,4"
-                        Background="{Binding BorderForegroundBrush, RelativeSource={RelativeSource AncestorType={x:Type controls:MaterialWindow}}}" />
+                <Border DockPanel.Dock="Left"
+                        Width="1"
+                        Margin="8 4 8 4"
+                        VerticalAlignment="Stretch"
+                        Background="{Binding BorderForegroundBrush, RelativeSource={RelativeSource AncestorType={x:Type controls:MaterialWindow}}}"/>
 
-                <Button Style="{StaticResource WindowButtonStyle}"
-                        Click="{s:Action OnInformationClick}"
-                        DockPanel.Dock="Right"
-                        Margin="0 -1 0 -1">
-                    <material:PackIcon Foreground="{Binding BorderForegroundBrush, RelativeSource={RelativeSource AncestorType={x:Type controls:MaterialWindow}}}"
-                                       Kind="HelpCircleOutline"
-                                       Width="24"
+                <TextBlock DockPanel.Dock="Left"
+                           Style="{StaticResource WindowTitleTextBlockStyle}"
+                           Text="{Binding DataContext.WindowTitleVersion, Mode=OneTime, RelativeSource={RelativeSource AncestorType={x:Type controls:MaterialWindow}}}"/>
+
+                <Border DockPanel.Dock="Right"
+                        Width="1"
+                        Margin="8 4 8 4"
+                        VerticalAlignment="Stretch"
+                        Background="{Binding BorderForegroundBrush, RelativeSource={RelativeSource AncestorType={x:Type controls:MaterialWindow}}}"/>
+
+                <Button DockPanel.Dock="Right"
+                        Style="{StaticResource WindowButtonStyle}"
+                        Width="40"
+                        Height="32"
+                        Click="{s:Action OnInformationClick}">
+                    <material:PackIcon Width="24"
                                        Height="24"
-                                       Margin="0"/>
+                                       Margin="0"
+                                       HorizontalAlignment="Center"
+                                       Foreground="{Binding BorderForegroundBrush, RelativeSource={RelativeSource AncestorType={x:Type controls:MaterialWindow}}}"
+                                       Kind="HelpCircleOutline">
+                        <material:PackIcon.Style>
+                            <Style TargetType="{x:Type material:PackIcon}">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding DataContext.Information.Update, RelativeSource={RelativeSource AncestorType={x:Type controls:MaterialWindow}}, Converter={StaticResource InvertedNullableToBooleanConverter}}" Value="True">
+                                        <DataTrigger.EnterActions>
+                                            <BeginStoryboard x:Name="UpdateFoundStoryboard">
+                                                <Storyboard>
+                                                    <DoubleAnimation AutoReverse="True"
+                                                                     RepeatBehavior="Forever"
+                                                                     Storyboard.TargetProperty="Opacity"
+                                                                     From="1"
+                                                                     To="0.5"
+                                                                     Duration="0:0:0.750">
+                                                        <DoubleAnimation.EasingFunction>
+                                                            <CubicEase EasingMode="EaseIn"/>
+                                                        </DoubleAnimation.EasingFunction>
+                                                    </DoubleAnimation>
+                                                    <DoubleAnimation AutoReverse="True"
+                                                                     RepeatBehavior="Forever"
+                                                                     Storyboard.TargetProperty="Width"
+                                                                     From="26"
+                                                                     To="24"
+                                                                     Duration="0:0:0.750">
+                                                        <DoubleAnimation.EasingFunction>
+                                                            <CubicEase EasingMode="EaseIn"/>
+                                                        </DoubleAnimation.EasingFunction>
+                                                    </DoubleAnimation>
+                                                    <DoubleAnimation AutoReverse="True"
+                                                                     RepeatBehavior="Forever"
+                                                                     Storyboard.TargetProperty="Height"
+                                                                     From="26"
+                                                                     To="24"
+                                                                     Duration="0:0:0.750">
+                                                        <DoubleAnimation.EasingFunction>
+                                                            <CubicEase EasingMode="EaseIn"/>
+                                                        </DoubleAnimation.EasingFunction>
+                                                    </DoubleAnimation>
+                                                </Storyboard>
+                                            </BeginStoryboard>
+                                        </DataTrigger.EnterActions>
+                                        <DataTrigger.ExitActions>
+                                            <RemoveStoryboard BeginStoryboardName="UpdateFoundStoryboard"/>
+                                        </DataTrigger.ExitActions>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </material:PackIcon.Style>
+                    </material:PackIcon>
                 </Button>
-                <Button Style="{StaticResource WindowButtonStyle}"
-                        Click="{s:Action OnSettingsClick}"
-                        DockPanel.Dock="Right"
-                        Margin="0 -1 0 -1">
-                    <material:PackIcon Foreground="{Binding BorderForegroundBrush, RelativeSource={RelativeSource AncestorType={x:Type controls:MaterialWindow}}}"
-                                       Kind="Cog"
-                                       Width="24"
+                <Button DockPanel.Dock="Right"
+                        Style="{StaticResource WindowButtonStyle}"
+                        Height="32"
+                        Click="{s:Action OnSettingsClick}">
+                    <material:PackIcon Width="24"
                                        Height="24"
-                                       Margin="0"/>
+                                       Margin="0"
+                                       Foreground="{Binding BorderForegroundBrush, RelativeSource={RelativeSource AncestorType={x:Type controls:MaterialWindow}}}"
+                                       Kind="Cog"/>
                 </Button>
-                <Button Style="{StaticResource WindowButtonStyle}"
-                        Click="{s:Action OnPluginClick}"
-                        DockPanel.Dock="Right"
-                        Margin="0 -1 0 -1">
-                    <material:PackIcon Foreground="{Binding BorderForegroundBrush, RelativeSource={RelativeSource AncestorType={x:Type controls:MaterialWindow}}}"
-                                       Kind="PowerPlug"
-                                       Width="24"
+                <Button DockPanel.Dock="Right"
+                        Style="{StaticResource WindowButtonStyle}"
+                        Height="32"
+                        Click="{s:Action OnPluginClick}">
+                    <material:PackIcon Width="24"
                                        Height="24"
-                                       Margin="0"/>
+                                       Margin="0"
+                                       Foreground="{Binding BorderForegroundBrush, RelativeSource={RelativeSource AncestorType={x:Type controls:MaterialWindow}}}"
+                                       Kind="PowerPlug"/>
                 </Button>
             </DockPanel>
         </DataTemplate>
     </controls:MaterialWindow.TitleTemplate>
-    <material:DialogHost Identifier="RootDialog" DialogTheme="Inherit" UseLayoutRounding="True">
-        <ScrollViewer VerticalScrollBarVisibility="Auto"
+    <material:DialogHost DialogTheme="Inherit"
+                         Identifier="RootDialog"
+                         UseLayoutRounding="True">
+        <ScrollViewer Focusable="False"
                       HorizontalScrollBarVisibility="Disabled"
-                      Focusable="False">
+                      VerticalScrollBarVisibility="Auto">
             <ScrollViewer.Style>
-                <Style TargetType="{x:Type ScrollViewer}" BasedOn="{StaticResource WindowScrollViewer}">
+                <Style BasedOn="{StaticResource WindowScrollViewer}" TargetType="{x:Type ScrollViewer}">
                     <Setter Property="Content">
                         <Setter.Value>
-                            <StackPanel Orientation="Vertical" Margin="10">
+                            <StackPanel Margin="10" Orientation="Vertical">
                                 <ContentControl s:View.Model="{Binding MediaSource}"/>
                                 <ContentControl s:View.Model="{Binding Script}"/>
                                 <ContentControl s:View.Model="{Binding OutputTarget}"/>
@@ -100,8 +164,7 @@
                         </Setter.Value>
                     </Setter>
                     <Style.Triggers>
-                        <DataTrigger Binding="{Binding DataContext.Settings.General.AppOrientation, RelativeSource={RelativeSource AncestorType={x:Type controls:MaterialWindow}}}"
-                                     Value="Horizontal">
+                        <DataTrigger Binding="{Binding DataContext.Settings.General.AppOrientation, RelativeSource={RelativeSource AncestorType={x:Type controls:MaterialWindow}}}" Value="Horizontal">
                             <Setter Property="Content">
                                 <Setter.Value>
                                     <Grid>
@@ -109,12 +172,16 @@
                                             <ColumnDefinition Width="600"/>
                                             <ColumnDefinition Width="600"/>
                                         </Grid.ColumnDefinitions>
-                                        
-                                        <StackPanel Orientation="Vertical" Margin="10" Grid.Column="0">
+
+                                        <StackPanel Grid.Column="0"
+                                                    Margin="10"
+                                                    Orientation="Vertical">
                                             <ContentControl s:View.Model="{Binding MediaSource}"/>
                                             <ContentControl s:View.Model="{Binding OutputTarget}"/>
                                         </StackPanel>
-                                        <ContentControl s:View.Model="{Binding Script}" Margin="10" Grid.Column="1"/>
+                                        <ContentControl s:View.Model="{Binding Script}"
+                                                        Grid.Column="1"
+                                                        Margin="10"/>
                                     </Grid>
                                 </Setter.Value>
                             </Setter>

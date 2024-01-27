@@ -1,9 +1,9 @@
 ﻿using PropertyChanged;
 using System.Collections;
 
-namespace MultiFunPlayer.Input;
+namespace MultiFunPlayer.Shortcut;
 
-public interface IShortcutSetting
+internal interface IShortcutSetting
 {
     object Value { get; set; }
     string Label { get; init; }
@@ -14,12 +14,12 @@ public interface IShortcutSetting
     Type Type { get; }
 }
 
-public interface IOneOfShortcutSetting : IShortcutSetting
+internal interface IOneOfShortcutSetting : IShortcutSetting
 {
     IEnumerable ItemsSource { get; init; }
 }
 
-public interface IShortcutSetting<T> : IShortcutSetting
+internal interface IShortcutSetting<T> : IShortcutSetting
 {
     object IShortcutSetting.Value
     {
@@ -31,7 +31,7 @@ public interface IShortcutSetting<T> : IShortcutSetting
     Func<T, string> CustomToString { get; init; }
 }
 
-public interface IOneOfShortcutSetting<T> : IShortcutSetting<T>, IOneOfShortcutSetting
+internal interface IOneOfShortcutSetting<T> : IShortcutSetting<T>, IOneOfShortcutSetting
 {
     IEnumerable IOneOfShortcutSetting.ItemsSource
     {
@@ -43,7 +43,7 @@ public interface IOneOfShortcutSetting<T> : IShortcutSetting<T>, IOneOfShortcutS
 }
 
 [AddINotifyPropertyChangedInterface]
-public partial class ShortcutSetting<T> : IShortcutSetting<T>
+internal partial class ShortcutSetting<T> : IShortcutSetting<T>
 {
     public T Value { get; set; }
     public string Label { get; init; }
@@ -57,8 +57,7 @@ public partial class ShortcutSetting<T> : IShortcutSetting<T>
     public override string ToString() => CustomToString?.Invoke(Value) ?? Value?.ToString() ?? "null";
 }
 
-[AddINotifyPropertyChangedInterface]
-public sealed partial class OneOfShortcutSetting<T> : ShortcutSetting<T>, IOneOfShortcutSetting<T>
+internal sealed class OneOfShortcutSetting<T> : ShortcutSetting<T>, IOneOfShortcutSetting<T>
 {
     public IEnumerable<T> ItemsSource { get; init; }
 }

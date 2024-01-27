@@ -11,6 +11,7 @@ using System.Net.Sockets;
 using System.Net.WebSockets;
 using System.Runtime.CompilerServices;
 using System.Runtime.ExceptionServices;
+using System.Threading;
 
 namespace MultiFunPlayer.Common;
 
@@ -102,8 +103,10 @@ public static class JsonExtensions
 
     public static Type GetTypeProperty(this JObject o)
     {
-        var (_, valueTypeName) = ReflectionUtils.SplitFullyQualifiedTypeName(o["$type"].ToString());
-        return Type.GetType(valueTypeName);
+        var (assemblyName, valueTypeName) = ReflectionUtils.SplitFullyQualifiedTypeName(o["$type"].ToString());
+        if (assemblyName == null)
+            return Type.GetType(valueTypeName);
+        return Type.GetType($"{valueTypeName}, {assemblyName}");
     }
 
     public static bool RenameProperty(this JObject o, string oldName, string newName)
@@ -250,9 +253,6 @@ public static class CollectionExtensions
         => new(collection, selector, propertyName);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool ValidateIndex<T>(this ICollection<T> collection, int index)
-        => index >= 0 && index < collection.Count;
-
     public static bool ValidateIndex<T>(this IReadOnlyCollection<T> collection, int index)
         => index >= 0 && index < collection.Count;
 
@@ -448,6 +448,70 @@ public static class StopwatchExtensions
             else if (diff < 5) Thread.Sleep(1);
             else if (diff < 15) Thread.Sleep(5);
             else Thread.Sleep(10);
+        }
+    }
+}
+
+public static class WaitHandleExtensions
+{
+    public static bool WaitOne(this WaitHandle handle, CancellationToken cancellationToken)
+        => ThrowIfCancellationRequested(WaitHandle.WaitAny(new[] { handle, cancellationToken.WaitHandle }) == 0, cancellationToken);
+    public static bool WaitOne(this WaitHandle handle, int millisecondsTimeout, CancellationToken cancellationToken)
+        => ThrowIfCancellationRequested(WaitHandle.WaitAny(new[] { handle, cancellationToken.WaitHandle }, millisecondsTimeout) == 0, cancellationToken);
+    public static bool WaitOne(this WaitHandle handle, TimeSpan timeout, CancellationToken cancellationToken)
+        => ThrowIfCancellationRequested(WaitHandle.WaitAny(new[] { handle, cancellationToken.WaitHandle }, timeout) == 0, cancellationToken);
+    public static bool WaitOne(this WaitHandle handle, int millisecondsTimeout, bool exitContext, CancellationToken cancellationToken)
+        => ThrowIfCancellationRequested(WaitHandle.WaitAny(new[] { handle, cancellationToken.WaitHandle }, millisecondsTimeout, exitContext) == 0, cancellationToken);
+    public static bool WaitOne(this WaitHandle handle, TimeSpan timeout, bool exitContext, CancellationToken cancellationToken)
+        => ThrowIfCancellationRequested(WaitHandle.WaitAny(new[] { handle, cancellationToken.WaitHandle }, timeout, exitContext) == 0, cancellationToken);
+
+    private static bool ThrowIfCancellationRequested(bool result, CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        return result;
+    }
+
+    public static Task<bool> WaitOneAsync(this WaitHandle handle, CancellationToken cancellationToken)
+    {
+        if (handle.WaitOne(0))
+            return Task.FromResult(true);
+        if (cancellationToken.IsCancellationRequested)
+            return Task.FromCanceled<bool>(cancellationToken);
+
+        return DoWaitOneAsync(handle, cancellationToken);
+    }
+
+    private static async Task<bool> DoWaitOneAsync(WaitHandle handle, CancellationToken cancellationToken)
+    {
+        var completionSource = new TaskCompletionSource<bool>();
+
+        using var threadPoolRegistration = new ThreadPoolRegistration(handle, completionSource);
+        await using var cancellationTokenRegistration = cancellationToken.Register(CancellationTokenCallback, completionSource, useSynchronizationContext: false);
+
+        return await completionSource.Task;
+
+        static void CancellationTokenCallback(object state)
+            => ((TaskCompletionSource<bool>)state).TrySetCanceled(CancellationToken.None);
+    }
+
+    private sealed class ThreadPoolRegistration : IDisposable
+    {
+        private readonly RegisteredWaitHandle _registeredWaitHandle;
+
+        public ThreadPoolRegistration(WaitHandle handle, TaskCompletionSource<bool> completionSource)
+        {
+            _registeredWaitHandle = ThreadPool.RegisterWaitForSingleObject(handle, WaitHandleCallback, completionSource, Timeout.InfiniteTimeSpan, executeOnlyOnce: true);
+
+            static void WaitHandleCallback(object state, bool timedOut)
+                => ((TaskCompletionSource<bool>)state).TrySetResult(!timedOut);
+        }
+
+        private void Dispose(bool disposing) => _registeredWaitHandle.Unregister(null);
+
+        public void Dispose()
+        {
+            Dispose(disposing: true);
+            GC.SuppressFinalize(this);
         }
     }
 }

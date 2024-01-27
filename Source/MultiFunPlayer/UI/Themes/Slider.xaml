@@ -2,21 +2,21 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:material="http://materialdesigninxaml.net/winfx/xaml/themes">
     <Style x:Key="MaterialDesignReversedSlider" TargetType="{x:Type Slider}">
-        <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+        <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
         <Setter Property="Stylus.IsPressAndHoldEnabled" Value="false"/>
         <Setter Property="Background" Value="{x:Null}"/>
         <Setter Property="BorderBrush" Value="Transparent"/>
         <Setter Property="Foreground" Value="{DynamicResource PrimaryHueMidBrush}"/>
-        <Setter Property="IsMoveToPointEnabled" Value="True" />
-        <Setter Property="material:ShadowAssist.ShadowDepth" Value="Depth1" />
-        <Setter Property="SnapsToDevicePixels" Value="False" />
-        <Setter Property="UseLayoutRounding" Value="False" />
+        <Setter Property="IsMoveToPointEnabled" Value="True"/>
+        <Setter Property="material:ShadowAssist.ShadowDepth" Value="Depth1"/>
+        <Setter Property="SnapsToDevicePixels" Value="False"/>
+        <Setter Property="UseLayoutRounding" Value="False"/>
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type Slider}">
-                    <Border BorderBrush="{TemplateBinding BorderBrush}"
+                    <Border Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
                             BorderThickness="{TemplateBinding BorderThickness}"
-                            Background="{TemplateBinding Background}"
                             SnapsToDevicePixels="True"
                             UseLayoutRounding="True">
                         <Grid SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" UseLayoutRounding="{TemplateBinding UseLayoutRounding}">
@@ -25,55 +25,79 @@
                                 <RowDefinition Height="Auto" MinHeight="{TemplateBinding MinHeight}"/>
                                 <RowDefinition Height="Auto"/>
                             </Grid.RowDefinitions>
-                            <TickBar x:Name="TopTick" Fill="{TemplateBinding Foreground}" Height="4" Margin="0,0,0,2" Placement="Top" Grid.Row="0" Visibility="Collapsed" />
-                            <TickBar x:Name="BottomTick" Fill="{TemplateBinding Foreground}" Height="4" Margin="0,2,0,0" Placement="Bottom" Grid.Row="2" Visibility="Collapsed"/>
-                            <Rectangle Grid.Row="1" Fill="{TemplateBinding Foreground}" Height="4" Opacity="0.38" VerticalAlignment="Center" RadiusX="2" RadiusY="2" />
+                            <TickBar x:Name="TopTick"
+                                     Grid.Row="0"
+                                     Height="4"
+                                     Margin="0 0 0 2"
+                                     Fill="{TemplateBinding Foreground}"
+                                     Placement="Top"
+                                     Visibility="Collapsed"/>
+                            <TickBar x:Name="BottomTick"
+                                     Grid.Row="2"
+                                     Height="4"
+                                     Margin="0 2 0 0"
+                                     Fill="{TemplateBinding Foreground}"
+                                     Placement="Bottom"
+                                     Visibility="Collapsed"/>
+                            <Rectangle Grid.Row="1"
+                                       Height="4"
+                                       VerticalAlignment="Center"
+                                       Fill="{TemplateBinding Foreground}"
+                                       Opacity="0.38"
+                                       RadiusX="2"
+                                       RadiusY="2"/>
                             <Border x:Name="activeTrack"
                                     Grid.Row="1"
-                                    Background="{TemplateBinding Foreground}"
-                                    CornerRadius="0,3,3,0"
-                                    Height="6"
                                     Width="{Binding IncreaseRepeatButton.ActualWidth, ElementName=PART_Track}"
+                                    Height="6"
                                     HorizontalAlignment="Right"
-                                    VerticalAlignment="Center" />
-                            <Canvas Grid.Row="1" VerticalAlignment="Center" Height="6">
-                                <Rectangle x:Name="PART_SelectionRange" 
-                                           Fill="{DynamicResource {x:Static SystemColors.HighlightBrushKey}}" 
-                                           Height="6" 
-                                           RadiusX="2" 
-                                           RadiusY="2" 
-                                           Visibility="Collapsed" />
+                                    VerticalAlignment="Center"
+                                    Background="{TemplateBinding Foreground}"
+                                    CornerRadius="0,3,3,0"/>
+                            <Canvas Grid.Row="1"
+                                    Height="6"
+                                    VerticalAlignment="Center">
+                                <Rectangle x:Name="PART_SelectionRange"
+                                           Height="6"
+                                           Fill="{DynamicResource {x:Static SystemColors.HighlightBrushKey}}"
+                                           RadiusX="2"
+                                           RadiusY="2"
+                                           Visibility="Collapsed"/>
                             </Canvas>
-                            <Track x:Name="PART_Track" Grid.Row="1" Height="20">
+                            <Track x:Name="PART_Track"
+                                   Grid.Row="1"
+                                   Height="20">
                                 <Track.DecreaseRepeatButton>
-                                    <RepeatButton Command="{x:Static Slider.DecreaseLarge}" Style="{StaticResource MaterialDesignRepeatButton}" />
+                                    <RepeatButton Style="{StaticResource MaterialDesignRepeatButton}" Command="{x:Static Slider.DecreaseLarge}"/>
                                 </Track.DecreaseRepeatButton>
                                 <Track.IncreaseRepeatButton>
-                                    <RepeatButton Command="{x:Static Slider.IncreaseLarge}" Style="{StaticResource MaterialDesignRepeatButton}" />
+                                    <RepeatButton Style="{StaticResource MaterialDesignRepeatButton}" Command="{x:Static Slider.IncreaseLarge}"/>
                                 </Track.IncreaseRepeatButton>
                                 <Track.Thumb>
-                                    <Thumb Template="{StaticResource MaterialDesignSliderThumb}" SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" Foreground="{TemplateBinding Foreground}" />
+                                    <Thumb Foreground="{TemplateBinding Foreground}"
+                                           SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"
+                                           Template="{StaticResource MaterialDesignSliderThumb}"/>
                                 </Track.Thumb>
                             </Track>
                         </Grid>
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="TickPlacement" Value="TopLeft">
-                            <Setter Property="Visibility" TargetName="TopTick" Value="Visible"/>
+                            <Setter TargetName="TopTick" Property="Visibility" Value="Visible"/>
                         </Trigger>
                         <Trigger Property="TickPlacement" Value="BottomRight">
-                            <Setter Property="Visibility" TargetName="BottomTick" Value="Visible"/>
+                            <Setter TargetName="BottomTick" Property="Visibility" Value="Visible"/>
                         </Trigger>
                         <Trigger Property="TickPlacement" Value="Both">
-                            <Setter Property="Visibility" TargetName="TopTick" Value="Visible"/>
-                            <Setter Property="Visibility" TargetName="BottomTick" Value="Visible"/>
+                            <Setter TargetName="TopTick" Property="Visibility" Value="Visible"/>
+                            <Setter TargetName="BottomTick" Property="Visibility" Value="Visible"/>
                         </Trigger>
                         <Trigger Property="IsSelectionRangeEnabled" Value="true">
-                            <Setter Property="Visibility" TargetName="PART_SelectionRange" Value="Visible"/>
+                            <Setter TargetName="PART_SelectionRange" Property="Visibility" Value="Visible"/>
                         </Trigger>
                         <Trigger Property="IsDirectionReversed" Value="True">
-                            <Setter TargetName="activeTrack" Property="CornerRadius" Value="3,0,0,3" />
-                            <Setter TargetName="activeTrack" Property="HorizontalAlignment" Value="Left" />
+                            <Setter TargetName="activeTrack" Property="CornerRadius" Value="3,0,0,3"/>
+                            <Setter TargetName="activeTrack" Property="HorizontalAlignment" Value="Left"/>
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
@@ -81,7 +105,7 @@
         </Setter>
         <Style.Triggers>
             <Trigger Property="IsEnabled" Value="False">
-                <Setter Property="Foreground" Value="{DynamicResource MaterialDesignCheckBoxDisabled}" />
+                <Setter Property="Foreground" Value="{DynamicResource MaterialDesignCheckBoxDisabled}"/>
             </Trigger>
         </Style.Triggers>
     </Style>

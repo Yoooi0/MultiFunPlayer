@@ -11,24 +11,25 @@ using System.IO;
 namespace MultiFunPlayer.OutputTarget.ViewModels;
 
 [DisplayName("File")]
-internal sealed class FileOutputTarget : ThreadAbstractOutputTarget
+internal sealed class FileOutputTarget(int instanceIndex, IEventAggregator eventAggregator, IDeviceAxisValueProvider valueProvider)
+    : ThreadAbstractOutputTarget(instanceIndex, eventAggregator, valueProvider)
 {
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
     public override ConnectionStatus Status { get; protected set; }
+    public bool IsConnected => Status == ConnectionStatus.Connected;
+    public bool IsDisconnected => Status == ConnectionStatus.Disconnected;
+    public bool IsConnectBusy => Status == ConnectionStatus.Connecting || Status == ConnectionStatus.Disconnecting;
+    public bool CanToggleConnect => !IsConnectBusy;
 
     public DirectoryInfo OutputDirectory { get; set; } = null;
     public ScriptType ScriptType { get; set; } = ScriptType.Funscript;
 
-    public FileOutputTarget(int instanceIndex, IEventAggregator eventAggregator, IDeviceAxisValueProvider valueProvider)
-        : base(instanceIndex, eventAggregator, valueProvider)
+    protected override IUpdateContext RegisterUpdateContext(DeviceAxisUpdateType updateType) => updateType switch
     {
-        UpdateInterval = 20;
-    }
-
-    public bool IsConnected => Status == ConnectionStatus.Connected;
-    public bool IsConnectBusy => Status == ConnectionStatus.Connecting || Status == ConnectionStatus.Disconnecting;
-    public bool CanToggleConnect => !IsConnectBusy;
+        DeviceAxisUpdateType.FixedUpdate => new ThreadFixedUpdateContext() { UpdateInterval = 20 },
+        _ => null,
+    };
 
     protected override void Run(CancellationToken token)
     {
@@ -66,15 +67,16 @@ internal sealed class FileOutputTarget : ThreadAbstractOutputTarget
         try
         {
             var currentTime = 0d;
+            var currentValues = DeviceAxis.All.ToDictionary(a => a, _ => double.NaN);
             var lastSavedValues = DeviceAxis.All.ToDictionary(a => a, _ => double.NaN);
-            FixedUpdate(() => !token.IsCancellationRequested, elapsed =>
+            FixedUpdate(() => !token.IsCancellationRequested, (_, elapsed) =>
             {
                 Logger.Trace("Begin FixedUpdate [Elapsed: {0}]", elapsed);
-                UpdateValues();
+                GetValues(currentValues);
 
                 currentTime += elapsed;
 
-                var values = Values.Where(x => DeviceAxis.IsValueDirty(x.Value, lastSavedValues[x.Key], 1E-10));
+                var values = currentValues.Where(x => DeviceAxis.IsValueDirty(x.Value, lastSavedValues[x.Key], 1E-10));
                 values = values.Where(x => AxisSettings[x.Key].Enabled);
 
                 foreach (var (axis, value) in values)

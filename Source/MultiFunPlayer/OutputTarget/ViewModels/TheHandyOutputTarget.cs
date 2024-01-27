@@ -1,5 +1,5 @@
 using MultiFunPlayer.Common;
-using MultiFunPlayer.Input;
+using MultiFunPlayer.Shortcut;
 using MultiFunPlayer.UI;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -14,7 +14,8 @@ using System.Text;
 namespace MultiFunPlayer.OutputTarget.ViewModels;
 
 [DisplayName("The Handy")]
-internal sealed class TheHandyOutputTarget : AsyncAbstractOutputTarget
+internal sealed class TheHandyOutputTarget(int instanceIndex, IEventAggregator eventAggregator, IDeviceAxisValueProvider valueProvider)
+    : AsyncAbstractOutputTarget(instanceIndex, eventAggregator, valueProvider)
 {
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
@@ -22,27 +23,24 @@ internal sealed class TheHandyOutputTarget : AsyncAbstractOutputTarget
     public DeviceAxis SourceAxis { get; set; } = null;
 
     public override ConnectionStatus Status { get; protected set; }
-
-    public TheHandyOutputTarget(int instanceIndex, IEventAggregator eventAggregator, IDeviceAxisValueProvider valueProvider)
-        : base(instanceIndex, eventAggregator, valueProvider)
-    {
-        UpdateInterval = 100;
-
-        PropertyChanged += (s, e) =>
-        {
-            if (Status != ConnectionStatus.Connected || e.PropertyName != nameof(SourceAxis) || SourceAxis == null)
-                return;
-
-            EventAggregator.Publish(new SyncRequestMessage(SourceAxis));
-        };
-    }
-
-    public override int MinimumUpdateInterval => 16;
-    public override int MaximumUpdateInterval => 200;
-
     public bool IsConnected => Status == ConnectionStatus.Connected;
+    public bool IsDisconnected => Status == ConnectionStatus.Disconnected;
     public bool IsConnectBusy => Status == ConnectionStatus.Connecting || Status == ConnectionStatus.Disconnecting;
-    public bool CanToggleConnect => !IsConnectBusy;
+    public bool CanToggleConnect => !IsConnectBusy && SourceAxis != null;
+
+    protected override IUpdateContext RegisterUpdateContext(DeviceAxisUpdateType updateType) => updateType switch
+    {
+        DeviceAxisUpdateType.PolledUpdate => new AsyncPolledUpdateContext(),
+        _ => null,
+    };
+
+    public void OnSourceAxisChanged()
+    {
+        if (Status != ConnectionStatus.Connected || SourceAxis == null)
+            return;
+
+        EventAggregator.Publish(new SyncRequestMessage(SourceAxis));
+    }
 
     protected override async Task RunAsync(CancellationToken token)
     {
@@ -54,6 +52,8 @@ internal sealed class TheHandyOutputTarget : AsyncAbstractOutputTarget
 
             if (string.IsNullOrWhiteSpace(ConnectionKey))
                 throw new Exception("Invalid connection key");
+            if (SourceAxis == null)
+                throw new Exception("Source axis not selected");
 
             client.DefaultRequestHeaders.Add("Accept", "application/json");
             client.DefaultRequestHeaders.Add("X-Connection-Key", ConnectionKey);
@@ -107,27 +107,20 @@ internal sealed class TheHandyOutputTarget : AsyncAbstractOutputTarget
             Status = ConnectionStatus.Connected;
             EventAggregator.Publish(new SyncRequestMessage());
 
-            var lastSentValue = double.NaN;
-            await FixedUpdateAsync(() => !token.IsCancellationRequested, async elapsed =>
+            await PolledUpdateAsync(SourceAxis, () => !token.IsCancellationRequested, async (_, snapshot, elapsed) =>
             {
-                Logger.Trace("Begin FixedUpdate [Elapsed: {0}]", elapsed);
-                UpdateValues();
-
-                if (SourceAxis == null)
+                Logger.Trace("Begin PolledUpdate [Index From: {0}, Index To: {1}, Duration: {2}, Elapsed: {3}]", snapshot.IndexFrom, snapshot.IndexTo, snapshot.Duration, elapsed);
+                if (snapshot.KeyframeFrom == null || snapshot.KeyframeTo == null)
                     return;
+
                 if (!AxisSettings[SourceAxis].Enabled)
                     return;
 
-                var currentValue = Values[SourceAxis];
-                if (!double.IsFinite(lastSentValue) || Math.Abs(lastSentValue - currentValue) >= 0.005)
-                {
-                    var position = Math.Clamp(currentValue * 100, 0, 100);
-                    var duration = (int)Math.Floor(elapsed * 1000 + 0.75);
-                    var content = $"{{ \"immediateResponse\": true, \"stopOnTarget\": true, \"duration\": {duration}, \"position\": {position.ToString(CultureInfo.InvariantCulture)} }}";
+                var position = Math.Clamp(snapshot.KeyframeTo.Value * 100, 0, 100);
+                var duration = (int)Math.Floor(snapshot.Duration * 1000 + 0.75);
+                var content = $"{{ \"immediateResponse\": true, \"stopOnTarget\": true, \"duration\": {duration}, \"position\": {position.ToString(CultureInfo.InvariantCulture)} }}";
 
-                    _ = await ApiPutAsync(client, "hdsp/xpt", content, token);
-                    lastSentValue = currentValue;
-                }
+                var result = await ApiPutAsync(client, "hdsp/xpt", content, token);
             }, token);
         }
         catch (OperationCanceledException) { }

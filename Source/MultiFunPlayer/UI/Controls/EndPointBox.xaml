@@ -1,13 +1,14 @@
 ﻿<UserControl x:Class="MultiFunPlayer.UI.Controls.EndPointBox"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
-             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-             xmlns:material="http://materialdesigninxaml.net/winfx/xaml/themes"
-             xmlns:local="clr-namespace:MultiFunPlayer.UI.Controls" 
              xmlns:converters="clr-namespace:MultiFunPlayer.UI.Converters"
-             mc:Ignorable="d" 
-             d:DesignHeight="450" d:DesignWidth="800">
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:local="clr-namespace:MultiFunPlayer.UI.Controls"
+             xmlns:material="http://materialdesigninxaml.net/winfx/xaml/themes"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             d:DesignHeight="450"
+             d:DesignWidth="800"
+             mc:Ignorable="d">
     <UserControl.Resources>
         <converters:PortToStringConverter x:Key="PortToStringConverter"/>
         <Style TargetType="{x:Type local:EndPointBox}">
@@ -17,53 +18,52 @@
                         <Grid Margin="0">
                             <AdornerDecorator VerticalAlignment="Center">
                                 <Border x:Name="Base"
+                                        material:BottomDashedLineAdorner.Brush="{DynamicResource MaterialDesignTextBoxBorder}"
+                                        material:BottomDashedLineAdorner.Thickness="0 0 0 1"
+                                        Background="Transparent"
                                         BorderBrush="{DynamicResource MaterialDesignTextBoxBorder}"
                                         BorderThickness="0 0 0 1"
-                                        SnapsToDevicePixels="True"
-                                        Background="Transparent"
-                                        material:BottomDashedLineAdorner.Brush="{DynamicResource MaterialDesignTextBoxBorder}"
-                                        material:BottomDashedLineAdorner.Thickness="0 0 0 1">
+                                        SnapsToDevicePixels="True">
                                     <StackPanel Orientation="Horizontal">
-                                        <TextBox Text="{Binding HostOrIPAddress, RelativeSource={RelativeSource TemplatedParent}}"
-                                                 material:TextFieldAssist.DecorationVisibility="Collapsed"
+                                        <TextBox Height="24"
                                                  MinWidth="50"
                                                  MaxWidth="150"
-                                                 Height="24"
-                                                 BorderBrush="Transparent"
-                                                 TextAlignment="Right"
                                                  material:HintAssist.HelperText="ip/host"
-                                                 material:ValidationAssist.Suppress="True"/>
-
-                                        <TextBlock Text=":"
-                                                   Margin="5 0 5 2"
-                                                   FontWeight="Black"
-                                                   VerticalAlignment="Center"/>
-
-                                        <TextBox Text="{Binding Port, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource PortToStringConverter}}"
                                                  material:TextFieldAssist.DecorationVisibility="Collapsed"
+                                                 material:ValidationAssist.Suppress="True"
+                                                 BorderBrush="Transparent"
+                                                 Text="{Binding HostOrIPAddress, RelativeSource={RelativeSource TemplatedParent}}"
+                                                 TextAlignment="Right"/>
+
+                                        <TextBlock Margin="5 0 5 2"
+                                                   VerticalAlignment="Center"
+                                                   FontWeight="Black"
+                                                   Text=":"/>
+
+                                        <TextBox Height="24"
                                                  MinWidth="20"
                                                  MaxWidth="40"
-                                                 Height="24"
-                                                 BorderBrush="Transparent"
-                                                 TextAlignment="Left"
                                                  material:HintAssist.HelperText="port"
-                                                 material:ValidationAssist.Suppress="True"/>
+                                                 material:TextFieldAssist.DecorationVisibility="Collapsed"
+                                                 material:ValidationAssist.Suppress="True"
+                                                 BorderBrush="Transparent"
+                                                 Text="{Binding Port, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource PortToStringConverter}}"
+                                                 TextAlignment="Left"/>
                                     </StackPanel>
                                 </Border>
                             </AdornerDecorator>
 
-                            <material:Underline x:Name="Underline"
-                                                Visibility="Visible"/>
+                            <material:Underline x:Name="Underline" Visibility="Visible"/>
                         </Grid>
 
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsEnabled" Value="False">
-                                <Setter TargetName="Base" Property="Opacity" Value="0.42" />
-                                <Setter TargetName="Base" Property="BorderBrush" Value="Transparent" />
-                                <Setter TargetName="Base" Property="material:BottomDashedLineAdorner.IsAttached" Value="True" />
+                                <Setter TargetName="Base" Property="Opacity" Value="0.42"/>
+                                <Setter TargetName="Base" Property="BorderBrush" Value="Transparent"/>
+                                <Setter TargetName="Base" Property="material:BottomDashedLineAdorner.IsAttached" Value="True"/>
                             </Trigger>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Base" Property="BorderBrush" Value="{DynamicResource PrimaryHueMidBrush}" />
+                                <Setter TargetName="Base" Property="BorderBrush" Value="{DynamicResource PrimaryHueMidBrush}"/>
                             </Trigger>
                             <Trigger Property="IsKeyboardFocusWithin" Value="True">
                                 <Setter TargetName="Underline" Property="IsActive" Value="True"/>

@@ -26,7 +26,7 @@ public sealed record ChangeScriptMessage(Dictionary<DeviceAxis, IScriptResource>
     public ChangeScriptMessage(IEnumerable<DeviceAxis> axes, IScriptResource scriptResource) : this(axes.ToDictionary(a => a, _ => scriptResource)) { }
 }
 
-public interface IMediaSourceControlMessage { }
+public interface IMediaSourceControlMessage;
 public sealed record MediaSeekMessage(TimeSpan Position) : IMediaSourceControlMessage;
 public sealed record MediaPlayPauseMessage(bool ShouldBePlaying) : IMediaSourceControlMessage;
 public sealed record MediaChangePathMessage(string Path) : IMediaSourceControlMessage;
