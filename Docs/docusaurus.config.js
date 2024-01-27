@@ -1,21 +1,24 @@
 // @ts-check
-// Note: type annotations allow type checking and IDEs autocompletion
+// `@type` JSDoc annotations allow editor autocompletion and type checking
+// (when paired with `@ts-check`).
+// There are various equivalent ways to declare your Docusaurus config.
+// See: https://docusaurus.io/docs/api/docusaurus-config
 
-const lightCodeTheme = require('prism-react-renderer/themes/github');
-const darkCodeTheme = require('prism-react-renderer/themes/dracula');
+import {themes as prismThemes} from 'prism-react-renderer';
 
 /** @type {import('@docusaurus/types').Config} */
 const config = {
   title: 'MultiFunPlayer',
   tagline: 'Flexible application to synchronize various devices with media playback',
+  favicon: 'img/favicon.ico',
   url: 'https://yoooi0.github.io',
   baseUrl: '/MultiFunPlayer/',
-  onBrokenLinks: 'throw',
-  onBrokenMarkdownLinks: 'warn',
-  favicon: 'img/favicon.ico',
 
   organizationName: 'Yoooi0',
   projectName: 'MultiFunPlayer',
+
+  onBrokenLinks: 'throw',
+  onBrokenMarkdownLinks: 'warn',
   trailingSlash: false,
 
   // Even if you don't use internalization, you can use this field to set useful
@@ -32,12 +35,12 @@ const config = {
       /** @type {import('@docusaurus/preset-classic').Options} */
       ({
         docs: {
-          sidebarPath: require.resolve('./sidebars.js'),
+          sidebarPath: './sidebars.js',
           editUrl: 'https://github.com/Yoooi0/MultiFunPlayer/tree/master/Docs/',
         },
         blog: false,
         theme: {
-          customCss: require.resolve('./src/css/custom.css'),
+          customCss: './src/css/custom.css',
         },
       }),
     ],
@@ -81,10 +84,10 @@ const config = {
         copyright: `Copyright © ${new Date().getFullYear()} Yoooi0.`,
       },
       prism: {
-        theme: lightCodeTheme,
-        darkTheme: darkCodeTheme,
+        theme: prismThemes.github,
+        darkTheme: prismThemes.dracula,
       },
     }),
 };
 
-module.exports = config;
+export default config;
