@@ -1,10 +1,10 @@
-import React from 'react';
 import clsx from 'clsx';
 import Link from '@docusaurus/Link';
 import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
 import Layout from '@theme/Layout';
 
 import HomepageContent from '@site/src/components/HomepageContent.mdx';
+import Heading from '@theme/Heading';
 import styles from './index.module.css';
 
 function HomepageHeader() {
@@ -12,8 +12,10 @@ function HomepageHeader() {
   return (
     <header className={clsx('hero hero--primary', styles.heroBanner)}>
       <div className="container">
-        <h1 className="hero__title">{siteConfig.title}</h1>
-        <p className="hero__subtitle">{siteConfig.tagline}</p>
+      <Heading as="h1" className="hero__title">
+        {siteConfig.title}
+      </Heading>
+      <p className="hero__subtitle">{siteConfig.tagline}</p>
       </div>
     </header>
   );

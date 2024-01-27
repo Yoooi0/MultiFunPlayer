@@ -1,14 +1,14 @@
 <div align="center">
     <h1>MultiFunPlayer</h1>
     <br/>
-    <img src="Assets/screenshot.png"/>
+    <img src="Assets/screenshot.png" style="border-radius: 8px"/>
 </div>
 
 <br/>
 
 # About
 
-MultiFunPlayer synchronizes your devices (e.g. [OSR](https://www.patreon.com/tempestvr) or [buttplug.io](https://buttplug.io)) with your video files using funscripts. The player has the ability to synchronize multiple devices with multiple funscripts at the same time enabling enhanced experience.
+MultiFunPlayer synchronizes your devices with video files using scripts. The player has the ability to synchronize multiple devices with multiple scripts at the same time enabling enhanced experience.
 
 # Downloads
 
@@ -25,24 +25,24 @@ MultiFunPlayer synchronizes your devices (e.g. [OSR](https://www.patreon.com/tem
 * Supports **[DeoVR](https://deovr.com/), [MPV](https://mpv.io/), [MPC-HC/BE](https://github.com/clsid2/mpc-hc), [HereSphere](https://store.steampowered.com/app/1234730/HereSphere/), [OpenFunscripter](https://github.com/OpenFunscripter/OFS), [VLC](https://videolan.org/vlc/), [Whirligig](http://whirligig.xyz/), [Plex](https://plex.tv), [Emby](https://emby.media/) and [Jellyfin](https://jellyfin.org/)** video players
 * Internal player to **play scripts without video files** 
 * Supports **[buttplug.io](https://buttplug.io), TCP, UDP, websockets, namedpipes, serial, file and The Handy (experimental)** outputs
+* Supports **[XBVR](https://github.com/xbapps/xbvr) and [Stash](https://github.com/stashapp/stash)** as script repositories
 * **C# plugin system** for custom behaviours and integrations
 * Supports **multiple concurrent outputs** of the same type
 * Supports **TCode v0.2 and TCode v0.3** devices with advanced customization
 * Auto detection and connection to any supported video player and output
-* Bind **keyboard/mouse/gamepad input** to almost any customizable action (150+ available actions)
+* Flexible **keyboard/mouse/gamepad** shortcut system with many configurable actions
 * Seek, open and play/pause video from MultiFunPlayer
 * Real time **script smoothing** using pchip or makima interpolation
-* Per axis **speed limit**
-* Configurable **auto-home** when axis is idle for specified time
-* **Smart limit** to limit axis output range or speed based on position of another axis with fully customizable curve
+* Configurable per axis **speed limit** and **auto-home**
+* **Smart limit** to limit axis range or speed based on another axis
 * **Soft start sync** feature to prevent unwanted motion
-* **Script libraries** to organize funscripts in different folders and load funscripts not located next to the video file
+* **Script libraries** to allow loading scripts not located next to the video file
 * Ability to **link unscripted axes** to scripted axes
 * Ability to **generate additional motion** or **fill script gaps** using random, script, pattern or custom curve motion providers
-* Customizable **color theme**
-* Multi **funscript heatmap** with stroke length visualization
-* Supports funscript **bookmarks and chapters**
-* True portable app, no files are created/edited outside of the executable folder
+* Customizable **theme color** with **dark mode**
+* **Script heatmap** with range and heat visualization
+* Supports script **bookmarks and chapters**
+* True **portable app**, no files are created/edited outside of the executable folder
 
 # How To
 
@@ -55,11 +55,11 @@ To synchronize with videos:
 * Configure by expanding settings with the "arrow" button on the right side
 * Click connect
 
-Once your video player and output are connected, the funscripts can be loaded in several ways:
+Once your video player and output are connected, scripts can be loaded in several ways:
 
-* Manually, by dragging a funscript file from windows explorer and dropping it on the desired axis `File` text box.
+* Manually, by dragging a script file from windows explorer and dropping it on the desired axis `File` text box.
 * Manually, by using the `Script->Load` menu in the axis settings toolbar.
-* Automatically, based on the currently played video file name if the funscripts are named correctly:
+* Automatically, based on the currently played video file name if the scripts are named correctly:
 
 
 <details>
@@ -100,7 +100,7 @@ Once your video player and output are connected, the funscripts can be loaded in
 </details>
 </br>
 
-> The above file names are standard and recommended, other supported funscript names can be seen and configured in "Device" settings.
+> The above file names are standard and recommended, other supported script names can be seen and configured in "Device" settings.
 
 > The above file names are matched in all script libraries and in the currently playing video directory.
 
