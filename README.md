@@ -1,7 +1,7 @@
 <div align="center">
     <h1>MultiFunPlayer</h1>
     <br/>
-    <img src="Assets/screenshot.png"/>
+    <img src="Assets/screenshot.png" style="border-radius: 8px"/>
 </div>
 
 <br/>
