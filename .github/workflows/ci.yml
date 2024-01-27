@@ -31,7 +31,7 @@ jobs:
       with:
           fetch-depth: 0
     - name: Detect changes
-      uses: dorny/paths-filter@v2
+      uses: dorny/paths-filter@v3
       id: changes
       with:
         filters: |
@@ -91,7 +91,7 @@ jobs:
       with:
           fetch-depth: 0
     - name: Setup dotnet
-      uses: actions/setup-dotnet@v3
+      uses: actions/setup-dotnet@v4
       with:
         dotnet-version: '8.0.x'
     - name: Setup GitVersion
@@ -106,7 +106,7 @@ jobs:
     - name: Build ${{ matrix.build_type }}
       run: dotnet publish --configuration ${{ matrix.build_type }}
     - name: Upload ${{ matrix.build_type }} artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: MultiFunPlayer-${{ steps.gitversion.outputs.fullSemVer }}.${{ steps.gitversion.outputs.shortSha }}-${{ matrix.build_type }}
         path: Source\MultiFunPlayer\bin\${{ matrix.build_type }}\win-x64\publish
