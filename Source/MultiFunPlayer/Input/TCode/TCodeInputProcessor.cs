@@ -8,6 +8,7 @@ internal sealed class TCodeInputProcessor : IInputProcessor
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
+    private readonly SplittingStringBuffer _buffer;
     private readonly Dictionary<string, int> _unsignedAxisStates;
     private readonly Dictionary<string, int> _signedAxisStates;
 
@@ -15,20 +16,28 @@ internal sealed class TCodeInputProcessor : IInputProcessor
 
     public TCodeInputProcessor()
     {
+        _buffer = new SplittingStringBuffer('\n');
         _unsignedAxisStates = [];
         _signedAxisStates = [];
     }
 
     public void Parse(string input)
     {
-        Logger.Trace("Parsing {0}", input);
-        foreach(var match in Regex.Matches(input, "#(?<button>.+?):(?<state>0|1)").OfType<Match>().Where(m => m.Success))
+        _buffer.Push(input);
+        foreach (var command in _buffer.Consume())
+            ParseCommand(command);
+    }
+
+    private void ParseCommand(string command)
+    {
+        Logger.Trace("Parsing {0}", command);
+        foreach (var match in Regex.Matches(command, "#(?<button>.+?):(?<state>0|1)").OfType<Match>().Where(m => m.Success))
             CreateButtonGesture(match);
 
-        foreach (var match in Regex.Matches(input, @"@(?<axis>.+?):(?<value>\d{1,5})").OfType<Match>().Where(m => m.Success))
+        foreach (var match in Regex.Matches(command, @"@(?<axis>.+?):(?<value>\d{1,5})").OfType<Match>().Where(m => m.Success))
             CreateAxisGesture(_unsignedAxisStates, match, ushort.MinValue, ushort.MaxValue);
 
-        foreach (var match in Regex.Matches(input, @"\$(?<axis>.+?):(?<value>-?\d{1,5})").OfType<Match>().Where(m => m.Success))
+        foreach (var match in Regex.Matches(command, @"\$(?<axis>.+?):(?<value>-?\d{1,5})").OfType<Match>().Where(m => m.Success))
             CreateAxisGesture(_signedAxisStates, match, short.MinValue, short.MaxValue);
 
         void CreateButtonGesture(Match match)

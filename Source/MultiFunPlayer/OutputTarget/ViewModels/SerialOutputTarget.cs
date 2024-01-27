@@ -174,7 +174,6 @@ internal sealed class SerialOutputTarget(int instanceIndex, IEventAggregator eve
             EventAggregator.Publish(new SyncRequestMessage());
 
             using var _ = inputManager.Register<TCodeInputProcessor>(out var tcodeInputProcessor);
-            var receiveBuffer = new SplittingStringBuffer('\n');
             if (UpdateType == DeviceAxisUpdateType.FixedUpdate)
             {
                 var currentValues = DeviceAxis.All.ToDictionary(a => a, _ => double.NaN);
@@ -240,10 +239,7 @@ internal sealed class SerialOutputTarget(int instanceIndex, IEventAggregator eve
             {
                 var receivedString = serialPort.ReadExisting();
                 Logger.Debug("Received \"{0}\" from \"{1}\"", receivedString, SelectedSerialPortDeviceId);
-
-                receiveBuffer.Push(receivedString);
-                foreach (var command in receiveBuffer.Consume())
-                    tcodeInputProcessor.Parse(command);
+                tcodeInputProcessor.Parse(receivedString);
             }
         }
         catch (Exception e) when (e is TimeoutException || e is IOException)

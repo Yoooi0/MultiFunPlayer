@@ -65,7 +65,6 @@ internal sealed class UdpOutputTarget(int instanceIndex, IEventAggregator eventA
             using var _ = inputManager.Register<TCodeInputProcessor>(out var tcodeInputProcessor);
 
             var buffer = new byte[256];
-            var receiveBuffer = new SplittingStringBuffer('\n');
             if (UpdateType == DeviceAxisUpdateType.FixedUpdate)
             {
                 var currentValues = DeviceAxis.All.ToDictionary(a => a, _ => double.NaN);
@@ -134,10 +133,7 @@ internal sealed class UdpOutputTarget(int instanceIndex, IEventAggregator eventA
             {
                 var message = Encoding.UTF8.GetString(bytes);
                 Logger.Debug("Received \"{0}\" from \"{1}\"", message, $"udp://{endpoint.ToUriString()}");
-
-                receiveBuffer.Push(message);
-                foreach (var command in receiveBuffer.Consume())
-                    tcodeInputProcessor.Parse(command);
+                tcodeInputProcessor.Parse(message);
             }
         }
         catch (Exception e)
