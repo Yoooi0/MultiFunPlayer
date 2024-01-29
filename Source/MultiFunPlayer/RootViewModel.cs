@@ -24,8 +24,8 @@ internal sealed class RootViewModel : Conductor<IScreen>.Collection.AllActive, I
     public int WindowLeft { get; set; }
     public int WindowTop { get; set; }
 
-    public string WindowTitleVersion => GitVersionInformation.BranchName != "master" ? $"v{GitVersionInformation.MajorMinorPatch}.{GitVersionInformation.ShortSha}"
-                                                                                     : $"v{GitVersionInformation.MajorMinorPatch}";
+    public string WindowTitleVersion => GitVersionInformation.CommitsSinceVersionSource == "0" ? $"v{GitVersionInformation.MajorMinorPatch}"
+                                                                                               : $"v{GitVersionInformation.InformationalVersion}";
 
     public RootViewModel(IEventAggregator eventAggregator)
     {
