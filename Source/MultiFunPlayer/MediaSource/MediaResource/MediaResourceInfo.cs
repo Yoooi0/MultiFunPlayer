@@ -5,7 +5,7 @@ using System.Text;
 
 namespace MultiFunPlayer.MediaSource.MediaResource;
 
-internal sealed class MediaResourceInfo
+public sealed class MediaResourceInfo
 {
     public bool IsPath { get; init; }
     public bool IsUrl { get; init; }
@@ -20,7 +20,7 @@ internal sealed class MediaResourceInfo
     public string Source { get; init; }
     public string Name { get; init; }
 
-    public static MediaResourceInfo CreateFromPath(string path, IEnumerable<IMediaPathModifier> modifiers)
+    internal static MediaResourceInfo CreateFromPath(string path, IEnumerable<IMediaPathModifier> modifiers)
     {
         if (path == null)
             return null;

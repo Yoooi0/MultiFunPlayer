@@ -1,3 +1,4 @@
+using MultiFunPlayer.MediaSource.MediaResource;
 using MultiFunPlayer.Script;
 using Newtonsoft.Json.Linq;
 
@@ -18,7 +19,7 @@ public sealed record MediaPlayingChangedMessage(bool IsPlaying);
 public sealed record MediaPathChangedMessage(string Path, bool ReloadScripts = true);
 public sealed record MediaDurationChangedMessage(TimeSpan? Duration);
 
-public sealed record PostScriptSearchMessage(Dictionary<DeviceAxis, IScriptResource> Scripts);
+public sealed record PostScriptSearchMessage(MediaResourceInfo MediaResource, Dictionary<DeviceAxis, IScriptResource> Scripts);
 public sealed record ScriptChangedMessage(DeviceAxis Axis, IScriptResource Script);
 public sealed record ChangeScriptMessage(Dictionary<DeviceAxis, IScriptResource> Scripts)
 {
