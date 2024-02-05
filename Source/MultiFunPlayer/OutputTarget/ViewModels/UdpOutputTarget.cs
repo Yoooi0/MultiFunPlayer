@@ -62,7 +62,7 @@ internal sealed class UdpOutputTarget(int instanceIndex, IEventAggregator eventA
         {
             EventAggregator.Publish(new SyncRequestMessage());
 
-            using var _ = inputManager.Register<TCodeInputProcessor>(out var tcodeInputProcessor);
+            using var _ = inputManager.RegisterProcessor<TCodeInputProcessor>(out var tcodeInputProcessor);
 
             var buffer = new byte[256];
             if (UpdateType == DeviceAxisUpdateType.FixedUpdate)

@@ -173,7 +173,7 @@ internal sealed class SerialOutputTarget(int instanceIndex, IEventAggregator eve
         {
             EventAggregator.Publish(new SyncRequestMessage());
 
-            using var _ = inputManager.Register<TCodeInputProcessor>(out var tcodeInputProcessor);
+            using var _ = inputManager.RegisterProcessor<TCodeInputProcessor>(out var tcodeInputProcessor);
             if (UpdateType == DeviceAxisUpdateType.FixedUpdate)
             {
                 var currentValues = DeviceAxis.All.ToDictionary(a => a, _ => double.NaN);

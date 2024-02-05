@@ -1,15 +1,25 @@
 using MultiFunPlayer.Common;
 using Newtonsoft.Json;
 using NLog;
+using System.ComponentModel;
 using System.Diagnostics;
 using Vortice.XInput;
 
 namespace MultiFunPlayer.Input.XInput;
 
+[DisplayName("XInput")]
+internal sealed class XInputProcessorSettings : AbstractInputProcessorSettings
+{
+    [JsonProperty] public double RightThumbDeadZone { get; set; } = Gamepad.RightThumbDeadZone / 32767d;
+    [JsonProperty] public double LeftThumbDeadZone {get; set; } = Gamepad.LeftThumbDeadZone / 32767d;
+    [JsonProperty] public double TriggerDeadZone { get; set; } = Gamepad.TriggerThreshold / 255d;
+}
+
 internal sealed class XInputProcessor : IInputProcessor
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
+    private readonly XInputProcessorSettings _settings;
     private readonly State[] _states;
     private readonly HashSet<GamepadVirtualKey> _pressedKeys;
 
@@ -18,8 +28,10 @@ internal sealed class XInputProcessor : IInputProcessor
 
     public event EventHandler<IInputGesture> OnGesture;
 
-    public XInputProcessor()
+    public XInputProcessor(XInputProcessorSettings settings)
     {
+        _settings = settings;
+
         _states = new State[4];
         _pressedKeys = [];
         _cancellationSource = new CancellationTokenSource();
@@ -76,12 +88,12 @@ internal sealed class XInputProcessor : IInputProcessor
     {
         Logger.Trace("User: {0}, Keystroke: {1}, Flags: {2}", userIndex, keystroke.VirtualKey, keystroke.Flags);
 
-        if (keystroke.Flags == KeyStrokeFlags.KeyDown || keystroke.Flags == KeyStrokeFlags.Repeat)
+        if (keystroke.Flags.HasFlag(KeyStrokeFlags.KeyDown) || keystroke.Flags.HasFlag(KeyStrokeFlags.Repeat))
         {
             _pressedKeys.Add(keystroke.VirtualKey);
             HandleGesture(GamepadButtonGesture.Create(userIndex, _pressedKeys, true));
         }
-        else if (keystroke.Flags == KeyStrokeFlags.KeyUp)
+        else if (keystroke.Flags.HasFlag(KeyStrokeFlags.KeyUp))
         {
             if (_pressedKeys.Count > 0)
                 HandleGesture(GamepadButtonGesture.Create(userIndex, _pressedKeys, false));
@@ -91,34 +103,48 @@ internal sealed class XInputProcessor : IInputProcessor
 
     private void ParseStateGestures(int userIndex, ref Gamepad last, ref Gamepad current, double elapsed)
     {
-        void CreateAxisGestureShort(short last, short current, GamepadAxis axis)
+        void CreateAxisGestureShort(short last, short current, double deadZone, GamepadAxis axis)
         {
             if (current == last)
                 return;
+            if (Math.Abs(current) < deadZone && Math.Abs(last) < deadZone)
+                return;
 
-            var delta = MathUtils.UnLerp(-ushort.MaxValue, ushort.MaxValue, current - last);
-            var value = MathUtils.UnLerp(short.MinValue, short.MaxValue, current);
-            HandleGesture(GamepadAxisGesture.Create(userIndex, axis, value, delta, elapsed));
+            var currentValue = UnLerpShort(current, deadZone);
+            var lastValue = UnLerpShort(last, deadZone);
+            var delta = Math.Clamp(-1, 1, currentValue - lastValue);
+            HandleGesture(GamepadAxisGesture.Create(userIndex, axis, currentValue, delta, elapsed));
+
+            static double UnLerpShort(short value, double deadZone) => 0.5 + value switch
+            {
+                > 0 => 0.5 * MathUtils.UnLerp(MathUtils.Clamp01(deadZone) * short.MaxValue, short.MaxValue, value),
+                < 0 => -0.5 * MathUtils.UnLerp(MathUtils.Clamp01(deadZone) * short.MinValue, short.MinValue, value),
+                _ => 0
+            };
         }
 
-        void CreateAxisGestureByte(byte last, byte current, GamepadAxis axis)
+        void CreateAxisGestureByte(byte last, byte current, double deadZone, GamepadAxis axis)
         {
             if (current == last)
                 return;
+            if (current < deadZone && last < deadZone)
+                return;
 
-            var delta = MathUtils.UnLerp(-byte.MaxValue, byte.MaxValue, current - last);
-            var value = MathUtils.UnLerp(byte.MinValue, byte.MaxValue, current);
-            HandleGesture(GamepadAxisGesture.Create(userIndex, axis, value, delta, elapsed));
+            var byteDeadZone = MathUtils.Clamp01(deadZone) * byte.MaxValue;
+            var currentValue = MathUtils.UnLerp(byteDeadZone, byte.MaxValue, current);
+            var lastValue = MathUtils.UnLerp(byteDeadZone, byte.MaxValue, last);
+            var delta = Math.Clamp(-1, 1, currentValue - lastValue);
+            HandleGesture(GamepadAxisGesture.Create(userIndex, axis, currentValue, delta, elapsed));
         }
 
-        CreateAxisGestureShort(last.RightThumbX, current.RightThumbX, GamepadAxis.RightThumbX);
-        CreateAxisGestureShort(last.RightThumbY, current.RightThumbY, GamepadAxis.RightThumbY);
+        CreateAxisGestureShort(last.RightThumbX, current.RightThumbX, _settings.RightThumbDeadZone, GamepadAxis.RightThumbX);
+        CreateAxisGestureShort(last.RightThumbY, current.RightThumbY, _settings.RightThumbDeadZone, GamepadAxis.RightThumbY);
 
-        CreateAxisGestureShort(last.LeftThumbX, current.LeftThumbX, GamepadAxis.LeftThumbX);
-        CreateAxisGestureShort(last.LeftThumbY, current.LeftThumbY, GamepadAxis.LeftThumbY);
+        CreateAxisGestureShort(last.LeftThumbX, current.LeftThumbX, _settings.LeftThumbDeadZone, GamepadAxis.LeftThumbX);
+        CreateAxisGestureShort(last.LeftThumbY, current.LeftThumbY, _settings.LeftThumbDeadZone, GamepadAxis.LeftThumbY);
 
-        CreateAxisGestureByte(last.RightTrigger, current.RightTrigger, GamepadAxis.RightTrigger);
-        CreateAxisGestureByte(last.LeftTrigger, current.LeftTrigger, GamepadAxis.LeftTrigger);
+        CreateAxisGestureByte(last.RightTrigger, current.RightTrigger, _settings.TriggerDeadZone, GamepadAxis.RightTrigger);
+        CreateAxisGestureByte(last.LeftTrigger, current.LeftTrigger, _settings.TriggerDeadZone, GamepadAxis.LeftTrigger);
     }
 
     private void HandleGesture(IInputGesture gesture)

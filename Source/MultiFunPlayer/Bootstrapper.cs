@@ -2,6 +2,7 @@ using Microsoft.Win32;
 using MultiFunPlayer.Common;
 using MultiFunPlayer.Input;
 using MultiFunPlayer.Input.RawInput;
+using MultiFunPlayer.Input.TCode;
 using MultiFunPlayer.Input.XInput;
 using MultiFunPlayer.MediaSource;
 using MultiFunPlayer.MotionProvider;
@@ -26,6 +27,7 @@ using StyletIoC;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
+using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
@@ -59,8 +61,14 @@ internal sealed class Bootstrapper : Bootstrapper<RootViewModel>
 
         builder.Bind<IMediaSource>().ToAllImplementations().InSingletonScope();
         builder.Bind<IConfigMigration>().ToAllImplementations().InSingletonScope();
-        builder.Bind<IInputProcessor>().To<XInputProcessor>().InSingletonScope();
-        builder.Bind<IInputProcessor>().To<RawInputProcessor>().InSingletonScope();
+
+        foreach (var type in ReflectionUtils.FindImplementations<IInputProcessorSettings>())
+            builder.Bind(type).And<IInputProcessorSettings>().To(type).InSingletonScope();
+
+        builder.Bind<IInputProcessorFactory>().To<InputProcessorFactory>().InSingletonScope();
+        builder.Bind<XInputProcessor>().ToSelf().InSingletonScope();
+        builder.Bind<RawInputProcessor>().ToSelf().InSingletonScope();
+        builder.Bind<TCodeInputProcessor>().ToSelf();
 
         builder.Bind<IStyletLoggerManager>().To<StyletLoggerManager>().InSingletonScope();
         builder.Bind<IOutputTargetFactory>().To<OutputTargetFactory>().InSingletonScope();
@@ -170,10 +178,6 @@ internal sealed class Bootstrapper : Bootstrapper<RootViewModel>
 
         var eventAggregator = Container.Get<IEventAggregator>();
         eventAggregator.Publish(new WindowCreatedMessage());
-
-        var source = PresentationSource.FromVisual(GetActiveWindow()) as HwndSource;
-        var rawInput = Container.GetAll<IInputProcessor>().OfType<RawInputProcessor>().FirstOrDefault();
-        rawInput?.RegisterWindow(source);
 
         base.OnLaunch();
     }

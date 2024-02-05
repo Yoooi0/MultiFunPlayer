@@ -2,45 +2,49 @@
 using Linearstar.Windows.RawInput.Native;
 using MultiFunPlayer.Common;
 using NLog;
-using System.Diagnostics;
+using Stylet;
+using System.ComponentModel;
+using System.Windows;
 using System.Windows.Input;
 using System.Windows.Interop;
 
 namespace MultiFunPlayer.Input.RawInput;
 
-internal sealed class RawInputProcessor : IInputProcessor
+[DisplayName("RawInput")]
+internal sealed class RawInputProcessorSettings : AbstractInputProcessorSettings
+{
+    public int VirtualMouseWidth { get; set; } = 500;
+    public int VirtualMouseHeight { get; set; } = 500;
+    public int VirtualWheelWidth { get; set; } = 10;
+    public int VirtualWheelHeight { get; set; } = 20;
+    public int CombineMouseAxisEventCount { get; set; } = 10;
+}
+
+internal sealed class RawInputProcessor : IInputProcessor, IHandle<WindowCreatedMessage>
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
+    private readonly RawInputProcessorSettings _settings;
     private readonly HashSet<Key> _pressedKeys;
     private HwndSource _source;
 
-    private long _lastMouseAxisTimestamp;
+    private int _mouseAxisEventCount;
     private double _mouseXAxis, _mouseYAxis;
-    private double _mouseDeltaXAccum, _mouseDeltaYAccum;
+    private double _mouseDeltaX, _mouseDeltaY;
     private double _mouseWheelAxis, _mouseHorizontalWheelAxis;
+    private int _mouseLastAbsoluteX, _mouseLastAbsoluteY;
 
     public event EventHandler<IInputGesture> OnGesture;
 
-    public RawInputProcessor()
+    public RawInputProcessor(RawInputProcessorSettings settings, IEventAggregator eventAggregator)
     {
+        _settings = settings;
+        eventAggregator.Subscribe(this);
+
         _pressedKeys = [];
-        _lastMouseAxisTimestamp = 0;
         _mouseXAxis = _mouseYAxis = 0.5;
         _mouseWheelAxis = _mouseHorizontalWheelAxis = 0.5;
-    }
-
-    public void RegisterWindow(HwndSource source)
-    {
-        if (_source != null)
-            throw new InvalidOperationException("Cannot register more than one window");
-
-        _source = source;
-
-        source.AddHook(MessageSink);
-
-        RawInputDevice.RegisterDevice(HidUsageAndPage.Keyboard, RawInputDeviceFlags.ExInputSink, source.Handle);
-        RawInputDevice.RegisterDevice(HidUsageAndPage.Mouse, RawInputDeviceFlags.ExInputSink, source.Handle);
+        _mouseLastAbsoluteX = _mouseLastAbsoluteY = -1;
     }
 
     private IntPtr MessageSink(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
@@ -86,62 +90,98 @@ internal sealed class RawInputProcessor : IInputProcessor
 
     public void ParseMouseGestures(RawInputMouseData data)
     {
-        bool HasFlag(RawMouseButtonFlags flag) => data.Mouse.Buttons.HasFlag(flag);
+        ParseMouseButtonGestures(data.Mouse);
+        ParseMouseAxisGestures(data.Mouse);
+    }
 
-        if (HasFlag(RawMouseButtonFlags.Button4Up)) HandleGesture(MouseButtonGesture.Create(MouseButton.XButton1, false));
-        else if (HasFlag(RawMouseButtonFlags.Button5Up)) HandleGesture(MouseButtonGesture.Create(MouseButton.XButton2, false));
-        else if (HasFlag(RawMouseButtonFlags.LeftButtonUp)) HandleGesture(MouseButtonGesture.Create(MouseButton.Left, false));
-        else if (HasFlag(RawMouseButtonFlags.RightButtonUp)) HandleGesture(MouseButtonGesture.Create(MouseButton.Right, false));
-        else if (HasFlag(RawMouseButtonFlags.MiddleButtonUp)) HandleGesture(MouseButtonGesture.Create(MouseButton.Middle, false));
+    private void ParseMouseButtonGestures(in RawMouse mouse)
+    {
+        var buttons = mouse.Buttons;
+        if (buttons.HasFlag(RawMouseButtonFlags.Button4Up)) HandleGesture(MouseButtonGesture.Create(MouseButton.XButton1, false));
+        else if (buttons.HasFlag(RawMouseButtonFlags.Button5Up)) HandleGesture(MouseButtonGesture.Create(MouseButton.XButton2, false));
+        else if (buttons.HasFlag(RawMouseButtonFlags.LeftButtonUp)) HandleGesture(MouseButtonGesture.Create(MouseButton.Left, false));
+        else if (buttons.HasFlag(RawMouseButtonFlags.RightButtonUp)) HandleGesture(MouseButtonGesture.Create(MouseButton.Right, false));
+        else if (buttons.HasFlag(RawMouseButtonFlags.MiddleButtonUp)) HandleGesture(MouseButtonGesture.Create(MouseButton.Middle, false));
 
-        if (HasFlag(RawMouseButtonFlags.Button4Down)) HandleGesture(MouseButtonGesture.Create(MouseButton.XButton1, true));
-        else if (HasFlag(RawMouseButtonFlags.Button5Down)) HandleGesture(MouseButtonGesture.Create(MouseButton.XButton2, true));
-        else if (HasFlag(RawMouseButtonFlags.LeftButtonDown)) HandleGesture(MouseButtonGesture.Create(MouseButton.Left, true));
-        else if (HasFlag(RawMouseButtonFlags.RightButtonDown)) HandleGesture(MouseButtonGesture.Create(MouseButton.Right, true));
-        else if (HasFlag(RawMouseButtonFlags.MiddleButtonDown)) HandleGesture(MouseButtonGesture.Create(MouseButton.Middle, true));
+        if (buttons.HasFlag(RawMouseButtonFlags.Button4Down)) HandleGesture(MouseButtonGesture.Create(MouseButton.XButton1, true));
+        else if (buttons.HasFlag(RawMouseButtonFlags.Button5Down)) HandleGesture(MouseButtonGesture.Create(MouseButton.XButton2, true));
+        else if (buttons.HasFlag(RawMouseButtonFlags.LeftButtonDown)) HandleGesture(MouseButtonGesture.Create(MouseButton.Left, true));
+        else if (buttons.HasFlag(RawMouseButtonFlags.RightButtonDown)) HandleGesture(MouseButtonGesture.Create(MouseButton.Right, true));
+        else if (buttons.HasFlag(RawMouseButtonFlags.MiddleButtonDown)) HandleGesture(MouseButtonGesture.Create(MouseButton.Middle, true));
+    }
 
-        if (data.Mouse.ButtonData != 0)
+    private void ParseMouseAxisGestures(in RawMouse mouse)
+    {
+        if (mouse.ButtonData != 0)
         {
-            var delta = data.Mouse.ButtonData / (120d * 50d);
-            if (HasFlag(RawMouseButtonFlags.MouseWheel))
+            if (mouse.Buttons.HasFlag(RawMouseButtonFlags.MouseWheel))
             {
+                var delta = Math.Clamp((double)mouse.ButtonData / (120 * _settings.VirtualWheelHeight), -1, 1);
                 _mouseWheelAxis = MathUtils.Clamp01(_mouseWheelAxis + delta);
                 HandleGesture(MouseAxisGesture.Create(MouseAxis.MouseWheel, _mouseWheelAxis, delta, 0));
             }
-            else if (HasFlag(RawMouseButtonFlags.MouseHorizontalWheel))
+            else if (mouse.Buttons.HasFlag(RawMouseButtonFlags.MouseHorizontalWheel))
             {
+                var delta = Math.Clamp((double)mouse.ButtonData / (120 * _settings.VirtualWheelWidth), -1, 1);
                 _mouseHorizontalWheelAxis = MathUtils.Clamp01(_mouseHorizontalWheelAxis + delta);
                 HandleGesture(MouseAxisGesture.Create(MouseAxis.MouseHorizontalWheel, _mouseHorizontalWheelAxis, delta, 0));
             }
         }
 
-        var deltaX = data.Mouse.LastX / 500d;
-        var deltaY = data.Mouse.LastY / 500d;
-
-        _mouseDeltaXAccum += deltaX;
-        _mouseDeltaYAccum += deltaY;
-        _mouseXAxis = MathUtils.Clamp01(_mouseXAxis + deltaX);
-        _mouseYAxis = MathUtils.Clamp01(_mouseYAxis + deltaY);
-
-        var timestamp = Stopwatch.GetTimestamp();
-        var elapsed = (timestamp - _lastMouseAxisTimestamp) / (double)Stopwatch.Frequency;
-        if (elapsed >= 0.01)
+        var isAbsolute = mouse.Flags.HasFlag(RawMouseFlags.MoveAbsolute);
+        var deltaX = Math.Clamp(isAbsolute switch
         {
-            _lastMouseAxisTimestamp = timestamp;
+            true when _mouseLastAbsoluteX >= 0 => (double)(mouse.LastX - _mouseLastAbsoluteX) / _settings.VirtualMouseWidth,
+            false => (double)mouse.LastX / _settings.VirtualMouseWidth,
+            _ => 0
+        }, -1, 1);
+        var deltaY = Math.Clamp(isAbsolute switch
+        {
+            true when _mouseLastAbsoluteY >= 0 => (double)(mouse.LastY - _mouseLastAbsoluteY) / _settings.VirtualMouseHeight,
+            false => (double)mouse.LastY / _settings.VirtualMouseHeight,
+            _ => 0
+        }, -1, 1);
 
-            if (Math.Abs(_mouseDeltaXAccum) > 0.000001)
-                HandleGesture(MouseAxisGesture.Create(MouseAxis.X, _mouseXAxis, _mouseDeltaXAccum, 0));
+        _mouseLastAbsoluteX = isAbsolute ? mouse.LastX : -1;
+        _mouseLastAbsoluteY = isAbsolute ? mouse.LastY : -1;
 
-            if (Math.Abs(_mouseDeltaYAccum) > 0.000001)
-                HandleGesture(MouseAxisGesture.Create(MouseAxis.Y, _mouseYAxis, _mouseDeltaYAccum, 0));
+        _mouseXAxis = MathUtils.Clamp01(_mouseXAxis + deltaX);
+        _mouseYAxis = MathUtils.Clamp01(_mouseXAxis + deltaY);
 
-            _mouseDeltaXAccum = 0;
-            _mouseDeltaYAccum = 0;
+        _mouseDeltaX += deltaX;
+        _mouseDeltaY += deltaY;
+
+        if (_mouseAxisEventCount++ >= _settings.CombineMouseAxisEventCount)
+        {
+            if (Math.Abs(_mouseDeltaX) > 0)
+                HandleGesture(MouseAxisGesture.Create(MouseAxis.X, _mouseXAxis, _mouseDeltaX, 0));
+
+            if (Math.Abs(_mouseDeltaY) > 0)
+                HandleGesture(MouseAxisGesture.Create(MouseAxis.Y, _mouseYAxis, _mouseDeltaY, 0));
+
+            _mouseDeltaX = _mouseDeltaY = 0;
+            _mouseAxisEventCount = 0;
         }
     }
 
     private void HandleGesture(IInputGesture gesture)
         => OnGesture?.Invoke(this, gesture);
+
+    private void RegisterWindow(HwndSource source)
+    {
+        if (_source != null)
+            throw new InvalidOperationException("Cannot register more than one window");
+
+        _source = source;
+
+        source.AddHook(MessageSink);
+
+        RawInputDevice.RegisterDevice(HidUsageAndPage.Keyboard, RawInputDeviceFlags.ExInputSink, source.Handle);
+        RawInputDevice.RegisterDevice(HidUsageAndPage.Mouse, RawInputDeviceFlags.ExInputSink, source.Handle);
+    }
+
+    public void Handle(WindowCreatedMessage message)
+        => RegisterWindow(PresentationSource.FromVisual(Application.Current.MainWindow) as HwndSource);
 
     private void Dispose(bool disposing)
     {
