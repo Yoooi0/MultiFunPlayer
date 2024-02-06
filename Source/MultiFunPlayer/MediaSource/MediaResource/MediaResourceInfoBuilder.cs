@@ -9,10 +9,11 @@ internal sealed class MediaResourceInfoBuilder(string originalPath)
 
     public MediaResourceInfo Build()
     {
-        if (originalPath == null)
+        var path = _modifiedPath ?? originalPath;
+        if (path == null)
             return null;
 
-        if (TryParseUri(originalPath, out var result) || TryParsePath(originalPath, out result))
+        if (TryParseUri(path, out var result) || TryParsePath(path, out result))
             return result;
 
         return null;
@@ -44,7 +45,7 @@ internal sealed class MediaResourceInfoBuilder(string originalPath)
                 return true;
 
             var source = $"{uri.Scheme}://{uri.Host}{(uri.Port != 80 ? $":{uri.Port}" : "")}{uri.LocalPath[..^name.Length].TrimEnd('\\', '/')}";
-            result = Build(MediaResourcePathType.Uri, name, source);
+            result = Build(MediaResourcePathType.Url, name, source);
             return true;
         }
         catch { }
@@ -80,6 +81,9 @@ internal sealed class MediaResourceInfoBuilder(string originalPath)
 
     public void WithModifiers(IEnumerable<IMediaPathModifier> mediaPathModifiers)
     {
+        if (originalPath == null)
+            return;
+
         var modifiedPath = originalPath;
         var modifier = mediaPathModifiers.FirstOrDefault(m => m.Process(ref modifiedPath));
         if (modifier != null)
