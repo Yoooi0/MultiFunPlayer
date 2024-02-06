@@ -1,4 +1,4 @@
-using MultiFunPlayer.Common;
+﻿using MultiFunPlayer.Common;
 using MultiFunPlayer.MediaSource.MediaResource;
 using Newtonsoft.Json;
 using NLog;
@@ -65,8 +65,10 @@ internal sealed class StashScriptRepository : AbstractScriptRepository
                 if (!string.Equals(mediaResourceUri.Host, ServerBaseUri.Host, StringComparison.OrdinalIgnoreCase))
                     return false;
 
+                var pathAndQuery = mediaResourceUri.GetComponents(UriComponents.PathAndQuery, UriFormat.Unescaped);
+
                 // <endpoint>/res?scene=<sceneId>
-                var match = Regex.Match(mediaResourceUri.Query, @"scene=(?<id>\d+?)");
+                var match = Regex.Match(pathAndQuery, @"scene=(?<id>\d+?)");
                 if (match.Success)
                 {
                     sceneId = int.Parse(match.Groups["id"].Value);
@@ -74,7 +76,7 @@ internal sealed class StashScriptRepository : AbstractScriptRepository
                 }
 
                 // <endpoint>/scene/<sceneId>/stream
-                match = Regex.Match(mediaResourceUri.Query, @"scene\/(?<id>\d+)\/stream");
+                match = Regex.Match(pathAndQuery, @"scene\/(?<id>\d+)\/stream");
                 if (match.Success)
                 {
                     sceneId = int.Parse(match.Groups["id"].Value);

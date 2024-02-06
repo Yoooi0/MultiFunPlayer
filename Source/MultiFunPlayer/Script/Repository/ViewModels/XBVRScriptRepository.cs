@@ -54,8 +54,10 @@ internal sealed class XBVRScriptRepository : AbstractScriptRepository
                 if (!string.Equals(mediaResourceUri.Host, ServerBaseUri.Host, StringComparison.OrdinalIgnoreCase))
                     return false;
 
+                var pathAndQuery = mediaResourceUri.GetComponents(UriComponents.PathAndQuery, UriFormat.Unescaped);
+
                 // <endpoint>/res?scene=<sceneId>
-                var match = Regex.Match(mediaResourceUri.Query, "scene=(?<id>.+?)(?>$|&)");
+                var match = Regex.Match(pathAndQuery, "scene=(?<id>.+?)(?>$|&)");
                 if (match.Success)
                 {
                     sceneId = match.Groups["id"].Value;
@@ -63,7 +65,7 @@ internal sealed class XBVRScriptRepository : AbstractScriptRepository
                 }
 
                 // <endpoint>/api/dms/file/<sceneId>
-                match = Regex.Match(mediaResourceUri.Query, @"api\/dms\/file\/(?<id>\d+)");
+                match = Regex.Match(pathAndQuery, @"api\/dms\/file\/(?<id>\d+)");
                 if (match.Success)
                 {
                     sceneId = match.Groups["id"].Value;
