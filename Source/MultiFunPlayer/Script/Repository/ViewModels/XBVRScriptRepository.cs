@@ -51,7 +51,7 @@ internal sealed class XBVRScriptRepository : AbstractScriptRepository
             else if (mediaResource.PathType == MediaResourcePathType.Uri)
             {
                 var mediaResourceUri = new Uri(mediaResource.Path);
-                if (string.Equals(mediaResourceUri.Host, ServerBaseUri.Host, StringComparison.OrdinalIgnoreCase))
+                if (!string.Equals(mediaResourceUri.Host, ServerBaseUri.Host, StringComparison.OrdinalIgnoreCase))
                     return false;
 
                 // <endpoint>/res?scene=<sceneId>
