@@ -2,7 +2,7 @@
 
 public enum MediaResourcePathType
 {
-    Uri,
+    Url,
     File
 }
 
@@ -16,6 +16,8 @@ public sealed class MediaResourceInfo
     public string Source { get; init; }
     public string Name { get; init; }
 
+    public bool IsFile => PathType == MediaResourcePathType.File;
+    public bool IsUrl => PathType == MediaResourcePathType.Url;
     public bool IsModified => ModifiedPath != null;
     public string Path => IsModified ? ModifiedPath : OriginalPath;
 }

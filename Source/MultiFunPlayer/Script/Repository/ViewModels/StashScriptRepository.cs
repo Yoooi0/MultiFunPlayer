@@ -26,8 +26,10 @@ internal sealed class StashScriptRepository : AbstractScriptRepository
         if (ServerBaseUri == null)
             return [];
 
-        if (!TryGetSceneId(out var sceneId))
+        if (!TryGetSceneId(mediaResource, out var sceneId))
             return [];
+
+        Logger.Debug("Found Stash scene id [Id: {0}]", sceneId);
 
         using var client = NetUtils.CreateHttpClient();
         var result = new Dictionary<DeviceAxis, IScriptResource>();
@@ -43,49 +45,51 @@ internal sealed class StashScriptRepository : AbstractScriptRepository
         var response = await client.SendAsync(request, token);
         var content = await response.Content.ReadAsStringAsync(token);
 
+        Logger.Trace("Received Stash api response \"{0}\"", response);
+
         var queryRespone = JsonConvert.DeserializeObject<QueryResponse>(content);
         _ = TryMatchLocal(queryRespone, axes, result, localRepository) || await TryMatchDms(queryRespone, result, client, token);
         return result;
+    }
 
-        bool TryGetSceneId(out int sceneId)
+    private bool TryGetSceneId(MediaResourceInfo mediaResource, out int sceneId)
+    {
+        sceneId = -1;
+        if (mediaResource.IsFile)
         {
-            sceneId = -1;
-            if (mediaResource.PathType == MediaResourcePathType.File)
-            {
-                var match = Regex.Match(mediaResource.Name, @"^(?<id>\d+) - .+");
-                if (!match.Success)
-                    return false;
+            var match = Regex.Match(mediaResource.Name, @"^(?<id>\d+) - .+");
+            if (!match.Success)
+                return false;
 
+            sceneId = int.Parse(match.Groups["id"].Value);
+            return true;
+        }
+        else if (mediaResource.IsUrl)
+        {
+            var mediaResourceUri = new Uri(mediaResource.Path);
+            if (!string.Equals(mediaResourceUri.Host, ServerBaseUri.Host, StringComparison.OrdinalIgnoreCase))
+                return false;
+
+            var pathAndQuery = mediaResourceUri.GetComponents(UriComponents.PathAndQuery, UriFormat.Unescaped);
+
+            // <endpoint>/res?scene=<sceneId>
+            var match = Regex.Match(pathAndQuery, @"scene=(?<id>\d+?)");
+            if (match.Success)
+            {
                 sceneId = int.Parse(match.Groups["id"].Value);
                 return true;
             }
-            else if (mediaResource.PathType == MediaResourcePathType.Uri)
+
+            // <endpoint>/scene/<sceneId>/stream
+            match = Regex.Match(pathAndQuery, @"scene\/(?<id>\d+)\/stream");
+            if (match.Success)
             {
-                var mediaResourceUri = new Uri(mediaResource.Path);
-                if (!string.Equals(mediaResourceUri.Host, ServerBaseUri.Host, StringComparison.OrdinalIgnoreCase))
-                    return false;
-
-                var pathAndQuery = mediaResourceUri.GetComponents(UriComponents.PathAndQuery, UriFormat.Unescaped);
-
-                // <endpoint>/res?scene=<sceneId>
-                var match = Regex.Match(pathAndQuery, @"scene=(?<id>\d+?)");
-                if (match.Success)
-                {
-                    sceneId = int.Parse(match.Groups["id"].Value);
-                    return true;
-                }
-
-                // <endpoint>/scene/<sceneId>/stream
-                match = Regex.Match(pathAndQuery, @"scene\/(?<id>\d+)\/stream");
-                if (match.Success)
-                {
-                    sceneId = int.Parse(match.Groups["id"].Value);
-                    return true;
-                }
+                sceneId = int.Parse(match.Groups["id"].Value);
+                return true;
             }
-
-            return false;
         }
+
+        return false;
     }
 
     private bool TryMatchLocal(QueryResponse queryRespone, IEnumerable<DeviceAxis> axes, Dictionary<DeviceAxis, IScriptResource> result, ILocalScriptRepository localRepository)

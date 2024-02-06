@@ -946,7 +946,7 @@ internal sealed class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDispo
         if (MediaResource == null)
             return;
 
-        if (MediaResource.PathType == MediaResourcePathType.Uri)
+        if (MediaResource.IsUrl)
         {
             Process.Start(new ProcessStartInfo
             {
@@ -1320,7 +1320,7 @@ internal sealed class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDispo
 
     public void OnMapCurrentMediaPathToFile(object sender, RoutedEventArgs e)
     {
-        if (MediaResource?.PathType != MediaResourcePathType.Uri)
+        if (MediaResource?.IsUrl != true)
             return;
 
         var dialog = new OpenFileDialog()

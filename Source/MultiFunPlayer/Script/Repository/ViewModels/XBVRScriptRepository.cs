@@ -24,57 +24,61 @@ internal sealed class XBVRScriptRepository : AbstractScriptRepository
         if (ServerBaseUri == null)
             return [];
 
-        if (!TryGetSceneId(out var sceneId))
+        if (!TryGetSceneId(mediaResource, out var sceneId))
             return [];
+
+        Logger.Debug("Found XBVR scene id [Id: {0}]", sceneId);
 
         using var client = NetUtils.CreateHttpClient();
         var result = new Dictionary<DeviceAxis, IScriptResource>();
         var uri = new Uri(ServerBaseUri, $"/api/scene/{sceneId}");
         var response = await client.GetStringAsync(uri, token);
 
+        Logger.Trace("Received XBVR scene content \"{0}\"", response);
+
         var metadata = JsonConvert.DeserializeObject<SceneMetadata>(response);
         _ = TryMatchLocal(metadata, axes, result, localRepository) || await TryMatchDms(metadata, axes, result, client, token);
         return result;
+    }
 
-        bool TryGetSceneId(out object sceneId)
+    private bool TryGetSceneId(MediaResourceInfo mediaResource, out object sceneId)
+    {
+        sceneId = null;
+        if (mediaResource.IsFile)
         {
-            sceneId = null;
-            if (mediaResource.PathType == MediaResourcePathType.File)
-            {
-                var match = Regex.Match(mediaResource.Name, @"^(?<id>\d+) - .+");
-                if (!match.Success)
-                    return false;
+            var match = Regex.Match(mediaResource.Name, @"^(?<id>\d+) - .+");
+            if (!match.Success)
+                return false;
 
+            sceneId = match.Groups["id"].Value;
+            return true;
+        }
+        else if (mediaResource.IsUrl)
+        {
+            var mediaResourceUri = new Uri(mediaResource.Path);
+            if (!string.Equals(mediaResourceUri.Host, ServerBaseUri.Host, StringComparison.OrdinalIgnoreCase))
+                return false;
+
+            var pathAndQuery = mediaResourceUri.GetComponents(UriComponents.PathAndQuery, UriFormat.Unescaped);
+
+            // <endpoint>/res?scene=<sceneId>
+            var match = Regex.Match(pathAndQuery, "scene=(?<id>.+?)(?>$|&)");
+            if (match.Success)
+            {
                 sceneId = match.Groups["id"].Value;
                 return true;
             }
-            else if (mediaResource.PathType == MediaResourcePathType.Uri)
+
+            // <endpoint>/api/dms/file/<sceneId>
+            match = Regex.Match(pathAndQuery, @"api\/dms\/file\/(?<id>\d+)");
+            if (match.Success)
             {
-                var mediaResourceUri = new Uri(mediaResource.Path);
-                if (!string.Equals(mediaResourceUri.Host, ServerBaseUri.Host, StringComparison.OrdinalIgnoreCase))
-                    return false;
-
-                var pathAndQuery = mediaResourceUri.GetComponents(UriComponents.PathAndQuery, UriFormat.Unescaped);
-
-                // <endpoint>/res?scene=<sceneId>
-                var match = Regex.Match(pathAndQuery, "scene=(?<id>.+?)(?>$|&)");
-                if (match.Success)
-                {
-                    sceneId = match.Groups["id"].Value;
-                    return true;
-                }
-
-                // <endpoint>/api/dms/file/<sceneId>
-                match = Regex.Match(pathAndQuery, @"api\/dms\/file\/(?<id>\d+)");
-                if (match.Success)
-                {
-                    sceneId = match.Groups["id"].Value;
-                    return true;
-                }
+                sceneId = match.Groups["id"].Value;
+                return true;
             }
-
-            return false;
         }
+
+        return false;
     }
 
     private bool TryMatchLocal(SceneMetadata metadata, IEnumerable<DeviceAxis> axes, Dictionary<DeviceAxis, IScriptResource> result, ILocalScriptRepository localRepository)
