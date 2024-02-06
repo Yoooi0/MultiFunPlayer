@@ -73,7 +73,7 @@ internal sealed class StashScriptRepository : AbstractScriptRepository
             var pathAndQuery = mediaResourceUri.GetComponents(UriComponents.PathAndQuery, UriFormat.Unescaped);
 
             // <endpoint>/res?scene=<sceneId>
-            var match = Regex.Match(pathAndQuery, @"scene=(?<id>\d+?)");
+            var match = Regex.Match(pathAndQuery, @"scene=(?<id>\d+?)(?>$|&)");
             if (match.Success)
             {
                 sceneId = int.Parse(match.Groups["id"].Value);
