@@ -39,7 +39,7 @@ internal sealed class XBVRScriptRepository : AbstractScriptRepository
         bool TryGetSceneId(out object sceneId)
         {
             sceneId = null;
-            if (mediaResource.IsPath)
+            if (mediaResource.PathType == MediaResourcePathType.File)
             {
                 var match = Regex.Match(mediaResource.Name, @"^(?<id>\d+) - .+");
                 if (!match.Success)
@@ -48,9 +48,9 @@ internal sealed class XBVRScriptRepository : AbstractScriptRepository
                 sceneId = match.Groups["id"].Value;
                 return true;
             }
-            else if (mediaResource.IsUrl)
+            else if (mediaResource.PathType == MediaResourcePathType.Uri)
             {
-                var mediaResourceUri = new Uri(mediaResource.IsModified ? mediaResource.ModifiedPath : mediaResource.OriginalPath);
+                var mediaResourceUri = new Uri(mediaResource.Path);
                 if (string.Equals(mediaResourceUri.Host, ServerBaseUri.Host, StringComparison.OrdinalIgnoreCase))
                     return false;
 

@@ -1,4 +1,4 @@
-﻿using MultiFunPlayer.Common;
+using MultiFunPlayer.Common;
 using MultiFunPlayer.MediaSource.MediaResource;
 using Newtonsoft.Json;
 using NLog;
@@ -50,7 +50,7 @@ internal sealed class StashScriptRepository : AbstractScriptRepository
         bool TryGetSceneId(out int sceneId)
         {
             sceneId = -1;
-            if (mediaResource.IsPath)
+            if (mediaResource.PathType == MediaResourcePathType.File)
             {
                 var match = Regex.Match(mediaResource.Name, @"^(?<id>\d+) - .+");
                 if (!match.Success)
@@ -59,9 +59,9 @@ internal sealed class StashScriptRepository : AbstractScriptRepository
                 sceneId = int.Parse(match.Groups["id"].Value);
                 return true;
             }
-            else if (mediaResource.IsUrl)
+            else if (mediaResource.PathType == MediaResourcePathType.Uri)
             {
-                var mediaResourceUri = new Uri(mediaResource.IsModified ? mediaResource.ModifiedPath : mediaResource.OriginalPath);
+                var mediaResourceUri = new Uri(mediaResource.Path);
                 if (string.Equals(mediaResourceUri.Host, ServerBaseUri.Host, StringComparison.OrdinalIgnoreCase))
                     return false;
 

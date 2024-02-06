@@ -1,83 +1,88 @@
-﻿namespace MultiFunPlayer.MediaSource.MediaResource;
+﻿using MultiFunPlayer.MediaSource.MediaResource.Modifier;
+using System.IO;
 
-internal interface IMediaResourceInfoBuilder
+namespace MultiFunPlayer.MediaSource.MediaResource;
+
+internal sealed class MediaResourceInfoBuilder(string originalPath)
 {
-    IMediaResourceInfoBuilder WithOriginalPath(string originalPath);
-    IMediaResourceInfoBuilder WithSourceAndName(string source, string name);
-    IMediaResourceInfoBuilder AsPath();
-    IMediaResourceInfoBuilder AsUrl();
-    IMediaResourceInfoBuilder AsLocal();
-    IMediaResourceInfoBuilder AsModified(string modifiedPath);
-
-    MediaResourceInfo Build();
-}
-
-internal sealed class MediaResourceInfoBuilder : IMediaResourceInfoBuilder
-{
-    [Flags]
-    private enum BuilderFlags
-    {
-        None = 0,
-        IsPath = 1 << 0,
-        IsUrl = 1 << 1,
-        IsLocal = 1 << 2,
-        Modified = 1 << 3
-    }
-
-    private string _source;
-    private string _name;
-    private string _originalPath;
     private string _modifiedPath;
-    private BuilderFlags _flags;
-
-    public IMediaResourceInfoBuilder AsPath()
-    {
-        _flags |= BuilderFlags.IsPath;
-        return this;
-    }
-
-    public IMediaResourceInfoBuilder AsUrl()
-    {
-        _flags |= BuilderFlags.IsUrl;
-        return this;
-    }
-
-    public IMediaResourceInfoBuilder AsLocal()
-    {
-        _flags |= BuilderFlags.IsLocal;
-        return this;
-    }
-
-    public IMediaResourceInfoBuilder AsModified(string modifiedPath)
-    {
-        _flags |= BuilderFlags.Modified;
-        _modifiedPath = modifiedPath;
-        return this;
-    }
-
-    public IMediaResourceInfoBuilder WithOriginalPath(string originalPath)
-    {
-        _originalPath = originalPath;
-        return this;
-    }
-
-    public IMediaResourceInfoBuilder WithSourceAndName(string source, string name)
-    {
-        _source = source;
-        _name = name;
-        return this;
-    }
 
     public MediaResourceInfo Build()
-        => new()
+    {
+        if (originalPath == null)
+            return null;
+
+        if (TryParseUri(originalPath, out var result) || TryParsePath(originalPath, out result))
+            return result;
+
+        return null;
+    }
+
+    private MediaResourceInfo Build(MediaResourcePathType pathType, string name, string source) => new()
+    {
+        ModifiedPath = _modifiedPath,
+        OriginalPath = originalPath,
+        PathType = pathType,
+        Name = name,
+        Source = source
+    };
+
+    private bool TryParseUri(string path, out MediaResourceInfo result)
+    {
+        result = null;
+
+        try
         {
-            IsPath = _flags.HasFlag(BuilderFlags.IsPath),
-            IsUrl = _flags.HasFlag(BuilderFlags.IsUrl),
-            IsModified = _flags.HasFlag(BuilderFlags.Modified),
-            Local = _flags.HasFlag(BuilderFlags.IsLocal),
-            OriginalPath = _originalPath,
-            ModifiedPath = _modifiedPath,
-            Source = _source,
-            Name = _name
-        };
+            if (!Uri.TryCreate(path, UriKind.RelativeOrAbsolute, out var uri))
+                return false;
+
+            if (!uri.IsAbsoluteUri || uri.IsFile)
+                return false;
+
+            var name = Path.GetFileName(uri.LocalPath);
+            if (string.IsNullOrWhiteSpace(name))
+                return true;
+
+            var source = $"{uri.Scheme}://{uri.Host}{(uri.Port != 80 ? $":{uri.Port}" : "")}{uri.LocalPath[..^name.Length].TrimEnd('\\', '/')}";
+            result = Build(MediaResourcePathType.Uri, name, source);
+            return true;
+        }
+        catch { }
+
+        return false;
+    }
+
+    private bool TryParsePath(string path, out MediaResourceInfo result)
+    {
+        result = null;
+        var name = Path.GetFileName(path);
+        if (string.IsNullOrWhiteSpace(name))
+            return false;
+
+        if (!path.EndsWith(name))
+            return false;
+
+        if (!Path.IsPathFullyQualified(path))
+        {
+            var absolutePath = Path.Join(Environment.CurrentDirectory, path);
+            if (File.Exists(absolutePath))
+                path = absolutePath;
+        }
+
+        var source = path.Remove(path.Length - name.Length);
+        if (Path.EndsInDirectorySeparator(source))
+            if (Path.GetPathRoot(source) != source)
+                source = source.TrimEnd('\\', '/');
+
+        result = Build(MediaResourcePathType.File, name, source);
+        return true;
+    }
+
+    public void WithModifiers(IEnumerable<IMediaPathModifier> mediaPathModifiers)
+    {
+        var modifiedPath = originalPath;
+        var modifier = mediaPathModifiers.FirstOrDefault(m => m.Process(ref modifiedPath));
+        if (modifier != null)
+            _modifiedPath = modifiedPath;
+    }
 }
