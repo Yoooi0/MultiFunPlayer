@@ -69,8 +69,8 @@ internal sealed class XBVRScriptRepository : AbstractScriptRepository
                 return true;
             }
 
-            // <endpoint>/api/dms/file/<sceneId>
-            match = Regex.Match(pathAndQuery, @"api\/dms\/file\/(?<id>\d+)");
+            // <endpoint>/api/dms/file/<fileId>/<sceneId> - <title>
+            match = Regex.Match(pathAndQuery, @"api\/dms\/file\/\d+\/(?<id>\d+) - .+");
             if (match.Success)
             {
                 sceneId = match.Groups["id"].Value;
