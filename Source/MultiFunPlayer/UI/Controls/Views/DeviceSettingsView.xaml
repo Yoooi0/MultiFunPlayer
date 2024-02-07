@@ -12,7 +12,7 @@
              x:ClassModifier="internal"
              mc:Ignorable="d">
     <UserControl.Resources>
-        <converters:StringListToStringConverter x:Key="StringListToStringConverter"/>
+        <converters:FunscriptNameListToStringConverter x:Key="FunscriptNameListToStringConverter"/>
     </UserControl.Resources>
 
     <Grid Margin="20">
@@ -227,7 +227,7 @@
                                 </DataGridTextColumn.HeaderStyle>
                             </DataGridTextColumn>
 
-                            <DataGridTextColumn Binding="{Binding FunscriptNames, Converter={StaticResource StringListToStringConverter}}"
+                            <DataGridTextColumn Binding="{Binding FunscriptNames, Converter={StaticResource FunscriptNameListToStringConverter}}"
                                                 EditingElementStyle="{StaticResource MaterialDesignDataGridTextColumnEditingStyle}"
                                                 ElementStyle="{StaticResource MaterialDesignDataGridTextColumnStyle}"
                                                 Header="Funscript names">
