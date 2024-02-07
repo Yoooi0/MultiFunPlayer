@@ -1,5 +1,6 @@
 using MultiFunPlayer.Common;
 using MultiFunPlayer.Script;
+using MultiFunPlayer.Script.Repository;
 using MultiFunPlayer.Shortcut;
 using MultiFunPlayer.UI;
 using Newtonsoft.Json.Linq;
@@ -15,7 +16,7 @@ using System.Windows;
 namespace MultiFunPlayer.MediaSource.ViewModels;
 
 [DisplayName("Internal")]
-internal sealed class InternalMediaSource(IShortcutManager shortcutManager, IEventAggregator eventAggregator) : AbstractMediaSource(shortcutManager, eventAggregator)
+internal sealed class InternalMediaSource(ILocalScriptRepository localRepository, IShortcutManager shortcutManager, IEventAggregator eventAggregator) : AbstractMediaSource(shortcutManager, eventAggregator)
 {
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
@@ -38,6 +39,7 @@ internal sealed class InternalMediaSource(IShortcutManager shortcutManager, IEve
 
     public bool IsShuffling { get; set; } = false;
     public bool IsLooping { get; set; } = false;
+    public bool LoadAdditionalScripts { get; set; } = false;
 
     protected override async Task RunAsync(CancellationToken token)
     {
@@ -271,28 +273,48 @@ internal sealed class InternalMediaSource(IShortcutManager shortcutManager, IEve
         if (Status != ConnectionStatus.Connected && Status != ConnectionStatus.Disconnecting)
             return;
 
-        PublishMessage(new ChangeScriptMessage(DeviceAxis.All, null));
-        var result = item == null ? null : FunscriptReader.Default.FromFileInfo(item.AsFileInfo());
-        if (result?.IsSuccess != true)
+        if (item == null)
         {
-            SetDuration(double.NaN);
-            SetPosition(double.NaN);
+            ResetState();
             return;
         }
 
-        if (result.IsMultiAxis)
+        var result = new Dictionary<DeviceAxis, IScriptResource>();
+        if (LoadAdditionalScripts)
         {
-            PublishMessage(new ChangeScriptMessage(result.Resources));
-            SetDuration(result.Resources.Values.Max(s => s.Keyframes[^1].Position));
+            var scriptName = DeviceAxisUtils.GetBaseNameWithExtension(item.Name);
+            result.Merge(localRepository.SearchForScripts(scriptName, Path.GetDirectoryName(item.FullName), DeviceAxis.All));
         }
         else
         {
-            var axes = DeviceAxisUtils.FindAxesMatchingName(item.Name, true);
-            PublishMessage(new ChangeScriptMessage(axes, result.Resource));
-            SetDuration(result.Resource.Keyframes[^1].Position);
+            var readerResult = FunscriptReader.Default.FromFileInfo(item.AsFileInfo());
+            if (readerResult.IsSuccess)
+            {
+                if (readerResult.IsMultiAxis)
+                    result.Merge(readerResult.Resources);
+                else
+                    result.Merge(DeviceAxisUtils.FindAxesMatchingName(item.Name, true).ToDictionary(a => a, _ => readerResult.Resource));
+            }
         }
 
+        if (result.Count == 0)
+        {
+            ResetState();
+            return;
+        }
+
+        SetDuration(result.Values.Max(s => s.Keyframes[^1].Position));
         SetPosition(0, forceSeek: true);
+
+        result.Merge(DeviceAxis.All.Except(result.Keys).ToDictionary(a => a, _ => default(IScriptResource)));
+        PublishMessage(new ChangeScriptMessage(result));
+
+        void ResetState()
+        {
+            SetDuration(double.NaN);
+            SetPosition(double.NaN);
+            PublishMessage(new ChangeScriptMessage(DeviceAxis.All, null));
+        }
     }
 
     private void SetDuration(double duration)
@@ -456,6 +478,9 @@ internal sealed class InternalMediaSource(IShortcutManager shortcutManager, IEve
         if (IsShuffling && IsLooping)
             IsLooping = false;
     }
+
+    public void OnLoadAdditionalScriptsChanged()
+        => SetCurrentItem(_currentItem);
 
     private sealed record PlayScriptAtIndexMessage(int Index) : IMediaSourceControlMessage;
     private sealed record PlayScriptWithOffsetMessage(int Offset) : IMediaSourceControlMessage;

@@ -78,7 +78,15 @@ internal sealed class Bootstrapper : Bootstrapper<RootViewModel>
         builder.Bind<IMotionProviderFactory>().To<MotionProviderFactory>().InSingletonScope();
         builder.Bind<IMotionProviderManager>().To<MotionProviderManager>().InSingletonScope();
 
-        builder.Bind<IScriptRepository>().ToAllImplementations().InSingletonScope();
+        foreach (var type in ReflectionUtils.FindImplementations<IScriptRepository>())
+        {
+            var binding = builder.Bind(type).And<IScriptRepository>();
+            if (type == typeof(LocalScriptRepository))
+                binding = binding.And<ILocalScriptRepository>();
+
+            binding.To(type).InSingletonScope();
+        }
+
         builder.Bind<IScriptRepositoryManager>().To<ScriptRepositoryManager>().InSingletonScope();
     }
 

@@ -107,6 +107,20 @@
                     </ToggleButton>
 
                     <ToggleButton Style="{StaticResource MaterialDesignToolBarToggleButton}"
+                                  IsChecked="{Binding LoadAdditionalScripts}"
+                                  ToolTip="Load additional scripts">
+                        <material:PackIcon Width="18"
+                                           Height="18"
+                                           Kind="FileMultipleOutline"
+                                           Opacity=".56"/>
+                        <material:ToggleButtonAssist.OnContent>
+                            <material:PackIcon Width="18"
+                                               Height="18"
+                                               Kind="FileMultipleOutline"/>
+                        </material:ToggleButtonAssist.OnContent>
+                    </ToggleButton>
+
+                    <ToggleButton Style="{StaticResource MaterialDesignToolBarToggleButton}"
                                   IsChecked="{Binding IsLooping}"
                                   ToolTip="Loop">
                         <material:PackIcon Width="20"

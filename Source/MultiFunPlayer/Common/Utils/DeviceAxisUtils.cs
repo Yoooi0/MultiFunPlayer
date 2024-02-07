@@ -1,4 +1,4 @@
-﻿using MultiFunPlayer.UI.Controls.ViewModels;
+using MultiFunPlayer.UI.Controls.ViewModels;
 using System.IO;
 
 namespace MultiFunPlayer.Common;
@@ -40,5 +40,19 @@ public static class DeviceAxisUtils
             else if (!isUnnamedScript && axis.FunscriptNames.Any(n => scriptWithoutExtension.EndsWith(n, StringComparison.OrdinalIgnoreCase)))
                 yield return axis;
         }
+    }
+
+    public static string GetBaseNameWithExtension(string fileName)
+    {
+        var fileExtension = Path.GetExtension(fileName);
+        var fileWithoutExtension = Path.GetFileNameWithoutExtension(fileName);
+
+        foreach(var funscriptName in KnownFunscriptNames.Union(DeviceAxis.All.SelectMany(d => d.FunscriptNames)))
+        {
+            if (fileWithoutExtension.EndsWith(funscriptName))
+                return $"{fileWithoutExtension[..^(funscriptName.Length + 1)]}{fileExtension}";
+        }
+
+        return fileName;
     }
 }
