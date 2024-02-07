@@ -1,22 +1,33 @@
 using MultiFunPlayer.UI.Controls.ViewModels;
+using System.Collections.Immutable;
 using System.IO;
 
 namespace MultiFunPlayer.Common;
 
 public static class DeviceAxisUtils
 {
-    public static IEnumerable<string> KnownFunscriptNames { get; } = DeviceSettingsViewModel.DefaultDevices.SelectMany(d => d.Axes)
-                                                                                                           .SelectMany(a => a.FunscriptNames)
-                                                                                                           .Distinct()
-                                                                                                           .ToList();
+    private static ImmutableSortedSet<string> _knownFunscriptNames;
+    public static IReadOnlySet<string> KnownFunscriptNames
+    {
+        get
+        {
+            _knownFunscriptNames ??= DeviceSettingsViewModel.DefaultDevices
+                                        .SelectMany(d => d.Axes)
+                                        .SelectMany(a => a.FunscriptNames)
+                                        .Union(DeviceAxis.All.SelectMany(d => d.FunscriptNames))
+                                        .Distinct()
+                                        .ToImmutableSortedSet();
+
+            return _knownFunscriptNames;
+        }
+    }
 
     public static IEnumerable<DeviceAxis> FindAxesMatchingName(string scriptName) => FindAxesMatchingName(DeviceAxis.All, scriptName);
     public static IEnumerable<DeviceAxis> FindAxesMatchingName(IEnumerable<DeviceAxis> axes, string scriptName)
     {
         var scriptWithoutExtension = Path.GetFileNameWithoutExtension(scriptName);
 
-        var funscriptNames = KnownFunscriptNames.Union(DeviceAxis.All.SelectMany(d => d.FunscriptNames));
-        var isUnnamedScript = !funscriptNames.Any(n => scriptWithoutExtension.EndsWith(n, StringComparison.OrdinalIgnoreCase));
+        var isUnnamedScript = !KnownFunscriptNames.Any(n => scriptWithoutExtension.EndsWith(n, StringComparison.OrdinalIgnoreCase));
         return FindAxesMatchingName(axes, scriptName, isUnnamedScript);
     }
 
@@ -44,15 +55,13 @@ public static class DeviceAxisUtils
 
     public static string GetBaseNameWithExtension(string fileName)
     {
-        var fileExtension = Path.GetExtension(fileName);
         var fileWithoutExtension = Path.GetFileNameWithoutExtension(fileName);
 
-        foreach(var funscriptName in KnownFunscriptNames.Union(DeviceAxis.All.SelectMany(d => d.FunscriptNames)))
-        {
-            if (fileWithoutExtension.EndsWith(funscriptName))
-                return $"{fileWithoutExtension[..^(funscriptName.Length + 1)]}{fileExtension}";
-        }
+        var funscriptName = KnownFunscriptNames.FirstOrDefault(n => fileWithoutExtension.EndsWith(n, StringComparison.OrdinalIgnoreCase));
+        if (funscriptName == null)
+            return fileName;
 
-        return fileName;
+        var fileExtension = Path.GetExtension(fileName);
+        return $"{fileWithoutExtension[..^(funscriptName.Length + 1)]}{fileExtension}";
     }
 }
