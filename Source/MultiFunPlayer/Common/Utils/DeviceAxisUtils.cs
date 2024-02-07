@@ -1,4 +1,4 @@
-using MultiFunPlayer.UI.Controls.ViewModels;
+﻿using MultiFunPlayer.UI.Controls.ViewModels;
 using System.Collections.Immutable;
 using System.IO;
 
@@ -6,19 +6,20 @@ namespace MultiFunPlayer.Common;
 
 public static class DeviceAxisUtils
 {
-    private static ImmutableSortedSet<string> _knownFunscriptNames;
-    public static IReadOnlySet<string> KnownFunscriptNames
+    private static ImmutableSortedSet<string> _funscriptExtensions;
+    private static IReadOnlySet<string> FunscriptExtensions
     {
         get
         {
-            _knownFunscriptNames ??= DeviceSettingsViewModel.DefaultDevices
+            _funscriptExtensions ??= DeviceSettingsViewModel.DefaultDevices
                                         .SelectMany(d => d.Axes)
                                         .SelectMany(a => a.FunscriptNames)
                                         .Union(DeviceAxis.All.SelectMany(d => d.FunscriptNames))
+                                        .Select(n => $".{n}")
                                         .Distinct()
                                         .ToImmutableSortedSet();
 
-            return _knownFunscriptNames;
+            return _funscriptExtensions;
         }
     }
 
@@ -27,7 +28,7 @@ public static class DeviceAxisUtils
     {
         var scriptWithoutExtension = Path.GetFileNameWithoutExtension(scriptName);
 
-        var isUnnamedScript = !KnownFunscriptNames.Any(n => scriptWithoutExtension.EndsWith(n, StringComparison.OrdinalIgnoreCase));
+        var isUnnamedScript = !FunscriptExtensions.Any(e => scriptWithoutExtension.EndsWith(e, StringComparison.OrdinalIgnoreCase));
         return FindAxesMatchingName(axes, scriptName, isUnnamedScript);
     }
 
@@ -48,7 +49,7 @@ public static class DeviceAxisUtils
         {
             if (isUnnamedScript && axis.LoadUnnamedScript)
                 yield return axis;
-            else if (!isUnnamedScript && axis.FunscriptNames.Any(n => scriptWithoutExtension.EndsWith(n, StringComparison.OrdinalIgnoreCase)))
+            else if (!isUnnamedScript && axis.FunscriptNames.Any(n => scriptWithoutExtension.EndsWith($".{n}", StringComparison.OrdinalIgnoreCase)))
                 yield return axis;
         }
     }
@@ -57,11 +58,11 @@ public static class DeviceAxisUtils
     {
         var fileWithoutExtension = Path.GetFileNameWithoutExtension(fileName);
 
-        var funscriptName = KnownFunscriptNames.FirstOrDefault(n => fileWithoutExtension.EndsWith(n, StringComparison.OrdinalIgnoreCase));
-        if (funscriptName == null)
+        var funscriptExtension = FunscriptExtensions.FirstOrDefault(n => fileWithoutExtension.EndsWith(n, StringComparison.OrdinalIgnoreCase));
+        if (funscriptExtension == null)
             return fileName;
 
         var fileExtension = Path.GetExtension(fileName);
-        return $"{fileWithoutExtension[..^(funscriptName.Length + 1)]}{fileExtension}";
+        return $"{fileWithoutExtension[..^funscriptExtension.Length]}{fileExtension}";
     }
 }
