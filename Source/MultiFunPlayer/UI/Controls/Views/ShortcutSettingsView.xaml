@@ -288,7 +288,20 @@
 
         <DataTemplate DataType="{x:Type xinput:GamepadAxisGestureDescriptor}">
             <DockPanel LastChildFill="True">
-                <TextBlock Margin="0 0 5 0"
+                <TextBlock Margin="0 0 0 0"
+                           VerticalAlignment="Center"
+                           FontSize="12"
+                           Text="User:"
+                           Typography.Capitals="AllSmallCaps"/>
+
+                <TextBlock Margin="5 0 0 0"
+                           VerticalAlignment="Center"
+                           FontSize="12"
+                           FontWeight="Bold"
+                           Text="{Binding UserIndex}"
+                           Typography.Capitals="AllSmallCaps"/>
+
+                <TextBlock Margin="10 0 5 0"
                            VerticalAlignment="Center"
                            FontSize="12"
                            Text="Axis:"

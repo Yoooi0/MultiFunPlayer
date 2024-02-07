@@ -535,7 +535,10 @@ internal sealed class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDispo
     #region Events
     public void Handle(MediaPathChangedMessage message)
     {
-        var resource = MediaResourceInfo.CreateFromPath(message.Path, MediaPathModifiers);
+        var builder = new MediaResourceInfoBuilder(message.Path);
+        builder.WithModifiers(MediaPathModifiers);
+
+        var resource = builder.Build();
         if (MediaResource == null && resource == null)
             return;
         if (MediaResource != null && resource != null)
@@ -943,18 +946,17 @@ internal sealed class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDispo
         if (MediaResource == null)
             return;
 
-        var fullPath = MediaResource.IsModified ? MediaResource.ModifiedPath : MediaResource.OriginalPath;
         if (MediaResource.IsUrl)
         {
             Process.Start(new ProcessStartInfo
             {
-                FileName = fullPath,
+                FileName = MediaResource.Path,
                 UseShellExecute = true
             });
         }
         else
         {
-            var directory = Path.GetDirectoryName(fullPath);
+            var directory = Path.GetDirectoryName(MediaResource.Path);
             if (Directory.Exists(directory))
                 Process.Start("explorer.exe", directory);
         }
