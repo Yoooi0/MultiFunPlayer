@@ -112,7 +112,7 @@ internal sealed class UdpOutputTarget(int instanceIndex, IEventAggregator eventA
                     var value = MathUtils.Lerp(settings.Minimum / 100, settings.Maximum / 100, snapshot.KeyframeTo.Value);
                     var duration = snapshot.Duration;
 
-                    var command = DeviceAxis.ToString(axis, value, duration);
+                    var command = DeviceAxis.ToString(axis, value, duration * 1000);
                     if (!string.IsNullOrWhiteSpace(command))
                     {
                         Logger.Trace("Sending \"{0}\" to \"{1}\"", command, $"udp://{Endpoint.ToUriString()}");
