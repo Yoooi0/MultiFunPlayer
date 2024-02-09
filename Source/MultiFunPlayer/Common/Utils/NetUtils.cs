@@ -1,5 +1,6 @@
 ﻿using System.Net;
 using System.Net.Http;
+using System.Net.NetworkInformation;
 using System.Text.RegularExpressions;
 
 namespace MultiFunPlayer.Common;
@@ -42,6 +43,25 @@ public static partial class NetUtils
     {
         endpoint = ParseEndpoint(endpointString);
         return endpoint != null;
+    }
+
+    public static IEnumerable<IPAddress> GetAllLocalAddresses()
+        => NetworkInterface.GetAllNetworkInterfaces()
+                           .Where(i => i.OperationalStatus == OperationalStatus.Up)
+                           .Select(i => i.GetIPProperties())
+                           .SelectMany(p => p.UnicastAddresses)
+                           .Select(a => a.Address);
+
+    public static bool IsLocalAddress(EndPoint endpoint)
+    {
+        var addresses = GetAllLocalAddresses().ToList();
+        return endpoint.GetAddresses().Any(addresses.Contains);
+    }
+
+    public static async ValueTask<bool> IsLocalAddressAsync(EndPoint endpoint)
+    {
+        var addresses = GetAllLocalAddresses().ToList();
+        return (await endpoint.GetAddressesAsync()).Any(addresses.Contains);
     }
 
     [GeneratedRegex(@"^(?:(?<family>InterNetwork|InterNetworkV6|Unspecified)\/)?(?<ipOrHost>.+):(?<port>\d+)$")]

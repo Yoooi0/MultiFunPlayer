@@ -26,7 +26,8 @@ internal sealed class StashScriptRepository : AbstractScriptRepository
         if (ServerBaseUri == null)
             return [];
 
-        if (!TryGetSceneId(mediaResource, out var sceneId))
+        var sceneId = await TryGetSceneId(mediaResource);
+        if (string.IsNullOrWhiteSpace(sceneId))
             return [];
 
         Logger.Debug("Found Stash scene id [Id: {0}]", sceneId);
@@ -52,44 +53,41 @@ internal sealed class StashScriptRepository : AbstractScriptRepository
         return result;
     }
 
-    private bool TryGetSceneId(MediaResourceInfo mediaResource, out int sceneId)
+    private async ValueTask<string> TryGetSceneId(MediaResourceInfo mediaResource)
     {
-        sceneId = -1;
         if (mediaResource.IsFile)
         {
             var match = Regex.Match(mediaResource.Name, @"^(?<id>\d+) - .+");
             if (!match.Success)
-                return false;
+                return null;
 
-            sceneId = int.Parse(match.Groups["id"].Value);
-            return true;
+            return match.Groups["id"].Value;
         }
         else if (mediaResource.IsUrl)
         {
             var mediaResourceUri = new Uri(mediaResource.Path);
             if (!string.Equals(mediaResourceUri.Host, ServerBaseUri.Host, StringComparison.OrdinalIgnoreCase))
-                return false;
+            {
+                if (!NetUtils.TryParseEndpoint(ServerBaseUri.Host, out var serverBaseEndoint) || !serverBaseEndoint.IsLocalhost())
+                    return null;
+                if (!NetUtils.TryParseEndpoint(mediaResourceUri.Host, out var mediaResourceEndpoint) || !await NetUtils.IsLocalAddressAsync(mediaResourceEndpoint))
+                    return null;
+            }
 
             var pathAndQuery = mediaResourceUri.GetComponents(UriComponents.PathAndQuery, UriFormat.Unescaped);
 
             // <endpoint>/res?scene=<sceneId>
             var match = Regex.Match(pathAndQuery, @"scene=(?<id>\d+?)(?>$|&)");
             if (match.Success)
-            {
-                sceneId = int.Parse(match.Groups["id"].Value);
-                return true;
-            }
+                return match.Groups["id"].Value;
 
             // <endpoint>/scene/<sceneId>/stream
             match = Regex.Match(pathAndQuery, @"scene\/(?<id>\d+)\/stream");
             if (match.Success)
-            {
-                sceneId = int.Parse(match.Groups["id"].Value);
-                return true;
-            }
+                return match.Groups["id"].Value;
         }
 
-        return false;
+        return null;
     }
 
     private bool TryMatchLocal(QueryResponse queryRespone, IEnumerable<DeviceAxis> axes, Dictionary<DeviceAxis, IScriptResource> result, ILocalScriptRepository localRepository)
