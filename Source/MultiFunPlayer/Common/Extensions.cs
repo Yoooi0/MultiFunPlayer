@@ -412,6 +412,34 @@ public static class NetExtensions
         throw new NotSupportedException($"{endpoint.GetType()} in not supported.");
     }
 
+    public static IPAddress[] GetAddresses(this EndPoint endpoint)
+    {
+        try
+        {
+            if (endpoint is IPEndPoint ipEndPoint)
+                return [ipEndPoint.Address];
+            if (endpoint is DnsEndPoint dnsEndPoint)
+                return Dns.GetHostAddresses(dnsEndPoint.Host, dnsEndPoint.AddressFamily);
+        }
+        catch { }
+
+        return [];
+    }
+
+    public static async ValueTask<IPAddress[]> GetAddressesAsync(this EndPoint endpoint)
+    {
+        try
+        {
+            if (endpoint is IPEndPoint ipEndPoint)
+                return [ipEndPoint.Address];
+            if (endpoint is DnsEndPoint dnsEndPoint)
+                return await Dns.GetHostAddressesAsync(dnsEndPoint.Host, dnsEndPoint.AddressFamily);
+        }
+        catch { }
+
+        return [];
+    }
+
     public static string ToUriString(this EndPoint endpoint)
     {
         if (endpoint is IPEndPoint ipEndPoint)
