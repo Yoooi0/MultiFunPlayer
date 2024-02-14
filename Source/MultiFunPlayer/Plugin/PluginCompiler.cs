@@ -203,7 +203,7 @@ internal static class PluginCompiler
 
             var compilation = CSharpCompilation.Create(
                 assemblyName,
-                syntaxTrees: new[] { encoded },
+                syntaxTrees: [encoded],
                 references: references,
                 options: compilationOptions
             );

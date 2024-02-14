@@ -317,7 +317,7 @@ internal sealed class ButtplugOutputTarget : AsyncAbstractOutputTarget
                 var deviceIndex = indexGroup.Key;
                 var device = GetDeviceByNameAndIndex(deviceName, deviceIndex);
                 if (device == null)
-                    return Enumerable.Empty<Task>();
+                    return [];
 
                 return indexGroup.GroupBy(m => m.ActuatorType).SelectMany(typeGroup => typeGroup.Select(s =>
                 {

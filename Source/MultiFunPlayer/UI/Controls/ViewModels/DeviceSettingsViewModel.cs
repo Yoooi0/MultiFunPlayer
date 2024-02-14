@@ -147,8 +147,8 @@ internal sealed class DeviceSettingsViewModel : Screen, IHandle<SettingsMessage>
         }
     }
 
-    public static readonly IReadOnlyList<DeviceSettingsModel> DefaultDevices = new List<DeviceSettingsModel>()
-    {
+    public static readonly IReadOnlyList<DeviceSettingsModel> DefaultDevices =
+    [
         new()
         {
             Name = "TCode-0.2",
@@ -187,7 +187,7 @@ internal sealed class DeviceSettingsViewModel : Screen, IHandle<SettingsMessage>
                 new() { Name = "A2", FriendlyName = "Lube", FunscriptNames = ["lube", "A2"], Enabled = false, DefaultValue = 0, }
             ]
         }
-    };
+    ];
 }
 
 [JsonObject(MemberSerialization = MemberSerialization.OptIn)]

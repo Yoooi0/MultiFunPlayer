@@ -18,9 +18,9 @@ namespace MultiFunPlayer.Common;
 internal static class ConnectableExtensions
 {
     public static Task WaitForIdle(this IConnectable connectable, CancellationToken token)
-        => connectable.WaitForStatus(new[] { ConnectionStatus.Connected, ConnectionStatus.Disconnected }, token);
+        => connectable.WaitForStatus([ConnectionStatus.Connected, ConnectionStatus.Disconnected], token);
     public static Task WaitForDisconnect(this IConnectable connectable, CancellationToken token)
-        => connectable.WaitForStatus(new[] { ConnectionStatus.Disconnected }, token);
+        => connectable.WaitForStatus([ConnectionStatus.Disconnected], token);
 }
 
 public static class JsonExtensions
@@ -218,7 +218,7 @@ public static class IOExtensions
                 return action.Invoke(directory);
         } catch { }
 
-        return Enumerable.Empty<T>();
+        return [];
     }
 
     public static IEnumerable<DirectoryInfo> SafeEnumerateDirectories(this DirectoryInfo directory) => directory.SafeEnumerateDirectories("*");
@@ -483,15 +483,15 @@ public static class StopwatchExtensions
 public static class WaitHandleExtensions
 {
     public static bool WaitOne(this WaitHandle handle, CancellationToken cancellationToken)
-        => ThrowIfCancellationRequested(WaitHandle.WaitAny(new[] { handle, cancellationToken.WaitHandle }) == 0, cancellationToken);
+        => ThrowIfCancellationRequested(WaitHandle.WaitAny([handle, cancellationToken.WaitHandle]) == 0, cancellationToken);
     public static bool WaitOne(this WaitHandle handle, int millisecondsTimeout, CancellationToken cancellationToken)
-        => ThrowIfCancellationRequested(WaitHandle.WaitAny(new[] { handle, cancellationToken.WaitHandle }, millisecondsTimeout) == 0, cancellationToken);
+        => ThrowIfCancellationRequested(WaitHandle.WaitAny([handle, cancellationToken.WaitHandle], millisecondsTimeout) == 0, cancellationToken);
     public static bool WaitOne(this WaitHandle handle, TimeSpan timeout, CancellationToken cancellationToken)
-        => ThrowIfCancellationRequested(WaitHandle.WaitAny(new[] { handle, cancellationToken.WaitHandle }, timeout) == 0, cancellationToken);
+        => ThrowIfCancellationRequested(WaitHandle.WaitAny([handle, cancellationToken.WaitHandle], timeout) == 0, cancellationToken);
     public static bool WaitOne(this WaitHandle handle, int millisecondsTimeout, bool exitContext, CancellationToken cancellationToken)
-        => ThrowIfCancellationRequested(WaitHandle.WaitAny(new[] { handle, cancellationToken.WaitHandle }, millisecondsTimeout, exitContext) == 0, cancellationToken);
+        => ThrowIfCancellationRequested(WaitHandle.WaitAny([handle, cancellationToken.WaitHandle], millisecondsTimeout, exitContext) == 0, cancellationToken);
     public static bool WaitOne(this WaitHandle handle, TimeSpan timeout, bool exitContext, CancellationToken cancellationToken)
-        => ThrowIfCancellationRequested(WaitHandle.WaitAny(new[] { handle, cancellationToken.WaitHandle }, timeout, exitContext) == 0, cancellationToken);
+        => ThrowIfCancellationRequested(WaitHandle.WaitAny([handle, cancellationToken.WaitHandle], timeout, exitContext) == 0, cancellationToken);
 
     private static bool ThrowIfCancellationRequested(bool result, CancellationToken cancellationToken)
     {

@@ -337,13 +337,11 @@ internal abstract class AbstractOutputTarget : Screen, IOutputTarget
     }
 }
 
-internal abstract class ThreadAbstractOutputTarget : AbstractOutputTarget
+internal abstract class ThreadAbstractOutputTarget(int instanceIndex, IEventAggregator eventAggregator, IDeviceAxisValueProvider valueProvider)
+    : AbstractOutputTarget(instanceIndex, eventAggregator, valueProvider)
 {
     private CancellationTokenSource _cancellationSource;
     private Thread _thread;
-
-    protected ThreadAbstractOutputTarget(int instanceIndex, IEventAggregator eventAggregator, IDeviceAxisValueProvider valueProvider)
-        : base(instanceIndex, eventAggregator, valueProvider) { }
 
     protected abstract void Run(CancellationToken token);
 
@@ -489,13 +487,11 @@ internal abstract class ThreadAbstractOutputTarget : AbstractOutputTarget
     }
 }
 
-internal abstract class AsyncAbstractOutputTarget : AbstractOutputTarget
+internal abstract class AsyncAbstractOutputTarget(int instanceIndex, IEventAggregator eventAggregator, IDeviceAxisValueProvider valueProvider)
+    : AbstractOutputTarget(instanceIndex, eventAggregator, valueProvider)
 {
     private CancellationTokenSource _cancellationSource;
     private Task _task;
-
-    protected AsyncAbstractOutputTarget(int instanceIndex, IEventAggregator eventAggregator, IDeviceAxisValueProvider valueProvider)
-        : base(instanceIndex, eventAggregator, valueProvider) { }
 
     protected abstract Task RunAsync(CancellationToken token);
 

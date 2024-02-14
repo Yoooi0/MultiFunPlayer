@@ -60,9 +60,7 @@ internal sealed class ShortcutSettingsViewModel : Screen, IHandle<SettingsMessag
         eventAggregator.Subscribe(this);
 
         CapturedGestures = [];
-        ShortcutTypes = ReflectionUtils.FindImplementations<IShortcut>()
-                                       .OrderBy(x => x.GetCustomAttribute<DisplayNameAttribute>().DisplayName)
-                                       .ToList();
+        ShortcutTypes = [.. ReflectionUtils.FindImplementations<IShortcut>().OrderBy(x => x.GetCustomAttribute<DisplayNameAttribute>().DisplayName)];
 
         AvailableActionsView = CollectionViewSource.GetDefaultView(AvailableActions);
         AvailableActionsView.Filter = o =>
