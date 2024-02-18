@@ -478,6 +478,7 @@
                     </DockPanel>
 
                     <DockPanel DockPanel.Dock="Top"
+                               Height="35"
                                IsEnabled="{Binding SelectedShortcutType, Converter={StaticResource InvertedNullableToBooleanConverter}}"
                                LastChildFill="True">
                         <material:PopupBox DockPanel.Dock="Right"
@@ -531,10 +532,15 @@
 
                         <ComboBox ItemsSource="{Binding CapturedGestures}"
                                   SelectedItem="{Binding SelectedCapturedGesture}"
-                                  Height="33"
                                   Margin="0 0 10 0"
+                                  Padding="0 5"
                                   material:TextFieldAssist.HasClearButton="True"
                                   IsEnabled="{Binding CapturedGestures.Count, Mode=OneWay, Converter={StaticResource NotZeroConverter}}">
+                            <material:HintAssist.Hint>
+                                <TextBlock Text="{Binding CapturedGestures.Count, StringFormat='Captured {0} gestures'}"
+                                           Typography.Capitals="AllSmallCaps"
+                                           Visibility="{Binding CapturedGestures.Count, Converter={StaticResource NotZeroToVisibilityConverter}}"/>
+                            </material:HintAssist.Hint>
                             <ComboBox.ItemContainerStyle>
                                 <Style BasedOn="{StaticResource MaterialDesignComboBoxItemStyle}" TargetType="{x:Type ComboBoxItem}">
                                     <Setter Property="Padding" Value="5"/>
