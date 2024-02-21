@@ -5,6 +5,7 @@ using Newtonsoft.Json.Linq;
 using NLog;
 using Stylet;
 using System.ComponentModel;
+using System.Globalization;
 using System.Net;
 using System.Net.Http;
 using System.Text.RegularExpressions;
@@ -117,7 +118,7 @@ internal sealed class MpcMediaSource(IShortcutManager shortcutManager, IEventAgg
                     playerState.Position = position;
                 }
 
-                if (variables.TryGetValue("playbackrate", out var playbackrateString) && double.TryParse(playbackrateString, out var speed) && speed > 0 && speed != playerState.Speed)
+                if (variables.TryGetValue("playbackrate", out var playbackrateString) && double.TryParse(playbackrateString.Replace(',', '.'), NumberStyles.Any, NumberFormatInfo.InvariantInfo, out var speed) && speed > 0 && speed != playerState.Speed)
                 {
                     PublishMessage(new MediaSpeedChangedMessage(speed));
                     playerState.Speed = speed;

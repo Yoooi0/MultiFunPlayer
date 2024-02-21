@@ -5,6 +5,7 @@ using Newtonsoft.Json.Linq;
 using NLog;
 using Stylet;
 using System.ComponentModel;
+using System.Globalization;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -146,13 +147,13 @@ internal sealed class VlcMediaSource(IShortcutManager shortcutManager, IEventAgg
                     _playerState.Duration = duration;
                 }
 
-                if (double.TryParse(statusDocument.Root.Element("position")?.Value, out var position) && position >= 0 && position != _playerState.Position && _playerState.Duration != null)
+                if (double.TryParse(statusDocument.Root.Element("position")?.Value?.Replace(',', '.'), NumberStyles.Any, NumberFormatInfo.InvariantInfo, out var position) && position >= 0 && position != _playerState.Position && _playerState.Duration != null)
                 {
                     PublishMessage(new MediaPositionChangedMessage(TimeSpan.FromSeconds(position * (double)_playerState.Duration)));
                     _playerState.Position = position;
                 }
 
-                if (double.TryParse(statusDocument.Root.Element("rate")?.Value, out var speed) && speed > 0 && speed != _playerState.Speed)
+                if (double.TryParse(statusDocument.Root.Element("rate")?.Value?.Replace(',', '.'), NumberStyles.Any, NumberFormatInfo.InvariantInfo, out var speed) && speed > 0 && speed != _playerState.Speed)
                 {
                     PublishMessage(new MediaSpeedChangedMessage(speed));
                     _playerState.Speed = speed;
