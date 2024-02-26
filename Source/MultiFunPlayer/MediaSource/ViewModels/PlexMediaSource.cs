@@ -41,7 +41,7 @@ internal sealed class PlexMediaSource(IShortcutManager shortcutManager, IEventAg
         if (SelectedClientMachineIdentifier == null)
             return;
 
-        Logger.Debug("Selected client: {0}", SelectedClient);
+        Logger.Debug("Selected {0}", SelectedClient);
     }
 
     protected override void OnInitialActivate()
@@ -228,7 +228,7 @@ internal sealed class PlexMediaSource(IShortcutManager shortcutManager, IEventAg
             async Task<HttpResponseMessage> WriteCommandAsync(Uri uri, CancellationToken token)
             {
                 var message = new HttpRequestMessage(HttpMethod.Get, uri);
-                Logger.Info("Sending \"{0}\" to \"{1}\"", uri, Name);
+                Logger.Trace("Sending \"{0}\" to \"{1}\"", uri, Name);
 
                 message.Headers.TryAddWithoutValidation("X-Plex-Target-Client-Identifier", SelectedClient.MachineIdentifier);
                 AddDefaultHeaders(message.Headers);
