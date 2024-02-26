@@ -1,4 +1,4 @@
-using MultiFunPlayer.Common;
+﻿using MultiFunPlayer.Common;
 using MultiFunPlayer.UI;
 using NLog;
 using Stylet;
@@ -35,7 +35,14 @@ internal sealed class PlexMediaSource(IShortcutManager shortcutManager, IEventAg
     private string ClientIdentifier { get; set; } = Guid.NewGuid().ToString();
 
     public bool CanChangeClient => IsDisconnected && !IsRefreshBusy && !string.IsNullOrWhiteSpace(PlexToken) && Clients.Count != 0;
-    public void OnSelectedClientChanged() => SelectedClientMachineIdentifier = SelectedClient?.MachineIdentifier;
+    public void OnSelectedClientChanged()
+    {
+        SelectedClientMachineIdentifier = SelectedClient?.MachineIdentifier;
+        if (SelectedClientMachineIdentifier == null)
+            return;
+
+        Logger.Debug("Selected client: {0}", SelectedClient);
+    }
 
     protected override void OnInitialActivate()
     {
@@ -221,6 +228,7 @@ internal sealed class PlexMediaSource(IShortcutManager shortcutManager, IEventAg
             async Task<HttpResponseMessage> WriteCommandAsync(Uri uri, CancellationToken token)
             {
                 var message = new HttpRequestMessage(HttpMethod.Get, uri);
+                Logger.Info("Sending \"{0}\" to \"{1}\"", uri, Name);
 
                 message.Headers.TryAddWithoutValidation("X-Plex-Target-Client-Identifier", SelectedClient.MachineIdentifier);
                 AddDefaultHeaders(message.Headers);
@@ -269,7 +277,6 @@ internal sealed class PlexMediaSource(IShortcutManager shortcutManager, IEventAg
 
                 var requestMessage = new HttpRequestMessage(HttpMethod.Get, messageUri);
 
-                Logger.Info(SelectedClient.ProtocolCapabilities);
                 requestMessage.Headers.TryAddWithoutValidation("X-Plex-Target-Client-Identifier", SelectedClient.MachineIdentifier);
                 AddDefaultHeaders(requestMessage.Headers);
 
