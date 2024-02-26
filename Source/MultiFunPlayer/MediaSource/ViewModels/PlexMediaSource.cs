@@ -1,4 +1,4 @@
-﻿using MultiFunPlayer.Common;
+using MultiFunPlayer.Common;
 using MultiFunPlayer.UI;
 using NLog;
 using Stylet;
@@ -98,7 +98,8 @@ internal sealed class PlexMediaSource(IShortcutManager shortcutManager, IEventAg
             var lastMetadataUri = default(Uri);
             var basePollUri = new Uri(ServerBaseUri, "/player/timeline/poll");
 
-            while (!token.IsCancellationRequested)
+            var timer = new PeriodicTimer(TimeSpan.FromMilliseconds(500));
+            while (await timer.WaitForNextTickAsync(token) && !token.IsCancellationRequested)
             {
                 _currentTimeline = await GetCurrentTimelineAsync();
                 if (_currentTimeline == null)
