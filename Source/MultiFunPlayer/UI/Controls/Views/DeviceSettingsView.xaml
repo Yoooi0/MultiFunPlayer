@@ -199,7 +199,8 @@
                               CanUserReorderColumns="False"
                               CanUserResizeColumns="True"
                               CanUserResizeRows="False"
-                              CanUserSortColumns="False">
+                              CanUserSortColumns="False"
+                              VerticalScrollBarVisibility="Visible">
                         <DataGrid.Columns>
                             <DataGridTextColumn Binding="{Binding Name}"
                                                 EditingElementStyle="{StaticResource MaterialDesignDataGridTextColumnEditingStyle}"

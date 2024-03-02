@@ -68,7 +68,7 @@ internal sealed class ShortcutManager : IShortcutManager
     private readonly Dictionary<string, IShortcutActionConfigurationBuilder> _actionConfigurationBuilders;
     private readonly ObservableConcurrentCollection<IShortcut> _shortcuts;
 
-    public bool HandleGestures { get; set; }
+    public bool HandleGestures { get; set; } = true;
     public IReadOnlyObservableConcurrentCollection<string> AvailableActions => _availableActions;
     public IReadOnlyObservableConcurrentCollection<IShortcut> Shortcuts => _shortcuts;
 

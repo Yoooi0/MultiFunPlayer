@@ -35,7 +35,14 @@ internal sealed class PlexMediaSource(IShortcutManager shortcutManager, IEventAg
     private string ClientIdentifier { get; set; } = Guid.NewGuid().ToString();
 
     public bool CanChangeClient => IsDisconnected && !IsRefreshBusy && !string.IsNullOrWhiteSpace(PlexToken) && Clients.Count != 0;
-    public void OnSelectedClientChanged() => SelectedClientMachineIdentifier = SelectedClient?.MachineIdentifier;
+    public void OnSelectedClientChanged()
+    {
+        SelectedClientMachineIdentifier = SelectedClient?.MachineIdentifier;
+        if (SelectedClientMachineIdentifier == null)
+            return;
+
+        Logger.Debug("Selected {0}", SelectedClient);
+    }
 
     protected override void OnInitialActivate()
     {
@@ -98,7 +105,8 @@ internal sealed class PlexMediaSource(IShortcutManager shortcutManager, IEventAg
             var lastMetadataUri = default(Uri);
             var basePollUri = new Uri(ServerBaseUri, "/player/timeline/poll");
 
-            while (!token.IsCancellationRequested)
+            var timer = new PeriodicTimer(TimeSpan.FromMilliseconds(500));
+            while (await timer.WaitForNextTickAsync(token) && !token.IsCancellationRequested)
             {
                 _currentTimeline = await GetCurrentTimelineAsync();
                 if (_currentTimeline == null)
@@ -188,6 +196,7 @@ internal sealed class PlexMediaSource(IShortcutManager shortcutManager, IEventAg
 
                 return root.ChildNodes
                            .OfType<XmlNode>()
+                           .Where(n => string.Equals(n.Name, "Timeline", StringComparison.OrdinalIgnoreCase))
                            .Where(n => !string.Equals(n.Attributes["type"]?.Value, "photo", StringComparison.OrdinalIgnoreCase))
                            .FirstOrDefault(n => !string.Equals(n.Attributes["state"]?.Value, "stopped", StringComparison.OrdinalIgnoreCase));
 
@@ -219,6 +228,7 @@ internal sealed class PlexMediaSource(IShortcutManager shortcutManager, IEventAg
             async Task<HttpResponseMessage> WriteCommandAsync(Uri uri, CancellationToken token)
             {
                 var message = new HttpRequestMessage(HttpMethod.Get, uri);
+                Logger.Trace("Sending \"{0}\" to \"{1}\"", uri, Name);
 
                 message.Headers.TryAddWithoutValidation("X-Plex-Target-Client-Identifier", SelectedClient.MachineIdentifier);
                 AddDefaultHeaders(message.Headers);
@@ -267,7 +277,6 @@ internal sealed class PlexMediaSource(IShortcutManager shortcutManager, IEventAg
 
                 var requestMessage = new HttpRequestMessage(HttpMethod.Get, messageUri);
 
-                Logger.Info(SelectedClient.ProtocolCapabilities);
                 requestMessage.Headers.TryAddWithoutValidation("X-Plex-Target-Client-Identifier", SelectedClient.MachineIdentifier);
                 AddDefaultHeaders(requestMessage.Headers);
 

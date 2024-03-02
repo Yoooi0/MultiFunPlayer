@@ -123,7 +123,8 @@ internal sealed class Bootstrapper : Bootstrapper<RootViewModel>
             SettingsHelper.Write(settings);
 
         logger.Info("Environment [OSVersion: {0}, CLRVersion: {1}]", Environment.OSVersion, Environment.Version);
-        logger.Info("Assembly [Version: {0}-{1}+{2}]", GitVersionInformation.MajorMinorPatch, GitVersionInformation.PreReleaseTag, GitVersionInformation.FullBuildMetaData);
+        logger.Info("Assembly [Version: {0}+{1}]", GitVersionInformation.SemVer, GitVersionInformation.FullBuildMetaData);
+        logger.Info("Config [Version: {0}]", settings.TryGetValue<int>("ConfigVersion", out var version) ? version : -1);
         logger.Info("Timer [IsHighResolution: {0}, Frequency: {1}]", Stopwatch.IsHighResolution, Stopwatch.Frequency);
         logger.Info("Set working directory to \"{0}\"", workingDirectory);
     }

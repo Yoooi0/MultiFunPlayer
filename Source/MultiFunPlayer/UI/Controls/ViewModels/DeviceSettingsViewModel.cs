@@ -156,7 +156,7 @@ internal sealed class DeviceSettingsViewModel : Screen, IHandle<SettingsMessage>
             IsDefault = true,
             Axes =
             [
-                new() { Name = "L0", FriendlyName = "Up/Down", FunscriptNames = ["stroke", "L0", "up"], LoadUnnamedScript = true, Enabled = true, DefaultValue = 0.5, },
+                new() { Name = "L0", FriendlyName = "Up/Down", FunscriptNames = ["stroke", "L0", "up", "raw"], LoadUnnamedScript = true, Enabled = true, DefaultValue = 0.5, },
                 new() { Name = "L1", FriendlyName = "Forward/Backward", FunscriptNames = ["surge", "L1", "forward"], Enabled = true, DefaultValue = 0.5, },
                 new() { Name = "L2", FriendlyName = "Left/Right", FunscriptNames = ["sway", "L2", "left"], Enabled = true, DefaultValue = 0.5, },
                 new() { Name = "R0", FriendlyName = "Twist", FunscriptNames = ["twist", "R0", "yaw"], Enabled = true, DefaultValue = 0.5, },
@@ -174,7 +174,7 @@ internal sealed class DeviceSettingsViewModel : Screen, IHandle<SettingsMessage>
             IsDefault = true,
             Axes =
             [
-                new() { Name = "L0", FriendlyName = "Up/Down", FunscriptNames = ["stroke", "L0", "up"], LoadUnnamedScript = true, Enabled = true, DefaultValue = 0.5, },
+                new() { Name = "L0", FriendlyName = "Up/Down", FunscriptNames = ["stroke", "L0", "up", "raw"], LoadUnnamedScript = true, Enabled = true, DefaultValue = 0.5, },
                 new() { Name = "L1", FriendlyName = "Forward/Backward", FunscriptNames = ["surge", "L1", "forward"], Enabled = true, DefaultValue = 0.5, },
                 new() { Name = "L2", FriendlyName = "Left/Right", FunscriptNames = ["sway", "L2", "left"], Enabled = true, DefaultValue = 0.5, },
                 new() { Name = "R0", FriendlyName = "Twist", FunscriptNames = ["twist", "R0", "yaw"], Enabled = true, DefaultValue = 0.5, },
