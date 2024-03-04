@@ -499,5 +499,9 @@ internal sealed class PlexMediaSource(IShortcutManager shortcutManager, IEventAg
     }
 
     internal sealed record class PlexClient(string Name, string Host, string Address, int Port, string MachineIdentifier, string Version, string Protocol,
-                                     string Product, string DeviceClass, int ProtocolVersion, string ProtocolCapabilities);
+                                     string Product, string DeviceClass, int ProtocolVersion, string ProtocolCapabilities)
+    {
+        public bool Equals(PlexClient other) => string.Equals(MachineIdentifier, other?.MachineIdentifier, StringComparison.Ordinal);
+        public override int GetHashCode() => MachineIdentifier.GetHashCode();
+    }
 }
