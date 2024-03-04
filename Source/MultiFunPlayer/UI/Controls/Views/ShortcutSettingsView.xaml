@@ -573,8 +573,7 @@
                            material:ShadowAssist.ShadowDepth="Depth1">
                 <Expander DockPanel.Dock="Bottom"
                           Style="{StaticResource MaterialDesignToolBarExpander}"
-                          Background="{DynamicResource MaterialDesignCardBackground}"
-                          IsEnabled="{Binding SelectedShortcut, Converter={StaticResource InvertedNullableToBooleanConverter}}">
+                          Background="{DynamicResource MaterialDesignCardBackground}">
                     <Expander.Header>
                         <TabControl x:Name="HeaderTabControl"
                                     Style="{StaticResource MaterialDesignTabControl}"
@@ -587,7 +586,9 @@
                         </TabControl>
                     </Expander.Header>
 
-                    <Grid DockPanel.Dock="Top" Height="300">
+                    <Grid DockPanel.Dock="Top"
+                          Height="300"
+                          IsEnabled="{Binding SelectedShortcut, Converter={StaticResource InvertedNullableToBooleanConverter}}">
                         <DockPanel LastChildFill="True">
                             <DockPanel.Style>
                                 <Style TargetType="{x:Type DockPanel}">

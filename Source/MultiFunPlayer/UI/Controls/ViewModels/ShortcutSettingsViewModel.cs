@@ -238,6 +238,12 @@ internal sealed class ShortcutSettingsViewModel : Screen, IHandle<SettingsMessag
         configurations.Move(index, index + 1);
     }
 
+    public void OnSelectedShortcutChanged()
+    {
+        if (SelectedShortcut == null)
+            ActionsFilter = null;
+    }
+
     public void OnSelectedShortcutTypeChanged()
         => CapturedGestures.Clear();
 
