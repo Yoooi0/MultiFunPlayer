@@ -108,7 +108,7 @@ internal sealed class JellyfinMediaSource(IShortcutManager shortcutManager, IEve
                 if (SelectedDeviceId == null)
                     continue;
 
-                var sessionsUri = new Uri(ServerBaseUri, $"/Sessions?api_key={ApiKey}&DeviceId={SelectedDeviceId}");
+                var sessionsUri = new Uri(ServerBaseUri, $"/Sessions?ApiKey={ApiKey}&DeviceId={SelectedDeviceId}");
                 var response = await UnwrapTimeout(() => client.GetAsync(sessionsUri, token));
                 if (response == null)
                     continue;
@@ -178,8 +178,8 @@ internal sealed class JellyfinMediaSource(IShortcutManager shortcutManager, IEve
                 var baseUri = new Uri(ServerBaseUri, $"/Sessions/{_currentSession.Id}/Playing/");
                 var uri = message switch
                 {
-                    MediaPlayPauseMessage playPauseMessage => new Uri(baseUri, $"{(playPauseMessage.ShouldBePlaying ? "Unpause" : "Pause")}?api_key={ApiKey}"),
-                    MediaSeekMessage seekMessage => new Uri(baseUri, $"Seek?api_key={ApiKey}&SeekPositionTicks={(long)(seekMessage.Position.TotalMilliseconds * 10000)}"),
+                    MediaPlayPauseMessage playPauseMessage => new Uri(baseUri, $"{(playPauseMessage.ShouldBePlaying ? "Unpause" : "Pause")}?ApiKey={ApiKey}"),
+                    MediaSeekMessage seekMessage => new Uri(baseUri, $"Seek?ApiKey={ApiKey}&SeekPositionTicks={(long)(seekMessage.Position.TotalMilliseconds * 10000)}"),
                     _ => null
                 };
 
@@ -233,7 +233,7 @@ internal sealed class JellyfinMediaSource(IShortcutManager shortcutManager, IEve
             using var client = NetUtils.CreateHttpClient();
             client.Timeout = TimeSpan.FromMilliseconds(5000);
 
-            var uri = new Uri(ServerBaseUri, $"/Devices?api_key={ApiKey}");
+            var uri = new Uri(ServerBaseUri, $"/Devices?ApiKey={ApiKey}");
             var response = await UnwrapTimeout(() => client.GetAsync(uri, token));
             response.EnsureSuccessStatusCode();
 
@@ -248,7 +248,7 @@ internal sealed class JellyfinMediaSource(IShortcutManager shortcutManager, IEve
 
                 try
                 {
-                    uri = new Uri(ServerBaseUri, $"/Devices/Options?api_key={ApiKey}&id={id}");
+                    uri = new Uri(ServerBaseUri, $"/Devices/Options?ApiKey={ApiKey}&id={id}");
                     response = await UnwrapTimeout(() => client.GetAsync(uri, token));
                     response.EnsureSuccessStatusCode();
 
