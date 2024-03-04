@@ -338,23 +338,8 @@ internal sealed class JellyfinMediaSource(IShortcutManager shortcutManager, IEve
         base.Dispose(disposing);
     }
 
-    internal sealed record class JellyfinDevice()
-    {
-        public string Name { get; init; }
-        public string Id { get; init; }
-        public string AppName { get; init; }
-        public string AppVersion { get; init; }
-    }
-
-    internal sealed record class JellyfinSession()
-    {
-        public string Id { get; init; }
-        [JsonProperty("PlayState")]
-        public PlayState State { get; init; }
-        [JsonProperty("NowPlayingItem")]
-        public PlayItem Item { get; init; }
-    }
-
+    internal sealed record class JellyfinDevice(string Name, string Id, string AppName, string AppVersion);
+    internal sealed record class JellyfinSession(string Id, [JsonProperty("PlayState")] PlayState State, [JsonProperty("NowPlayingItem")] PlayItem Item);
     internal sealed record class PlayState(long PositionTicks, bool IsPaused);
     internal sealed record class PlayItem(long RunTimeTicks, string Path);
 }
