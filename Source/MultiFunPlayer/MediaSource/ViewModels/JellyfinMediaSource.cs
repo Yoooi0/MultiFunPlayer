@@ -327,6 +327,20 @@ internal sealed class JellyfinMediaSource(IShortcutManager shortcutManager, IEve
                 ServerBaseUri = uri;
         });
         #endregion
+
+        #region ApiKey
+        s.RegisterAction<string>($"{Name}::ApiKey::Set", s => s.WithLabel("Api key"), apiKey => ApiKey = apiKey);
+        #endregion
+
+        #region SelectedDevice
+        s.RegisterAction<string>($"{Name}::Device::SetByName", s => s.WithLabel("Name"), name => {
+            var devcie = Devices.FirstOrDefault(p => string.Equals(p.Name, name, StringComparison.Ordinal));
+            if (devcie == null)
+                return;
+
+            SelectDeviceById(devcie.Id);
+        });
+        #endregion
     }
 
     protected override void Dispose(bool disposing)
