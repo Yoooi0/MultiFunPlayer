@@ -209,7 +209,7 @@ internal sealed class EmbyMediaSource(IShortcutManager shortcutManager, IEventAg
             token.ThrowIfCancellationRequested();
 
             IsRefreshBusy = true;
-            await DoRefreshClients(token);
+            await DoRefreshDevices(token);
         }
         catch (Exception e)
         {
@@ -221,7 +221,7 @@ internal sealed class EmbyMediaSource(IShortcutManager shortcutManager, IEventAg
             IsRefreshBusy = false;
         }
 
-        async Task DoRefreshClients(CancellationToken token)
+        async Task DoRefreshDevices(CancellationToken token)
         {
             await Task.Delay(250, token);
 
