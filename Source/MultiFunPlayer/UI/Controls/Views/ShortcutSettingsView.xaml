@@ -428,8 +428,7 @@
     </UserControl.Resources>
 
     <Grid Width="550"
-          Height="750"
-          MinHeight="300"
+          MaxHeight="700"
           Margin="20">
         <DockPanel LastChildFill="True">
             <material:Card DockPanel.Dock="Top"
@@ -767,7 +766,7 @@
             <material:Card DockPanel.Dock="Top"
                            Margin="0 0 0 10"
                            material:ShadowAssist.ShadowDepth="Depth1">
-                <DockPanel LastChildFill="True">
+                <DockPanel MinHeight="250" LastChildFill="True">
                     <ListBox DockPanel.Dock="Top"
                              ItemsSource="{Binding Shortcuts}"
                              SelectedItem="{Binding SelectedShortcut}"
