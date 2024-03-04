@@ -150,7 +150,7 @@ internal sealed class PlexMediaSource(IShortcutManager shortcutManager, IEventAg
                 document.Load(await response.Content.ReadAsStreamAsync(token));
 
                 var root = document.DocumentElement;
-                Logger.Trace(() => string.Format("Received \"{0}\" from \"{1}\"", root.OuterXml, Name));
+                Logger.Trace(() => $"Received \"{root.OuterXml}\" from \"{Name}\"");
 
                 if (!root.HasChildNodes)
                     return false;
@@ -189,7 +189,7 @@ internal sealed class PlexMediaSource(IShortcutManager shortcutManager, IEventAg
                 document.Load(await response.Content.ReadAsStreamAsync(token));
 
                 var root = document.DocumentElement;
-                Logger.Trace(() => string.Format("Received \"{0}\" from \"{1}\"", root.OuterXml, Name));
+                Logger.Trace(() => $"Received \"{root.OuterXml}\" from \"{Name}\"");
 
                 if (!root.HasChildNodes)
                     return null;
@@ -347,7 +347,7 @@ internal sealed class PlexMediaSource(IShortcutManager shortcutManager, IEventAg
             document.Load(await response.Content.ReadAsStreamAsync(token));
 
             var root = document.DocumentElement;
-            Logger.Trace(() => string.Format("Received \"{0}\" from \"{1}\"", root.OuterXml, Name));
+            Logger.Trace(() => $"Received \"{root.OuterXml}\" from \"{Name}\"");
 
             if (!root.HasChildNodes)
                 return;

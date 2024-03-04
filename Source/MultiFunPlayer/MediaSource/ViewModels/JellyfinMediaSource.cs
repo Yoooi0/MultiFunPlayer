@@ -217,7 +217,7 @@ internal sealed class JellyfinMediaSource(IShortcutManager shortcutManager, IEve
         }
         catch (Exception e)
         {
-            Logger.Warn(e, $"{Name} client refresh failed with exception");
+            Logger.Warn(e, $"{Name} device refresh failed with exception");
         }
         finally
         {
@@ -237,7 +237,7 @@ internal sealed class JellyfinMediaSource(IShortcutManager shortcutManager, IEve
             var response = await UnwrapTimeout(() => client.GetAsync(uri, token));
             var content = await response.Content.ReadAsStringAsync(token);
 
-            Logger.Trace(() => string.Format("Received \"{0}\" from \"{1}\"", content, Name));
+            Logger.Trace(() => $"Received \"{content}\" from \"{Name}\"");
 
             var o = JObject.Parse(content);
             var currentDevices = o["Items"].ToObject<List<JellyfinDevice>>();
