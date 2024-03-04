@@ -31,7 +31,14 @@ internal sealed class JellyfinMediaSource(IShortcutManager shortcutManager, IEve
     public ObservableConcurrentCollection<JellyfinDevice> Devices { get; set; } = [];
 
     public bool CanChangeDevice => IsDisconnected && !IsRefreshBusy && !string.IsNullOrEmpty(ApiKey) && Devices.Count != 0;
-    public void OnSelectedDeviceChanged() => SelectedDeviceId = SelectedDevice?.Id;
+    public void OnSelectedDeviceChanged()
+    {
+        SelectedDeviceId = SelectedDevice?.Id;
+        if (SelectedDeviceId == null)
+            return;
+
+        Logger.Debug("Selected {0}", SelectedDevice);
+    }
 
     protected override void OnInitialActivate()
     {
