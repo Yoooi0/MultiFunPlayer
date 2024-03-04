@@ -332,6 +332,7 @@ internal sealed class PlexMediaSource(IShortcutManager shortcutManager, IEventAg
         async Task DoRefreshClients(CancellationToken token)
         {
             await Task.Delay(250, token);
+            Logger.Debug("Refreshing clients");
 
             using var client = NetUtils.CreateHttpClient();
             client.Timeout = TimeSpan.FromMilliseconds(5000);
@@ -346,6 +347,8 @@ internal sealed class PlexMediaSource(IShortcutManager shortcutManager, IEventAg
             document.Load(await response.Content.ReadAsStreamAsync(token));
 
             var root = document.DocumentElement;
+            Logger.Trace(() => string.Format("Received \"{0}\" from \"{1}\"", root.OuterXml, Name));
+
             if (!root.HasChildNodes)
                 return;
 

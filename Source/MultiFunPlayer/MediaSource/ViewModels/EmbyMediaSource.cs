@@ -224,6 +224,7 @@ internal sealed class EmbyMediaSource(IShortcutManager shortcutManager, IEventAg
         async Task DoRefreshDevices(CancellationToken token)
         {
             await Task.Delay(250, token);
+            Logger.Debug("Refreshing devices");
 
             using var client = NetUtils.CreateHttpClient();
             client.Timeout = TimeSpan.FromMilliseconds(5000);
@@ -231,6 +232,8 @@ internal sealed class EmbyMediaSource(IShortcutManager shortcutManager, IEventAg
             var uri = new Uri(ServerBaseUri, $"/Devices?api_key={ApiKey}");
             var response = await UnwrapTimeout(() => client.GetAsync(uri, token));
             var content = await response.Content.ReadAsStringAsync(token);
+
+            Logger.Trace(() => string.Format("Received \"{0}\" from \"{1}\"", content, Name));
 
             var o = JObject.Parse(content);
             var currentDevices = o["Items"].ToObject<List<EmbyDevice>>();
