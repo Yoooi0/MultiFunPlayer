@@ -59,7 +59,9 @@ internal sealed class InformationViewModel : Screen
         if (rateLimit["resources"]["core"]["remaining"].ToObject<int>() < 5)
             return;
 
-        if (GitVersionInformation.BranchName == "master")
+        var branchIsMaster = GitVersionInformation.BranchName == "master";
+        var branchIsTag = GitVersionInformation.BranchName.StartsWith("tags/");
+        if (branchIsMaster || branchIsTag)
         {
             if (!Version.TryParse(GitVersionInformation.MajorMinorPatch, out var currentVersion))
                 return;
@@ -70,7 +72,7 @@ internal sealed class InformationViewModel : Screen
                                .Select(o => Regex.Match(o["ref"].ToString(), @"^refs\/tags\/(?<version>\d+\.\d+\.\d+)$"))
                                .Select(m => m.Success && Version.TryParse(m.Groups["version"].ToString(), out var v) ? v : null)
                                .NotNull()
-                               .Where(v => v > currentVersion)
+                               .Where(v => v > currentVersion || (branchIsMaster && v == currentVersion))
                                .GroupBy(v => $"{v.Major}.{v.Minor}")
                                .Select(g => g.Max())
                                .Order()
@@ -110,7 +112,12 @@ internal sealed class InformationViewModel : Screen
                     updateContent.Inlines.Add(releaseContent);
                 }
 
-                updateLabel = CreateUpdateLabel($"v{GitVersionInformation.MajorMinorPatch}", $"v{latestRelease["tag_name"]}", updateUri);
+                var fromText = $"v{GitVersionInformation.MajorMinorPatch}";
+                var toText = $"v{latestRelease["tag_name"]}";
+                if (branchIsMaster)
+                    fromText += $".{GitVersionInformation.ShortSha}";
+
+                updateLabel = CreateUpdateLabel(fromText, toText, updateUri);
             });
 
             Update = new UpdateData(updateUri, updateLabel, updateContent);
