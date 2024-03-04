@@ -238,13 +238,37 @@ internal sealed class EmbyMediaSource(IShortcutManager shortcutManager, IEventAg
 
             var uri = new Uri(ServerBaseUri, $"/Devices?api_key={ApiKey}");
             var response = await UnwrapTimeout(() => client.GetAsync(uri, token));
-            var content = await response.Content.ReadAsStringAsync(token);
+            response.EnsureSuccessStatusCode();
 
+            var content = await response.Content.ReadAsStringAsync(token);
             Logger.Trace(() => $"Received \"{content}\" from \"{Name}\"");
 
             var o = JObject.Parse(content);
-            var currentDevices = o["Items"].ToObject<List<EmbyDevice>>();
+            foreach (var device in o["Items"].OfType<JObject>())
+            {
+                if (!device.TryGetValue<string>("Id", out var id) || string.IsNullOrWhiteSpace(id))
+                    continue;
 
+                try
+                {
+                    uri = new Uri(ServerBaseUri, $"/Devices/Options?api_key={ApiKey}&Id={id}");
+                    response = await UnwrapTimeout(() => client.GetAsync(uri, token));
+                    response.EnsureSuccessStatusCode();
+
+                    content = await response.Content.ReadAsStringAsync(token);
+                    Logger.Trace(() => $"Received \"{content}\" from \"{Name}\"");
+
+                    var options = JObject.Parse(content);
+                    if (options.TryGetValue<string>("CustomName", out var customName) && !string.IsNullOrWhiteSpace(customName))
+                        device["Name"] = customName;
+                }
+                catch (Exception e)
+                {
+                    Logger.Warn(e, $"Failed to read custom name for device \"{id}\"");
+                }
+            }
+
+            var currentDevices = o["Items"].ToObject<List<EmbyDevice>>();
             var lastSelectedMachineIdentifier = SelectedDeviceId;
             Devices.RemoveRange(Devices.Except(currentDevices).ToList());
             Devices.AddRange(currentDevices.Except(Devices).ToList());
