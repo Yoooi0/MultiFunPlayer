@@ -5,8 +5,8 @@ using System.Text;
 namespace MultiFunPlayer.Shortcut;
 
 [DisplayName("Button Long Press")]
-internal sealed class ButtonLongPressShortcut(IShortcutActionResolver actionResolver, ISimpleInputGestureDescriptor gesture)
-    : AbstractShortcut<ISimpleInputGesture, ISimpleInputGestureData>(actionResolver, gesture)
+internal sealed class ButtonLongPressShortcut(IShortcutActionRunner actionRunner, ISimpleInputGestureDescriptor gesture)
+    : AbstractShortcut<ISimpleInputGesture, ISimpleInputGestureData>(actionRunner, gesture)
 {
     public int MinimumHoldDuration { get; set; } = 1000;
     public int MaximumHoldDuration { get; set; } = -1;

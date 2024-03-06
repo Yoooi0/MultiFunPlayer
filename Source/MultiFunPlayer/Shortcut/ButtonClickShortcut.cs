@@ -5,8 +5,8 @@ using System.Text;
 namespace MultiFunPlayer.Shortcut;
 
 [DisplayName("Button Click")]
-internal sealed class ButtonClickShortcut(IShortcutActionResolver actionResolver, ISimpleInputGestureDescriptor gesture)
-    : AbstractShortcut<ISimpleInputGesture, ISimpleInputGestureData>(actionResolver, gesture)
+internal sealed class ButtonClickShortcut(IShortcutActionRunner actionRunner, ISimpleInputGestureDescriptor gesture)
+    : AbstractShortcut<ISimpleInputGesture, ISimpleInputGestureData>(actionRunner, gesture)
 {
     private int _stateCounter;
 

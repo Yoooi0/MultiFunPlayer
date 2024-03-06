@@ -24,6 +24,7 @@ internal sealed class ShortcutSettingsViewModel : Screen, IHandle<SettingsMessag
 
     private readonly IInputProcessorManager _inputManager;
     private readonly IShortcutManager _shortcutManager;
+    private readonly IShortcutFactory _shortcutFactory;
     private readonly Channel<IInputGesture> _gestureChannel;
 
     public string ActionsFilter { get; set; }
@@ -49,11 +50,12 @@ internal sealed class ShortcutSettingsViewModel : Screen, IHandle<SettingsMessag
     [JsonProperty] public bool IsTCodeButtonGestureEnabled { get; set; } = true;
     [JsonProperty] public bool IsTCodeAxisGestureEnabled { get; set; } = true;
 
-    public ShortcutSettingsViewModel(IInputProcessorManager inputManager, IShortcutManager shortcutManager, IEventAggregator eventAggregator)
+    public ShortcutSettingsViewModel(IInputProcessorManager inputManager, IShortcutManager shortcutManager, IShortcutFactory shortcutFactory, IEventAggregator eventAggregator)
     {
         DisplayName = "Shortcut";
         _inputManager = inputManager;
         _shortcutManager = shortcutManager;
+        _shortcutFactory = shortcutFactory;
 
         Logger.Debug($"Initialized with {shortcutManager.AvailableActions.Count} available actions");
 
@@ -166,7 +168,7 @@ internal sealed class ShortcutSettingsViewModel : Screen, IHandle<SettingsMessag
         if (SelectedCapturedGesture == null)
             return;
 
-        var shortcut = (IShortcut)Activator.CreateInstance(SelectedShortcutType, [_shortcutManager,  SelectedCapturedGesture]);
+        var shortcut = _shortcutFactory.CreateShortcut(SelectedShortcutType, SelectedCapturedGesture);
         SelectedShortcut = _shortcutManager.AddShortcut(shortcut);
     }
 

@@ -2,12 +2,8 @@ using MultiFunPlayer.Common;
 using MultiFunPlayer.Input;
 using Newtonsoft.Json;
 using PropertyChanged;
-using Stylet;
 using System.Collections.Concurrent;
 using System.ComponentModel;
-using System.Linq.Expressions;
-using System.Reflection;
-using System.Text;
 
 namespace MultiFunPlayer.Shortcut;
 
@@ -36,11 +32,12 @@ internal interface IShortcut : IDisposable
 }
 
 [AddINotifyPropertyChangedInterface]
-internal abstract partial class AbstractShortcut<TGesture, TData>(IShortcutActionResolver actionResolver, IInputGestureDescriptor gesture)
+internal abstract partial class AbstractShortcut<TGesture, TData>(IShortcutActionRunner actionRunner, IInputGestureDescriptor gesture)
     : IShortcut where TGesture : IInputGesture where TData : IInputGestureData
 {
     private readonly ConcurrentDictionary<string, Timer> _actions = [];
     private readonly ConcurrentDictionary<string, (Task Task, CancellationTokenSource CancellationSource)> _repeatingActions = [];
+    private int _isScheduled;
 
     [JsonIgnore]
     protected object SyncRoot { get; } = new();
@@ -56,6 +53,8 @@ internal abstract partial class AbstractShortcut<TGesture, TData>(IShortcutActio
 
     [JsonIgnore]
     public Type OutputDataType { get; } = typeof(TData);
+    [JsonIgnore]
+    public bool IsScheduled => _isScheduled == 1;
 
     protected void Invoke(TData gestureData)
     {
@@ -63,10 +62,19 @@ internal abstract partial class AbstractShortcut<TGesture, TData>(IShortcutActio
             return;
         if (Configurations.Count == 0)
             return;
+        if (Interlocked.CompareExchange(ref _isScheduled, 1, 0) != 0)
+            return;
 
-        foreach (var configuration in Configurations)
-            if (actionResolver.TryGetAction(configuration.Name, out var action))
-                action.Invoke(configuration, gestureData);
+        if (actionRunner.ScheduleInvoke(Configurations, gestureData, OnInvoked))
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsScheduled)));
+        else
+            _isScheduled = 0;
+    }
+
+    private void OnInvoked()
+    {
+        _isScheduled = 0;
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsScheduled)));
     }
 
     protected void Delay(int milisecondsDelay, Action action, string key = "")
