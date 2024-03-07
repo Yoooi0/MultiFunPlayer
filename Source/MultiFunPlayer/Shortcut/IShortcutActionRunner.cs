@@ -1,6 +1,6 @@
 ﻿using MultiFunPlayer.Input;
 using NLog;
-using System.Threading.Channels;
+using System.Collections.Concurrent;
 
 namespace MultiFunPlayer.Shortcut;
 
@@ -14,59 +14,49 @@ internal class ShortcutActionRunner : IShortcutActionRunner, IDisposable
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
     private readonly IShortcutActionResolver _actionResolver;
-    private readonly Channel<ScheduledItem> _itemChannel;
 
-    private CancellationTokenSource _cancellationSource;
-    private Task _task;
+    private BlockingCollection<ScheduledItem> _queue;
+    private Thread _thread;
 
     public ShortcutActionRunner(IShortcutActionResolver actionResolver)
     {
         _actionResolver = actionResolver;
-        _itemChannel = Channel.CreateUnbounded<ScheduledItem>(new UnboundedChannelOptions()
-        {
-            SingleReader = true,
-            SingleWriter = true
-        });
+        _queue = [];
 
-        _cancellationSource = new CancellationTokenSource();
-        _task = Task.Factory.StartNew(() => InvokeAsync(_cancellationSource.Token),
-                    _cancellationSource.Token,
-                    TaskCreationOptions.LongRunning,
-                    TaskScheduler.Default)
-                        .Unwrap();
+        _thread = new Thread(ConsumeItems);
+        _thread.Start();
     }
 
-    private async Task InvokeAsync(CancellationToken token)
+    private void ConsumeItems()
     {
-        try
+        foreach (var item in _queue.GetConsumingEnumerable())
         {
-            await foreach (var item in _itemChannel.Reader.ReadAllAsync(token))
+            foreach (var configuration in item.Configurations)
             {
-                foreach (var configuration in item.Configurations)
+                if (_actionResolver.TryGetAction(configuration.Name, out var action))
                 {
-                    if (_actionResolver.TryGetAction(configuration.Name, out var action))
-                    {
-                        Logger.Trace(() => $"Invoking \"{configuration.Name}\" action [Configuration: \"{string.Join(", ", configuration.Settings.Select(s => s.ToString()))}\", Gesture: {item.GestureData}]");
-                        await action.Invoke(configuration, item.GestureData);
-                    }
+                    Logger.Trace(() => $"Invoking \"{configuration.Name}\" action [Configuration: \"{string.Join(", ", configuration.Settings.Select(s => s.ToString()))}\", Gesture: {item.GestureData}]");
+                    var valueTask = action.Invoke(configuration, item.GestureData);
+                    if (!valueTask.IsCompleted)
+                        valueTask.AsTask().GetAwaiter().GetResult();
                 }
-
-                item.Callback?.Invoke();
             }
-        } catch (OperationCanceledException) { }
+
+            item.Callback?.Invoke();
+        }
     }
 
     public bool ScheduleInvoke(IEnumerable<IShortcutActionConfiguration> configurations, IInputGestureData gestureData, Action callback)
-        => _itemChannel.Writer.TryWrite(new ScheduledItem(configurations, gestureData, callback)); //TODO: configurations.ToList?
+        => _queue.TryAdd(new ScheduledItem(configurations, gestureData, callback)); //TODO: configurations.ToList?
 
     protected virtual void Dispose(bool disposing)
     {
-        _cancellationSource?.Cancel();
-        _task?.GetAwaiter().GetResult();
-        _cancellationSource?.Dispose();
+        _queue?.CompleteAdding();
+        _thread?.Join();
+        _queue?.Dispose();
 
-        _task = null;
-        _cancellationSource = null;
+        _queue = null;
+        _thread = null;
     }
 
     public void Dispose()
