@@ -97,15 +97,7 @@ internal sealed class OutputTargetViewModel : Conductor<IOutputTarget>.Collectio
     protected override void OnViewLoaded()
     {
         base.OnViewLoaded();
-
-        if (_task != null)
-            return;
-
-        _task = Task.Factory.StartNew(() => ScanAsync(_cancellationSource.Token),
-            _cancellationSource.Token,
-            TaskCreationOptions.LongRunning,
-            TaskScheduler.Default)
-            .Unwrap();
+        _task ??= Task.Run(() => ScanAsync(_cancellationSource.Token));
     }
 
     public void Handle(SettingsMessage message)

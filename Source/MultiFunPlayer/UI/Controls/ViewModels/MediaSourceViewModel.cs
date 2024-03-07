@@ -1,4 +1,4 @@
-﻿using MultiFunPlayer.Common;
+using MultiFunPlayer.Common;
 using MultiFunPlayer.MediaSource;
 using MultiFunPlayer.Shortcut;
 using Newtonsoft.Json.Linq;
@@ -59,15 +59,7 @@ internal sealed class MediaSourceViewModel : Conductor<IMediaSource>.Collection.
     protected override void OnViewLoaded()
     {
         base.OnViewLoaded();
-
-        if (_task != null)
-            return;
-
-        _task = Task.Factory.StartNew(() => ScanAsync(_cancellationSource.Token),
-            _cancellationSource.Token,
-            TaskCreationOptions.LongRunning,
-            TaskScheduler.Default)
-            .Unwrap();
+        _task ??= Task.Run(() => ScanAsync(_cancellationSource.Token));
     }
 
     public void Handle(SettingsMessage message)

@@ -55,12 +55,8 @@ internal abstract class AbstractMediaSource : Screen, IMediaSource, IHandle<IMed
     protected virtual async ValueTask<bool> OnConnectingAsync()
     {
         _cancellationSource = new CancellationTokenSource();
-        _task = Task.Factory.StartNew(() => RunAsync(_cancellationSource.Token),
-            _cancellationSource.Token,
-            TaskCreationOptions.LongRunning,
-            TaskScheduler.Default)
-            .Unwrap();
-        _ = _task.ContinueWith(_ => DisconnectAsync()).Unwrap();
+        _task = Task.Run(() => RunAsync(_cancellationSource.Token));
+        _ = _task.ContinueWith(_ => DisconnectAsync());
 
         return await ValueTask.FromResult(true);
     }

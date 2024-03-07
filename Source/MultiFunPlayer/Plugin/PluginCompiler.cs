@@ -100,12 +100,7 @@ internal static class PluginCompiler
             SingleWriter = false
         });
 
-        _compileTask ??= Task.Factory.StartNew(DoCompile,
-            default,
-            TaskCreationOptions.LongRunning,
-            TaskScheduler.Default)
-            .Unwrap();
-
+        _compileTask ??= Task.Run(DoCompile);
         _compileQueue.Writer.TryWrite(() =>
         {
             Logger.Debug("Compiling plugin [File: {0}]", pluginFile.FullName);
