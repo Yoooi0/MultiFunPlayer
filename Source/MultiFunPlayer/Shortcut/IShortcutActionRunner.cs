@@ -7,9 +7,9 @@ namespace MultiFunPlayer.Shortcut;
 internal interface IShortcutActionRunner
 {
     bool ScheduleInvoke(IEnumerable<IShortcutActionConfiguration> configurations, IInputGestureData gestureData, Action callback);
+    ValueTask Invoke(IShortcutActionConfiguration actionConfiguration, IInputGestureData gestureData);
 
     ValueTask Invoke(string actionName, params object[] arguments);
-    ValueTask Invoke(IShortcutActionConfiguration actionConfiguration, IInputGestureData gestureData);
     ValueTask Invoke(string actionName);
     ValueTask Invoke<T0>(string actionName, T0 arg0);
     ValueTask Invoke<T0, T1>(string actionName, T0 arg0, T1 arg1);
@@ -56,7 +56,7 @@ internal class ShortcutActionRunner : IShortcutActionRunner, IDisposable
     }
 
     public bool ScheduleInvoke(IEnumerable<IShortcutActionConfiguration> configurations, IInputGestureData gestureData, Action callback)
-        => _queue.TryAdd(new ScheduledItem(configurations, gestureData, callback)); //TODO: configurations.ToList?
+        => _queue.TryAdd(new ScheduledItem(configurations, gestureData, callback));
 
     public ValueTask Invoke(string actionName, params object[] arguments)
     {
