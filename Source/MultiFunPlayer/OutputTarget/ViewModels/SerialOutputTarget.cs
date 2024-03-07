@@ -16,7 +16,7 @@ using System.Text.RegularExpressions;
 namespace MultiFunPlayer.OutputTarget.ViewModels;
 
 [DisplayName("Serial")]
-internal sealed class SerialOutputTarget(int instanceIndex, IEventAggregator eventAggregator, IDeviceAxisValueProvider valueProvider, IInputProcessorManager inputManager)
+internal sealed class SerialOutputTarget(int instanceIndex, IEventAggregator eventAggregator, IDeviceAxisValueProvider valueProvider, IInputProcessorFactory inputProcessorFactory)
     : ThreadAbstractOutputTarget(instanceIndex, eventAggregator, valueProvider)
 {
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
@@ -173,7 +173,7 @@ internal sealed class SerialOutputTarget(int instanceIndex, IEventAggregator eve
         {
             EventAggregator.Publish(new SyncRequestMessage());
 
-            using var _ = inputManager.RegisterProcessor<TCodeInputProcessor>(out var tcodeInputProcessor);
+            using var tcodeInputProcessor = inputProcessorFactory.GetInputProcessor<TCodeInputProcessor>();
             if (UpdateType == DeviceAxisUpdateType.FixedUpdate)
             {
                 var currentValues = DeviceAxis.All.ToDictionary(a => a, _ => double.NaN);

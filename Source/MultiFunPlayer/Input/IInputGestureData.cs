@@ -12,12 +12,12 @@ public interface IAxisInputGestureData : IInputGestureData
     public double ApplyTo(double value, double deltaModifier = 1);
 }
 
-internal sealed class SimpleInputGestureData : ISimpleInputGestureData
+internal sealed record SimpleInputGestureData : ISimpleInputGestureData
 {
     public static readonly SimpleInputGestureData Default = new();
 }
 
-internal sealed class AxisInputGestureData : IAxisInputGestureData
+internal sealed record AxisInputGestureData : IAxisInputGestureData
 {
     public double ValueOrDelta { get; }
     public double DeltaTime { get; }

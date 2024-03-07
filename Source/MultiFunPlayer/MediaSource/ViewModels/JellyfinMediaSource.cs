@@ -375,6 +375,10 @@ internal sealed class JellyfinMediaSource(IShortcutManager shortcutManager, IEve
             SelectDeviceById(devcie.Id);
         });
         #endregion
+
+        #region RefreshDevices
+        s.RegisterAction($"{Name}::RefreshDevices", async () => { if (CanRefreshDevices) await RefreshDevices(); });
+        #endregion
     }
 
     protected override void Dispose(bool disposing)

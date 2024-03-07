@@ -213,7 +213,7 @@ internal sealed class MediaSourceViewModel : Conductor<IMediaSource>.Collection.
         foreach (var source in AvailableSources)
         {
             s.RegisterAction($"{source.Name}::Connection::Toggle", async () => await ToggleConnectAsync(source));
-            s.RegisterAction($"{source.Name}::Connection::Connect",async () =>
+            s.RegisterAction($"{source.Name}::Connection::Connect", async () =>
             {
                 await _semaphore.WaitAsync(token);
                 if (_currentSource != source)

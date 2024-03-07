@@ -378,6 +378,10 @@ internal sealed class EmbyMediaSource(IShortcutManager shortcutManager, IEventAg
             SelectDeviceById(devcie.Id);
         });
         #endregion
+
+        #region RefreshDevices
+        s.RegisterAction($"{Name}::RefreshDevices", async () => { if (CanRefreshDevices) await RefreshDevices(); });
+        #endregion
     }
 
     protected override void Dispose(bool disposing)

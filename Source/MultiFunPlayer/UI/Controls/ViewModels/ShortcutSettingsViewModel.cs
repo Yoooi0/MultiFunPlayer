@@ -18,12 +18,12 @@ using System.Windows.Data;
 namespace MultiFunPlayer.UI.Controls.ViewModels;
 
 [JsonObject(MemberSerialization = MemberSerialization.OptIn)]
-internal sealed class ShortcutSettingsViewModel : Screen, IHandle<SettingsMessage>, IDisposable
+internal sealed class ShortcutSettingsViewModel : Screen, IHandle<SettingsMessage>, IHandle<IInputGesture>, IDisposable
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-    private readonly IInputProcessorManager _inputManager;
     private readonly IShortcutManager _shortcutManager;
+    private readonly IShortcutFactory _shortcutFactory;
     private readonly Channel<IInputGesture> _gestureChannel;
 
     public string ActionsFilter { get; set; }
@@ -49,15 +49,15 @@ internal sealed class ShortcutSettingsViewModel : Screen, IHandle<SettingsMessag
     [JsonProperty] public bool IsTCodeButtonGestureEnabled { get; set; } = true;
     [JsonProperty] public bool IsTCodeAxisGestureEnabled { get; set; } = true;
 
-    public ShortcutSettingsViewModel(IInputProcessorManager inputManager, IShortcutManager shortcutManager, IEventAggregator eventAggregator)
+    public ShortcutSettingsViewModel(IShortcutManager shortcutManager, IShortcutFactory shortcutFactory, IEventAggregator eventAggregator)
     {
         DisplayName = "Shortcut";
-        _inputManager = inputManager;
         _shortcutManager = shortcutManager;
+        _shortcutFactory = shortcutFactory;
 
         Logger.Debug($"Initialized with {shortcutManager.AvailableActions.Count} available actions");
 
-        eventAggregator.Subscribe(this);
+        eventAggregator.Subscribe(this, [EventAggregator.DefaultChannel, IInputProcessor.EventAggregatorChannelName]);
 
         CapturedGestures = [];
         ShortcutTypes = [.. ReflectionUtils.FindImplementations<IShortcut>().OrderBy(x => x.GetCustomAttribute<DisplayNameAttribute>().DisplayName)];
@@ -83,7 +83,6 @@ internal sealed class ShortcutSettingsViewModel : Screen, IHandle<SettingsMessag
             return true;
         };
 
-        _inputManager.OnGesture += HandleGesture;
         _gestureChannel = Channel.CreateUnbounded<IInputGesture>(new UnboundedChannelOptions()
         {
             SingleReader = true,
@@ -102,7 +101,7 @@ internal sealed class ShortcutSettingsViewModel : Screen, IHandle<SettingsMessag
     protected override void OnActivate() => _shortcutManager.HandleGestures = false;
     protected override void OnDeactivate() => _shortcutManager.HandleGestures = true;
 
-    private void HandleGesture(object sender, IInputGesture gesture)
+    public void Handle(IInputGesture gesture)
     {
         if (!IsCapturingGestures)
             return;
@@ -166,7 +165,7 @@ internal sealed class ShortcutSettingsViewModel : Screen, IHandle<SettingsMessag
         if (SelectedCapturedGesture == null)
             return;
 
-        var shortcut = (IShortcut)Activator.CreateInstance(SelectedShortcutType, [_shortcutManager,  SelectedCapturedGesture]);
+        var shortcut = _shortcutFactory.CreateShortcut(SelectedShortcutType, SelectedCapturedGesture);
         SelectedShortcut = _shortcutManager.AddShortcut(shortcut);
     }
 
@@ -304,10 +303,7 @@ internal sealed class ShortcutSettingsViewModel : Screen, IHandle<SettingsMessag
         #endregion
     }
 
-    private void Dispose(bool disposing)
-    {
-        _inputManager.OnGesture -= HandleGesture;
-    }
+    private void Dispose(bool disposing) { }
 
     public void Dispose()
     {

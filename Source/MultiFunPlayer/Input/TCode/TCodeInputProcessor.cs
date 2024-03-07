@@ -1,25 +1,17 @@
 using MultiFunPlayer.Common;
 using NLog;
+using Stylet;
 using System.Text.RegularExpressions;
 
 namespace MultiFunPlayer.Input.TCode;
 
-internal sealed class TCodeInputProcessor : IInputProcessor
+internal sealed class TCodeInputProcessor(IEventAggregator eventAggregator) : AbstractInputProcessor(eventAggregator)
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-    private readonly SplittingStringBuffer _buffer;
-    private readonly Dictionary<string, int> _unsignedAxisStates;
-    private readonly Dictionary<string, int> _signedAxisStates;
-
-    public event EventHandler<IInputGesture> OnGesture;
-
-    public TCodeInputProcessor()
-    {
-        _buffer = new SplittingStringBuffer('\n');
-        _unsignedAxisStates = [];
-        _signedAxisStates = [];
-    }
+    private readonly SplittingStringBuffer _buffer = new('\n');
+    private readonly Dictionary<string, int> _unsignedAxisStates = [];
+    private readonly Dictionary<string, int> _signedAxisStates = [];
 
     public void Parse(string input)
     {
@@ -44,7 +36,7 @@ internal sealed class TCodeInputProcessor : IInputProcessor
         {
             var button = match.Groups["button"].Value;
             var state = int.Parse(match.Groups["state"].Value) == 1;
-            HandleGesture(TCodeButtonGesture.Create(button, state));
+            PublishGesture(TCodeButtonGesture.Create(button, state));
         }
 
         void CreateAxisGesture(Dictionary<string, int> states, Match match, double minValue, double maxValue)
@@ -60,19 +52,8 @@ internal sealed class TCodeInputProcessor : IInputProcessor
             var valueDecimal = MathUtils.UnLerp(minValue, maxValue, value);
             var deltaDecimal = MathUtils.UnLerp(minValue, maxValue, delta);
 
-            HandleGesture(TCodeAxisGesture.Create(axis, valueDecimal, deltaDecimal, 0));
+            PublishGesture(TCodeAxisGesture.Create(axis, valueDecimal, deltaDecimal, 0));
             states[axis] = value;
         }
-    }
-
-    private void HandleGesture(IInputGesture gesture)
-        => OnGesture?.Invoke(this, gesture);
-
-    private void Dispose(bool disposing) { }
-
-    public void Dispose()
-    {
-        Dispose(disposing: true);
-        GC.SuppressFinalize(this);
     }
 }
