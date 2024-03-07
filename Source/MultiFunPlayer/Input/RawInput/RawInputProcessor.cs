@@ -4,6 +4,7 @@ using MultiFunPlayer.Common;
 using NLog;
 using Stylet;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Interop;
@@ -17,7 +18,7 @@ internal sealed class RawInputProcessorSettings : AbstractInputProcessorSettings
     public int VirtualMouseHeight { get; set; } = 500;
     public int VirtualWheelWidth { get; set; } = 10;
     public int VirtualWheelHeight { get; set; } = 20;
-    public int CombineMouseAxisEventCount { get; set; } = 10;
+    public int MaximumMouseAxisUpdateRate { get; set; } = 125;
 }
 
 internal sealed class RawInputProcessor : IInputProcessor, IHandle<WindowCreatedMessage>
@@ -28,11 +29,11 @@ internal sealed class RawInputProcessor : IInputProcessor, IHandle<WindowCreated
     private readonly HashSet<Key> _pressedKeys;
     private HwndSource _source;
 
-    private int _mouseAxisEventCount;
     private double _mouseXAxis, _mouseYAxis;
     private double _mouseDeltaX, _mouseDeltaY;
     private double _mouseWheelAxis, _mouseHorizontalWheelAxis;
     private int _mouseLastAbsoluteX, _mouseLastAbsoluteY;
+    private long _lastMouseAxisEventTicks;
 
     public event EventHandler<IInputGesture> OnGesture;
 
@@ -45,6 +46,7 @@ internal sealed class RawInputProcessor : IInputProcessor, IHandle<WindowCreated
         _mouseXAxis = _mouseYAxis = 0.5;
         _mouseWheelAxis = _mouseHorizontalWheelAxis = 0.5;
         _mouseLastAbsoluteX = _mouseLastAbsoluteY = -1;
+        _lastMouseAxisEventTicks = -1;
     }
 
     private IntPtr MessageSink(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
@@ -151,7 +153,9 @@ internal sealed class RawInputProcessor : IInputProcessor, IHandle<WindowCreated
         _mouseDeltaX += deltaX;
         _mouseDeltaY += deltaY;
 
-        if (_mouseAxisEventCount++ >= _settings.CombineMouseAxisEventCount)
+        var currentTicks = Stopwatch.GetTimestamp();
+        var timeSinceLastUpdate = (currentTicks - _lastMouseAxisEventTicks) / (double)Stopwatch.Frequency;
+        if (timeSinceLastUpdate >= 1d / _settings.MaximumMouseAxisUpdateRate || _lastMouseAxisEventTicks < 0)
         {
             if (Math.Abs(_mouseDeltaX) > 0)
                 HandleGesture(MouseAxisGesture.Create(MouseAxis.X, _mouseXAxis, _mouseDeltaX, 0));
@@ -160,7 +164,7 @@ internal sealed class RawInputProcessor : IInputProcessor, IHandle<WindowCreated
                 HandleGesture(MouseAxisGesture.Create(MouseAxis.Y, _mouseYAxis, _mouseDeltaY, 0));
 
             _mouseDeltaX = _mouseDeltaY = 0;
-            _mouseAxisEventCount = 0;
+            _lastMouseAxisEventTicks = currentTicks;
         }
     }
 

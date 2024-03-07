@@ -97,6 +97,18 @@
                                          StringFormat="{}{0}steps"
                                          Value="{Binding VirtualWheelHeight}"/>
                 </DockPanel>
+
+                <DockPanel DockPanel.Dock="Top">
+                    <TextBlock DockPanel.Dock="Left"
+                               Margin="0 0 5 0"
+                               VerticalAlignment="Center"
+                               Text="Mouse axis update rate:"/>
+                    <metro:NumericUpDown DockPanel.Dock="Right"
+                                         Maximum="1000"
+                                         Minimum="30"
+                                         StringFormat="{}{0}hz"
+                                         Value="{Binding MaximumMouseAxisUpdateRate}"/>
+                </DockPanel>
             </DockPanel>
         </DataTemplate>
     </UserControl.Resources>
