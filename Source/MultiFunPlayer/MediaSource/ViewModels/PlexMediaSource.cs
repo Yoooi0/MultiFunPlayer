@@ -433,6 +433,10 @@ internal sealed class PlexMediaSource(IShortcutManager shortcutManager, IEventAg
             SelectClientByMachineIdentifier(client.MachineIdentifier);
         });
         #endregion
+
+        #region RefreshClients
+        s.RegisterAction($"{Name}::RefreshClients", async () => { if (CanRefreshClients) await RefreshClients(); });
+        #endregion
     }
 
     private void AddDefaultHeaders(HttpRequestHeaders headers)
