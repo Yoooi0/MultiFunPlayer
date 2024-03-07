@@ -57,16 +57,6 @@ internal interface IShortcutManager : IShortcutActionResolver, IDisposable
     void RegisterAction<TD, T0, T1, T2>(string actionName, Func<IShortcutSettingBuilder<T0>, IShortcutSettingBuilder<T0>> settings0, Func<IShortcutSettingBuilder<T1>, IShortcutSettingBuilder<T1>> settings1, Func<IShortcutSettingBuilder<T2>, IShortcutSettingBuilder<T2>> settings2, Action<TD, T0, T1, T2> action) where TD : IInputGestureData;
     void RegisterAction<TD, T0, T1, T2, T3>(string actionName, Func<IShortcutSettingBuilder<T0>, IShortcutSettingBuilder<T0>> settings0, Func<IShortcutSettingBuilder<T1>, IShortcutSettingBuilder<T1>> settings1, Func<IShortcutSettingBuilder<T2>, IShortcutSettingBuilder<T2>> settings2, Func<IShortcutSettingBuilder<T3>, IShortcutSettingBuilder<T3>> settings3, Action<TD, T0, T1, T2, T3> action) where TD : IInputGestureData;
 
-    //TODO: move to runner?
-    ValueTask Invoke(string actionName, params object[] arguments);
-    ValueTask Invoke(IShortcutActionConfiguration actionConfiguration, IInputGestureData gestureData);
-    ValueTask Invoke(string actionName);
-    ValueTask Invoke<T0>(string actionName, T0 arg0);
-    ValueTask Invoke<T0, T1>(string actionName, T0 arg0, T1 arg1);
-    ValueTask Invoke<T0, T1, T2>(string actionName, T0 arg0, T1 arg1, T2 arg2);
-    ValueTask Invoke<T0, T1, T2, T3>(string actionName, T0 arg0, T1 arg1, T2 arg2, T3 arg3);
-    ValueTask Invoke<T0, T1, T2, T3, T4>(string actionName, T0 arg0, T1 arg1, T2 arg2, T3 arg3, T4 arg4);
-
     void UnregisterAction(string actionName);
 
     bool ActionAcceptsGestureData(string actionName, Type gestureDataType);
@@ -356,70 +346,6 @@ internal sealed class ShortcutManager : IShortcutManager, IHandle<IInputGesture>
             return null;
 
         return builder.Build();
-    }
-
-    public ValueTask Invoke(string actionName, params object[] arguments)
-    {
-        Logger.Trace("Invoking \"{name}\" action [Arguments: \"{arguments}\"]", actionName, arguments);
-        if (TryGetAction(actionName, out var action))
-            return action.Invoke(arguments);
-        return ValueTask.CompletedTask;
-    }
-
-    public ValueTask Invoke(IShortcutActionConfiguration actionConfiguration, IInputGestureData gestureData)
-    {
-        Logger.Trace(() => $"Invoking \"{actionConfiguration.Name}\" action [Configuration: \"{string.Join(", ", actionConfiguration.Settings.Select(s => s.ToString()))}\", Gesture: {gestureData}]");
-        if (TryGetAction(actionConfiguration.Name, out var action))
-            return action.Invoke(actionConfiguration, gestureData);
-        return ValueTask.CompletedTask;
-    }
-
-    public ValueTask Invoke(string actionName)
-    {
-        Logger.Trace("Invoking \"{0}\" action", actionName);
-        if (TryGetAction(actionName, out var action) && action is ShortcutAction concreteAction)
-            return concreteAction.Invoke();
-        return ValueTask.CompletedTask;
-    }
-
-    public ValueTask Invoke<T0>(string actionName, T0 arg0)
-    {
-        Logger.Trace("Invoking \"{0}\" action [Arguments: \"{1}\"]", actionName, arg0);
-        if (TryGetAction(actionName, out var action) && action is ShortcutAction<T0> concreteAction)
-            return concreteAction.Invoke(arg0);
-        return ValueTask.CompletedTask;
-    }
-
-    public ValueTask Invoke<T0, T1>(string actionName, T0 arg0, T1 arg1)
-    {
-        Logger.Trace("Invoking \"{0}\" action [Arguments: \"{1}, {2}\"]", actionName, arg0, arg1);
-        if (TryGetAction(actionName, out var action) && action is ShortcutAction<T0, T1> concreteAction)
-            return concreteAction.Invoke(arg0, arg1);
-        return ValueTask.CompletedTask;
-    }
-
-    public ValueTask Invoke<T0, T1, T2>(string actionName, T0 arg0, T1 arg1, T2 arg2)
-    {
-        Logger.Trace("Invoking \"{0}\" action [Arguments: \"{1}, {2}, {3}\"]", actionName, arg0, arg1, arg2);
-        if (TryGetAction(actionName, out var action) && action is ShortcutAction<T0, T1, T2> concreteAction)
-            return concreteAction.Invoke(arg0, arg1, arg2);
-        return ValueTask.CompletedTask;
-    }
-
-    public ValueTask Invoke<T0, T1, T2, T3>(string actionName, T0 arg0, T1 arg1, T2 arg2, T3 arg3)
-    {
-        Logger.Trace("Invoking \"{0}\" action [Arguments: \"{1}, {2}, {3}, {4}\"]", actionName, arg0, arg1, arg2, arg3);
-        if (TryGetAction(actionName, out var action) && action is ShortcutAction<T0, T1, T2, T3> concreteAction)
-            return concreteAction.Invoke(arg0, arg1, arg2, arg3);
-        return ValueTask.CompletedTask;
-    }
-
-    public ValueTask Invoke<T0, T1, T2, T3, T4>(string actionName, T0 arg0, T1 arg1, T2 arg2, T3 arg3, T4 arg4)
-    {
-        Logger.Trace("Invoking \"{0}\" action [Arguments: \"{1}, {2}, {3}, {4}, {5}\"]", actionName, arg0, arg1, arg2, arg3, arg4);
-        if (TryGetAction(actionName, out var action) && action is ShortcutAction<T0, T1, T2, T3, T4> concreteAction)
-            return concreteAction.Invoke(arg0, arg1, arg2, arg3, arg4);
-        return ValueTask.CompletedTask;
     }
 
     public void Handle(IInputGesture gesture)
