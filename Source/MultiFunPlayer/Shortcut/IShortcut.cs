@@ -53,8 +53,6 @@ internal abstract partial class AbstractShortcut<TGesture, TData>(IShortcutActio
 
     [JsonIgnore]
     public Type OutputDataType { get; } = typeof(TData);
-    [JsonIgnore]
-    public bool IsScheduled => _isScheduled == 1;
 
     protected void Invoke(TData gestureData)
     {
@@ -65,17 +63,11 @@ internal abstract partial class AbstractShortcut<TGesture, TData>(IShortcutActio
         if (Interlocked.CompareExchange(ref _isScheduled, 1, 0) != 0)
             return;
 
-        if (actionRunner.ScheduleInvoke(Configurations, gestureData, OnInvoked))
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsScheduled)));
-        else
+        if (!actionRunner.ScheduleInvoke(Configurations, gestureData, OnInvoked))
             _isScheduled = 0;
     }
 
-    private void OnInvoked()
-    {
-        _isScheduled = 0;
-        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsScheduled)));
-    }
+    private void OnInvoked() => _isScheduled = 0;
 
     protected void Delay(int milisecondsDelay, Action action, string key = "")
         => Delay(TimeSpan.FromMilliseconds(milisecondsDelay), action, key);
