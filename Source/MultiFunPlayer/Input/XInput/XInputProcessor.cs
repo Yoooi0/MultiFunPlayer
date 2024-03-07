@@ -1,6 +1,7 @@
 using MultiFunPlayer.Common;
 using Newtonsoft.Json;
 using NLog;
+using Stylet;
 using System.ComponentModel;
 using System.Diagnostics;
 using Vortice.XInput;
@@ -15,7 +16,7 @@ internal sealed class XInputProcessorSettings : AbstractInputProcessorSettings
     [JsonProperty] public double TriggerDeadZone { get; set; } = Gamepad.TriggerThreshold / 255d;
 }
 
-internal sealed class XInputProcessor : IInputProcessor
+internal sealed class XInputProcessor : AbstractInputProcessor
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
@@ -26,9 +27,7 @@ internal sealed class XInputProcessor : IInputProcessor
     private CancellationTokenSource _cancellationSource;
     private Thread _thread;
 
-    public event EventHandler<IInputGesture> OnGesture;
-
-    public XInputProcessor(XInputProcessorSettings settings)
+    public XInputProcessor(XInputProcessorSettings settings, IEventAggregator eventAggregator) : base(eventAggregator)
     {
         _settings = settings;
 
@@ -91,12 +90,12 @@ internal sealed class XInputProcessor : IInputProcessor
         if (keystroke.Flags.HasFlag(KeyStrokeFlags.KeyDown) || keystroke.Flags.HasFlag(KeyStrokeFlags.Repeat))
         {
             _pressedKeys.Add(keystroke.VirtualKey);
-            HandleGesture(GamepadButtonGesture.Create(userIndex, _pressedKeys, true));
+            PublishGesture(GamepadButtonGesture.Create(userIndex, _pressedKeys, true));
         }
         else if (keystroke.Flags.HasFlag(KeyStrokeFlags.KeyUp))
         {
             if (_pressedKeys.Count > 0)
-                HandleGesture(GamepadButtonGesture.Create(userIndex, _pressedKeys, false));
+                PublishGesture(GamepadButtonGesture.Create(userIndex, _pressedKeys, false));
             _pressedKeys.Clear();
         }
     }
@@ -113,7 +112,7 @@ internal sealed class XInputProcessor : IInputProcessor
             var currentValue = UnLerpShort(current, deadZone);
             var lastValue = UnLerpShort(last, deadZone);
             var delta = Math.Clamp(-1, 1, currentValue - lastValue);
-            HandleGesture(GamepadAxisGesture.Create(userIndex, axis, currentValue, delta, elapsed));
+            PublishGesture(GamepadAxisGesture.Create(userIndex, axis, currentValue, delta, elapsed));
 
             static double UnLerpShort(short value, double deadZone) => 0.5 + value switch
             {
@@ -134,7 +133,7 @@ internal sealed class XInputProcessor : IInputProcessor
             var currentValue = MathUtils.UnLerp(byteDeadZone, byte.MaxValue, current);
             var lastValue = MathUtils.UnLerp(byteDeadZone, byte.MaxValue, last);
             var delta = Math.Clamp(-1, 1, currentValue - lastValue);
-            HandleGesture(GamepadAxisGesture.Create(userIndex, axis, currentValue, delta, elapsed));
+            PublishGesture(GamepadAxisGesture.Create(userIndex, axis, currentValue, delta, elapsed));
         }
 
         CreateAxisGestureShort(last.RightThumbX, current.RightThumbX, _settings.RightThumbDeadZone, GamepadAxis.RightThumbX);
@@ -147,11 +146,10 @@ internal sealed class XInputProcessor : IInputProcessor
         CreateAxisGestureByte(last.LeftTrigger, current.LeftTrigger, _settings.TriggerDeadZone, GamepadAxis.LeftTrigger);
     }
 
-    private void HandleGesture(IInputGesture gesture)
-        => OnGesture?.Invoke(this, gesture);
-
-    private void Dispose(bool disposing)
+    protected override void Dispose(bool disposing)
     {
+        base.Dispose(disposing);
+
         Vortice.XInput.XInput.SetReporting(false);
 
         _cancellationSource?.Cancel();
@@ -160,11 +158,5 @@ internal sealed class XInputProcessor : IInputProcessor
 
         _thread = null;
         _cancellationSource = null;
-    }
-
-    public void Dispose()
-    {
-        Dispose(disposing: true);
-        GC.SuppressFinalize(this);
     }
 }

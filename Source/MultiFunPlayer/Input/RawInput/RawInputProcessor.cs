@@ -20,7 +20,7 @@ internal sealed class RawInputProcessorSettings : AbstractInputProcessorSettings
     public int CombineMouseAxisEventCount { get; set; } = 10;
 }
 
-internal sealed class RawInputProcessor : IInputProcessor, IHandle<WindowCreatedMessage>
+internal sealed class RawInputProcessor : AbstractInputProcessor, IHandle<WindowCreatedMessage>
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
@@ -34,9 +34,7 @@ internal sealed class RawInputProcessor : IInputProcessor, IHandle<WindowCreated
     private double _mouseWheelAxis, _mouseHorizontalWheelAxis;
     private int _mouseLastAbsoluteX, _mouseLastAbsoluteY;
 
-    public event EventHandler<IInputGesture> OnGesture;
-
-    public RawInputProcessor(RawInputProcessorSettings settings, IEventAggregator eventAggregator)
+    public RawInputProcessor(RawInputProcessorSettings settings, IEventAggregator eventAggregator) : base(eventAggregator)
     {
         _settings = settings;
         eventAggregator.Subscribe(this);
@@ -78,12 +76,12 @@ internal sealed class RawInputProcessor : IInputProcessor, IHandle<WindowCreated
         if (pressed)
         {
             _pressedKeys.Add(key);
-            HandleGesture(KeyboardGesture.Create(_pressedKeys, true));
+            PublishGesture(KeyboardGesture.Create(_pressedKeys, true));
         }
         else
         {
             if (_pressedKeys.Count > 0)
-                HandleGesture(KeyboardGesture.Create(_pressedKeys, false));
+                PublishGesture(KeyboardGesture.Create(_pressedKeys, false));
             _pressedKeys.Clear();
         }
     }
@@ -97,17 +95,17 @@ internal sealed class RawInputProcessor : IInputProcessor, IHandle<WindowCreated
     private void ParseMouseButtonGestures(in RawMouse mouse)
     {
         var buttons = mouse.Buttons;
-        if (buttons.HasFlag(RawMouseButtonFlags.Button4Up)) HandleGesture(MouseButtonGesture.Create(MouseButton.XButton1, false));
-        else if (buttons.HasFlag(RawMouseButtonFlags.Button5Up)) HandleGesture(MouseButtonGesture.Create(MouseButton.XButton2, false));
-        else if (buttons.HasFlag(RawMouseButtonFlags.LeftButtonUp)) HandleGesture(MouseButtonGesture.Create(MouseButton.Left, false));
-        else if (buttons.HasFlag(RawMouseButtonFlags.RightButtonUp)) HandleGesture(MouseButtonGesture.Create(MouseButton.Right, false));
-        else if (buttons.HasFlag(RawMouseButtonFlags.MiddleButtonUp)) HandleGesture(MouseButtonGesture.Create(MouseButton.Middle, false));
+        if (buttons.HasFlag(RawMouseButtonFlags.Button4Up)) PublishGesture(MouseButtonGesture.Create(MouseButton.XButton1, false));
+        else if (buttons.HasFlag(RawMouseButtonFlags.Button5Up)) PublishGesture(MouseButtonGesture.Create(MouseButton.XButton2, false));
+        else if (buttons.HasFlag(RawMouseButtonFlags.LeftButtonUp)) PublishGesture(MouseButtonGesture.Create(MouseButton.Left, false));
+        else if (buttons.HasFlag(RawMouseButtonFlags.RightButtonUp)) PublishGesture(MouseButtonGesture.Create(MouseButton.Right, false));
+        else if (buttons.HasFlag(RawMouseButtonFlags.MiddleButtonUp)) PublishGesture(MouseButtonGesture.Create(MouseButton.Middle, false));
 
-        if (buttons.HasFlag(RawMouseButtonFlags.Button4Down)) HandleGesture(MouseButtonGesture.Create(MouseButton.XButton1, true));
-        else if (buttons.HasFlag(RawMouseButtonFlags.Button5Down)) HandleGesture(MouseButtonGesture.Create(MouseButton.XButton2, true));
-        else if (buttons.HasFlag(RawMouseButtonFlags.LeftButtonDown)) HandleGesture(MouseButtonGesture.Create(MouseButton.Left, true));
-        else if (buttons.HasFlag(RawMouseButtonFlags.RightButtonDown)) HandleGesture(MouseButtonGesture.Create(MouseButton.Right, true));
-        else if (buttons.HasFlag(RawMouseButtonFlags.MiddleButtonDown)) HandleGesture(MouseButtonGesture.Create(MouseButton.Middle, true));
+        if (buttons.HasFlag(RawMouseButtonFlags.Button4Down)) PublishGesture(MouseButtonGesture.Create(MouseButton.XButton1, true));
+        else if (buttons.HasFlag(RawMouseButtonFlags.Button5Down)) PublishGesture(MouseButtonGesture.Create(MouseButton.XButton2, true));
+        else if (buttons.HasFlag(RawMouseButtonFlags.LeftButtonDown)) PublishGesture(MouseButtonGesture.Create(MouseButton.Left, true));
+        else if (buttons.HasFlag(RawMouseButtonFlags.RightButtonDown)) PublishGesture(MouseButtonGesture.Create(MouseButton.Right, true));
+        else if (buttons.HasFlag(RawMouseButtonFlags.MiddleButtonDown)) PublishGesture(MouseButtonGesture.Create(MouseButton.Middle, true));
     }
 
     private void ParseMouseAxisGestures(in RawMouse mouse)
@@ -118,13 +116,13 @@ internal sealed class RawInputProcessor : IInputProcessor, IHandle<WindowCreated
             {
                 var delta = Math.Clamp((double)mouse.ButtonData / (120 * _settings.VirtualWheelHeight), -1, 1);
                 _mouseWheelAxis = MathUtils.Clamp01(_mouseWheelAxis + delta);
-                HandleGesture(MouseAxisGesture.Create(MouseAxis.MouseWheel, _mouseWheelAxis, delta, 0));
+                PublishGesture(MouseAxisGesture.Create(MouseAxis.MouseWheel, _mouseWheelAxis, delta, 0));
             }
             else if (mouse.Buttons.HasFlag(RawMouseButtonFlags.MouseHorizontalWheel))
             {
                 var delta = Math.Clamp((double)mouse.ButtonData / (120 * _settings.VirtualWheelWidth), -1, 1);
                 _mouseHorizontalWheelAxis = MathUtils.Clamp01(_mouseHorizontalWheelAxis + delta);
-                HandleGesture(MouseAxisGesture.Create(MouseAxis.MouseHorizontalWheel, _mouseHorizontalWheelAxis, delta, 0));
+                PublishGesture(MouseAxisGesture.Create(MouseAxis.MouseHorizontalWheel, _mouseHorizontalWheelAxis, delta, 0));
             }
         }
 
@@ -154,18 +152,15 @@ internal sealed class RawInputProcessor : IInputProcessor, IHandle<WindowCreated
         if (_mouseAxisEventCount++ >= _settings.CombineMouseAxisEventCount)
         {
             if (Math.Abs(_mouseDeltaX) > 0)
-                HandleGesture(MouseAxisGesture.Create(MouseAxis.X, _mouseXAxis, _mouseDeltaX, 0));
+                PublishGesture(MouseAxisGesture.Create(MouseAxis.X, _mouseXAxis, _mouseDeltaX, 0));
 
             if (Math.Abs(_mouseDeltaY) > 0)
-                HandleGesture(MouseAxisGesture.Create(MouseAxis.Y, _mouseYAxis, _mouseDeltaY, 0));
+                PublishGesture(MouseAxisGesture.Create(MouseAxis.Y, _mouseYAxis, _mouseDeltaY, 0));
 
             _mouseDeltaX = _mouseDeltaY = 0;
             _mouseAxisEventCount = 0;
         }
     }
-
-    private void HandleGesture(IInputGesture gesture)
-        => OnGesture?.Invoke(this, gesture);
 
     private void RegisterWindow(HwndSource source)
     {
@@ -183,19 +178,15 @@ internal sealed class RawInputProcessor : IInputProcessor, IHandle<WindowCreated
     public void Handle(WindowCreatedMessage message)
         => RegisterWindow(PresentationSource.FromVisual(Application.Current.MainWindow) as HwndSource);
 
-    private void Dispose(bool disposing)
+    protected override void Dispose(bool disposing)
     {
+        base.Dispose(disposing);
+
         _source?.RemoveHook(MessageSink);
 
         RawInputDevice.UnregisterDevice(HidUsageAndPage.Keyboard);
         RawInputDevice.UnregisterDevice(HidUsageAndPage.Mouse);
 
         _source = null;
-    }
-
-    public void Dispose()
-    {
-        Dispose(disposing: true);
-        GC.SuppressFinalize(this);
     }
 }

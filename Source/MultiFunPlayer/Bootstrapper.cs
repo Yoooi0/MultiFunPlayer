@@ -75,7 +75,6 @@ internal sealed class Bootstrapper : Bootstrapper<RootViewModel>
         builder.Bind<IShortcutManager>().And<IShortcutActionResolver>().To<ShortcutManager>().InSingletonScope();
         builder.Bind<IShortcutActionRunner>().To<ShortcutActionRunner>().InSingletonScope();
         builder.Bind<IShortcutFactory>().To<ShortcutFactory>().InSingletonScope();
-        builder.Bind<IInputProcessorManager>().To<InputProcessorManager>().InSingletonScope();
         builder.Bind<IPropertyManager>().To<PropertyManager>().InSingletonScope();
         builder.Bind<IMotionProviderFactory>().To<MotionProviderFactory>().InSingletonScope();
         builder.Bind<IMotionProviderManager>().To<MotionProviderManager>().InSingletonScope();
@@ -167,6 +166,9 @@ internal sealed class Bootstrapper : Bootstrapper<RootViewModel>
     protected override void Launch()
     {
         PluginCompiler.Initialize(Container);
+
+        _ = Container.Get<RawInputProcessor>();
+        _ = Container.Get<XInputProcessor>();
 
         //TODO: temporary fix due to SettingsViewModel IoC binding causing output targets
         //      to be initialized after shortcuts and clearing all output target actions

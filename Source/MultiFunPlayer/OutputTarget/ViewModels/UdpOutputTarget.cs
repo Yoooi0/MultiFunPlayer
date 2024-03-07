@@ -14,7 +14,7 @@ using System.Text;
 namespace MultiFunPlayer.OutputTarget.ViewModels;
 
 [DisplayName("UDP")]
-internal sealed class UdpOutputTarget(int instanceIndex, IEventAggregator eventAggregator, IDeviceAxisValueProvider valueProvider, IInputProcessorManager inputManager)
+internal sealed class UdpOutputTarget(int instanceIndex, IEventAggregator eventAggregator, IDeviceAxisValueProvider valueProvider, IInputProcessorFactory inputProcessorFactory)
     : ThreadAbstractOutputTarget(instanceIndex, eventAggregator, valueProvider)
 {
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
@@ -62,7 +62,7 @@ internal sealed class UdpOutputTarget(int instanceIndex, IEventAggregator eventA
         {
             EventAggregator.Publish(new SyncRequestMessage());
 
-            using var _ = inputManager.RegisterProcessor<TCodeInputProcessor>(out var tcodeInputProcessor);
+            using var tcodeInputProcessor = inputProcessorFactory.GetInputProcessor<TCodeInputProcessor>();
 
             var buffer = new byte[256];
             if (UpdateType == DeviceAxisUpdateType.FixedUpdate)

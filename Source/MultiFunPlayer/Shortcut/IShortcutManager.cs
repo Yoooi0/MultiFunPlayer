@@ -2,6 +2,7 @@ using MultiFunPlayer.Common;
 using MultiFunPlayer.Input;
 using MultiFunPlayer.Settings;
 using NLog;
+using Stylet;
 
 namespace MultiFunPlayer.Shortcut;
 
@@ -72,11 +73,10 @@ internal interface IShortcutManager : IShortcutActionResolver, IDisposable
     IShortcutActionConfiguration CreateShortcutActionConfigurationInstance(string actionName);
 }
 
-internal sealed class ShortcutManager : IShortcutManager
+internal sealed class ShortcutManager : IShortcutManager, IHandle<IInputGesture>
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-    private readonly IInputProcessorManager _inputManager;
     private readonly ObservableConcurrentCollection<string> _availableActions;
     private readonly Dictionary<string, IShortcutAction> _actions;
     private readonly Dictionary<string, IShortcutActionConfigurationBuilder> _actionConfigurationBuilders;
@@ -86,15 +86,14 @@ internal sealed class ShortcutManager : IShortcutManager
     public IReadOnlyObservableConcurrentCollection<string> AvailableActions => _availableActions;
     public IReadOnlyObservableConcurrentCollection<IShortcut> Shortcuts => _shortcuts;
 
-    public ShortcutManager(IInputProcessorManager inputManager)
+    public ShortcutManager(IEventAggregator eventAggregator)
     {
+        eventAggregator.Subscribe(this, IInputProcessor.EventAggregatorChannelName);
+
         _availableActions = [];
         _actions = [];
         _actionConfigurationBuilders = [];
         _shortcuts = [];
-
-        _inputManager = inputManager;
-        _inputManager.OnGesture += HandleGesture;
     }
 
     public IShortcutActionConfiguration BindAction(IShortcut shortcut, string actionName)
@@ -423,7 +422,7 @@ internal sealed class ShortcutManager : IShortcutManager
         return ValueTask.CompletedTask;
     }
 
-    private void HandleGesture(object sender, IInputGesture gesture)
+    public void Handle(IInputGesture gesture)
     {
         if (!HandleGestures)
             return;
@@ -434,8 +433,6 @@ internal sealed class ShortcutManager : IShortcutManager
 
     private void Dispose(bool disposing)
     {
-        _inputManager.OnGesture -= HandleGesture;
-
         foreach(var shortcut in _shortcuts)
             shortcut.Dispose();
     }
