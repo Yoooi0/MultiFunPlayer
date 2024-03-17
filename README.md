@@ -108,3 +108,18 @@ Once your video player and output are connected, scripts can be loaded in severa
 
 * [.NET 8.0 x64 Desktop Runtime](https://dotnet.microsoft.com/en-us/download/dotnet/8.0/runtime)
 * [Visual C++ 2019 x64 Redistributable](https://aka.ms/vs/17/release/vc_redist.x64.exe)
+
+# Supporters
+
+<table>
+    <tbody>
+        <tr>
+            <td style="width: 250px"><a href="https://www.aliexpress.com/store/1103361043/pages/all-items.html"><img src="Assets/logo_funosr.png"/></a></td>
+            <td style="min-width: 200px"><strong>Thank you to FUNOSR for providing me with their devices! </br> It will help ensure MultiFunPlayer behaves correctly with all device types. </br></br> If you don't have OSR2 or SR6 to use with MultiFunPlayer you can get one built for you with their custom low noise brushless servos via their <a href="https://www.aliexpress.com/store/1103361043/pages/all-items.html">shop</a>.</strong></td>
+        </tr>
+        <tr>
+            <td><a href="https://www.patreon.com/yoooi"><img src="Assets/logo_patreon.png"/></a></td>
+            <td><strong>Thank you to all 200+ patreon members who allow me to dedicate more time to MultiFunPlayer.</strong></td>
+        </tr>
+    </tbody>
+</table>
