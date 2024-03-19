@@ -303,9 +303,8 @@ internal sealed class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDispo
                 {
                     if (settings.BypassTransition)
                         return false;
-                    if (!state.ExternalTransition.Update(deltaTime))
-                        return false;
 
+                    state.ExternalTransition.Update(deltaTime);
                     context.TransitionValue = state.ExternalTransition.GetValue();
                     return context.IsTransitionDirty;
                 }
@@ -370,9 +369,8 @@ internal sealed class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDispo
                     }
 
                     if (double.IsFinite(context.TransitionValue))
-                        if (!IsPlaying && !context.InsideScript)
-                            if (!context.IsScriptDirty && !context.IsMotionProviderDirty)
-                                context.Value = context.TransitionValue;
+                        if (context.Invalid && settings.SelectedMotionProvider == null)
+                            context.Value = context.TransitionValue;
 
                     if (settings.InvertValue)
                         context.Value = 1 - context.Value;
@@ -401,7 +399,7 @@ internal sealed class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDispo
                         return false;
                     if (context.IsScriptDirty || context.IsMotionProviderDirty)
                         return false;
-                    if (context.IsTransitionDirty && !(IsPlaying || context.InsideScript))
+                    if (context.IsTransitionDirty && context.Invalid && settings.SelectedMotionProvider == null)
                         return false;
 
                     return true;
