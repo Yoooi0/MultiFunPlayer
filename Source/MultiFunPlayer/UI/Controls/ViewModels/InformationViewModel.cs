@@ -198,5 +198,5 @@ internal sealed class InformationViewModel : Screen
         }
     }
 
-    public sealed record class UpdateData(Uri Uri, Inline Label, Inline Content);
+    public sealed record UpdateData(Uri Uri, Inline Label, Inline Content);
 }

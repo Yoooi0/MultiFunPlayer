@@ -390,13 +390,13 @@ internal sealed class JellyfinMediaSource(IShortcutManager shortcutManager, IEve
         base.Dispose(disposing);
     }
 
-    internal sealed record class JellyfinDevice(string Name, string Id, string AppName, string AppVersion)
+    internal sealed record JellyfinDevice(string Name, string Id, string AppName, string AppVersion)
     {
         public bool Equals(JellyfinDevice other) => string.Equals(Id, other?.Id, StringComparison.Ordinal);
         public override int GetHashCode() => Id.GetHashCode();
     }
 
-    internal sealed record class JellyfinSession(string Id, [JsonProperty("PlayState")] PlayState State, [JsonProperty("NowPlayingItem")] PlayItem Item);
-    internal sealed record class PlayState(long PositionTicks, bool IsPaused);
-    internal sealed record class PlayItem(long RunTimeTicks, string Path);
+    internal sealed record JellyfinSession(string Id, [JsonProperty("PlayState")] PlayState State, [JsonProperty("NowPlayingItem")] PlayItem Item);
+    internal sealed record PlayState(long PositionTicks, bool IsPaused);
+    internal sealed record PlayItem(long RunTimeTicks, string Path);
 }
