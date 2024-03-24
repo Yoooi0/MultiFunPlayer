@@ -1,30 +1,34 @@
 using MultiFunPlayer.Settings.Converters;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using System.Collections.Frozen;
 using System.Collections.Immutable;
 using System.ComponentModel;
-using System.Runtime.Serialization;
 
 namespace MultiFunPlayer.Common;
 
-[JsonObject(MemberSerialization = MemberSerialization.OptIn)]
 [TypeConverter(typeof(DeviceAxisTypeConverter))]
 public sealed class DeviceAxis
 {
-    private int _id;
+    private readonly int _id;
 
-    [JsonProperty] public string Name { get; init; }
-    [JsonProperty] public double DefaultValue { get; init; }
-    [JsonProperty] public string FriendlyName { get; init; }
-    [JsonProperty] public IReadOnlyList<string> FunscriptNames { get; init; }
-    [JsonProperty] public bool LoadUnnamedScript { get; init; }
+    public string Name { get; }
+    public double DefaultValue { get; }
+    public string FriendlyName { get; }
+    public IReadOnlyList<string> FunscriptNames { get; }
+    public bool LoadUnnamedScript { get; }
 
     public override string ToString() => Name;
     public override int GetHashCode() => _id;
 
-    [OnDeserialized]
-    internal void OnDeserializedMethod(StreamingContext context) => _id = _count++;
+    private DeviceAxis(DeviceAxisSettings settings)
+    {
+        _id = _count++;
+
+        Name = settings.Name;
+        DefaultValue = settings.DefaultValue;
+        FriendlyName = settings.FriendlyName;
+        FunscriptNames = settings.FunscriptNames;
+        LoadUnnamedScript = settings.LoadUnnamedScript;
+    }
 
     private static int _count;
     private static int _outputMaximum;
@@ -52,16 +56,11 @@ public sealed class DeviceAxis
     public static bool IsValueDirty(double value, double lastValue, double epsilon)
         => Math.Abs(lastValue - value) >= epsilon || (double.IsFinite(value) ^ double.IsFinite(lastValue));
 
-    internal static void LoadSettings(JObject settings, JsonSerializer serializer)
+    internal static void InitializeFromDevice(DeviceSettings device)
     {
-        var enabledAxes = JArray.FromObject((settings["Axes"] as JArray).Where(x => x["Enabled"].ToObject<bool>()));
-        if (!enabledAxes.TryToObject<List<DeviceAxis>>(serializer, out var axes)
-         || !settings.TryGetValue<int>("OutputPrecision", serializer, out var precision))
-            throw new JsonReaderException("Unable to read device settings");
-
-        _outputMaximum = (int)(Math.Pow(10, precision) - 1);
-        _outputFormat = $"{{0:{new string('0', precision)}}}";
-        _axes = axes.ToFrozenDictionary(a => a.Name, a => a);
-        All = [.. axes];
+        _outputMaximum = (int)(Math.Pow(10, device.OutputPrecision) - 1);
+        _outputFormat = $"{{0:{new string('0', device.OutputPrecision)}}}";
+        _axes = device.Axes.Where(s => s.Enabled).ToFrozenDictionary(s => s.Name, s => new DeviceAxis(s));
+        All = _axes.Values;
     }
 }

@@ -238,14 +238,14 @@ internal sealed class Bootstrapper : Bootstrapper<RootViewModel>
         });
 
         var dirty = false;
-        var defaultDevices = JArray.FromObject(DeviceSettingsViewModel.DefaultDevices);
+        var defaultDevices = JArray.FromObject(DeviceSettings.DefaultDevices);
         if (!settings.TryGetValue("Devices", out var devicesToken) || devicesToken is not JArray devices)
         {
             settings["Devices"] = defaultDevices;
             devices = defaultDevices;
         }
 
-        var loadedDefaultDevices = devices.Children<JObject>().Where(t => t[nameof(DeviceSettingsModel.IsDefault)].ToObject<bool>()).ToList();
+        var loadedDefaultDevices = devices.Children<JObject>().Where(t => t[nameof(DeviceSettings.IsDefault)].ToObject<bool>()).ToList();
         if (!JToken.DeepEquals(new JArray(loadedDefaultDevices), defaultDevices))
         {
             logger.Info("Updating changes in default devices");
@@ -261,21 +261,21 @@ internal sealed class Bootstrapper : Bootstrapper<RootViewModel>
 
         if (!settings.TryGetValue<string>(nameof(DeviceSettingsViewModel.SelectedDevice), serializer, out var selectedDevice) || string.IsNullOrWhiteSpace(selectedDevice))
         {
-            selectedDevice = devices.Last[nameof(DeviceSettingsModel.Name)].ToString();
+            selectedDevice = devices.Last[nameof(DeviceSettings.Name)].ToString();
             settings[nameof(DeviceSettingsViewModel.SelectedDevice)] = selectedDevice;
             dirty = true;
         }
 
-        var device = devices.FirstOrDefault(d => string.Equals(d[nameof(DeviceSettingsModel.Name)].ToString(), selectedDevice, StringComparison.OrdinalIgnoreCase));
+        var device = devices.FirstOrDefault(d => string.Equals(d[nameof(DeviceSettings.Name)].ToString(), selectedDevice, StringComparison.OrdinalIgnoreCase)) as JObject;
         if (device == null)
         {
             logger.Warn("Unable to find device! [SelectedDevice: \"{0}\"]", selectedDevice);
-            device = devices.Last;
-            settings[nameof(DeviceSettingsViewModel.SelectedDevice)] = device[nameof(DeviceSettingsModel.Name)].ToString();
+            device = devices.Last as JObject;
+            settings[nameof(DeviceSettingsViewModel.SelectedDevice)] = device[nameof(DeviceSettings.Name)].ToString();
             dirty = true;
         }
 
-        DeviceAxis.LoadSettings(device as JObject, serializer);
+        DeviceAxis.InitializeFromDevice(device.ToObject<DeviceSettings>());
         return dirty;
     }
 
