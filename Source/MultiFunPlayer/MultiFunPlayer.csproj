@@ -7,7 +7,7 @@
     <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
-	<IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
+    <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
     <ApplicationIcon>..\..\Assets\icon.ico</ApplicationIcon>
     <SelfContained>false</SelfContained>
     <ImplicitUsings>true</ImplicitUsings>
@@ -16,8 +16,12 @@
     <DebugType>none</DebugType>
     <DebugSymbols>false</DebugSymbols>
   </PropertyGroup>
+    
   <ItemGroup>
     <None Include="..\..\.editorconfig" Link=".editorconfig" />
+  </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="$(AssemblyName).Tests" />
   </ItemGroup>
     
   <ItemGroup>
@@ -30,9 +34,9 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-	<PackageReference Include="GitVersion.MsBuild" Version="5.*">
-	  <PrivateAssets>All</PrivateAssets>
-	</PackageReference>
+    <PackageReference Include="GitVersion.MsBuild" Version="5.*">
+      <PrivateAssets>All</PrivateAssets>
+    </PackageReference>
     <PackageReference Include="MahApps.Metro" Version="2.4.9" />
     <PackageReference Include="MaterialDesignThemes" Version="4.7.0" />
     <PackageReference Include="MaterialDesignThemes.MahApps" Version="0.2.6" />

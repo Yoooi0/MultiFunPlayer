@@ -103,6 +103,8 @@ jobs:
       uses: gittools/actions/gitversion/execute@v0.11
     - name: Install dependencies
       run: dotnet restore
+    - name: Test ${{ matrix.build_type }}
+      run: dotnet test --configuration ${{ matrix.build_type }}
     - name: Build ${{ matrix.build_type }}
       run: dotnet publish --configuration ${{ matrix.build_type }}
     - name: Upload ${{ matrix.build_type }} artifact

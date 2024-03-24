@@ -29,6 +29,8 @@ jobs:
       uses: gittools/actions/gitversion/execute@v0.11
     - name: Install Dependencies
       run: dotnet restore
+    - name: Test
+      run: dotnet test --configuration Release
     - name: Build Framework Dependent
       run: dotnet publish --self-contained false --configuration Release --property:PublishDir=.\bin\Release\win-x64\publish\framework-dependent
     - name: Build Self Contained
