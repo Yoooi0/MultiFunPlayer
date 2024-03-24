@@ -1,5 +1,4 @@
-﻿using MultiFunPlayer.UI.Controls.ViewModels;
-using System.Collections.Immutable;
+﻿using System.Collections.Immutable;
 using System.IO;
 
 namespace MultiFunPlayer.Common;
@@ -11,7 +10,7 @@ public static class DeviceAxisUtils
     {
         get
         {
-            _funscriptExtensions ??= DeviceSettingsViewModel.DefaultDevices
+            _funscriptExtensions ??= DeviceSettings.DefaultDevices
                                         .SelectMany(d => d.Axes)
                                         .SelectMany(a => a.FunscriptNames)
                                         .Union(DeviceAxis.All.SelectMany(d => d.FunscriptNames))
