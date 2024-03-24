@@ -37,8 +37,10 @@ internal sealed class MediaResourceInfoBuilder(string originalPath)
             if (!Uri.TryCreate(path, UriKind.RelativeOrAbsolute, out var uri))
                 return false;
 
-            if (!uri.IsAbsoluteUri || uri.IsFile)
+            if (!uri.IsAbsoluteUri)
                 return false;
+            if (uri.IsFile)
+                return TryParsePath(uri.LocalPath, out result);
 
             var name = Path.GetFileName(uri.LocalPath);
             if (string.IsNullOrWhiteSpace(name))

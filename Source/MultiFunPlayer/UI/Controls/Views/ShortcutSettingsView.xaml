@@ -480,34 +480,6 @@
                                Height="35"
                                IsEnabled="{Binding SelectedShortcutType, Converter={StaticResource InvertedNullableToBooleanConverter}}"
                                LastChildFill="True">
-                        <material:PopupBox DockPanel.Dock="Right"
-                                           Style="{StaticResource MaterialDesignToolBarPopupBox}"
-                                           Width="32"
-                                           Height="32"
-                                           VerticalAlignment="Center"
-                                           PlacementMode="BottomAndAlignRightEdges"
-                                           StaysOpen="True"
-                                           ToolTip="Filter">
-                            <material:PopupBox.ToggleContent>
-                                <material:PackIcon Width="24"
-                                                   Height="24"
-                                                   Kind="FormatListBulleted"/>
-                            </material:PopupBox.ToggleContent>
-                            <Grid Width="150" Margin="10">
-                                <StackPanel>
-                                    <StackPanel>
-                                        <CheckBox Content="Keyboard keys" IsChecked="{Binding IsKeyboardKeysGestureEnabled}"/>
-                                        <CheckBox Content="Mouse axis" IsChecked="{Binding IsMouseAxisGestureEnabled}"/>
-                                        <CheckBox Content="Mouse button" IsChecked="{Binding IsMouseButtonGestureEnabled}"/>
-                                        <CheckBox Content="Gamepad axis" IsChecked="{Binding IsGamepadAxisGestureEnabled}"/>
-                                        <CheckBox Content="Gamepad button" IsChecked="{Binding IsGamepadButtonGestureEnabled}"/>
-                                        <CheckBox Content="TCode axis" IsChecked="{Binding IsTCodeAxisGestureEnabled}"/>
-                                        <CheckBox Content="TCode button" IsChecked="{Binding IsTCodeButtonGestureEnabled}"/>
-                                    </StackPanel>
-                                </StackPanel>
-                            </Grid>
-                        </material:PopupBox>
-
                         <Button DockPanel.Dock="Right"
                                 Style="{StaticResource MaterialDesignFlatButton}"
                                 Width="32"

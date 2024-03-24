@@ -54,7 +54,7 @@ internal sealed class LocalScriptRepository(IEventAggregator eventAggregator) : 
             var sourceDirectory = new DirectoryInfo(mediaSource);
             TryMatchArchive(Path.Join(sourceDirectory.FullName, $"{mediaWithoutExtension}.zip"));
 
-            foreach (var funscriptFile in sourceDirectory.EnumerateFiles($"{mediaWithoutExtension}.*funscript"))
+            foreach (var funscriptFile in sourceDirectory.EnumerateFiles($"{mediaWithoutExtension}.*funscript").OrderBy(i => i.FullName))
                 TryMatchName(funscriptFile.Name, FunscriptReader.Default.FromFileInfo(funscriptFile));
         }
 
@@ -151,5 +151,5 @@ internal sealed class ScriptLibrary(DirectoryInfo directory) : PropertyChangedBa
     [JsonProperty] public DirectoryInfo Directory { get; } = directory;
     [JsonProperty] public bool Recursive { get; set; }
 
-    public IEnumerable<FileInfo> EnumerateFiles(string searchPattern) => Directory.SafeEnumerateFiles(searchPattern, IOUtils.CreateEnumerationOptions(Recursive));
+    public IEnumerable<FileInfo> EnumerateFiles(string searchPattern) => Directory.SafeEnumerateFiles(searchPattern, IOUtils.CreateEnumerationOptions(Recursive)).OrderBy(i => i.FullName);
 }

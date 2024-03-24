@@ -393,13 +393,13 @@ internal sealed class EmbyMediaSource(IShortcutManager shortcutManager, IEventAg
         base.Dispose(disposing);
     }
 
-    internal sealed record class EmbyDevice(string Name, [JsonProperty("ReportedDeviceId")] string Id, string AppName, string AppVersion)
+    internal sealed record EmbyDevice(string Name, [JsonProperty("ReportedDeviceId")] string Id, string AppName, string AppVersion)
     {
         public bool Equals(EmbyDevice other) => string.Equals(Id, other?.Id, StringComparison.Ordinal);
         public override int GetHashCode() => Id.GetHashCode();
     }
 
-    internal sealed record class EmbySession(string Id, [JsonProperty("PlayState")] PlayState State, [JsonProperty("NowPlayingItem")] PlayItem Item);
-    internal sealed record class PlayState(long PositionTicks, bool IsPaused, double PlaybackRate);
-    internal sealed record class PlayItem(long RunTimeTicks, string Path);
+    internal sealed record EmbySession(string Id, [JsonProperty("PlayState")] PlayState State, [JsonProperty("NowPlayingItem")] PlayItem Item);
+    internal sealed record PlayState(long PositionTicks, bool IsPaused, double PlaybackRate);
+    internal sealed record PlayItem(long RunTimeTicks, string Path);
 }

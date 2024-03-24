@@ -3,7 +3,6 @@ using MultiFunPlayer.Input;
 using Newtonsoft.Json;
 using PropertyChanged;
 using System.Collections.Concurrent;
-using System.ComponentModel;
 
 namespace MultiFunPlayer.Shortcut;
 
