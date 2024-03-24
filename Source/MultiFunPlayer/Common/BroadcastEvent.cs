@@ -42,7 +42,7 @@ internal sealed class BroadcastEvent<T> where T : class
     public async ValueTask<(bool Success, T Value)> WaitOneAsync(object context, CancellationToken cancellationToken)
     {
         var waitHandle = _waitHandles[context];
-        if (waitHandle.WaitOne(0))
+        if (waitHandle.WaitOne(0, cancellationToken))
             return (true, CleanupAndGetValue(context));
 
         if (!await GetWaitHandleTask(context, cancellationToken))
