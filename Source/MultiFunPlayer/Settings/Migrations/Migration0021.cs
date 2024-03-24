@@ -5,7 +5,7 @@ namespace MultiFunPlayer.Settings.Migrations;
 
 internal sealed class Migration0021 : AbstractConfigMigration
 {
-    private readonly Logger Logger = LogManager.GetCurrentClassLogger();
+    protected override Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
     private readonly Dictionary<string, string> _replaceMap = new()
     {
