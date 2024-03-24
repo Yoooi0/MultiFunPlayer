@@ -11,7 +11,6 @@ using System.Net.Sockets;
 using System.Net.WebSockets;
 using System.Runtime.CompilerServices;
 using System.Runtime.ExceptionServices;
-using System.Threading;
 
 namespace MultiFunPlayer.Common;
 

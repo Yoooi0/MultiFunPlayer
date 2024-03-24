@@ -1,8 +1,5 @@
 using MultiFunPlayer.Common;
 using MultiFunPlayer.Input;
-using MultiFunPlayer.Input.RawInput;
-using MultiFunPlayer.Input.TCode;
-using MultiFunPlayer.Input.XInput;
 using MultiFunPlayer.Shortcut;
 using MultiFunPlayer.UI.Dialogs.ViewModels;
 using Newtonsoft.Json;
