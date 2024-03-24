@@ -41,14 +41,6 @@ internal sealed class ShortcutSettingsViewModel : Screen, IHandle<SettingsMessag
     public IReadOnlyCollection<Type> ShortcutTypes { get; }
     public Type SelectedShortcutType { get; set; }
 
-    [JsonProperty] public bool IsKeyboardKeysGestureEnabled { get; set; } = true;
-    [JsonProperty] public bool IsMouseAxisGestureEnabled { get; set; } = true;
-    [JsonProperty] public bool IsMouseButtonGestureEnabled { get; set; } = true;
-    [JsonProperty] public bool IsGamepadAxisGestureEnabled { get; set; } = true;
-    [JsonProperty] public bool IsGamepadButtonGestureEnabled { get; set; } = true;
-    [JsonProperty] public bool IsTCodeButtonGestureEnabled { get; set; } = true;
-    [JsonProperty] public bool IsTCodeAxisGestureEnabled { get; set; } = true;
-
     public ShortcutSettingsViewModel(IShortcutManager shortcutManager, IShortcutFactory shortcutFactory, IEventAggregator eventAggregator)
     {
         DisplayName = "Shortcut";
@@ -103,22 +95,8 @@ internal sealed class ShortcutSettingsViewModel : Screen, IHandle<SettingsMessag
 
     public void Handle(IInputGesture gesture)
     {
-        if (!IsCapturingGestures)
-            return;
-
-        switch (gesture)
-        {
-            case KeyboardGesture when !IsKeyboardKeysGestureEnabled:
-            case MouseAxisGesture when !IsMouseAxisGestureEnabled:
-            case MouseButtonGesture when !IsMouseButtonGestureEnabled:
-            case GamepadAxisGesture when !IsGamepadAxisGestureEnabled:
-            case GamepadButtonGesture when !IsGamepadButtonGestureEnabled:
-            case TCodeButtonGesture when !IsTCodeButtonGestureEnabled:
-            case TCodeAxisGesture when !IsTCodeAxisGestureEnabled:
-                return;
-        }
-
-        _gestureChannel.Writer.TryWrite(gesture);
+        if (IsCapturingGestures)
+            _gestureChannel.Writer.TryWrite(gesture);
     }
 
     public async void CaptureGestures(object sender, RoutedEventArgs e)
@@ -127,12 +105,6 @@ internal sealed class ShortcutSettingsViewModel : Screen, IHandle<SettingsMessag
             return;
 
         if (SelectedShortcutType == null)
-            return;
-
-        if (!IsKeyboardKeysGestureEnabled && !IsMouseAxisGestureEnabled
-        && !IsMouseButtonGestureEnabled && !IsGamepadAxisGestureEnabled
-        && !IsGamepadButtonGestureEnabled && !IsTCodeButtonGestureEnabled
-        && !IsTCodeAxisGestureEnabled)
             return;
 
         using var captureCancellationSource = new CancellationTokenSource(2000);
@@ -258,19 +230,6 @@ internal sealed class ShortcutSettingsViewModel : Screen, IHandle<SettingsMessag
         {
             if (!message.Settings.TryGetObject(out var settings, "Shortcut"))
                 return;
-
-            if (settings.TryGetValue<bool>(nameof(IsKeyboardKeysGestureEnabled), out var isKeyboardKeysGestureEnabled))
-                IsKeyboardKeysGestureEnabled = isKeyboardKeysGestureEnabled;
-            if (settings.TryGetValue<bool>(nameof(IsMouseAxisGestureEnabled), out var isMouseAxisGestureEnabled))
-                IsMouseAxisGestureEnabled = isMouseAxisGestureEnabled;
-            if (settings.TryGetValue<bool>(nameof(IsMouseButtonGestureEnabled), out var isMouseButtonGestureEnabled))
-                IsMouseButtonGestureEnabled = isMouseButtonGestureEnabled;
-            if (settings.TryGetValue<bool>(nameof(IsGamepadAxisGestureEnabled), out var isGamepadAxisGestureEnabled))
-                IsGamepadAxisGestureEnabled = isGamepadAxisGestureEnabled;
-            if (settings.TryGetValue<bool>(nameof(IsGamepadButtonGestureEnabled), out var isGamepadButtonGestureEnabled))
-                IsGamepadButtonGestureEnabled = isGamepadButtonGestureEnabled;
-            if (settings.TryGetValue<bool>(nameof(IsTCodeButtonGestureEnabled), out var isTCodeButtonGestureEnabled))
-                IsTCodeButtonGestureEnabled = isTCodeButtonGestureEnabled;
 
             if (settings.TryGetValue<List<IShortcut>>(nameof(Shortcuts), new JsonSerializerSettings() { TypeNameHandling = TypeNameHandling.Objects }, out var shortcuts))
             {
