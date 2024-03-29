@@ -30,27 +30,8 @@ internal sealed class Migration0024 : AbstractConfigMigration
             ["$.Script.Repositories.XBVR.Endpoint"] = "ServerBaseUri",
         };
 
-        foreach(var (path, newName) in migrations)
-        {
-            if (settings.SelectToken(path) is not JValue token)
-                continue;
-            if (token.Parent is not JProperty property)
-                continue;
-            if (property.Parent is not JObject parent)
-                continue;
-
-            if (!NetUtils.TryParseEndpoint(token.Value<string>(), out var endpoint))
-                continue;
-
-            var oldValue = endpoint.ToUriString();
-            var newValue = $"http://{oldValue}";
-            property.Value = newValue;
-            Logger.Info("Changed \"{0}\" value from \"{1}\" to \"{2}\"", path, oldValue, newValue);
-
-            var oldName = property.Name;
-            parent.RenameProperty(oldName, newName);
-            Logger.Info("Renamed \"{0}\" property from \"{1}\" to \"{2}\"", path, oldName, newName);
-        }
+        EditPropertiesByPaths(settings, migrations.Keys, v => NetUtils.TryParseEndpoint(v.ToString(), out var endpoint) ? $"http://{endpoint.ToUriString()}" : null);
+        RenamePropertiesByPaths(settings, migrations, selectMultiple: false);
     }
 
     private void MigrateEndpointActionConfigurations(JObject settings)

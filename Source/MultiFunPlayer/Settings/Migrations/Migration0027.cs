@@ -2,6 +2,7 @@
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NLog;
+using System.Diagnostics;
 
 namespace MultiFunPlayer.Settings.Migrations;
 
@@ -11,11 +12,7 @@ internal sealed class Migration0027 : AbstractConfigMigration
 
     public override void Migrate(JObject settings)
     {
-        if (settings.ContainsKey("Shortcuts"))
-        {
-            Logger.Info("Renamed \"Shortcuts\" to \"Shortcut\"");
-            settings.RenameProperty("Shortcuts", "Shortcut");
-        }
+        RenamePropertyByName(settings, "Shortcuts", "Shortcut");
 
         if (settings.TryGetObject(out var shortcutSettings, "Shortcut"))
             MigrateShortcuts(shortcutSettings);
@@ -25,84 +22,61 @@ internal sealed class Migration0027 : AbstractConfigMigration
 
     private void MigrateShortcuts(JObject settings)
     {
-        if (settings.ContainsKey("Bindings"))
-        {
-            settings.RenameProperty("Bindings", "Shortcuts");
-            Logger.Info("Renamed \"Shortcut.Bindings\" to \"Shortcut.Shortcuts\"");
-        }
+        RenamePropertyByPath(settings, "$.Shortcut.Bindings", "Shortcuts");
 
-        var gestureToShortcutMap = new Dictionary<string, string>()
+        foreach (var shortcut in SelectObjects(settings, "$.Shortcut.Shortcuts"))
         {
-            ["MultiFunPlayer.Input.RawInput.KeyboardGestureDescriptor, MultiFunPlayer"] =    "MultiFunPlayer.Shortcut.ButtonReleaseShortcut, MultiFunPlayer",
-            ["MultiFunPlayer.Input.RawInput.MouseButtonGestureDescriptor, MultiFunPlayer"] = "MultiFunPlayer.Shortcut.ButtonReleaseShortcut, MultiFunPlayer",
-            ["MultiFunPlayer.Input.RawInput.MouseAxisGestureDescriptor, MultiFunPlayer"] =   "MultiFunPlayer.Shortcut.AxisDriveShortcut, MultiFunPlayer",
-            ["MultiFunPlayer.Input.TCode.TCodeButtonGestureDescriptor, MultiFunPlayer"] =    "MultiFunPlayer.Shortcut.ButtonReleaseShortcut, MultiFunPlayer",
-            ["MultiFunPlayer.Input.TCode.TCodeAxisGestureDescriptor, MultiFunPlayer"] =      "MultiFunPlayer.Shortcut.AxisDriveShortcut, MultiFunPlayer",
-            ["MultiFunPlayer.Input.XInput.GamepadButtonGestureDescriptor, MultiFunPlayer"] = "MultiFunPlayer.Shortcut.ButtonReleaseShortcut, MultiFunPlayer",
-            ["MultiFunPlayer.Input.XInput.GamepadAxisGestureDescriptor, MultiFunPlayer"] =   "MultiFunPlayer.Shortcut.AxisDriveShortcut, MultiFunPlayer",
-        };
-
-        foreach(var shortcut in settings["Shortcuts"].OfType<JObject>())
-        {
-            if (!shortcut.ContainsKey("Gesture"))
+            if (!TryGetValue<JObject>(shortcut, "Gesture", out var gesture))
                 continue;
-            if (shortcut["Gesture"] is not JObject gesture || !gesture.ContainsKey("$type"))
+            if (!TryGetValue<JValue>(gesture, "$type", out var gestureType))
                 continue;
 
-            var gestureType = gesture["$type"].ToString();
-            var shortcutType = gestureToShortcutMap[gestureType];
-
-            shortcut.Add("$type", shortcutType);
-            Logger.Info($"Marked \"{gestureType}\" binding as \"{shortcutType}\" shortcut");
+            AddPropertyByName(shortcut, "$type", gestureType.ToString() switch
+            {
+                "MultiFunPlayer.Input.RawInput.KeyboardGestureDescriptor, MultiFunPlayer" => "MultiFunPlayer.Shortcut.ButtonReleaseShortcut, MultiFunPlayer",
+                "MultiFunPlayer.Input.RawInput.MouseButtonGestureDescriptor, MultiFunPlayer" => "MultiFunPlayer.Shortcut.ButtonReleaseShortcut, MultiFunPlayer",
+                "MultiFunPlayer.Input.RawInput.MouseAxisGestureDescriptor, MultiFunPlayer" => "MultiFunPlayer.Shortcut.AxisDriveShortcut, MultiFunPlayer",
+                "MultiFunPlayer.Input.TCode.TCodeButtonGestureDescriptor, MultiFunPlayer" => "MultiFunPlayer.Shortcut.ButtonReleaseShortcut, MultiFunPlayer",
+                "MultiFunPlayer.Input.TCode.TCodeAxisGestureDescriptor, MultiFunPlayer" => "MultiFunPlayer.Shortcut.AxisDriveShortcut, MultiFunPlayer",
+                "MultiFunPlayer.Input.XInput.GamepadButtonGestureDescriptor, MultiFunPlayer" => "MultiFunPlayer.Shortcut.ButtonReleaseShortcut, MultiFunPlayer",
+                "MultiFunPlayer.Input.XInput.GamepadAxisGestureDescriptor, MultiFunPlayer" => "MultiFunPlayer.Shortcut.AxisDriveShortcut, MultiFunPlayer",
+                _ => throw new UnreachableException()
+            });
         }
 
         var migratedCounter = 0;
-        foreach(var action in settings.SelectTokens("$.Shortcuts[*].Actions[?(@.Name =~ /Shortcut::Enabled::.*/i)]").OfType<JObject>())
+        foreach (var action in SelectObjects(settings, "$.Shortcuts[*].Actions[?(@.Name =~ /Shortcut::Enabled::.*/i)]"))
         {
-            if (!action.ContainsKey("Settings"))
-                continue;
-            if (action["Settings"].First is not JObject gestureSetting)
+            if (!TrySelectObject(action, "$.Settings[0]", out var gesture))
                 continue;
 
-            var gestureSettingJson = gestureSetting.ToString(Formatting.None);
-            var matchedShortcut = FindShortcutByGestureJson(gestureSettingJson);
+            var matchedShortcut = FindShortcutByGestureJson(gesture.ToString(Formatting.None));
             if (matchedShortcut == null)
             {
-                Logger.Warn($"Unable to find matching shortcut for \"{action["Name"]}\" action!");
+                //TODO: remove??
+                Logger.Warn($"Unable to find matching shortcut for \"{action["Name"]}\" action");
                 continue;
             }
 
             if (!matchedShortcut.ContainsKey("Name"))
+                AddPropertyByName(matchedShortcut, "Name", $"migrated{migratedCounter++}");
+
+            RemoveAllProperties(gesture);
+            AddPropertiesByName(gesture, new Dictionary<string, JToken>()
             {
-                var newName = $"migrated{migratedCounter++}";
-                matchedShortcut.Add("Name", newName);
-                Logger.Info($"Naming matched shortcut to \"{newName}\"");
-            }
-
-            var shortcutName = matchedShortcut["Name"];
-            Logger.Info($"Matched \"{action["Name"]}\" action to \"{shortcutName}\" shortcut");
-
-            gestureSetting["$type"] = "System.String, System.Private.CoreLib";
-            gestureSetting["Value"] = shortcutName;
-
-            foreach (var property in gestureSetting.Properties().ToList())
-            {
-                if (property.Name != "$type" && property.Name != "Value")
-                {
-                    property.Remove();
-                    Logger.Info($"Removed unused property \"{property.Name}\" from action setting");
-                }
-            }
+                ["$type"] = "System.String, System.Private.CoreLib",
+                ["Value"] = matchedShortcut["Name"].ToString()
+            });
         }
 
         JObject FindShortcutByGestureJson(string findGestureJson)
         {
-            foreach (var shortcut in settings["Shortcuts"].OfType<JObject>())
+            foreach (var shortcut in SelectObjects(settings, "$.Shortcuts[*]"))
             {
-                if (!shortcut.ContainsKey("Gesture"))
+                if (TryGetValue<JObject>(shortcut, "Gesture", out var gesture))
                     continue;
 
-                var gestureJson = shortcut["Gesture"].ToString(Formatting.None);
+                var gestureJson = gesture.ToString(Formatting.None);
                 if (string.Equals(findGestureJson, gestureJson, StringComparison.Ordinal))
                     return shortcut;
             }

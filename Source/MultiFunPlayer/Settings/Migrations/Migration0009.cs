@@ -1,5 +1,4 @@
 ﻿using MultiFunPlayer.Common;
-using MultiFunPlayer.UI.Controls.ViewModels;
 using Newtonsoft.Json.Linq;
 using NLog;
 
@@ -11,32 +10,22 @@ internal sealed class Migration0009 : AbstractConfigMigration
 
     public override void Migrate(JObject settings)
     {
-        if (!settings.TryGetValue("Devices", out var _))
-            MigrateDevices(settings);
-
-        base.Migrate(settings);
-    }
-
-    private void MigrateDevices(JObject settings)
-    {
-        Logger.Info("Migrating Devices");
-
         var devices = DeviceSettings.DefaultDevices.ToList();
-        if (!settings.TryGetValue<string>("SelectedDevice", out var selectedDevice) || string.IsNullOrWhiteSpace(selectedDevice))
+        if (!TryGetValue<JToken>(settings, "SelectedDevice", out var selectedDevice) || string.IsNullOrWhiteSpace(selectedDevice.ToObject<string>()))
             selectedDevice = devices[^1].Name;
 
-        var device = devices.Find(d => string.Equals(d.Name, selectedDevice, StringComparison.OrdinalIgnoreCase)) ?? devices[^1];
+        SetPropertyByName(settings, "SelectedDevice", selectedDevice, addIfMissing: true);
+
+        var device = devices.Find(d => string.Equals(d.Name, selectedDevice.ToObject<string>(), StringComparison.OrdinalIgnoreCase)) ?? devices[^1];
         var migratedName = $"{device.Name} (migrated)";
         var migratedDevice = device.Clone(migratedName);
 
         foreach (var axis in migratedDevice.Axes)
             axis.Enabled = true;
 
-        Logger.Info("Created device \"{0}\"", migratedName);
         devices.Add(migratedDevice);
-        selectedDevice = migratedName;
+        SetPropertyByName(settings, "Devices", JArray.FromObject(devices), addIfMissing: true);
 
-        settings["Devices"] = JArray.FromObject(devices);
-        settings["SelectedDevice"] = selectedDevice;
+        base.Migrate(settings);
     }
 }

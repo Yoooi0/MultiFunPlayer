@@ -107,20 +107,6 @@ public static class JsonExtensions
             return Type.GetType(valueTypeName);
         return Type.GetType($"{valueTypeName}, {assemblyName}");
     }
-
-    public static bool RenameProperty(this JObject o, string oldName, string newName)
-    {
-        if (string.Equals(oldName, newName))
-            return true;
-
-        if (!o.ContainsKey(oldName))
-            return false;
-
-        var p = o.Property(oldName);
-        p.Replace(new JProperty(newName, p.Value));
-
-        return true;
-    }
 }
 
 public static class TaskExtensions

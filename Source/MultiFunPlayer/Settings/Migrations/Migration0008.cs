@@ -1,5 +1,4 @@
-﻿using MultiFunPlayer.Common;
-using Newtonsoft.Json.Linq;
+﻿using Newtonsoft.Json.Linq;
 using NLog;
 
 namespace MultiFunPlayer.Settings.Migrations;
@@ -10,30 +9,10 @@ internal sealed class Migration0008 : AbstractConfigMigration
 
     public override void Migrate(JObject settings)
     {
-        if (settings.TryGetObject(out var logBlacklistSettings, "LogBlacklist"))
-            MigrateLogBlacklist(logBlacklistSettings);
+        RenamePropertyByPath(settings,
+            "$.LogBlacklist.[MultiFunPlayer.UI.Controls.ViewModels.ShortcutViewModel]",
+            "MultiFunPlayer.UI.Controls.ViewModels.ShortcutSettingsViewModel");
 
         base.Migrate(settings);
-    }
-
-    private void MigrateLogBlacklist(JObject settings)
-    {
-        Logger.Info("Migrating LogBlacklist");
-        var filterMap = new Dictionary<string, string>()
-        {
-            ["MultiFunPlayer.UI.Controls.ViewModels.ShortcutViewModel"] = "MultiFunPlayer.UI.Controls.ViewModels.ShortcutSettingsViewModel"
-        };
-
-        foreach (var (from, to) in filterMap)
-        {
-            if (!settings.ContainsKey(from))
-                continue;
-
-            var value = settings[from];
-            settings.Remove(from);
-            settings.Add(to, value);
-
-            Logger.Info("Migrated from \"{0}\" to \"{1}\"", from, to);
-        }
     }
 }

@@ -1,5 +1,4 @@
-﻿using MultiFunPlayer.Common;
-using Newtonsoft.Json.Linq;
+﻿using Newtonsoft.Json.Linq;
 using NLog;
 
 namespace MultiFunPlayer.Settings.Migrations;
@@ -10,20 +9,8 @@ internal sealed class Migration0013 : AbstractConfigMigration
 
     public override void Migrate(JObject settings)
     {
-        if (settings.TryGetValue("Devices", out var devicesToken) && devicesToken is JArray deviceSettings)
-            MigrateDeviceDefaultProperty(deviceSettings);
+        RenamePropertiesByPath(settings, "$.Devices[*].Default", "IsDefault");
 
         base.Migrate(settings);
-    }
-
-    private void MigrateDeviceDefaultProperty(JArray deviceSettings)
-    {
-        Logger.Info("Migrating devices");
-
-        foreach (var device in deviceSettings.OfType<JObject>())
-        {
-            device.RenameProperty("Default", "IsDefault");
-            Logger.Info("Migrated property from \"Default\" to \"IsDefault\"");
-        }
     }
 }

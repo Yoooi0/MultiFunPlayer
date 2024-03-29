@@ -1,6 +1,6 @@
-﻿using MultiFunPlayer.Common;
-using Newtonsoft.Json.Linq;
+﻿using Newtonsoft.Json.Linq;
 using NLog;
+using System.Text.RegularExpressions;
 
 namespace MultiFunPlayer.Settings.Migrations;
 
@@ -10,38 +10,11 @@ internal sealed class Migration0018 : AbstractConfigMigration
 
     public override void Migrate(JObject settings)
     {
-        MigrateInvertScriptAxisSettings(settings);
+        RenamePropertiesByPath(settings, "$.Script.AxisSettings.*.InvertScript", "InvertValue");
 
-        if (settings.TryGetObject(out var shortcutSettings, "Shortcuts"))
-            MigrateBypassActions(shortcutSettings);
+        EditPropertiesByPath(settings, "$.Shortcuts.Bindings[*].Actions[?(@.Descriptor =~ /Axis::InvertScript::.*/i)].Descriptor",
+            v => Regex.Replace(v.ToString(), "^Axis::InvertScript::", "Axis::InvertValue::"));
 
         base.Migrate(settings);
-    }
-
-    private void MigrateInvertScriptAxisSettings(JObject settings)
-    {
-        Logger.Info("Migrating invert settings");
-
-        foreach (var axisSettings in settings.SelectTokens("$.Script.AxisSettings.*").OfType<JObject>())
-        {
-            if (!axisSettings.TryGetValue<bool>("InvertScript", out var invert))
-                continue;
-
-            axisSettings.RenameProperty("InvertScript", "InvertValue");
-            Logger.Info($"Migrated \"InvertScript={invert}\" to \"InvertValue={invert}\"");
-        }
-    }
-
-    private void MigrateBypassActions(JObject settings)
-    {
-        Logger.Info("Migrating invert actions");
-        foreach (var action in settings.SelectTokens("$.Bindings[*].Actions[?(@.Descriptor =~ /Axis::InvertScript/i)]").OfType<JObject>())
-        {
-            var oldDescriptor = action["Descriptor"].ToString();
-            var newDescriptor = oldDescriptor.Replace("Axis::InvertScript", "Axis::InvertValue");
-
-            action["Descriptor"] = newDescriptor;
-            Logger.Info("Migrated action descriptor from \"{0}\" to \"{1}\"", oldDescriptor, newDescriptor);
-        }
     }
 }

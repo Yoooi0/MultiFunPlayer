@@ -1,5 +1,4 @@
-﻿using MultiFunPlayer.Common;
-using Newtonsoft.Json.Linq;
+﻿using Newtonsoft.Json.Linq;
 using NLog;
 
 namespace MultiFunPlayer.Settings.Migrations;
@@ -10,19 +9,8 @@ internal sealed class Migration0026 : AbstractConfigMigration
 
     public override void Migrate(JObject settings)
     {
-        if (settings.TryGetObject(out var scriptSettings, "Script"))
-            MigrateHeatmapShowStrokeLength(scriptSettings);
+        RenamePropertyByName(settings, "$.Script.HeatmapShowStrokeLength", "HeatmapShowRange");
 
         base.Migrate(settings);
-    }
-
-    private void MigrateHeatmapShowStrokeLength(JObject settings)
-    {
-        Logger.Info("Migrating HeatmapShowStrokeLength property");
-        if (!settings.ContainsKey("HeatmapShowStrokeLength"))
-            return;
-
-        settings.RenameProperty("HeatmapShowStrokeLength", "HeatmapShowRange");
-        Logger.Info("Renamed property from \"HeatmapShowStrokeLength\" to \"HeatmapShowRange\"");
     }
 }

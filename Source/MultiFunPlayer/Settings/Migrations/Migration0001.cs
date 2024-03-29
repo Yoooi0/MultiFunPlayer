@@ -1,5 +1,4 @@
 ﻿using Microsoft.Win32;
-using MultiFunPlayer.Common;
 using Newtonsoft.Json.Linq;
 using NLog;
 using System.Management;
@@ -13,11 +12,22 @@ internal sealed class Migration0001 : AbstractConfigMigration
 
     public override void Migrate(JObject settings)
     {
-        if (settings.TryGetObject(out var serialSettings, "OutputTarget", "Serial"))
-            MigrateSerialOutputTargetSelectedComPort(serialSettings);
+        if (TrySelectObject(settings, "$.OutputTarget.Serial", out var serial)
+         && TrySelectProperty(serial, "SelectedComPort", out var selectedComPort))
+        {
+            var deviceId = GetComPortDeviceId(selectedComPort.Value.ToObject<string>());
+            AddPropertyByName(serial, "SelectedSerialPort", deviceId);
+            RemoveProperty(selectedComPort);
+        }
 
-        if (settings.TryGetObject(out var shortcutSettings, "Shortcuts"))
-            MigrateSerialComPortSetAction(shortcutSettings);
+        foreach (var action in SelectObjects(settings, "$.Shortcuts.Bindings[*].Actions[?(@.Descriptor =~ /Serial::ComPort::Set.*/i)]"))
+        {
+            EditPropertiesByPaths(action, new Dictionary<string, Func<JToken, JToken>>()
+            {
+                ["$.Descriptor"] = _ => "Serial::SerialPort::Set",
+                ["$.Settings[0].Value"] = v => GetComPortDeviceId(v.ToObject<string>())
+            });
+        }
 
         base.Migrate(settings);
     }
@@ -45,69 +55,7 @@ internal sealed class Migration0001 : AbstractConfigMigration
 
         try { return serialPort?.GetPropertyValue("DeviceID") as string; } catch { }
 
+        Logger.Warn("Could not find DeviceID for \"{0}\"", comPort);
         return null;
-    }
-
-    private void MigrateSerialOutputTargetSelectedComPort(JObject settings)
-    {
-        Logger.Info("Migrating SerialOutputTarget SelectedComPort");
-        if (settings.TryGetValue<string>("SelectedComPort", out var selectedComPort))
-        {
-            var deviceId = GetComPortDeviceId(selectedComPort);
-            if (deviceId != null)
-            {
-                settings["SelectedSerialPort"] = deviceId;
-                Logger.Info("Migrated SelectedComPort from \"{0}\" to \"{1}\"", selectedComPort, settings["SelectedSerialPort"]);
-            }
-            else
-            {
-                Logger.Warn("Could not find DeviceID for \"{0}\"", selectedComPort);
-            }
-        }
-
-        settings.Remove("SelectedComPort");
-        Logger.Info("Removed \"SelectedComPort\"");
-    }
-
-    private void MigrateSerialComPortSetAction(JObject settings)
-    {
-        if (!settings.TryGetValue("Bindings", out var bindingsToken))
-            return;
-
-        Logger.Info("Migrating \"Serial::ComPort::Set\" action");
-        foreach (var binding in bindingsToken.OfType<JObject>())
-        {
-            if (!binding.TryGetValue("Actions", out var actionsToken))
-                continue;
-
-            foreach (var action in actionsToken.OfType<JObject>())
-            {
-                if (!action.ContainsKey("Descriptor") || !string.Equals(action["Descriptor"].ToString(), "Serial::ComPort::Set"))
-                    continue;
-
-                if (!action.TryGetValue("Settings", out var settingsToken))
-                    continue;
-
-                if (settingsToken.FirstOrDefault() is not JObject settingToken)
-                    continue;
-
-                if (!settingToken.ContainsKey("Value"))
-                    continue;
-
-                var comPort = settingToken["Value"].ToString();
-                var deviceId = GetComPortDeviceId(comPort);
-                if (deviceId != null)
-                {
-                    action["Descriptor"] = "Serial::SerialPort::Set";
-                    settingToken["Value"] = deviceId;
-
-                    Logger.Info("Migrated \"Serial::ComPort::Set [{0}]\" to \"Serial::SerialPort::Set [{1}]\"", comPort, deviceId);
-                }
-                else
-                {
-                    Logger.Warn("Could not find DeviceID for \"{0}\"", comPort);
-                }
-            }
-        }
     }
 }

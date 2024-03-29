@@ -9,15 +9,18 @@ internal sealed class Migration0028 : AbstractConfigMigration
 
     public override void Migrate(JObject settings)
     {
-        RemoveProperties(settings, "$.Shortcut", [
-            "IsKeyboardKeysGestureEnabled",
-            "IsMouseAxisGestureEnabled",
-            "IsMouseButtonGestureEnabled",
-            "IsGamepadAxisGestureEnabled",
-            "IsGamepadButtonGestureEnabled",
-            "IsTCodeButtonGestureEnabled",
-            "IsTCodeAxisGestureEnabled"
-        ]);
+        if (TrySelectObject(settings, "$.Shortcut", out var shortcutSettings))
+        {
+            RemovePropertiesByName(shortcutSettings, [
+                "IsKeyboardKeysGestureEnabled",
+                "IsMouseAxisGestureEnabled",
+                "IsMouseButtonGestureEnabled",
+                "IsGamepadAxisGestureEnabled",
+                "IsGamepadButtonGestureEnabled",
+                "IsTCodeButtonGestureEnabled",
+                "IsTCodeAxisGestureEnabled"
+            ]);
+        }
 
         base.Migrate(settings);
     }
