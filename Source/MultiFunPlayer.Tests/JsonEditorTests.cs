@@ -67,6 +67,49 @@ public class JsonEditorTests
     }
 
     [Fact]
+    public void AddTokenToContainerAddsPropertyToObject()
+    {
+        var o = new JObject();
+        var result = _editor.AddTokenToContainer(new JProperty("foo", 0), o);
+
+        Assert.True(result);
+        Assert.Single(o);
+        Assert.True(o.ContainsKey("foo"));
+        Assert.Equal(0, o["foo"].Value<int>());
+    }
+
+    [Fact]
+    public void AddTokenToContainerFailsToAddValueToObject()
+    {
+        var o = new JObject();
+        var result = _editor.AddTokenToContainer(new JValue(0), o);
+
+        Assert.True(!result);
+        Assert.Empty(o);
+    }
+
+    [Fact]
+    public void AddTokenToContainerAddsTokenToArray()
+    {
+        var a = new JArray();
+        var result = _editor.AddTokenToContainer(new JValue(0), a);
+
+        Assert.True(result);
+        Assert.Single(a);
+        Assert.Equal(0, a[0].ToObject<int>());
+    }
+
+    [Fact]
+    public void AddTokenToContainerFailsToAddPropertyToArray()
+    {
+        var a = new JArray();
+        var result = _editor.AddTokenToContainer(new JProperty("foo", 0), a);
+
+        Assert.True(!result);
+        Assert.Empty(a);
+    }
+
+    [Fact]
     public void RenamePropertyRenamesProperty()
     {
         var o = new JObject() { ["foo"] = 0 };

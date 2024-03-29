@@ -10,21 +10,22 @@ internal sealed class Migration0009 : AbstractConfigMigration
 
     public override void Migrate(JObject settings)
     {
-        var devices = DeviceSettings.DefaultDevices.ToList();
+        var defaultDevices = DeviceSettings.DefaultDevices.ToList();
+
+        AddPropertyByName(settings, "Devices", JArray.FromObject(defaultDevices), out var devices);
         if (!TryGetValue<JToken>(settings, "SelectedDevice", out var selectedDevice) || string.IsNullOrWhiteSpace(selectedDevice.ToObject<string>()))
-            selectedDevice = devices[^1].Name;
+            selectedDevice = defaultDevices[^1].Name;
 
         SetPropertyByName(settings, "SelectedDevice", selectedDevice, addIfMissing: true);
 
-        var device = devices.Find(d => string.Equals(d.Name, selectedDevice.ToObject<string>(), StringComparison.OrdinalIgnoreCase)) ?? devices[^1];
+        var device = defaultDevices.Find(d => string.Equals(d.Name, selectedDevice.ToObject<string>(), StringComparison.OrdinalIgnoreCase)) ?? defaultDevices[^1];
         var migratedName = $"{device.Name} (migrated)";
         var migratedDevice = device.Clone(migratedName);
 
         foreach (var axis in migratedDevice.Axes)
             axis.Enabled = true;
 
-        devices.Add(migratedDevice);
-        SetPropertyByName(settings, "Devices", JArray.FromObject(devices), addIfMissing: true);
+        AddTokenToContainer(JObject.FromObject(migratedDevice), devices.Value as JArray);
 
         base.Migrate(settings);
     }

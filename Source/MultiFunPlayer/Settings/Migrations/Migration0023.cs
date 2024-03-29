@@ -9,7 +9,8 @@ internal sealed class Migration0023 : AbstractConfigMigration
 
     public override void Migrate(JObject settings)
     {
-        EditPropertyByPath(settings, "$.Script.Repositories.Local.Enabled", _ => true);
+        if (TrySelectObject(settings, "$.Script.Repositories.Local", out var localRepository))
+            SetPropertyByName(localRepository, "Enabled", true, addIfMissing: true);
 
         base.Migrate(settings);
     }

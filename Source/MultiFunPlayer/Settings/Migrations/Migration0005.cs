@@ -20,10 +20,10 @@ internal sealed class Migration0005 : AbstractConfigMigration
         RenamePropertiesByPaths(settings, new Dictionary<string, string>()
         {
             ["$.Script.VideoPathModifiers"] = "MediaPathModifiers",
-            ["$.Script.VideoContentVisible"] = "VideoContentVisible",
+            ["$.Script.VideoContentVisible"] = "MediaContentVisible",
             ["$.Script.SyncSettings.SyncOnVideoFileChanged"] = "SyncOnMediaFileChanged",
             ["$.Script.SyncSettings.SyncOnVideoPlayPause"] = "SyncOnMediaPlayPause",
-            ["$.Script.VideoSource"] = "MediaSource"
+            ["$.VideoSource"] = "MediaSource"
         }, selectMultiple: false);
 
         base.Migrate(settings);

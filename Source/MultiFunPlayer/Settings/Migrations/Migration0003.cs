@@ -19,7 +19,9 @@ internal sealed class Migration0003 : AbstractConfigMigration
                 ["Serial"] = "MultiFunPlayer.OutputTarget.ViewModels.SerialOutputTargetViewModel, MultiFunPlayer"
             };
 
-            var items = new JArray();
+            AddPropertyByName(outputTargets, "Items", new JArray());
+
+            var items = GetValue<JArray>(outputTargets, "Items");
             foreach (var property in GetProperties(outputTargets, nameToTypeMap.Keys))
             {
                 var outputTarget = property.Value as JObject;
@@ -29,11 +31,10 @@ internal sealed class Migration0003 : AbstractConfigMigration
                     ["$index"] = 0
                 });
 
-                items.Add(outputTarget);
+                AddTokenToContainer(outputTarget, items);
                 RemoveProperty(property);
             }
 
-            AddPropertyByName(outputTargets, "Items", items);
             EditPropertyByName(outputTargets, "ActiveItem", v => $"{v}/0");
         }
 

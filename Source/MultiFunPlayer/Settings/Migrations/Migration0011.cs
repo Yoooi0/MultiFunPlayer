@@ -11,7 +11,7 @@ internal sealed class Migration0011 : AbstractConfigMigration
     public override void Migrate(JObject settings)
     {
         var prefixMap = new Dictionary<string, string>();
-        foreach (var outputTarget in SelectObjects(settings, "$.OutputTarget.Items[?(@.$type =~ /.*NetworkOutputTargetViewModel.*/i)]\""))
+        foreach (var outputTarget in SelectObjects(settings, "$.OutputTarget.Items[?(@.$type =~ /.*NetworkOutputTargetViewModel.*/i)]"))
         {
             if (!TryGetValue<JValue>(outputTarget, "$index", out var index) || !TryGetValue<JValue>(outputTarget, "Protocol", out var protocol))
                 continue;
@@ -29,12 +29,14 @@ internal sealed class Migration0011 : AbstractConfigMigration
         if (TrySelectProperty(settings, "$.OutputTarget.ActiveItem", out var activeItem))
         {
             var value = activeItem.Value.ToObject<string>();
-            if (value.StartsWith("Network")
-             && TrySelectObject(settings, "$.OutputTarget.Items[?(@.$type =~ /.*NetworkOutputTargetViewModel.*/i && @.$index == {index})]", out var outputTarget)
-             && TryGetValue<JValue>(outputTarget, "Protocol", out var protocol))
+            if (value.StartsWith("Network"))
             {
-                var index = int.Parse(activeItem.Value.ToObject<string>().Split('/')[1]);
-                SetProperty(activeItem, $"{protocol.ToObject<string>().ToUpper()}/{index}");
+                var index = int.Parse(value.Split('/')[1]);
+                if (TrySelectObject(settings, $"$.OutputTarget.Items[?(@.$type =~ /.*NetworkOutputTargetViewModel.*/i && @.$index == {index})]", out var outputTarget)
+                 && TryGetValue<JValue>(outputTarget, "Protocol", out var protocol))
+                {
+                    SetProperty(activeItem, $"{protocol.ToObject<string>().ToUpper()}/{index}");
+                }
             }
         }
 

@@ -24,12 +24,12 @@ internal sealed class Migration0006 : AbstractConfigMigration
             RemoveToken(action);
 
         var defaultPoints = new string[] { "25,100", "90,0" };
-        foreach (var axisSettings in SelectObjects(settings, "$.Script.AxisSettings[*]"))
+        foreach (var axisSettings in SelectObjects(settings, "$.Script.AxisSettings.*"))
         {
             SetPropertyByName(axisSettings, "SmartLimitPoints", JArray.FromObject(defaultPoints), addIfMissing: true);
 
             if (RemovePropertyByName(axisSettings, "SmartLimitEnabled", out var property))
-                AddPropertyByName(axisSettings, "SmartLimitInputAxis", property.ToObject<bool>() ? "L0" : null);
+                AddPropertyByName(axisSettings, "SmartLimitInputAxis", property.Value.ToObject<bool>() ? "L0" : null);
         }
 
         base.Migrate(settings);

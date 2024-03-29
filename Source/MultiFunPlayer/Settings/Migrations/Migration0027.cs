@@ -13,24 +13,11 @@ internal sealed class Migration0027 : AbstractConfigMigration
     public override void Migrate(JObject settings)
     {
         RenamePropertyByName(settings, "Shortcuts", "Shortcut");
-
-        if (settings.TryGetObject(out var shortcutSettings, "Shortcut"))
-            MigrateShortcuts(shortcutSettings);
-
-        base.Migrate(settings);
-    }
-
-    private void MigrateShortcuts(JObject settings)
-    {
         RenamePropertyByPath(settings, "$.Shortcut.Bindings", "Shortcuts");
 
-        foreach (var shortcut in SelectObjects(settings, "$.Shortcut.Shortcuts"))
+        foreach (var shortcut in SelectObjects(settings, "$.Shortcut.Shortcuts[*]"))
         {
-            if (!TryGetValue<JObject>(shortcut, "Gesture", out var gesture))
-                continue;
-            if (!TryGetValue<JValue>(gesture, "$type", out var gestureType))
-                continue;
-
+            var gestureType = SelectValue(shortcut, "$.Gesture.$type");
             AddPropertyByName(shortcut, "$type", gestureType.ToString() switch
             {
                 "MultiFunPlayer.Input.RawInput.KeyboardGestureDescriptor, MultiFunPlayer" => "MultiFunPlayer.Shortcut.ButtonReleaseShortcut, MultiFunPlayer",
@@ -45,35 +32,32 @@ internal sealed class Migration0027 : AbstractConfigMigration
         }
 
         var migratedCounter = 0;
-        foreach (var action in SelectObjects(settings, "$.Shortcuts[*].Actions[?(@.Name =~ /Shortcut::Enabled::.*/i)]"))
+        foreach (var action in SelectObjects(settings, "$.Shortcut.Shortcuts[*].Actions[?(@.Name =~ /Shortcut::Enabled::.*/i)]"))
         {
-            if (!TrySelectObject(action, "$.Settings[0]", out var gesture))
-                continue;
-
+            var gesture = SelectObject(action, "$.Settings[0]");
             var matchedShortcut = FindShortcutByGestureJson(gesture.ToString(Formatting.None));
             if (matchedShortcut == null)
             {
-                //TODO: remove??
                 Logger.Warn($"Unable to find matching shortcut for \"{action["Name"]}\" action");
+                RemoveToken(action);
                 continue;
             }
 
             if (!matchedShortcut.ContainsKey("Name"))
                 AddPropertyByName(matchedShortcut, "Name", $"migrated{migratedCounter++}");
 
-            RemoveAllProperties(gesture);
-            AddPropertiesByName(gesture, new Dictionary<string, JToken>()
+            SetPropertiesByName(gesture, new Dictionary<string, JToken>()
             {
                 ["$type"] = "System.String, System.Private.CoreLib",
                 ["Value"] = matchedShortcut["Name"].ToString()
-            });
+            }, addIfMissing: true);
         }
 
         JObject FindShortcutByGestureJson(string findGestureJson)
         {
-            foreach (var shortcut in SelectObjects(settings, "$.Shortcuts[*]"))
+            foreach (var shortcut in SelectObjects(settings, "$.Shortcut.Shortcuts[*]"))
             {
-                if (TryGetValue<JObject>(shortcut, "Gesture", out var gesture))
+                if (!TryGetValue<JObject>(shortcut, "Gesture", out var gesture))
                     continue;
 
                 var gestureJson = gesture.ToString(Formatting.None);
@@ -83,5 +67,7 @@ internal sealed class Migration0027 : AbstractConfigMigration
 
             return null;
         }
+
+        base.Migrate(settings);
     }
 }

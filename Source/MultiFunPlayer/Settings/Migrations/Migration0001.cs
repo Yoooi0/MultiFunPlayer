@@ -53,9 +53,14 @@ internal sealed class Migration0001 : AbstractConfigMigration
             return false;
         });
 
-        try { return serialPort?.GetPropertyValue("DeviceID") as string; } catch { }
+        var result = default(string);
+        try {
+            result = serialPort?.GetPropertyValue("DeviceID") as string;
+        } catch { }
 
-        Logger.Warn("Could not find DeviceID for \"{0}\"", comPort);
-        return null;
+        if (result == null)
+            Logger.Warn("Could not find DeviceID for \"{0}\"", comPort);
+
+        return result;
     }
 }

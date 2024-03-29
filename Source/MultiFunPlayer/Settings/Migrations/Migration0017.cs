@@ -9,16 +9,13 @@ internal sealed class Migration0017 : AbstractConfigMigration
 
     public override void Migrate(JObject settings)
     {
-        foreach (var output in SelectObjects(settings, "$.OutputTarget.Items[?(@.$type =~ /.*FileOutputTargetViewModel.*/)]"))
+        foreach (var output in SelectObjects(settings, "$.OutputTarget.Items[?(@.$type =~ /.*FileOutputTargetViewModel.*/i)]"))
         {
             if (!TryGetValue<JArray>(output, "EnabledAxes", out var enabledAxes)
              || !TryGetValue<JObject>(output, "AxisSettings", out var axisSettings))
              continue;
 
-            var enabledAxesValues = enabledAxes.ToObject<List<string>>();
-            if (enabledAxesValues == null || enabledAxesValues.Count == 0)
-                continue;
-
+            var enabledAxesValues = enabledAxes.ToObject<List<string>>() ?? [];
             foreach (var property in axisSettings.Properties())
                 SetPropertyByName(property.Value as JObject, "Enabled", enabledAxesValues.Contains(property.Name), addIfMissing: true);
 

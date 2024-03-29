@@ -10,17 +10,6 @@ internal sealed class Migration0024 : AbstractConfigMigration
 
     public override void Migrate(JObject settings)
     {
-        MigrateEndpointPropertiesToUri(settings);
-
-        if (settings.TryGetObject(out var shortcutSettings, "Shortcuts"))
-            MigrateEndpointActionConfigurations(shortcutSettings);
-
-        base.Migrate(settings);
-    }
-
-    private void MigrateEndpointPropertiesToUri(JObject settings)
-    {
-        Logger.Info("Migrating endpoint properties to uri");
         var migrations = new Dictionary<string, string>()
         {
             ["$.MediaSource.Emby.ServerEndpoint"] = "ServerBaseUri",
@@ -30,34 +19,16 @@ internal sealed class Migration0024 : AbstractConfigMigration
             ["$.Script.Repositories.XBVR.Endpoint"] = "ServerBaseUri",
         };
 
-        EditPropertiesByPaths(settings, migrations.Keys, v => NetUtils.TryParseEndpoint(v.ToString(), out var endpoint) ? $"http://{endpoint.ToUriString()}" : null);
+        EditPropertiesByPaths(settings, migrations.Keys, 
+            v => NetUtils.TryParseEndpoint(v.ToString(), out var endpoint) ? $"http://{endpoint.ToUriString()}" : null);
         RenamePropertiesByPaths(settings, migrations, selectMultiple: false);
-    }
 
-    private void MigrateEndpointActionConfigurations(JObject settings)
-    {
-        Logger.Info("Migrating endpoint action configurations");
+        EditPropertiesByPath(settings, "$.Shortcuts.Bindings[*].Actions[?(@.Name =~ /(Plex|Emby|Jellyfin)::Endpoint::Set/i)].Name",
+            v => v.ToString().Replace("Endpoint", "ServerBaseUri"));
 
-        var migrations = new Dictionary<string, string>()
-        {
-            ["Plex::Endpoint::Set"] = "Plex::ServerBaseUri::Set",
-            ["Emby::Endpoint::Set"] = "Emby::ServerBaseUri::Set",
-            ["Jellyfin::Endpoint::Set"] = "Jellyfin::ServerBaseUri::Set",
-        };
+        EditPropertiesByPath(settings, "$.Shortcuts.Bindings[*].Actions[?(@.Name =~ /(Plex|Emby|Jellyfin)::ServerBaseUri::Set/i)].Settings[0].Value",
+            v => NetUtils.TryParseEndpoint(v.ToString(), out var endpoint) ? $"http://{endpoint.ToUriString()}" : null);
 
-        foreach (var (oldName, newName) in migrations)
-        {
-            foreach(var action in settings.SelectTokens($"$.Bindings[*].Actions[?(@.Name == '{oldName}')]").OfType<JObject>())
-            {
-                action["Name"] = newName;
-                Logger.Info("Changed \"{0}\" name from \"{1}\" to \"{2}\"", action.Path, oldName, newName);
-
-                var valueToken = action["Settings"][0]["Value"] as JValue;
-                var oldValue = valueToken.Value<string>();
-                var newValue = $"http://{oldValue}";
-                valueToken.Value = newValue;
-                Logger.Info("Changed \"{0}\" value from \"{1}\" to \"{2}\"", valueToken.Path, oldValue, newValue);
-            }
-        }
+        base.Migrate(settings);
     }
 }

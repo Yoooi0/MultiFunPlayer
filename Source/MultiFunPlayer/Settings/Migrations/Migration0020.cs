@@ -9,9 +9,11 @@ internal sealed class Migration0020 : AbstractConfigMigration
 
     public override void Migrate(JObject settings)
     {
-        if (TrySelectProperty(settings, "$.Shortcuts.Bindings[*].Gesture[?(@.$type =~ /.*GamepadButtonGestureDescriptor.*/i)].Button", out var property))
+        ModifyPropertiesByPath(settings, "$.Shortcuts.Bindings[?(@.Gesture.$type =~ /.*GamepadButtonGestureDescriptor.*/i)].Gesture.Button", property =>
+        {
             if (RenameProperty(ref property, "Buttons"))
                 SetProperty(property, new JArray(property.Value.ToString()));
+        });
 
         base.Migrate(settings);
     }

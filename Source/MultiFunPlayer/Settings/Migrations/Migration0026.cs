@@ -9,7 +9,7 @@ internal sealed class Migration0026 : AbstractConfigMigration
 
     public override void Migrate(JObject settings)
     {
-        RenamePropertyByName(settings, "$.Script.HeatmapShowStrokeLength", "HeatmapShowRange");
+        RenamePropertyByPath(settings, "$.Script.HeatmapShowStrokeLength", "HeatmapShowRange");
 
         base.Migrate(settings);
     }

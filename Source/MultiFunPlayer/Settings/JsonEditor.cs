@@ -1,4 +1,4 @@
-﻿using MultiFunPlayer.Common;
+using MultiFunPlayer.Common;
 using Newtonsoft.Json.Linq;
 using NLog;
 
@@ -88,6 +88,7 @@ internal class JsonEditor
 
     public bool MoveProperty(JProperty property, JObject toObject, bool replace = false)
     {
+        var oldParent = property.Parent;
         var oldPath = property.Path;
         var oldProperty = default(JProperty);
 
@@ -99,8 +100,8 @@ internal class JsonEditor
                 RemoveProperty(oldProperty);
             }
 
-            toObject.Add(property);
             property.Remove();
+            toObject.Add(property);
 
             Logger.Info("Moved property from \"{0}\" to \"{1}\"", oldPath, property.Path);
             return true;
@@ -109,7 +110,9 @@ internal class JsonEditor
         {
             Logger.Warn(e, "Failed to move property \"{0}\" to \"{1}\"", oldPath, toObject.Path);
             if (oldProperty != null)
-                AddProperty(toObject, oldProperty);
+                toObject.Add(oldProperty);
+            if (property.Parent == null)
+                oldParent.Add(property);
 
             return false;
         }
@@ -191,6 +194,22 @@ internal class JsonEditor
         properties = result;
     }
 
+    public bool AddTokenToContainer(JToken token, JContainer container)
+    {
+        try
+        {
+            container.Add(token);
+            Logger.Info("Added token \"{0}\" to container \"{1}\"", token.ToString(), container.Path);
+
+            return true;
+        }
+        catch (Exception e)
+        {
+            Logger.Warn(e, "Failed to add token \"{0}\" to container \"{1}\"", token.ToString(), container.Path);
+            return false;
+        }
+    }
+
     public void RemoveAllProperties(JObject o)
     {
         foreach (var property in o.Properties().ToList())
@@ -204,8 +223,8 @@ internal class JsonEditor
     public bool EditPropertyByName(JObject o, string propertyName, Func<JToken, JToken> modifier) => ModifyPropertyByName(o, propertyName, p => SetProperty(p, modifier(p.Value)));
     public bool SetPropertyByName(JObject o, string propertyName, JToken value, bool addIfMissing = false)
     {
-        if (TryGetProperty(o, propertyName, out var property))
-            return SetProperty(property, value);
+        if (o.ContainsKey(propertyName))
+            return SetProperty(o.Property(propertyName), value);
         else if (addIfMissing)
             return AddPropertyByName(o, propertyName, value);
         return false;
@@ -412,6 +431,12 @@ internal class JsonEditor
         try
         {
             var selectedToken = o.SelectToken(path, errorWhenNoMatch: true);
+            if (selectedToken == null)
+            {
+                Logger.Warn("Failed to select \"{0}\" [Path: \"{1}\", Object: \"{2}\"]", typeof(T).Name, path, o.Path);
+                return false;
+            }
+
             if (selectedToken is not T)
             {
                 Logger.Warn("Selected token is not a \"{0}\" [Actual: \"{1}\", Path: \"{2}\", Object: \"{3}\"]", typeof(T).Name, selectedToken?.GetType().Name, path, o.Path);

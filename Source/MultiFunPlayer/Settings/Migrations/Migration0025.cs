@@ -9,7 +9,7 @@ internal sealed class Migration0025 : AbstractConfigMigration
 
     public override void Migrate(JObject settings)
     {
-        RemovePropertyByPath(settings, "$.LogBlacklist.[MultiFunPlayer.UI.Controls.ViewModels.ShortcutSettingsViewModel]");
+        RemovePropertyByPath(settings, "$.LogBlacklist.['MultiFunPlayer.UI.Controls.ViewModels.ShortcutSettingsViewModel']");
 
         base.Migrate(settings);
     }

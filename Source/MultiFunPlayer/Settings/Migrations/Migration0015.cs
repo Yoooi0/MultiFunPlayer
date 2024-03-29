@@ -10,7 +10,7 @@ internal sealed class Migration0015 : AbstractConfigMigration
 
     public override void Migrate(JObject settings)
     {
-        foreach (var axisSettings in SelectObjects(settings, "$.Script.AxisSettings[*]"))
+        foreach (var axisSettings in SelectObjects(settings, "$.Script.AxisSettings.*"))
         {
             if (!TryGetProperty(axisSettings, "Bypass", out var bypass))
                 continue;
