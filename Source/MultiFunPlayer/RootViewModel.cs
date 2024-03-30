@@ -13,9 +13,11 @@ namespace MultiFunPlayer;
 
 internal sealed class RootViewModel : Conductor<IScreen>.Collection.AllActive, IHandle<SettingsMessage>
 {
-    private bool _isDragging;
     private double _lastValidWindowLeft;
     private double _lastValidWindowTop;
+    private bool _isInSizeMove;
+    private bool _isSizing;
+    private bool _isDragging;
 
     [Inject] public ScriptViewModel Script { get; set; }
     [Inject] public MediaSourceViewModel MediaSource { get; set; }
@@ -26,7 +28,7 @@ internal sealed class RootViewModel : Conductor<IScreen>.Collection.AllActive, I
 
     public bool DisablePopup { get; set; }
 
-    public double WindowWidth { get; } = 600;
+    public double WindowWidth { get; set; } = 600;
     public double WindowHeight { get; set; }
     public double WindowLeft { get; set; }
     public double WindowTop { get; set; }
@@ -82,10 +84,11 @@ internal sealed class RootViewModel : Conductor<IScreen>.Collection.AllActive, I
             _lastValidWindowTop = WindowTop;
     }
 
-    public void OnMouseUp(object sender, MouseButtonEventArgs e)
+    public void OnWindowWidthChanged() => BringWindowIntoView(0.5);
+    public void OnWindowHeightChanged()
     {
-        _isDragging = false;
-        BringWindowIntoView(0.5);
+        if (!_isSizing)
+            BringWindowIntoView(0.5);
     }
 
     public void OnMouseDown(object sender, MouseButtonEventArgs e)
@@ -96,7 +99,6 @@ internal sealed class RootViewModel : Conductor<IScreen>.Collection.AllActive, I
         if (e.LeftButton != MouseButtonState.Pressed)
             return;
 
-        _isDragging = true;
         window.DragMove();
     }
 
@@ -150,16 +152,39 @@ internal sealed class RootViewModel : Conductor<IScreen>.Collection.AllActive, I
     private IntPtr MessageSink(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
     {
         const int WM_WINDOWPOSCHANGING = 0x0046;
+        const int WM_SIZING = 0x0214;
+        const int WM_MOVING = 0x0216;
+        const int WM_ENTERSIZEMOVE = 0x0231;
+        const int WM_EXITSIZEMOVE = 0x0232;
+        const uint SWP_NOSIZE = 0x0001;
         const uint SWP_NOMOVE = 0x0002;
 
-        if (msg == WM_WINDOWPOSCHANGING && _isDragging && Mouse.LeftButton != MouseButtonState.Pressed)
+        if (msg == WM_WINDOWPOSCHANGING && _isInSizeMove)
         {
             var windowPos = Marshal.PtrToStructure<WINDOWPOS>(lParam);
+            var willMove = (windowPos.Flags & SWP_NOMOVE) == 0;
+            var willSize = (windowPos.Flags & SWP_NOSIZE) == 0;
+
             if (WindowTop < 0 && windowPos.Y == 0)
             {
-                windowPos.Flags |= SWP_NOMOVE;
-                Marshal.StructureToPtr(windowPos, lParam, false);
+                var setNoMove = willSize || (willMove && _isSizing) || (willMove && _isDragging && Mouse.LeftButton != MouseButtonState.Pressed);
+                if (setNoMove)
+                {
+                    windowPos.Flags |= SWP_NOMOVE;
+                    Marshal.StructureToPtr(windowPos, lParam, false);
+                }
             }
+        }
+        else if (msg == WM_SIZING) { _isSizing = _isInSizeMove; }
+        else if (msg == WM_MOVING) { _isDragging = _isInSizeMove; }
+        else if (msg == WM_ENTERSIZEMOVE) { _isInSizeMove = true; }
+        else if (msg == WM_EXITSIZEMOVE)
+        {
+            _isInSizeMove = false;
+            _isDragging = false;
+            _isSizing = false;
+
+            BringWindowIntoView(0.5);
         }
 
         return IntPtr.Zero;
