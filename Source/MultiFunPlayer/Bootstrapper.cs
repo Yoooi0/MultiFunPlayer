@@ -266,8 +266,7 @@ internal sealed class Bootstrapper : Bootstrapper<RootViewModel>
             dirty = true;
         }
 
-        var device = devices.FirstOrDefault(d => string.Equals(d[nameof(DeviceSettings.Name)].ToString(), selectedDevice, StringComparison.OrdinalIgnoreCase)) as JObject;
-        if (device == null)
+        if (devices.FirstOrDefault(d => string.Equals(d[nameof(DeviceSettings.Name)].ToString(), selectedDevice, StringComparison.OrdinalIgnoreCase)) is not JObject device)
         {
             logger.Warn("Unable to find device! [SelectedDevice: \"{0}\"]", selectedDevice);
             device = devices.Last as JObject;

@@ -196,8 +196,8 @@ internal sealed class PlexMediaSource(IShortcutManager shortcutManager, IEventAg
 
                 return root.ChildNodes
                            .OfType<XmlNode>()
-                           .Where(n => string.Equals(n.Name, "Timeline", StringComparison.OrdinalIgnoreCase))
-                           .Where(n => !string.Equals(n.Attributes["type"]?.Value, "photo", StringComparison.OrdinalIgnoreCase))
+                           .Where(n => string.Equals(n.Name, "Timeline", StringComparison.OrdinalIgnoreCase)
+                                   && !string.Equals(n.Attributes["type"]?.Value, "photo", StringComparison.OrdinalIgnoreCase))
                            .FirstOrDefault(n => !string.Equals(n.Attributes["state"]?.Value, "stopped", StringComparison.OrdinalIgnoreCase));
 
                 async Task<HttpResponseMessage> WriteTimelineCommandAsync()
