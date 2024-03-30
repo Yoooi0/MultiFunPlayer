@@ -14,6 +14,8 @@ namespace MultiFunPlayer;
 internal sealed class RootViewModel : Conductor<IScreen>.Collection.AllActive, IHandle<SettingsMessage>
 {
     private bool _isDragging;
+    private double _lastValidWindowLeft;
+    private double _lastValidWindowTop;
 
     [Inject] public ScriptViewModel Script { get; set; }
     [Inject] public MediaSourceViewModel MediaSource { get; set; }
@@ -35,6 +37,8 @@ internal sealed class RootViewModel : Conductor<IScreen>.Collection.AllActive, I
     public RootViewModel(IEventAggregator eventAggregator)
     {
         eventAggregator.Subscribe(this);
+        _lastValidWindowLeft = double.NaN;
+        _lastValidWindowTop = double.NaN;
     }
 
     protected override void OnActivate()
@@ -66,6 +70,18 @@ internal sealed class RootViewModel : Conductor<IScreen>.Collection.AllActive, I
         source.AddHook(MessageSink);
     }
 
+    public void OnWindowLeftChanged()
+    {
+        if (WindowLeft != -32000)
+            _lastValidWindowLeft = WindowLeft;
+    }
+
+    public void OnWindowTopChanged()
+    {
+        if (WindowTop != -32000)
+            _lastValidWindowTop = WindowTop;
+    }
+
     public void OnMouseUp(object sender, MouseButtonEventArgs e)
     {
         _isDragging = false;
@@ -92,8 +108,8 @@ internal sealed class RootViewModel : Conductor<IScreen>.Collection.AllActive, I
         {
             settings[nameof(DisablePopup)] = DisablePopup;
             settings[nameof(WindowHeight)] = WindowHeight;
-            settings[nameof(WindowLeft)] = WindowLeft;
-            settings[nameof(WindowTop)] = WindowTop;
+            settings[nameof(WindowLeft)] = _lastValidWindowLeft;
+            settings[nameof(WindowTop)] = _lastValidWindowTop;
         }
         else if (message.Action == SettingsAction.Loading)
         {
