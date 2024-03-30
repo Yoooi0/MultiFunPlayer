@@ -119,7 +119,7 @@ Once your video player and output are connected, scripts can be loaded in severa
         </tr>
         <tr>
             <td><a href="https://www.patreon.com/yoooi"><img src="Assets/logo_patreon.png"/></a></td>
-            <td><strong>Thank you to all 200+ patreon members who allow me to dedicate more time to MultiFunPlayer.</strong></td>
+            <td><strong>Thank you to all 200+ patreon members who allow me to dedicate more time to MultiFunPlayer!</strong></td>
         </tr>
     </tbody>
 </table>

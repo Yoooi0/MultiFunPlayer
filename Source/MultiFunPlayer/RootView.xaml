@@ -8,7 +8,7 @@
                          xmlns:s="https://github.com/canton7/Stylet"
                          Title="MultiFunPlayer"
                          Style="{StaticResource MaterialDesignWindow}"
-                         Width="600"
+                         Width="{Binding WindowWidth, Mode=TwoWay}"
                          Height="{Binding WindowHeight, Mode=TwoWay}"
                          MinWidth="600"
                          MinHeight="300"
