@@ -19,7 +19,7 @@ internal sealed class Migration0024 : AbstractConfigMigration
             ["$.Script.Repositories.XBVR.Endpoint"] = "ServerBaseUri",
         };
 
-        EditPropertiesByPaths(settings, migrations.Keys, 
+        EditPropertiesByPaths(settings, migrations.Keys,
             v => NetUtils.TryParseEndpoint(v.ToString(), out var endpoint) ? $"http://{endpoint.ToUriString()}" : null);
         RenamePropertiesByPaths(settings, migrations, selectMultiple: false);
 
