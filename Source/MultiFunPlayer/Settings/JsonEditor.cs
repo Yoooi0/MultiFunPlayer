@@ -1,4 +1,4 @@
-using MultiFunPlayer.Common;
+﻿using MultiFunPlayer.Common;
 using Newtonsoft.Json.Linq;
 using NLog;
 
@@ -18,12 +18,28 @@ internal class JsonEditor
         try
         {
             token.Remove();
-            Logger.Info("Removed token \"{0}\"", path);
+            Logger.Info("Removed token \"{0}\" from \"{1}\"", token.ToString(), path);
             return true;
         }
         catch (Exception e)
         {
-            Logger.Warn(e, "Failed to remove token \"{0}\"", path);
+            Logger.Warn("Failed to remove token \"{0}\": {1}", path, e.Message);
+            return false;
+        }
+    }
+
+    public bool AddTokenToContainer(JToken token, JContainer container)
+    {
+        try
+        {
+            container.Add(token);
+            Logger.Info("Added token \"{0}\" to container \"{1}\"", token.ToString(), container.Path);
+
+            return true;
+        }
+        catch (Exception e)
+        {
+            Logger.Warn("Failed to add token \"{0}\" to container \"{1}\": {2}", token.ToString(), container.Path, e.Message);
             return false;
         }
     }
@@ -40,7 +56,7 @@ internal class JsonEditor
         }
         catch (Exception e)
         {
-            Logger.Warn(e, "Failed to remove property \"{0}\"", path);
+            Logger.Warn("Failed to remove property \"{0}\": {1}", path, e.Message);
             return false;
         }
     }
@@ -55,7 +71,7 @@ internal class JsonEditor
         }
         catch (Exception e)
         {
-            Logger.Warn(e, "Failed to add property \"{0}={1}\" to \"{2}\"", property.Name, property.Value.ToString(), o.Path);
+            Logger.Warn("Failed to add property \"{0}={1}\" to \"{2}\": {3}", property.Name, property.Value.ToString(), o.Path, e.Message);
             return false;
         }
     }
@@ -64,7 +80,7 @@ internal class JsonEditor
     {
         var parent = property.Parent;
         var value = property.Value;
-        var path = property.Path;
+        var oldPath = property.Path;
 
         try
         {
@@ -76,12 +92,12 @@ internal class JsonEditor
 
             property = newProperty;
 
-            Logger.Info("Renamed property \"{0}\" to \"{1}\"", path, newName);
+            Logger.Info("Renamed property \"{0}\" to \"{1}\"", oldPath, newName);
             return true;
         }
         catch (Exception e)
         {
-            Logger.Warn(e, "Failed to rename property \"{0}\" to \"{1}\"", path, newName);
+            Logger.Warn("Failed to rename property \"{0}\" to \"{1}\": {2}", oldPath, newName, e.Message);
             return false;
         }
     }
@@ -103,12 +119,12 @@ internal class JsonEditor
             property.Remove();
             toObject.Add(property);
 
-            Logger.Info("Moved property from \"{0}\" to \"{1}\"", oldPath, property.Path);
+            Logger.Info("Moved property \"{0}\" to \"{1}\"", oldPath, property.Path);
             return true;
         }
         catch (Exception e)
         {
-            Logger.Warn(e, "Failed to move property \"{0}\" to \"{1}\"", oldPath, toObject.Path);
+            Logger.Warn("Failed to move property \"{0}\" to \"{1}\": {2}", oldPath, toObject.Path, e.Message);
             if (oldProperty != null)
                 toObject.Add(oldProperty);
             if (property.Parent == null)
@@ -140,12 +156,12 @@ internal class JsonEditor
 
             property = newProperty;
 
-            Logger.Info("Moved property from \"{0}\" to \"{1}\"", oldPath, property.Path);
+            Logger.Info("Moved property \"{0}\" to \"{1}\"", oldPath, property.Path);
             return true;
         }
         catch (Exception e)
         {
-            Logger.Warn(e, "Failed to move property \"{0}\" to \"{1}\"", oldPath, toObject.Path);
+            Logger.Warn("Failed to move property \"{0}\" to \"{1}\": {2}", oldPath, toObject.Path, e.Message);
             if (oldProperty != null)
                 AddProperty(toObject, oldProperty);
 
@@ -168,7 +184,7 @@ internal class JsonEditor
         }
         catch (Exception e)
         {
-            Logger.Warn(e, "Failed to edit property \"{0}\"", path);
+            Logger.Warn("Failed to edit property \"{0}\": {1}", path, e.Message);
             return false;
         }
     }
@@ -192,22 +208,6 @@ internal class JsonEditor
                 result.Add(property);
 
         properties = result;
-    }
-
-    public bool AddTokenToContainer(JToken token, JContainer container)
-    {
-        try
-        {
-            container.Add(token);
-            Logger.Info("Added token \"{0}\" to container \"{1}\"", token.ToString(), container.Path);
-
-            return true;
-        }
-        catch (Exception e)
-        {
-            Logger.Warn(e, "Failed to add token \"{0}\" to container \"{1}\"", token.ToString(), container.Path);
-            return false;
-        }
     }
 
     public void RemoveAllProperties(JObject o)
@@ -389,14 +389,14 @@ internal class JsonEditor
         value = default;
         if (!o.ContainsKey(propertyName))
         {
-            Logger.Warn("Object \"{0}\" is missing property \"{1}\"", o.Path, propertyName);
+            Logger.Warn("Failed to find property \"{0}\" in \"{1}\" object", propertyName, o.Path);
             return false;
         }
 
         var propertyValue = o[propertyName];
         if (propertyValue is not T)
         {
-            Logger.Warn("Property value is not a \"{0}\" [Actual: \"{1}\", Path: \"{2}\", Object: \"{3}\"]", typeof(T).Name, propertyValue?.GetType().Name, propertyValue.Path, o.Path);
+            Logger.Warn("Failed to get property \"{0}\" value as \"{1}\": Propert value is \"{2}\"", propertyValue.Path, typeof(T).Name, propertyValue.GetType().Name);
             return false;
         }
 
@@ -433,13 +433,13 @@ internal class JsonEditor
             var selectedToken = o.SelectToken(path, errorWhenNoMatch: true);
             if (selectedToken == null)
             {
-                Logger.Warn("Failed to select \"{0}\" [Path: \"{1}\", Object: \"{2}\"]", typeof(T).Name, path, o.Path);
+                Logger.Warn("Failed to select \"{0}\" token with path \"{1}\" from \"{2}\" token", typeof(T).Name, path, o.Path);
                 return false;
             }
 
             if (selectedToken is not T)
             {
-                Logger.Warn("Selected token is not a \"{0}\" [Actual: \"{1}\", Path: \"{2}\", Object: \"{3}\"]", typeof(T).Name, selectedToken?.GetType().Name, path, o.Path);
+                Logger.Warn("Failed to select \"{0}\" token with path \"{1}\" from \"{2}\" token: Selected token is \"{3}\"", typeof(T).Name, path, o.Path, selectedToken.GetType().Name);
                 return false;
             }
 
@@ -448,7 +448,7 @@ internal class JsonEditor
         }
         catch (Exception e)
         {
-            Logger.Warn(e, "Failed to select token \"{0}\" from \"{1}\"", path, o.Path);
+            Logger.Warn("Failed to select \"{0}\" token with path \"{1}\" from \"{2}\" token: {3}", path, path, o.Path, e.Message);
             return false;
         }
     }
@@ -464,7 +464,7 @@ internal class JsonEditor
         }
         catch (Exception e)
         {
-            Logger.Warn(e, "Failed to select tokens \"{0}\" from \"{1}\"", path, o.Path);
+            Logger.Warn("Failed to select \"{0}\" tokens with path \"{1}\" from \"{2}\" token: {3}", typeof(T).Name, path, o.Path, e.Message);
             return false;
         }
     }
