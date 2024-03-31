@@ -104,7 +104,7 @@ internal sealed class ShortcutSettingsViewModel : Screen, IHandle<SettingsMessag
         if (SelectedShortcutType == null)
             return;
 
-        using var captureCancellationSource = new CancellationTokenSource(2000);
+        using var captureCancellationSource = new CancellationTokenSource(5000);
         var token = captureCancellationSource.Token;
 
         while (_gestureChannel.Reader.TryRead(out var _)) ;
@@ -119,7 +119,10 @@ internal sealed class ShortcutSettingsViewModel : Screen, IHandle<SettingsMessag
                 _ = await _gestureChannel.Reader.WaitToReadAsync(token);
                 var gesture = await _gestureChannel.Reader.ReadAsync(token);
                 if (IShortcut.AcceptsGesture(SelectedShortcutType, gesture) && !CapturedGestures.Contains(gesture.Descriptor))
+                {
                     CapturedGestures.Add(gesture.Descriptor);
+                    captureCancellationSource.CancelAfter(5000);
+                }
             } while (!token.IsCancellationRequested);
         }
         catch (OperationCanceledException) { }
