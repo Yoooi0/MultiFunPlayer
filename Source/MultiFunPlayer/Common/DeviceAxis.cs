@@ -58,6 +58,9 @@ public sealed class DeviceAxis
 
     internal static void InitializeFromDevice(DeviceSettings device)
     {
+        if (_axes != null)
+            throw new NotSupportedException();
+
         _outputMaximum = (int)(Math.Pow(10, device.OutputPrecision) - 1);
         _outputFormat = $"{{0:{new string('0', device.OutputPrecision)}}}";
         _axes = device.Axes.Where(s => s.Enabled).ToFrozenDictionary(s => s.Name, s => new DeviceAxis(s));
