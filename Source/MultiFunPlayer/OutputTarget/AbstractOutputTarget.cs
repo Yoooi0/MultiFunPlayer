@@ -141,9 +141,14 @@ internal abstract class AbstractOutputTarget : Screen, IOutputTarget
             settings[nameof(AutoConnectEnabled)] = AutoConnectEnabled;
             settings[nameof(AxisSettings)] = JObject.FromObject(AxisSettings);
 
-            //TODO: move to separate object per update type
             foreach (var (_, context) in UpdateContexts)
-                settings.Merge(JObject.FromObject(context), new JsonMergeSettings() { MergeArrayHandling = MergeArrayHandling.Replace });
+            {
+                if (!settings.EnsureContainsObjects("UpdateContextSettings", context.GetType().Name)
+                 || !settings.TryGetObject(out var contextSettings, "UpdateContextSettings", context.GetType().Name))
+                    continue;
+
+                contextSettings.Merge(JObject.FromObject(context), new JsonMergeSettings() { MergeArrayHandling = MergeArrayHandling.Replace });
+            }
         }
         else if (action == SettingsAction.Loading)
         {
@@ -153,9 +158,13 @@ internal abstract class AbstractOutputTarget : Screen, IOutputTarget
                 foreach (var (axis, axisSettingsToken) in axisSettingsMap)
                     axisSettingsToken.Populate(AxisSettings[axis]);
 
-            //TODO: move to separate object per update type
             foreach (var (_, context) in UpdateContexts)
-                settings.Populate(context);
+            {
+                if (!settings.TryGetObject(out var contextSettings, "UpdateContextSettings", context.GetType().Name))
+                    continue;
+
+                contextSettings.Populate(context);
+            }
         }
     }
 
