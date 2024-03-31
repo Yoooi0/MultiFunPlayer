@@ -1,4 +1,5 @@
 using MultiFunPlayer.Common;
+using MultiFunPlayer.MediaSource;
 using MultiFunPlayer.OutputTarget;
 using MultiFunPlayer.Shortcut;
 using Newtonsoft.Json.Linq;
@@ -15,10 +16,10 @@ internal sealed class OutputTargetViewModel : Conductor<IOutputTarget>.Collectio
     private readonly IOutputTargetFactory _outputTargetFactory;
     private Task _task;
     private CancellationTokenSource _cancellationSource;
+    private Dictionary<IOutputTarget, SemaphoreSlim> _semaphores;
+    private SemaphoreSlim _scanIntervalSemaphore;
 
     public List<Type> AvailableOutputTargetTypes { get; }
-
-    private Dictionary<IOutputTarget, SemaphoreSlim> _semaphores;
 
     public bool ContentVisible { get; set; }
     public int ScanDelay { get; set; } = 2500;
@@ -32,6 +33,7 @@ internal sealed class OutputTargetViewModel : Conductor<IOutputTarget>.Collectio
 
         _semaphores = [];
         _cancellationSource = new CancellationTokenSource();
+        _scanIntervalSemaphore = new SemaphoreSlim(0);
 
         AvailableOutputTargetTypes = ReflectionUtils.FindImplementations<IOutputTarget>().ToList();
     }
@@ -154,17 +156,25 @@ internal sealed class OutputTargetViewModel : Conductor<IOutputTarget>.Collectio
 
         await _semaphores[target].WaitAsync(token);
         if (target.Status == ConnectionStatus.Connected)
-        {
-            await target.DisconnectAsync();
-            await target.WaitForDisconnect(token);
-        }
+            await DisconnectAsync(target, token);
         else if (target.Status == ConnectionStatus.Disconnected)
-        {
-            await target.ConnectAsync();
-            await target.WaitForIdle(token);
-        }
+            await ConnectAsync(target, token);
 
         _semaphores[target].Release();
+    }
+
+    private async Task ConnectAsync(IOutputTarget target, CancellationToken token)
+    {
+        _scanIntervalSemaphore.Release();
+        await target.ConnectAsync();
+        await target.WaitForIdle(token);
+    }
+
+    private async Task DisconnectAsync(IOutputTarget target, CancellationToken token)
+    {
+        _scanIntervalSemaphore.Release();
+        await target.DisconnectAsync();
+        await target.WaitForDisconnect(token);
     }
 
     private async Task ScanAsync(CancellationToken token)
@@ -181,15 +191,12 @@ internal sealed class OutputTargetViewModel : Conductor<IOutputTarget>.Collectio
 
                     await _semaphores[target].WaitAsync(token);
                     if (target.Status != ConnectionStatus.Connected && await target.CanConnectAsyncWithStatus(token))
-                    {
-                        await target.ConnectAsync();
-                        await target.WaitForIdle(token);
-                    }
+                        await ConnectAsync(target, token);
 
                     _semaphores[target].Release();
                 }
 
-                await Task.Delay(ScanInterval, token);
+                while (await _scanIntervalSemaphore.WaitAsync(ScanInterval, token));
             }
         }
         catch (OperationCanceledException) { }
@@ -205,25 +212,15 @@ internal sealed class OutputTargetViewModel : Conductor<IOutputTarget>.Collectio
         s.RegisterAction($"{target.Identifier}::Connection::Connect", async () =>
         {
             await _semaphores[target].WaitAsync(token);
-
             if (target.Status == ConnectionStatus.Disconnected)
-            {
-                await target.ConnectAsync();
-                await target.WaitForIdle(token);
-            }
-
+                await ConnectAsync(target, token);
             _semaphores[target].Release();
         });
         s.RegisterAction($"{target.Identifier}::Connection::Disconnect", async () =>
         {
             await _semaphores[target].WaitAsync(token);
-
             if (target.Status == ConnectionStatus.Connected)
-            {
-                await target.DisconnectAsync();
-                await target.WaitForDisconnect(token);
-            }
-
+                await DisconnectAsync(target, token);
             _semaphores[target].Release();
         });
         #endregion
@@ -248,10 +245,12 @@ internal sealed class OutputTargetViewModel : Conductor<IOutputTarget>.Collectio
                 semaphore.Dispose();
 
         _cancellationSource?.Dispose();
+        _scanIntervalSemaphore?.Dispose();
 
         _semaphores = null;
         _task = null;
         _cancellationSource = null;
+        _scanIntervalSemaphore = null;
     }
 
     public void Dispose()
