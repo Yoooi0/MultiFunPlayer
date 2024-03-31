@@ -1,4 +1,4 @@
-using MultiFunPlayer.Common;
+﻿using MultiFunPlayer.Common;
 using MultiFunPlayer.MediaSource;
 using MultiFunPlayer.Shortcut;
 using Newtonsoft.Json.Linq;
@@ -12,6 +12,7 @@ internal sealed class MediaSourceViewModel : Conductor<IMediaSource>.Collection.
     private CancellationTokenSource _cancellationSource;
     private IMediaSource _currentSource;
     private SemaphoreSlim _semaphore;
+    private SemaphoreSlim _scanIntervalSemaphore;
 
     public IReadOnlyList<IMediaSource> AvailableSources { get; }
 
@@ -28,6 +29,7 @@ internal sealed class MediaSourceViewModel : Conductor<IMediaSource>.Collection.
         _currentSource = null;
         _semaphore = new SemaphoreSlim(1, 1);
         _cancellationSource = new CancellationTokenSource();
+        _scanIntervalSemaphore = new SemaphoreSlim(0);
 
         RegisterActions(shortcutManager);
     }
@@ -151,12 +153,14 @@ internal sealed class MediaSourceViewModel : Conductor<IMediaSource>.Collection.
 
     private async Task ConnectAsync(IMediaSource source, CancellationToken token)
     {
+        _scanIntervalSemaphore.Release();
         await source.ConnectAsync();
         await source.WaitForIdle(token);
     }
 
     private async Task DisconnectAsync(IMediaSource source, CancellationToken token)
     {
+        _scanIntervalSemaphore.Release();
         await source.DisconnectAsync();
         await source.WaitForDisconnect(token);
     }
@@ -168,6 +172,30 @@ internal sealed class MediaSourceViewModel : Conductor<IMediaSource>.Collection.
             await Task.Delay(ScanDelay, token);
             while (!token.IsCancellationRequested)
             {
+                if (_currentSource == null)
+                {
+                    foreach (var source in Items.ToList())
+                    {
+                        if (_currentSource != null)
+                            break;
+
+                        if (!source.AutoConnectEnabled)
+                            continue;
+
+                        await _semaphore.WaitAsync(token);
+                        if (_currentSource == null && await source.CanConnectAsyncWithStatus(token))
+                        {
+                            await source.ConnectAsync();
+                            await source.WaitForIdle(token);
+
+                            if (source.Status == ConnectionStatus.Connected)
+                                _currentSource = source;
+                        }
+
+                        _semaphore.Release();
+                    }
+                }
+
                 if (_currentSource != null)
                 {
                     await _currentSource.WaitForDisconnect(token);
@@ -177,31 +205,7 @@ internal sealed class MediaSourceViewModel : Conductor<IMediaSource>.Collection.
                     _semaphore.Release();
                 }
 
-                foreach (var source in Items.ToList())
-                {
-                    if (_currentSource != null)
-                        break;
-
-                    if (!source.AutoConnectEnabled)
-                        continue;
-
-                    await _semaphore.WaitAsync(token);
-                    if (await source.CanConnectAsyncWithStatus(token))
-                    {
-                        if (_currentSource == null)
-                        {
-                            await source.ConnectAsync();
-                            await source.WaitForIdle(token);
-
-                            if (source.Status == ConnectionStatus.Connected)
-                                _currentSource = source;
-                        }
-                    }
-
-                    _semaphore.Release();
-                }
-
-                await Task.Delay(ScanInterval, token);
+                while (await _scanIntervalSemaphore.WaitAsync(ScanInterval, token));
             }
         }
         catch (OperationCanceledException) { }
@@ -239,11 +243,13 @@ internal sealed class MediaSourceViewModel : Conductor<IMediaSource>.Collection.
         _semaphore?.Dispose();
         _currentSource?.Dispose();
         _cancellationSource?.Dispose();
+        _scanIntervalSemaphore?.Dispose();
 
         _task = null;
         _semaphore = null;
         _currentSource = null;
         _cancellationSource = null;
+        _scanIntervalSemaphore = null;
     }
 
     public void Dispose()
