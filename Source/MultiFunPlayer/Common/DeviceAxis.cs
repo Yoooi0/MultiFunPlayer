@@ -14,7 +14,6 @@ public sealed class DeviceAxis
     public double DefaultValue { get; }
     public string FriendlyName { get; }
     public IReadOnlyList<string> FunscriptNames { get; }
-    public bool LoadUnnamedScript { get; }
 
     public override string ToString() => Name;
     public override int GetHashCode() => _id;
@@ -27,7 +26,6 @@ public sealed class DeviceAxis
         DefaultValue = settings.DefaultValue;
         FriendlyName = settings.FriendlyName;
         FunscriptNames = settings.FunscriptNames;
-        LoadUnnamedScript = settings.LoadUnnamedScript;
     }
 
     private static int _count;

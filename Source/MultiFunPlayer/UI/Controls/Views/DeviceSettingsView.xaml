@@ -210,23 +210,7 @@
                             <DataGridTextColumn Binding="{Binding FriendlyName}"
                                                 EditingElementStyle="{StaticResource MaterialDesignDataGridTextColumnEditingStyle}"
                                                 ElementStyle="{StaticResource MaterialDesignDataGridTextColumnStyle}"
-                                                Header="Friendly name">
-                                <DataGridTextColumn.HeaderStyle>
-                                    <Style BasedOn="{StaticResource MaterialDesignDataGridColumnHeader}" TargetType="{x:Type DataGridColumnHeader}">
-                                        <Setter Property="HorizontalContentAlignment" Value="Right"/>
-                                        <Setter Property="ContentTemplate">
-                                            <Setter.Value>
-                                                <DataTemplate>
-                                                    <TextBlock Width="50"
-                                                               Text="{Binding}"
-                                                               TextAlignment="Right"
-                                                               TextWrapping="Wrap"/>
-                                                </DataTemplate>
-                                            </Setter.Value>
-                                        </Setter>
-                                    </Style>
-                                </DataGridTextColumn.HeaderStyle>
-                            </DataGridTextColumn>
+                                                Header="Friendly name"/>
 
                             <DataGridTextColumn Binding="{Binding FunscriptNames, Converter={StaticResource FunscriptNameListToStringConverter}}"
                                                 EditingElementStyle="{StaticResource MaterialDesignDataGridTextColumnEditingStyle}"
@@ -234,14 +218,35 @@
                                                 Header="Funscript names">
                                 <DataGridTextColumn.HeaderStyle>
                                     <Style BasedOn="{StaticResource MaterialDesignDataGridColumnHeader}" TargetType="{x:Type DataGridColumnHeader}">
-                                        <Setter Property="HorizontalContentAlignment" Value="Right"/>
                                         <Setter Property="ContentTemplate">
                                             <Setter.Value>
                                                 <DataTemplate>
-                                                    <TextBlock Width="60"
-                                                               Text="{Binding}"
-                                                               TextAlignment="Right"
-                                                               TextWrapping="Wrap"/>
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <TextBlock Margin="0 0 3 0" Text="{Binding}"/>
+
+                                                        <material:ColorZone DockPanel.Dock="Right"
+                                                                            Width="14"
+                                                                            Height="14"
+                                                                            VerticalAlignment="Center"
+                                                                            Background="{DynamicResource PrimaryHueLightBrush}"
+                                                                            CornerRadius="7"
+                                                                            Mode="Custom">
+                                                            <material:ColorZone.ToolTip>
+                                                                <TextBlock>
+                                                                    List of names used to match funscript files to this axis<LineBreak/>
+                                                                    The files should be in&#x20;<Italic>&lt;video name&gt;.&lt;funscript name&gt;.funscript</Italic>
+                                                                    format<LineBreak/>
+                                                                    Use * to match files without a funscript name<LineBreak/>
+                                                                    Names are processed in order from left to right</TextBlock>
+                                                            </material:ColorZone.ToolTip>
+                                                            <material:PackIcon Width="10"
+                                                                               Height="10"
+                                                                               HorizontalAlignment="Center"
+                                                                               VerticalAlignment="Center"
+                                                                               Foreground="Black"
+                                                                               Kind="QuestionMark"/>
+                                                        </material:ColorZone>
+                                                    </StackPanel>
                                                 </DataTemplate>
                                             </Setter.Value>
                                         </Setter>
@@ -249,49 +254,12 @@
                                 </DataGridTextColumn.HeaderStyle>
                             </DataGridTextColumn>
 
-                            <DataGridCheckBoxColumn Binding="{Binding LoadUnnamedScript, UpdateSourceTrigger=PropertyChanged}"
-                                                    EditingElementStyle="{StaticResource MaterialDesignDataGridCheckBoxColumnEditingStyle}"
-                                                    ElementStyle="{StaticResource MaterialDesignDataGridCheckBoxColumnStyle}"
-                                                    Header="Load unnamed script">
-                                <DataGridCheckBoxColumn.HeaderStyle>
-                                    <Style BasedOn="{StaticResource MaterialDesignDataGridColumnHeader}" TargetType="{x:Type DataGridColumnHeader}">
-                                        <Setter Property="HorizontalContentAlignment" Value="Right"/>
-                                        <Setter Property="ContentTemplate">
-                                            <Setter.Value>
-                                                <DataTemplate>
-                                                    <TextBlock Width="90"
-                                                               Text="{Binding}"
-                                                               TextAlignment="Right"
-                                                               TextWrapping="Wrap"/>
-                                                </DataTemplate>
-                                            </Setter.Value>
-                                        </Setter>
-                                    </Style>
-                                </DataGridCheckBoxColumn.HeaderStyle>
-                            </DataGridCheckBoxColumn>
-
                             <metro:DataGridNumericUpDownColumn Binding="{Binding DefaultValue}"
                                                                Header="Default value"
                                                                HideUpDownButtons="True"
                                                                Maximum="1"
                                                                Minimum="0"
-                                                               StringFormat="{}{0:P0}">
-                                <metro:DataGridNumericUpDownColumn.HeaderStyle>
-                                    <Style BasedOn="{StaticResource MaterialDesignDataGridColumnHeader}" TargetType="{x:Type DataGridColumnHeader}">
-                                        <Setter Property="HorizontalContentAlignment" Value="Right"/>
-                                        <Setter Property="ContentTemplate">
-                                            <Setter.Value>
-                                                <DataTemplate>
-                                                    <TextBlock Width="50"
-                                                               Text="{Binding}"
-                                                               TextAlignment="Right"
-                                                               TextWrapping="Wrap"/>
-                                                </DataTemplate>
-                                            </Setter.Value>
-                                        </Setter>
-                                    </Style>
-                                </metro:DataGridNumericUpDownColumn.HeaderStyle>
-                            </metro:DataGridNumericUpDownColumn>
+                                                               StringFormat="{}{0:P0}"/>
 
                             <DataGridCheckBoxColumn Binding="{Binding Enabled, UpdateSourceTrigger=PropertyChanged}"
                                                     EditingElementStyle="{StaticResource MaterialDesignDataGridCheckBoxColumnEditingStyle}"

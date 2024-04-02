@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using Stylet;
 
 namespace MultiFunPlayer.Common;
@@ -28,7 +28,7 @@ internal sealed class DeviceSettings : PropertyChangedBase
             IsDefault = true,
             Axes =
             [
-                new() { Name = "L0", FriendlyName = "Up/Down", FunscriptNames = ["stroke", "L0", "up", "raw"], LoadUnnamedScript = true, Enabled = true, DefaultValue = 0.5, },
+                new() { Name = "L0", FriendlyName = "Up/Down", FunscriptNames = ["raw", "*", "stroke", "L0", "up"], Enabled = true, DefaultValue = 0.5, },
                 new() { Name = "L1", FriendlyName = "Forward/Backward", FunscriptNames = ["surge", "L1", "forward"], Enabled = true, DefaultValue = 0.5, },
                 new() { Name = "L2", FriendlyName = "Left/Right", FunscriptNames = ["sway", "L2", "left"], Enabled = true, DefaultValue = 0.5, },
                 new() { Name = "R0", FriendlyName = "Twist", FunscriptNames = ["twist", "R0", "yaw"], Enabled = true, DefaultValue = 0.5, },
@@ -46,7 +46,7 @@ internal sealed class DeviceSettings : PropertyChangedBase
             IsDefault = true,
             Axes =
             [
-                new() { Name = "L0", FriendlyName = "Up/Down", FunscriptNames = ["stroke", "L0", "up", "raw"], LoadUnnamedScript = true, Enabled = true, DefaultValue = 0.5, },
+                new() { Name = "L0", FriendlyName = "Up/Down", FunscriptNames = ["raw", "*", "stroke", "L0", "up"], Enabled = true, DefaultValue = 0.5, },
                 new() { Name = "L1", FriendlyName = "Forward/Backward", FunscriptNames = ["surge", "L1", "forward"], Enabled = true, DefaultValue = 0.5, },
                 new() { Name = "L2", FriendlyName = "Left/Right", FunscriptNames = ["sway", "L2", "left"], Enabled = true, DefaultValue = 0.5, },
                 new() { Name = "R0", FriendlyName = "Twist", FunscriptNames = ["twist", "R0", "yaw"], Enabled = true, DefaultValue = 0.5, },
@@ -68,7 +68,6 @@ internal sealed class DeviceAxisSettings : PropertyChangedBase
     [JsonProperty] public string Name { get; set; } = null;
     [JsonProperty] public string FriendlyName { get; set; } = null;
     [JsonProperty] public ObservableConcurrentCollection<string> FunscriptNames { get; set; } = [];
-    [JsonProperty] public bool LoadUnnamedScript { get; set; } = false;
     [JsonProperty] public double DefaultValue { get; set; } = 0;
     [JsonProperty] public bool Enabled { get; set; } = false;
 
@@ -77,7 +76,6 @@ internal sealed class DeviceAxisSettings : PropertyChangedBase
         Name = Name,
         FriendlyName = FriendlyName,
         FunscriptNames = new(FunscriptNames),
-        LoadUnnamedScript = LoadUnnamedScript,
         DefaultValue = DefaultValue,
         Enabled = Enabled
     };

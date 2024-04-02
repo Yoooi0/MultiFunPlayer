@@ -15,7 +15,8 @@ internal sealed class FunscriptNameListToStringConverter : IValueConverter
 
         var items = list.NotNull()
                         .Select(x => x.Split('.', _splitOptions).LastOrDefault())
-                        .Where(x => !string.IsNullOrEmpty(x));
+                        .Where(x => !string.IsNullOrEmpty(x))
+                        .Distinct(StringComparer.OrdinalIgnoreCase);
 
         return string.Join(", ", items);
     }
@@ -32,7 +33,7 @@ internal sealed class FunscriptNameListToStringConverter : IValueConverter
         var items = s.Split(',', _splitOptions)
                      .Select(x => x.Split('.', _splitOptions).LastOrDefault())
                      .Where(x => !string.IsNullOrWhiteSpace(x))
-                     .Distinct();
+                     .Distinct(StringComparer.OrdinalIgnoreCase);
 
         foreach (var item in items)
                 list.Add(item);

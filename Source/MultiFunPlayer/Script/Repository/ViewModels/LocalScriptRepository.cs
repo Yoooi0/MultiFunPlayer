@@ -31,72 +31,76 @@ internal sealed class LocalScriptRepository(IEventAggregator eventAggregator) : 
         if (!axes.Any())
             return [];
 
-        Logger.Debug("Maching files to axes [Axes: {list}]", axes);
-
-        var searchResult = new Dictionary<DeviceAxis, IScriptResource>();
         var mediaWithoutExtension = Path.GetFileNameWithoutExtension(mediaName);
-        if (ScriptLibraries != null)
-        {
-            foreach (var library in ScriptLibraries)
-            {
-                Logger.Debug("Searching library \"{0}\"", library.Directory);
-                foreach (var zipFile in library.EnumerateFiles($"{mediaWithoutExtension}.zip"))
-                    TryMatchArchive(zipFile.FullName);
-
-                foreach (var funscriptFile in library.EnumerateFiles($"{mediaWithoutExtension}.*funscript"))
-                    TryMatchName(funscriptFile.Name, FunscriptReader.Default.FromFileInfo(funscriptFile));
-            }
-        }
-
+        var foundScripts = new List<ScriptReaderResult>();
         if (Directory.Exists(mediaSource))
         {
-            Logger.Debug("Searching media location \"{0}\"", mediaSource);
             var sourceDirectory = new DirectoryInfo(mediaSource);
-            TryMatchArchive(Path.Join(sourceDirectory.FullName, $"{mediaWithoutExtension}.zip"));
+            Logger.Debug("Searching media location \"{0}\"", sourceDirectory.FullName);
 
-            foreach (var funscriptFile in sourceDirectory.EnumerateFiles($"{mediaWithoutExtension}.*funscript").OrderBy(i => i.FullName))
-                TryMatchName(funscriptFile.Name, FunscriptReader.Default.FromFileInfo(funscriptFile));
+            AddToFound(foundScripts, EnumerateArchive(Path.Join(sourceDirectory.FullName, $"{mediaWithoutExtension}.zip")));
+            AddToFound(foundScripts, sourceDirectory.EnumerateFiles($"{mediaWithoutExtension}.*funscript")
+                                                    .OrderBy(i => i.FullName)
+                                                    .Select(FunscriptReader.Default.FromFileInfo));
         }
+
+        foreach (var library in ScriptLibraries)
+        {
+            Logger.Debug("Searching library \"{0}\"", library.Directory);
+            AddToFound(foundScripts, library.EnumerateFiles($"{mediaWithoutExtension}.zip")
+                                            .SelectMany(i => EnumerateArchive(i.FullName)));
+            AddToFound(foundScripts, library.EnumerateFiles($"{mediaWithoutExtension}.*funscript")
+                                            .Select(FunscriptReader.Default.FromFileInfo));
+        }
+
+        Logger.Debug("Found {0} scripts matching \"{1}\"", foundScripts.Count, mediaName);
+        Logger.Debug("Maching scripts to axes {list}", axes);
+
+        var searchResult = new Dictionary<DeviceAxis, IScriptResource>();
+        if (foundScripts.Find(r => r.IsMultiAxis) is ScriptReaderResult multiAxisScript)
+        {
+            Logger.Debug("Matching first found multi-axis script");
+            foreach (var axis in axes)
+                AddToResult(searchResult, axis, multiAxisScript.Resources.GetValueOrDefault(axis, null));
+        }
+
+        var foundScriptNames = foundScripts.Select(r => r.Name).Distinct();
+        var foundScriptLookup = foundScripts.ToLookup(r => r.Name);
+        foreach (var axis in axes)
+            foreach (var matchedScriptName in DeviceAxisUtils.FindNamesMatchingAxis(axis, foundScriptNames, mediaName))
+                foreach (var matchedScript in foundScriptLookup[matchedScriptName])
+                    AddToResult(searchResult, axis, matchedScript.Resource);
 
         return searchResult;
 
-        void SaveScriptToResult(DeviceAxis axis, IScriptResource resource)
+        static void AddToResult(IDictionary<DeviceAxis, IScriptResource> result, DeviceAxis axis, IScriptResource resource)
         {
-            Logger.Debug("Matched {0} script to \"{1}\"", axis, resource.Name);
-            if (searchResult.TryGetValue(axis, out var existingResource))
-                Logger.Debug("Overwriting {0} script from \"{1}\"", axis, existingResource.Name);
-
-            searchResult[axis] = resource;
-        }
-
-        void TryMatchName(string scriptName, ScriptReaderResult readerResult)
-        {
-            if (!readerResult.IsSuccess)
-                return;
-
-            if (readerResult.IsMultiAxis)
-            {
-                foreach (var (axis, resource) in readerResult.Resources)
-                    SaveScriptToResult(axis, resource);
-            }
+            if (!result.TryAdd(axis, resource))
+                Logger.Debug("Matched {0} script to [Name: \"{1}\", Source: \"{2}\"]", axis, resource.Name, resource.Source);
             else
+                Logger.Debug("Ignoring {0} script [Name: \"{1}\", Source: \"{2}\"] because {0} is already matched to a script", axis, resource.Name, resource.Source);
+        }
+
+        static void AddToFound(IList<ScriptReaderResult> results, IEnumerable<ScriptReaderResult> newResults)
+        {
+            foreach (var newResult in newResults)
             {
-                foreach (var axis in DeviceAxisUtils.FindAxesMatchingName(axes, scriptName, mediaName))
-                    SaveScriptToResult(axis, readerResult.Resource);
+                Logger.Debug("Found script [Name: \"{0}\", Source: \"{1}\"]", newResult.Name, newResult.Source);
+                results.Add(newResult);
             }
         }
 
-        void TryMatchArchive(string archivePath)
+        static IEnumerable<ScriptReaderResult> EnumerateArchive(string archivePath)
         {
             if (!File.Exists(archivePath))
-                return;
+                yield break;
 
-            Logger.Debug("Matching zip file \"{0}\"", archivePath);
+            Logger.Debug("Searching zip file \"{0}\"", archivePath);
             using var zip = ZipFile.OpenRead(archivePath);
             foreach (var entry in zip.Entries.Where(e => string.Equals(Path.GetExtension(e.FullName), ".funscript", StringComparison.OrdinalIgnoreCase)))
             {
                 using var stream = entry.Open();
-                TryMatchName(entry.Name, FunscriptReader.Default.FromStream(entry.Name, archivePath, stream));
+                yield return FunscriptReader.Default.FromStream(entry.Name, archivePath, stream);
             }
         }
     }

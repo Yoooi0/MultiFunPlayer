@@ -41,7 +41,7 @@ internal sealed class ScriptRepositoryManager : Screen, IScriptRepositoryManager
         if (mediaResource == null)
             return result;
 
-        Logger.Info("Trying to match scripts to resource [Name: {0}, Source: {1}]", mediaResource.Name, mediaResource.Source);
+        Logger.Info("Trying to match scripts to media [Name: \"{0}\", Source: \"{1}\"]", mediaResource.Name, mediaResource.Source);
         foreach (var model in Repositories)
         {
             if (!model.Enabled)
@@ -60,7 +60,7 @@ internal sealed class ScriptRepositoryManager : Screen, IScriptRepositoryManager
         }
 
         foreach(var (axis, resource) in result)
-            Logger.Info("Matched {0} script to \"{1}\"", axis, resource.Name);
+            Logger.Info("Matched {0} script to [Name: \"{1}\", Source: \"{2}\"]", axis, resource?.Name, resource?.Source);
 
         return result;
     }
