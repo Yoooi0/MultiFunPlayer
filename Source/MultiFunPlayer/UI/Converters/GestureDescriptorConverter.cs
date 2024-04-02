@@ -12,7 +12,7 @@ internal sealed class GestureDescriptorToBrushConverter : IValueConverter
 {
     public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
     {
-        if (value is string || value == null)
+        if (value is string or null)
             return null;
 
         var colorHex = value switch

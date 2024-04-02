@@ -21,7 +21,7 @@ internal sealed class JellyfinMediaSource(IShortcutManager shortcutManager, IEve
     public override ConnectionStatus Status { get; protected set; }
     public bool IsConnected => Status == ConnectionStatus.Connected;
     public bool IsDisconnected => Status == ConnectionStatus.Disconnected;
-    public bool IsConnectBusy => Status == ConnectionStatus.Connecting || Status == ConnectionStatus.Disconnecting;
+    public bool IsConnectBusy => Status is ConnectionStatus.Connecting or ConnectionStatus.Disconnecting;
     public bool CanToggleConnect => !IsConnectBusy;
 
     public Uri ServerBaseUri { get; set; } = new Uri("http://127.0.0.1:8096");

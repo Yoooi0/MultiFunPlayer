@@ -21,7 +21,7 @@ internal sealed class OfsMediaSource(IShortcutManager shortcutManager, IEventAgg
     public override ConnectionStatus Status { get; protected set; }
     public bool IsConnected => Status == ConnectionStatus.Connected;
     public bool IsDisconnected => Status == ConnectionStatus.Disconnected;
-    public bool IsConnectBusy => Status == ConnectionStatus.Connecting || Status == ConnectionStatus.Disconnecting;
+    public bool IsConnectBusy => Status is ConnectionStatus.Connecting or ConnectionStatus.Disconnecting;
     public bool CanToggleConnect => !IsConnectBusy;
 
     public Uri Uri { get; set; } = new Uri("ws://127.0.0.1:8080/ofs");

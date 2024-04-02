@@ -1,4 +1,3 @@
-﻿using ControlzEx.Standard;
 using MultiFunPlayer.Settings;
 using Newtonsoft.Json.Linq;
 using NLog;

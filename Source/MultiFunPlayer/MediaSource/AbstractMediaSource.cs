@@ -63,7 +63,7 @@ internal abstract class AbstractMediaSource : Screen, IMediaSource, IHandle<IMed
 
     public async virtual Task DisconnectAsync()
     {
-        if (Status == ConnectionStatus.Disconnected || Status == ConnectionStatus.Disconnecting)
+        if (Status is ConnectionStatus.Disconnected or ConnectionStatus.Disconnecting)
             return;
 
         Status = ConnectionStatus.Disconnecting;

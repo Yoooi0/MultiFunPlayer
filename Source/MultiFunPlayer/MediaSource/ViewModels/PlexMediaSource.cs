@@ -1,4 +1,4 @@
-﻿using MultiFunPlayer.Common;
+using MultiFunPlayer.Common;
 using MultiFunPlayer.UI;
 using NLog;
 using Stylet;
@@ -24,7 +24,7 @@ internal sealed class PlexMediaSource(IShortcutManager shortcutManager, IEventAg
     public override ConnectionStatus Status { get; protected set; }
     public bool IsConnected => Status == ConnectionStatus.Connected;
     public bool IsDisconnected => Status == ConnectionStatus.Disconnected;
-    public bool IsConnectBusy => Status == ConnectionStatus.Connecting || Status == ConnectionStatus.Disconnecting;
+    public bool IsConnectBusy => Status is ConnectionStatus.Connecting or ConnectionStatus.Disconnecting;
     public bool CanToggleConnect => !IsConnectBusy && SelectedClient != null && !string.IsNullOrWhiteSpace(PlexToken);
 
     public ObservableConcurrentCollection<PlexClient> Clients { get; } = [];

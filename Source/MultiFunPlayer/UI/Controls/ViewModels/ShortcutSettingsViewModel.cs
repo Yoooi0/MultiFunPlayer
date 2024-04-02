@@ -1,4 +1,4 @@
-using MultiFunPlayer.Common;
+﻿using MultiFunPlayer.Common;
 using MultiFunPlayer.Input;
 using MultiFunPlayer.Shortcut;
 using MultiFunPlayer.UI.Dialogs.ViewModels;
@@ -15,7 +15,7 @@ using System.Windows.Data;
 namespace MultiFunPlayer.UI.Controls.ViewModels;
 
 [JsonObject(MemberSerialization = MemberSerialization.OptIn)]
-internal sealed class ShortcutSettingsViewModel : Screen, IHandle<SettingsMessage>, IHandle<IInputGesture>, IDisposable
+internal sealed class ShortcutSettingsViewModel : Screen, IHandle<SettingsMessage>, IHandle<IInputGesture>
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
@@ -80,7 +80,7 @@ internal sealed class ShortcutSettingsViewModel : Screen, IHandle<SettingsMessag
 
         PropertyChanged += (s, e) =>
         {
-            if (e.PropertyName == nameof(ActionsFilter) || e.PropertyName == nameof(SelectedShortcut))
+            if (e.PropertyName is nameof(ActionsFilter) or nameof(SelectedShortcut))
                 AvailableActionsView.Refresh();
         };
 
@@ -260,13 +260,5 @@ internal sealed class ShortcutSettingsViewModel : Screen, IHandle<SettingsMessag
             s => s.WithLabel("Target shortcut name"),
             shortcutName => UpdateSettings(shortcutName, s => s.Enabled = !s.Enabled));
         #endregion
-    }
-
-    private void Dispose(bool disposing) { }
-
-    public void Dispose()
-    {
-        Dispose(disposing: true);
-        GC.SuppressFinalize(this);
     }
 }

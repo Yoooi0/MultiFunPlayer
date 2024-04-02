@@ -372,7 +372,7 @@ public sealed partial class DraggablePointCanvas : UserControl
             return;
 
         var y = Math.Clamp(_keyframes.Interpolate(index, x, InterpolationType), 0, ActualHeight);
-        (Scrubber.Data as EllipseGeometry).Center = new Point(x, y);
+        ((EllipseGeometry)Scrubber.Data).Center = new Point(x, y);
 
         bool CanRefresh()
         {

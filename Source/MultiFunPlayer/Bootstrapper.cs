@@ -140,7 +140,7 @@ internal sealed class Bootstrapper : Bootstrapper<RootViewModel>
             return;
 
         var vcDllPresent = Directory.EnumerateFiles(Path.GetDirectoryName(Environment.ProcessPath), "*.dll", SearchOption.AllDirectories)
-                                    .Select(f => Path.GetFileName(f))
+                                    .Select(Path.GetFileName)
                                     .Any(f => f.StartsWith("vcruntime140", StringComparison.OrdinalIgnoreCase));
         if (vcDllPresent)
             return;

@@ -15,8 +15,8 @@ public abstract class PluginBase : PropertyChangedBase
 {
     private readonly MessageProxy _messageProxy;
     private readonly FrozenDictionary<Type, bool> _asyncHandlerOverrides;
-    internal CancellationTokenSource _internalCancellationSource;
 
+    internal CancellationTokenSource InternalCancellationSource;
     internal event EventHandler<Exception> OnInternalException;
 
     [Inject] internal IDeviceAxisValueProvider DeviceAxisValueProvider { get; set; }
@@ -154,7 +154,7 @@ public abstract class PluginBase : PropertyChangedBase
 
         if (_asyncHandlerOverrides.TryGetValue(e.GetType(), out var overridden) && overridden)
         {
-            var token = _internalCancellationSource.Token;
+            var token = InternalCancellationSource.Token;
             _ = Task.Run(async () =>
             {
                 try
@@ -189,7 +189,7 @@ public abstract class PluginBase : PropertyChangedBase
 
     internal void InternalInitialize(CancellationToken cancellationToken)
     {
-        _internalCancellationSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        InternalCancellationSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         EventAggregator.Subscribe(_messageProxy);
     }
 
@@ -200,9 +200,9 @@ public abstract class PluginBase : PropertyChangedBase
     {
         EventAggregator.Unsubscribe(_messageProxy);
 
-        _internalCancellationSource?.Cancel();
-        _internalCancellationSource?.Dispose();
-        _internalCancellationSource = null;
+        InternalCancellationSource?.Cancel();
+        InternalCancellationSource?.Dispose();
+        InternalCancellationSource = null;
 
         Dispose(disposing: true);
         GC.SuppressFinalize(this);
@@ -225,13 +225,13 @@ public abstract class SyncPluginBase : PluginBase
         void HandleInternalException(object _, Exception e)
         {
             if (Interlocked.CompareExchange(ref internalException, e, null) == null)
-                _internalCancellationSource.Cancel();
+                InternalCancellationSource.Cancel();
         }
 
         try
         {
             OnInternalException += HandleInternalException;
-            Execute(_internalCancellationSource.Token);
+            Execute(InternalCancellationSource.Token);
         }
         catch (OperationCanceledException) when (internalException != null) { internalException.Throw(); }
         catch (Exception e) when (internalException != null) { throw new AggregateException(internalException, e); }
@@ -260,13 +260,13 @@ public abstract class AsyncPluginBase : PluginBase
         void HandleInternalException(object _, Exception e)
         {
             if (Interlocked.CompareExchange(ref internalException, e, null) == null)
-                _internalCancellationSource.Cancel();
+                InternalCancellationSource.Cancel();
         }
 
         try
         {
             OnInternalException += HandleInternalException;
-            await ExecuteAsync(_internalCancellationSource.Token);
+            await ExecuteAsync(InternalCancellationSource.Token);
         }
         catch (OperationCanceledException) when (internalException != null) { internalException.Throw(); }
         catch (Exception e) when (internalException != null) { throw new AggregateException(internalException, e); }

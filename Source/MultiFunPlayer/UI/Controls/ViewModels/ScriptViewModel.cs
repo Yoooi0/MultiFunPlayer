@@ -929,7 +929,7 @@ internal sealed class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDispo
         if (!axes.Any())
             return;
 
-        var maybeSkipPosition = AxisKeyframes.Keys.Select(a => GetSkipPosition(a)).MinBy(x => x ?? double.PositiveInfinity);
+        var maybeSkipPosition = AxisKeyframes.Keys.Select(GetSkipPosition).MinBy(x => x ?? double.PositiveInfinity);
         var currentPosition = MediaPosition;
         if (maybeSkipPosition is not double skipPosition || currentPosition >= skipPosition || (skipPosition - currentPosition) <= minimumSkip)
             return;
@@ -1357,7 +1357,7 @@ internal sealed class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDispo
                 else if (!play && IsPlaying) OnPlayPauseClick();
             });
 
-        s.RegisterAction("Media::PlayPause::Toggle", () => OnPlayPauseClick());
+        s.RegisterAction("Media::PlayPause::Toggle", OnPlayPauseClick);
         #endregion
 
         #region Media::Path
@@ -1389,7 +1389,7 @@ internal sealed class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDispo
         s.RegisterAction<double>("Media::Position::Time::Offset",
             s => s.WithLabel("Value offset").WithStringFormat("{}{0}s"), offset => SeekMediaToTime(MediaPosition + offset));
         s.RegisterAction<double>("Media::Position::Time::Set",
-            s => s.WithLabel("Value").WithStringFormat("{}{0}s"), value => SeekMediaToTime(value));
+            s => s.WithLabel("Value").WithStringFormat("{}{0}s"), SeekMediaToTime);
 
         s.RegisterAction<double>("Media::Position::Percent::Offset",
             s => s.WithLabel("Value offset").WithStringFormat("{}{0}%"),
@@ -1411,7 +1411,7 @@ internal sealed class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDispo
         s.RegisterAction<double, double>("Media::Loop::Set",
             s => s.WithLabel("Start position").WithStringFormat("{}{0}s"),
             s => s.WithLabel("End position").WithStringFormat("{}{0}s"),
-            (startPosition, endPosition) => SetMediaLoop(startPosition, endPosition));
+            SetMediaLoop);
 
         s.RegisterAction("Media::Loop::CycleSetStartEnd", () =>
             {
@@ -1423,12 +1423,12 @@ internal sealed class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDispo
                     SetMediaLoopEndFromMediaPosition();
             });
 
-        s.RegisterAction<double>("Media::Loop::Start::Set", s => s.WithLabel("Position").WithStringFormat("{}{0}s"), position => SetMediaLoopStart(position));
-        s.RegisterAction<double>("Media::Loop::End::Set", s => s.WithLabel("Position").WithStringFormat("{}{0}s"), position => SetMediaLoopEnd(position));
-        s.RegisterAction("Media::Loop::Clear", () => ClearMediaLoop());
-        s.RegisterAction("Media::Loop::Set::FromCurrentChapter", () => SetMediaLoopFromCurrentChapter());
-        s.RegisterAction("Media::Loop::Start::Set::FromMediaPosition", () => SetMediaLoopStartFromMediaPosition());
-        s.RegisterAction("Media::Loop::End::Set::FromMediaPosition", () => SetMediaLoopEndFromMediaPosition());
+        s.RegisterAction<double>("Media::Loop::Start::Set", s => s.WithLabel("Position").WithStringFormat("{}{0}s"), SetMediaLoopStart);
+        s.RegisterAction<double>("Media::Loop::End::Set", s => s.WithLabel("Position").WithStringFormat("{}{0}s"), SetMediaLoopEnd);
+        s.RegisterAction("Media::Loop::Clear", ClearMediaLoop);
+        s.RegisterAction("Media::Loop::Set::FromCurrentChapter", SetMediaLoopFromCurrentChapter);
+        s.RegisterAction("Media::Loop::Start::Set::FromMediaPosition", SetMediaLoopStartFromMediaPosition);
+        s.RegisterAction("Media::Loop::End::Set::FromMediaPosition", SetMediaLoopEndFromMediaPosition);
         #endregion
 
         #region Media::AutoSkipToScriptStartEnabled
@@ -2161,7 +2161,7 @@ internal sealed class AxisSettings : PropertyChangedBase
         SmartLimitTargetValue = axis.DefaultValue;
         AutoHomeTargetValue = axis.DefaultValue;
 
-        if (axis.Name == "R0" || axis.Name == "R1" || axis.Name == "R2")
+        if (axis.Name is "R0" or "R1" or "R2")
         {
             if (DeviceAxis.TryParse("L0", out var strokeAxis))
                 UpdateMotionProviderWithAxis = strokeAxis;

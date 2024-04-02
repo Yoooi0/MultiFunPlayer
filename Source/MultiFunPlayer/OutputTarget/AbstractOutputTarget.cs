@@ -51,7 +51,7 @@ internal abstract class AbstractOutputTarget : Screen, IOutputTarget
     public abstract Task ConnectAsync();
     public async Task DisconnectAsync()
     {
-        if (Status == ConnectionStatus.Disconnected || Status == ConnectionStatus.Disconnecting)
+        if (Status is ConnectionStatus.Disconnected or ConnectionStatus.Disconnecting)
             return;
 
         Status = ConnectionStatus.Disconnecting;

@@ -26,7 +26,7 @@ internal sealed class SerialOutputTarget(int instanceIndex, IEventAggregator eve
     public override ConnectionStatus Status { get; protected set; }
     public bool IsConnected => Status == ConnectionStatus.Connected;
     public bool IsDisconnected => Status == ConnectionStatus.Disconnected;
-    public bool IsConnectBusy => Status == ConnectionStatus.Connecting || Status == ConnectionStatus.Disconnecting;
+    public bool IsConnectBusy => Status is ConnectionStatus.Connecting or ConnectionStatus.Disconnecting;
     public bool CanToggleConnect => !IsConnectBusy && !IsRefreshBusy && SelectedSerialPortDeviceId != null;
 
     public DeviceAxisUpdateType UpdateType { get; set; } = DeviceAxisUpdateType.FixedUpdate;
@@ -242,7 +242,7 @@ internal sealed class SerialOutputTarget(int instanceIndex, IEventAggregator eve
                 tcodeInputProcessor.Parse(receivedString);
             }
         }
-        catch (Exception e) when (e is TimeoutException || e is IOException)
+        catch (Exception e) when (e is TimeoutException or IOException)
         {
             Logger.Error(e, $"{Identifier} failed with exception");
             _ = DialogHelper.ShowErrorAsync(e, $"{Identifier} failed with exception", "RootDialog");

@@ -31,7 +31,7 @@ internal sealed class InternalMediaSource(ILocalScriptRepository localRepository
     public override ConnectionStatus Status { get; protected set; }
     public bool IsConnected => Status == ConnectionStatus.Connected;
     public bool IsDisconnected => Status == ConnectionStatus.Disconnected;
-    public bool IsConnectBusy => Status == ConnectionStatus.Connecting || Status == ConnectionStatus.Disconnecting;
+    public bool IsConnectBusy => Status is ConnectionStatus.Connecting or ConnectionStatus.Disconnecting;
     public bool CanToggleConnect => !IsConnectBusy;
 
     public int PlaylistIndex { get; set; } = 0;
@@ -270,7 +270,7 @@ internal sealed class InternalMediaSource(ILocalScriptRepository localRepository
     private void SetCurrentItem(PlaylistItem item)
     {
         _currentItem = item;
-        if (Status != ConnectionStatus.Connected && Status != ConnectionStatus.Disconnecting)
+        if (Status is not ConnectionStatus.Connected and not ConnectionStatus.Disconnecting)
             return;
 
         if (item == null)
@@ -320,28 +320,28 @@ internal sealed class InternalMediaSource(ILocalScriptRepository localRepository
     private void SetDuration(double duration)
     {
         _duration = duration;
-        if (Status == ConnectionStatus.Connected || Status == ConnectionStatus.Disconnecting)
+        if (Status is ConnectionStatus.Connected or ConnectionStatus.Disconnecting)
             PublishMessage(new MediaDurationChangedMessage(double.IsFinite(duration) ? TimeSpan.FromSeconds(duration) : null));
     }
 
     private void SetPosition(double position, bool forceSeek = false)
     {
         _position = position;
-        if (Status == ConnectionStatus.Connected || Status == ConnectionStatus.Disconnecting)
+        if (Status is ConnectionStatus.Connected or ConnectionStatus.Disconnecting)
             PublishMessage(new MediaPositionChangedMessage(double.IsFinite(position) ? TimeSpan.FromSeconds(position) : null, forceSeek));
     }
 
     private void SetSpeed(double speed)
     {
         _speed = speed;
-        if (Status == ConnectionStatus.Connected || Status == ConnectionStatus.Disconnecting)
+        if (Status is ConnectionStatus.Connected or ConnectionStatus.Disconnecting)
             PublishMessage(new MediaSpeedChangedMessage(speed));
     }
 
     private void SetIsPlaying(bool isPlaying)
     {
         _isPlaying = isPlaying;
-        if (Status == ConnectionStatus.Connected || Status == ConnectionStatus.Disconnecting)
+        if (Status is ConnectionStatus.Connected or ConnectionStatus.Disconnecting)
             PublishMessage(new MediaPlayingChangedMessage(isPlaying));
     }
 

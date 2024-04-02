@@ -1,154 +1,137 @@
 ﻿using MultiFunPlayer.Common;
-using System.Collections.Concurrent;
 
 namespace MultiFunPlayer.Tests;
 
 public class BroadcastEventTests
 {
+    private const string _context = "context";
+    private const string _value = "value";
+
     [Fact]
     public void RegisterContextThrowsWhenContextAlreadyRegistered()
     {
-        const string context = "context";
         var e = new BroadcastEvent<object>();
 
-        e.RegisterContext(context);
-        Assert.Throws<InvalidOperationException>(() => e.RegisterContext(context));
+        e.RegisterContext(_context);
+        Assert.Throws<InvalidOperationException>(() => e.RegisterContext(_context));
     }
 
     [Fact]
     public void UnregisterContextDoesNotThrowWithoutRegisteredContext()
     {
-        const string context = "context";
         var e = new BroadcastEvent<object>();
-        e.UnregisterContext(context);
+        e.UnregisterContext(_context);
     }
 
     [Fact]
     public void UnregisterContextDoesNotThrowWithRegisteredContext()
     {
-        const string context = "context";
         var e = new BroadcastEvent<object>();
-        e.RegisterContext(context);
-        e.UnregisterContext(context);
+        e.RegisterContext(_context);
+        e.UnregisterContext(_context);
     }
 
     [Fact]
     public void WaitOneSucceedsWithSetValue()
     {
-        const string context = "context";
-        const string value = "value";
         var e = new BroadcastEvent<string>();
-        e.RegisterContext(context);
-        e.Set(value);
+        e.RegisterContext(_context);
+        e.Set(_value);
 
-        (var success, var result) = e.WaitOne(context, CancellationToken.None);
+        (var success, var result) = e.WaitOne(_context, CancellationToken.None);
         Assert.True(success);
-        Assert.Equal(value, result);
+        Assert.Equal(_value, result);
     }
 
     [Fact]
     public async Task WaitOneAsyncSucceedsWithSetValue()
     {
-        const string context = "context";
-        const string value = "value";
         var e = new BroadcastEvent<string>();
-        e.RegisterContext(context);
-        e.Set(value);
+        e.RegisterContext(_context);
+        e.Set(_value);
 
-        (var success, var result) = await e.WaitOneAsync(context, CancellationToken.None);
+        (var success, var result) = await e.WaitOneAsync(_context, CancellationToken.None);
         Assert.True(success);
-        Assert.Equal(value, result);
+        Assert.Equal(_value, result);
     }
 
     [Fact]
     public void WaitOneThrowsWithCancelledToken()
     {
-        const string context = "context";
-        const string value = "value";
         var e = new BroadcastEvent<string>();
-        e.RegisterContext(context);
-        e.Set(value);
+        e.RegisterContext(_context);
+        e.Set(_value);
 
-        Assert.Throws<OperationCanceledException>(() => e.WaitOne(context, new CancellationToken(true)));
+        Assert.Throws<OperationCanceledException>(() => e.WaitOne(_context, new CancellationToken(true)));
     }
 
     [Fact]
     public async Task WaitOneAsyncThrowsWithCancelledToken()
     {
-        const string context = "context";
-        const string value = "value";
         var e = new BroadcastEvent<string>();
-        e.RegisterContext(context);
-        e.Set(value);
+        e.RegisterContext(_context);
+        e.Set(_value);
 
-        await Assert.ThrowsAsync<OperationCanceledException>(async () => await e.WaitOneAsync(context, new CancellationToken(true)));
+        await Assert.ThrowsAsync<OperationCanceledException>(async () => await e.WaitOneAsync(_context, new CancellationToken(true)));
     }
 
     [Fact]
     public void WaitAnySucceedsWithValidIndex()
     {
-        const string context = "context";
-        const string value = "value";
-        const int index = 1;
+        const int Index = 1;
 
         var es = new BroadcastEvent<string>[] { new(), new(), new() };
         foreach (var e in es)
-            e.RegisterContext(context);
+            e.RegisterContext(_context);
 
-        es[index].Set(value);
-        var result = BroadcastEvent<string>.WaitAny(es, context, CancellationToken.None);
+        es[Index].Set(_value);
+        var result = BroadcastEvent<string>.WaitAny(es, _context, CancellationToken.None);
 
-        Assert.Equal(index, result.Index);
-        Assert.Equal(value, result.Value);
+        Assert.Equal(Index, result.Index);
+        Assert.Equal(_value, result.Value);
     }
 
     [Fact]
     public async Task WaitAnyAsyncSucceedsWithValidIndex()
     {
-        const string context = "context";
-        const string value = "value";
         const int index = 1;
 
         var es = new BroadcastEvent<string>[] { new(), new(), new() };
         foreach (var e in es)
-            e.RegisterContext(context);
+            e.RegisterContext(_context);
 
-        es[index].Set(value);
-        var result = await BroadcastEvent<string>.WaitAnyAsync(es, context, CancellationToken.None);
+        es[index].Set(_value);
+        var result = await BroadcastEvent<string>.WaitAnyAsync(es, _context, CancellationToken.None);
 
         Assert.Equal(index, result.Index);
-        Assert.Equal(value, result.Value);
+        Assert.Equal(_value, result.Value);
     }
 
     [Fact]
     public void WaitAnyThrowsWithCancelledToken()
     {
-        const string context = "context";
-        const string value = "value";
         const int index = 1;
 
         var es = new BroadcastEvent<string>[] { new(), new(), new() };
         foreach (var e in es)
-            e.RegisterContext(context);
+            e.RegisterContext(_context);
 
-        es[index].Set(value);
+        es[index].Set(_value);
 
-        Assert.Throws<OperationCanceledException>(() => BroadcastEvent<string>.WaitAny(es, context, new CancellationToken(true)));
+        Assert.Throws<OperationCanceledException>(() => BroadcastEvent<string>.WaitAny(es, _context, new CancellationToken(true)));
     }
 
     [Fact]
     public async Task WaitAnyAsyncThrowsWithCancelledToken()
     {
-        const string context = "context";
-        const string value = "value";
         const int index = 1;
 
         var es = new BroadcastEvent<string>[] { new(), new(), new() };
         foreach (var e in es)
-            e.RegisterContext(context);
+            e.RegisterContext(_context);
 
-        es[index].Set(value);
+        es[index].Set(_value);
 
-        await Assert.ThrowsAsync<OperationCanceledException>(async () => await BroadcastEvent<string>.WaitAnyAsync(es, context, new CancellationToken(true)));
+        await Assert.ThrowsAsync<OperationCanceledException>(async () => await BroadcastEvent<string>.WaitAnyAsync(es, _context, new CancellationToken(true)));
     }
 }
