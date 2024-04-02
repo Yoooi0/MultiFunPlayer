@@ -45,7 +45,7 @@ internal sealed class VlcMediaSource(IShortcutManager shortcutManager, IEventAgg
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", Convert.ToBase64String(Encoding.UTF8.GetBytes($":{Password}")));
 
             var uri = new Uri($"http://{Endpoint.ToUriString()}/requests/status.xml");
-            var response = await UnwrapTimeout(() => client.GetAsync(uri, token));
+            var response = await client.GetAsync(uri, token);
             response.EnsureSuccessStatusCode();
 
             Status = ConnectionStatus.Connected;
@@ -59,7 +59,7 @@ internal sealed class VlcMediaSource(IShortcutManager shortcutManager, IEventAgg
 
             task.ThrowIfFaulted();
         }
-        catch (OperationCanceledException) { }
+        catch (OperationCanceledException e) when (e.InnerException is not TimeoutException) { }
         catch (Exception e)
         {
             Logger.Error(e, $"{Name} failed with exception");
@@ -84,7 +84,7 @@ internal sealed class VlcMediaSource(IShortcutManager shortcutManager, IEventAgg
             {
                 await Task.Delay(200, token);
 
-                var statusResponse = await UnwrapTimeout(() => client.GetAsync(statusUri, token));
+                var statusResponse = await client.GetAsync(statusUri, token);
                 if (statusResponse == null)
                     continue;
 
@@ -106,7 +106,7 @@ internal sealed class VlcMediaSource(IShortcutManager shortcutManager, IEventAgg
 
                 if (playlistId != lastPlaylistId)
                 {
-                    var playlistResponse = await UnwrapTimeout(() => client.GetAsync(playlistUri, token));
+                    var playlistResponse = await client.GetAsync(playlistUri, token);
                     if (playlistResponse == null)
                         continue;
 
@@ -160,7 +160,7 @@ internal sealed class VlcMediaSource(IShortcutManager shortcutManager, IEventAgg
                 }
             }
         }
-        catch (OperationCanceledException) { }
+        catch (OperationCanceledException e) when (e.InnerException is not TimeoutException) { }
 
         void ResetState()
         {
@@ -198,11 +198,11 @@ internal sealed class VlcMediaSource(IShortcutManager shortcutManager, IEventAgg
                 var requestUri = new Uri($"{uriBase}?command={uriArguments}");
                 Logger.Trace("Sending \"{0}\" to \"{1}\"", uriArguments, Name);
 
-                var response = await UnwrapTimeout(() => client.GetAsync(requestUri, token));
+                var response = await client.GetAsync(requestUri, token);
                 response.EnsureSuccessStatusCode();
             }
         }
-        catch (OperationCanceledException) { }
+        catch (OperationCanceledException e) when (e.InnerException is not TimeoutException) { }
     }
 
     public override void HandleSettings(JObject settings, SettingsAction action)
@@ -269,30 +269,6 @@ internal sealed class VlcMediaSource(IShortcutManager shortcutManager, IEventAgg
         catch
         {
             return false;
-        }
-    }
-
-    private async Task<HttpResponseMessage> UnwrapTimeout(Func<Task<HttpResponseMessage>> action)
-    {
-        //https://github.com/dotnet/runtime/issues/21965
-
-        try
-        {
-            return await action();
-        }
-        catch (Exception e)
-        {
-            if (e is OperationCanceledException operationCanceledException)
-            {
-                var innerException = operationCanceledException.InnerException;
-                if (innerException is TimeoutException)
-                    innerException.Throw();
-
-                operationCanceledException.Throw();
-            }
-
-            e.Throw();
-            return null;
         }
     }
 

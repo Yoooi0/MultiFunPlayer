@@ -70,7 +70,7 @@ internal sealed class JellyfinMediaSource(IShortcutManager shortcutManager, IEve
             client.Timeout = TimeSpan.FromMilliseconds(1000);
 
             var uri = new Uri(ServerBaseUri, "/System/Ping");
-            var response = await UnwrapTimeout(() => client.GetAsync(uri, token));
+            var response = await client.GetAsync(uri, token);
             response.EnsureSuccessStatusCode();
 
             Status = ConnectionStatus.Connected;
@@ -82,7 +82,7 @@ internal sealed class JellyfinMediaSource(IShortcutManager shortcutManager, IEve
 
             task.ThrowIfFaulted();
         }
-        catch (OperationCanceledException) { }
+        catch (OperationCanceledException e) when (e.InnerException is not TimeoutException) { }
         catch (Exception e)
         {
             Logger.Error(e, $"{Name} failed with exception");
@@ -109,7 +109,7 @@ internal sealed class JellyfinMediaSource(IShortcutManager shortcutManager, IEve
                     continue;
 
                 var sessionsUri = new Uri(ServerBaseUri, $"/Sessions?ApiKey={ApiKey}&DeviceId={SelectedDeviceId}");
-                var response = await UnwrapTimeout(() => client.GetAsync(sessionsUri, token));
+                var response = await client.GetAsync(sessionsUri, token);
                 if (response == null)
                     continue;
 
@@ -160,7 +160,7 @@ internal sealed class JellyfinMediaSource(IShortcutManager shortcutManager, IEve
                 lastItem = item;
             }
         }
-        catch (OperationCanceledException) { }
+        catch (OperationCanceledException e) when (e.InnerException is not TimeoutException) { }
     }
 
     private async Task WriteAsync(HttpClient client, CancellationToken token)
@@ -234,7 +234,7 @@ internal sealed class JellyfinMediaSource(IShortcutManager shortcutManager, IEve
             client.Timeout = TimeSpan.FromMilliseconds(5000);
 
             var uri = new Uri(ServerBaseUri, $"/Devices?ApiKey={ApiKey}");
-            var response = await UnwrapTimeout(() => client.GetAsync(uri, token));
+            var response = await client.GetAsync(uri, token);
             response.EnsureSuccessStatusCode();
 
             var content = await response.Content.ReadAsStringAsync(token);
@@ -249,7 +249,7 @@ internal sealed class JellyfinMediaSource(IShortcutManager shortcutManager, IEve
                 try
                 {
                     uri = new Uri(ServerBaseUri, $"/Devices/Options?ApiKey={ApiKey}&id={id}");
-                    response = await UnwrapTimeout(() => client.GetAsync(uri, token));
+                    response = await client.GetAsync(uri, token);
                     response.EnsureSuccessStatusCode();
 
                     content = await response.Content.ReadAsStringAsync(token);
@@ -315,7 +315,7 @@ internal sealed class JellyfinMediaSource(IShortcutManager shortcutManager, IEve
             client.Timeout = TimeSpan.FromMilliseconds(500);
 
             var uri = new Uri(ServerBaseUri, "/System/Ping");
-            var response = await UnwrapTimeout(() => client.GetAsync(uri, token));
+            var response = await client.GetAsync(uri, token);
             response.EnsureSuccessStatusCode();
 
             return true;
@@ -323,30 +323,6 @@ internal sealed class JellyfinMediaSource(IShortcutManager shortcutManager, IEve
         catch
         {
             return false;
-        }
-    }
-
-    private async Task<HttpResponseMessage> UnwrapTimeout(Func<Task<HttpResponseMessage>> action)
-    {
-        //https://github.com/dotnet/runtime/issues/21965
-
-        try
-        {
-            return await action();
-        }
-        catch (Exception e)
-        {
-            if (e is OperationCanceledException operationCanceledException)
-            {
-                var innerException = operationCanceledException.InnerException;
-                if (innerException is TimeoutException)
-                    innerException.Throw();
-
-                operationCanceledException.Throw();
-            }
-
-            e.Throw();
-            return null;
         }
     }
 

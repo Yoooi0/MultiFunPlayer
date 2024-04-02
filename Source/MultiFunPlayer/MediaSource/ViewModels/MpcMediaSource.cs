@@ -37,7 +37,7 @@ internal sealed class MpcMediaSource(IShortcutManager shortcutManager, IEventAgg
             client.Timeout = TimeSpan.FromMilliseconds(1000);
 
             var uri = new Uri($"http://{Endpoint.ToUriString()}");
-            var response = await UnwrapTimeout(() => client.GetAsync(uri, token));
+            var response = await client.GetAsync(uri, token);
             response.EnsureSuccessStatusCode();
 
             Status = ConnectionStatus.Connected;
@@ -49,7 +49,7 @@ internal sealed class MpcMediaSource(IShortcutManager shortcutManager, IEventAgg
 
             task.ThrowIfFaulted();
         }
-        catch (OperationCanceledException) { }
+        catch (OperationCanceledException e) when (e.InnerException is not TimeoutException) { }
         catch (Exception e)
         {
             Logger.Error(e, $"{Name} failed with exception");
@@ -75,7 +75,7 @@ internal sealed class MpcMediaSource(IShortcutManager shortcutManager, IEventAgg
             {
                 await Task.Delay(200, token);
 
-                var response = await UnwrapTimeout(() => client.GetAsync(variablesUri, token));
+                var response = await client.GetAsync(variablesUri, token);
                 if (response == null)
                     continue;
 
@@ -125,7 +125,7 @@ internal sealed class MpcMediaSource(IShortcutManager shortcutManager, IEventAgg
                 }
             }
         }
-        catch (OperationCanceledException) { }
+        catch (OperationCanceledException e) when (e.InnerException is not TimeoutException) { }
     }
 
     private async Task WriteAsync(HttpClient client, CancellationToken token)
@@ -159,11 +159,11 @@ internal sealed class MpcMediaSource(IShortcutManager shortcutManager, IEventAgg
                 var requestUri = new Uri($"{uriBase}{uriFile}{uriArguments}");
                 Logger.Trace("Sending \"{0}{1}\" to \"{2}\"", uriFile, uriArguments, Name);
 
-                var response = await UnwrapTimeout(() => client.GetAsync(requestUri, token));
+                var response = await client.GetAsync(requestUri, token);
                 response.EnsureSuccessStatusCode();
             }
         }
-        catch (OperationCanceledException) { }
+        catch (OperationCanceledException e) when (e.InnerException is not TimeoutException) { }
     }
 
     public override void HandleSettings(JObject settings, SettingsAction action)
@@ -201,30 +201,6 @@ internal sealed class MpcMediaSource(IShortcutManager shortcutManager, IEventAgg
         catch
         {
             return false;
-        }
-    }
-
-    private async Task<HttpResponseMessage> UnwrapTimeout(Func<Task<HttpResponseMessage>> action)
-    {
-        //https://github.com/dotnet/runtime/issues/21965
-
-        try
-        {
-            return await action();
-        }
-        catch (Exception e)
-        {
-            if (e is OperationCanceledException operationCanceledException)
-            {
-                var innerException = operationCanceledException.InnerException;
-                if (innerException is TimeoutException)
-                    innerException.Throw();
-
-                operationCanceledException.Throw();
-            }
-
-            e.Throw();
-            return null;
         }
     }
 

@@ -233,7 +233,7 @@ internal sealed class PlexMediaSource(IShortcutManager shortcutManager, IEventAg
                 message.Headers.TryAddWithoutValidation("X-Plex-Target-Client-Identifier", SelectedClient.MachineIdentifier);
                 AddDefaultHeaders(message.Headers);
 
-                return await UnwrapTimeout(() => httpClient.SendAsync(message, token));
+                return await httpClient.SendAsync(message, token);
             }
 
             void ResetState()
@@ -244,7 +244,7 @@ internal sealed class PlexMediaSource(IShortcutManager shortcutManager, IEventAg
                 PublishMessage(new MediaPlayingChangedMessage(false));
             }
         }
-        catch (OperationCanceledException) { }
+        catch (OperationCanceledException e) when (e.InnerException is not TimeoutException) { }
     }
 
     private async Task WriteAsync(HttpClient httpClient, CancellationToken token)
@@ -285,7 +285,7 @@ internal sealed class PlexMediaSource(IShortcutManager shortcutManager, IEventAg
 
                 try
                 {
-                    _ = await UnwrapTimeout(() => httpClient.SendAsync(requestMessage, messageCancellationSource.Token));
+                    _ = await httpClient.SendAsync(requestMessage, messageCancellationSource.Token);
                 }
                 catch (OperationCanceledException) when (messageCancellationSource.IsCancellationRequested && !token.IsCancellationRequested) { }
                 finally
@@ -296,7 +296,7 @@ internal sealed class PlexMediaSource(IShortcutManager shortcutManager, IEventAg
                 }
             }
         }
-        catch (OperationCanceledException) { }
+        catch (OperationCanceledException e) when (e.InnerException is not TimeoutException) { }
     }
 
     public bool CanRefreshClients => !IsRefreshBusy && IsDisconnected && ServerBaseUri != null && !string.IsNullOrWhiteSpace(PlexToken);
@@ -467,30 +467,6 @@ internal sealed class PlexMediaSource(IShortcutManager shortcutManager, IEventAg
 
         var response = await client.SendAsync(message, token);
         return response.IsSuccessStatusCode;
-    }
-
-    private async Task<HttpResponseMessage> UnwrapTimeout(Func<Task<HttpResponseMessage>> action)
-    {
-        //https://github.com/dotnet/runtime/issues/21965
-
-        try
-        {
-            return await action();
-        }
-        catch (Exception e)
-        {
-            if (e is OperationCanceledException operationCanceledException)
-            {
-                var innerException = operationCanceledException.InnerException;
-                if (innerException is TimeoutException)
-                    innerException.Throw();
-
-                operationCanceledException.Throw();
-            }
-
-            e.Throw();
-            return null;
-        }
     }
 
     protected override void Dispose(bool disposing)
