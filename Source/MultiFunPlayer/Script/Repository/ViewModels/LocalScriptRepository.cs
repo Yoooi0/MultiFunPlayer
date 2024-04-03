@@ -1,4 +1,4 @@
-using Microsoft.Win32;
+﻿using Microsoft.Win32;
 using MultiFunPlayer.Common;
 using MultiFunPlayer.MediaSource.MediaResource;
 using Newtonsoft.Json;
@@ -57,35 +57,44 @@ internal sealed class LocalScriptRepository(IEventAggregator eventAggregator) : 
         Logger.Debug("Maching scripts to axes {list}", axes);
 
         var searchResult = new Dictionary<DeviceAxis, IScriptResource>();
-        if (foundScripts.Find(r => r.IsMultiAxis) is ScriptReaderResult multiAxisScript)
+
+        var multiAxisLookup = foundScripts.ToLookup(r => r.IsMultiAxis);
+        foreach (var multiAxisScript in multiAxisLookup[true])
         {
-            Logger.Debug("Matching first found multi-axis script");
-            foreach (var axis in axes)
-                AddToResult(searchResult, axis, multiAxisScript.Resources.GetValueOrDefault(axis, null));
+            if (searchResult.Count == 0)
+            {
+                Logger.Debug("Matching multi-axis script [Name: \"{0}\", Source: \"{1}\"]", multiAxisScript.Name, multiAxisScript.Source);
+                foreach (var axis in axes)
+                    AddToResult(searchResult, axis, multiAxisScript.Resources.GetValueOrDefault(axis, null));
+            }
+            else
+            {
+                Logger.Debug("Ignoring multi-axis script [Name: \"{0}\", Source: \"{1}\"] because one was already matched", multiAxisScript.Name, multiAxisScript.Source);
+            }
         }
 
-        var foundScriptNames = foundScripts.Select(r => r.Name).Distinct();
-        var foundScriptLookup = foundScripts.ToLookup(r => r.Name);
+        var singleAxisScriptNames = multiAxisLookup[false].Select(r => r.Name).Distinct().ToList();
+        var singleAxisScriptLookup = multiAxisLookup[false].ToLookup(r => r.Name);
         foreach (var axis in axes)
-            foreach (var matchedScriptName in DeviceAxisUtils.FindNamesMatchingAxis(axis, foundScriptNames, mediaName))
-                foreach (var matchedScript in foundScriptLookup[matchedScriptName])
+            foreach (var matchedScriptName in DeviceAxisUtils.FindNamesMatchingAxis(axis, singleAxisScriptNames, mediaName))
+                foreach (var matchedScript in singleAxisScriptLookup[matchedScriptName])
                     AddToResult(searchResult, axis, matchedScript.Resource);
 
         return searchResult;
 
         static void AddToResult(IDictionary<DeviceAxis, IScriptResource> result, DeviceAxis axis, IScriptResource resource)
         {
-            if (!result.TryAdd(axis, resource))
-                Logger.Debug("Matched {0} script to [Name: \"{1}\", Source: \"{2}\"]", axis, resource.Name, resource.Source);
+            if (result.TryAdd(axis, resource))
+                Logger.Debug("Matched {0} script to [Name: \"{1}\", Source: \"{2}\"]", axis, resource?.Name, resource?.Source);
             else
-                Logger.Debug("Ignoring {0} script [Name: \"{1}\", Source: \"{2}\"] because {0} is already matched to a script", axis, resource.Name, resource.Source);
+                Logger.Debug("Ignoring {0} script [Name: \"{1}\", Source: \"{2}\"] because {0} is already matched to a script", axis, resource?.Name, resource?.Source);
         }
 
         static void AddToFound(IList<ScriptReaderResult> results, IEnumerable<ScriptReaderResult> newResults)
         {
             foreach (var newResult in newResults)
             {
-                Logger.Debug("Found script [Name: \"{0}\", Source: \"{1}\"]", newResult.Name, newResult.Source);
+                Logger.Debug("Found script [Name: \"{0}\", Source: \"{1}\", IsMultiAxis: {2}]", newResult.Name, newResult.Source, newResult.IsMultiAxis);
                 results.Add(newResult);
             }
         }
