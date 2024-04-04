@@ -44,20 +44,35 @@ public abstract class PluginBase : PropertyChangedBase
     #endregion
 
     #region Shortcut
-    protected ValueTask InvokeAction(string actionName, params object[] arguments)
+    protected void InvokeAction(string actionName, params object[] arguments)
         => ShortcutActionRunner.Invoke(actionName, arguments);
-    protected ValueTask InvokeAction(string actionName)
+    protected void InvokeAction(string actionName)
         => ShortcutActionRunner.Invoke(actionName);
-    protected ValueTask InvokeAction<T0>(string actionName, T0 arg0)
+    protected void InvokeAction<T0>(string actionName, T0 arg0)
         => ShortcutActionRunner.Invoke(actionName, arg0);
-    protected ValueTask InvokeAction<T0, T1>(string actionName, T0 arg0, T1 arg1)
+    protected void InvokeAction<T0, T1>(string actionName, T0 arg0, T1 arg1)
         => ShortcutActionRunner.Invoke(actionName, arg0, arg1);
-    protected ValueTask InvokeAction<T0, T1, T2>(string actionName, T0 arg0, T1 arg1, T2 arg2)
+    protected void InvokeAction<T0, T1, T2>(string actionName, T0 arg0, T1 arg1, T2 arg2)
         => ShortcutActionRunner.Invoke(actionName, arg0, arg1, arg2);
-    protected ValueTask InvokeAction<T0, T1, T2, T3>(string actionName, T0 arg0, T1 arg1, T2 arg2, T3 arg3)
+    protected void InvokeAction<T0, T1, T2, T3>(string actionName, T0 arg0, T1 arg1, T2 arg2, T3 arg3)
         => ShortcutActionRunner.Invoke(actionName, arg0, arg1, arg2, arg3);
-    protected ValueTask InvokeAction<T0, T1, T2, T3, T4>(string actionName, T0 arg0, T1 arg1, T2 arg2, T3 arg3, T4 arg4)
+    protected void InvokeAction<T0, T1, T2, T3, T4>(string actionName, T0 arg0, T1 arg1, T2 arg2, T3 arg3, T4 arg4)
         => ShortcutActionRunner.Invoke(actionName, arg0, arg1, arg2, arg3, arg4);
+
+    protected ValueTask InvokeActionAsync(string actionName, params object[] arguments)
+        => ShortcutActionRunner.InvokeAsync(actionName, arguments);
+    protected ValueTask InvokeActionAsync(string actionName)
+        => ShortcutActionRunner.InvokeAsync(actionName);
+    protected ValueTask InvokeActionAsync<T0>(string actionName, T0 arg0)
+        => ShortcutActionRunner.InvokeAsync(actionName, arg0);
+    protected ValueTask InvokeActionAsync<T0, T1>(string actionName, T0 arg0, T1 arg1)
+        => ShortcutActionRunner.InvokeAsync(actionName, arg0, arg1);
+    protected ValueTask InvokeActionAsync<T0, T1, T2>(string actionName, T0 arg0, T1 arg1, T2 arg2)
+        => ShortcutActionRunner.InvokeAsync(actionName, arg0, arg1, arg2);
+    protected ValueTask InvokeActionAsync<T0, T1, T2, T3>(string actionName, T0 arg0, T1 arg1, T2 arg2, T3 arg3)
+        => ShortcutActionRunner.InvokeAsync(actionName, arg0, arg1, arg2, arg3);
+    protected ValueTask InvokeActionAsync<T0, T1, T2, T3, T4>(string actionName, T0 arg0, T1 arg1, T2 arg2, T3 arg3, T4 arg4)
+        => ShortcutActionRunner.InvokeAsync(actionName, arg0, arg1, arg2, arg3, arg4);
 
     protected void RegisterAction<T0>(string actionName, Func<IShortcutSettingBuilder<T0>, IShortcutSettingBuilder<T0>> settings0, Action<T0> action)
         => ShortcutManager.RegisterAction(actionName, settings0, action);
