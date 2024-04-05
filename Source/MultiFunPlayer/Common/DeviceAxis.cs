@@ -1,7 +1,8 @@
-using MultiFunPlayer.Settings.Converters;
+﻿using MultiFunPlayer.Settings.Converters;
 using System.Collections.Frozen;
 using System.Collections.Immutable;
 using System.ComponentModel;
+using System.Text;
 
 namespace MultiFunPlayer.Common;
 
@@ -30,7 +31,7 @@ public sealed class DeviceAxis
 
     private static int _count;
     private static int _outputMaximum;
-    private static string _outputFormat;
+    private static CompositeFormat _outputFormat;
     private static FrozenDictionary<string, DeviceAxis> _axes;
     public static ImmutableArray<DeviceAxis> All { get; private set; }
 
@@ -41,7 +42,7 @@ public sealed class DeviceAxis
         return axis != null;
     }
 
-    public static string ToString(DeviceAxis axis, double value) => $"{axis}{string.Format(_outputFormat, value * _outputMaximum)}";
+    public static string ToString(DeviceAxis axis, double value) => $"{axis}{string.Format(null, _outputFormat, value * _outputMaximum)}";
     public static string ToString(DeviceAxis axis, double value, double interval) => $"{ToString(axis, value)}I{(int)Math.Floor(interval + 0.75)}";
 
     public static string ToString(IEnumerable<KeyValuePair<DeviceAxis, double>> values)
@@ -60,7 +61,7 @@ public sealed class DeviceAxis
             throw new NotSupportedException();
 
         _outputMaximum = (int)(Math.Pow(10, device.OutputPrecision) - 1);
-        _outputFormat = $"{{0:{new string('0', device.OutputPrecision)}}}";
+        _outputFormat = CompositeFormat.Parse($"{{0:{new string('0', device.OutputPrecision)}}}");
         _axes = device.Axes.Where(s => s.Enabled).ToFrozenDictionary(s => s.Name, s => new DeviceAxis(s));
         All = _axes.Values;
     }
