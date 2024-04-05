@@ -135,7 +135,7 @@ internal sealed class StashScriptRepository : AbstractScriptRepository
         if (queryRespone?.Data?.FindScene?.Paths?.Funscript == null)
             return false;
 
-        var scriptUri = queryRespone.Data.FindScene.Paths.Funscript;
+        var scriptUri = new Uri(queryRespone.Data.FindScene.Paths.Funscript);
 
         var scriptName = queryRespone.Data.FindScene.Id;
         if (!string.IsNullOrWhiteSpace(queryRespone.Data.FindScene.Title))

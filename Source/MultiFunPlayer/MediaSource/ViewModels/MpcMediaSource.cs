@@ -31,7 +31,7 @@ internal sealed class MpcMediaSource(IShortcutManager shortcutManager, IEventAgg
         {
             Logger.Info("Connecting to {0} at \"{1}\"", Name, Endpoint.ToUriString());
             if (Endpoint == null)
-                throw new Exception("Endpoint cannot be null.");
+                throw new MediaSourceException("Endpoint cannot be null.");
 
             using var client = NetUtils.CreateHttpClient();
             client.Timeout = TimeSpan.FromMilliseconds(1000);

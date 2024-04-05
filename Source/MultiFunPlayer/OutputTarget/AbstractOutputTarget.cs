@@ -647,3 +647,10 @@ internal abstract class AsyncAbstractOutputTarget(int instanceIndex, IEventAggre
         }
     }
 }
+
+internal class OutputTargetException : Exception
+{
+    public OutputTargetException() { }
+    public OutputTargetException(string message) : base(message) { }
+    public OutputTargetException(string message, Exception innerException) : base(message, innerException) { }
+}

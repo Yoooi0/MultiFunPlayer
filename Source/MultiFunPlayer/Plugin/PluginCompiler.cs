@@ -1,4 +1,4 @@
-using Microsoft.CodeAnalysis;
+﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Emit;
@@ -177,9 +177,9 @@ internal static class PluginCompiler
                                           .ToList();
 
             if (pluginClasses.Count == 0)
-                return PluginCompilationResult.FromFailure(new Exception("Unable to find base Plugin class"));
+                return PluginCompilationResult.FromFailure(new PluginCompileException("Unable to find base Plugin class"));
             if (pluginClasses.Count > 1)
-                return PluginCompilationResult.FromFailure(new Exception("Found more than one base Plugin class"));
+                return PluginCompilationResult.FromFailure(new PluginCompileException("Found more than one base Plugin class"));
 
             var assemblyName = $"Plugin_{Path.GetFileNameWithoutExtension(pluginFile.Name)}";
             var encoded = CSharpSyntaxTree.Create(

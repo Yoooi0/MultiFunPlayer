@@ -1,4 +1,4 @@
-using Microsoft.Win32;
+﻿using Microsoft.Win32;
 using MultiFunPlayer.Common;
 using MultiFunPlayer.Input;
 using MultiFunPlayer.Input.TCode;

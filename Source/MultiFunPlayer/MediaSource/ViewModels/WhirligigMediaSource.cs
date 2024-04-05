@@ -35,7 +35,7 @@ internal sealed class WhirligigMediaSource(IShortcutManager shortcutManager, IEv
 
             if (Endpoint.IsLocalhost())
                 if (!Process.GetProcesses().Any(p => Regex.IsMatch(p.ProcessName, "(?i)whirligig")))
-                    throw new Exception($"Could not find a running {Name} process.");
+                    throw new MediaSourceException($"Could not find a running {Name} process.");
 
             using var client = new TcpClient();
             {

@@ -143,7 +143,7 @@ internal sealed class OutputTargetViewModel : Conductor<IOutputTarget>.Collectio
             }
 
             if (settings.TryGetValue<string>(nameof(ActiveItem), out var selectedItem))
-                ChangeActiveItem(Items.FirstOrDefault(x => string.Equals(x.Identifier, selectedItem)) ?? Items.FirstOrDefault(), closePrevious: false);
+                ChangeActiveItem(Items.FirstOrDefault(x => string.Equals(x.Identifier, selectedItem, StringComparison.Ordinal)) ?? Items.FirstOrDefault(), closePrevious: false);
         }
     }
 

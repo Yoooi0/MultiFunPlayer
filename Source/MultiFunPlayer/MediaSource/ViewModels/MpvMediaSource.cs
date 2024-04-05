@@ -46,7 +46,7 @@ internal sealed class MpvMediaSource(IShortcutManager shortcutManager, IEventAgg
             {
                 var executable = Executable?.AsRefreshed() ?? new FileInfo(Path.Join(Path.GetDirectoryName(Environment.ProcessPath), "mpv.exe"));
                 if (!executable.Exists)
-                    throw new Exception("Could not find mpv executable! Please set path to mpv.exe or download latest release from settings.");
+                    throw new MediaSourceException("Could not find mpv executable! Please set path to mpv.exe or download latest release from settings.");
 
                 var processInfo = new ProcessStartInfo()
                 {

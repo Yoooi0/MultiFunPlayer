@@ -184,3 +184,10 @@ internal abstract class AbstractMediaSource : Screen, IMediaSource, IHandle<IMed
         GC.SuppressFinalize(this);
     }
 }
+
+internal class MediaSourceException : Exception
+{
+    public MediaSourceException() { }
+    public MediaSourceException(string message) : base(message) { }
+    public MediaSourceException(string message, Exception innerException) : base(message, innerException) { }
+}

@@ -1,4 +1,4 @@
-using MultiFunPlayer.Common;
+﻿using MultiFunPlayer.Common;
 using MultiFunPlayer.Shortcut;
 using MultiFunPlayer.UI;
 using Newtonsoft.Json.Linq;
@@ -52,7 +52,7 @@ internal sealed class PipeOutputTarget(int instanceIndex, IEventAggregator event
         {
             Logger.Error(e, "Error when opening pipe");
             if (client?.IsConnected == true)
-                client.Close();
+                client.Dispose();
 
             _ = DialogHelper.ShowErrorAsync(e, "Error when opening pipe", "RootDialog");
             return;
@@ -122,7 +122,7 @@ internal sealed class PipeOutputTarget(int instanceIndex, IEventAggregator event
         try
         {
             if (client?.IsConnected == true)
-                client.Close();
+                client.Dispose();
         } catch { }
     }
 

@@ -1,4 +1,4 @@
-﻿using MultiFunPlayer.Common;
+using MultiFunPlayer.Common;
 using MultiFunPlayer.Shortcut;
 using MultiFunPlayer.UI;
 using Newtonsoft.Json;
@@ -34,11 +34,11 @@ internal sealed class HereSphereMediaSource(IShortcutManager shortcutManager, IE
         {
             Logger.Info("Connecting to {0} at \"{1}\"", Name, Endpoint.ToUriString());
             if (Endpoint == null)
-                throw new Exception("Endpoint cannot be null.");
+                throw new MediaSourceException("Endpoint cannot be null.");
 
             if (Endpoint.IsLocalhost())
                 if (!Process.GetProcesses().Any(p => Regex.IsMatch(p.ProcessName, "(?i)heresphere")))
-                    throw new Exception($"Could not find a running {Name} process.");
+                    throw new MediaSourceException($"Could not find a running {Name} process.");
 
             using var client = new TcpClient();
             {

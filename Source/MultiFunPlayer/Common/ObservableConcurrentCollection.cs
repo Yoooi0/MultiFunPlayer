@@ -1,4 +1,4 @@
-using PropertyChanged;
+﻿using PropertyChanged;
 using System.Collections;
 using System.Collections.Specialized;
 using System.ComponentModel;
@@ -120,7 +120,7 @@ public sealed class ObservableConcurrentCollection<T> : IList<T>, IReadOnlyObser
             if (newIndex < 0 || newIndex > _items.Count)
                 throw new IndexOutOfRangeException();
 
-            T item = _items[oldIndex];
+            var item = _items[oldIndex];
             _items.RemoveAt(oldIndex);
             _items.Insert(newIndex, item);
             NotifyObserversOfChange();

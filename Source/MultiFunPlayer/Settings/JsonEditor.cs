@@ -470,7 +470,7 @@ internal class JsonEditor
     }
 
     public IReadOnlyList<JProperty> GetProperties(JObject o, IEnumerable<string> propertyNames) => propertyNames.Select(p => GetProperty(o, p)).ToList();
-    public JProperty GetProperty(JObject o, string propertyName) => TryGetProperty(o, propertyName, out JProperty property) ? property : null;
+    public JProperty GetProperty(JObject o, string propertyName) => TryGetProperty(o, propertyName, out var property) ? property : null;
     public bool TryGetProperty(JObject o, string propertyName, out JProperty property)
     {
         property = default;
@@ -484,7 +484,7 @@ internal class JsonEditor
         return true;
     }
 
-    public JProperty SelectProperty(JObject o, string propertyPath) => TrySelectProperty(o, propertyPath, out JProperty property) ? property : null;
+    public JProperty SelectProperty(JObject o, string propertyPath) => TrySelectProperty(o, propertyPath, out var property) ? property : null;
     public bool TrySelectProperty(JObject o, string propertyPath, out JProperty result)
     {
         result = default;
@@ -494,7 +494,7 @@ internal class JsonEditor
         return result != null;
     }
 
-    public IReadOnlyList<JProperty> SelectProperties(JObject o, string propertiesPath) => TrySelectProperties(o, propertiesPath, out IReadOnlyList<JProperty> properties) ? properties : [];
+    public IReadOnlyList<JProperty> SelectProperties(JObject o, string propertiesPath) => TrySelectProperties(o, propertiesPath, out var properties) ? properties : [];
     public bool TrySelectProperties(JObject o, string propertiesPath, out IReadOnlyList<JProperty> result)
     {
         result = default;

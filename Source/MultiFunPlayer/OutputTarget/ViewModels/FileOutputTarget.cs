@@ -1,4 +1,4 @@
-using Microsoft.Win32;
+﻿using Microsoft.Win32;
 using MultiFunPlayer.Common;
 using MultiFunPlayer.Script;
 using MultiFunPlayer.UI;
@@ -39,7 +39,7 @@ internal sealed class FileOutputTarget(int instanceIndex, IEventAggregator event
         {
             Logger.Info("Connecting to {0}", Identifier);
             if (!AxisSettings.Values.Any(x => x.Enabled))
-                throw new Exception("At least one axis must be enabled");
+                throw new OutputTargetException("At least one axis must be enabled");
 
             if (OutputDirectory?.AsRefreshed().Exists != true)
                 throw new DirectoryNotFoundException("Output directory does not exist");

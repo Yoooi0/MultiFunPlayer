@@ -66,11 +66,11 @@ internal sealed class PlexMediaSource(IShortcutManager shortcutManager, IEventAg
         {
             Logger.Info("Connecting to {0} at \"{1}\"", Name, ServerBaseUri);
             if (ServerBaseUri == null)
-                throw new Exception("Endpoint cannot be null.");
+                throw new MediaSourceException("Endpoint cannot be null.");
             if (string.IsNullOrEmpty(PlexToken))
-                throw new Exception("Plex token cannot be empty.");
+                throw new MediaSourceException("Plex token cannot be empty.");
 
-            var client = NetUtils.CreateHttpClient();
+            using var client = NetUtils.CreateHttpClient();
             client.Timeout = TimeSpan.FromMilliseconds(5000);
 
             await Task.Delay(250, token);
@@ -105,7 +105,7 @@ internal sealed class PlexMediaSource(IShortcutManager shortcutManager, IEventAg
             var lastMetadataUri = default(Uri);
             var basePollUri = new Uri(ServerBaseUri, "/player/timeline/poll");
 
-            var timer = new PeriodicTimer(TimeSpan.FromMilliseconds(500));
+            using var timer = new PeriodicTimer(TimeSpan.FromMilliseconds(500));
             while (await timer.WaitForNextTickAsync(token) && !token.IsCancellationRequested)
             {
                 _currentTimeline = await GetCurrentTimelineAsync();

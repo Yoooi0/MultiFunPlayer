@@ -1,4 +1,4 @@
-using MultiFunPlayer.Common;
+﻿using MultiFunPlayer.Common;
 using MultiFunPlayer.Script;
 using MultiFunPlayer.Script.Repository;
 using MultiFunPlayer.Shortcut;
@@ -497,7 +497,7 @@ internal sealed class InternalMediaSource(ILocalScriptRepository localRepository
 
             if (SourceFile.Exists)
                 _items = File.ReadAllLines(SourceFile.FullName)
-                             .Select(p => { try { return new PlaylistItem(p); } catch { return null; } })
+                             .Select(PlaylistItem.CreateFromPath)
                              .NotNull()
                              .Where(f => string.Equals(f.Extension, ".funscript", StringComparison.OrdinalIgnoreCase))
                              .ToList();
@@ -507,7 +507,7 @@ internal sealed class InternalMediaSource(ILocalScriptRepository localRepository
 
         public Playlist(IEnumerable<string> files)
         {
-            _items = files.Select(p => { try { return new PlaylistItem(p); } catch { return null; } })
+            _items = files.Select(PlaylistItem.CreateFromPath)
                           .NotNull()
                           .Where(f => string.Equals(f.Extension, ".funscript", StringComparison.OrdinalIgnoreCase))
                           .ToList();
@@ -555,9 +555,11 @@ internal sealed class InternalMediaSource(ILocalScriptRepository localRepository
         public event PropertyChangedEventHandler PropertyChanged;
     }
 
-    internal sealed class PlaylistItem(string path) : PropertyChangedBase
+    internal sealed class PlaylistItem : PropertyChangedBase
     {
-        private readonly FileInfo _source = new(path);
+        private readonly FileInfo _source;
+
+        private PlaylistItem(string path) => _source = new(path);
 
         public string Name => _source.Name;
         public string FullName => _source.FullName;
@@ -572,6 +574,12 @@ internal sealed class InternalMediaSource(ILocalScriptRepository localRepository
             if (before ^ after)
                 NotifyOfPropertyChange(nameof(Exists));
             return this;
+        }
+
+        public static PlaylistItem CreateFromPath(string path)
+        {
+            try { return new PlaylistItem(path); }
+            catch { return null; }
         }
     }
 }
