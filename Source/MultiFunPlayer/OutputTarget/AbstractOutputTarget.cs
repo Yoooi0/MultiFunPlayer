@@ -1,4 +1,4 @@
-using MultiFunPlayer.Common;
+﻿using MultiFunPlayer.Common;
 using MultiFunPlayer.Input;
 using MultiFunPlayer.Shortcut;
 using Newtonsoft.Json.Linq;
@@ -534,8 +534,11 @@ internal abstract class AsyncAbstractOutputTarget(int instanceIndex, IEventAggre
     protected override ValueTask<bool> OnConnectingAsync()
     {
         _cancellationSource = new CancellationTokenSource();
-        _task = Task.Run(() => RunAsync(_cancellationSource.Token));
-        _ = _task.ContinueWith(_ => DisconnectAsync());
+        _task = Task.Run(async () =>
+        {
+            try { await RunAsync(_cancellationSource.Token); }
+            finally { _ = Task.Run(DisconnectAsync); }
+        });
 
         return ValueTask.FromResult(true);
     }

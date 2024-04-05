@@ -1,4 +1,4 @@
-using MultiFunPlayer.Common;
+﻿using MultiFunPlayer.Common;
 using Stylet;
 using System.Diagnostics;
 using System.IO;
@@ -1013,8 +1013,11 @@ internal sealed class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDispo
         if (token == null)
             return;
 
-        _autoSkipToScriptStartTask = Task.Delay(1000, token.Value)
-                                         .ContinueWith(_ => SeekMediaToScriptStart(AutoSkipToScriptStartOffset, onlyWhenBefore: true));
+        _autoSkipToScriptStartTask = Task.Run(async () =>
+        {
+            await Task.Delay(1000, token.Value);
+            SeekMediaToScriptStart(AutoSkipToScriptStartOffset, onlyWhenBefore: true);
+        });
     }
 
     private void SeekMediaToScriptStart(double offset, bool onlyWhenBefore)

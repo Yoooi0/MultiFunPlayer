@@ -1,4 +1,4 @@
-using MultiFunPlayer.Common;
+﻿using MultiFunPlayer.Common;
 using MultiFunPlayer.Shortcut;
 using Newtonsoft.Json.Linq;
 using PropertyChanged;
@@ -55,8 +55,11 @@ internal abstract class AbstractMediaSource : Screen, IMediaSource, IHandle<IMed
     protected virtual async ValueTask<bool> OnConnectingAsync()
     {
         _cancellationSource = new CancellationTokenSource();
-        _task = Task.Run(() => RunAsync(_cancellationSource.Token));
-        _ = _task.ContinueWith(_ => DisconnectAsync());
+        _task = Task.Run(async () =>
+        {
+            try { await RunAsync(_cancellationSource.Token); }
+            finally { _ = Task.Run(DisconnectAsync); }
+        });
 
         return await ValueTask.FromResult(true);
     }
