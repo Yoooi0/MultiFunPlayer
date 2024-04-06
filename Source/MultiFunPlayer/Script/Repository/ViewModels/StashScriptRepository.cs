@@ -1,4 +1,4 @@
-﻿using MultiFunPlayer.Common;
+using MultiFunPlayer.Common;
 using MultiFunPlayer.MediaSource.MediaResource;
 using Newtonsoft.Json;
 using NLog;
@@ -46,7 +46,7 @@ internal sealed class StashScriptRepository : AbstractScriptRepository
         var response = await client.SendAsync(request, token);
         var content = await response.Content.ReadAsStringAsync(token);
 
-        Logger.Trace("Received Stash api response \"{0}\"", response);
+        Logger.Trace("Received Stash api response \"{0}\"", content);
 
         var queryRespone = JsonConvert.DeserializeObject<QueryResponse>(content);
         _ = TryMatchLocal(queryRespone, axes, result, localRepository) || await TryMatchDms(queryRespone, result, client, token);
