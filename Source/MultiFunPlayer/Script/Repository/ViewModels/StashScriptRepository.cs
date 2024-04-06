@@ -46,7 +46,7 @@ internal sealed class StashScriptRepository : AbstractScriptRepository
         var response = await client.SendAsync(request, token);
         var content = await response.Content.ReadAsStringAsync(token);
 
-        Logger.Trace("Received Stash api response \"{0}\"", response);
+        Logger.Trace("Received Stash api response \"{0}\"", content);
 
         var queryRespone = JsonConvert.DeserializeObject<QueryResponse>(content);
         _ = TryMatchLocal(queryRespone, axes, result, localRepository) || await TryMatchDms(queryRespone, result, client, token);
@@ -66,12 +66,10 @@ internal sealed class StashScriptRepository : AbstractScriptRepository
         else if (mediaResource.IsUrl)
         {
             var mediaResourceUri = new Uri(mediaResource.Path);
-            if (!string.Equals(mediaResourceUri.Host, ServerBaseUri.Host, StringComparison.OrdinalIgnoreCase))
+            if (!await PointsToTheSameEndpoint(mediaResourceUri, ServerBaseUri))
             {
-                if (!NetUtils.TryParseEndpoint(ServerBaseUri.Host, out var serverBaseEndoint) || !serverBaseEndoint.IsLocalhost())
-                    return null;
-                if (!NetUtils.TryParseEndpoint(mediaResourceUri.Host, out var mediaResourceEndpoint) || !await NetUtils.IsLocalAddressAsync(mediaResourceEndpoint))
-                    return null;
+                Logger.Debug("Ignoring \"{0}\" resource because it does not point to \"{1}\"", mediaResource.Path, ServerBaseUri);
+                return null;
             }
 
             var pathAndQuery = mediaResourceUri.GetComponents(UriComponents.PathAndQuery, UriFormat.Unescaped);
@@ -88,6 +86,21 @@ internal sealed class StashScriptRepository : AbstractScriptRepository
         }
 
         return null;
+
+        static async Task<bool> PointsToTheSameEndpoint(Uri resourceUri, Uri serverUri)
+        {
+            if (string.Equals(resourceUri.Host, serverUri.Host, StringComparison.OrdinalIgnoreCase))
+                return resourceUri.Port == serverUri.Port;
+
+            if (!serverUri.IsLoopback)
+                return false;
+
+            var resourceHostAndPort = resourceUri.GetComponents(UriComponents.HostAndPort, UriFormat.Unescaped);
+            if (!NetUtils.TryParseEndpoint(resourceHostAndPort, out var resourceEndpoint))
+                return false;
+
+            return await NetUtils.IsLocalAddressAsync(resourceEndpoint);
+        }
     }
 
     private bool TryMatchLocal(QueryResponse queryRespone, IEnumerable<DeviceAxis> axes, Dictionary<DeviceAxis, IScriptResource> result, ILocalScriptRepository localRepository)
