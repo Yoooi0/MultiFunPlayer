@@ -10,21 +10,23 @@ internal interface ISettingsPreprocessor
     bool Preprocess(JObject settings);
 }
 
-internal sealed class SettingsMigrationPreprocessor(IEnumerable<ISettingsMigration> migrations) : ISettingsPreprocessor
+internal sealed class SettingsMigrationPreprocessor(IEnumerable<ISettingsMigration> migrations) : JsonEditor, ISettingsPreprocessor
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
+    protected override void Log(LogLevel level, string message, params object[] args)
+        => Logger.Log(LogLevel.Trace, message, args);
+
     public bool Preprocess(JObject settings)
     {
-        if (!settings.ContainsKey("ConfigVersion"))
+        if (!TryGetProperty(settings, "ConfigVersion", out var configVersion))
         {
-            settings["ConfigVersion"] = migrations.Select(m => m.TargetVersion).DefaultIfEmpty(-1).Max();
+            AddPropertyByName(settings, "ConfigVersion", migrations.Select(m => m.TargetVersion).DefaultIfEmpty(-1).Max());
             return true;
         }
 
         var dirty = false;
-
-        var settingsVersion = settings["ConfigVersion"].ToObject<int>();
+        var settingsVersion = configVersion.ToObject<int>();
         var pendingMigrations = migrations.Where(m => m.TargetVersion > settingsVersion)
                                           .OrderBy(m => m.TargetVersion);
 
@@ -41,7 +43,10 @@ internal sealed class SettingsMigrationPreprocessor(IEnumerable<ISettingsMigrati
 
 internal sealed class SettingsDevicePreprocessor : JsonEditor, ISettingsPreprocessor
 {
-    protected override Logger Logger { get; } = LogManager.GetCurrentClassLogger();
+    private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+
+    protected override void Log(LogLevel level, string message, params object[] args)
+        => Logger.Log(LogLevel.Trace, message, args);
 
     public bool Preprocess(JObject settings)
     {

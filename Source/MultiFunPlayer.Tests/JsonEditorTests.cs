@@ -6,7 +6,7 @@ namespace MultiFunPlayer.Tests;
 
 public class JsonEditorTests
 {
-    private readonly JsonEditor _editor = new(LogManager.LogFactory.CreateNullLogger());
+    private readonly JsonEditor _editor = new();
 
     [Fact]
     public void RemoveTokenRemovesPropertyFromObject()
