@@ -244,33 +244,39 @@ internal sealed class Bootstrapper : Bootstrapper<RootViewModel>
             settings["Devices"] = defaultDevices;
             devices = defaultDevices;
         }
-
-        var loadedDefaultDevices = devices.Children<JObject>().Where(t => t[nameof(DeviceSettings.IsDefault)].ToObject<bool>()).ToList();
-        if (!JToken.DeepEquals(new JArray(loadedDefaultDevices), defaultDevices))
+        else
         {
-            logger.Info("Updating changes in default devices");
-            dirty = true;
+            var jsonEditor = new JsonEditor();
+            foreach (var defaultDevice in jsonEditor.SelectObjects(devices, "$.[?(@.IsDefault == true)]"))
+            {
+                var deviceName = defaultDevice["Name"];
+                foreach (var axisSettings in jsonEditor.SelectObjects(defaultDevice, "$.Axes[*]"))
+                {
+                    var axisName = axisSettings["Name"];
+                    var enabled = axisSettings["Enabled"].ToObject<bool>();
+                    jsonEditor.SetPropertyByPath(defaultDevices, $"$.[?(@.Name == '{deviceName}')].Axes[?(@.Name == '{axisName}')].Enabled", enabled);
+                }
 
-            foreach (var deviceToken in loadedDefaultDevices)
-                devices.Remove(deviceToken);
+                defaultDevice.Remove();
+            }
 
             var insertIndex = 0;
-            foreach (var deviceToken in defaultDevices)
-                devices.Insert(insertIndex++, deviceToken);
+            foreach (var defaultDevice in defaultDevices)
+                devices.Insert(insertIndex++, defaultDevice);
         }
 
-        if (!settings.TryGetValue<string>(nameof(DeviceSettingsViewModel.SelectedDevice), serializer, out var selectedDevice) || string.IsNullOrWhiteSpace(selectedDevice))
+        if (!settings.TryGetValue<string>("SelectedDevice", serializer, out var selectedDevice) || string.IsNullOrWhiteSpace(selectedDevice))
         {
-            selectedDevice = devices.Last[nameof(DeviceSettings.Name)].ToString();
-            settings[nameof(DeviceSettingsViewModel.SelectedDevice)] = selectedDevice;
+            selectedDevice = devices.Last["Name"].ToString();
+            settings["SelectedDevice"] = selectedDevice;
             dirty = true;
         }
 
-        if (devices.FirstOrDefault(d => string.Equals(d[nameof(DeviceSettings.Name)].ToString(), selectedDevice, StringComparison.OrdinalIgnoreCase)) is not JObject device)
+        if (devices.FirstOrDefault(d => string.Equals(d["Name"].ToString(), selectedDevice, StringComparison.OrdinalIgnoreCase)) is not JObject device)
         {
             logger.Warn("Unable to find device! [SelectedDevice: \"{0}\"]", selectedDevice);
             device = devices.Last as JObject;
-            settings[nameof(DeviceSettingsViewModel.SelectedDevice)] = device[nameof(DeviceSettings.Name)].ToString();
+            settings["SelectedDevice"] = device["Name"].ToString();
             dirty = true;
         }
 

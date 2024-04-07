@@ -7,6 +7,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:metro="http://metro.mahapps.com/winfx/xaml/controls"
              xmlns:s="https://github.com/canton7/Stylet"
+             xmlns:ui="clr-namespace:MultiFunPlayer.UI"
              d:DesignHeight="450"
              d:DesignWidth="800"
              x:ClassModifier="internal"
@@ -144,7 +145,7 @@
                     <TextBlock DockPanel.Dock="Right"
                                Margin="50 0 0 0"
                                VerticalAlignment="Center"
-                               Text="Clone this device to customize settings."/>
+                               Text="Clone this device to customize all settings."/>
                 </DockPanel>
             </material:Card>
 
@@ -172,9 +173,7 @@
                 </DockPanel>
             </material:Card>
 
-            <material:Card DockPanel.Dock="Top"
-                           material:ShadowAssist.ShadowDepth="Depth1"
-                           IsEnabled="{Binding SelectedDevice.IsDefault, Converter={StaticResource NotConverter}}">
+            <material:Card DockPanel.Dock="Top" material:ShadowAssist.ShadowDepth="Depth1">
                 <DockPanel LastChildFill="True">
                     <Button DockPanel.Dock="Bottom"
                             Style="{StaticResource MaterialDesignFloatingActionMiniButton}"
@@ -182,7 +181,8 @@
                             Height="32"
                             Margin="0 10 0 10"
                             Padding="0"
-                            Click="{s:Action OnAddAxis}">
+                            Click="{s:Action OnAddAxis}"
+                            IsEnabled="{Binding SelectedDevice.IsDefault, Converter={StaticResource NotConverter}}">
                         <material:PackIcon Width="24"
                                            Height="24"
                                            Kind="Plus"/>
@@ -201,18 +201,29 @@
                               CanUserResizeRows="False"
                               CanUserSortColumns="False"
                               VerticalScrollBarVisibility="Visible">
+                        <DataGrid.Resources>
+                            <ui:BindingProxy x:Key="SelectedDeviceProxy" DataContext="{Binding SelectedDevice}"/>
+                            <Style x:Key="IsDefaultCellStyle"
+                                   BasedOn="{StaticResource MaterialDesignDataGridCell}"
+                                   TargetType="{x:Type DataGridCell}">
+                                <Setter Property="IsEnabled" Value="{Binding DataContext.IsDefault, Converter={StaticResource NotConverter}, Source={StaticResource SelectedDeviceProxy}}"/>
+                            </Style>
+                        </DataGrid.Resources>
                         <DataGrid.Columns>
                             <DataGridTextColumn Binding="{Binding Name}"
+                                                CellStyle="{StaticResource IsDefaultCellStyle}"
                                                 EditingElementStyle="{StaticResource MaterialDesignDataGridTextColumnEditingStyle}"
                                                 ElementStyle="{StaticResource MaterialDesignDataGridTextColumnStyle}"
                                                 Header="Name"/>
 
                             <DataGridTextColumn Binding="{Binding FriendlyName}"
+                                                CellStyle="{StaticResource IsDefaultCellStyle}"
                                                 EditingElementStyle="{StaticResource MaterialDesignDataGridTextColumnEditingStyle}"
                                                 ElementStyle="{StaticResource MaterialDesignDataGridTextColumnStyle}"
                                                 Header="Friendly name"/>
 
                             <DataGridTextColumn Binding="{Binding FunscriptNames, Converter={StaticResource FunscriptNameListToStringConverter}}"
+                                                CellStyle="{StaticResource IsDefaultCellStyle}"
                                                 EditingElementStyle="{StaticResource MaterialDesignDataGridTextColumnEditingStyle}"
                                                 ElementStyle="{StaticResource MaterialDesignDataGridTextColumnStyle}"
                                                 Header="Funscript names">
@@ -255,6 +266,7 @@
                             </DataGridTextColumn>
 
                             <metro:DataGridNumericUpDownColumn Binding="{Binding DefaultValue}"
+                                                               CellStyle="{StaticResource IsDefaultCellStyle}"
                                                                Header="Default value"
                                                                HideUpDownButtons="True"
                                                                Maximum="1"
@@ -266,7 +278,7 @@
                                                     ElementStyle="{StaticResource MaterialDesignDataGridCheckBoxColumnStyle}"
                                                     Header="Enabled"/>
 
-                            <DataGridTemplateColumn>
+                            <DataGridTemplateColumn CellStyle="{StaticResource IsDefaultCellStyle}">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <Button DockPanel.Dock="Right"
