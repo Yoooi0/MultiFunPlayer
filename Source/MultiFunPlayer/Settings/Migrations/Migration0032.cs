@@ -11,7 +11,7 @@ internal sealed class Migration0032 : AbstractSettingsMigration
     protected override void InternalMigrate(JObject settings)
     {
         if (!TryGetValue<JValue>(settings, "SelectedDevice", out var selectedDeviceName)
-         || !TrySelectObject(settings, $"$.Devices[?(@.IsDefault == false && @.Name =~ /{Regex.Escape(selectedDeviceName.ToString())}/i)]", out var selectedDevice)
+         || !TrySelectObject(settings, $"$.Devices[?(@.IsDefault == false && @.Name =~ /^{Regex.Escape(selectedDeviceName.ToString())}$/i)]", out var selectedDevice)
          || !TrySelectObjects(settings, "$.Devices[?(@.IsDefault == true)]", out var defaultDevices))
             return;
 

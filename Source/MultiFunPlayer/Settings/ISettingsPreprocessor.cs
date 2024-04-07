@@ -58,12 +58,12 @@ internal sealed class SettingsDevicePreprocessor : JsonEditor, ISettingsPreproce
             Logger.Trace("Updating default devices");
             foreach (var defaultDevice in SelectObjects(devices, "$.[?(@.IsDefault == true)]"))
             {
-                var deviceName = defaultDevice["Name"];
+                var deviceName = defaultDevice["Name"].ToString();
                 foreach (var axisSettings in SelectObjects(defaultDevice, "$.Axes[*]"))
                 {
                     var axisName = axisSettings["Name"];
                     var enabled = axisSettings["Enabled"].ToObject<bool>();
-                    if (TrySelectProperty(defaultDevices, $"$.[?(@.Name == '{deviceName}')].Axes[?(@.Name == '{axisName}')].Enabled", out var defaultDeviceEnabled)
+                    if (TrySelectProperty(defaultDevices, $"$.[?(@.Name == /^{Regex.Escape(deviceName)}$/i)].Axes[?(@.Name == '{axisName}')].Enabled", out var defaultDeviceEnabled)
                      && defaultDeviceEnabled.Value.ToObject<bool>() != enabled)
                         SetProperty(defaultDeviceEnabled, enabled);
                 }
