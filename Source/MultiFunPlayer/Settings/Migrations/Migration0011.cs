@@ -8,7 +8,7 @@ internal sealed class Migration0011 : AbstractConfigMigration
 {
     protected override Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
-    public override void Migrate(JObject settings)
+    protected override void InternalMigrate(JObject settings)
     {
         var prefixMap = new Dictionary<string, string>();
         foreach (var outputTarget in SelectObjects(settings, "$.OutputTarget.Items[?(@.$type =~ /.*NetworkOutputTargetViewModel.*/i)]"))
@@ -51,7 +51,5 @@ internal sealed class Migration0011 : AbstractConfigMigration
 
             SetPropertyByName(outputTarget, "SendDirtyValuesOnly", protocol.ToObject<string>() == "Tcp", addIfMissing: true);
         }
-
-        base.Migrate(settings);
     }
 }

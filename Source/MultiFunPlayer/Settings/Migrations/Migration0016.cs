@@ -7,11 +7,9 @@ internal sealed class Migration0016 : AbstractConfigMigration
 {
     protected override Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
-    public override void Migrate(JObject settings)
+    protected override void InternalMigrate(JObject settings)
     {
         foreach (var binding in SelectObjects(settings, "$.Shortcuts.Bindings[*]"))
             AddPropertyByName(binding, "Enabled", true);
-
-        base.Migrate(settings);
     }
 }

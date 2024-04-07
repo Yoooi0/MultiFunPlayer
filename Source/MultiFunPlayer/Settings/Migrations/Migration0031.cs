@@ -7,7 +7,7 @@ internal sealed class Migration0031 : AbstractConfigMigration
 {
     protected override Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
-    public override void Migrate(JObject settings)
+    protected override void InternalMigrate(JObject settings)
     {
         foreach (var axisSettings in SelectObjects(settings, "$.Devices[?(@.IsDefault == false)].Axes[*]"))
         {
@@ -49,7 +49,5 @@ internal sealed class Migration0031 : AbstractConfigMigration
             if (!newFunscriptNames.SequenceEqual(funscriptNames, StringComparer.OrdinalIgnoreCase))
                 SetPropertyByName(axisSettings, "FunscriptNames", JArray.FromObject(newFunscriptNames));
         }
-
-        base.Migrate(settings);
     }
 }

@@ -8,7 +8,7 @@ internal sealed class Migration0009 : AbstractConfigMigration
 {
     protected override Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
-    public override void Migrate(JObject settings)
+    protected override void InternalMigrate(JObject settings)
     {
         var defaultDevices = DeviceSettings.DefaultDevices.ToList();
 
@@ -26,7 +26,5 @@ internal sealed class Migration0009 : AbstractConfigMigration
             axis.Enabled = true;
 
         AddTokenToContainer(JObject.FromObject(migratedDevice), devices.Value as JArray);
-
-        base.Migrate(settings);
     }
 }

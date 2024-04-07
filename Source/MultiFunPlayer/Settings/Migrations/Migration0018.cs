@@ -8,13 +8,11 @@ internal sealed class Migration0018 : AbstractConfigMigration
 {
     protected override Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
-    public override void Migrate(JObject settings)
+    protected override void InternalMigrate(JObject settings)
     {
         RenamePropertiesByPath(settings, "$.Script.AxisSettings.*.InvertScript", "InvertValue");
 
         EditPropertiesByPath(settings, "$.Shortcuts.Bindings[*].Actions[?(@.Descriptor =~ /Axis::InvertScript::.*/i)].Descriptor",
             v => Regex.Replace(v.ToString(), "^Axis::InvertScript::", "Axis::InvertValue::"));
-
-        base.Migrate(settings);
     }
 }

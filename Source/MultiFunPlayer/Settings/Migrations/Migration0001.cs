@@ -10,7 +10,7 @@ internal sealed class Migration0001 : AbstractConfigMigration
 {
     protected override Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
-    public override void Migrate(JObject settings)
+    protected override void InternalMigrate(JObject settings)
     {
         if (TrySelectObject(settings, "$.OutputTarget.Serial", out var serial)
          && TrySelectProperty(serial, "SelectedComPort", out var selectedComPort))
@@ -28,8 +28,6 @@ internal sealed class Migration0001 : AbstractConfigMigration
                 ["$.Settings[0].Value"] = v => GetComPortDeviceId(v.ToObject<string>())
             });
         }
-
-        base.Migrate(settings);
     }
 
     private string GetComPortDeviceId(string comPort)

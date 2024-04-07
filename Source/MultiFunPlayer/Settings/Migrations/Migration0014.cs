@@ -7,7 +7,7 @@ internal sealed class Migration0014 : AbstractConfigMigration
 {
     protected override Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
-    public override void Migrate(JObject settings)
+    protected override void InternalMigrate(JObject settings)
     {
         foreach (var deviceSettings in SelectObjects(settings, "$.OutputTarget.Items[?(@.$type =~ /.*ButtplugOutputTargetViewModel.*/)].DeviceSettings[*]"))
         {
@@ -22,7 +22,5 @@ internal sealed class Migration0014 : AbstractConfigMigration
                 _ => "Unknown"
             });
         }
-
-        base.Migrate(settings);
     }
 }

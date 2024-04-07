@@ -7,7 +7,7 @@ internal sealed class Migration0029 : AbstractConfigMigration
 {
     protected override Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
-    public override void Migrate(JObject settings)
+    protected override void InternalMigrate(JObject settings)
     {
         var updateContextPropertyMap = new Dictionary<string, string[]>()
         {
@@ -43,7 +43,5 @@ internal sealed class Migration0029 : AbstractConfigMigration
                     MovePropertyByName(outputTarget, property, contextSettings);
             }
         }
-
-        base.Migrate(settings);
     }
 }

@@ -7,7 +7,7 @@ internal sealed class Migration0028 : AbstractConfigMigration
 {
     protected override Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
-    public override void Migrate(JObject settings)
+    protected override void InternalMigrate(JObject settings)
     {
         RemovePropertiesByPaths(settings, [
             "$.Shortcut.IsKeyboardKeysGestureEnabled",
@@ -18,7 +18,5 @@ internal sealed class Migration0028 : AbstractConfigMigration
             "$.Shortcut.IsTCodeButtonGestureEnabled",
             "$.Shortcut.IsTCodeAxisGestureEnabled"
         ], selectMultiple: false);
-
-        base.Migrate(settings);
     }
 }

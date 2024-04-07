@@ -9,7 +9,7 @@ internal sealed class Migration0027 : AbstractConfigMigration
 {
     protected override Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
-    public override void Migrate(JObject settings)
+    protected override void InternalMigrate(JObject settings)
     {
         RenamePropertyByName(settings, "Shortcuts", "Shortcut");
         RenamePropertyByPath(settings, "$.Shortcut.Bindings", "Shortcuts");
@@ -66,7 +66,5 @@ internal sealed class Migration0027 : AbstractConfigMigration
 
             return null;
         }
-
-        base.Migrate(settings);
     }
 }

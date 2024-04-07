@@ -7,7 +7,7 @@ internal sealed class Migration0006 : AbstractConfigMigration
 {
     protected override Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
-    public override void Migrate(JObject settings)
+    protected override void InternalMigrate(JObject settings)
     {
         foreach (var action in SelectObjects(settings, "$.Shortcuts.Bindings[*].Actions[?(@.Descriptor =~ /Axis::SmartLimitEnabled::Set.*/i)]"))
         {
@@ -31,7 +31,5 @@ internal sealed class Migration0006 : AbstractConfigMigration
             if (RemovePropertyByName(axisSettings, "SmartLimitEnabled", out var property))
                 AddPropertyByName(axisSettings, "SmartLimitInputAxis", property.Value.ToObject<bool>() ? "L0" : null);
         }
-
-        base.Migrate(settings);
     }
 }

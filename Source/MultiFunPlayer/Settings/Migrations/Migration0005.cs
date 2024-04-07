@@ -8,7 +8,7 @@ internal sealed class Migration0005 : AbstractConfigMigration
 {
     protected override Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
-    public override void Migrate(JObject settings)
+    protected override void InternalMigrate(JObject settings)
     {
         EditPropertiesByPath(settings, "$.Script.VideoPathModifiers[*].$type",
             v => Regex.Replace(v.ToString(), @"^MultiFunPlayer\.VideoSource", "MultiFunPlayer.MediaSource"));
@@ -25,7 +25,5 @@ internal sealed class Migration0005 : AbstractConfigMigration
             ["$.Script.SyncSettings.SyncOnVideoPlayPause"] = "SyncOnMediaPlayPause",
             ["$.VideoSource"] = "MediaSource"
         }, selectMultiple: false);
-
-        base.Migrate(settings);
     }
 }

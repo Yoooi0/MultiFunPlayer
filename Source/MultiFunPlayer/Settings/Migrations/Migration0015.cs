@@ -8,7 +8,7 @@ internal sealed class Migration0015 : AbstractConfigMigration
 {
     protected override Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
-    public override void Migrate(JObject settings)
+    protected override void InternalMigrate(JObject settings)
     {
         foreach (var axisSettings in SelectObjects(settings, "$.Script.AxisSettings.*"))
         {
@@ -30,7 +30,5 @@ internal sealed class Migration0015 : AbstractConfigMigration
             EditPropertyByName(action, "Descriptor",
                 v => Regex.Replace(v.ToString(), "^Axis::Bypass::", "Axis::Bypass::All::"));
         }
-
-        base.Migrate(settings);
     }
 }

@@ -8,7 +8,7 @@ internal sealed class Migration0024 : AbstractConfigMigration
 {
     protected override Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
-    public override void Migrate(JObject settings)
+    protected override void InternalMigrate(JObject settings)
     {
         var migrations = new Dictionary<string, string>()
         {
@@ -28,7 +28,5 @@ internal sealed class Migration0024 : AbstractConfigMigration
 
         EditPropertiesByPath(settings, "$.Shortcuts.Bindings[*].Actions[?(@.Name =~ /(Plex|Emby|Jellyfin)::ServerBaseUri::Set/i)].Settings[0].Value",
             v => NetUtils.TryParseEndpoint(v.ToString(), out var endpoint) ? $"http://{endpoint.ToUriString()}" : null);
-
-        base.Migrate(settings);
     }
 }

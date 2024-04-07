@@ -7,37 +7,35 @@ internal sealed class Migration0003 : AbstractConfigMigration
 {
     protected override Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
-    public override void Migrate(JObject settings)
+    protected override void InternalMigrate(JObject settings)
     {
-        if (TryGetValue<JObject>(settings, "OutputTarget", out var outputTargets))
+        if (!TryGetValue<JObject>(settings, "OutputTarget", out var outputTargets))
+            return;
+
+        var nameToTypeMap = new Dictionary<string, string>()
         {
-            var nameToTypeMap = new Dictionary<string, string>()
+            ["Buttplug.io"] = "MultiFunPlayer.OutputTarget.ViewModels.ButtplugOutputTargetViewModel, MultiFunPlayer",
+            ["Network"] = "MultiFunPlayer.OutputTarget.ViewModels.NetworkOutputTargetViewModel, MultiFunPlayer",
+            ["Pipe"] = "MultiFunPlayer.OutputTarget.ViewModels.PipeOutputTargetViewModel, MultiFunPlayer",
+            ["Serial"] = "MultiFunPlayer.OutputTarget.ViewModels.SerialOutputTargetViewModel, MultiFunPlayer"
+        };
+
+        AddPropertyByName(outputTargets, "Items", new JArray());
+
+        var items = GetValue<JArray>(outputTargets, "Items");
+        foreach (var property in GetProperties(outputTargets, nameToTypeMap.Keys))
+        {
+            var outputTarget = property.Value as JObject;
+            AddPropertiesByName(outputTarget, new Dictionary<string, JToken>()
             {
-                ["Buttplug.io"] = "MultiFunPlayer.OutputTarget.ViewModels.ButtplugOutputTargetViewModel, MultiFunPlayer",
-                ["Network"] = "MultiFunPlayer.OutputTarget.ViewModels.NetworkOutputTargetViewModel, MultiFunPlayer",
-                ["Pipe"] = "MultiFunPlayer.OutputTarget.ViewModels.PipeOutputTargetViewModel, MultiFunPlayer",
-                ["Serial"] = "MultiFunPlayer.OutputTarget.ViewModels.SerialOutputTargetViewModel, MultiFunPlayer"
-            };
+                ["$type"] = nameToTypeMap[property.Name],
+                ["$index"] = 0
+            });
 
-            AddPropertyByName(outputTargets, "Items", new JArray());
-
-            var items = GetValue<JArray>(outputTargets, "Items");
-            foreach (var property in GetProperties(outputTargets, nameToTypeMap.Keys))
-            {
-                var outputTarget = property.Value as JObject;
-                AddPropertiesByName(outputTarget, new Dictionary<string, JToken>()
-                {
-                    ["$type"] = nameToTypeMap[property.Name],
-                    ["$index"] = 0
-                });
-
-                AddTokenToContainer(outputTarget, items);
-                RemoveProperty(property);
-            }
-
-            EditPropertyByName(outputTargets, "ActiveItem", v => $"{v}/0");
+            AddTokenToContainer(outputTarget, items);
+            RemoveProperty(property);
         }
 
-        base.Migrate(settings);
+        EditPropertyByName(outputTargets, "ActiveItem", v => $"{v}/0");
     }
 }

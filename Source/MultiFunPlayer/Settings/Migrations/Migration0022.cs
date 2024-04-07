@@ -7,14 +7,12 @@ internal sealed class Migration0022 : AbstractConfigMigration
 {
     protected override Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
-    public override void Migrate(JObject settings)
+    protected override void InternalMigrate(JObject settings)
     {
-        if (TrySelectProperty(settings, "$.Script.ScriptLibraries", out var scriptLibraries))
-        {
-            var localRepository = CreateChildObjects(settings, "Script", "Repositories", "Local");
-            MoveProperty(scriptLibraries, localRepository, replace: true);
-        }
+        if (!TrySelectProperty(settings, "$.Script.ScriptLibraries", out var scriptLibraries))
+            return;
 
-        base.Migrate(settings);
+        var localRepository = CreateChildObjects(settings, "Script", "Repositories", "Local");
+        MoveProperty(scriptLibraries, localRepository, replace: true);
     }
 }

@@ -7,7 +7,7 @@ internal sealed class Migration0017 : AbstractConfigMigration
 {
     protected override Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
-    public override void Migrate(JObject settings)
+    protected override void InternalMigrate(JObject settings)
     {
         foreach (var output in SelectObjects(settings, "$.OutputTarget.Items[?(@.$type =~ /.*FileOutputTargetViewModel.*/i)]"))
         {
@@ -21,7 +21,5 @@ internal sealed class Migration0017 : AbstractConfigMigration
 
             RemovePropertyByName(output, "EnabledAxes");
         }
-
-        base.Migrate(settings);
     }
 }
