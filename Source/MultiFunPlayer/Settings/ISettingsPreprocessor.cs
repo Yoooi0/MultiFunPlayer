@@ -56,19 +56,19 @@ internal sealed class SettingsDevicePreprocessor : JsonEditor, ISettingsPreproce
         else
         {
             Logger.Trace("Updating default devices");
-            foreach (var defaultDevice in SelectObjects(devices, "$.[?(@.IsDefault == true)]"))
+            foreach (var loadedDefaultDevice in SelectObjects(devices, "$.[?(@.IsDefault == true)]"))
             {
-                var deviceName = defaultDevice["Name"].ToString();
-                foreach (var axisSettings in SelectObjects(defaultDevice, "$.Axes[*]"))
+                var loadedDeviceName = loadedDefaultDevice["Name"].ToString();
+                foreach (var loadedAxisSettings in SelectObjects(loadedDefaultDevice, "$.Axes[*]"))
                 {
-                    var axisName = axisSettings["Name"];
-                    var enabled = axisSettings["Enabled"].ToObject<bool>();
-                    if (TrySelectProperty(defaultDevices, $"$.[?(@.Name == /^{Regex.Escape(deviceName)}$/i)].Axes[?(@.Name == '{axisName}')].Enabled", out var defaultDeviceEnabled)
-                     && defaultDeviceEnabled.Value.ToObject<bool>() != enabled)
-                        SetProperty(defaultDeviceEnabled, enabled);
+                    var loadedAxisName = loadedAxisSettings["Name"];
+                    var loadedAxisEnabled = loadedAxisSettings["Enabled"].ToObject<bool>();
+                    if (TrySelectProperty(defaultDevices, $"$.[?(@.Name == /^{Regex.Escape(loadedDeviceName)}$/i)].Axes[?(@.Name == '{loadedAxisName}')].Enabled", out var defaultAxisEnabled)
+                     && defaultAxisEnabled.Value.ToObject<bool>() != loadedAxisEnabled)
+                        SetProperty(defaultAxisEnabled, loadedAxisEnabled);
                 }
 
-                defaultDevice.Remove();
+                loadedDefaultDevice.Remove();
             }
 
             var insertIndex = 0;
