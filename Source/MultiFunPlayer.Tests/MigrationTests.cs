@@ -10,7 +10,7 @@ public class MigrationTests
     public static IEnumerable<Type> FindImplementations(Type type)
         => type.Assembly.GetTypes().Where(t => t.IsClass && !t.IsAbstract && ReflectionUtils.IsAssignableFromOrSubclass(type, t));
 
-    public static IEnumerable<Type> MigrationTypes => FindImplementations<AbstractConfigMigration>();
+    public static IEnumerable<Type> MigrationTypes => FindImplementations<AbstractSettingsMigration>();
     private static string[] DefaultMigrationProperties => ["ConfigVersion"];
 
     public static IEnumerable<object[]> ExpectedPropertiesOnMigrate
@@ -23,7 +23,7 @@ public class MigrationTests
     [MemberData(nameof(ExpectedPropertiesOnMigrate))]
     public void MigrateOnEmptyObjectAddsExpectedProperties(Type migrationType, string[] expectedProperties)
     {
-        var migration = (AbstractConfigMigration)Activator.CreateInstance(migrationType);
+        var migration = (AbstractSettingsMigration)Activator.CreateInstance(migrationType);
         var o = new JObject();
         migration.Migrate(o);
 

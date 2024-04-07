@@ -44,6 +44,22 @@ internal class JsonEditor
         }
     }
 
+    public bool InsertTokenToArray(JToken token, int index, JArray array)
+    {
+        try
+        {
+            array.Insert(index, token);
+            Logger.Info("Inserted token \"{0}\" to array \"{1}\" at index \"{2}\"", token.ToString(), array.Path, index);
+
+            return true;
+        }
+        catch (Exception e)
+        {
+            Logger.Warn("Failed to insert token \"{0}\" to array \"{1}\" at index \"{2}\": {3}", token.ToString(), array.Path, index, e.Message);
+            return false;
+        }
+    }
+
     public bool RemoveProperty(JProperty property)
     {
         var path = property.Path;

@@ -5,7 +5,7 @@ using System.Diagnostics;
 
 namespace MultiFunPlayer.Settings.Migrations;
 
-internal sealed class Migration0027 : AbstractConfigMigration
+internal sealed class Migration0027 : AbstractSettingsMigration
 {
     protected override Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 

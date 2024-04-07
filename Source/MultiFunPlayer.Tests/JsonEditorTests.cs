@@ -1,4 +1,4 @@
-using MultiFunPlayer.Settings;
+﻿using MultiFunPlayer.Settings;
 using Newtonsoft.Json.Linq;
 using NLog;
 
@@ -103,6 +103,27 @@ public class JsonEditorTests
     {
         var a = new JArray();
         var result = _editor.AddTokenToContainer(new JProperty("foo", 0), a);
+
+        Assert.True(!result);
+        Assert.Empty(a);
+    }
+
+    [Fact]
+    public void InsertTokenToArrayAddsToken()
+    {
+        var a = new JArray();
+        var result = _editor.InsertTokenToArray("foo", 0, a);
+
+        Assert.True(result);
+        Assert.Single(a);
+        Assert.Equal("foo", a[0].ToString());
+    }
+
+    [Fact]
+    public void InsertTokenToArrayFailsWhenIndexOutOfRange()
+    {
+        var a = new JArray();
+        var result = _editor.InsertTokenToArray("foo", 1, a);
 
         Assert.True(!result);
         Assert.Empty(a);

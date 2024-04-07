@@ -3,7 +3,7 @@ using NLog;
 
 namespace MultiFunPlayer.Settings.Migrations;
 
-internal sealed class Migration0022 : AbstractConfigMigration
+internal sealed class Migration0022 : AbstractSettingsMigration
 {
     protected override Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 

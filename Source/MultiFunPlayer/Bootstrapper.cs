@@ -1,4 +1,4 @@
-using Microsoft.Win32;
+﻿using Microsoft.Win32;
 using MultiFunPlayer.Common;
 using MultiFunPlayer.Input;
 using MultiFunPlayer.Input.RawInput;
@@ -18,7 +18,6 @@ using MultiFunPlayer.UI.Controls.ViewModels;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;
-using Newtonsoft.Json.Serialization;
 using NLog;
 using NLog.Config;
 using NLog.Targets;
@@ -58,7 +57,9 @@ internal sealed class Bootstrapper : Bootstrapper<RootViewModel>
         builder.Bind<ScriptViewModel>().And<IDeviceAxisValueProvider>().To<ScriptViewModel>().InSingletonScope();
 
         builder.Bind<IMediaSource>().ToAllImplementations().InSingletonScope();
-        builder.Bind<IConfigMigration>().ToAllImplementations().InSingletonScope();
+        builder.Bind<ISettingsMigration>().ToAllImplementations().InSingletonScope();
+        builder.Bind<SettingsMigrationPreprocessor>().ToSelf().InSingletonScope();
+        builder.Bind<SettingsDevicePreprocessor>().ToSelf().InSingletonScope();
 
         foreach (var type in ReflectionUtils.FindImplementations<IInputProcessorSettings>())
             builder.Bind(type).And<IInputProcessorSettings>().To(type).InSingletonScope();
@@ -96,7 +97,6 @@ internal sealed class Bootstrapper : Bootstrapper<RootViewModel>
 
         ConfigureJson();
 
-        SettingsHelper.Initialize(Container.GetAll<IConfigMigration>());
         var settings = SettingsHelper.ReadOrEmpty();
         var dirty = ConfigureLoging(settings);
 
@@ -115,8 +115,8 @@ internal sealed class Bootstrapper : Bootstrapper<RootViewModel>
                 LogManager.Shutdown();
         };
 
-        dirty |= SettingsHelper.Migrate(settings);
-        dirty |= ConfigureDevice(settings);
+        dirty |= Container.Get<SettingsMigrationPreprocessor>().Preprocess(settings);
+        dirty |= Container.Get<SettingsDevicePreprocessor>().Preprocess(settings);
 
         if (dirty)
             SettingsHelper.Write(settings);
@@ -227,61 +227,6 @@ internal sealed class Bootstrapper : Bootstrapper<RootViewModel>
 
             return settings;
         };
-    }
-
-    private bool ConfigureDevice(JObject settings)
-    {
-        var logger = LogManager.GetLogger(nameof(MultiFunPlayer));
-        var serializer = JsonSerializer.Create(new JsonSerializerSettings()
-        {
-            ContractResolver = new DefaultContractResolver()
-        });
-
-        var dirty = false;
-        var defaultDevices = JArray.FromObject(DeviceSettings.DefaultDevices);
-        if (!settings.TryGetValue("Devices", out var devicesToken) || devicesToken is not JArray devices)
-        {
-            settings["Devices"] = defaultDevices;
-            devices = defaultDevices;
-        }
-        else
-        {
-            var jsonEditor = new JsonEditor();
-            foreach (var defaultDevice in jsonEditor.SelectObjects(devices, "$.[?(@.IsDefault == true)]"))
-            {
-                var deviceName = defaultDevice["Name"];
-                foreach (var axisSettings in jsonEditor.SelectObjects(defaultDevice, "$.Axes[*]"))
-                {
-                    var axisName = axisSettings["Name"];
-                    var enabled = axisSettings["Enabled"].ToObject<bool>();
-                    jsonEditor.SetPropertyByPath(defaultDevices, $"$.[?(@.Name == '{deviceName}')].Axes[?(@.Name == '{axisName}')].Enabled", enabled);
-                }
-
-                defaultDevice.Remove();
-            }
-
-            var insertIndex = 0;
-            foreach (var defaultDevice in defaultDevices)
-                devices.Insert(insertIndex++, defaultDevice);
-        }
-
-        if (!settings.TryGetValue<string>("SelectedDevice", serializer, out var selectedDevice) || string.IsNullOrWhiteSpace(selectedDevice))
-        {
-            selectedDevice = devices.Last["Name"].ToString();
-            settings["SelectedDevice"] = selectedDevice;
-            dirty = true;
-        }
-
-        if (devices.FirstOrDefault(d => string.Equals(d["Name"].ToString(), selectedDevice, StringComparison.OrdinalIgnoreCase)) is not JObject device)
-        {
-            logger.Warn("Unable to find device! [SelectedDevice: \"{0}\"]", selectedDevice);
-            device = devices.Last as JObject;
-            settings["SelectedDevice"] = device["Name"].ToString();
-            dirty = true;
-        }
-
-        DeviceAxis.InitializeFromDevice(device.ToObject<DeviceSettings>());
-        return dirty;
     }
 
     private bool ConfigureLoging(JObject settings)

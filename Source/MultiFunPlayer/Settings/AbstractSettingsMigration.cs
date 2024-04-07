@@ -1,14 +1,14 @@
-using Newtonsoft.Json.Linq;
+﻿using Newtonsoft.Json.Linq;
 using NLog;
 
 namespace MultiFunPlayer.Settings;
 
-internal abstract class AbstractConfigMigration : JsonEditor, IConfigMigration
+internal abstract class AbstractSettingsMigration : JsonEditor, ISettingsMigration
 {
     public int TargetVersion { get; }
     protected override abstract Logger Logger { get; }
 
-    protected AbstractConfigMigration() => TargetVersion = int.Parse(GetType().Name[^4..]);
+    protected AbstractSettingsMigration() => TargetVersion = int.Parse(GetType().Name[^4..]);
     protected abstract void InternalMigrate(JObject settings);
 
     public void Migrate(JObject settings)
