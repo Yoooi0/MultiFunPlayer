@@ -290,14 +290,14 @@ internal class JsonEditor
         }
     }
 
-    public bool RemovePropertyByPath(JObject o, string propertyPath) => ModifyPropertyByPath(o, propertyPath, RemoveProperty);
-    public bool RenamePropertyByPath(JObject o, string propertyPath, string newName) => ModifyPropertyByPath(o, propertyPath, p => RenameProperty(ref p, newName));
-    public bool MovePropertyByPath(JObject o, string propertyPath, JObject toObject) => ModifyPropertyByPath(o, propertyPath, p => MoveProperty(p, toObject));
-    public bool MovePropertyByPath(JObject o, string propertyPath, string newName, JObject toObject) => ModifyPropertyByPath(o, propertyPath, p => MoveProperty(ref p, toObject, newName));
-    public bool EditPropertyByPath(JObject o, string propertyPath, Func<JToken, JToken> modifier) => ModifyPropertyByPath(o, propertyPath, p => SetProperty(p, modifier(p.Value)));
-    public bool SetPropertyByPath(JObject o, string propertyPath, JToken value) => ModifyPropertyByPath(o, propertyPath, p => SetProperty(p, value));
+    public bool RemovePropertyByPath(JContainer o, string propertyPath) => ModifyPropertyByPath(o, propertyPath, RemoveProperty);
+    public bool RenamePropertyByPath(JContainer o, string propertyPath, string newName) => ModifyPropertyByPath(o, propertyPath, p => RenameProperty(ref p, newName));
+    public bool MovePropertyByPath(JContainer o, string propertyPath, JObject toObject) => ModifyPropertyByPath(o, propertyPath, p => MoveProperty(p, toObject));
+    public bool MovePropertyByPath(JContainer o, string propertyPath, string newName, JObject toObject) => ModifyPropertyByPath(o, propertyPath, p => MoveProperty(ref p, toObject, newName));
+    public bool EditPropertyByPath(JContainer o, string propertyPath, Func<JToken, JToken> modifier) => ModifyPropertyByPath(o, propertyPath, p => SetProperty(p, modifier(p.Value)));
+    public bool SetPropertyByPath(JContainer o, string propertyPath, JToken value) => ModifyPropertyByPath(o, propertyPath, p => SetProperty(p, value));
 
-    public bool ModifyPropertyByPath(JObject o, string propertyPath, Func<JProperty, bool> modifier)
+    public bool ModifyPropertyByPath(JContainer o, string propertyPath, Func<JProperty, bool> modifier)
     {
         if (!TrySelectProperty(o, propertyPath, out var property))
             return false;
@@ -305,18 +305,18 @@ internal class JsonEditor
         return modifier(property);
     }
 
-    public void RemovePropertiesByPath(JObject o, string propertiesPath) => ModifyPropertiesByPath(o, propertiesPath, p => RemoveProperty(p));
-    public void RenamePropertiesByPath(JObject o, string propertiesPath, string newName) => ModifyPropertiesByPath(o, propertiesPath, p => RenameProperty(ref p, newName));
-    public void EditPropertiesByPath(JObject o, string propertiesPath, Func<JToken, JToken> modifier) => ModifyPropertiesByPath(o, propertiesPath, p => SetProperty(p, modifier(p.Value)));
-    public void SetPropertiesByPath(JObject o, string propertiesPath, JToken value) => ModifyPropertiesByPath(o, propertiesPath, p => SetProperty(p, value));
+    public void RemovePropertiesByPath(JContainer o, string propertiesPath) => ModifyPropertiesByPath(o, propertiesPath, p => RemoveProperty(p));
+    public void RenamePropertiesByPath(JContainer o, string propertiesPath, string newName) => ModifyPropertiesByPath(o, propertiesPath, p => RenameProperty(ref p, newName));
+    public void EditPropertiesByPath(JContainer o, string propertiesPath, Func<JToken, JToken> modifier) => ModifyPropertiesByPath(o, propertiesPath, p => SetProperty(p, modifier(p.Value)));
+    public void SetPropertiesByPath(JContainer o, string propertiesPath, JToken value) => ModifyPropertiesByPath(o, propertiesPath, p => SetProperty(p, value));
 
-    public void RemovePropertiesByPath(JObject o, string propertiesPath, Func<JToken, bool> filter) => ModifyPropertiesByPath(o, propertiesPath, p => filter(p.Value), p => RemoveProperty(p));
-    public void RenamePropertiesByPath(JObject o, string propertiesPath, Func<JToken, bool> filter, string newName) => ModifyPropertiesByPath(o, propertiesPath, p => filter(p.Value), p => RenameProperty(ref p, newName));
-    public void EditPropertiesByPath(JObject o, string propertiesPath, Func<JToken, bool> filter, Func<JToken, JToken> modifier) => ModifyPropertiesByPath(o, propertiesPath, p => filter(p.Value), p => SetProperty(p, modifier(p.Value)));
-    public void SetPropertiesByPath(JObject o, string propertiesPath, Func<JToken, bool> filter, JToken value) => ModifyPropertiesByPath(o, propertiesPath, p => filter(p.Value), p => SetProperty(p, value));
+    public void RemovePropertiesByPath(JContainer o, string propertiesPath, Func<JToken, bool> filter) => ModifyPropertiesByPath(o, propertiesPath, p => filter(p.Value), p => RemoveProperty(p));
+    public void RenamePropertiesByPath(JContainer o, string propertiesPath, Func<JToken, bool> filter, string newName) => ModifyPropertiesByPath(o, propertiesPath, p => filter(p.Value), p => RenameProperty(ref p, newName));
+    public void EditPropertiesByPath(JContainer o, string propertiesPath, Func<JToken, bool> filter, Func<JToken, JToken> modifier) => ModifyPropertiesByPath(o, propertiesPath, p => filter(p.Value), p => SetProperty(p, modifier(p.Value)));
+    public void SetPropertiesByPath(JContainer o, string propertiesPath, Func<JToken, bool> filter, JToken value) => ModifyPropertiesByPath(o, propertiesPath, p => filter(p.Value), p => SetProperty(p, value));
 
-    public void ModifyPropertiesByPath(JObject o, string propertiesPath, Action<JProperty> modifier) => ModifyPropertiesByPath(o, propertiesPath, _ => true, modifier);
-    public void ModifyPropertiesByPath(JObject o, string propertiesPath, Func<JProperty, bool> filter, Action<JProperty> modifier)
+    public void ModifyPropertiesByPath(JContainer o, string propertiesPath, Action<JProperty> modifier) => ModifyPropertiesByPath(o, propertiesPath, _ => true, modifier);
+    public void ModifyPropertiesByPath(JContainer o, string propertiesPath, Func<JProperty, bool> filter, Action<JProperty> modifier)
     {
         if (TrySelectProperties(o, propertiesPath, out var properties))
             foreach (var property in properties)
@@ -324,16 +324,16 @@ internal class JsonEditor
                     modifier(property);
     }
 
-    public void RemovePropertiesByPaths(JObject o, IEnumerable<string> propertyPaths, bool selectMultiple = true) => ModifyPropertiesByPaths(o, propertyPaths, selectMultiple, RemoveProperty);
-    public void EditPropertiesByPaths(JObject o, IEnumerable<string> propertyPaths, Func<JToken, JToken> modifier, bool selectMultiple = true) => ModifyPropertiesByPaths(o, propertyPaths, selectMultiple, p => SetProperty(p, modifier(p.Value)));
-    public void SetPropertiesByPaths(JObject o, IEnumerable<string> propertyPaths, JToken value, bool selectMultiple = true) => ModifyPropertiesByPaths(o, propertyPaths, selectMultiple, p => SetProperty(p, value));
+    public void RemovePropertiesByPaths(JContainer o, IEnumerable<string> propertyPaths, bool selectMultiple = true) => ModifyPropertiesByPaths(o, propertyPaths, selectMultiple, RemoveProperty);
+    public void EditPropertiesByPaths(JContainer o, IEnumerable<string> propertyPaths, Func<JToken, JToken> modifier, bool selectMultiple = true) => ModifyPropertiesByPaths(o, propertyPaths, selectMultiple, p => SetProperty(p, modifier(p.Value)));
+    public void SetPropertiesByPaths(JContainer o, IEnumerable<string> propertyPaths, JToken value, bool selectMultiple = true) => ModifyPropertiesByPaths(o, propertyPaths, selectMultiple, p => SetProperty(p, value));
 
-    public void RemovePropertiesByPaths(JObject o, IEnumerable<string> propertyPaths, Func<JToken, bool> filter, bool selectMultiple = true) => ModifyPropertiesByPaths(o, propertyPaths, selectMultiple, p => filter(p.Value), RemoveProperty);
-    public void EditPropertiesByPaths(JObject o, IEnumerable<string> propertyPaths, Func<JToken, bool> filter, Func<JToken, JToken> modifier, bool selectMultiple = true) => ModifyPropertiesByPaths(o, propertyPaths, selectMultiple, p => filter(p.Value), p => SetProperty(p, modifier(p.Value)));
-    public void SetPropertiesByPaths(JObject o, IEnumerable<string> propertyPaths, Func<JToken, bool> filter, JToken value, bool selectMultiple = true) => ModifyPropertiesByPaths(o, propertyPaths, selectMultiple, p => filter(p.Value), p => SetProperty(p, value));
+    public void RemovePropertiesByPaths(JContainer o, IEnumerable<string> propertyPaths, Func<JToken, bool> filter, bool selectMultiple = true) => ModifyPropertiesByPaths(o, propertyPaths, selectMultiple, p => filter(p.Value), RemoveProperty);
+    public void EditPropertiesByPaths(JContainer o, IEnumerable<string> propertyPaths, Func<JToken, bool> filter, Func<JToken, JToken> modifier, bool selectMultiple = true) => ModifyPropertiesByPaths(o, propertyPaths, selectMultiple, p => filter(p.Value), p => SetProperty(p, modifier(p.Value)));
+    public void SetPropertiesByPaths(JContainer o, IEnumerable<string> propertyPaths, Func<JToken, bool> filter, JToken value, bool selectMultiple = true) => ModifyPropertiesByPaths(o, propertyPaths, selectMultiple, p => filter(p.Value), p => SetProperty(p, value));
 
-    public void ModifyPropertiesByPaths(JObject o, IEnumerable<string> propertyPaths, bool selectMultiple, Func<JProperty, bool> modifier) => ModifyPropertiesByPaths(o, propertyPaths, selectMultiple, _ => true, modifier);
-    public void ModifyPropertiesByPaths(JObject o, IEnumerable<string> propertyPaths, bool selectMultiple, Func<JProperty, bool> filter, Func<JProperty, bool> modifier)
+    public void ModifyPropertiesByPaths(JContainer o, IEnumerable<string> propertyPaths, bool selectMultiple, Func<JProperty, bool> modifier) => ModifyPropertiesByPaths(o, propertyPaths, selectMultiple, _ => true, modifier);
+    public void ModifyPropertiesByPaths(JContainer o, IEnumerable<string> propertyPaths, bool selectMultiple, Func<JProperty, bool> filter, Func<JProperty, bool> modifier)
     {
         foreach (var propertyPath in propertyPaths)
         {
@@ -352,16 +352,16 @@ internal class JsonEditor
         }
     }
 
-    public void RenamePropertiesByPaths(JObject o, IEnumerable<KeyValuePair<string, string>> propertyPathMap, bool selectMultiple = true) => ModifyPropertiesByPaths(o, propertyPathMap, selectMultiple, (p, n) => RenameProperty(ref p, n));
-    public void EditPropertiesByPaths(JObject o, IEnumerable<KeyValuePair<string, Func<JToken, JToken>>> propertyPathMap, bool selectMultiple = true) => ModifyPropertiesByPaths(o, propertyPathMap, selectMultiple, (p, m) => SetProperty(p, m(p.Value)));
-    public void SetPropertiesByPaths(JObject o, IEnumerable<KeyValuePair<string, JToken>> propertyPathMap, bool selectMultiple = true) => ModifyPropertiesByPaths(o, propertyPathMap, selectMultiple, (p, t) => SetProperty(p, t));
+    public void RenamePropertiesByPaths(JContainer o, IEnumerable<KeyValuePair<string, string>> propertyPathMap, bool selectMultiple = true) => ModifyPropertiesByPaths(o, propertyPathMap, selectMultiple, (p, n) => RenameProperty(ref p, n));
+    public void EditPropertiesByPaths(JContainer o, IEnumerable<KeyValuePair<string, Func<JToken, JToken>>> propertyPathMap, bool selectMultiple = true) => ModifyPropertiesByPaths(o, propertyPathMap, selectMultiple, (p, m) => SetProperty(p, m(p.Value)));
+    public void SetPropertiesByPaths(JContainer o, IEnumerable<KeyValuePair<string, JToken>> propertyPathMap, bool selectMultiple = true) => ModifyPropertiesByPaths(o, propertyPathMap, selectMultiple, (p, t) => SetProperty(p, t));
 
-    public void RenamePropertiesByPaths(JObject o, IEnumerable<KeyValuePair<string, string>> propertyPathMap, Func<JProperty, bool> filter, bool selectMultiple = true) => ModifyPropertiesByPaths(o, propertyPathMap, selectMultiple, filter, (p, n) => RenameProperty(ref p, n));
-    public void EditPropertiesByPaths(JObject o, IEnumerable<KeyValuePair<string, Func<JToken, JToken>>> propertyPathMap, Func<JProperty, bool> filter, bool selectMultiple = true) => ModifyPropertiesByPaths(o, propertyPathMap, selectMultiple, filter, (p, m) => SetProperty(p, m(p.Value)));
-    public void SetPropertiesByPaths(JObject o, IEnumerable<KeyValuePair<string, JToken>> propertyPathMap, Func<JProperty, bool> filter, bool selectMultiple = true) => ModifyPropertiesByPaths(o, propertyPathMap, selectMultiple, filter, (p, t) => SetProperty(p, t));
+    public void RenamePropertiesByPaths(JContainer o, IEnumerable<KeyValuePair<string, string>> propertyPathMap, Func<JProperty, bool> filter, bool selectMultiple = true) => ModifyPropertiesByPaths(o, propertyPathMap, selectMultiple, filter, (p, n) => RenameProperty(ref p, n));
+    public void EditPropertiesByPaths(JContainer o, IEnumerable<KeyValuePair<string, Func<JToken, JToken>>> propertyPathMap, Func<JProperty, bool> filter, bool selectMultiple = true) => ModifyPropertiesByPaths(o, propertyPathMap, selectMultiple, filter, (p, m) => SetProperty(p, m(p.Value)));
+    public void SetPropertiesByPaths(JContainer o, IEnumerable<KeyValuePair<string, JToken>> propertyPathMap, Func<JProperty, bool> filter, bool selectMultiple = true) => ModifyPropertiesByPaths(o, propertyPathMap, selectMultiple, filter, (p, t) => SetProperty(p, t));
 
-    public void ModifyPropertiesByPaths<T>(JObject o, IEnumerable<KeyValuePair<string, T>> propertyPathMap, bool selectMultiple, Action<JProperty, T> modifier) => ModifyPropertiesByPaths<T>(o, propertyPathMap, selectMultiple, _ => true, modifier);
-    public void ModifyPropertiesByPaths<T>(JObject o, IEnumerable<KeyValuePair<string, T>> propertyPathMap, bool selectMultiple, Func<JProperty, bool> filter, Action<JProperty, T> modifier)
+    public void ModifyPropertiesByPaths<T>(JContainer o, IEnumerable<KeyValuePair<string, T>> propertyPathMap, bool selectMultiple, Action<JProperty, T> modifier) => ModifyPropertiesByPaths<T>(o, propertyPathMap, selectMultiple, _ => true, modifier);
+    public void ModifyPropertiesByPaths<T>(JContainer o, IEnumerable<KeyValuePair<string, T>> propertyPathMap, bool selectMultiple, Func<JProperty, bool> filter, Action<JProperty, T> modifier)
     {
         foreach (var (propertyPath, argument) in propertyPathMap)
         {
@@ -484,8 +484,8 @@ internal class JsonEditor
         return true;
     }
 
-    public JProperty SelectProperty(JObject o, string propertyPath) => TrySelectProperty(o, propertyPath, out var property) ? property : null;
-    public bool TrySelectProperty(JObject o, string propertyPath, out JProperty result)
+    public JProperty SelectProperty(JContainer o, string propertyPath) => TrySelectProperty(o, propertyPath, out var property) ? property : null;
+    public bool TrySelectProperty(JContainer o, string propertyPath, out JProperty result)
     {
         result = default;
         if (TrySelectToken(o, propertyPath, out var valueToken))
@@ -494,8 +494,8 @@ internal class JsonEditor
         return result != null;
     }
 
-    public IReadOnlyList<JProperty> SelectProperties(JObject o, string propertiesPath) => TrySelectProperties(o, propertiesPath, out var properties) ? properties : [];
-    public bool TrySelectProperties(JObject o, string propertiesPath, out IReadOnlyList<JProperty> result)
+    public IReadOnlyList<JProperty> SelectProperties(JContainer o, string propertiesPath) => TrySelectProperties(o, propertiesPath, out var properties) ? properties : [];
+    public bool TrySelectProperties(JContainer o, string propertiesPath, out IReadOnlyList<JProperty> result)
     {
         result = default;
         if (!TrySelectTokens(o, propertiesPath, out var valueTokens))
