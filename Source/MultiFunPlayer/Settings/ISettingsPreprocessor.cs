@@ -1,4 +1,4 @@
-﻿using MultiFunPlayer.Common;
+using MultiFunPlayer.Common;
 using Newtonsoft.Json.Linq;
 using NLog;
 using System.Text.RegularExpressions;
@@ -26,7 +26,7 @@ internal sealed class SettingsMigrationPreprocessor(IEnumerable<ISettingsMigrati
         }
 
         var dirty = false;
-        var settingsVersion = configVersion.ToObject<int>();
+        var settingsVersion = configVersion.Value.ToObject<int>();
         var pendingMigrations = migrations.Where(m => m.TargetVersion > settingsVersion)
                                           .OrderBy(m => m.TargetVersion);
 
