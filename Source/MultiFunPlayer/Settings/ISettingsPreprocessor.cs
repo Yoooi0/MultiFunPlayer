@@ -1,4 +1,4 @@
-using MultiFunPlayer.Common;
+﻿using MultiFunPlayer.Common;
 using Newtonsoft.Json.Linq;
 using NLog;
 using System.Text.RegularExpressions;
@@ -68,7 +68,7 @@ internal sealed class SettingsDevicePreprocessor : JsonEditor, ISettingsPreproce
                 {
                     var loadedAxisName = loadedAxisSettings["Name"];
                     var loadedAxisEnabled = loadedAxisSettings["Enabled"].ToObject<bool>();
-                    if (TrySelectProperty(defaultDevices, $"$.[?(@.Name == /^{Regex.Escape(loadedDeviceName)}$/i)].Axes[?(@.Name == '{loadedAxisName}')].Enabled", out var defaultAxisEnabled)
+                    if (TrySelectProperty(defaultDevices, $"$.[?(@.Name =~ /^{Regex.Escape(loadedDeviceName)}$/i)].Axes[?(@.Name == '{loadedAxisName}')].Enabled", out var defaultAxisEnabled)
                      && defaultAxisEnabled.Value.ToObject<bool>() != loadedAxisEnabled)
                         SetProperty(defaultAxisEnabled, loadedAxisEnabled);
                 }
