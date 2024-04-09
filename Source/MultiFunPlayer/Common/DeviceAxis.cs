@@ -62,7 +62,10 @@ public sealed class DeviceAxis
 
         _outputMaximum = (int)(Math.Pow(10, device.OutputPrecision) - 1);
         _outputFormat = CompositeFormat.Parse($"{{0:{new string('0', device.OutputPrecision)}}}");
-        _axes = device.Axes.Where(s => s.Enabled).ToFrozenDictionary(s => s.Name, s => new DeviceAxis(s));
-        All = _axes.Values;
+
+        All = device.Axes.Where(s => s.Enabled)
+                         .Select(s => new DeviceAxis(s))
+                         .ToImmutableArray();
+        _axes = All.ToFrozenDictionary(a => a.Name, a => a);
     }
 }
