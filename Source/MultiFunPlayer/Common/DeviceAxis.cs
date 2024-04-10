@@ -32,10 +32,10 @@ public sealed class DeviceAxis
     private static int _count;
     private static int _outputMaximum;
     private static CompositeFormat _outputFormat;
-    private static FrozenDictionary<string, DeviceAxis> _axes;
+    private static FrozenDictionary<string, DeviceAxis> _axisNameMap;
     public static ImmutableArray<DeviceAxis> All { get; private set; }
 
-    public static DeviceAxis Parse(string name) => _axes.GetValueOrDefault(name, null);
+    public static DeviceAxis Parse(string name) => _axisNameMap.GetValueOrDefault(name, null);
     public static bool TryParse(string name, out DeviceAxis axis)
     {
         axis = Parse(name);
@@ -57,7 +57,7 @@ public sealed class DeviceAxis
 
     internal static void InitializeFromDevice(DeviceSettings device)
     {
-        if (_axes != null)
+        if (_count != 0)
             throw new NotSupportedException();
 
         _outputMaximum = (int)(Math.Pow(10, device.OutputPrecision) - 1);
@@ -66,6 +66,6 @@ public sealed class DeviceAxis
         All = device.Axes.Where(s => s.Enabled)
                          .Select(s => new DeviceAxis(s))
                          .ToImmutableArray();
-        _axes = All.ToFrozenDictionary(a => a.Name, a => a);
+        _axisNameMap = All.ToFrozenDictionary(a => a.Name, a => a);
     }
 }
