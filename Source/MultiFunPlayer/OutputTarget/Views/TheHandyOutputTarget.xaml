@@ -201,7 +201,7 @@
                                         </DataTemplate>
                                     </metro:RangeSlider.AutoToolTipUpperValueTemplate>
                                     <metro:RangeSlider.AutoToolTipRangeValuesTemplate>
-                                        <DataTemplate DataType="mah:RangeSliderAutoTooltipValues">
+                                        <DataTemplate DataType="{x:Type metro:RangeSliderAutoTooltipValues}">
                                             <StackPanel Orientation="Horizontal">
                                                 <TextBlock Text="{Binding LowerValue, StringFormat='{}{0:D}%'}"/>
                                                 <TextBlock Text=" - "/>
