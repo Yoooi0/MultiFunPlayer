@@ -786,10 +786,10 @@
                                                 </DataTrigger>
 
                                                 <Trigger Property="UIElement.IsMouseOver" Value="True">
-                                                    <Setter TargetName="Container" Property="Panel.Background" Value="{DynamicResource MaterialDesignCardBackgroundHover}"/>
+                                                    <Setter TargetName="Container" Property="Panel.Background" Value="{DynamicResource MaterialDesignCardBackgroundHoverBrush}"/>
                                                 </Trigger>
                                                 <Trigger Property="IsSelected" Value="True">
-                                                    <Setter TargetName="Container" Property="Background" Value="{DynamicResource MaterialDesignCardBackgroundSelected}"/>
+                                                    <Setter TargetName="Container" Property="Background" Value="{DynamicResource MaterialDesignCardBackgroundSelectedBrush}"/>
                                                     <Setter TargetName="Container" Property="material:ShadowAssist.ShadowDepth" Value="Depth2"/>
                                                 </Trigger>
                                             </ControlTemplate.Triggers>

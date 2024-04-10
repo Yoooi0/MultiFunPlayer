@@ -637,7 +637,7 @@
                                        Text="{Binding Key}">
                                 <TextBlock.Resources>
                                     <Style TargetType="TextBlock">
-                                        <Setter Property="Foreground" Value="{DynamicResource MaterialDesignBodyDisabled}"/>
+                                        <Setter Property="Foreground" Value="{DynamicResource MaterialDesignBodyDisabledBrush}"/>
                                         <Setter Property="FontWeight" Value="Medium"/>
                                         <Style.Triggers>
                                             <DataTrigger Binding="{Binding Value.Script, Converter={StaticResource InvertedNullableToBooleanConverter}}" Value="True">
