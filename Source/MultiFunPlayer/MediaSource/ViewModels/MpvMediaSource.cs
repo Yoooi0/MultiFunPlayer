@@ -1,4 +1,4 @@
-using Microsoft.Win32;
+﻿using Microsoft.Win32;
 using MultiFunPlayer.Common;
 using MultiFunPlayer.Shortcut;
 using MultiFunPlayer.UI;
@@ -185,7 +185,7 @@ internal sealed class MpvMediaSource(IShortcutManager shortcutManager, IEventAgg
                     continue;
 
                 Logger.Trace("Sending \"{0}\" to \"{1}\"", messageString, Name);
-                await writer.WriteLineAsync(messageString).WithCancellation(token);
+                await writer.WriteLineAsync(messageString.AsMemory(), token);
             }
         }
         catch (OperationCanceledException) { }

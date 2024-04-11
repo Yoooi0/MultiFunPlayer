@@ -1,4 +1,4 @@
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System.Buffers;
 using System.Collections;
@@ -111,68 +111,6 @@ public static class JsonExtensions
 
 public static class TaskExtensions
 {
-    public static Task WithCancellation(this Task task, CancellationToken cancellationToken)
-    {
-        static async Task DoWaitAsync(Task task, CancellationToken cancellationToken)
-        {
-            var tcs = new TaskCompletionSource();
-            await using var registration = cancellationToken.Register(() => tcs.TrySetCanceled(cancellationToken), useSynchronizationContext: false);
-            await await Task.WhenAny(task, tcs.Task);
-        }
-
-        if (!cancellationToken.CanBeCanceled)
-            return task;
-        if (cancellationToken.IsCancellationRequested)
-            return Task.FromCanceled(cancellationToken);
-        return DoWaitAsync(task, cancellationToken);
-    }
-
-    public static Task<TResult> WithCancellation<TResult>(this Task<TResult> task, CancellationToken cancellationToken)
-    {
-        static async Task<T> DoWaitAsync<T>(Task<T> task, CancellationToken cancellationToken)
-        {
-            var tcs = new TaskCompletionSource<T>();
-            await using var registration = cancellationToken.Register(() => tcs.TrySetCanceled(cancellationToken), useSynchronizationContext: false);
-            return await await Task.WhenAny(task, tcs.Task);
-        }
-
-        if (!cancellationToken.CanBeCanceled)
-            return task;
-        if (cancellationToken.IsCancellationRequested)
-            return Task.FromCanceled<TResult>(cancellationToken);
-        return DoWaitAsync(task, cancellationToken);
-    }
-
-    public static Task WithCancellation(this Task task, int millisecondsDelay)
-    {
-        static async Task DoWaitAsync(Task task, int millisecondsDelay)
-        {
-            var tcs = new TaskCompletionSource();
-            using var cancellationSource = new CancellationTokenSource(millisecondsDelay);
-            await using var registration = cancellationSource.Token.Register(() => tcs.TrySetCanceled(), useSynchronizationContext: false);
-
-            try { await await Task.WhenAny(task, tcs.Task); }
-            catch (OperationCanceledException) when (tcs.Task.IsCanceled) { throw new TimeoutException(); }
-        }
-
-        return DoWaitAsync(task, millisecondsDelay);
-    }
-
-    public static Task<TResult> WithCancellation<TResult>(this Task<TResult> task, int millisecondsDelay)
-    {
-        static async Task<T> DoWaitAsync<T>(Task<T> task, int millisecondsDelay)
-        {
-            var tcs = new TaskCompletionSource<T>();
-            using var cancellationSource = new CancellationTokenSource(millisecondsDelay);
-            await using var registration = cancellationSource.Token.Register(() => tcs.TrySetCanceled(), useSynchronizationContext: false);
-
-            try { return await await Task.WhenAny(task, tcs.Task); }
-            catch (OperationCanceledException) when (tcs.Task.IsCanceled) { throw new TimeoutException(); }
-        }
-
-        return DoWaitAsync(task, millisecondsDelay);
-    }
-
     public static void ThrowIfFaulted(this Task task)
     {
         var e = task.Exception;

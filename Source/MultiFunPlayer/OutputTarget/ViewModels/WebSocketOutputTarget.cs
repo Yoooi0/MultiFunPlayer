@@ -41,8 +41,11 @@ internal sealed class WebSocketOutputTarget(int instanceIndex, IEventAggregator 
         try
         {
             Logger.Info("Connecting to {0} at \"{1}\"", Identifier, Uri.ToString());
-            await client.ConnectAsync(Uri, token)
-                        .WithCancellation(1000);
+
+            using var cancellationSource = CancellationTokenSource.CreateLinkedTokenSource(token);
+            cancellationSource.CancelAfter(1000);
+            await client.ConnectAsync(Uri, cancellationSource.Token);
+
             Status = ConnectionStatus.Connected;
         }
         catch (Exception e)
@@ -183,9 +186,10 @@ internal sealed class WebSocketOutputTarget(int instanceIndex, IEventAggregator 
         try
         {
             using var client = new ClientWebSocket();
-            await client.ConnectAsync(Uri, token)
-                        .WithCancellation(250);
+            using var cancellationSource = CancellationTokenSource.CreateLinkedTokenSource(token);
+            cancellationSource.CancelAfter(250);
 
+            await client.ConnectAsync(Uri, cancellationSource.Token);
             await client.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, null, token);
 
             return true;
