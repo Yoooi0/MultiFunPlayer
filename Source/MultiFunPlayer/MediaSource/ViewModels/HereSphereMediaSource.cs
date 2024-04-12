@@ -42,8 +42,8 @@ internal sealed class HereSphereMediaSource(IShortcutManager shortcutManager, IE
 
             using var client = new TcpClient();
             {
-                using var timeoutCancellationSource = new CancellationTokenSource(5000);
-                using var connectCancellationSource = CancellationTokenSource.CreateLinkedTokenSource(token, timeoutCancellationSource.Token);
+                using var connectCancellationSource = CancellationTokenSource.CreateLinkedTokenSource(token);
+                connectCancellationSource.CancelAfter(5000);
 
                 await client.ConnectAsync(Endpoint, connectCancellationSource.Token);
             }

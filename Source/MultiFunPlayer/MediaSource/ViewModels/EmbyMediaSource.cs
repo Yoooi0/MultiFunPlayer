@@ -102,9 +102,9 @@ internal sealed class EmbyMediaSource(IShortcutManager shortcutManager, IEventAg
         {
             var lastState = default(PlayState);
             var lastItem = default(PlayItem);
-            while (!token.IsCancellationRequested)
+            using var timer = new PeriodicTimer(TimeSpan.FromMilliseconds(500));
+            while (await timer.WaitForNextTickAsync(token) && !token.IsCancellationRequested)
             {
-                await Task.Delay(500, token);
                 if (SelectedDeviceId == null)
                     continue;
 
