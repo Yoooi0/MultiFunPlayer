@@ -1,4 +1,4 @@
-using Buttplug;
+﻿using Buttplug;
 using Buttplug.NewtonsoftJson;
 using MultiFunPlayer.Common;
 using MultiFunPlayer.Shortcut;
@@ -89,7 +89,7 @@ internal sealed class ButtplugOutputTarget : AsyncAbstractOutputTarget
             _startScanSemaphore.Release();
     }
 
-    protected override async Task RunAsync(CancellationToken token)
+    protected override async Task RunAsync(ConnectionType connectionType, CancellationToken token)
     {
         void OnDeviceRemoved(ButtplugDevice device)
         {
@@ -126,15 +126,22 @@ internal sealed class ButtplugOutputTarget : AsyncAbstractOutputTarget
 
         try
         {
-            Logger.Info("Connecting to {0} at \"{1}\"", Identifier, $"ws://{Endpoint.ToUriString()}");
+            if (connectionType != ConnectionType.AutoConnect)
+                Logger.Info("Connecting to {0} at \"{1}\" [Type: {2}]", Identifier, $"ws://{Endpoint?.ToUriString()}", connectionType);
+            if (Endpoint == null)
+                throw new OutputTargetException("Endpoint cannot be null");
+
             await client.ConnectAsync(new Uri($"ws://{Endpoint.ToUriString()}"), token);
             Status = ConnectionStatus.Connected;
         }
-        catch (Exception e)
+        catch (Exception e) when (connectionType != ConnectionType.AutoConnect)
         {
-            Logger.Error(e, "Error when connecting to server");
-
-            _ = DialogHelper.ShowErrorAsync(e, "Error when connecting to server", "RootDialog");
+            Logger.Error(e, "Error when connecting to {0}", Name);
+            _ = DialogHelper.ShowErrorAsync(e, $"Error when connecting to {Name}", "RootDialog");
+            return;
+        }
+        catch
+        {
             return;
         }
 
@@ -406,22 +413,6 @@ internal sealed class ButtplugOutputTarget : AsyncAbstractOutputTarget
     {
         base.UnregisterActions(s);
         s.UnregisterAction($"{Identifier}::Endpoint::Set");
-    }
-
-    public override async ValueTask<bool> CanConnectAsync(CancellationToken token)
-    {
-        try
-        {
-            using var client = new ClientWebSocket();
-            await client.ConnectAsync(new Uri($"ws://{Endpoint.ToUriString()}"), token);
-            var result = client.State == WebSocketState.Open;
-            await client.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, null, token);
-            return result;
-        }
-        catch
-        {
-            return false;
-        }
     }
 
     public void OnSettingsAdd()

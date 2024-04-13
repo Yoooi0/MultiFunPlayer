@@ -31,13 +31,17 @@ internal sealed class FileOutputTarget(int instanceIndex, IEventAggregator event
         _ => null,
     };
 
-    protected override void Run(CancellationToken token)
+    protected override void Run(ConnectionType connectionType, CancellationToken token)
     {
+        if (connectionType == ConnectionType.AutoConnect)
+            return;
+
         var writers = new Dictionary<DeviceAxis, IScriptWriter>();
 
         try
         {
-            Logger.Info("Connecting to {0}", Identifier);
+            if (connectionType != ConnectionType.AutoConnect)
+                Logger.Info("Connecting to {0} [Type: {1}]", Identifier, connectionType);
             if (!AxisSettings.Values.Any(x => x.Enabled))
                 throw new OutputTargetException("At least one axis must be enabled");
 
@@ -59,8 +63,8 @@ internal sealed class FileOutputTarget(int instanceIndex, IEventAggregator event
         }
         catch (Exception e)
         {
-            Logger.Error(e, "Error when initializing writers");
-            _ = DialogHelper.ShowErrorAsync(e, "Error when initializing writers", "RootDialog");
+            Logger.Error(e, "Error when connecting to {0}", Name);
+            _ = DialogHelper.ShowErrorAsync(e, $"Error when connecting to {Name}", "RootDialog");
             return;
         }
 
@@ -125,6 +129,4 @@ internal sealed class FileOutputTarget(int instanceIndex, IEventAggregator event
                 ScriptType = scriptType;
         }
     }
-
-    public override async ValueTask<bool> CanConnectAsync(CancellationToken token) => await ValueTask.FromResult(false);
 }

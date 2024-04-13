@@ -42,13 +42,14 @@ internal sealed class TheHandyOutputTarget(int instanceIndex, IEventAggregator e
         EventAggregator.Publish(new SyncRequestMessage(SourceAxis));
     }
 
-    protected override async Task RunAsync(CancellationToken token)
+    protected override async Task RunAsync(ConnectionType connectionType, CancellationToken token)
     {
         using var client = NetUtils.CreateHttpClient();
 
         try
         {
-            Logger.Info("Connecting to {0} at \"{1}\"", Identifier, ConnectionKey);
+            if (connectionType != ConnectionType.AutoConnect)
+                Logger.Info("Connecting to {0} at \"{1}\" [Type: {2}]", Identifier, ConnectionKey, connectionType);
 
             if (string.IsNullOrWhiteSpace(ConnectionKey))
                 throw new OutputTargetException("Invalid connection key");
@@ -76,10 +77,14 @@ internal sealed class TheHandyOutputTarget(int instanceIndex, IEventAggregator e
                     throw new OutputTargetException($"Unable to set HDSP device mode [Response: {response.ToString(Formatting.None)}]");
             }
         }
-        catch (Exception e)
+        catch (Exception e) when (connectionType != ConnectionType.AutoConnect)
         {
-            Logger.Error(e, "Error when connecting to the device");
-            _ = DialogHelper.ShowErrorAsync(e, "Error when connecting to the device", "RootDialog");
+            Logger.Error(e, "Error when connecting to {0}", Name);
+            _ = DialogHelper.ShowErrorAsync(e, $"Error when connecting to {Name}", "RootDialog");
+            return;
+        }
+        catch
+        {
             return;
         }
 
@@ -199,26 +204,5 @@ internal sealed class TheHandyOutputTarget(int instanceIndex, IEventAggregator e
         base.UnregisterActions(s);
         s.UnregisterAction($"{Identifier}::ConnectionKey::Set");
         s.UnregisterAction($"{Identifier}::SourceAxis::Set");
-    }
-
-    public override async ValueTask<bool> CanConnectAsync(CancellationToken token)
-    {
-        try
-        {
-            if (string.IsNullOrWhiteSpace(ConnectionKey))
-                return false;
-
-            using var client = NetUtils.CreateHttpClient();
-
-            client.DefaultRequestHeaders.Add("Accept", "application/json");
-            client.DefaultRequestHeaders.Add("X-Connection-Key", ConnectionKey);
-
-            var response = await ApiGetAsync(client, "connected", token);
-            return response.TryGetValue<bool>("connected", out var connected) && connected;
-        }
-        catch
-        {
-            return false;
-        }
     }
 }

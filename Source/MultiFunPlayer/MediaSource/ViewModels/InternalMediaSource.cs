@@ -41,21 +41,33 @@ internal sealed class InternalMediaSource(ILocalScriptRepository localRepository
     public bool IsLooping { get; set; } = false;
     public bool LoadAdditionalScripts { get; set; } = false;
 
-    protected override async Task RunAsync(CancellationToken token)
+    protected override async Task RunAsync(ConnectionType connectionType, CancellationToken token)
     {
         try
         {
-            Logger.Info("Connecting to {0}", Name);
+            if (connectionType != ConnectionType.AutoConnect)
+                Logger.Info("Connecting to {0} [Type: {1}]", Name, connectionType);
 
             await Task.Delay(250, token);
             PlayIndex(-1);
             SetIsPlaying(false);
             SetSpeed(1);
 
-            ClearPendingMessages();
-
             Status = ConnectionStatus.Connected;
+        }
+        catch (Exception e) when (connectionType != ConnectionType.AutoConnect)
+        {
+            Logger.Error(e, "Error when connecting to {0}", Name);
+            _ = DialogHelper.ShowErrorAsync(e, $"Error when connecting to {Name}", "RootDialog");
+            return;
+        }
+        catch
+        {
+            return;
+        }
 
+        try
+        {
             var lastTicks = Stopwatch.GetTimestamp();
             using var timer = new PeriodicTimer(TimeSpan.FromMilliseconds(100));
             while (!token.IsCancellationRequested && await timer.WaitForNextTickAsync(token))
@@ -140,7 +152,6 @@ internal sealed class InternalMediaSource(ILocalScriptRepository localRepository
 
         PlayIndex(-1);
         SetIsPlaying(false);
-        ClearPendingMessages();
     }
 
     private bool? CheckIndexAndRefresh(int index)
@@ -392,8 +403,6 @@ internal sealed class InternalMediaSource(ILocalScriptRepository localRepository
             }
         }
     }
-
-    public override async ValueTask<bool> CanConnectAsync(CancellationToken token) => await ValueTask.FromResult(true);
 
     protected override void RegisterActions(IShortcutManager s)
     {

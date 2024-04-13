@@ -135,37 +135,57 @@ internal sealed class SerialOutputTarget(int instanceIndex, IEventAggregator eve
 
     public void OnSelectedSerialPortChanged() => SelectedSerialPortDeviceId = SelectedSerialPort?.DeviceID;
 
-    protected override async ValueTask<bool> OnConnectingAsync()
+    protected override async ValueTask<bool> OnConnectingAsync(ConnectionType connectionType)
     {
         if (SelectedSerialPortDeviceId == null)
             return false;
         if (SelectedSerialPort == null)
             await RefreshPorts();
+        if (SelectedSerialPort == null)
+            return false;
 
-        return SelectedSerialPort != null && await base.OnConnectingAsync();
+        return await base.OnConnectingAsync(connectionType);
     }
 
-    protected override void Run(CancellationToken token)
+    protected override void Run(ConnectionType connectionType, CancellationToken token)
     {
         var serialPort = default(SerialPort);
 
         try
         {
-            Logger.Info("Connecting to {0} at \"{1}\"", Identifier, SelectedSerialPortDeviceId);
+            if (connectionType != ConnectionType.AutoConnect)
+                Logger.Info("Connecting to {0} at \"{1}\" [Type: {2}]", Identifier, SelectedSerialPortDeviceId, connectionType);
 
-            serialPort = CreateSerialPort();
+            serialPort = new()
+            {
+                PortName = SelectedSerialPort.PortName,
+                BaudRate = BaudRate,
+                Parity = Parity,
+                StopBits = StopBits,
+                DataBits = DataBits,
+                Handshake = Handshake,
+                DtrEnable = DtrEnable,
+                RtsEnable = RtsEnable,
+                ReadTimeout = ReadTimeout,
+                WriteTimeout = WriteTimeout,
+                WriteBufferSize = WriteBufferSize,
+                ReadBufferSize = ReadBufferSize,
+            };
+
             serialPort.Open();
-            serialPort.ReadExisting();
             Status = ConnectionStatus.Connected;
         }
         catch (Exception e)
         {
-            Logger.Error(e, "Error when opening serial port");
-
-            try { serialPort?.Close(); }
+            try { serialPort?.Dispose(); }
             catch { }
 
-            _ = Execute.OnUIThreadAsync(() => _ = DialogHelper.ShowErrorAsync(e, "Error when opening serial port", "RootDialog"));
+            if (connectionType != ConnectionType.AutoConnect)
+            {
+                Logger.Error(e, "Error when connecting to {0}", Name);
+                _ = DialogHelper.ShowErrorAsync(e, $"Error when connecting to {Name}", "RootDialog");
+            }
+
             return;
         }
 
@@ -309,27 +329,6 @@ internal sealed class SerialOutputTarget(int instanceIndex, IEventAggregator eve
         s.UnregisterAction($"{Identifier}::SerialPort::Set");
     }
 
-    public override async ValueTask<bool> CanConnectAsync(CancellationToken token)
-    {
-        try
-        {
-            await RefreshPorts();
-            if (SelectedSerialPort == null)
-                return false;
-
-            using var serialPort = CreateSerialPort();
-            serialPort.Open();
-            serialPort.ReadExisting();
-            serialPort.Close();
-
-            return true;
-        }
-        catch
-        {
-            return false;
-        }
-    }
-
     protected override void Dispose(bool disposing)
     {
         _refreshCancellationSource?.Cancel();
@@ -338,22 +337,6 @@ internal sealed class SerialOutputTarget(int instanceIndex, IEventAggregator eve
 
         base.Dispose(disposing);
     }
-
-    private SerialPort CreateSerialPort() => new()
-    {
-        PortName = SelectedSerialPort.PortName,
-        BaudRate = BaudRate,
-        Parity = Parity,
-        StopBits = StopBits,
-        DataBits = DataBits,
-        Handshake = Handshake,
-        DtrEnable = DtrEnable,
-        RtsEnable = RtsEnable,
-        ReadTimeout = ReadTimeout,
-        WriteTimeout = WriteTimeout,
-        WriteBufferSize = WriteBufferSize,
-        ReadBufferSize = ReadBufferSize,
-    };
 
     public sealed class SerialPortInfo
     {

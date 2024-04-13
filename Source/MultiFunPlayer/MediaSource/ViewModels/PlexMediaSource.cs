@@ -1,4 +1,4 @@
-using MultiFunPlayer.Common;
+﻿using MultiFunPlayer.Common;
 using MultiFunPlayer.UI;
 using NLog;
 using Stylet;
@@ -50,32 +50,51 @@ internal sealed class PlexMediaSource(IShortcutManager shortcutManager, IEventAg
         _ = RefreshClients();
     }
 
-    protected override async ValueTask<bool> OnConnectingAsync()
+    protected override async ValueTask<bool> OnConnectingAsync(ConnectionType connectionType)
     {
         if (SelectedClientMachineIdentifier == null)
             return false;
         if (SelectedClient == null)
             await RefreshClients();
+        if (SelectedClient == null)
+            return false;
 
-        return SelectedClient != null && await base.OnConnectingAsync();
+        return await base.OnConnectingAsync(connectionType);
     }
 
-    protected override async Task RunAsync(CancellationToken token)
+    protected override async Task RunAsync(ConnectionType connectionType, CancellationToken token)
     {
+        using var client = NetUtils.CreateHttpClient();
+
         try
         {
-            Logger.Info("Connecting to {0} at \"{1}\"", Name, ServerBaseUri);
+            if (connectionType != ConnectionType.AutoConnect)
+                Logger.Info("Connecting to {0} at \"{1}\" [Type: {2}]", Name, ServerBaseUri, connectionType);
             if (ServerBaseUri == null)
-                throw new MediaSourceException("Endpoint cannot be null.");
+                throw new MediaSourceException("Endpoint cannot be null");
             if (string.IsNullOrEmpty(PlexToken))
-                throw new MediaSourceException("Plex token cannot be empty.");
+                throw new MediaSourceException("Plex token cannot be empty");
 
-            using var client = NetUtils.CreateHttpClient();
-            client.Timeout = TimeSpan.FromMilliseconds(5000);
+            client.Timeout = TimeSpan.FromMilliseconds(500);
+            var message = new HttpRequestMessage(HttpMethod.Head, new Uri(ServerBaseUri, "/clients"));
+            AddDefaultHeaders(message.Headers);
 
-            await Task.Delay(250, token);
+            _ = await client.SendAsync(message, token);
             Status = ConnectionStatus.Connected;
+        }
+        catch (Exception e) when (connectionType != ConnectionType.AutoConnect)
+        {
+            Logger.Error(e, "Error when connecting to {0}", Name);
+            _ = DialogHelper.ShowErrorAsync(e, $"Error when connecting to {Name}", "RootDialog");
+            return;
+        }
+        catch
+        {
+            return;
+        }
 
+        try
+        {
             using var cancellationSource = CancellationTokenSource.CreateLinkedTokenSource(token);
             var task = await Task.WhenAny(ReadAsync(client, cancellationSource.Token), WriteAsync(client, cancellationSource.Token));
             cancellationSource.Cancel();
@@ -452,21 +471,6 @@ internal sealed class PlexMediaSource(IShortcutManager shortcutManager, IEventAg
         headers.TryAddWithoutValidation("X-Plex-Sync-Version", "2");
         headers.TryAddWithoutValidation("X-Plex-Features", "external-media");
         headers.TryAddWithoutValidation("X-Plex-Token", PlexToken);
-    }
-
-    public override async ValueTask<bool> CanConnectAsync(CancellationToken token)
-    {
-        if (ServerBaseUri == null)
-            return false;
-
-        using var client = NetUtils.CreateHttpClient();
-        client.Timeout = TimeSpan.FromMilliseconds(5000);
-
-        var message = new HttpRequestMessage(HttpMethod.Head, new Uri(ServerBaseUri, "/clients"));
-        AddDefaultHeaders(message.Headers);
-
-        var response = await client.SendAsync(message, token);
-        return response.IsSuccessStatusCode;
     }
 
     protected override void Dispose(bool disposing)

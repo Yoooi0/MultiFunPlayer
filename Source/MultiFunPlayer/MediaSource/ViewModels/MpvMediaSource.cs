@@ -1,4 +1,4 @@
-using Microsoft.Win32;
+﻿using Microsoft.Win32;
 using MultiFunPlayer.Common;
 using MultiFunPlayer.Shortcut;
 using MultiFunPlayer.UI;
@@ -18,8 +18,7 @@ namespace MultiFunPlayer.MediaSource.ViewModels;
 internal sealed class MpvMediaSource(IShortcutManager shortcutManager, IEventAggregator eventAggregator) : AbstractMediaSource(shortcutManager, eventAggregator)
 {
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
-
-    private readonly string _pipeName = "multifunplayer-mpv";
+    private static string PipeName { get; } = "multifunplayer-mpv";
 
     public override ConnectionStatus Status { get; protected set; }
     public bool IsConnected => Status == ConnectionStatus.Connected;
@@ -31,56 +30,70 @@ internal sealed class MpvMediaSource(IShortcutManager shortcutManager, IEventAgg
     public string Arguments { get; set; } = "--keep-open --pause";
     public bool AutoStartEnabled { get; set; } = false;
 
-    protected override async Task RunAsync(CancellationToken token)
+    protected override async Task RunAsync(ConnectionType connectionType, CancellationToken token)
     {
+        await using var client = new NamedPipeClientStream(".", PipeName, PipeDirection.InOut, PipeOptions.Asynchronous);
+
         try
         {
-            Logger.Info("Connecting to {0} at \"{1}\"", Name, _pipeName);
-            await using var client = new NamedPipeClientStream(".", _pipeName, PipeDirection.InOut, PipeOptions.Asynchronous);
+            if (connectionType != ConnectionType.AutoConnect)
+                Logger.Info("Connecting to {0} at \"{1}\" [Type: {2}]", Name, PipeName, connectionType);
 
             try
             {
                 await client.ConnectAsync(500, token);
+                Status = ConnectionStatus.Connected;
             }
             catch (TimeoutException e)
             {
                 var executable = Executable?.AsRefreshed() ?? new FileInfo(Path.Join(Path.GetDirectoryName(Environment.ProcessPath), "mpv.exe"));
                 if (!executable.Exists)
-                    throw new MediaSourceException("Could not find mpv executable! Please set path to mpv.exe or download latest release from settings.");
+                    throw new MediaSourceException("Could not find mpv executable! Set path to mpv.exe or download latest release from settings.");
                 if (!AutoStartEnabled)
                     e.Throw();
 
                 var processInfo = new ProcessStartInfo()
                 {
                     FileName = executable.FullName,
-                    Arguments = $"--input-ipc-server={_pipeName} {Arguments}"
+                    Arguments = $"--input-ipc-server={PipeName} {Arguments}"
                 };
 
                 Process.Start(processInfo);
 
+                if (connectionType != ConnectionType.AutoConnect)
+                    Logger.Info("Connecting to {0} at \"{1}\" [Type: {2}]", Name, PipeName, connectionType);
+
                 await client.ConnectAsync(2000, token);
-            }
-
-            if (client.IsConnected)
-            {
-                using var reader = new StreamReader(client);
-                await using var writer = new StreamWriter(client) { AutoFlush = true };
-
-                await writer.WriteLineAsync("{ \"command\": [\"observe_property_string\", 1, \"pause\"] }");
-                await writer.WriteLineAsync("{ \"command\": [\"observe_property_string\", 2, \"duration\"] }");
-                await writer.WriteLineAsync("{ \"command\": [\"observe_property_string\", 3, \"time-pos\"] }");
-                await writer.WriteLineAsync("{ \"command\": [\"observe_property_string\", 4, \"path\"] }");
-                await writer.WriteLineAsync("{ \"command\": [\"observe_property_string\", 5, \"speed\"] }");
-
                 Status = ConnectionStatus.Connected;
-                ClearPendingMessages();
-
-                using var cancellationSource = CancellationTokenSource.CreateLinkedTokenSource(token);
-                var task = await Task.WhenAny(ReadAsync(client, reader, cancellationSource.Token), WriteAsync(client, writer, cancellationSource.Token));
-                cancellationSource.Cancel();
-
-                task.ThrowIfFaulted();
             }
+        }
+        catch (Exception e) when (connectionType != ConnectionType.AutoConnect)
+        {
+            Logger.Error(e, "Error when connecting to {0}", Name);
+            _ = DialogHelper.ShowErrorAsync(e, $"Error when connecting to {Name}", "RootDialog");
+            return;
+        }
+        catch
+        {
+            return;
+        }
+
+        try
+        {
+            using var reader = new StreamReader(client);
+            await using var writer = new StreamWriter(client) { AutoFlush = true };
+
+            await writer.WriteLineAsync("{ \"command\": [\"observe_property_string\", 1, \"pause\"] }");
+            await writer.WriteLineAsync("{ \"command\": [\"observe_property_string\", 2, \"duration\"] }");
+            await writer.WriteLineAsync("{ \"command\": [\"observe_property_string\", 3, \"time-pos\"] }");
+            await writer.WriteLineAsync("{ \"command\": [\"observe_property_string\", 4, \"path\"] }");
+            await writer.WriteLineAsync("{ \"command\": [\"observe_property_string\", 5, \"speed\"] }");
+
+            using var cancellationSource = CancellationTokenSource.CreateLinkedTokenSource(token);
+            var task = await Task.WhenAny(ReadAsync(client, reader, cancellationSource.Token), WriteAsync(client, writer, cancellationSource.Token));
+            cancellationSource.Cancel();
+
+            task.ThrowIfFaulted();
         }
         catch (OperationCanceledException) { }
         catch (IOException e) { Logger.Debug(e, $"{Name} failed with exception"); }
@@ -213,8 +226,6 @@ internal sealed class MpvMediaSource(IShortcutManager shortcutManager, IEventAgg
                 AutoStartEnabled = autoStartEnabled;
         }
     }
-
-    public override async ValueTask<bool> CanConnectAsync(CancellationToken token) => await ValueTask.FromResult(AutoStartEnabled || File.Exists(@$"\\.\\pipe\\{_pipeName}"));
 
     public void OnLoadExecutable()
     {

@@ -157,15 +157,15 @@ internal sealed class OutputTargetViewModel : Conductor<IOutputTarget>.Collectio
         if (target.Status == ConnectionStatus.Connected)
             await DisconnectAsync(target, token);
         else if (target.Status == ConnectionStatus.Disconnected)
-            await ConnectAsync(target, token);
+            await ConnectAsync(target, ConnectionType.Manual, token);
 
         _semaphores[target].Release();
     }
 
-    private async Task ConnectAsync(IOutputTarget target, CancellationToken token)
+    private async Task ConnectAsync(IOutputTarget target, ConnectionType connectionType, CancellationToken token)
     {
         _scanIntervalSemaphore.Release();
-        await target.ConnectAsync();
+        await target.ConnectAsync(connectionType);
         await target.WaitForIdle(token);
     }
 
@@ -189,8 +189,8 @@ internal sealed class OutputTargetViewModel : Conductor<IOutputTarget>.Collectio
                         continue;
 
                     await _semaphores[target].WaitAsync(token);
-                    if (target.Status != ConnectionStatus.Connected && await target.CanConnectAsyncWithStatus(token))
-                        await ConnectAsync(target, token);
+                    if (target.Status != ConnectionStatus.Connected)
+                        await ConnectAsync(target, ConnectionType.AutoConnect, token);
 
                     _semaphores[target].Release();
                 }
@@ -212,7 +212,7 @@ internal sealed class OutputTargetViewModel : Conductor<IOutputTarget>.Collectio
         {
             await _semaphores[target].WaitAsync(token);
             if (target.Status == ConnectionStatus.Disconnected)
-                await ConnectAsync(target, token);
+                await ConnectAsync(target, ConnectionType.Manual, token);
             _semaphores[target].Release();
         });
         s.RegisterAction($"{target.Identifier}::Connection::Disconnect", async () =>

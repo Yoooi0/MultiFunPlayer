@@ -1,4 +1,4 @@
-using MultiFunPlayer.Common;
+﻿using MultiFunPlayer.Common;
 using MultiFunPlayer.Input;
 using MultiFunPlayer.Input.TCode;
 using MultiFunPlayer.Shortcut;
@@ -37,13 +37,16 @@ internal sealed class UdpOutputTarget(int instanceIndex, IEventAggregator eventA
         _ => null,
     };
 
-    protected override void Run(CancellationToken token)
+    protected override void Run(ConnectionType connectionType, CancellationToken token)
     {
         using var client = new UdpClient();
 
         try
         {
-            Logger.Info("Connecting to {0} at \"{1}\"", Identifier, $"udp://{Endpoint.ToUriString()}");
+            if (connectionType != ConnectionType.AutoConnect)
+                Logger.Info("Connecting to {0} at \"{1}\" [Type: {2}]", Identifier, $"udp://{Endpoint?.ToUriString()}", connectionType);
+            if (Endpoint == null)
+                throw new OutputTargetException("Endpoint cannot be null");
 
             const int SIO_UDP_CONNRESET = -1744830452;
             client.Client.IOControl((IOControlCode)SIO_UDP_CONNRESET, [0, 0, 0, 0], null);
@@ -51,10 +54,14 @@ internal sealed class UdpOutputTarget(int instanceIndex, IEventAggregator eventA
             client.Connect(Endpoint);
             Status = ConnectionStatus.Connected;
         }
-        catch (Exception e)
+        catch (Exception e) when (connectionType != ConnectionType.AutoConnect)
         {
-            Logger.Error(e, "Error when connecting to server");
-            _ = DialogHelper.ShowErrorAsync(e, "Error when connecting to server", "RootDialog");
+            Logger.Error(e, "Error when connecting to {0}", Name);
+            _ = DialogHelper.ShowErrorAsync(e, $"Error when connecting to {Name}", "RootDialog");
+            return;
+        }
+        catch
+        {
             return;
         }
 
@@ -179,6 +186,4 @@ internal sealed class UdpOutputTarget(int instanceIndex, IEventAggregator eventA
         base.UnregisterActions(s);
         s.UnregisterAction($"{Identifier}::Endpoint::Set");
     }
-
-    public override async ValueTask<bool> CanConnectAsync(CancellationToken token) => await ValueTask.FromResult(true);
 }

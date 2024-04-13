@@ -118,19 +118,18 @@ internal sealed class MediaSourceViewModel : Conductor<IMediaSource>.Collection.
         var token = _cancellationSource.Token;
         await _semaphore.WaitAsync(token);
         if (_currentSource == source)
-            await ToggleConnectCurrentSourceAsync(token);
+        {
+            if (_currentSource?.Status == ConnectionStatus.Connected)
+                await DisconnectCurrentSourceAsync(token);
+            else if (_currentSource?.Status == ConnectionStatus.Disconnected)
+                await ConnectAsync(_currentSource, ConnectionType.Manual, token);
+        }
         else if (_currentSource != source)
+        {
             await ConnectAndSetAsCurrentSourceAsync(source, token);
+        }
 
         _semaphore.Release();
-    }
-
-    private async Task ToggleConnectCurrentSourceAsync(CancellationToken token)
-    {
-        if (_currentSource?.Status == ConnectionStatus.Connected)
-            await DisconnectCurrentSourceAsync(token);
-        else if (_currentSource?.Status == ConnectionStatus.Disconnected)
-            await ConnectAsync(_currentSource, token);
     }
 
     private async Task ConnectAndSetAsCurrentSourceAsync(IMediaSource source, CancellationToken token)
@@ -139,7 +138,7 @@ internal sealed class MediaSourceViewModel : Conductor<IMediaSource>.Collection.
             await DisconnectCurrentSourceAsync(token);
 
         if (source != null)
-            await ConnectAsync(source, token);
+            await ConnectAsync(source, ConnectionType.Manual, token);
 
         if (source == null || source.Status == ConnectionStatus.Connected)
             _currentSource = source;
@@ -151,10 +150,10 @@ internal sealed class MediaSourceViewModel : Conductor<IMediaSource>.Collection.
         _currentSource = null;
     }
 
-    private async Task ConnectAsync(IMediaSource source, CancellationToken token)
+    private async Task ConnectAsync(IMediaSource source, ConnectionType connectionType, CancellationToken token)
     {
         _scanIntervalSemaphore.Release();
-        await source.ConnectAsync();
+        await source.ConnectAsync(connectionType);
         await source.WaitForIdle(token);
     }
 
@@ -183,10 +182,9 @@ internal sealed class MediaSourceViewModel : Conductor<IMediaSource>.Collection.
                             continue;
 
                         await _semaphore.WaitAsync(token);
-                        if (_currentSource == null && await source.CanConnectAsyncWithStatus(token))
+                        if (_currentSource == null)
                         {
-                            await source.ConnectAsync();
-                            await source.WaitForIdle(token);
+                            await ConnectAsync(source, ConnectionType.AutoConnect, token);
 
                             if (source.Status == ConnectionStatus.Connected)
                                 _currentSource = source;

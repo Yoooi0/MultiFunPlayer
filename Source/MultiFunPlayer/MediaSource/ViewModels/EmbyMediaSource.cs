@@ -1,4 +1,4 @@
-using MultiFunPlayer.Common;
+﻿using MultiFunPlayer.Common;
 using MultiFunPlayer.Shortcut;
 using MultiFunPlayer.UI;
 using Newtonsoft.Json;
@@ -46,27 +46,31 @@ internal sealed class EmbyMediaSource(IShortcutManager shortcutManager, IEventAg
         _ = RefreshDevices();
     }
 
-    protected override async ValueTask<bool> OnConnectingAsync()
+    protected override async ValueTask<bool> OnConnectingAsync(ConnectionType connectionType)
     {
         if (SelectedDeviceId == null)
             return false;
         if (SelectedDevice == null)
             await RefreshDevices();
+        if (SelectedDevice == null)
+            return false;
 
-        return SelectedDevice != null && await base.OnConnectingAsync();
+        return await base.OnConnectingAsync(connectionType);
     }
 
-    protected override async Task RunAsync(CancellationToken token)
+    protected override async Task RunAsync(ConnectionType connectionType, CancellationToken token)
     {
+        using var client = NetUtils.CreateHttpClient();
+
         try
         {
-            Logger.Info("Connecting to {0} at \"{1}\"", Name, ServerBaseUri);
+            if (connectionType != ConnectionType.AutoConnect)
+                Logger.Info("Connecting to {0} at \"{1}\" [Type: {2}]", Name, ServerBaseUri, connectionType);
             if (ServerBaseUri == null)
-                throw new MediaSourceException("Endpoint cannot be null.");
+                throw new MediaSourceException("Endpoint cannot be null");
             if (string.IsNullOrEmpty(ApiKey))
-                throw new MediaSourceException("Api key cannot be empty.");
+                throw new MediaSourceException("Api key cannot be empty");
 
-            using var client = NetUtils.CreateHttpClient();
             client.Timeout = TimeSpan.FromMilliseconds(1000);
 
             var uri = new Uri(ServerBaseUri, "/System/Ping");
@@ -74,8 +78,20 @@ internal sealed class EmbyMediaSource(IShortcutManager shortcutManager, IEventAg
             response.EnsureSuccessStatusCode();
 
             Status = ConnectionStatus.Connected;
-            ClearPendingMessages();
+        }
+        catch (Exception e) when (connectionType != ConnectionType.AutoConnect)
+        {
+            Logger.Error(e, "Error when connecting to {0}", Name);
+            _ = DialogHelper.ShowErrorAsync(e, $"Error when connecting to {Name}", "RootDialog");
+            return;
+        }
+        catch
+        {
+            return;
+        }
 
+        try
+        {
             using var cancellationSource = CancellationTokenSource.CreateLinkedTokenSource(token);
             var task = await Task.WhenAny(ReadAsync(client, cancellationSource.Token), WriteAsync(client, cancellationSource.Token));
             cancellationSource.Cancel();
@@ -304,28 +320,6 @@ internal sealed class EmbyMediaSource(IShortcutManager shortcutManager, IEventAg
                 ApiKey = apiKey;
             if (settings.TryGetValue<Uri>(nameof(ServerBaseUri), out var serverBaseUri))
                 ServerBaseUri = serverBaseUri;
-        }
-    }
-
-    public override async ValueTask<bool> CanConnectAsync(CancellationToken token)
-    {
-        try
-        {
-            if (ServerBaseUri == null)
-                return false;
-
-            using var client = NetUtils.CreateHttpClient();
-            client.Timeout = TimeSpan.FromMilliseconds(500);
-
-            var uri = new Uri(ServerBaseUri, "/System/Ping");
-            var response = await client.GetAsync(uri, token);
-            response.EnsureSuccessStatusCode();
-
-            return true;
-        }
-        catch
-        {
-            return false;
         }
     }
 

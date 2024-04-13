@@ -1,4 +1,4 @@
-using MultiFunPlayer.Common;
+﻿using MultiFunPlayer.Common;
 using MultiFunPlayer.Shortcut;
 using MultiFunPlayer.UI;
 using Newtonsoft.Json.Linq;
@@ -32,16 +32,18 @@ internal sealed class VlcMediaSource(IShortcutManager shortcutManager, IEventAgg
     public EndPoint Endpoint { get; set; } = new IPEndPoint(IPAddress.Loopback, 8080);
     public string Password { get; set; } = null;
 
-    protected override async Task RunAsync(CancellationToken token)
+    protected override async Task RunAsync(ConnectionType connectionType, CancellationToken token)
     {
+        using var client = NetUtils.CreateHttpClient();
+
         try
         {
-            Logger.Info("Connecting to {0} at \"{1}\"", Name, Endpoint.ToUriString());
+            if (connectionType != ConnectionType.AutoConnect)
+                Logger.Info("Connecting to {0} at \"{1}\" [Type: {2}]", Name, Endpoint?.ToUriString(), connectionType);
             if (Endpoint == null)
-                throw new MediaSourceException("Endpoint cannot be null.");
+                throw new MediaSourceException("Endpoint cannot be null");
 
-            using var client = NetUtils.CreateHttpClient();
-            client.Timeout = TimeSpan.FromMilliseconds(1000);
+            client.Timeout = TimeSpan.FromMilliseconds(500);
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", Convert.ToBase64String(Encoding.UTF8.GetBytes($":{Password}")));
 
             var uri = new Uri($"http://{Endpoint.ToUriString()}/requests/status.xml");
@@ -49,8 +51,20 @@ internal sealed class VlcMediaSource(IShortcutManager shortcutManager, IEventAgg
             response.EnsureSuccessStatusCode();
 
             Status = ConnectionStatus.Connected;
-            ClearPendingMessages();
+        }
+        catch (Exception e) when (connectionType != ConnectionType.AutoConnect)
+        {
+            Logger.Error(e, "Error when connecting to {0}", Name);
+            _ = DialogHelper.ShowErrorAsync(e, $"Error when connecting to {Name}", "RootDialog");
+            return;
+        }
+        catch
+        {
+            return;
+        }
 
+        try
+        {
             _playerState = new PlayerState();
 
             using var cancellationSource = CancellationTokenSource.CreateLinkedTokenSource(token);
@@ -246,29 +260,6 @@ internal sealed class VlcMediaSource(IShortcutManager shortcutManager, IEventAgg
                     Logger.Warn(e, "Failed to decrypt password from settings");
                 }
             }
-        }
-    }
-
-    public override async ValueTask<bool> CanConnectAsync(CancellationToken token)
-    {
-        try
-        {
-            if (Endpoint == null)
-                return false;
-
-            var uri = new Uri($"http://{Endpoint.ToUriString()}");
-
-            using var client = NetUtils.CreateHttpClient();
-            client.Timeout = TimeSpan.FromMilliseconds(50);
-
-            var response = await client.GetAsync(uri, token);
-            response.EnsureSuccessStatusCode();
-
-            return true;
-        }
-        catch
-        {
-            return false;
         }
     }
 

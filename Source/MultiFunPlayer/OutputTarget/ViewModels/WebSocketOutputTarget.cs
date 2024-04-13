@@ -1,4 +1,4 @@
-using MultiFunPlayer.Common;
+﻿using MultiFunPlayer.Common;
 using MultiFunPlayer.Shortcut;
 using MultiFunPlayer.UI;
 using Newtonsoft.Json.Linq;
@@ -34,24 +34,31 @@ internal sealed class WebSocketOutputTarget(int instanceIndex, IEventAggregator 
         _ => null,
     };
 
-    protected override async Task RunAsync(CancellationToken token)
+    protected override async Task RunAsync(ConnectionType connectionType, CancellationToken token)
     {
         using var client = new ClientWebSocket();
 
         try
         {
-            Logger.Info("Connecting to {0} at \"{1}\"", Identifier, Uri.ToString());
+            if (connectionType != ConnectionType.AutoConnect)
+                Logger.Info("Connecting to {0} at \"{1}\" [Type: {2}]", Identifier, Uri?.ToString(), connectionType);
+            if (Uri == null)
+                throw new OutputTargetException("Uri cannot be null");
 
             using var cancellationSource = CancellationTokenSource.CreateLinkedTokenSource(token);
-            cancellationSource.CancelAfter(1000);
+            cancellationSource.CancelAfter(500);
             await client.ConnectAsync(Uri, cancellationSource.Token);
 
             Status = ConnectionStatus.Connected;
         }
-        catch (Exception e)
+        catch (Exception e) when (connectionType != ConnectionType.AutoConnect)
         {
-            Logger.Error(e, "Error when connecting to websocket");
-            _ = DialogHelper.ShowErrorAsync(e, "Error when connecting to websocket", "RootDialog");
+            Logger.Error(e, "Error when connecting to {0}", Name);
+            _ = DialogHelper.ShowErrorAsync(e, $"Error when connecting to {Name}", "RootDialog");
+            return;
+        }
+        catch
+        {
             return;
         }
 
@@ -179,24 +186,5 @@ internal sealed class WebSocketOutputTarget(int instanceIndex, IEventAggregator 
     {
         base.UnregisterActions(s);
         s.UnregisterAction($"{Identifier}::Uri::Set");
-    }
-
-    public override async ValueTask<bool> CanConnectAsync(CancellationToken token)
-    {
-        try
-        {
-            using var client = new ClientWebSocket();
-            using var cancellationSource = CancellationTokenSource.CreateLinkedTokenSource(token);
-            cancellationSource.CancelAfter(250);
-
-            await client.ConnectAsync(Uri, cancellationSource.Token);
-            await client.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, null, token);
-
-            return true;
-        }
-        catch
-        {
-            return false;
-        }
     }
 }

@@ -1,4 +1,4 @@
-using MultiFunPlayer.Common;
+﻿using MultiFunPlayer.Common;
 using MultiFunPlayer.Shortcut;
 using MultiFunPlayer.UI;
 using Newtonsoft.Json.Linq;
@@ -27,28 +27,41 @@ internal sealed class WhirligigMediaSource(IShortcutManager shortcutManager, IEv
 
     public EndPoint Endpoint { get; set; } = new IPEndPoint(IPAddress.Loopback, 2000);
 
-    protected override async Task RunAsync(CancellationToken token)
+    protected override async Task RunAsync(ConnectionType connectionType, CancellationToken token)
     {
+        using var client = new TcpClient();
+
         try
         {
-            Logger.Info("Connecting to {0} at \"{1}\"", Name, Endpoint.ToUriString());
-
+            if (connectionType != ConnectionType.AutoConnect)
+                Logger.Info("Connecting to {0} at \"{1}\" [Type: {2}]", Name, Endpoint?.ToUriString(), connectionType);
+            if (Endpoint == null)
+                throw new MediaSourceException("Endpoint cannot be null");
             if (Endpoint.IsLocalhost())
                 if (!Process.GetProcesses().Any(p => Regex.IsMatch(p.ProcessName, "(?i)whirligig")))
-                    throw new MediaSourceException($"Could not find a running {Name} process.");
+                    throw new MediaSourceException($"Could not find a running {Name} process");
 
-            using var client = new TcpClient();
-            {
-                using var connectCancellationSource = CancellationTokenSource.CreateLinkedTokenSource(token);
-                connectCancellationSource.CancelAfter(5000);
+            using var cancellationSource = CancellationTokenSource.CreateLinkedTokenSource(token);
+            cancellationSource.CancelAfter(500);
 
-                await client.ConnectAsync(Endpoint, connectCancellationSource.Token);
-            }
+            await client.ConnectAsync(Endpoint, cancellationSource.Token);
+            Status = ConnectionStatus.Connected;
+        }
+        catch (Exception e) when (connectionType != ConnectionType.AutoConnect)
+        {
+            Logger.Error(e, "Error when connecting to {0}", Name);
+            _ = DialogHelper.ShowErrorAsync(e, $"Error when connecting to {Name}", "RootDialog");
+            return;
+        }
+        catch
+        {
+            return;
+        }
 
+        try
+        {
             await using var stream = client.GetStream();
             using var reader = new StreamReader(stream);
-
-            Status = ConnectionStatus.Connected;
             while (!token.IsCancellationRequested && client.Connected && !reader.EndOfStream)
             {
                 var message = await reader.ReadLineAsync(token);
@@ -108,35 +121,6 @@ internal sealed class WhirligigMediaSource(IShortcutManager shortcutManager, IEv
         {
             if (settings.TryGetValue<EndPoint>(nameof(Endpoint), out var endpoint))
                 Endpoint = endpoint;
-        }
-    }
-
-    public override async ValueTask<bool> CanConnectAsync(CancellationToken token)
-    {
-        try
-        {
-            if (Endpoint == null)
-                return false;
-
-            if (Endpoint.IsLocalhost())
-                if (!Process.GetProcesses().Any(p => Regex.IsMatch(p.ProcessName, "(?i)whirligig")))
-                    return false;
-
-            using var client = new TcpClient();
-            {
-                using var timeoutCancellationSource = new CancellationTokenSource(2500);
-                using var connectCancellationSource = CancellationTokenSource.CreateLinkedTokenSource(token, timeoutCancellationSource.Token);
-
-                await client.ConnectAsync(Endpoint, connectCancellationSource.Token);
-            }
-
-            await using var stream = client.GetStream();
-
-            return client.Connected;
-        }
-        catch
-        {
-            return false;
         }
     }
 

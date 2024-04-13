@@ -1,4 +1,4 @@
-﻿using MultiFunPlayer.Common;
+using MultiFunPlayer.Common;
 using MultiFunPlayer.Script;
 using MultiFunPlayer.Shortcut;
 using MultiFunPlayer.UI;
@@ -27,21 +27,36 @@ internal sealed class OfsMediaSource(IShortcutManager shortcutManager, IEventAgg
     public Uri Uri { get; set; } = new Uri("ws://127.0.0.1:8080/ofs");
     public bool ForceSeek { get; set; } = false;
 
-    protected override async Task RunAsync(CancellationToken token)
+    protected override async Task RunAsync(ConnectionType connectionType, CancellationToken token)
     {
+        using var client = new ClientWebSocket();
+
         try
         {
-            using var client = new ClientWebSocket();
+            if (connectionType != ConnectionType.AutoConnect)
+                Logger.Info("Connecting to {0} at \"{1}\" [Type: {2}]", Name, Uri?.ToString(), connectionType);
+            if (Uri == null)
+                throw new MediaSourceException("Uri cannot be null");
 
-            Logger.Info("Connecting to {0} at \"{1}\"", Name, Uri.ToString());
-            {
-                using var connectCancellationSource = CancellationTokenSource.CreateLinkedTokenSource(token);
-                connectCancellationSource.CancelAfter(1000);
-                await client.ConnectAsync(Uri, connectCancellationSource.Token);
-            }
+            using var cancellationSource = CancellationTokenSource.CreateLinkedTokenSource(token);
+            cancellationSource.CancelAfter(500);
+            await client.ConnectAsync(Uri, cancellationSource.Token);
 
             Status = ConnectionStatus.Connected;
+        }
+        catch (Exception e) when (connectionType != ConnectionType.AutoConnect)
+        {
+            Logger.Error(e, "Error when connecting to {0}", Name);
+            _ = DialogHelper.ShowErrorAsync(e, $"Error when connecting to {Name}", "RootDialog");
+            return;
+        }
+        catch
+        {
+            return;
+        }
 
+        try
+        {
             using var cancellationSource = CancellationTokenSource.CreateLinkedTokenSource(token);
             var task = await Task.WhenAny(ReadAsync(client, cancellationSource.Token), WriteAsync(client, cancellationSource.Token));
             cancellationSource.Cancel();
@@ -194,26 +209,6 @@ internal sealed class OfsMediaSource(IShortcutManager shortcutManager, IEventAgg
                 Uri = uri;
             if (settings.TryGetValue<bool>(nameof(ForceSeek), out var forceSeek))
                 ForceSeek = forceSeek;
-        }
-    }
-
-    public override async ValueTask<bool> CanConnectAsync(CancellationToken token)
-    {
-        if (Uri == null)
-            return false;
-
-        try
-        {
-            using var client = new ClientWebSocket();
-            await client.ConnectAsync(Uri, token);
-
-            var result = client.State == WebSocketState.Open;
-            await client.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, null, token);
-            return result;
-        }
-        catch
-        {
-            return false;
         }
     }
 

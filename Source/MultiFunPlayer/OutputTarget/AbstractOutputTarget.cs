@@ -48,7 +48,7 @@ internal abstract class AbstractOutputTarget : Screen, IOutputTarget
     protected abstract void RegisterUpdateContexts();
     protected abstract IUpdateContext RegisterUpdateContext(DeviceAxisUpdateType updateType);
 
-    public abstract Task ConnectAsync();
+    public abstract Task ConnectAsync(ConnectionType connectionType);
     public async Task DisconnectAsync()
     {
         if (Status is ConnectionStatus.Disconnected or ConnectionStatus.Disconnecting)
@@ -60,22 +60,8 @@ internal abstract class AbstractOutputTarget : Screen, IOutputTarget
         Status = ConnectionStatus.Disconnected;
     }
 
-    protected abstract ValueTask<bool> OnConnectingAsync();
+    protected abstract ValueTask<bool> OnConnectingAsync(ConnectionType connectionType);
     protected abstract ValueTask OnDisconnectingAsync();
-
-    public async virtual ValueTask<bool> CanConnectAsync(CancellationToken token) => await ValueTask.FromResult(false);
-    public async virtual ValueTask<bool> CanConnectAsyncWithStatus(CancellationToken token)
-    {
-        if (Status != ConnectionStatus.Disconnected)
-            return await ValueTask.FromResult(false);
-
-        Status = ConnectionStatus.Connecting;
-        await Task.Delay(100, token);
-        var result = await CanConnectAsync(token);
-        Status = ConnectionStatus.Disconnected;
-
-        return result;
-    }
 
     public async Task WaitForStatus(IEnumerable<ConnectionStatus> statuses, CancellationToken token)
     {
@@ -352,7 +338,7 @@ internal abstract class ThreadAbstractOutputTarget(int instanceIndex, IEventAggr
     private CancellationTokenSource _cancellationSource;
     private Thread _thread;
 
-    protected abstract void Run(CancellationToken token);
+    protected abstract void Run(ConnectionType connectionType, CancellationToken token);
 
     protected sealed override void RegisterUpdateContexts()
     {
@@ -371,22 +357,25 @@ internal abstract class ThreadAbstractOutputTarget(int instanceIndex, IEventAggr
         }
     }
 
-    public override async Task ConnectAsync()
+    public override async Task ConnectAsync(ConnectionType connectionType)
     {
         if (Status != ConnectionStatus.Disconnected)
             return;
 
         Status = ConnectionStatus.Connecting;
-        if (!await OnConnectingAsync())
+        if (!await OnConnectingAsync(connectionType))
             await DisconnectAsync();
     }
 
-    protected override ValueTask<bool> OnConnectingAsync()
+    protected override ValueTask<bool> OnConnectingAsync(ConnectionType connectionType)
     {
         _cancellationSource = new CancellationTokenSource();
         _thread = new Thread(() =>
         {
-            Run(_cancellationSource.Token);
+            if (connectionType == ConnectionType.AutoConnect)
+                Thread.Sleep(250);
+
+            Run(connectionType, _cancellationSource.Token);
             _ = DisconnectAsync();
         })
         {
@@ -502,7 +491,7 @@ internal abstract class AsyncAbstractOutputTarget(int instanceIndex, IEventAggre
     private CancellationTokenSource _cancellationSource;
     private Task _task;
 
-    protected abstract Task RunAsync(CancellationToken token);
+    protected abstract Task RunAsync(ConnectionType connectionType, CancellationToken token);
 
     protected sealed override void RegisterUpdateContexts()
     {
@@ -521,22 +510,25 @@ internal abstract class AsyncAbstractOutputTarget(int instanceIndex, IEventAggre
         }
     }
 
-    public override async Task ConnectAsync()
+    public override async Task ConnectAsync(ConnectionType connectionType)
     {
         if (Status != ConnectionStatus.Disconnected)
             return;
 
         Status = ConnectionStatus.Connecting;
-        if (!await OnConnectingAsync())
+        if (!await OnConnectingAsync(connectionType))
             await DisconnectAsync();
     }
 
-    protected override ValueTask<bool> OnConnectingAsync()
+    protected override ValueTask<bool> OnConnectingAsync(ConnectionType connectionType)
     {
         _cancellationSource = new CancellationTokenSource();
         _task = Task.Run(async () =>
         {
-            try { await RunAsync(_cancellationSource.Token); }
+            if (connectionType == ConnectionType.AutoConnect)
+                await Task.Delay(250);
+
+            try { await RunAsync(connectionType, _cancellationSource.Token); }
             finally { _ = Task.Run(DisconnectAsync); }
         });
 

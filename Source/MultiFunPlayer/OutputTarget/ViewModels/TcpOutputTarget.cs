@@ -1,4 +1,4 @@
-using MultiFunPlayer.Common;
+﻿using MultiFunPlayer.Common;
 using MultiFunPlayer.Shortcut;
 using MultiFunPlayer.UI;
 using Newtonsoft.Json.Linq;
@@ -35,20 +35,28 @@ internal sealed class TcpOutputTarget(int instanceIndex, IEventAggregator eventA
         _ => null,
     };
 
-    protected override void Run(CancellationToken token)
+    protected override void Run(ConnectionType connectionType, CancellationToken token)
     {
         using var client = new TcpClient();
 
         try
         {
-            Logger.Info("Connecting to {0} at \"{1}\"", Identifier, $"tcp://{Endpoint.ToUriString()}");
+            if (connectionType != ConnectionType.AutoConnect)
+                Logger.Info("Connecting to {0} at \"{1}\" [Type: {2}]", Identifier, $"tcp://{Endpoint?.ToUriString()}", connectionType);
+            if (Endpoint == null)
+                throw new OutputTargetException("Endpoint cannot be null");
+
             client.Connect(Endpoint);
             Status = ConnectionStatus.Connected;
         }
-        catch (Exception e)
+        catch (Exception e) when (connectionType != ConnectionType.AutoConnect)
         {
-            Logger.Error(e, "Error when connecting to server");
-            _ = DialogHelper.ShowErrorAsync(e, "Error when connecting to server", "RootDialog");
+            Logger.Error(e, "Error when connecting to {0}", Name);
+            _ = DialogHelper.ShowErrorAsync(e, $"Error when connecting to {Name}", "RootDialog");
+            return;
+        }
+        catch
+        {
             return;
         }
 
@@ -156,20 +164,5 @@ internal sealed class TcpOutputTarget(int instanceIndex, IEventAggregator eventA
     {
         base.UnregisterActions(s);
         s.UnregisterAction($"{Identifier}::Endpoint::Set");
-    }
-
-    public override async ValueTask<bool> CanConnectAsync(CancellationToken token)
-    {
-        try
-        {
-            using var client = new TcpClient();
-            await client.ConnectAsync(Endpoint, token);
-            client.GetStream();
-            return true;
-        }
-        catch
-        {
-            return false;
-        }
     }
 }

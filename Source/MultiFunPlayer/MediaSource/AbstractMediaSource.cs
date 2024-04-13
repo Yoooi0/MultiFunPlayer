@@ -38,27 +38,34 @@ internal abstract class AbstractMediaSource : Screen, IMediaSource, IHandle<IMed
         RegisterActions(shortcutManager);
     }
 
-    protected abstract Task RunAsync(CancellationToken token);
+    protected abstract Task RunAsync(ConnectionType connectionType, CancellationToken token);
 
     protected void PublishMessage(object message) => _eventAggregator.Publish(message);
 
-    public async virtual Task ConnectAsync()
+    public async virtual Task ConnectAsync(ConnectionType connectionType)
     {
         if (Status != ConnectionStatus.Disconnected)
             return;
 
         Status = ConnectionStatus.Connecting;
-        if (!await OnConnectingAsync())
+        if (!await OnConnectingAsync(connectionType))
             await DisconnectAsync();
     }
 
-    protected virtual async ValueTask<bool> OnConnectingAsync()
+    protected virtual async ValueTask<bool> OnConnectingAsync(ConnectionType connectionType)
     {
         _cancellationSource = new CancellationTokenSource();
         _task = Task.Run(async () =>
         {
-            try { await RunAsync(_cancellationSource.Token); }
+            if (connectionType == ConnectionType.AutoConnect)
+                await Task.Delay(250);
+
+            while (_messageChannel.Reader.TryRead(out _)) ;
+
+            try { await RunAsync(connectionType, _cancellationSource.Token); }
             finally { _ = Task.Run(DisconnectAsync); }
+
+            while (_messageChannel.Reader.TryRead(out _)) ;
         });
 
         return await ValueTask.FromResult(true);
@@ -90,20 +97,6 @@ internal abstract class AbstractMediaSource : Screen, IMediaSource, IHandle<IMed
         _task = null;
 
         Interlocked.Decrement(ref _isDisconnectingFlag);
-    }
-
-    public async virtual ValueTask<bool> CanConnectAsync(CancellationToken token) => await ValueTask.FromResult(false);
-    public async virtual ValueTask<bool> CanConnectAsyncWithStatus(CancellationToken token)
-    {
-        if (Status != ConnectionStatus.Disconnected)
-            return await ValueTask.FromResult(false);
-
-        Status = ConnectionStatus.Connecting;
-        await Task.Delay(100, token);
-        var result = await CanConnectAsync(token);
-        Status = ConnectionStatus.Disconnected;
-
-        return result;
     }
 
     public async Task WaitForStatus(IEnumerable<ConnectionStatus> statuses, CancellationToken token)
@@ -148,11 +141,6 @@ internal abstract class AbstractMediaSource : Screen, IMediaSource, IHandle<IMed
         s.RegisterAction<bool>($"{Name}::AutoConnectEnabled::Set", s => s.WithLabel("Enable auto connect"), enabled => AutoConnectEnabled = enabled);
         s.RegisterAction($"{Name}::AutoConnectEnabled::Toggle", () => AutoConnectEnabled = !AutoConnectEnabled);
         #endregion
-    }
-
-    protected void ClearPendingMessages()
-    {
-        while (_messageChannel.Reader.TryRead(out _)) ;
     }
 
     protected async ValueTask WaitForMessageAsync(CancellationToken token)

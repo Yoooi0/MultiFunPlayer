@@ -35,26 +35,32 @@ internal sealed class PipeOutputTarget(int instanceIndex, IEventAggregator event
         _ => null,
     };
 
-    protected override void Run(CancellationToken token)
+    protected override void Run(ConnectionType connectionType, CancellationToken token)
     {
         var client = default(NamedPipeClientStream);
 
         try
         {
-            Logger.Info("Connecting to {0} at \"{1}\"", Identifier, PipeName);
+            if (connectionType != ConnectionType.AutoConnect)
+                Logger.Info("Connecting to {0} at \"{1}\"", Identifier, PipeName);
+            if (string.IsNullOrWhiteSpace(PipeName))
+                throw new OutputTargetException("Pipe name cannot be empty");
 
             client = new NamedPipeClientStream(".", PipeName, PipeDirection.Out);
-            client.Connect(2500);
+            client.Connect(500);
 
             Status = ConnectionStatus.Connected;
         }
         catch (Exception e)
         {
-            Logger.Error(e, "Error when opening pipe");
-            if (client?.IsConnected == true)
-                client.Dispose();
+            client?.Dispose();
 
-            _ = DialogHelper.ShowErrorAsync(e, "Error when opening pipe", "RootDialog");
+            if (connectionType != ConnectionType.AutoConnect)
+            {
+                Logger.Error(e, "Error when connecting to {0}", Name);
+                _ = DialogHelper.ShowErrorAsync(e, $"Error when connecting to {Name}", "RootDialog");
+            }
+
             return;
         }
 
@@ -119,11 +125,8 @@ internal sealed class PipeOutputTarget(int instanceIndex, IEventAggregator event
             _ = DialogHelper.ShowErrorAsync(e, $"{Identifier} failed with exception", "RootDialog");
         }
 
-        try
-        {
-            if (client?.IsConnected == true)
-                client.Dispose();
-        } catch { }
+        try { client?.Dispose(); }
+        catch { }
     }
 
     public override void HandleSettings(JObject settings, SettingsAction action)
@@ -157,17 +160,5 @@ internal sealed class PipeOutputTarget(int instanceIndex, IEventAggregator event
     {
         base.UnregisterActions(s);
         s.UnregisterAction($"{Identifier}::PipeName::Set");
-    }
-
-    public override async ValueTask<bool> CanConnectAsync(CancellationToken token)
-    {
-        try
-        {
-            return await ValueTask.FromResult(File.Exists($@"\\.\pipe\{PipeName}"));
-        }
-        catch
-        {
-            return await ValueTask.FromResult(false);
-        }
     }
 }
