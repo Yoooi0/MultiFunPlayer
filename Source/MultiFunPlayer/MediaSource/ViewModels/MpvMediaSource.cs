@@ -1,4 +1,4 @@
-﻿using Microsoft.Win32;
+using Microsoft.Win32;
 using MultiFunPlayer.Common;
 using MultiFunPlayer.Shortcut;
 using MultiFunPlayer.UI;
@@ -42,11 +42,13 @@ internal sealed class MpvMediaSource(IShortcutManager shortcutManager, IEventAgg
             {
                 await client.ConnectAsync(500, token);
             }
-            catch (TimeoutException)
+            catch (TimeoutException e)
             {
                 var executable = Executable?.AsRefreshed() ?? new FileInfo(Path.Join(Path.GetDirectoryName(Environment.ProcessPath), "mpv.exe"));
                 if (!executable.Exists)
                     throw new MediaSourceException("Could not find mpv executable! Please set path to mpv.exe or download latest release from settings.");
+                if (!AutoStartEnabled)
+                    e.Throw();
 
                 var processInfo = new ProcessStartInfo()
                 {
