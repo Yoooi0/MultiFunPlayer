@@ -78,6 +78,9 @@ internal sealed class WebSocketOutputTarget(int instanceIndex, IEventAggregator 
             Logger.Error(e, $"{Identifier} failed with exception");
             _ = DialogHelper.ShowErrorAsync(e, $"{Identifier} failed with exception", "RootDialog");
         }
+
+        try { await client.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, null, CancellationToken.None); }
+        catch { }
     }
 
     private async Task WriteAsync(ClientWebSocket client, CancellationToken token)

@@ -1,4 +1,4 @@
-using MultiFunPlayer.Common;
+﻿using MultiFunPlayer.Common;
 using MultiFunPlayer.Script;
 using MultiFunPlayer.Shortcut;
 using MultiFunPlayer.UI;
@@ -69,6 +69,9 @@ internal sealed class OfsMediaSource(IShortcutManager shortcutManager, IEventAgg
             Logger.Error(e, $"{Name} failed with exception");
             _ = DialogHelper.ShowErrorAsync(e, $"{Name} failed with exception", "RootDialog");
         }
+
+        try { await client.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, null, CancellationToken.None); }
+        catch { }
 
         if (IsDisposing)
             return;
