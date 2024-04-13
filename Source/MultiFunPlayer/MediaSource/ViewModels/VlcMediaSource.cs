@@ -40,6 +40,7 @@ internal sealed class VlcMediaSource(IShortcutManager shortcutManager, IEventAgg
         {
             if (connectionType != ConnectionType.AutoConnect)
                 Logger.Info("Connecting to {0} at \"{1}\" [Type: {2}]", Name, Endpoint?.ToUriString(), connectionType);
+
             if (Endpoint == null)
                 throw new MediaSourceException("Endpoint cannot be null");
 

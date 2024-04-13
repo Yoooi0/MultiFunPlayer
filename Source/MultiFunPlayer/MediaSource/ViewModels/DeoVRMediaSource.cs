@@ -36,9 +36,9 @@ internal sealed class DeoVRMediaSource(IShortcutManager shortcutManager, IEventA
         {
             if (connectionType != ConnectionType.AutoConnect)
                 Logger.Info("Connecting to {0} at \"{1}\" [Type: {2}]", Name, Endpoint?.ToUriString(), connectionType);
+
             if (Endpoint == null)
                 throw new MediaSourceException("Endpoint cannot be null");
-
             if (Endpoint.IsLocalhost())
                 if (!Process.GetProcesses().Any(p => Regex.IsMatch(p.ProcessName, "(?i)(?>deovr|slr)")))
                     throw new MediaSourceException($"Could not find a running {Name} process");

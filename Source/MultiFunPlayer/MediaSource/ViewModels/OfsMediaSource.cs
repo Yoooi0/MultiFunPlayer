@@ -35,6 +35,7 @@ internal sealed class OfsMediaSource(IShortcutManager shortcutManager, IEventAgg
         {
             if (connectionType != ConnectionType.AutoConnect)
                 Logger.Info("Connecting to {0} at \"{1}\" [Type: {2}]", Name, Uri?.ToString(), connectionType);
+
             if (Uri == null)
                 throw new MediaSourceException("Uri cannot be null");
 

@@ -42,6 +42,7 @@ internal sealed class WebSocketOutputTarget(int instanceIndex, IEventAggregator 
         {
             if (connectionType != ConnectionType.AutoConnect)
                 Logger.Info("Connecting to {0} at \"{1}\" [Type: {2}]", Identifier, Uri?.ToString(), connectionType);
+
             if (Uri == null)
                 throw new OutputTargetException("Uri cannot be null");
 

@@ -70,6 +70,7 @@ internal sealed class PlexMediaSource(IShortcutManager shortcutManager, IEventAg
         {
             if (connectionType != ConnectionType.AutoConnect)
                 Logger.Info("Connecting to {0} at \"{1}\" [Type: {2}]", Name, ServerBaseUri, connectionType);
+
             if (ServerBaseUri == null)
                 throw new MediaSourceException("Endpoint cannot be null");
             if (string.IsNullOrEmpty(PlexToken))

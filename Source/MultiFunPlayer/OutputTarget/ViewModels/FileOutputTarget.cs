@@ -42,9 +42,9 @@ internal sealed class FileOutputTarget(int instanceIndex, IEventAggregator event
         {
             if (connectionType != ConnectionType.AutoConnect)
                 Logger.Info("Connecting to {0} [Type: {1}]", Identifier, connectionType);
+
             if (!AxisSettings.Values.Any(x => x.Enabled))
                 throw new OutputTargetException("At least one axis must be enabled");
-
             if (OutputDirectory?.AsRefreshed().Exists != true)
                 throw new DirectoryNotFoundException("Output directory does not exist");
 

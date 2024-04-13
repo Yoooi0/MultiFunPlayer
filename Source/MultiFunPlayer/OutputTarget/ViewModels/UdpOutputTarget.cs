@@ -45,6 +45,7 @@ internal sealed class UdpOutputTarget(int instanceIndex, IEventAggregator eventA
         {
             if (connectionType != ConnectionType.AutoConnect)
                 Logger.Info("Connecting to {0} at \"{1}\" [Type: {2}]", Identifier, $"udp://{Endpoint?.ToUriString()}", connectionType);
+
             if (Endpoint == null)
                 throw new OutputTargetException("Endpoint cannot be null");
 

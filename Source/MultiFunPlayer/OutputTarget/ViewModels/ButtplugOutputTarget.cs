@@ -128,6 +128,7 @@ internal sealed class ButtplugOutputTarget : AsyncAbstractOutputTarget
         {
             if (connectionType != ConnectionType.AutoConnect)
                 Logger.Info("Connecting to {0} at \"{1}\" [Type: {2}]", Identifier, $"ws://{Endpoint?.ToUriString()}", connectionType);
+
             if (Endpoint == null)
                 throw new OutputTargetException("Endpoint cannot be null");
 

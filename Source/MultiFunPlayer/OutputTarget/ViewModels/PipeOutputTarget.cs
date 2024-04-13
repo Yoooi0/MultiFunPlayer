@@ -43,6 +43,7 @@ internal sealed class PipeOutputTarget(int instanceIndex, IEventAggregator event
         {
             if (connectionType != ConnectionType.AutoConnect)
                 Logger.Info("Connecting to {0} at \"{1}\"", Identifier, PipeName);
+
             if (string.IsNullOrWhiteSpace(PipeName))
                 throw new OutputTargetException("Pipe name cannot be empty");
 
