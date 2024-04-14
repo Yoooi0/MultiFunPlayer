@@ -38,8 +38,6 @@ internal abstract class AbstractMediaSource : Screen, IMediaSource, IHandle<IMed
         RegisterActions(shortcutManager);
     }
 
-    protected abstract Task RunAsync(ConnectionType connectionType, CancellationToken token);
-
     protected void PublishMessage(object message) => _eventAggregator.Publish(message);
 
     public async virtual Task ConnectAsync(ConnectionType connectionType)
@@ -48,11 +46,25 @@ internal abstract class AbstractMediaSource : Screen, IMediaSource, IHandle<IMed
             return;
 
         Status = ConnectionStatus.Connecting;
-        if (!await OnConnectingAsync(connectionType))
+        if (await OnConnectingAsync(connectionType))
+            Run(connectionType);
+        else
             await DisconnectAsync();
     }
 
-    protected virtual async ValueTask<bool> OnConnectingAsync(ConnectionType connectionType)
+    public async Task DisconnectAsync()
+    {
+        if (Status is ConnectionStatus.Disconnected or ConnectionStatus.Disconnecting)
+            return;
+
+        Status = ConnectionStatus.Disconnecting;
+        await Task.Delay(250);
+        await OnDisconnectingAsync();
+        Status = ConnectionStatus.Disconnected;
+    }
+
+    protected abstract Task RunAsync(ConnectionType connectionType, CancellationToken token);
+    protected void Run(ConnectionType connectionType)
     {
         _cancellationSource = new CancellationTokenSource();
         _task = Task.Run(async () =>
@@ -67,23 +79,12 @@ internal abstract class AbstractMediaSource : Screen, IMediaSource, IHandle<IMed
 
             while (_messageChannel.Reader.TryRead(out _)) ;
         });
-
-        return await ValueTask.FromResult(true);
     }
 
-    public async virtual Task DisconnectAsync()
-    {
-        if (Status is ConnectionStatus.Disconnected or ConnectionStatus.Disconnecting)
-            return;
-
-        Status = ConnectionStatus.Disconnecting;
-        await Task.Delay(250);
-        await OnDisconnectingAsync();
-        Status = ConnectionStatus.Disconnected;
-    }
+    protected virtual ValueTask<bool> OnConnectingAsync(ConnectionType connectionType) => ValueTask.FromResult(true);
 
     private int _isDisconnectingFlag;
-    protected virtual async ValueTask OnDisconnectingAsync()
+    protected async ValueTask OnDisconnectingAsync()
     {
         if (Interlocked.CompareExchange(ref _isDisconnectingFlag, 1, 0) != 0)
             return;

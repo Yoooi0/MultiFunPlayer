@@ -1,4 +1,4 @@
-﻿using MultiFunPlayer.Common;
+using MultiFunPlayer.Common;
 using MultiFunPlayer.Input;
 using MultiFunPlayer.Shortcut;
 using Newtonsoft.Json.Linq;
@@ -48,7 +48,18 @@ internal abstract class AbstractOutputTarget : Screen, IOutputTarget
     protected abstract void RegisterUpdateContexts();
     protected abstract IUpdateContext RegisterUpdateContext(DeviceAxisUpdateType updateType);
 
-    public abstract Task ConnectAsync(ConnectionType connectionType);
+    public async Task ConnectAsync(ConnectionType connectionType)
+    {
+        if (Status != ConnectionStatus.Disconnected)
+            return;
+
+        Status = ConnectionStatus.Connecting;
+        if (await OnConnectingAsync(connectionType))
+            Run(connectionType);
+        else
+            await DisconnectAsync();
+    }
+
     public async Task DisconnectAsync()
     {
         if (Status is ConnectionStatus.Disconnected or ConnectionStatus.Disconnecting)
@@ -60,7 +71,8 @@ internal abstract class AbstractOutputTarget : Screen, IOutputTarget
         Status = ConnectionStatus.Disconnected;
     }
 
-    protected abstract ValueTask<bool> OnConnectingAsync(ConnectionType connectionType);
+    protected abstract void Run(ConnectionType connectionType);
+    protected virtual ValueTask<bool> OnConnectingAsync(ConnectionType connectionType) => ValueTask.FromResult(true);
     protected abstract ValueTask OnDisconnectingAsync();
 
     public async Task WaitForStatus(IEnumerable<ConnectionStatus> statuses, CancellationToken token)
@@ -338,8 +350,6 @@ internal abstract class ThreadAbstractOutputTarget(int instanceIndex, IEventAggr
     private CancellationTokenSource _cancellationSource;
     private Thread _thread;
 
-    protected abstract void Run(ConnectionType connectionType, CancellationToken token);
-
     protected sealed override void RegisterUpdateContexts()
     {
         foreach(var updateType in Enum.GetValues<DeviceAxisUpdateType>())
@@ -357,17 +367,8 @@ internal abstract class ThreadAbstractOutputTarget(int instanceIndex, IEventAggr
         }
     }
 
-    public override async Task ConnectAsync(ConnectionType connectionType)
-    {
-        if (Status != ConnectionStatus.Disconnected)
-            return;
-
-        Status = ConnectionStatus.Connecting;
-        if (!await OnConnectingAsync(connectionType))
-            await DisconnectAsync();
-    }
-
-    protected override ValueTask<bool> OnConnectingAsync(ConnectionType connectionType)
+    protected abstract void Run(ConnectionType connectionType, CancellationToken token);
+    protected sealed override void Run(ConnectionType connectionType)
     {
         _cancellationSource = new CancellationTokenSource();
         _thread = new Thread(() =>
@@ -382,8 +383,6 @@ internal abstract class ThreadAbstractOutputTarget(int instanceIndex, IEventAggr
             IsBackground = true
         };
         _thread.Start();
-
-        return ValueTask.FromResult(true);
     }
 
     private int _isDisconnectingFlag;
@@ -491,8 +490,6 @@ internal abstract class AsyncAbstractOutputTarget(int instanceIndex, IEventAggre
     private CancellationTokenSource _cancellationSource;
     private Task _task;
 
-    protected abstract Task RunAsync(ConnectionType connectionType, CancellationToken token);
-
     protected sealed override void RegisterUpdateContexts()
     {
         foreach (var updateType in Enum.GetValues<DeviceAxisUpdateType>())
@@ -510,17 +507,8 @@ internal abstract class AsyncAbstractOutputTarget(int instanceIndex, IEventAggre
         }
     }
 
-    public override async Task ConnectAsync(ConnectionType connectionType)
-    {
-        if (Status != ConnectionStatus.Disconnected)
-            return;
-
-        Status = ConnectionStatus.Connecting;
-        if (!await OnConnectingAsync(connectionType))
-            await DisconnectAsync();
-    }
-
-    protected override ValueTask<bool> OnConnectingAsync(ConnectionType connectionType)
+    protected abstract Task RunAsync(ConnectionType connectionType, CancellationToken token);
+    protected sealed override void Run(ConnectionType connectionType)
     {
         _cancellationSource = new CancellationTokenSource();
         _task = Task.Run(async () =>
@@ -531,8 +519,6 @@ internal abstract class AsyncAbstractOutputTarget(int instanceIndex, IEventAggre
             try { await RunAsync(connectionType, _cancellationSource.Token); }
             finally { _ = Task.Run(DisconnectAsync); }
         });
-
-        return ValueTask.FromResult(true);
     }
 
     private int _isDisconnectingFlag;
