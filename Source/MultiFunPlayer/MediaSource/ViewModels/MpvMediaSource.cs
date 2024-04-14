@@ -28,7 +28,7 @@ internal sealed class MpvMediaSource(IShortcutManager shortcutManager, IEventAgg
 
     public FileInfo Executable { get; set; } = null;
     public string Arguments { get; set; } = "--keep-open --pause";
-    public bool AutoStartEnabled { get; set; } = false;
+    public bool AutoStartEnabled { get; set; } = true;
 
     protected override ValueTask<bool> OnConnectingAsync(ConnectionType connectionType)
     {
