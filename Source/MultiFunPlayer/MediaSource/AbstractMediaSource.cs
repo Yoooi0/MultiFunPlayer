@@ -46,6 +46,9 @@ internal abstract class AbstractMediaSource : Screen, IMediaSource, IHandle<IMed
             return;
 
         Status = ConnectionStatus.Connecting;
+        if (connectionType == ConnectionType.AutoConnect)
+            await Task.Delay(250);
+
         if (await OnConnectingAsync(connectionType))
             Run(connectionType);
         else
@@ -69,9 +72,6 @@ internal abstract class AbstractMediaSource : Screen, IMediaSource, IHandle<IMed
         _cancellationSource = new CancellationTokenSource();
         _task = Task.Run(async () =>
         {
-            if (connectionType == ConnectionType.AutoConnect)
-                await Task.Delay(250);
-
             while (_messageChannel.Reader.TryRead(out _)) ;
 
             try { await RunAsync(connectionType, _cancellationSource.Token); }

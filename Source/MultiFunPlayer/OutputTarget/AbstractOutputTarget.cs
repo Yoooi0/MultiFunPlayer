@@ -55,6 +55,9 @@ internal abstract class AbstractOutputTarget : Screen, IOutputTarget
             return;
 
         Status = ConnectionStatus.Connecting;
+        if (connectionType == ConnectionType.AutoConnect)
+            await Task.Delay(250);
+
         if (await OnConnectingAsync(connectionType))
             Run(connectionType);
         else
@@ -374,9 +377,6 @@ internal abstract class ThreadAbstractOutputTarget(int instanceIndex, IEventAggr
         _cancellationSource = new CancellationTokenSource();
         _thread = new Thread(() =>
         {
-            if (connectionType == ConnectionType.AutoConnect)
-                Thread.Sleep(250);
-
             Run(connectionType, _cancellationSource.Token);
             _ = DisconnectAsync();
         })
