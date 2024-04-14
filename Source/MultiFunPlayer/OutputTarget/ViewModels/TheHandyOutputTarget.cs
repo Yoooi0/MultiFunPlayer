@@ -17,7 +17,7 @@ namespace MultiFunPlayer.OutputTarget.ViewModels;
 internal sealed class TheHandyOutputTarget(int instanceIndex, IEventAggregator eventAggregator, IDeviceAxisValueProvider valueProvider)
     : AsyncAbstractOutputTarget(instanceIndex, eventAggregator, valueProvider)
 {
-    private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
+    protected override Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
     public string ConnectionKey { get; set; } = null;
     public DeviceAxis SourceAxis { get; set; } = null;
@@ -42,20 +42,25 @@ internal sealed class TheHandyOutputTarget(int instanceIndex, IEventAggregator e
         EventAggregator.Publish(new SyncRequestMessage(SourceAxis));
     }
 
+    protected override ValueTask<bool> OnConnectingAsync(ConnectionType connectionType)
+    {
+        if (connectionType != ConnectionType.AutoConnect)
+            Logger.Info("Connecting to {0} at \"{1}\" [Type: {2}]", Identifier, ConnectionKey, connectionType);
+
+        if (string.IsNullOrWhiteSpace(ConnectionKey))
+            throw new OutputTargetException("Invalid connection key");
+        if (SourceAxis == null)
+            throw new OutputTargetException("Source axis not selected");
+
+        return ValueTask.FromResult(true);
+    }
+
     protected override async Task RunAsync(ConnectionType connectionType, CancellationToken token)
     {
         using var client = NetUtils.CreateHttpClient();
 
         try
         {
-            if (connectionType != ConnectionType.AutoConnect)
-                Logger.Info("Connecting to {0} at \"{1}\" [Type: {2}]", Identifier, ConnectionKey, connectionType);
-
-            if (string.IsNullOrWhiteSpace(ConnectionKey))
-                throw new OutputTargetException("Invalid connection key");
-            if (SourceAxis == null)
-                throw new OutputTargetException("Source axis not selected");
-
             client.DefaultRequestHeaders.Add("Accept", "application/json");
             client.DefaultRequestHeaders.Add("X-Connection-Key", ConnectionKey);
 

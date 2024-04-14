@@ -1,4 +1,4 @@
-using Microsoft.Win32;
+﻿using Microsoft.Win32;
 using MultiFunPlayer.Common;
 using MultiFunPlayer.Shortcut;
 using MultiFunPlayer.UI;
@@ -17,7 +17,7 @@ namespace MultiFunPlayer.MediaSource.ViewModels;
 [DisplayName("MPV")]
 internal sealed class MpvMediaSource(IShortcutManager shortcutManager, IEventAggregator eventAggregator) : AbstractMediaSource(shortcutManager, eventAggregator)
 {
-    private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
+    protected override Logger Logger { get; } = LogManager.GetCurrentClassLogger();
     private static string PipeName { get; } = "multifunplayer-mpv";
 
     public override ConnectionStatus Status { get; protected set; }
@@ -30,15 +30,23 @@ internal sealed class MpvMediaSource(IShortcutManager shortcutManager, IEventAgg
     public string Arguments { get; set; } = "--keep-open --pause";
     public bool AutoStartEnabled { get; set; } = false;
 
+    protected override ValueTask<bool> OnConnectingAsync(ConnectionType connectionType)
+    {
+        if (connectionType != ConnectionType.AutoConnect)
+            Logger.Info("Connecting to {0} at \"{1}\" [Type: {2}]", Name, PipeName, connectionType);
+
+        if (Executable?.AsRefreshed().Exists != true)
+            throw new MediaSourceException("Could not find mpv executable! Set path to mpv.exe or download latest release from settings.");
+
+        return ValueTask.FromResult(true);
+    }
+
     protected override async Task RunAsync(ConnectionType connectionType, CancellationToken token)
     {
         await using var client = new NamedPipeClientStream(".", PipeName, PipeDirection.InOut, PipeOptions.Asynchronous);
 
         try
         {
-            if (connectionType != ConnectionType.AutoConnect)
-                Logger.Info("Connecting to {0} at \"{1}\" [Type: {2}]", Name, PipeName, connectionType);
-
             try
             {
                 await client.ConnectAsync(500, token);
@@ -46,8 +54,6 @@ internal sealed class MpvMediaSource(IShortcutManager shortcutManager, IEventAgg
             }
             catch (TimeoutException e)
             {
-                if (Executable?.AsRefreshed().Exists != true)
-                    throw new MediaSourceException("Could not find mpv executable! Set path to mpv.exe or download latest release from settings.");
                 if (!AutoStartEnabled)
                     e.Throw();
 

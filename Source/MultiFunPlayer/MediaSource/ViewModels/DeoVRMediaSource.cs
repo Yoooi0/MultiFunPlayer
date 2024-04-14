@@ -18,7 +18,7 @@ namespace MultiFunPlayer.MediaSource.ViewModels;
 [DisplayName("DeoVR")]
 internal sealed class DeoVRMediaSource(IShortcutManager shortcutManager, IEventAggregator eventAggregator) : AbstractMediaSource(shortcutManager, eventAggregator)
 {
-    private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
+    protected override Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
     public override ConnectionStatus Status { get; protected set; }
     public bool IsConnected => Status == ConnectionStatus.Connected;
@@ -28,21 +28,26 @@ internal sealed class DeoVRMediaSource(IShortcutManager shortcutManager, IEventA
 
     public EndPoint Endpoint { get; set; } = new IPEndPoint(IPAddress.Loopback, 23554);
 
+    protected override ValueTask<bool> OnConnectingAsync(ConnectionType connectionType)
+    {
+        if (connectionType != ConnectionType.AutoConnect)
+            Logger.Info("Connecting to {0} at \"{1}\" [Type: {2}]", Name, Endpoint?.ToUriString(), connectionType);
+
+        if (Endpoint == null)
+            throw new MediaSourceException("Endpoint cannot be null");
+        if (Endpoint.IsLocalhost())
+            if (!Process.GetProcesses().Any(p => Regex.IsMatch(p.ProcessName, "(?i)(?>deovr|slr)")))
+                throw new MediaSourceException($"Could not find a running {Name} process");
+
+        return ValueTask.FromResult(true);
+    }
+
     protected override async Task RunAsync(ConnectionType connectionType, CancellationToken token)
     {
         using var client = new TcpClient();
 
         try
         {
-            if (connectionType != ConnectionType.AutoConnect)
-                Logger.Info("Connecting to {0} at \"{1}\" [Type: {2}]", Name, Endpoint?.ToUriString(), connectionType);
-
-            if (Endpoint == null)
-                throw new MediaSourceException("Endpoint cannot be null");
-            if (Endpoint.IsLocalhost())
-                if (!Process.GetProcesses().Any(p => Regex.IsMatch(p.ProcessName, "(?i)(?>deovr|slr)")))
-                    throw new MediaSourceException($"Could not find a running {Name} process");
-
             using var cancellationSource = CancellationTokenSource.CreateLinkedTokenSource(token);
             cancellationSource.CancelAfter(500);
 

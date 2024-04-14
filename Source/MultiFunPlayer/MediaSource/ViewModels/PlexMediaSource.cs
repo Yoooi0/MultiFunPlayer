@@ -15,7 +15,7 @@ namespace MultiFunPlayer.MediaSource.ViewModels;
 [DisplayName("Plex")]
 internal sealed class PlexMediaSource(IShortcutManager shortcutManager, IEventAggregator eventAggregator) : AbstractMediaSource(shortcutManager, eventAggregator)
 {
-    private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
+    protected override Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
     private CancellationTokenSource _refreshCancellationSource = new();
     private XmlNode _currentTimeline;
@@ -52,14 +52,20 @@ internal sealed class PlexMediaSource(IShortcutManager shortcutManager, IEventAg
 
     protected override async ValueTask<bool> OnConnectingAsync(ConnectionType connectionType)
     {
+        if (connectionType != ConnectionType.AutoConnect)
+            Logger.Info("Connecting to {0} at \"{1}\" [Type: {2}]", Name, ServerBaseUri, connectionType);
+
+        if (ServerBaseUri == null)
+            throw new MediaSourceException("Endpoint cannot be null");
+        if (string.IsNullOrEmpty(PlexToken))
+            throw new MediaSourceException("Plex token cannot be empty");
+
         if (SelectedClientMachineIdentifier == null)
             return false;
         if (SelectedClient == null)
             await RefreshClients();
-        if (SelectedClient == null)
-            return false;
 
-        return await base.OnConnectingAsync(connectionType);
+        return SelectedClient != null;
     }
 
     protected override async Task RunAsync(ConnectionType connectionType, CancellationToken token)
@@ -68,14 +74,6 @@ internal sealed class PlexMediaSource(IShortcutManager shortcutManager, IEventAg
 
         try
         {
-            if (connectionType != ConnectionType.AutoConnect)
-                Logger.Info("Connecting to {0} at \"{1}\" [Type: {2}]", Name, ServerBaseUri, connectionType);
-
-            if (ServerBaseUri == null)
-                throw new MediaSourceException("Endpoint cannot be null");
-            if (string.IsNullOrEmpty(PlexToken))
-                throw new MediaSourceException("Plex token cannot be empty");
-
             client.Timeout = TimeSpan.FromMilliseconds(500);
             var message = new HttpRequestMessage(HttpMethod.Head, new Uri(ServerBaseUri, "/clients"));
             AddDefaultHeaders(message.Headers);

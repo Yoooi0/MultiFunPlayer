@@ -13,7 +13,7 @@ namespace MultiFunPlayer.MediaSource.ViewModels;
 [DisplayName("Jellyfin")]
 internal sealed class JellyfinMediaSource(IShortcutManager shortcutManager, IEventAggregator eventAggregator) : AbstractMediaSource(shortcutManager, eventAggregator)
 {
-    private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
+    protected override Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
     private CancellationTokenSource _refreshCancellationSource = new();
     private JellyfinSession _currentSession;
@@ -48,14 +48,20 @@ internal sealed class JellyfinMediaSource(IShortcutManager shortcutManager, IEve
 
     protected override async ValueTask<bool> OnConnectingAsync(ConnectionType connectionType)
     {
+        if (connectionType != ConnectionType.AutoConnect)
+            Logger.Info("Connecting to {0} at \"{1}\" [Type: {2}]", Name, ServerBaseUri, connectionType);
+
+        if (ServerBaseUri == null)
+            throw new MediaSourceException("Endpoint cannot be null");
+        if (string.IsNullOrEmpty(ApiKey))
+            throw new MediaSourceException("Api key cannot be empty");
+
         if (SelectedDeviceId == null)
             return false;
         if (SelectedDevice == null)
             await RefreshDevices();
-        if (SelectedDevice == null)
-            return false;
 
-        return await base.OnConnectingAsync(connectionType);
+        return SelectedDevice != null;
     }
 
     protected override async Task RunAsync(ConnectionType connectionType, CancellationToken token)
@@ -64,14 +70,6 @@ internal sealed class JellyfinMediaSource(IShortcutManager shortcutManager, IEve
 
         try
         {
-            if (connectionType != ConnectionType.AutoConnect)
-                Logger.Info("Connecting to {0} at \"{1}\" [Type: {2}]", Name, ServerBaseUri, connectionType);
-
-            if (ServerBaseUri == null)
-                throw new MediaSourceException("Endpoint cannot be null");
-            if (string.IsNullOrEmpty(ApiKey))
-                throw new MediaSourceException("Api key cannot be empty");
-
             client.Timeout = TimeSpan.FromMilliseconds(1000);
 
             var uri = new Uri(ServerBaseUri, "/System/Ping");

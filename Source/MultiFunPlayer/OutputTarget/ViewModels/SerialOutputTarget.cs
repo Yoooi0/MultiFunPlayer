@@ -19,7 +19,7 @@ namespace MultiFunPlayer.OutputTarget.ViewModels;
 internal sealed class SerialOutputTarget(int instanceIndex, IEventAggregator eventAggregator, IDeviceAxisValueProvider valueProvider, IInputProcessorFactory inputProcessorFactory)
     : ThreadAbstractOutputTarget(instanceIndex, eventAggregator, valueProvider)
 {
-    private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
+    protected override Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
     private CancellationTokenSource _refreshCancellationSource = new();
 
@@ -137,14 +137,15 @@ internal sealed class SerialOutputTarget(int instanceIndex, IEventAggregator eve
 
     protected override async ValueTask<bool> OnConnectingAsync(ConnectionType connectionType)
     {
+        if (connectionType != ConnectionType.AutoConnect)
+            Logger.Info("Connecting to {0} at \"{1}\" [Type: {2}]", Identifier, SelectedSerialPortDeviceId, connectionType);
+
         if (SelectedSerialPortDeviceId == null)
             return false;
         if (SelectedSerialPort == null)
             await RefreshPorts();
-        if (SelectedSerialPort == null)
-            return false;
 
-        return await base.OnConnectingAsync(connectionType);
+        return SelectedSerialPort != null;
     }
 
     protected override void Run(ConnectionType connectionType, CancellationToken token)
@@ -153,9 +154,6 @@ internal sealed class SerialOutputTarget(int instanceIndex, IEventAggregator eve
 
         try
         {
-            if (connectionType != ConnectionType.AutoConnect)
-                Logger.Info("Connecting to {0} at \"{1}\" [Type: {2}]", Identifier, SelectedSerialPortDeviceId, connectionType);
-
             serialPort = new()
             {
                 PortName = SelectedSerialPort.PortName,

@@ -14,7 +14,7 @@ namespace MultiFunPlayer.OutputTarget.ViewModels;
 internal sealed class WebSocketOutputTarget(int instanceIndex, IEventAggregator eventAggregator, IDeviceAxisValueProvider valueProvider)
     : AsyncAbstractOutputTarget(instanceIndex, eventAggregator, valueProvider)
 {
-    private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
+    protected override Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
     public override ConnectionStatus Status { get; protected set; }
     public bool IsConnected => Status == ConnectionStatus.Connected;
@@ -34,18 +34,23 @@ internal sealed class WebSocketOutputTarget(int instanceIndex, IEventAggregator 
         _ => null,
     };
 
+    protected override ValueTask<bool> OnConnectingAsync(ConnectionType connectionType)
+    {
+        if (connectionType != ConnectionType.AutoConnect)
+            Logger.Info("Connecting to {0} at \"{1}\" [Type: {2}]", Identifier, Uri?.ToString(), connectionType);
+
+        if (Uri == null)
+            throw new OutputTargetException("Uri cannot be null");
+
+        return ValueTask.FromResult(true);
+    }
+
     protected override async Task RunAsync(ConnectionType connectionType, CancellationToken token)
     {
         using var client = new ClientWebSocket();
 
         try
         {
-            if (connectionType != ConnectionType.AutoConnect)
-                Logger.Info("Connecting to {0} at \"{1}\" [Type: {2}]", Identifier, Uri?.ToString(), connectionType);
-
-            if (Uri == null)
-                throw new OutputTargetException("Uri cannot be null");
-
             using var cancellationSource = CancellationTokenSource.CreateLinkedTokenSource(token);
             cancellationSource.CancelAfter(500);
             await client.ConnectAsync(Uri, cancellationSource.Token);

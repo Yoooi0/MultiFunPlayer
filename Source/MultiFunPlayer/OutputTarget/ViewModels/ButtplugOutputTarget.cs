@@ -18,7 +18,7 @@ namespace MultiFunPlayer.OutputTarget.ViewModels;
 [DisplayName("Buttplug.io")]
 internal sealed class ButtplugOutputTarget : AsyncAbstractOutputTarget
 {
-    private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
+    protected override Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
     private SemaphoreSlim _startScanSemaphore;
     private SemaphoreSlim _endScanSemaphore;
@@ -89,6 +89,17 @@ internal sealed class ButtplugOutputTarget : AsyncAbstractOutputTarget
             _startScanSemaphore.Release();
     }
 
+    protected override ValueTask<bool> OnConnectingAsync(ConnectionType connectionType)
+    {
+        if (connectionType != ConnectionType.AutoConnect)
+            Logger.Info("Connecting to {0} at \"{1}\" [Type: {2}]", Identifier, $"ws://{Endpoint?.ToUriString()}", connectionType);
+
+        if (Endpoint == null)
+            throw new OutputTargetException("Endpoint cannot be null");
+
+        return ValueTask.FromResult(true);
+    }
+
     protected override async Task RunAsync(ConnectionType connectionType, CancellationToken token)
     {
         void OnDeviceRemoved(ButtplugDevice device)
@@ -126,12 +137,6 @@ internal sealed class ButtplugOutputTarget : AsyncAbstractOutputTarget
 
         try
         {
-            if (connectionType != ConnectionType.AutoConnect)
-                Logger.Info("Connecting to {0} at \"{1}\" [Type: {2}]", Identifier, $"ws://{Endpoint?.ToUriString()}", connectionType);
-
-            if (Endpoint == null)
-                throw new OutputTargetException("Endpoint cannot be null");
-
             await client.ConnectAsync(new Uri($"ws://{Endpoint.ToUriString()}"), token);
             Status = ConnectionStatus.Connected;
         }

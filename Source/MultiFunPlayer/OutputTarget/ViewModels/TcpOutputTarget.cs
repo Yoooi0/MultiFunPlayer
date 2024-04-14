@@ -15,7 +15,7 @@ namespace MultiFunPlayer.OutputTarget.ViewModels;
 internal sealed class TcpOutputTarget(int instanceIndex, IEventAggregator eventAggregator, IDeviceAxisValueProvider valueProvider)
     : ThreadAbstractOutputTarget(instanceIndex, eventAggregator, valueProvider)
 {
-    private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
+    protected override Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
     public override ConnectionStatus Status { get; protected set; }
     public bool IsConnected => Status == ConnectionStatus.Connected;
@@ -35,18 +35,23 @@ internal sealed class TcpOutputTarget(int instanceIndex, IEventAggregator eventA
         _ => null,
     };
 
+    protected override ValueTask<bool> OnConnectingAsync(ConnectionType connectionType)
+    {
+        if (connectionType != ConnectionType.AutoConnect)
+            Logger.Info("Connecting to {0} at \"{1}\" [Type: {2}]", Identifier, $"tcp://{Endpoint?.ToUriString()}", connectionType);
+
+        if (Endpoint == null)
+            throw new OutputTargetException("Endpoint cannot be null");
+
+        return ValueTask.FromResult(true);
+    }
+
     protected override void Run(ConnectionType connectionType, CancellationToken token)
     {
         using var client = new TcpClient();
 
         try
         {
-            if (connectionType != ConnectionType.AutoConnect)
-                Logger.Info("Connecting to {0} at \"{1}\" [Type: {2}]", Identifier, $"tcp://{Endpoint?.ToUriString()}", connectionType);
-
-            if (Endpoint == null)
-                throw new OutputTargetException("Endpoint cannot be null");
-
             client.Connect(Endpoint);
             Status = ConnectionStatus.Connected;
         }

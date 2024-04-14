@@ -18,7 +18,7 @@ namespace MultiFunPlayer.MediaSource.ViewModels;
 [DisplayName("Internal")]
 internal sealed class InternalMediaSource(ILocalScriptRepository localRepository, IShortcutManager shortcutManager, IEventAggregator eventAggregator) : AbstractMediaSource(shortcutManager, eventAggregator)
 {
-    private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
+    protected override Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
     private readonly object _playlistLock = new();
 
@@ -41,13 +41,18 @@ internal sealed class InternalMediaSource(ILocalScriptRepository localRepository
     public bool IsLooping { get; set; } = false;
     public bool LoadAdditionalScripts { get; set; } = false;
 
+    protected override ValueTask<bool> OnConnectingAsync(ConnectionType connectionType)
+    {
+        if (connectionType != ConnectionType.AutoConnect)
+            Logger.Info("Connecting to {0} [Type: {1}]", Name, connectionType);
+
+        return ValueTask.FromResult(true);
+    }
+
     protected override async Task RunAsync(ConnectionType connectionType, CancellationToken token)
     {
         try
         {
-            if (connectionType != ConnectionType.AutoConnect)
-                Logger.Info("Connecting to {0} [Type: {1}]", Name, connectionType);
-
             await Task.Delay(250, token);
             PlayIndex(-1);
             SetIsPlaying(false);

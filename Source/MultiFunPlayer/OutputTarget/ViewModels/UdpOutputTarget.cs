@@ -17,7 +17,7 @@ namespace MultiFunPlayer.OutputTarget.ViewModels;
 internal sealed class UdpOutputTarget(int instanceIndex, IEventAggregator eventAggregator, IDeviceAxisValueProvider valueProvider, IInputProcessorFactory inputProcessorFactory)
     : ThreadAbstractOutputTarget(instanceIndex, eventAggregator, valueProvider)
 {
-    private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
+    protected override Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
     public override ConnectionStatus Status { get; protected set; }
     public bool IsConnected => Status == ConnectionStatus.Connected;
@@ -37,18 +37,23 @@ internal sealed class UdpOutputTarget(int instanceIndex, IEventAggregator eventA
         _ => null,
     };
 
+    protected override ValueTask<bool> OnConnectingAsync(ConnectionType connectionType)
+    {
+        if (connectionType != ConnectionType.AutoConnect)
+            Logger.Info("Connecting to {0} at \"{1}\" [Type: {2}]", Identifier, $"udp://{Endpoint?.ToUriString()}", connectionType);
+
+        if (Endpoint == null)
+            throw new OutputTargetException("Endpoint cannot be null");
+
+        return ValueTask.FromResult(true);
+    }
+
     protected override void Run(ConnectionType connectionType, CancellationToken token)
     {
         using var client = new UdpClient();
 
         try
         {
-            if (connectionType != ConnectionType.AutoConnect)
-                Logger.Info("Connecting to {0} at \"{1}\" [Type: {2}]", Identifier, $"udp://{Endpoint?.ToUriString()}", connectionType);
-
-            if (Endpoint == null)
-                throw new OutputTargetException("Endpoint cannot be null");
-
             const int SIO_UDP_CONNRESET = -1744830452;
             client.Client.IOControl((IOControlCode)SIO_UDP_CONNRESET, [0, 0, 0, 0], null);
 

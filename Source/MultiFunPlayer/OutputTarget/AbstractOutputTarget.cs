@@ -1,7 +1,9 @@
 ﻿using MultiFunPlayer.Common;
 using MultiFunPlayer.Input;
 using MultiFunPlayer.Shortcut;
+using MultiFunPlayer.UI;
 using Newtonsoft.Json.Linq;
+using NLog;
 using PropertyChanged;
 using Stylet;
 using System.ComponentModel;
@@ -14,6 +16,7 @@ namespace MultiFunPlayer.OutputTarget;
 
 internal abstract class AbstractOutputTarget : Screen, IOutputTarget
 {
+    protected abstract Logger Logger { get; }
     private readonly IDeviceAxisValueProvider _valueProvider;
 
     public string Name { get; init; }
@@ -58,10 +61,22 @@ internal abstract class AbstractOutputTarget : Screen, IOutputTarget
         if (connectionType == ConnectionType.AutoConnect)
             await Task.Delay(250);
 
-        if (await OnConnectingAsync(connectionType))
-            Run(connectionType);
-        else
-            await DisconnectAsync();
+        try
+        {
+            if (await OnConnectingAsync(connectionType))
+            {
+                Run(connectionType);
+                return;
+            }
+        }
+        catch (Exception e) when (connectionType != ConnectionType.AutoConnect)
+        {
+            Logger.Error(e, "Error when connecting to {0}", Name);
+            _ = DialogHelper.ShowErrorAsync(e, $"Error when connecting to {Name}", "RootDialog");
+        }
+        catch { }
+
+        await DisconnectAsync();
     }
 
     public async Task DisconnectAsync()
@@ -76,7 +91,7 @@ internal abstract class AbstractOutputTarget : Screen, IOutputTarget
     }
 
     protected abstract void Run(ConnectionType connectionType);
-    protected virtual ValueTask<bool> OnConnectingAsync(ConnectionType connectionType) => ValueTask.FromResult(true);
+    protected abstract ValueTask<bool> OnConnectingAsync(ConnectionType connectionType);
     protected abstract ValueTask OnDisconnectingAsync();
 
     public async Task WaitForStatus(IEnumerable<ConnectionStatus> statuses, CancellationToken token)

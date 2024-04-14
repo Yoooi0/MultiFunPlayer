@@ -15,7 +15,7 @@ namespace MultiFunPlayer.OutputTarget.ViewModels;
 internal sealed class PipeOutputTarget(int instanceIndex, IEventAggregator eventAggregator, IDeviceAxisValueProvider valueProvider)
     : ThreadAbstractOutputTarget(instanceIndex, eventAggregator, valueProvider)
 {
-    private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
+    protected override Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
     public override ConnectionStatus Status { get; protected set; }
     public bool IsConnected => Status == ConnectionStatus.Connected;
@@ -35,18 +35,23 @@ internal sealed class PipeOutputTarget(int instanceIndex, IEventAggregator event
         _ => null,
     };
 
+    protected override ValueTask<bool> OnConnectingAsync(ConnectionType connectionType)
+    {
+        if (connectionType != ConnectionType.AutoConnect)
+            Logger.Info("Connecting to {0} at \"{1}\"", Identifier, PipeName);
+
+        if (string.IsNullOrWhiteSpace(PipeName))
+            throw new OutputTargetException("Pipe name cannot be empty");
+
+        return ValueTask.FromResult(true);
+    }
+
     protected override void Run(ConnectionType connectionType, CancellationToken token)
     {
         var client = default(NamedPipeClientStream);
 
         try
         {
-            if (connectionType != ConnectionType.AutoConnect)
-                Logger.Info("Connecting to {0} at \"{1}\"", Identifier, PipeName);
-
-            if (string.IsNullOrWhiteSpace(PipeName))
-                throw new OutputTargetException("Pipe name cannot be empty");
-
             client = new NamedPipeClientStream(".", PipeName, PipeDirection.Out);
             client.Connect(500);
 

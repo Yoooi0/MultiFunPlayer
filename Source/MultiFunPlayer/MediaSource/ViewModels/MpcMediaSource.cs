@@ -15,7 +15,7 @@ namespace MultiFunPlayer.MediaSource.ViewModels;
 [DisplayName("MPC-HC")]
 internal sealed class MpcMediaSource(IShortcutManager shortcutManager, IEventAggregator eventAggregator) : AbstractMediaSource(shortcutManager, eventAggregator)
 {
-    private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
+    protected override Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
     public override ConnectionStatus Status { get; protected set; }
     public bool IsConnected => Status == ConnectionStatus.Connected;
@@ -25,18 +25,23 @@ internal sealed class MpcMediaSource(IShortcutManager shortcutManager, IEventAgg
 
     public EndPoint Endpoint { get; set; } = new IPEndPoint(IPAddress.Loopback, 13579);
 
+    protected override ValueTask<bool> OnConnectingAsync(ConnectionType connectionType)
+    {
+        if (connectionType != ConnectionType.AutoConnect)
+            Logger.Info("Connecting to {0} at \"{1}\" [Type: {2}]", Name, Endpoint?.ToUriString(), connectionType);
+
+        if (Endpoint == null)
+            throw new MediaSourceException("Endpoint cannot be null");
+
+        return ValueTask.FromResult(true);
+    }
+
     protected override async Task RunAsync(ConnectionType connectionType, CancellationToken token)
     {
         using var client = NetUtils.CreateHttpClient();
 
         try
         {
-            if (connectionType != ConnectionType.AutoConnect)
-                Logger.Info("Connecting to {0} at \"{1}\" [Type: {2}]", Name, Endpoint?.ToUriString(), connectionType);
-
-            if (Endpoint == null)
-                throw new MediaSourceException("Endpoint cannot be null");
-
             client.Timeout = TimeSpan.FromMilliseconds(500);
 
             var uri = new Uri($"http://{Endpoint.ToUriString()}");

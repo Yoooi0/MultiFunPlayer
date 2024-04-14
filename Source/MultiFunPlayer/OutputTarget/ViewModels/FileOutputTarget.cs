@@ -14,7 +14,7 @@ namespace MultiFunPlayer.OutputTarget.ViewModels;
 internal sealed class FileOutputTarget(int instanceIndex, IEventAggregator eventAggregator, IDeviceAxisValueProvider valueProvider)
     : ThreadAbstractOutputTarget(instanceIndex, eventAggregator, valueProvider)
 {
-    private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
+    protected override Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
     public override ConnectionStatus Status { get; protected set; }
     public bool IsConnected => Status == ConnectionStatus.Connected;
@@ -31,6 +31,19 @@ internal sealed class FileOutputTarget(int instanceIndex, IEventAggregator event
         _ => null,
     };
 
+    protected override ValueTask<bool> OnConnectingAsync(ConnectionType connectionType)
+    {
+        if (connectionType != ConnectionType.AutoConnect)
+            Logger.Info("Connecting to {0} [Type: {1}]", Identifier, connectionType);
+
+        if (!AxisSettings.Values.Any(x => x.Enabled))
+            throw new OutputTargetException("At least one axis must be enabled");
+        if (OutputDirectory?.AsRefreshed().Exists != true)
+            throw new DirectoryNotFoundException("Output directory does not exist");
+
+        return ValueTask.FromResult(true);
+    }
+
     protected override void Run(ConnectionType connectionType, CancellationToken token)
     {
         if (connectionType == ConnectionType.AutoConnect)
@@ -40,14 +53,6 @@ internal sealed class FileOutputTarget(int instanceIndex, IEventAggregator event
 
         try
         {
-            if (connectionType != ConnectionType.AutoConnect)
-                Logger.Info("Connecting to {0} [Type: {1}]", Identifier, connectionType);
-
-            if (!AxisSettings.Values.Any(x => x.Enabled))
-                throw new OutputTargetException("At least one axis must be enabled");
-            if (OutputDirectory?.AsRefreshed().Exists != true)
-                throw new DirectoryNotFoundException("Output directory does not exist");
-
             var baseFileName = $"MultiFunPlayer_{DateTime.Now:yyyyMMddTHHmmss}";
             foreach (var axis in AxisSettings.Where(x => x.Value.Enabled).Select(x => x.Key))
             {
