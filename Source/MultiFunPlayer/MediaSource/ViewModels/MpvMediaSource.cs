@@ -57,12 +57,14 @@ internal sealed class MpvMediaSource(IShortcutManager shortcutManager, IEventAgg
                 if (!AutoStartEnabled)
                     e.Throw();
 
+                var arguments = $"--input-ipc-server={PipeName} {Arguments}";
                 var processInfo = new ProcessStartInfo()
                 {
                     FileName = Executable.FullName,
-                    Arguments = $"--input-ipc-server={PipeName} {Arguments}"
+                    Arguments = arguments
                 };
 
+                Logger.Debug("Starting process \"{0}\" with arguments \"{1}\"", Executable.FullName, arguments);
                 Process.Start(processInfo);
 
                 if (connectionType != ConnectionType.AutoConnect)
