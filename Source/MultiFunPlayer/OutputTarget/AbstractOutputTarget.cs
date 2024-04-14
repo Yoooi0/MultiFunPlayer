@@ -1,4 +1,4 @@
-using MultiFunPlayer.Common;
+﻿using MultiFunPlayer.Common;
 using MultiFunPlayer.Input;
 using MultiFunPlayer.Shortcut;
 using Newtonsoft.Json.Linq;
@@ -8,6 +8,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Reflection;
 using System.Threading.Channels;
+using System.Windows;
 
 namespace MultiFunPlayer.OutputTarget;
 
@@ -386,12 +387,16 @@ internal abstract class ThreadAbstractOutputTarget(int instanceIndex, IEventAggr
     }
 
     private int _isDisconnectingFlag;
-    protected override ValueTask OnDisconnectingAsync()
+    protected async override ValueTask OnDisconnectingAsync()
     {
         if (Interlocked.CompareExchange(ref _isDisconnectingFlag, 1, 0) != 0)
-            return ValueTask.CompletedTask;
+            return;
 
         _cancellationSource?.Cancel();
+
+        if (Application.Current.Dispatcher.CheckAccess())
+            await Task.Yield();
+
         _thread?.Join();
 
         _cancellationSource?.Dispose();
@@ -400,7 +405,7 @@ internal abstract class ThreadAbstractOutputTarget(int instanceIndex, IEventAggr
         _thread = null;
 
         Interlocked.Decrement(ref _isDisconnectingFlag);
-        return ValueTask.CompletedTask;
+        return;
     }
 
     protected void FixedUpdate(Func<bool> condition, Action<ThreadFixedUpdateContext, double> body)
