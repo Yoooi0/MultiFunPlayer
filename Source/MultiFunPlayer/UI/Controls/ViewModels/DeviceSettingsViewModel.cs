@@ -136,7 +136,7 @@ internal sealed class DeviceSettingsViewModel : Screen, IHandle<SettingsMessage>
         if (message.Action == SettingsAction.Saving)
         {
             message.Settings[nameof(Devices)] = JArray.FromObject(Devices);
-            message.Settings[nameof(SelectedDevice)] = SelectedDevice.Name;
+            message.Settings[nameof(SelectedDevice)] = SelectedDevice?.Name;
         }
         else if (message.Action == SettingsAction.Loading)
         {
