@@ -409,10 +409,8 @@ internal abstract class ThreadAbstractOutputTarget(int instanceIndex, IEventAggr
 
         _cancellationSource?.Cancel();
 
-        if (Application.Current.Dispatcher.CheckAccess())
-            await Task.Yield();
-
-        _thread?.Join();
+        if (_thread != null)
+            await Task.Run(() => _thread.Join());
 
         _cancellationSource?.Dispose();
 
