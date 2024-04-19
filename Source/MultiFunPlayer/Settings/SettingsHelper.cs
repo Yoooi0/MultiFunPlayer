@@ -7,9 +7,8 @@ namespace MultiFunPlayer.Settings;
 internal static class SettingsHelper
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-    private const string DefaultPath = $"{nameof(MultiFunPlayer)}.config.json";
 
-    public static JObject ReadOrEmpty(string path = DefaultPath)
+    public static JObject ReadOrEmpty(string path)
     {
         if (Read(path) is JObject settings)
             return settings;
@@ -17,7 +16,7 @@ internal static class SettingsHelper
         return [];
     }
 
-    public static JObject Read(string path = DefaultPath)
+    private static JObject Read(string path)
     {
         if (!File.Exists(path))
             return null;
@@ -34,7 +33,7 @@ internal static class SettingsHelper
         }
     }
 
-    public static void Write(JObject settings, string path = DefaultPath)
+    public static void Write(JObject settings, string path)
     {
         try
         {

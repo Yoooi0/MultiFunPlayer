@@ -36,6 +36,8 @@ namespace MultiFunPlayer;
 
 internal sealed class Bootstrapper : Bootstrapper<RootViewModel>
 {
+    private const string SettingsPath = $"{nameof(MultiFunPlayer)}.config.json";
+
     static Bootstrapper()
     {
         ToolTipService.ShowDurationProperty.OverrideMetadata(typeof(FrameworkElement), new FrameworkPropertyMetadata(int.MaxValue));
@@ -97,7 +99,7 @@ internal sealed class Bootstrapper : Bootstrapper<RootViewModel>
 
         ConfigureJson();
 
-        var settings = SettingsHelper.ReadOrEmpty();
+        var settings = SettingsHelper.ReadOrEmpty(SettingsPath);
         var dirty = ConfigureLoging(settings);
 
         var logger = LogManager.GetLogger(nameof(MultiFunPlayer));
@@ -119,7 +121,7 @@ internal sealed class Bootstrapper : Bootstrapper<RootViewModel>
         dirty |= Container.Get<SettingsDevicePreprocessor>().Preprocess(settings);
 
         if (dirty)
-            SettingsHelper.Write(settings);
+            SettingsHelper.Write(settings, SettingsPath);
 
         logger.Info("Environment [OSVersion: {0}, CLRVersion: {1}]", Environment.OSVersion, Environment.Version);
         logger.Info("Assembly [Version: {0}+{1}]", GitVersionInformation.SemVer, GitVersionInformation.FullBuildMetaData);
@@ -132,33 +134,62 @@ internal sealed class Bootstrapper : Bootstrapper<RootViewModel>
     {
         base.OnStart();
 
-        var vcInstalled = Registry.ClassesRoot?.OpenSubKey("Installer")?.OpenSubKey("Dependencies")
-                                              ?.GetSubKeyNames()
-                                              ?.Where(s => Regex.IsMatch(s, @"VC,redist\.x64,amd64,14\.\d+,bundle"))
-                                              .Any() ?? false;
-        if (vcInstalled)
-            return;
+        CheckVCInstalled();
+        CheckWritePermissions();
 
-        var vcDllPresent = Directory.EnumerateFiles(Path.GetDirectoryName(Environment.ProcessPath), "*.dll", SearchOption.AllDirectories)
-                                    .Select(Path.GetFileName)
-                                    .Any(f => f.StartsWith("vcruntime140", StringComparison.OrdinalIgnoreCase));
-        if (vcDllPresent)
-            return;
-
-        var result = MessageBox.Show("To run this application, you must install Visual C++ 2019 x64 redistributable.\nWould you like to download it now?",
-                                     $"{nameof(MultiFunPlayer)}.exe",
-                                     MessageBoxButton.YesNo, MessageBoxImage.Error);
-
-        if (result == MessageBoxResult.Yes)
+        static void CheckVCInstalled()
         {
-            Process.Start(new ProcessStartInfo
+            var vcInstalled = Registry.ClassesRoot?.OpenSubKey("Installer")?.OpenSubKey("Dependencies")
+                                                  ?.GetSubKeyNames()
+                                                  ?.Where(s => Regex.IsMatch(s, @"VC,redist\.x64,amd64,14\.\d+,bundle"))
+                                                  .Any() ?? false;
+            if (vcInstalled)
+                return;
+
+            var vcDllPresent = Directory.EnumerateFiles(Path.GetDirectoryName(Environment.ProcessPath), "*.dll", SearchOption.AllDirectories)
+                                        .Select(Path.GetFileName)
+                                        .Any(f => f.StartsWith("vcruntime140", StringComparison.OrdinalIgnoreCase));
+            if (vcDllPresent)
+                return;
+
+            const string message = """
+                To run this application, you must install Visual C++ 2019 x64 redistributable.
+                Would you like to download it now?
+                """;
+
+            var result = MessageBox.Show(message, $"{nameof(MultiFunPlayer)}.exe", MessageBoxButton.YesNo, MessageBoxImage.Error);
+            if (result == MessageBoxResult.Yes)
             {
-                FileName = "https://aka.ms/vs/17/release/vc_redist.x64.exe",
-                UseShellExecute = true
-            });
+                Process.Start(new ProcessStartInfo
+                {
+                    FileName = "https://aka.ms/vs/17/release/vc_redist.x64.exe",
+                    UseShellExecute = true
+                });
+            }
+
+            Environment.Exit(1157 /* ERROR_DLL_NOT_FOUND */);
         }
 
-        Environment.Exit(1157 /* ERROR_DLL_NOT_FOUND */);
+        static void CheckWritePermissions()
+        {
+            var randomFileName = Path.GetRandomFileName();
+            try
+            {
+                using var stream = File.Create(Path.Join(Path.GetDirectoryName(Environment.ProcessPath), randomFileName), 1, FileOptions.DeleteOnClose);
+            }
+            catch (Exception e)
+            {
+                var message = $"""
+                    File write permissions check failed!
+                    {e.GetType()}: {e.Message.Replace(randomFileName, "")}
+
+                    Ensure "{Environment.UserName}" account has sufficient permissions, or run {nameof(MultiFunPlayer)} as administrator.
+                    """;
+
+                _ = MessageBox.Show(message, $"{nameof(MultiFunPlayer)}.exe", MessageBoxButton.OK, MessageBoxImage.Error);
+                Environment.Exit(4 /* ERROR_ACCESS_DENIED */);
+            }
+        }
     }
 
     protected override void Launch()
@@ -173,7 +204,7 @@ internal sealed class Bootstrapper : Bootstrapper<RootViewModel>
         _ = Container.Get<OutputTargetViewModel>();
         _ = RootViewModel;
 
-        var settings = SettingsHelper.ReadOrEmpty();
+        var settings = SettingsHelper.ReadOrEmpty(SettingsPath);
         var eventAggregator = Container.Get<IEventAggregator>();
         eventAggregator.Publish(new SettingsMessage(settings, SettingsAction.Loading));
 
@@ -195,10 +226,10 @@ internal sealed class Bootstrapper : Bootstrapper<RootViewModel>
 
     private void OnWindowClosing(object sender, CancelEventArgs e)
     {
-        var settings = SettingsHelper.ReadOrEmpty();
+        var settings = SettingsHelper.ReadOrEmpty(SettingsPath);
         var eventAggregator = Container.Get<IEventAggregator>();
         eventAggregator.Publish(new SettingsMessage(settings, SettingsAction.Saving));
-        SettingsHelper.Write(settings);
+        SettingsHelper.Write(settings, SettingsPath);
     }
 
     private void ConfigureJson()
