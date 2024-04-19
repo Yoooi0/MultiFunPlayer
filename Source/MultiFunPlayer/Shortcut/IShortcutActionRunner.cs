@@ -8,23 +8,19 @@ internal interface IShortcutActionRunner
 {
     bool ScheduleInvoke(IEnumerable<IShortcutActionConfiguration> configurations, IInputGestureData gestureData, Action callback);
 
-    void Invoke(IShortcutActionConfiguration actionConfiguration, IInputGestureData gestureData);
-    void Invoke(string actionName, params object[] arguments);
-    void Invoke(string actionName);
-    void Invoke<T0>(string actionName, T0 arg0);
-    void Invoke<T0, T1>(string actionName, T0 arg0, T1 arg1);
-    void Invoke<T0, T1, T2>(string actionName, T0 arg0, T1 arg1, T2 arg2);
-    void Invoke<T0, T1, T2, T3>(string actionName, T0 arg0, T1 arg1, T2 arg2, T3 arg3);
-    void Invoke<T0, T1, T2, T3, T4>(string actionName, T0 arg0, T1 arg1, T2 arg2, T3 arg3, T4 arg4);
+    void Invoke(string actionName, bool invokeDirectly);
+    void Invoke<T0>(string actionName, T0 arg0, bool invokeDirectly);
+    void Invoke<T0, T1>(string actionName, T0 arg0, T1 arg1, bool invokeDirectly);
+    void Invoke<T0, T1, T2>(string actionName, T0 arg0, T1 arg1, T2 arg2, bool invokeDirectly);
+    void Invoke<T0, T1, T2, T3>(string actionName, T0 arg0, T1 arg1, T2 arg2, T3 arg3, bool invokeDirectly);
+    void Invoke<T0, T1, T2, T3, T4>(string actionName, T0 arg0, T1 arg1, T2 arg2, T3 arg3, T4 arg4, bool invokeDirectly);
 
-    ValueTask InvokeAsync(IShortcutActionConfiguration actionConfiguration, IInputGestureData gestureData);
-    ValueTask InvokeAsync(string actionName, params object[] arguments);
-    ValueTask InvokeAsync(string actionName);
-    ValueTask InvokeAsync<T0>(string actionName, T0 arg0);
-    ValueTask InvokeAsync<T0, T1>(string actionName, T0 arg0, T1 arg1);
-    ValueTask InvokeAsync<T0, T1, T2>(string actionName, T0 arg0, T1 arg1, T2 arg2);
-    ValueTask InvokeAsync<T0, T1, T2, T3>(string actionName, T0 arg0, T1 arg1, T2 arg2, T3 arg3);
-    ValueTask InvokeAsync<T0, T1, T2, T3, T4>(string actionName, T0 arg0, T1 arg1, T2 arg2, T3 arg3, T4 arg4);
+    ValueTask InvokeAsync(string actionName, bool invokeDirectly);
+    ValueTask InvokeAsync<T0>(string actionName, T0 arg0, bool invokeDirectly);
+    ValueTask InvokeAsync<T0, T1>(string actionName, T0 arg0, T1 arg1, bool invokeDirectly);
+    ValueTask InvokeAsync<T0, T1, T2>(string actionName, T0 arg0, T1 arg1, T2 arg2, bool invokeDirectly);
+    ValueTask InvokeAsync<T0, T1, T2, T3>(string actionName, T0 arg0, T1 arg1, T2 arg2, T3 arg3, bool invokeDirectly);
+    ValueTask InvokeAsync<T0, T1, T2, T3, T4>(string actionName, T0 arg0, T1 arg1, T2 arg2, T3 arg3, T4 arg4, bool invokeDirectly);
 }
 
 internal class ShortcutActionRunner : IShortcutActionRunner, IDisposable
@@ -33,13 +29,13 @@ internal class ShortcutActionRunner : IShortcutActionRunner, IDisposable
 
     private readonly IShortcutActionResolver _actionResolver;
 
-    private BlockingCollection<ScheduledItem> _queue;
+    private BlockingCollection<(IInvokableItem Item, Action Callback)> _scheduledItems;
     private Thread _thread;
 
     public ShortcutActionRunner(IShortcutActionResolver actionResolver)
     {
         _actionResolver = actionResolver;
-        _queue = [];
+        _scheduledItems = [];
 
         _thread = new Thread(ConsumeItems);
         _thread.Start();
@@ -47,153 +43,83 @@ internal class ShortcutActionRunner : IShortcutActionRunner, IDisposable
 
     private void ConsumeItems()
     {
-        foreach (var item in _queue.GetConsumingEnumerable())
+        foreach (var (item, callback) in _scheduledItems.GetConsumingEnumerable())
         {
-            foreach (var configuration in item.Configurations)
-            {
-                if (_actionResolver.TryGetAction(configuration.Name, out var action))
-                {
-                    Logger.Trace(() => $"Invoking \"{configuration.Name}\" action [Configuration: \"{string.Join(", ", configuration.Settings.Select(s => s.ToString()))}\", Gesture: {item.GestureData}]");
-                    var valueTask = action.Invoke(configuration, item.GestureData);
-                    if (!valueTask.IsCompleted)
-                        valueTask.AsTask().GetAwaiter().GetResult();
-                }
-            }
-
-            item.Callback?.Invoke();
+            item.Invoke(_actionResolver);
+            callback?.Invoke();
         }
     }
 
+    private bool ScheduleInvoke(IInvokableItem item, Action callback) => _scheduledItems.TryAdd((item, callback));
     public bool ScheduleInvoke(IEnumerable<IShortcutActionConfiguration> configurations, IInputGestureData gestureData, Action callback)
-        => _queue.TryAdd(new ScheduledItem(configurations, gestureData, callback));
+        => ScheduleInvoke(new GestureInvokableItem(configurations, gestureData), callback);
 
-    public void Invoke(string actionName, params object[] arguments)
+    public void Invoke(string actionName, bool invokeDirectly)
+        => InvokeOrSchedule(new ManualInvokableItem(actionName), invokeDirectly);
+    public void Invoke<T0>(string actionName, T0 arg0, bool invokeDirectly)
+        => InvokeOrSchedule(new ManualInvokableItem<T0>(actionName, arg0), invokeDirectly);
+    public void Invoke<T0, T1>(string actionName, T0 arg0, T1 arg1, bool invokeDirectly)
+        => InvokeOrSchedule(new ManualInvokableItem<T0, T1>(actionName, arg0, arg1), invokeDirectly);
+    public void Invoke<T0, T1, T2>(string actionName, T0 arg0, T1 arg1, T2 arg2, bool invokeDirectly)
+        => InvokeOrSchedule(new ManualInvokableItem<T0, T1, T2>(actionName, arg0, arg1, arg2), invokeDirectly);
+    public void Invoke<T0, T1, T2, T3>(string actionName, T0 arg0, T1 arg1, T2 arg2, T3 arg3, bool invokeDirectly)
+        => InvokeOrSchedule(new ManualInvokableItem<T0, T1, T2, T3>(actionName, arg0, arg1, arg2, arg3), invokeDirectly);
+    public void Invoke<T0, T1, T2, T3, T4>(string actionName, T0 arg0, T1 arg1, T2 arg2, T3 arg3, T4 arg4, bool invokeDirectly)
+        => InvokeOrSchedule(new ManualInvokableItem<T0, T1, T2, T3, T4>(actionName, arg0, arg1, arg2, arg3, arg4), invokeDirectly);
+
+    public ValueTask InvokeAsync(string actionName, bool invokeDirectly)
+        => InvokeOrScheduleAsync(new ManualInvokableItem(actionName), invokeDirectly);
+    public ValueTask InvokeAsync<T0>(string actionName, T0 arg0, bool invokeDirectly)
+        => InvokeOrScheduleAsync(new ManualInvokableItem<T0>(actionName, arg0), invokeDirectly);
+    public ValueTask InvokeAsync<T0, T1>(string actionName, T0 arg0, T1 arg1, bool invokeDirectly)
+        => InvokeOrScheduleAsync(new ManualInvokableItem<T0, T1>(actionName, arg0, arg1), invokeDirectly);
+    public ValueTask InvokeAsync<T0, T1, T2>(string actionName, T0 arg0, T1 arg1, T2 arg2, bool invokeDirectly)
+        => InvokeOrScheduleAsync(new ManualInvokableItem<T0, T1, T2>(actionName, arg0, arg1, arg2), invokeDirectly);
+    public ValueTask InvokeAsync<T0, T1, T2, T3>(string actionName, T0 arg0, T1 arg1, T2 arg2, T3 arg3, bool invokeDirectly)
+        => InvokeOrScheduleAsync(new ManualInvokableItem<T0, T1, T2, T3>(actionName, arg0, arg1, arg2, arg3), invokeDirectly);
+    public ValueTask InvokeAsync<T0, T1, T2, T3, T4>(string actionName, T0 arg0, T1 arg1, T2 arg2, T3 arg3, T4 arg4, bool invokeDirectly)
+        => InvokeOrScheduleAsync(new ManualInvokableItem<T0, T1, T2, T3, T4>(actionName, arg0, arg1, arg2, arg3, arg4), invokeDirectly);
+
+    private ValueTask InvokeOrScheduleAsync(IInvokableItem item, bool invokeDirectly)
     {
-        var task = InvokeAsync(actionName, arguments);
-        if (!task.IsCompleted)
-            task.AsTask().GetAwaiter().GetResult();
+        if (invokeDirectly)
+        {
+            item.Invoke(_actionResolver);
+            return ValueTask.CompletedTask;
+        }
+        else
+        {
+            var completionSource = new TaskCompletionSource();
+            if (!ScheduleInvoke(item, completionSource.SetResult))
+                return ValueTask.CompletedTask;
+
+            return new ValueTask(completionSource.Task);
+        }
     }
 
-    public void Invoke(IShortcutActionConfiguration actionConfiguration, IInputGestureData gestureData)
+    private void InvokeOrSchedule(IInvokableItem item, bool invokeDirectly)
     {
-        var task = InvokeAsync(actionConfiguration, gestureData);
-        if (!task.IsCompleted)
-            task.AsTask().GetAwaiter().GetResult();
-    }
+        if (invokeDirectly)
+        {
+            item.Invoke(_actionResolver);
+        }
+        else
+        {
+            using var callbackEvent = new ManualResetEventSlim();
+            if (!ScheduleInvoke(item, callbackEvent.Set))
+                return;
 
-    public void Invoke(string actionName)
-    {
-        var task = InvokeAsync(actionName);
-        if (!task.IsCompleted)
-            task.AsTask().GetAwaiter().GetResult();
-    }
-
-    public void Invoke<T0>(string actionName, T0 arg0)
-    {
-        var task = InvokeAsync(actionName, arg0);
-        if (!task.IsCompleted)
-            task.AsTask().GetAwaiter().GetResult();
-    }
-
-    public void Invoke<T0, T1>(string actionName, T0 arg0, T1 arg1)
-    {
-        var task = InvokeAsync(actionName, arg0, arg1);
-        if (!task.IsCompleted)
-            task.AsTask().GetAwaiter().GetResult();
-    }
-
-    public void Invoke<T0, T1, T2>(string actionName, T0 arg0, T1 arg1, T2 arg2)
-    {
-        var task = InvokeAsync(actionName, arg0, arg1, arg2);
-        if (!task.IsCompleted)
-            task.AsTask().GetAwaiter().GetResult();
-    }
-
-    public void Invoke<T0, T1, T2, T3>(string actionName, T0 arg0, T1 arg1, T2 arg2, T3 arg3)
-    {
-        var task = InvokeAsync(actionName, arg0, arg1, arg2, arg3);
-        if (!task.IsCompleted)
-            task.AsTask().GetAwaiter().GetResult();
-    }
-
-    public void Invoke<T0, T1, T2, T3, T4>(string actionName, T0 arg0, T1 arg1, T2 arg2, T3 arg3, T4 arg4)
-    {
-        var task = InvokeAsync(actionName, arg0, arg1, arg2, arg3, arg4);
-        if (!task.IsCompleted)
-            task.AsTask().GetAwaiter().GetResult();
-    }
-
-    public ValueTask InvokeAsync(string actionName, params object[] arguments)
-    {
-        Logger.Trace("Invoking \"{name}\" action [Arguments: \"{arguments}\"]", actionName, arguments);
-        if (_actionResolver.TryGetAction(actionName, out var action))
-            return action.Invoke(arguments);
-        return ValueTask.CompletedTask;
-    }
-
-    public ValueTask InvokeAsync(IShortcutActionConfiguration actionConfiguration, IInputGestureData gestureData)
-    {
-        Logger.Trace(() => $"Invoking \"{actionConfiguration.Name}\" action [Configuration: \"{string.Join(", ", actionConfiguration.Settings.Select(s => s.ToString()))}\", Gesture: {gestureData}]");
-        if (_actionResolver.TryGetAction(actionConfiguration.Name, out var action))
-            return action.Invoke(actionConfiguration, gestureData);
-        return ValueTask.CompletedTask;
-    }
-
-    public ValueTask InvokeAsync(string actionName)
-    {
-        Logger.Trace("Invoking \"{0}\" action", actionName);
-        if (_actionResolver.TryGetAction(actionName, out var action) && action is ShortcutAction concreteAction)
-            return concreteAction.Invoke();
-        return ValueTask.CompletedTask;
-    }
-
-    public ValueTask InvokeAsync<T0>(string actionName, T0 arg0)
-    {
-        Logger.Trace("Invoking \"{0}\" action [Arguments: \"{1}\"]", actionName, arg0);
-        if (_actionResolver.TryGetAction(actionName, out var action) && action is ShortcutAction<T0> concreteAction)
-            return concreteAction.Invoke(arg0);
-        return ValueTask.CompletedTask;
-    }
-
-    public ValueTask InvokeAsync<T0, T1>(string actionName, T0 arg0, T1 arg1)
-    {
-        Logger.Trace("Invoking \"{0}\" action [Arguments: \"{1}, {2}\"]", actionName, arg0, arg1);
-        if (_actionResolver.TryGetAction(actionName, out var action) && action is ShortcutAction<T0, T1> concreteAction)
-            return concreteAction.Invoke(arg0, arg1);
-        return ValueTask.CompletedTask;
-    }
-
-    public ValueTask InvokeAsync<T0, T1, T2>(string actionName, T0 arg0, T1 arg1, T2 arg2)
-    {
-        Logger.Trace("Invoking \"{0}\" action [Arguments: \"{1}, {2}, {3}\"]", actionName, arg0, arg1, arg2);
-        if (_actionResolver.TryGetAction(actionName, out var action) && action is ShortcutAction<T0, T1, T2> concreteAction)
-            return concreteAction.Invoke(arg0, arg1, arg2);
-        return ValueTask.CompletedTask;
-    }
-
-    public ValueTask InvokeAsync<T0, T1, T2, T3>(string actionName, T0 arg0, T1 arg1, T2 arg2, T3 arg3)
-    {
-        Logger.Trace("Invoking \"{0}\" action [Arguments: \"{1}, {2}, {3}, {4}\"]", actionName, arg0, arg1, arg2, arg3);
-        if (_actionResolver.TryGetAction(actionName, out var action) && action is ShortcutAction<T0, T1, T2, T3> concreteAction)
-            return concreteAction.Invoke(arg0, arg1, arg2, arg3);
-        return ValueTask.CompletedTask;
-    }
-
-    public ValueTask InvokeAsync<T0, T1, T2, T3, T4>(string actionName, T0 arg0, T1 arg1, T2 arg2, T3 arg3, T4 arg4)
-    {
-        Logger.Trace("Invoking \"{0}\" action [Arguments: \"{1}, {2}, {3}, {4}, {5}\"]", actionName, arg0, arg1, arg2, arg3, arg4);
-        if (_actionResolver.TryGetAction(actionName, out var action) && action is ShortcutAction<T0, T1, T2, T3, T4> concreteAction)
-            return concreteAction.Invoke(arg0, arg1, arg2, arg3, arg4);
-        return ValueTask.CompletedTask;
+            callbackEvent.Wait();
+        }
     }
 
     protected virtual void Dispose(bool disposing)
     {
-        _queue?.CompleteAdding();
+        _scheduledItems?.CompleteAdding();
         _thread?.Join();
-        _queue?.Dispose();
+        _scheduledItems?.Dispose();
 
-        _queue = null;
+        _scheduledItems = null;
         _thread = null;
     }
 
@@ -203,5 +129,106 @@ internal class ShortcutActionRunner : IShortcutActionRunner, IDisposable
         GC.SuppressFinalize(this);
     }
 
-    private record struct ScheduledItem(IEnumerable<IShortcutActionConfiguration> Configurations, IInputGestureData GestureData, Action Callback);
+    private interface IInvokableItem
+    {
+        void Invoke(IShortcutActionResolver actionResolver);
+    }
+
+    private abstract record AbstractInvokableItem : IInvokableItem
+    {
+        public abstract void Invoke(IShortcutActionResolver actionResolver);
+
+        protected void Wait(in ValueTask task)
+        {
+            if (!task.IsCompleted)
+                task.AsTask().GetAwaiter().GetResult();
+        }
+    }
+
+    private sealed record GestureInvokableItem(IEnumerable<IShortcutActionConfiguration> Configurations, IInputGestureData GestureData) : AbstractInvokableItem
+    {
+        public override void Invoke(IShortcutActionResolver actionResolver)
+        {
+            foreach (var configuration in Configurations)
+            {
+                if (actionResolver.TryGetAction(configuration.Name, out var action))
+                {
+                    Logger.Trace(() => $"Invoking \"{configuration.Name}\" action [Configuration: \"{string.Join(", ", configuration.Settings.Select(s => s.ToString()))}\", Gesture: {GestureData}]");
+                    Wait(action.Invoke(configuration, GestureData));
+                }
+            }
+        }
+    }
+
+    private sealed record ManualInvokableItem(string ActionName) : AbstractInvokableItem
+    {
+        public override void Invoke(IShortcutActionResolver actionResolver)
+        {
+            if (actionResolver.TryGetAction(ActionName, out var action) && action is ShortcutAction concreteAction)
+            {
+                Logger.Trace("Invoking \"{name}\" action", ActionName);
+                Wait(concreteAction.Invoke());
+            }
+        }
+    }
+
+    private sealed record ManualInvokableItem<T0>(string ActionName, T0 Arg0) : AbstractInvokableItem
+    {
+        public override void Invoke(IShortcutActionResolver actionResolver)
+        {
+            if (actionResolver.TryGetAction(ActionName, out var action) && action is ShortcutAction<T0> concreteAction)
+            {
+                Logger.Trace("Invoking \"{0}\" action [Arguments: \"{1}\"]", ActionName, Arg0);
+                Wait(concreteAction.Invoke(Arg0));
+            }
+        }
+    }
+
+    private sealed record ManualInvokableItem<T0, T1>(string ActionName, T0 Arg0, T1 Arg1) : AbstractInvokableItem
+    {
+        public override void Invoke(IShortcutActionResolver actionResolver)
+        {
+            if (actionResolver.TryGetAction(ActionName, out var action) && action is ShortcutAction<T0, T1> concreteAction)
+            {
+                Logger.Trace("Invoking \"{0}\" action [Arguments: \"{1}, {2}\"]", ActionName, Arg0, Arg1);
+                Wait(concreteAction.Invoke(Arg0, Arg1));
+            }
+        }
+    }
+
+    private sealed record ManualInvokableItem<T0, T1, T2>(string ActionName, T0 Arg0, T1 Arg1, T2 Arg2) : AbstractInvokableItem
+    {
+        public override void Invoke(IShortcutActionResolver actionResolver)
+        {
+            if (actionResolver.TryGetAction(ActionName, out var action) && action is ShortcutAction<T0, T1, T2> concreteAction)
+            {
+                Logger.Trace("Invoking \"{0}\" action [Arguments: \"{1}, {2}, {3}\"]", ActionName, Arg0, Arg1, Arg2);
+                Wait(concreteAction.Invoke(Arg0, Arg1, Arg2));
+            }
+        }
+    }
+
+    private sealed record ManualInvokableItem<T0, T1, T2, T3>(string ActionName, T0 Arg0, T1 Arg1, T2 Arg2, T3 Arg3) : AbstractInvokableItem
+    {
+        public override void Invoke(IShortcutActionResolver actionResolver)
+        {
+            if (actionResolver.TryGetAction(ActionName, out var action) && action is ShortcutAction<T0, T1, T2, T3> concreteAction)
+            {
+                Logger.Trace("Invoking \"{0}\" action [Arguments: \"{1}, {2}, {3}, {4}\"]", ActionName, Arg0, Arg1, Arg2, Arg3);
+                Wait(concreteAction.Invoke(Arg0, Arg1, Arg2, Arg3));
+            }
+        }
+    }
+
+    private sealed record ManualInvokableItem<T0, T1, T2, T3, T4>(string ActionName, T0 Arg0, T1 Arg1, T2 Arg2, T3 Arg3, T4 Arg4) : AbstractInvokableItem
+    {
+        public override void Invoke(IShortcutActionResolver actionResolver)
+        {
+            if (actionResolver.TryGetAction(ActionName, out var action) && action is ShortcutAction<T0, T1, T2, T3, T4> concreteAction)
+            {
+                Logger.Trace("Invoking \"{0}\" action [Arguments: \"{1}, {2}, {3}, {4}, {5}\"]", ActionName, Arg0, Arg1, Arg2, Arg3, Arg4);
+                Wait(concreteAction.Invoke(Arg0, Arg1, Arg2, Arg3, Arg4));
+            }
+        }
+    }
 }
