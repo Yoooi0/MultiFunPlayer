@@ -1,4 +1,4 @@
-using MultiFunPlayer.Common;
+﻿using MultiFunPlayer.Common;
 using MultiFunPlayer.UI.Dialogs.ViewModels;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -143,7 +143,9 @@ internal sealed class DeviceSettingsViewModel : Screen, IHandle<SettingsMessage>
             if (message.Settings.TryGetValue<List<DeviceSettings>>(nameof(Devices), out var devices))
                 Devices = new ObservableConcurrentCollection<DeviceSettings>(devices);
             if (message.Settings.TryGetValue<string>(nameof(SelectedDevice), out var selectedDevice))
-                SelectedDevice = Devices.FirstOrDefault(d => string.Equals(d.Name, selectedDevice, StringComparison.OrdinalIgnoreCase)) ?? Devices[^1];
+                SelectedDevice = Devices.FirstOrDefault(d => string.Equals(d.Name, selectedDevice, StringComparison.OrdinalIgnoreCase));
+
+            SelectedDevice ??= Devices.LastOrDefault();
         }
     }
 }
