@@ -1,4 +1,4 @@
-﻿using MultiFunPlayer.Common;
+using MultiFunPlayer.Common;
 using Stylet;
 using System.Diagnostics;
 using System.IO;
@@ -479,14 +479,10 @@ internal sealed class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDispo
                         var step = context.Value - context.LastValue;
                         if (!double.IsFinite(step))
                             return false;
-                        if (Math.Abs(step) < 0.000001)
-                            return false;
 
                         var speed = step / deltaTime;
-                        var maxSpeed = 1 / settings.MaximumSecondsPerStroke;
-                        if (Math.Abs(speed / maxSpeed) < 1)
-                            return false;
-                        if (!double.IsFinite(maxSpeed))
+                        var maxSpeed = settings.SpeedLimitUnitsPerSecond;
+                        if (Math.Abs(speed) < maxSpeed)
                             return false;
 
                         context.Value = MathUtils.Clamp01(context.LastValue + maxSpeed * deltaTime * Math.Sign(speed));
@@ -1725,16 +1721,31 @@ internal sealed class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDispo
             s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All), axis => UpdateSettings(axis, s => s.SpeedLimitEnabled = !s.SpeedLimitEnabled));
         #endregion
 
-        #region Axis::SpeedLimitSecondsPerStroke
-        s.RegisterAction<DeviceAxis, double>("Axis::SpeedLimitSecondsPerStroke::Offset",
-            s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All),
-            s => s.WithLabel("Value offset").WithStringFormat("{}{0:F3}s/stroke"),
-            (axis, offset) => UpdateSettings(axis, s => s.MaximumSecondsPerStroke = Math.Clamp(s.MaximumSecondsPerStroke + offset, 0.001, 10)));
+        #region Axis::SpeedLimitSecondsPerUnit
+        static double SecondsPerUnitToUnitsPerSecond(double secondsPerUnit)
+            => secondsPerUnit == 0 ? double.PositiveInfinity : double.IsInfinity(secondsPerUnit) ? 0 : 1 / secondsPerUnit;
 
-        s.RegisterAction<DeviceAxis, double>("Axis::SpeedLimitSecondsPerStroke::Set",
+        s.RegisterAction<DeviceAxis, double>("Axis::SpeedLimitSecondsPerUnit::Offset",
             s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All),
-            s => s.WithLabel("Value").WithStringFormat("{}{0:F3}s/stroke"),
-            (axis, value) => UpdateSettings(axis, s => s.MaximumSecondsPerStroke = Math.Clamp(value, 0.001, 10)));
+            s => s.WithLabel("Value offset").WithStringFormat("{}{0:F3} s/unit"),
+            (axis, offset) => UpdateSettings(axis, s => s.SpeedLimitUnitsPerSecond = Math.Max(0, s.SpeedLimitUnitsPerSecond + SecondsPerUnitToUnitsPerSecond(offset))));
+
+        s.RegisterAction<DeviceAxis, double>("Axis::SpeedLimitSecondsPerUnit::Set",
+            s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All),
+            s => s.WithLabel("Value").WithStringFormat("{}{0:F3} s/unit"),
+            (axis, value) => UpdateSettings(axis, s => s.SpeedLimitUnitsPerSecond = Math.Max(0, SecondsPerUnitToUnitsPerSecond(value))));
+        #endregion
+
+        #region Axis::SpeedLimitUnitsPerSecond
+        s.RegisterAction<DeviceAxis, double>("Axis::SpeedLimitUnitsPerSecond::Offset",
+            s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All),
+            s => s.WithLabel("Value offset").WithStringFormat("{}{0:F2} units/s"),
+            (axis, offset) => UpdateSettings(axis, s => s.SpeedLimitUnitsPerSecond = Math.Max(0, s.SpeedLimitUnitsPerSecond + offset)));
+
+        s.RegisterAction<DeviceAxis, double>("Axis::SpeedLimitUnitsPerSecond::Set",
+            s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All),
+            s => s.WithLabel("Value").WithStringFormat("{}{0:F2} units/s"),
+            (axis, value) => UpdateSettings(axis, s => s.SpeedLimitUnitsPerSecond = Math.Max(0, value)));
         #endregion
 
         #region Axis::AutoHomeEnabled
@@ -2157,7 +2168,7 @@ internal sealed class AxisSettings : PropertyChangedBase
     [JsonProperty] public DeviceAxis UpdateMotionProviderWithAxis { get; set; } = null;
     [JsonProperty] public string SelectedMotionProvider { get; set; } = null;
     [JsonProperty] public bool SpeedLimitEnabled { get; set; } = false;
-    [JsonProperty] public double MaximumSecondsPerStroke { get; set; } = 0.1;
+    [JsonProperty] public double SpeedLimitUnitsPerSecond { get; set; } = 10;
 
     public AxisSettings(DeviceAxis axis)
     {

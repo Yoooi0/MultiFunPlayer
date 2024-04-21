@@ -22,6 +22,7 @@
         <converters:MotionProviderSelectorConverter x:Key="MotionProviderSelectorConverter"/>
         <converters:MotionProviderOverridesScriptConverter x:Key="MotionProviderOverridesScriptConverter"/>
         <converters:InvertValueConverter x:Key="InvertValueConverter"/>
+        <material:MathConverter x:Key="PowMathConverter" Operation="Pow"/>
     </UserControl.Resources>
     <StackPanel Margin="0 0 0 20">
         <material:Card Margin="0 0 0 10" material:ShadowAssist.ShadowDepth="Depth1">
@@ -1548,26 +1549,56 @@
                                                 </material:PopupBox.ToggleContent>
                                                 <Grid Margin="10">
                                                     <StackPanel Width="200">
-                                                        <StackPanel Margin="0 0 0 10" Orientation="Horizontal">
-                                                            <TextBlock Width="50"
+                                                        <DockPanel Margin="0 0 0 10" LastChildFill="True">
+                                                            <TextBlock DockPanel.Dock="Left"
+                                                                       Width="50"
                                                                        Margin="0 0 10 0"
                                                                        VerticalAlignment="Center"
                                                                        Text="Enabled:"/>
 
-                                                            <CheckBox Style="{StaticResource MaterialDesignSwitchToggleButton}" IsChecked="{Binding Value.Settings.SpeedLimitEnabled}"/>
-                                                        </StackPanel>
+                                                            <CheckBox DockPanel.Dock="Left"
+                                                                      Style="{StaticResource MaterialDesignSwitchToggleButton}"
+                                                                      IsChecked="{Binding Value.Settings.SpeedLimitEnabled}"/>
 
-                                                        <DockPanel LastChildFill="True">
+                                                            <material:ColorZone DockPanel.Dock="Right"
+                                                                                Width="14"
+                                                                                Height="14"
+                                                                                HorizontalAlignment="Right"
+                                                                                VerticalAlignment="Center"
+                                                                                CornerRadius="7"
+                                                                                Mode="PrimaryLight">
+                                                                <material:ColorZone.ToolTip>
+                                                                    <TextBlock>
+                                                                        1 unit is equal to axis value change<LineBreak/>
+                                                                        from 0% to 100% or vice versa</TextBlock>
+                                                                </material:ColorZone.ToolTip>
+                                                                <material:PackIcon Width="10"
+                                                                                   Height="10"
+                                                                                   HorizontalAlignment="Center"
+                                                                                   VerticalAlignment="Center"
+                                                                                   Kind="Help"/>
+                                                            </material:ColorZone>
+                                                        </DockPanel>
+
+                                                        <DockPanel LastChildFill="False">
                                                             <TextBlock DockPanel.Dock="Left"
                                                                        Margin="0 0 10 0"
                                                                        VerticalAlignment="Center"
                                                                        Text="Limit: "/>
 
-                                                            <metro:NumericUpDown Interval="0.001"
-                                                                                 Maximum="10"
-                                                                                 Minimum="0.001"
-                                                                                 StringFormat="{}{0:F3}s/stroke"
-                                                                                 Value="{Binding Value.Settings.MaximumSecondsPerStroke}"/>
+                                                            <metro:NumericUpDown DockPanel.Dock="Right"
+                                                                                 Width="150"
+                                                                                 Interval="0.1"
+                                                                                 Minimum="0"
+                                                                                 StringFormat="{}{0:F2} units/s"
+                                                                                 Value="{Binding Value.Settings.SpeedLimitUnitsPerSecond}"/>
+                                                        </DockPanel>
+
+                                                        <DockPanel Margin="0 5 0 0" LastChildFill="True">
+                                                            <TextBlock DockPanel.Dock="Left"
+                                                                       VerticalAlignment="Center"
+                                                                       Text="{Binding Value.Settings.SpeedLimitUnitsPerSecond, StringFormat={}{0:F3} s/unit, Converter={StaticResource PowMathConverter}, ConverterParameter=-1}"
+                                                                       TextAlignment="Right"/>
                                                         </DockPanel>
                                                     </StackPanel>
                                                 </Grid>
