@@ -24,7 +24,7 @@ internal sealed class SplittingStringBuffer(char separator)
 
         int endIndex;
         var currentIndex = 0;
-        while ((endIndex = Array.IndexOf(_buffer, separator, currentIndex)) >= 0)
+        while ((endIndex = Array.IndexOf(_buffer, separator, currentIndex, _index - currentIndex)) >= 0)
         {
             yield return new string(_buffer.AsSpan(new Range(currentIndex, endIndex)));
             currentIndex = endIndex + 1;
