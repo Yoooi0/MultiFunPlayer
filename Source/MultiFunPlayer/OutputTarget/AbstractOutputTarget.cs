@@ -10,7 +10,6 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Reflection;
 using System.Threading.Channels;
-using System.Windows;
 
 namespace MultiFunPlayer.OutputTarget;
 

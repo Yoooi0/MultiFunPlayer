@@ -1,6 +1,5 @@
 ﻿using MultiFunPlayer.Settings;
 using Newtonsoft.Json.Linq;
-using NLog;
 
 namespace MultiFunPlayer.Tests;
 

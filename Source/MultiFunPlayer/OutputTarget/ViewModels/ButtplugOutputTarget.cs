@@ -10,7 +10,6 @@ using PropertyChanged;
 using Stylet;
 using System.ComponentModel;
 using System.Net;
-using System.Net.WebSockets;
 using System.Windows;
 
 namespace MultiFunPlayer.OutputTarget.ViewModels;
