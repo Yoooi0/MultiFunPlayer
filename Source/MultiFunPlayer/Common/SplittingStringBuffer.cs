@@ -33,9 +33,8 @@ internal sealed class SplittingStringBuffer(char separator)
         if (currentIndex == 0)
             yield break;
 
-        var remainingRange = new Range(currentIndex, _index);
-        _buffer.AsSpan(remainingRange).CopyTo(_buffer);
-        _buffer.AsSpan(remainingRange).Clear();
+        _buffer.AsSpan(new Range(currentIndex, _index)).CopyTo(_buffer);
+        _buffer.AsSpan(new Range(_index - currentIndex, _index)).Clear();
         _index -= currentIndex;
     }
 }
