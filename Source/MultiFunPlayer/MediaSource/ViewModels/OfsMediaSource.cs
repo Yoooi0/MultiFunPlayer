@@ -1,4 +1,4 @@
-﻿using MultiFunPlayer.Common;
+using MultiFunPlayer.Common;
 using MultiFunPlayer.Script;
 using MultiFunPlayer.Shortcut;
 using MultiFunPlayer.UI;
@@ -30,7 +30,7 @@ internal sealed class OfsMediaSource(IShortcutManager shortcutManager, IEventAgg
     protected override ValueTask<bool> OnConnectingAsync(ConnectionType connectionType)
     {
         if (connectionType != ConnectionType.AutoConnect)
-            Logger.Info("Connecting to {0} at \"{1}\" [Type: {2}]", Name, Uri?.ToString(), connectionType);
+            Logger.Info("Connecting to {0} at \"{1}\" [Type: {2}]", Name, Uri, connectionType);
 
         if (Uri == null)
             throw new MediaSourceException("Uri cannot be null");
@@ -52,7 +52,7 @@ internal sealed class OfsMediaSource(IShortcutManager shortcutManager, IEventAgg
         }
         catch (Exception e) when (connectionType != ConnectionType.AutoConnect)
         {
-            Logger.Error(e, "Error when connecting to {0}", Name);
+            Logger.Error(e, "Error when connecting to {0} at \"{1}\"", Name, Uri);
             _ = DialogHelper.ShowErrorAsync(e, $"Error when connecting to {Name}", "RootDialog");
             return;
         }

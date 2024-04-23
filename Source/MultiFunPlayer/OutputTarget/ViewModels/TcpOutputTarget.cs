@@ -38,7 +38,7 @@ internal sealed class TcpOutputTarget(int instanceIndex, IEventAggregator eventA
     protected override ValueTask<bool> OnConnectingAsync(ConnectionType connectionType)
     {
         if (connectionType != ConnectionType.AutoConnect)
-            Logger.Info("Connecting to {0} at \"{1}\" [Type: {2}]", Identifier, $"tcp://{Endpoint?.ToUriString()}", connectionType);
+            Logger.Info("Connecting to {0} at \"{1}\" [Type: {2}]", Identifier, Endpoint?.ToUriString(), connectionType);
 
         if (Endpoint == null)
             throw new OutputTargetException("Endpoint cannot be null");
@@ -57,7 +57,7 @@ internal sealed class TcpOutputTarget(int instanceIndex, IEventAggregator eventA
         }
         catch (Exception e) when (connectionType != ConnectionType.AutoConnect)
         {
-            Logger.Error(e, "Error when connecting to {0}", Name);
+            Logger.Error(e, "Error when connecting to {0} at \"{1}\"", Name, Endpoint?.ToUriString());
             _ = DialogHelper.ShowErrorAsync(e, $"Error when connecting to {Name}", "RootDialog");
             return;
         }

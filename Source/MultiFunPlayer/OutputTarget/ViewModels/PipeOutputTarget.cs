@@ -1,4 +1,4 @@
-﻿using MultiFunPlayer.Common;
+using MultiFunPlayer.Common;
 using MultiFunPlayer.Shortcut;
 using MultiFunPlayer.UI;
 using Newtonsoft.Json.Linq;
@@ -62,7 +62,7 @@ internal sealed class PipeOutputTarget(int instanceIndex, IEventAggregator event
 
             if (connectionType != ConnectionType.AutoConnect)
             {
-                Logger.Error(e, "Error when connecting to {0}", Name);
+                Logger.Error(e, "Error when connecting to {0} at \"{1}\"", Name, PipeName);
                 _ = DialogHelper.ShowErrorAsync(e, $"Error when connecting to {Name}", "RootDialog");
             }
 

@@ -80,7 +80,7 @@ internal sealed class JellyfinMediaSource(IShortcutManager shortcutManager, IEve
         }
         catch (Exception e) when (connectionType != ConnectionType.AutoConnect)
         {
-            Logger.Error(e, "Error when connecting to {0}", Name);
+            Logger.Error(e, "Error when connecting to {0} at \"{1}\"", Name, ServerBaseUri);
             _ = DialogHelper.ShowErrorAsync(e, $"Error when connecting to {Name}", "RootDialog");
             return;
         }
