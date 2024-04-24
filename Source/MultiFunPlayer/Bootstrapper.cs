@@ -263,9 +263,10 @@ internal sealed class Bootstrapper : Bootstrapper<RootViewModel>
     private bool ConfigureLoging(JObject settings)
     {
         var dirty = false;
-        if (!settings.ContainsKey("LogLevel"))
+        if (!settings.TryGetValue<LogLevel>("LogLevel", out var logLevel))
         {
-            settings["LogLevel"] = JToken.FromObject(LogLevel.Info);
+            logLevel = LogLevel.Info;
+            settings["LogLevel"] = JToken.FromObject(logLevel);
             dirty = true;
         }
 
@@ -287,26 +288,23 @@ internal sealed class Bootstrapper : Bootstrapper<RootViewModel>
                 config.AddRule(LogLevel.Trace, maxLevel, blackhole, filter, true);
         }
 
-        if (settings.TryGetValue<LogLevel>("LogLevel", out var minLevel))
+        config.AddRule(logLevel, LogLevel.Fatal, new FileTarget("file")
         {
-            config.AddRule(minLevel, LogLevel.Fatal, new FileTarget("file")
-            {
-                FileName = @"${basedir}\Logs\latest.log",
-                ArchiveFileName = @"${basedir}\Logs\log.{#}.log",
-                ArchiveNumbering = ArchiveNumberingMode.DateAndSequence,
-                ArchiveAboveSize = 5 * 1024 * 1024,
-                ArchiveDateFormat = "yyyyMMdd",
-                ArchiveOldFileOnStartup = true,
-                MaxArchiveFiles = 10,
-                OpenFileCacheTimeout = 30,
-                AutoFlush = false,
-                OpenFileFlushTimeout = 5
-            });
-        }
+            FileName = @"${basedir}\Logs\latest.log",
+            ArchiveFileName = @"${basedir}\Logs\log.{#}.log",
+            ArchiveNumbering = ArchiveNumberingMode.DateAndSequence,
+            ArchiveAboveSize = 5 * 1024 * 1024,
+            ArchiveDateFormat = "yyyyMMdd",
+            ArchiveOldFileOnStartup = true,
+            MaxArchiveFiles = 10,
+            OpenFileCacheTimeout = 30,
+            AutoFlush = false,
+            OpenFileFlushTimeout = 5
+        });
 
         if (Debugger.IsAttached)
         {
-            var debugMinLevel = minLevel != null ? LogLevel.FromOrdinal(Math.Min(minLevel.Ordinal, 1)) : LogLevel.Debug;
+            var debugMinLevel = LogLevel.FromOrdinal(Math.Min(logLevel.Ordinal, 1));
             config.AddRule(debugMinLevel, LogLevel.Fatal, new DebugSystemTarget("debug"));
         }
 

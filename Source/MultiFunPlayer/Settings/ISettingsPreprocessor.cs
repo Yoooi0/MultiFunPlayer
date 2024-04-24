@@ -32,7 +32,6 @@ internal sealed class SettingsMigrationPreprocessor(IEnumerable<ISettingsMigrati
 
         foreach (var migration in pendingMigrations)
         {
-            Logger.Info("Migrating settings to version {0}", migration.TargetVersion);
             migration.Migrate(settings);
             dirty = true;
         }
@@ -60,7 +59,7 @@ internal sealed class SettingsDevicePreprocessor : JsonEditor, ISettingsPreproce
         }
         else
         {
-            Logger.Trace("Updating default devices");
+            Logger.Debug("Updating default devices");
             foreach (var loadedDefaultDevice in SelectObjects(devices, "$.[?(@.IsDefault == true)]"))
             {
                 var loadedDeviceName = loadedDefaultDevice["Name"].ToString();
