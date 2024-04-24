@@ -23,7 +23,7 @@ internal interface IShortcutActionRunner
     ValueTask InvokeAsync<T0, T1, T2, T3, T4>(string actionName, T0 arg0, T1 arg1, T2 arg2, T3 arg3, T4 arg4, bool invokeDirectly);
 }
 
-internal class ShortcutActionRunner : IShortcutActionRunner, IDisposable
+internal sealed class ShortcutActionRunner : IShortcutActionRunner, IDisposable
 {
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
@@ -113,7 +113,7 @@ internal class ShortcutActionRunner : IShortcutActionRunner, IDisposable
         }
     }
 
-    protected virtual void Dispose(bool disposing)
+    private void Dispose(bool disposing)
     {
         _scheduledItems?.CompleteAdding();
         _thread?.Join();

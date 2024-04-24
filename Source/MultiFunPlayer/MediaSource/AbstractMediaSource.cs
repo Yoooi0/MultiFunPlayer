@@ -193,7 +193,7 @@ internal abstract class AbstractMediaSource : Screen, IMediaSource, IHandle<IMed
     }
 }
 
-internal class MediaSourceException : Exception
+internal sealed class MediaSourceException : Exception
 {
     public MediaSourceException() { }
     public MediaSourceException(string message) : base(message) { }

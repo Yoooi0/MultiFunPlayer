@@ -8,7 +8,7 @@ internal interface IShortcutFactory
     IShortcut CreateShortcut(Type type, IInputGestureDescriptor gesture);
 }
 
-internal class ShortcutFactory(IShortcutActionRunner actionScheduler) : IShortcutFactory
+internal sealed class ShortcutFactory(IShortcutActionRunner actionScheduler) : IShortcutFactory
 {
     public T CreateShortcut<T>(IInputGestureDescriptor gesture) where T : IShortcut
         => (T)Activator.CreateInstance(typeof(T), [actionScheduler, gesture]);

@@ -646,7 +646,7 @@ internal abstract class AsyncAbstractOutputTarget(int instanceIndex, IEventAggre
     }
 }
 
-internal class OutputTargetException : Exception
+internal sealed class OutputTargetException : Exception
 {
     public OutputTargetException() { }
     public OutputTargetException(string message) : base(message) { }
