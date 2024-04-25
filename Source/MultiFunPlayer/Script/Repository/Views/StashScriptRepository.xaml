@@ -4,6 +4,7 @@
              xmlns:common="clr-namespace:MultiFunPlayer.Common"
              xmlns:controls="clr-namespace:MultiFunPlayer.UI.Controls"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:material="http://materialdesigninxaml.net/winfx/xaml/themes"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:repository="clr-namespace:MultiFunPlayer.Script.Repository.ViewModels"
              xmlns:ui="clr-namespace:MultiFunPlayer.UI"
@@ -22,6 +23,20 @@
                              AvailableSchemes="http https"
                              ShowPathAndQuery="False"
                              Uri="{Binding ServerBaseUri}"/>
+        </DockPanel>
+
+
+        <DockPanel LastChildFill="False">
+            <TextBlock DockPanel.Dock="Left"
+                       Margin="0 0 10 0"
+                       VerticalAlignment="Center"
+                       Text="Api key:"/>
+
+            <TextBox MinWidth="150"
+                     MaxWidth="408"
+                     material:HintAssist.Hint="(optional)"
+                     material:TextFieldAssist.HasClearButton="True"
+                     Text="{Binding ApiKey}"/>
         </DockPanel>
 
         <DockPanel LastChildFill="False">

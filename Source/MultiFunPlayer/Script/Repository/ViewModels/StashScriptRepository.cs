@@ -17,6 +17,7 @@ internal sealed class StashScriptRepository : AbstractScriptRepository
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
     [JsonProperty] public Uri ServerBaseUri { get; set; } = new Uri("http://127.0.0.1:9999");
+    [JsonProperty] public string ApiKey { get; set; } = null;
     [JsonProperty] public StashVideoMatchType VideoMatchType { get; set; } = StashVideoMatchType.UseFirstMatchOnly;
     [JsonProperty] public DeviceAxis ScriptMatchAxis { get; set; } = DeviceAxis.All.FirstOrDefault();
 
@@ -33,6 +34,9 @@ internal sealed class StashScriptRepository : AbstractScriptRepository
         Logger.Debug("Found Stash scene id [Id: {0}]", sceneId);
 
         using var client = NetUtils.CreateHttpClient();
+        if (!string.IsNullOrWhiteSpace(ApiKey))
+            client.DefaultRequestHeaders.TryAddWithoutValidation("ApiKey", ApiKey);
+
         var result = new Dictionary<DeviceAxis, IScriptResource>();
 
         var query = $"{{\"query\":\"{{ findScene(id: {sceneId}) {{ id, title, files {{ path }}, paths {{ funscript }} }} }}\",\"variables\":null}}";
