@@ -1,4 +1,4 @@
-using MultiFunPlayer.Common;
+﻿using MultiFunPlayer.Common;
 using Newtonsoft.Json.Linq;
 using NLog;
 using NLog.Config;
@@ -91,7 +91,7 @@ internal sealed class GeneralSettingsViewModel : Screen, IHandle<SettingsMessage
 
         Logger.Info("Changing log level to \"{0}\"", SelectedLogLevel.Name);
 
-        GetRuleWithTarget("file")?.SetLoggingLevels(SelectedLogLevel, LogLevel.Fatal);
+        GetRuleWithTarget("application")?.SetLoggingLevels(SelectedLogLevel, LogLevel.Fatal);
         if (Debugger.IsAttached)
             GetRuleWithTarget("debug")?.SetLoggingLevels(LogLevel.FromOrdinal(Math.Min(SelectedLogLevel.Ordinal, 1)), LogLevel.Fatal);
 

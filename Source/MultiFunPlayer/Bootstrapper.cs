@@ -288,10 +288,10 @@ internal sealed class Bootstrapper : Bootstrapper<RootViewModel>
                 config.AddRule(LogLevel.Trace, maxLevel, blackhole, filter, true);
         }
 
-        config.AddRule(logLevel, LogLevel.Fatal, new FileTarget("file")
+        config.AddRule(logLevel, LogLevel.Fatal, new FileTarget("application")
         {
-            FileName = @"${basedir}\Logs\latest.log",
-            ArchiveFileName = @"${basedir}\Logs\log.{#}.log",
+            FileName = @"${basedir}\Logs\application.log",
+            ArchiveFileName = @"${basedir}\Logs\application.{#}.log",
             ArchiveNumbering = ArchiveNumberingMode.DateAndSequence,
             ArchiveAboveSize = 5 * 1024 * 1024,
             ArchiveDateFormat = "yyyyMMdd",
@@ -301,6 +301,19 @@ internal sealed class Bootstrapper : Bootstrapper<RootViewModel>
             AutoFlush = false,
             OpenFileFlushTimeout = 5
         });
+
+        config.AddRule(LogLevel.Trace, LogLevel.Fatal, new FileTarget("migration")
+        {
+            FileName = @"${basedir}\Logs\migration.log",
+            ArchiveFileName = @"${basedir}\Logs\migration.{#}.log",
+            ArchiveNumbering = ArchiveNumberingMode.DateAndSequence,
+            ArchiveDateFormat = "yyyyMMdd",
+            ArchiveOldFileOnStartup = true,
+            MaxArchiveFiles = 10,
+            OpenFileCacheTimeout = 30,
+            AutoFlush = false,
+            OpenFileFlushTimeout = 5,
+        }, "MultiFunPlayer.Settings.Migrations.*");
 
         if (Debugger.IsAttached)
         {
