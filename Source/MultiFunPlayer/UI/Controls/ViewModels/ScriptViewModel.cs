@@ -533,14 +533,27 @@ internal sealed class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDispo
         builder.WithModifiers(MediaPathModifiers);
 
         var resource = builder.Build();
+        if (resource == null)
+        {
+            Logger.Info("Received {0} [Path: \"1\"]", message?.Path);
+        }
+        else if (!resource.IsModified)
+        {
+            Logger.Info("Received {0} [Source: \"{1}\", Name: \"{2}\", Path: \"{3}\", Type: \"{4}\"]",
+                nameof(MediaPathChangedMessage), resource?.Source, resource?.Name, resource?.OriginalPath, resource?.PathType);
+        }
+        else
+        {
+            Logger.Info("Received {0} [Source: \"{1}\", Name: \"{2}\", OriginalPath: \"{3}\", ModifiedPath: \"{4}\", Type: \"{5}\"]",
+                nameof(MediaPathChangedMessage), resource?.Source, resource?.Name, resource?.OriginalPath, resource?.ModifiedPath, resource?.PathType);
+        }
+
         if (MediaResource == null && resource == null)
             return;
         if (MediaResource != null && resource != null)
             if (string.Equals(MediaResource.Name, resource.Name, StringComparison.OrdinalIgnoreCase)
              && string.Equals(MediaResource.Source, resource.Source, StringComparison.OrdinalIgnoreCase))
                 return;
-
-        Logger.Info("Received {0} [Source: \"{1}\" Name: \"{2}\"]", nameof(MediaPathChangedMessage), resource?.Source, resource?.Name);
 
         MediaResource = resource;
         if (SyncSettings.SyncOnMediaResourceChanged)
@@ -682,8 +695,17 @@ internal sealed class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDispo
         }
     }
 
-    public void Handle(SyncRequestMessage message) => ResetSync(true, message.Axes);
-    public void Handle(ReloadScriptsRequestMessage message) => ReloadAxes(message.Axes);
+    public void Handle(SyncRequestMessage message)
+    {
+        Logger.Debug("Received {0}", nameof(SyncRequestMessage));
+        ResetSync(true, message.Axes);
+    }
+
+    public void Handle(ReloadScriptsRequestMessage message)
+    {
+        Logger.Debug("Received {0}", nameof(ReloadScriptsRequestMessage));
+        ReloadAxes(message.Axes);
+    }
 
     public void Handle(ChangeScriptMessage message)
     {
