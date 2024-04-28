@@ -53,6 +53,7 @@ internal sealed class TcpOutputTarget(int instanceIndex, IEventAggregator eventA
         try
         {
             client.Connect(Endpoint);
+            client.NoDelay = true;
             Status = ConnectionStatus.Connected;
         }
         catch (Exception e) when (connectionType != ConnectionType.AutoConnect)
