@@ -220,7 +220,7 @@ public static class StreamExtensions
     public static async Task<byte[]> ReadBytesAsync(this NetworkStream stream, int count, CancellationToken token)
     {
         using var memoryOwner = MemoryPool<byte>.Shared.Rent(1024);
-        await using var memoryStream = new MemoryStream();
+        await using var memoryStream = new MemoryStream(count);
 
         var readMemory = memoryOwner.Memory;
         while (memoryStream.Position < count)
@@ -238,7 +238,7 @@ public static class StreamExtensions
 
     public static byte[] ReadBytes(this NetworkStream stream, int count)
     {
-        using var memoryStream = new MemoryStream();
+        using var memoryStream = new MemoryStream(count);
         var readBuffer = ArrayPool<byte>.Shared.Rent(1024);
 
         while (memoryStream.Position < count)
@@ -251,6 +251,7 @@ public static class StreamExtensions
             memoryStream.Write(readBuffer.AsSpan(0, read));
         }
 
+        ArrayPool<byte>.Shared.Return(readBuffer);
         return memoryStream.ToArray();
     }
 }
