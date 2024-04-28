@@ -97,10 +97,7 @@ internal sealed class HereSphereMediaSource(IShortcutManager shortcutManager, IE
             var playerState = default(PlayerState);
             while (!token.IsCancellationRequested && client.Connected)
             {
-                var lengthBuffer = await stream.ReadBytesAsync(4, token);
-                if (lengthBuffer.Length < 4)
-                    continue;
-
+                var lengthBuffer = await stream.ReadExactlyAsync(4, token);
                 var length = BitConverter.ToInt32(lengthBuffer, 0);
                 if (length <= 0)
                 {
@@ -118,7 +115,7 @@ internal sealed class HereSphereMediaSource(IShortcutManager shortcutManager, IE
 
                 playerState ??= new PlayerState();
 
-                var dataBuffer = await stream.ReadBytesAsync(length, token);
+                var dataBuffer = await stream.ReadExactlyAsync(length, token);
                 try
                 {
                     var json = Encoding.UTF8.GetString(dataBuffer);

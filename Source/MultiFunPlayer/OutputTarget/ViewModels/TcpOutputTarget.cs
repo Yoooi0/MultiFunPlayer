@@ -83,7 +83,7 @@ internal sealed class TcpOutputTarget(int instanceIndex, IEventAggregator eventA
 
                     if (client.Connected && client.Available > 0)
                     {
-                        var message = Encoding.UTF8.GetString(stream.ReadBytes(client.Available));
+                        var message = Encoding.UTF8.GetString(stream.ReadExactly(client.Available));
                         Logger.Debug("Received \"{0}\" from \"{1}\"", message, $"tcp://{Endpoint.ToUriString()}");
                     }
 

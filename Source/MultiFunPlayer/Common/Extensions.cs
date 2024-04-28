@@ -217,42 +217,18 @@ public static class CollectionExtensions
 
 public static class StreamExtensions
 {
-    public static async Task<byte[]> ReadBytesAsync(this NetworkStream stream, int count, CancellationToken token)
+    public static async Task<byte[]> ReadExactlyAsync(this Stream stream, int count, CancellationToken token)
     {
-        using var memoryOwner = MemoryPool<byte>.Shared.Rent(1024);
-        await using var memoryStream = new MemoryStream(count);
-
-        var readMemory = memoryOwner.Memory;
-        while (memoryStream.Position < count)
-        {
-            var remaining = Math.Min(count - (int)memoryStream.Position, readMemory.Length);
-            var read = await stream.ReadAsync(readMemory[..remaining], token);
-            if (read == 0)
-                break;
-
-            await memoryStream.WriteAsync(readMemory[..read], token);
-        }
-
-        return memoryStream.ToArray();
+        var buffer = new byte[count];
+        await stream.ReadExactlyAsync(buffer, token);
+        return buffer;
     }
 
-    public static byte[] ReadBytes(this NetworkStream stream, int count)
+    public static byte[] ReadExactly(this Stream stream, int count)
     {
-        using var memoryStream = new MemoryStream(count);
-        var readBuffer = ArrayPool<byte>.Shared.Rent(1024);
-
-        while (memoryStream.Position < count)
-        {
-            var remaining = Math.Min(count - (int)memoryStream.Position, readBuffer.Length);
-            var read = stream.Read(readBuffer.AsSpan(0, remaining));
-            if (read == 0)
-                break;
-
-            memoryStream.Write(readBuffer.AsSpan(0, read));
-        }
-
-        ArrayPool<byte>.Shared.Return(readBuffer);
-        return memoryStream.ToArray();
+        var buffer = new byte[count];
+        stream.ReadExactly(buffer);
+        return buffer;
     }
 }
 
