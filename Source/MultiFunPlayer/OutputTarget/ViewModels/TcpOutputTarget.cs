@@ -115,7 +115,7 @@ internal sealed class TcpOutputTarget(int instanceIndex, IEventAggregator eventA
                     if (snapshot.KeyframeFrom == null || snapshot.KeyframeTo == null)
                         return;
 
-                    var value = MathUtils.Lerp(settings.Minimum / 100, settings.Maximum / 100, snapshot.KeyframeTo.Value);
+                    var value = MathUtils.Lerp(settings.Minimum, settings.Maximum, snapshot.KeyframeTo.Value);
                     var duration = snapshot.Duration;
 
                     var command = DeviceAxis.ToString(axis, value, duration * 1000);

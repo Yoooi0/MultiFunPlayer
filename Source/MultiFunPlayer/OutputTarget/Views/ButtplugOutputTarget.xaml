@@ -22,6 +22,7 @@
             <converters:ButtplugDeviceConnectedConverter x:Key="ButtplugDeviceConnectedConverter"/>
             <converters:MultiObjectEqualToBooleanConverter x:Key="MultiObjectEqualToBooleanConverter"/>
             <converters:ItemIndexInContainerConverter x:Key="ItemIndexInContainerConverter"/>
+            <converters:AutoToolTipValueToPercentConverter x:Key="AutoToolTipValueToPercentConverter"/>
         </ResourceDictionary>
     </UserControl.Resources>
 
@@ -189,30 +190,31 @@
                                 <metro:RangeSlider Style="{StaticResource MaterialDesignCompactRangeSlider}"
                                                    Width="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType={x:Type Canvas}}}"
                                                    AutoToolTipPlacement="TopLeft"
+                                                   AutoToolTipPrecision="2"
                                                    IsEnabled="{Binding Value.Enabled}"
                                                    LowerValue="{Binding Value.Minimum, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                                   Maximum="100"
-                                                   MinRange="1"
+                                                   Maximum="1.00"
+                                                   MinRange="0.01"
                                                    MinRangeWidth="10"
-                                                   Minimum="0"
+                                                   Minimum="0.00"
                                                    UpperValue="{Binding Value.Maximum, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                                    UseLayoutRounding="False">
                                     <metro:RangeSlider.AutoToolTipLowerValueTemplate>
                                         <DataTemplate>
-                                            <TextBlock HorizontalAlignment="Right" Text="{Binding StringFormat='{}{0:D}%'}"/>
+                                            <TextBlock HorizontalAlignment="Right" Text="{Binding Converter={StaticResource AutoToolTipValueToPercentConverter}}"/>
                                         </DataTemplate>
                                     </metro:RangeSlider.AutoToolTipLowerValueTemplate>
                                     <metro:RangeSlider.AutoToolTipUpperValueTemplate>
                                         <DataTemplate>
-                                            <TextBlock HorizontalAlignment="Right" Text="{Binding StringFormat='{}{0:D}%'}"/>
+                                            <TextBlock HorizontalAlignment="Right" Text="{Binding Converter={StaticResource AutoToolTipValueToPercentConverter}}"/>
                                         </DataTemplate>
                                     </metro:RangeSlider.AutoToolTipUpperValueTemplate>
                                     <metro:RangeSlider.AutoToolTipRangeValuesTemplate>
                                         <DataTemplate DataType="{x:Type metro:RangeSliderAutoTooltipValues}">
                                             <StackPanel Orientation="Horizontal">
-                                                <TextBlock Text="{Binding LowerValue, StringFormat='{}{0:D}%'}"/>
+                                                <TextBlock Text="{Binding LowerValue, Converter={StaticResource AutoToolTipValueToPercentConverter}}"/>
                                                 <TextBlock Text=" - "/>
-                                                <TextBlock Text="{Binding UpperValue, StringFormat='{}{0:D}%'}"/>
+                                                <TextBlock Text="{Binding UpperValue, Converter={StaticResource AutoToolTipValueToPercentConverter}}"/>
                                             </StackPanel>
                                         </DataTemplate>
                                     </metro:RangeSlider.AutoToolTipRangeValuesTemplate>
