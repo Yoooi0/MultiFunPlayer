@@ -54,7 +54,15 @@ internal partial class ShortcutSetting<T> : IShortcutSetting<T>
 
     public Type Type => typeof(T).IsValueType || Value == null ? typeof(T) : Value.GetType();
 
-    public override string ToString() => CustomToString?.Invoke(Value) ?? Value?.ToString() ?? "null";
+    public override string ToString()
+    {
+        if (CustomToString != null)
+            return CustomToString.Invoke(Value);
+        else if (Value != null && StringFormat != null)
+            return string.Format(StringFormat, Value);
+        else
+            return Value?.ToString() ?? "null";
+    }
 }
 
 internal sealed class OneOfShortcutSetting<T> : ShortcutSetting<T>, IOneOfShortcutSetting<T>
