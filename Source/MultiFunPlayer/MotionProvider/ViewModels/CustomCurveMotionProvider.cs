@@ -158,7 +158,7 @@ internal sealed class CustomCurveMotionProvider : AbstractMotionProvider
         #region CustomCurveMotionProvider::Duration
         s.RegisterAction<DeviceAxis, double>($"MotionProvider::{name}::Duration::Set",
             s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All),
-            s => s.WithLabel("Duration").WithStringFormat("{0}s"),
+            s => s.WithLabel("Duration").AsNumericUpDown(1, 60, 1, "{0}s"),
             (axis, duration) => UpdateProperty(axis, p => p.Duration = duration));
         #endregion
 

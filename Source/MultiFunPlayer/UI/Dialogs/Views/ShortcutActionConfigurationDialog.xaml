@@ -43,17 +43,22 @@
                 </DataTemplate>
                 <DataTemplate x:Key="Int32Template" DataType="{x:Type shortcut:IShortcutSetting}">
                     <DockPanel>
-                        <metro:NumericUpDown StringFormat="{Binding StringFormat}" Value="{Binding Value}"/>
-                    </DockPanel>
-                </DataTemplate>
-                <DataTemplate x:Key="SingleTemplate" DataType="{x:Type shortcut:IShortcutSetting}">
-                    <DockPanel>
-                        <metro:NumericUpDown StringFormat="{Binding StringFormat}" Value="{Binding Value}"/>
+                        <metro:NumericUpDown Interval="{Binding TemplateContext.Interval, Mode=OneWay}"
+                                             Maximum="{Binding TemplateContext.Maximum, Mode=OneWay}"
+                                             Minimum="{Binding TemplateContext.Minimum, Mode=OneWay}"
+                                             NumericInputMode="{Binding TemplateContext.NumericInput, Mode=OneWay}"
+                                             StringFormat="{Binding TemplateContext.StringFormat, Mode=OneWay}"
+                                             Value="{Binding Value}"/>
                     </DockPanel>
                 </DataTemplate>
                 <DataTemplate x:Key="DoubleTemplate" DataType="{x:Type shortcut:IShortcutSetting}">
                     <DockPanel>
-                        <metro:NumericUpDown StringFormat="{Binding StringFormat}" Value="{Binding Value}"/>
+                        <metro:NumericUpDown Interval="{Binding TemplateContext.Interval, Mode=OneWay}"
+                                             Maximum="{Binding TemplateContext.Maximum, Mode=OneWay}"
+                                             Minimum="{Binding TemplateContext.Minimum, Mode=OneWay}"
+                                             NumericInputMode="{Binding TemplateContext.NumericInput, Mode=OneWay}"
+                                             StringFormat="{Binding TemplateContext.StringFormat, Mode=OneWay}"
+                                             Value="{Binding Value}"/>
                     </DockPanel>
                 </DataTemplate>
                 <DataTemplate x:Key="StringTemplate" DataType="{x:Type shortcut:IShortcutSetting}">

@@ -1,4 +1,6 @@
-﻿namespace MultiFunPlayer.Shortcut;
+﻿using MahApps.Metro.Controls;
+
+namespace MultiFunPlayer.Shortcut;
 
 public interface IShortcutSettingBuilder
 {
@@ -12,9 +14,9 @@ public interface IShortcutSettingBuilder<T> : IShortcutSettingBuilder
     IShortcutSettingBuilder<T> WithLabel(string label);
     IShortcutSettingBuilder<T> WithDescription(string description);
     IShortcutSettingBuilder<T> WithItemsSource<TItemsSource>(TItemsSource itemsSource, bool bindsDirectlyToItemsSource = false) where TItemsSource : IEnumerable<T>;
-    IShortcutSettingBuilder<T> WithStringFormat(string stringFormat);
     IShortcutSettingBuilder<T> WithTemplateName(string templateName);
     IShortcutSettingBuilder<T> WithCustomToString(Func<T, string> toString);
+    IShortcutSettingBuilder<T> AsNumericUpDown(double minimum = double.MinValue, double maximum = double.MaxValue, double interval = 1d, string stringFormat = null);
 }
 
 internal sealed class ShortcutSettingBuilder<T> : IShortcutSettingBuilder<T>
@@ -23,20 +25,26 @@ internal sealed class ShortcutSettingBuilder<T> : IShortcutSettingBuilder<T>
     private string _description;
     private string _label;
     private IEnumerable<T> _itemsSource;
-    private string _stringFormat;
     private string _templateName;
+    private IShortcutSettingTemplateContext _templateContext;
     private Func<T, string> _toString;
 
     IShortcutSetting IShortcutSettingBuilder.Build() => Build();
     public IShortcutSetting<T> Build()
     {
+        if (_templateContext == null)
+        {
+            if (typeof(T) == typeof(int) || typeof(T) == typeof(double))
+                AsNumericUpDown();
+        }
+
         if (_itemsSource == null)
             return new ShortcutSetting<T>()
             {
                 Description = _description,
                 Label = _label,
-                StringFormat = _stringFormat,
                 TemplateName = _templateName,
+                TemplateContext = _templateContext,
                 Value = _defaultValue,
                 CustomToString = _toString
             };
@@ -46,8 +54,8 @@ internal sealed class ShortcutSettingBuilder<T> : IShortcutSettingBuilder<T>
             Description = _description,
             Label = _label,
             ItemsSource = _itemsSource,
-            StringFormat = _stringFormat,
             TemplateName = _templateName,
+            TemplateContext = _templateContext,
             Value = _defaultValue,
             CustomToString = _toString
         };
@@ -62,7 +70,19 @@ internal sealed class ShortcutSettingBuilder<T> : IShortcutSettingBuilder<T>
 
     public IShortcutSettingBuilder<T> WithDescription(string description) { _description = description; return this; }
     public IShortcutSettingBuilder<T> WithLabel(string label) { _label = label; return this; }
-    public IShortcutSettingBuilder<T> WithStringFormat(string stringFormat) { _stringFormat = stringFormat; return this; }
     public IShortcutSettingBuilder<T> WithTemplateName(string templateName) { _templateName = templateName; return this; }
     public IShortcutSettingBuilder<T> WithCustomToString(Func<T, string> toString) { _toString = toString; return this; }
+
+    public IShortcutSettingBuilder<T> AsNumericUpDown(double minimum = double.MinValue, double maximum = double.MaxValue, double interval = 1d, string stringFormat = null)
+    {
+        var numericInput = NumericInput.All;
+        if (typeof(T) == typeof(int))
+        {
+            stringFormat ??= "{0:F0}";
+            numericInput = NumericInput.Numbers;
+        }
+
+        _templateContext = new NumericUpDownShortcutSettingTemplateContext(minimum, maximum, interval, stringFormat, numericInput);
+        return this;
+    }
 }

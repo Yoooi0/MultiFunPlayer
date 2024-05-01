@@ -1,4 +1,4 @@
-﻿using MultiFunPlayer.Common;
+using MultiFunPlayer.Common;
 using MultiFunPlayer.Script;
 using MultiFunPlayer.Script.Repository;
 using MultiFunPlayer.Shortcut;
@@ -433,7 +433,9 @@ internal sealed class InternalMediaSource(ILocalScriptRepository localRepository
         s.RegisterAction($"{Name}::Playlist::Clear", () => WhenConnected(ClearPlaylist));
         s.RegisterAction($"{Name}::Playlist::Prev", () => WhenConnected(PlayPrevious));
         s.RegisterAction($"{Name}::Playlist::Next", () => WhenConnected(PlayNext));
-        s.RegisterAction<int>($"{Name}::Playlist::PlayByIndex", s => s.WithLabel("Index"), index => WhenConnected(() => WriteMessage(new PlayScriptAtIndexMessage(index))));
+        s.RegisterAction<int>($"{Name}::Playlist::PlayByIndex",
+            s => s.WithLabel("Index").AsNumericUpDown(minimum: 0),
+            index => WhenConnected(() => WriteMessage(new PlayScriptAtIndexMessage(index))));
         s.RegisterAction<string>($"{Name}::Playlist::PlayByName", s => s.WithLabel("File name/path"), name => WhenConnected(() =>
         {
             var playlist = ScriptPlaylist;
