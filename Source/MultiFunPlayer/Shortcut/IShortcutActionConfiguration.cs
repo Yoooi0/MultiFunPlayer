@@ -1,4 +1,4 @@
-﻿using MultiFunPlayer.Input;
+using MultiFunPlayer.Input;
 using MultiFunPlayer.Settings;
 using NLog;
 using PropertyChanged;
@@ -71,7 +71,11 @@ internal sealed class ShortcutActionConfiguration : PropertyChangedBase, IShortc
             if (setting.Value is INotifyPropertyChanged oldPropertyChanged)
                 oldPropertyChanged.PropertyChanged -= OnSettingPropertyChanged;
 
-            setting.Value = value;
+            var coercedValue = setting.TemplateContext?.CoerceValue(value) ?? value;
+            if (!Equals(coercedValue, value))
+                Logger.Warn("Action \"{0}\" setting value coerced from \"{1}\" to \"{2}\"", Name, value, coercedValue);
+
+            setting.Value = coercedValue;
             if (setting.Value is INotifyPropertyChanged newPropertyChanged)
                 newPropertyChanged.PropertyChanged += OnSettingPropertyChanged;
         }

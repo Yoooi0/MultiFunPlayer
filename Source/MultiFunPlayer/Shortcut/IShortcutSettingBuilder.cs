@@ -1,4 +1,4 @@
-﻿using MahApps.Metro.Controls;
+using MahApps.Metro.Controls;
 
 namespace MultiFunPlayer.Shortcut;
 
@@ -83,6 +83,7 @@ internal sealed class ShortcutSettingBuilder<T> : IShortcutSettingBuilder<T>
         }
 
         _templateContext = new NumericUpDownShortcutSettingTemplateContext(minimum, maximum, interval, stringFormat, numericInput);
+        _defaultValue = (T)Convert.ChangeType(_templateContext.CoerceValue(_defaultValue), typeof(T));
         return this;
     }
 }
