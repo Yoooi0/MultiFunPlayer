@@ -1201,9 +1201,9 @@
                                                                             <Slider DockPanel.Dock="Top"
                                                                                     material:SliderAssist.OnlyShowFocusVisualWhileDragging="True"
                                                                                     IsSnapToTickEnabled="True"
-                                                                                    Maximum="100"
+                                                                                    Maximum="1"
                                                                                     Minimum="0"
-                                                                                    TickFrequency="1"
+                                                                                    TickFrequency="0.01"
                                                                                     Value="{Binding Value.Settings.MotionProviderBlend}"/>
 
                                                                             <DockPanel DockPanel.Dock="Top" LastChildFill="False">
@@ -1214,7 +1214,7 @@
                                                                                                TextAlignment="Center"/>
 
                                                                                     <TextBlock VerticalAlignment="Center"
-                                                                                               Text="{Binding Value.Settings.MotionProviderBlend, Converter={StaticResource InvertValueConverter}, ConverterParameter=100, StringFormat={}{0:0}%}"
+                                                                                               Text="{Binding Value.Settings.MotionProviderBlend, Converter={StaticResource InvertValueConverter}, ConverterParameter=1, StringFormat={}{0:P0}}"
                                                                                                TextAlignment="Center"/>
                                                                                 </StackPanel>
 
@@ -1227,7 +1227,7 @@
                                                                                                TextAlignment="Center"/>
 
                                                                                     <TextBlock VerticalAlignment="Center"
-                                                                                               Text="{Binding Value.Settings.MotionProviderBlend, StringFormat={}{0:0}%}"
+                                                                                               Text="{Binding Value.Settings.MotionProviderBlend, StringFormat={}{0:P0}}"
                                                                                                TextAlignment="Center"/>
                                                                                 </StackPanel>
                                                                             </DockPanel>
@@ -1764,16 +1764,16 @@
                                             <TextBlock DockPanel.Dock="Right"
                                                        Width="50"
                                                        VerticalAlignment="Center"
-                                                       Text="{Binding Value.Settings.ScriptScale, StringFormat={}{0:0}%}"
+                                                       Text="{Binding Value.Settings.ScriptScale, StringFormat={}{0:P0}}"
                                                        TextAlignment="Right"/>
 
                                             <Slider DockPanel.Dock="Left"
-                                                    behaviours:SliderAssist.DefaultValueOnDoubleClick="100"
+                                                    behaviours:SliderAssist.DefaultValueOnDoubleClick="1"
                                                     material:SliderAssist.OnlyShowFocusVisualWhileDragging="True"
                                                     IsSnapToTickEnabled="True"
-                                                    Maximum="400"
-                                                    Minimum="1"
-                                                    TickFrequency="1"
+                                                    Maximum="4"
+                                                    Minimum="0.01"
+                                                    TickFrequency="0.01"
                                                     ValueChanged="{s:Action OnScriptScaleSliderValueChanged}"
                                                     Value="{Binding Value.Settings.ScriptScale}"/>
                                         </DockPanel>

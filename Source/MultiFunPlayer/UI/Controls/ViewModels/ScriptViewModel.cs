@@ -233,7 +233,7 @@ internal sealed class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDispo
 
                     context.InsideGap = keyframes.IsGap(context.Index);
                     var scriptValue = MathUtils.Clamp01(keyframes.Interpolate(context.Index, axisPosition, settings.InterpolationType));
-                    context.ScriptValue = MathUtils.Clamp01(axis.DefaultValue + (scriptValue - axis.DefaultValue) * settings.ScriptScale / 100);
+                    context.ScriptValue = MathUtils.Clamp01(axis.DefaultValue + (scriptValue - axis.DefaultValue) * settings.ScriptScale);
                     return context.IsScriptDirty;
                 }
 
@@ -288,7 +288,7 @@ internal sealed class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDispo
                         MotionProviderManager.Update(axis, settings.SelectedMotionProvider, deltaTime);
 
                     var providerValue = MotionProviderManager.GetValue(axis);
-                    var blendT = context.InsideScript && !isGapFill ? MathUtils.Clamp01(settings.MotionProviderBlend / 100) : 1;
+                    var blendT = context.InsideScript && !isGapFill ? MathUtils.Clamp01(settings.MotionProviderBlend) : 1;
                     var blendFrom = double.IsFinite(context.ScriptValue) ? context.ScriptValue : axis.DefaultValue;
                     providerValue = MathUtils.Clamp01(MathUtils.Lerp(blendFrom, providerValue, blendT));
 
@@ -1387,11 +1387,11 @@ internal sealed class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDispo
 
         #region Media::Speed
         s.RegisterAction<double>("Media::Speed::Offset",
-            s => s.WithLabel("Value offset").AsNumericUpDown(stringFormat: "{0}%"),
-            offset => _eventAggregator.Publish(new MediaChangeSpeedMessage(CoerceMediaSpeed(PlaybackSpeed + offset / 100))));
+            s => s.WithLabel("Value offset").AsNumericUpDown(interval: 0.01, stringFormat: "{0:P0}"),
+            offset => _eventAggregator.Publish(new MediaChangeSpeedMessage(CoerceMediaSpeed(PlaybackSpeed + offset))));
         s.RegisterAction<double>("Media::Speed::Set",
-            s => s.WithLabel("Value").AsNumericUpDown(minimum: 1, stringFormat: "{0}%"),
-            value => _eventAggregator.Publish(new MediaChangeSpeedMessage(CoerceMediaSpeed(value / 100))));
+            s => s.WithLabel("Value").AsNumericUpDown(minimum: 0.01, interval: 0.01, stringFormat: "{0:P0}"),
+            value => _eventAggregator.Publish(new MediaChangeSpeedMessage(CoerceMediaSpeed(value))));
 
         static double CoerceMediaSpeed(double speed)
         {
@@ -1415,11 +1415,10 @@ internal sealed class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDispo
             s => s.WithLabel("Value").AsNumericUpDown(minimum: 0, stringFormat: "{0.00}s"), SeekMediaToTime);
 
         s.RegisterAction<double>("Media::Position::Percent::Offset",
-            s => s.WithLabel("Value offset").AsNumericUpDown(stringFormat: "{0}%"),
-            offset => SeekMediaToPercent(MediaPosition / MediaDuration + offset / 100));
+            s => s.WithLabel("Value offset").AsNumericUpDown(-1, 1, 0.01, stringFormat: "{0:P0}"),
+            offset => SeekMediaToPercent(MediaPosition / MediaDuration + offset));
         s.RegisterAction<double>("Media::Position::Percent::Set",
-            s => s.WithLabel("Value").AsNumericUpDown(0, 100, 1, "{0}%"),
-            value => SeekMediaToPercent(value / 100));
+            s => s.WithLabel("Value").AsNumericUpDown(0, 1, 0.01, "{0:P0}"), SeekMediaToPercent);
 
         s.RegisterAction<double>("Media::Position::SkipToScriptStart",
             s => s.WithLabel("Offset").AsNumericUpDown(stringFormat: "{0.00}s"), offset => SeekMediaToScriptStart(offset, onlyWhenBefore: false));
@@ -1844,13 +1843,13 @@ internal sealed class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDispo
         #region Axis::ScriptScale
         s.RegisterAction<DeviceAxis, double>("Axis::ScriptScale::Offset",
             s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All),
-            s => s.WithLabel("Value offset").AsNumericUpDown(-400, 400, 1, "{0}%"),
-            (axis, offset) => UpdateSettings(axis, s => s.ScriptScale = Math.Clamp(s.ScriptScale + offset, 1, 400)));
+            s => s.WithLabel("Value offset").AsNumericUpDown(-4, 4, 0.01, "{0:P0}"),
+            (axis, offset) => UpdateSettings(axis, s => s.ScriptScale = Math.Clamp(s.ScriptScale + offset, 0.01, 4)));
 
         s.RegisterAction<DeviceAxis, double>("Axis::ScriptScale::Set",
             s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All),
-            s => s.WithLabel("Value").AsNumericUpDown(1, 400, 1, "{0}%"),
-            (axis, value) => UpdateSettings(axis, s => s.ScriptScale = Math.Clamp(value, 1, 400)));
+            s => s.WithLabel("Value").AsNumericUpDown(0.01, 4, 0.01, "{0:P0}"),
+            (axis, value) => UpdateSettings(axis, s => s.ScriptScale = Math.Clamp(value, 0.01, 4)));
         #endregion
 
         #region Axis::MotionProvider
@@ -1866,17 +1865,17 @@ internal sealed class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDispo
         #region Axis::MotionProviderBlend
         s.RegisterAction<DeviceAxis, double>("Axis::MotionProviderBlend::Offset",
             s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All),
-            s => s.WithLabel("Value offset").AsNumericUpDown(-100, 100, 1, "{0}%"),
-            (axis, offset) => UpdateSettings(axis, s => s.MotionProviderBlend = Math.Clamp(s.MotionProviderBlend + offset, 0, 100)));
+            s => s.WithLabel("Value offset").AsNumericUpDown(-1, 1, 0.01, "{0:P0}"),
+            (axis, offset) => UpdateSettings(axis, s => s.MotionProviderBlend = MathUtils.Clamp01(s.MotionProviderBlend + offset)));
 
         s.RegisterAction<DeviceAxis, double>("Axis::MotionProviderBlend::Set",
             s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All),
-            s => s.WithLabel("Value").AsNumericUpDown(0, 100, 1, "{0}%"),
-            (axis, value) => UpdateSettings(axis, s => s.MotionProviderBlend = Math.Clamp(value, 0, 100)));
+            s => s.WithLabel("Value").AsNumericUpDown(0, 1, 0.01, "{0:P0}"),
+            (axis, value) => UpdateSettings(axis, s => s.MotionProviderBlend = MathUtils.Clamp01(value)));
 
         s.RegisterAction<IAxisInputGestureData, DeviceAxis>("Axis::MotionProviderBlend::Drive",
             s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All),
-            (data, axis) => UpdateSettings(axis, s => s.MotionProviderBlend = Math.Clamp(data.ApplyTo(s.MotionProviderBlend, 100), 0, 100)));
+            (data, axis) => UpdateSettings(axis, s => s.MotionProviderBlend = MathUtils.Clamp01(data.ApplyTo(s.MotionProviderBlend))));
         #endregion
 
         #region Axis::MotionProviderFillGaps
@@ -2180,7 +2179,7 @@ internal sealed class AxisSettings : PropertyChangedBase
     [JsonProperty] public bool AutoHomeInsideScript { get; set; } = false;
     [JsonProperty] public bool InvertValue { get; set; } = false;
     [JsonProperty] public double Offset { get; set; } = 0;
-    [JsonProperty] public double ScriptScale { get; set; } = 100;
+    [JsonProperty] public double ScriptScale { get; set; } = 1;
     [JsonProperty] public bool BypassScript { get; set; } = false;
     [JsonProperty] public bool BypassMotionProvider { get; set; } = false;
     [JsonProperty] public bool BypassTransition { get; set; } = false;

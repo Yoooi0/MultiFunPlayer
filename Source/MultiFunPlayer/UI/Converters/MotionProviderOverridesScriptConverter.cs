@@ -14,7 +14,7 @@ internal sealed class MotionProviderOverridesScriptConverter : IMultiValueConver
         || values[2] is not double motionProviderBlend)
             return null;
 
-        return script != null && selectedMotionProvider != null && motionProviderBlend > 50;
+        return script != null && selectedMotionProvider != null && motionProviderBlend > 0.5;
     }
 
     public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture)
