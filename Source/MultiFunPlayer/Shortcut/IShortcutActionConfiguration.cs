@@ -1,4 +1,4 @@
-using MultiFunPlayer.Input;
+﻿using MultiFunPlayer.Input;
 using MultiFunPlayer.Settings;
 using NLog;
 using PropertyChanged;
@@ -64,7 +64,7 @@ internal sealed class ShortcutActionConfiguration : PropertyChangedBase, IShortc
 
         if (!typeMatches)
         {
-            Logger.Warn($"Action \"{Name}\" setting type mismatch! [\"{settingType}\" != \"{valueType}\"]");
+            Logger.Warn("Action \"{0}\" setting type mismatch! [\"{1}\" != \"{2}\"]", Name, settingType, valueType);
         }
         else
         {

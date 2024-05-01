@@ -1,4 +1,4 @@
-using MahApps.Metro.Controls;
+﻿using MahApps.Metro.Controls;
 
 namespace MultiFunPlayer.Shortcut;
 
@@ -26,7 +26,9 @@ internal sealed class ShortcutSettingBuilder<T> : IShortcutSettingBuilder<T>
     private string _label;
     private IEnumerable<T> _itemsSource;
     private string _templateName;
+    #pragma warning disable CA1859 
     private IShortcutSettingTemplateContext _templateContext;
+    #pragma warning restore CA1859
     private Func<T, string> _toString;
 
     IShortcutSetting IShortcutSettingBuilder.Build() => Build();
