@@ -10,7 +10,7 @@ internal interface ISettingsPreprocessor
     bool Preprocess(JObject settings);
 }
 
-internal sealed class SettingsMigrationPreprocessor(IEnumerable<ISettingsMigration> migrations) : JsonEditor, ISettingsPreprocessor
+internal sealed class MigrationSettingsPreprocessor(IEnumerable<ISettingsMigration> migrations) : JsonEditor, ISettingsPreprocessor
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
@@ -40,7 +40,7 @@ internal sealed class SettingsMigrationPreprocessor(IEnumerable<ISettingsMigrati
     }
 }
 
-internal sealed class SettingsDevicePreprocessor : JsonEditor, ISettingsPreprocessor
+internal sealed class DeviceSettingsPreprocessor : JsonEditor, ISettingsPreprocessor
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 

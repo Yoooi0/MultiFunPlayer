@@ -37,6 +37,7 @@ namespace MultiFunPlayer;
 internal sealed class Bootstrapper : Bootstrapper<RootViewModel>
 {
     private const string SettingsPath = $"{nameof(MultiFunPlayer)}.config.json";
+    private Logger Logger { get; } = LogManager.GetLogger(nameof(MultiFunPlayer));
 
     static Bootstrapper()
     {
@@ -60,8 +61,8 @@ internal sealed class Bootstrapper : Bootstrapper<RootViewModel>
 
         builder.Bind<IMediaSource>().ToAllImplementations().InSingletonScope();
         builder.Bind<ISettingsMigration>().ToAllImplementations().InSingletonScope();
-        builder.Bind<SettingsMigrationPreprocessor>().ToSelf().InSingletonScope();
-        builder.Bind<SettingsDevicePreprocessor>().ToSelf().InSingletonScope();
+        builder.Bind<MigrationSettingsPreprocessor>().ToSelf().InSingletonScope();
+        builder.Bind<DeviceSettingsPreprocessor>().ToSelf().InSingletonScope();
 
         foreach (var type in ReflectionUtils.FindImplementations<IInputProcessorSettings>())
             builder.Bind(type).And<IInputProcessorSettings>().To(type).InSingletonScope();
@@ -102,32 +103,31 @@ internal sealed class Bootstrapper : Bootstrapper<RootViewModel>
         var settings = SettingsHelper.ReadOrEmpty(SettingsPath);
         var dirty = ConfigureLoging(settings);
 
-        var logger = LogManager.GetLogger(nameof(MultiFunPlayer));
         var shortcutManager = Container.Get<IShortcutManager>();
         shortcutManager.RegisterAction<LogLevel, string>("Debug::Log",
             s => s.WithLabel("Log level").WithDefaultValue(LogLevel.Info).WithItemsSource(LogLevel.AllLoggingLevels),
             s => s.WithLabel("Message"),
-            logger.Log);
+            Logger.Log);
 
         AppDomain.CurrentDomain.UnhandledException += (s, e) =>
         {
-            logger.Fatal(e.ExceptionObject as Exception);
+            Logger.Fatal(e.ExceptionObject as Exception);
             LogManager.Flush();
             if (e.IsTerminating)
                 LogManager.Shutdown();
         };
 
-        dirty |= Container.Get<SettingsMigrationPreprocessor>().Preprocess(settings);
-        dirty |= Container.Get<SettingsDevicePreprocessor>().Preprocess(settings);
+        dirty |= Container.Get<MigrationSettingsPreprocessor>().Preprocess(settings);
+        dirty |= Container.Get<DeviceSettingsPreprocessor>().Preprocess(settings);
 
         if (dirty)
             SettingsHelper.Write(settings, SettingsPath);
 
-        logger.Info("Environment [OSVersion: {0}, CLRVersion: {1}]", Environment.OSVersion, Environment.Version);
-        logger.Info("Assembly [Version: {0}+{1}]", GitVersionInformation.SemVer, GitVersionInformation.FullBuildMetaData);
-        logger.Info("Config [Version: {0}]", settings.TryGetValue<int>("ConfigVersion", out var version) ? version : -1);
-        logger.Info("Timer [IsHighResolution: {0}, Frequency: {1}]", Stopwatch.IsHighResolution, Stopwatch.Frequency);
-        logger.Info("Set working directory to \"{0}\"", workingDirectory);
+        Logger.Info("Environment [OSVersion: {0}, CLRVersion: {1}]", Environment.OSVersion, Environment.Version);
+        Logger.Info("Assembly [Version: {0}+{1}]", GitVersionInformation.SemVer, GitVersionInformation.FullBuildMetaData);
+        Logger.Info("Config [Version: {0}]", settings.TryGetValue<int>("ConfigVersion", out var version) ? version : -1);
+        Logger.Info("Timer [IsHighResolution: {0}, Frequency: {1}]", Stopwatch.IsHighResolution, Stopwatch.Frequency);
+        Logger.Info("Set working directory to \"{0}\"", workingDirectory);
     }
 
     protected override void OnStart()
