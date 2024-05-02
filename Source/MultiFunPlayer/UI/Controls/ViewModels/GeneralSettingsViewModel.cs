@@ -83,17 +83,17 @@ internal sealed class GeneralSettingsViewModel : Screen, IHandle<SettingsMessage
 
     public void OnSelectedLogLevelChanged()
     {
-        static LoggingRule GetRuleWithTarget(string targetName)
-            => LogManager.Configuration.LoggingRules.FirstOrDefault(r => r.Targets.Any(t => string.Equals(t.Name, targetName, StringComparison.OrdinalIgnoreCase)));
-
         if (SelectedLogLevel == null)
             return;
 
         Logger.Info("Changing log level to \"{0}\"", SelectedLogLevel.Name);
 
-        GetRuleWithTarget("application")?.SetLoggingLevels(SelectedLogLevel, LogLevel.Fatal);
+        LogManager.Configuration.FindRuleByName("application")?.SetLoggingLevels(SelectedLogLevel, LogLevel.Fatal);
         if (Debugger.IsAttached)
-            GetRuleWithTarget("debug")?.SetLoggingLevels(LogLevel.FromOrdinal(Math.Min(SelectedLogLevel.Ordinal, 1)), LogLevel.Fatal);
+        {
+            var debugLogLevel = LogLevel.FromOrdinal(Math.Min(SelectedLogLevel.Ordinal, 1));
+            LogManager.Configuration.FindRuleByName("debug")?.SetLoggingLevels(debugLogLevel, LogLevel.Fatal);
+        }
 
         LogManager.ReconfigExistingLoggers();
     }

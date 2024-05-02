@@ -98,10 +98,11 @@ internal sealed class Bootstrapper : Bootstrapper<RootViewModel>
         var workingDirectory = Path.GetDirectoryName(Environment.ProcessPath);
         Directory.SetCurrentDirectory(workingDirectory);
 
+        ConfigureLogging();
         ConfigureJson();
 
         var settings = SettingsHelper.ReadOrEmpty(SettingsPath);
-        var dirty = ConfigureLoging(settings);
+        var dirty = ConfigureLogging(settings);
 
         var shortcutManager = Container.Get<IShortcutManager>();
         shortcutManager.RegisterAction<LogLevel, string>("Debug::Log",
@@ -260,7 +261,48 @@ internal sealed class Bootstrapper : Bootstrapper<RootViewModel>
         };
     }
 
-    private bool ConfigureLoging(JObject settings)
+    private void ConfigureLogging()
+    {
+        var config = new LoggingConfiguration();
+
+        config.LoggingRules.Add(new LoggingRule("*", LogLevel.Trace, LogLevel.Fatal, new FileTarget()
+        {
+            FileName = @"${basedir}\Logs\application.log",
+            ArchiveFileName = @"${basedir}\Logs\application.{#}.log",
+            ArchiveNumbering = ArchiveNumberingMode.DateAndSequence,
+            ArchiveAboveSize = 5 * 1024 * 1024,
+            ArchiveDateFormat = "yyyyMMdd",
+            ArchiveOldFileOnStartup = true,
+            MaxArchiveFiles = 10,
+            OpenFileCacheTimeout = 30,
+            AutoFlush = false,
+            OpenFileFlushTimeout = 5
+        }) { RuleName = "application" });
+
+        config.LoggingRules.Add(new LoggingRule("MultiFunPlayer.Settings.Migrations.*", LogLevel.Trace, LogLevel.Fatal, new FileTarget()
+        {
+            FileName = @"${basedir}\Logs\migration.log",
+            ArchiveFileName = @"${basedir}\Logs\migration.{#}.log",
+            ArchiveNumbering = ArchiveNumberingMode.DateAndSequence,
+            ArchiveDateFormat = "yyyyMMdd",
+            ArchiveOldFileOnStartup = true,
+            MaxArchiveFiles = 10,
+            OpenFileCacheTimeout = 30,
+            AutoFlush = false,
+            OpenFileFlushTimeout = 5,
+        }) { RuleName = "migration" } );
+
+        if (Debugger.IsAttached)
+            config.LoggingRules.Add(new LoggingRule("*", LogLevel.Trace, LogLevel.Fatal, new DebugSystemTarget()) { RuleName = "debug" } );
+
+        LogManager.Configuration = config;
+
+        var styletLoggerManager = Container.Get<IStyletLoggerManager>();
+        Stylet.Logging.LogManager.LoggerFactory = styletLoggerManager.GetLogger;
+        Stylet.Logging.LogManager.Enabled = true;
+    }
+
+    private bool ConfigureLogging(JObject settings)
     {
         var dirty = false;
         if (!settings.TryGetValue<LogLevel>("LogLevel", out var logLevel))
@@ -280,53 +322,22 @@ internal sealed class Bootstrapper : Bootstrapper<RootViewModel>
             dirty = true;
         }
 
-        var config = new LoggingConfiguration();
+        var config = LogManager.Configuration;
         if (settings.TryGetValue<Dictionary<string, LogLevel>>("LogBlacklist", out var blacklist))
         {
             var blackhole = new NullTarget();
             foreach (var (filter, maxLevel) in blacklist)
-                config.AddRule(LogLevel.Trace, maxLevel, blackhole, filter, true);
+                config.LoggingRules.Insert(0, new LoggingRule(filter, LogLevel.Trace, maxLevel, blackhole) { Final = true });
         }
 
-        config.AddRule(logLevel, LogLevel.Fatal, new FileTarget("application")
-        {
-            FileName = @"${basedir}\Logs\application.log",
-            ArchiveFileName = @"${basedir}\Logs\application.{#}.log",
-            ArchiveNumbering = ArchiveNumberingMode.DateAndSequence,
-            ArchiveAboveSize = 5 * 1024 * 1024,
-            ArchiveDateFormat = "yyyyMMdd",
-            ArchiveOldFileOnStartup = true,
-            MaxArchiveFiles = 10,
-            OpenFileCacheTimeout = 30,
-            AutoFlush = false,
-            OpenFileFlushTimeout = 5
-        });
-
-        config.AddRule(LogLevel.Trace, LogLevel.Fatal, new FileTarget("migration")
-        {
-            FileName = @"${basedir}\Logs\migration.log",
-            ArchiveFileName = @"${basedir}\Logs\migration.{#}.log",
-            ArchiveNumbering = ArchiveNumberingMode.DateAndSequence,
-            ArchiveDateFormat = "yyyyMMdd",
-            ArchiveOldFileOnStartup = true,
-            MaxArchiveFiles = 10,
-            OpenFileCacheTimeout = 30,
-            AutoFlush = false,
-            OpenFileFlushTimeout = 5,
-        }, "MultiFunPlayer.Settings.Migrations.*");
-
+        LogManager.Configuration.FindRuleByName("application")?.SetLoggingLevels(logLevel, LogLevel.Fatal);
         if (Debugger.IsAttached)
         {
-            var debugMinLevel = LogLevel.FromOrdinal(Math.Min(logLevel.Ordinal, 1));
-            config.AddRule(debugMinLevel, LogLevel.Fatal, new DebugSystemTarget("debug"));
+            var debugLogLevel = LogLevel.FromOrdinal(Math.Min(logLevel.Ordinal, 1));
+            LogManager.Configuration.FindRuleByName("debug")?.SetLoggingLevels(debugLogLevel, LogLevel.Fatal);
         }
 
-        LogManager.Configuration = config;
-
-        var styletLoggerManager = Container.Get<IStyletLoggerManager>();
-        Stylet.Logging.LogManager.LoggerFactory = styletLoggerManager.GetLogger;
-        Stylet.Logging.LogManager.Enabled = true;
-
+        LogManager.ReconfigExistingLoggers();
         return dirty;
     }
 }
