@@ -120,7 +120,7 @@ internal sealed class CustomCurveMotionProvider : AbstractMotionProvider
                 return;
 
             var newValue = MathUtils.Clamp01(_keyframes.Interpolate(_index, Time, InterpolationType));
-            Value = MathUtils.Map(newValue, 0, 1, Minimum / 100, Maximum / 100);
+            Value = MathUtils.Map(newValue, 0, 1, Minimum, Maximum);
             Time += Speed * deltaTime;
         }
     }

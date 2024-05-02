@@ -27,7 +27,7 @@ internal sealed class PatternMotionProvider(DeviceAxis target, IEventAggregator 
 
     public override void Update(double deltaTime)
     {
-        Value = MathUtils.Map(Calculate(), 0, 1, Minimum / 100, Maximum / 100);
+        Value = MathUtils.Map(Calculate(), 0, 1, Minimum, Maximum);
         _time += Speed * deltaTime;
     }
 

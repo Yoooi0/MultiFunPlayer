@@ -60,7 +60,7 @@ internal sealed class LoopingScriptMotionProvider(DeviceAxis target, IEventAggre
             return;
 
         var newValue = MathUtils.Clamp01(keyframes.Interpolate(_scriptIndex, _time, InterpolationType));
-        Value = MathUtils.Map(newValue, 0, 1, Minimum / 100, Maximum / 100);
+        Value = MathUtils.Map(newValue, 0, 1, Minimum, Maximum);
         _time += Speed * deltaTime;
     }
 

@@ -28,7 +28,7 @@ internal sealed class RandomMotionProvider : AbstractMotionProvider
     public override void Update(double deltaTime)
     {
         var noise = _noise.Calculate2D(_time, _time, Octaves, Persistence, Lacunarity);
-        Value = MathUtils.Map(noise, -1, 1, Minimum / 100, Maximum / 100);
+        Value = MathUtils.Map(noise, -1, 1, Minimum, Maximum);
         _time += Speed * deltaTime;
     }
 
