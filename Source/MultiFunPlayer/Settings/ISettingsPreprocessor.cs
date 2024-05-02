@@ -56,6 +56,7 @@ internal sealed class SettingsDevicePreprocessor : JsonEditor, ISettingsPreproce
         {
             settings["Devices"] = defaultDevices;
             devices = defaultDevices;
+            dirty = true;
         }
         else
         {
