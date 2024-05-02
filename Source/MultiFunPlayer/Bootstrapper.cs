@@ -99,6 +99,8 @@ internal sealed class Bootstrapper : Bootstrapper<RootViewModel>
         Directory.SetCurrentDirectory(workingDirectory);
 
         ConfigureLogging();
+
+        Logger.Debug("Bootstrapper Configure");
         ConfigureJson();
 
         var settings = SettingsHelper.ReadOrEmpty(SettingsPath);
@@ -195,6 +197,8 @@ internal sealed class Bootstrapper : Bootstrapper<RootViewModel>
 
     protected override void Launch()
     {
+        Logger.Debug("Bootstrapper Launch");
+
         PluginCompiler.Initialize(Container);
 
         _ = Container.Get<RawInputProcessor>();
@@ -216,6 +220,8 @@ internal sealed class Bootstrapper : Bootstrapper<RootViewModel>
 
     protected override void OnLaunch()
     {
+        Logger.Debug("Bootstrapper OnLaunch");
+
         var window = GetActiveWindow();
         window.Closing += OnWindowClosing;
 
@@ -227,6 +233,8 @@ internal sealed class Bootstrapper : Bootstrapper<RootViewModel>
 
     private void OnWindowClosing(object sender, CancelEventArgs e)
     {
+        Logger.Debug("Bootstrapper OnWindowClosing");
+
         var settings = SettingsHelper.ReadOrEmpty(SettingsPath);
         var eventAggregator = Container.Get<IEventAggregator>();
         eventAggregator.Publish(new SettingsMessage(settings, SettingsAction.Saving));
