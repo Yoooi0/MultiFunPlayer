@@ -1,4 +1,4 @@
-﻿using MultiFunPlayer.Common;
+using MultiFunPlayer.Common;
 using Stylet;
 using System.Diagnostics;
 using System.IO;
@@ -432,7 +432,9 @@ internal sealed class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDispo
                             return true;
                         }
 
-                        context.Value = MathUtils.Clamp01(MathUtils.Lerp(context.Value, settings.AutoHomeTargetValue, t * Math.Pow(2, 8 * (t - 1))));
+                        var from = !double.IsFinite(context.LastValue) ? axis.DefaultValue : context.LastValue;
+                        context.Value = MathUtils.Clamp01(MathUtils.Lerp(from, settings.AutoHomeTargetValue, t * Math.Pow(2, 8 * (t - 1))));
+
                         return true;
                     }
 
