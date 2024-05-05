@@ -1,4 +1,5 @@
-﻿using MahApps.Metro.Controls;
+using MahApps.Metro.Controls;
+using System.Collections.Concurrent;
 
 namespace MultiFunPlayer.Shortcut;
 
@@ -21,24 +22,25 @@ public interface IShortcutSettingBuilder<T> : IShortcutSettingBuilder
 
 internal sealed class ShortcutSettingBuilder<T> : IShortcutSettingBuilder<T>
 {
+    private static readonly ConcurrentDictionary<int, IShortcutSettingTemplateContext> _templateContextCache = new();
+
     private T _defaultValue;
     private string _description;
     private string _label;
     private IEnumerable<T> _itemsSource;
     private string _templateName;
-    #pragma warning disable CA1859 
     private IShortcutSettingTemplateContext _templateContext;
-    #pragma warning restore CA1859
     private Func<T, string> _toString;
 
     IShortcutSetting IShortcutSettingBuilder.Build() => Build();
     public IShortcutSetting<T> Build()
     {
         if (_templateContext == null)
-        {
             if (typeof(T) == typeof(int) || typeof(T) == typeof(double))
                 AsNumericUpDown();
-        }
+
+        if (_templateContext != null)
+            _templateContext = _templateContextCache.GetOrAdd(_templateContext.GetHashCode(), _templateContext);
 
         if (_itemsSource == null)
             return new ShortcutSetting<T>()
