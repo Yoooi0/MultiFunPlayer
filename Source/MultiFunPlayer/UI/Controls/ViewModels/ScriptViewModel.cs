@@ -550,12 +550,8 @@ internal sealed class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDispo
                 nameof(MediaPathChangedMessage), resource?.Source, resource?.Name, resource?.OriginalPath, resource?.ModifiedPath, resource?.PathType);
         }
 
-        if (MediaResource == null && resource == null)
+        if (MediaResource == resource)
             return;
-        if (MediaResource != null && resource != null)
-            if (string.Equals(MediaResource.Name, resource.Name, StringComparison.OrdinalIgnoreCase)
-             && string.Equals(MediaResource.Source, resource.Source, StringComparison.OrdinalIgnoreCase))
-                return;
 
         MediaResource = resource;
         if (SyncSettings.SyncOnMediaResourceChanged)
