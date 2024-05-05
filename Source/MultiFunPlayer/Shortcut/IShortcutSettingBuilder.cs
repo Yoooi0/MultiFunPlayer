@@ -1,4 +1,4 @@
-using MahApps.Metro.Controls;
+﻿using MahApps.Metro.Controls;
 using System.Collections.Concurrent;
 
 namespace MultiFunPlayer.Shortcut;
@@ -43,6 +43,7 @@ internal sealed class ShortcutSettingBuilder<T> : IShortcutSettingBuilder<T>
             _templateContext = _templateContextCache.GetOrAdd(_templateContext.GetHashCode(), _templateContext);
 
         if (_itemsSource == null)
+        {
             return new ShortcutSetting<T>()
             {
                 Description = _description,
@@ -52,17 +53,20 @@ internal sealed class ShortcutSettingBuilder<T> : IShortcutSettingBuilder<T>
                 Value = _defaultValue,
                 CustomToString = _toString
             };
-
-        return new OneOfShortcutSetting<T>()
+        }
+        else
         {
-            Description = _description,
-            Label = _label,
-            ItemsSource = _itemsSource,
-            TemplateName = _templateName,
-            TemplateContext = _templateContext,
-            Value = _defaultValue,
-            CustomToString = _toString
-        };
+            return new OneOfShortcutSetting<T>()
+            {
+                Description = _description,
+                Label = _label,
+                ItemsSource = _itemsSource,
+                TemplateName = _templateName,
+                TemplateContext = _templateContext,
+                Value = _defaultValue,
+                CustomToString = _toString
+            };
+        }
     }
 
     public IShortcutSettingBuilder<T> WithDefaultValue(T defaultValue) { _defaultValue = defaultValue; return this; }
