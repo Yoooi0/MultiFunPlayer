@@ -78,16 +78,38 @@ internal sealed class CustomCurveMotionProvider : AbstractMotionProvider
         var needsRefresh = Interlocked.CompareExchange(ref _pendingRefreshFlag, 0, 1) == 1;
         if (needsRefresh)
         {
-            var newKeyframes = new KeyframeCollection(Points.Count + 2)
+            if (IsLooping && Points.Count != 1)
             {
-                { Viewport.Left, Points[0].Y }
-            };
+                const int minimumTilePointCount = 3;
 
-            foreach (var point in Points)
-                newKeyframes.Add(point.X, point.Y);
-            newKeyframes.Add(Viewport.Right, Points[^1].Y);
+                var tileCount = Math.Ceiling((double)minimumTilePointCount / Points.Count);
+                var newKeyframes = new KeyframeCollection(Points.Count + minimumTilePointCount * 2);
+                for (var i = tileCount; i >= 1; i--)
+                    foreach (var point in Points.TakeLast(minimumTilePointCount))
+                        newKeyframes.Add(point.X - i * Viewport.Width, point.Y);
 
-            _keyframes = newKeyframes;
+                foreach (var point in Points)
+                    newKeyframes.Add(point.X, point.Y);
+
+                for (var i = 1; i <= tileCount; i++)
+                    foreach (var point in Points.Take(minimumTilePointCount))
+                        newKeyframes.Add(point.X + i * Viewport.Width, point.Y);
+
+                _keyframes = newKeyframes;
+            }
+            else
+            {
+                var newKeyframes = new KeyframeCollection(Points.Count + 2)
+                {
+                    { Viewport.Left, Points[0].Y }
+                };
+
+                foreach (var point in Points)
+                    newKeyframes.Add(point.X, point.Y);
+                newKeyframes.Add(Viewport.Right, Points[^1].Y);
+
+                _keyframes = newKeyframes;
+            }
         }
 
         if (_keyframes == null)
