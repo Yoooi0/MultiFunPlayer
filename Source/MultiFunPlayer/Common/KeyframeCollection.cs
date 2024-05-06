@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 
 namespace MultiFunPlayer.Common;
 
@@ -45,14 +45,8 @@ public sealed class KeyframeCollection : IReadOnlyList<Keyframe>
 
     public double Interpolate(int index, double position, InterpolationType interpolationType)
     {
-        static double Distance(Keyframe p0, Keyframe p1)
-            => Math.Sqrt((p1.Position - p0.Position) * (p1.Position - p0.Position) + (p1.Value - p0.Value) * (p1.Value - p0.Value));
-
-        Keyframe TakeOrExtrapolateRight(int index, Keyframe prev0, Keyframe prev1)
-            => index < Count ? this[index] : new Keyframe(prev1.Position + Distance(prev0, prev1) * 2, prev1.Value);
-
-        Keyframe TakeOrExtrapolateLeft(int index, Keyframe next1, Keyframe next0)
-            => index >= 0 ? this[index] : new Keyframe(next1.Position - Distance(next1, next0) * 2, next1.Value);
+        Keyframe TakeOrExtrapolate(int index, Keyframe p0, Keyframe p1)
+            => this.ValidateIndex(index) ? this[index] : new Keyframe(3 * p1.Position - 2 * p0.Position, p1.Value);
 
         var p0 = this[index + 0];
         var p1 = this[index + 1];
@@ -64,18 +58,18 @@ public sealed class KeyframeCollection : IReadOnlyList<Keyframe>
 
             case InterpolationType.Pchip:
                 {
-                    var pm1 = TakeOrExtrapolateLeft(index - 1, p1, p0);
-                    var pp1 = TakeOrExtrapolateRight(index + 2, p0, p1);
+                    var pm1 = TakeOrExtrapolate(index - 1, p1, p0);
+                    var pp1 = TakeOrExtrapolate(index + 2, p0, p1);
 
                     return Interpolation.Pchip(pm1.Position, pm1.Value, p0.Position, p0.Value, p1.Position, p1.Value, pp1.Position, pp1.Value, position);
                 }
 
             case InterpolationType.Makima:
                 {
-                    var pm1 = TakeOrExtrapolateLeft(index - 1, p1, p0);
-                    var pm2 = TakeOrExtrapolateLeft(index - 2, pm1, p1);
-                    var pp1 = TakeOrExtrapolateRight(index + 2, p0, p1);
-                    var pp2 = TakeOrExtrapolateRight(index + 3, p1, pp1);
+                    var pm1 = TakeOrExtrapolate(index - 1, p1, p0);
+                    var pm2 = TakeOrExtrapolate(index - 2, pm1, p1);
+                    var pp1 = TakeOrExtrapolate(index + 2, p0, p1);
+                    var pp2 = TakeOrExtrapolate(index + 3, p1, pp1);
 
                     return Interpolation.Makima(pm2.Position, pm2.Value, pm1.Position, pm1.Value, p0.Position, p0.Value, p1.Position, p1.Value, pp1.Position, pp1.Value, pp2.Position, pp2.Value, position);
                 }
