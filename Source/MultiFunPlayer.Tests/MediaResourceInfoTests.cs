@@ -13,6 +13,8 @@ public class MediaResourceInfoTests
         ["/Users/user/folder", "folder", "/Users/user"],
         [@"C:\filenoext", "filenoext", @"C:\"],
         [@"X:\file.ext", "file.ext", @"X:\"],
+        ["C:/folder/file.ext", "file.ext", @"C:\folder"],
+        [@"C:\folder%20\file%20.ext", "file%20.ext", @"C:\folder%20"],
         [@"\\127.0.0.1\folder\file.ext", "file.ext", @"\\127.0.0.1\folder"],
         [@"\\contoso.local\folder\file.ext", "file.ext", @"\\contoso.local\folder"],
         ["http://in.ter.net/subfolder/filenoext", "filenoext", "http://in.ter.net/subfolder"],
@@ -31,6 +33,7 @@ public class MediaResourceInfoTests
         ["file:///C:/file.ext", "file.ext", @"C:\"],
         ["file:///C:/file with (spaces).ext", "file with (spaces).ext", @"C:\"],
         ["file:///C:/file%20with%20%28spaces%29.ext", "file with (spaces).ext", @"C:\"],
+        ["file:///C:/folder%2520/file%2520.ext", "file%20.ext", @"C:\folder%20"],
     ];
 
     public static IEnumerable<object[]> InvalidSamplePaths => [
