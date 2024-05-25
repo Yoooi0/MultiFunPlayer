@@ -23,6 +23,7 @@ public class MediaResourceInfoTests
         ["http://in.ter.net/subfolder/file.ext?query=yes#fragment", "file.ext", "http://in.ter.net/subfolder"],
         ["http://127.0.0.1:9999/file/file with (spaces).ext", "file with (spaces).ext", "http://127.0.0.1:9999/file"],
         ["http://127.0.0.1:9999/file/file%20with%20%28spaces%29.ext", "file with (spaces).ext", "http://127.0.0.1:9999/file"],
+        ["http://127.0.0.1:9999/file/file%2520double%2520%2528encoded%2529.ext", "file%20double%20%28encoded%29.ext", "http://127.0.0.1:9999/file"],
         ["http://127.0.0.1:9999/file/file%20with%20%28spaces%29.ext?query=yes#fragment", "file with (spaces).ext", "http://127.0.0.1:9999/file"],
         ["http://www.example.com/düsseldörf/日本語/위키백과:대문/file.ext", "file.ext", "http://www.example.com/düsseldörf/日本語/위키백과:대문"],
         ["http://www.example.com/d%C3%BCsseld%C3%B6rf/%E6%97%A5%E6%9C%AC%E8%AA%9E/%EC%9C%84%ED%82%A4%EB%B0%B1%EA%B3%BC:%EB%8C%80%EB%AC%B8/file.ext", "file.ext", "http://www.example.com/düsseldörf/日本語/위키백과:대문"],
@@ -33,7 +34,7 @@ public class MediaResourceInfoTests
         ["file:///C:/file.ext", "file.ext", @"C:\"],
         ["file:///C:/file with (spaces).ext", "file with (spaces).ext", @"C:\"],
         ["file:///C:/file%20with%20%28spaces%29.ext", "file with (spaces).ext", @"C:\"],
-        ["file:///C:/folder%2520/file%2520.ext", "file%20.ext", @"C:\folder%20"],
+        ["file:///C:/file%2520double%2520%2528encoded%2529.ext", "file%20double%20%28encoded%29.ext", @"C:\"],
     ];
 
     public static IEnumerable<object[]> InvalidSamplePaths => [
