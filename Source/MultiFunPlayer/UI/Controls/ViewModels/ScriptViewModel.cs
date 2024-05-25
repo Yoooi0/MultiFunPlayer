@@ -74,7 +74,7 @@ internal sealed class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDispo
     [JsonProperty] public int HeatmapBucketCount { get; set; } = 333;
     [JsonProperty] public bool HeatmapInvertY { get; set; } = false;
     [JsonProperty] public bool AutoSkipToScriptStartEnabled { get; set; } = true;
-    [JsonProperty] public double AutoSkipToScriptStartOffset { get; set; } = 5;
+    [JsonProperty] public double AutoSkipToScriptStartOffset { get; set; } = -5;
 
     public bool IsSyncing => AxisStates.Values.Any(s => s.SyncTime > 0);
     public double SyncProgress => !IsSyncing ? 100 : GetSyncProgress(AxisStates.Values.Max(s => s.SyncTime), SyncSettings.Duration) * 100;
@@ -1048,7 +1048,7 @@ internal sealed class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDispo
         if (startPosition == null)
             return;
 
-        var targetMediaTime = Math.Max(Math.Min(startPosition.Value, MediaDuration) - offset, 0);
+        var targetMediaTime = Math.Max(Math.Min(startPosition.Value, MediaDuration) + offset, 0);
         if (onlyWhenBefore && targetMediaTime <= MediaPosition)
             return;
 

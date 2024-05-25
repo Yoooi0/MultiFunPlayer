@@ -420,11 +420,11 @@
                                                        Height="22"
                                                        Kind="SkipForward"/>
                                 </material:PopupBox.ToggleContent>
-                                <Grid Width="200" Margin="10">
+                                <Grid Width="175" Margin="10">
                                     <StackPanel>
                                         <StackPanel Margin="0 0 0 10" Orientation="Horizontal">
                                             <TextBlock Width="50"
-                                                       Margin="0 0 10 0"
+                                                       Margin="0 0 5 0"
                                                        VerticalAlignment="Center"
                                                        Text="Enabled:"/>
 
@@ -434,24 +434,17 @@
                                         <DockPanel Margin="0 0 0 10">
                                             <TextBlock DockPanel.Dock="Left"
                                                        Width="50"
-                                                       Margin="0 0 10 0"
+                                                       Margin="0 0 5 0"
                                                        VerticalAlignment="Center"
                                                        Text="Offset:"/>
 
-                                            <TextBlock DockPanel.Dock="Right"
-                                                       Width="40"
-                                                       VerticalAlignment="Center"
-                                                       Text="{Binding AutoSkipToScriptStartOffset, StringFormat={}{0:0.0}s}"
-                                                       TextAlignment="Right"/>
-
-                                            <Slider DockPanel.Dock="Left"
-                                                    VerticalAlignment="Center"
-                                                    material:SliderAssist.OnlyShowFocusVisualWhileDragging="True"
-                                                    IsSnapToTickEnabled="True"
-                                                    Maximum="10"
-                                                    Minimum="0"
-                                                    TickFrequency="0.1"
-                                                    Value="{Binding AutoSkipToScriptStartOffset}"/>
+                                            <metro:NumericUpDown DockPanel.Dock="Left"
+                                                                 VerticalAlignment="Center"
+                                                                 Interval="0.1"
+                                                                 Maximum="0"
+                                                                 SnapToMultipleOfInterval="True"
+                                                                 StringFormat="{}{0:F1}s"
+                                                                 Value="{Binding AutoSkipToScriptStartOffset}"/>
                                         </DockPanel>
                                     </StackPanel>
                                 </Grid>
