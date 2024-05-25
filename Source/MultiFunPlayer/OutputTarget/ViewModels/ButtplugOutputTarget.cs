@@ -19,8 +19,7 @@ internal sealed class ButtplugOutputTarget : AsyncAbstractOutputTarget
 {
     protected override Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
-    private SemaphoreSlim _startScanSemaphore;
-    private SemaphoreSlim _endScanSemaphore;
+    private SemaphoreSlim _scanSemaphore;
 
     public override ConnectionStatus Status { get; protected set; }
     public bool IsConnected => Status == ConnectionStatus.Connected;
@@ -69,6 +68,8 @@ internal sealed class ButtplugOutputTarget : AsyncAbstractOutputTarget
         DeviceSettings = [];
 
         AvailableDevices.CollectionChanged += (s, e) => DeviceSettings.Refresh();
+
+        _scanSemaphore = new SemaphoreSlim(1, 1);
     }
 
     protected override IUpdateContext RegisterUpdateContext(DeviceAxisUpdateType updateType) => updateType switch
@@ -80,13 +81,7 @@ internal sealed class ButtplugOutputTarget : AsyncAbstractOutputTarget
 
     public bool IsScanBusy { get; set; }
     public bool CanScan => IsConnected;
-    public void ToggleScan()
-    {
-        if (IsScanBusy && _endScanSemaphore?.CurrentCount == 0)
-            _endScanSemaphore.Release();
-        else if (_startScanSemaphore?.CurrentCount == 0)
-            _startScanSemaphore.Release();
-    }
+    public void ToggleScan() => _scanSemaphore.Release();
 
     protected override ValueTask<bool> OnConnectingAsync(ConnectionType connectionType)
     {
@@ -128,11 +123,6 @@ internal sealed class ButtplugOutputTarget : AsyncAbstractOutputTarget
         client.DeviceAdded += (_, device) => OnDeviceAdded(device);
         client.DeviceRemoved += (_, device) => OnDeviceRemoved(device);
         client.UnhandledException += (_, exception) => Logger.Debug(exception);
-        client.ScanningFinished += (_, _) =>
-        {
-            if (IsScanBusy && _endScanSemaphore?.CurrentCount == 0)
-                _endScanSemaphore.Release();
-        };
 
         try
         {
@@ -152,11 +142,9 @@ internal sealed class ButtplugOutputTarget : AsyncAbstractOutputTarget
 
         try
         {
-            _ = ScanAsync(client, token);
-
             EventAggregator.Publish(new SyncRequestMessage());
             using var cancellationSource = CancellationTokenSource.CreateLinkedTokenSource(token);
-            var task = await Task.WhenAny(FixedUpdateAsync(client, cancellationSource.Token), PolledUpdateAsync(client, cancellationSource.Token));
+            var task = await Task.WhenAny(FixedUpdateAsync(client, cancellationSource.Token), PolledUpdateAsync(client, cancellationSource.Token), ScanAsync(client, cancellationSource.Token));
             cancellationSource.Cancel();
 
             task.ThrowIfFaulted();
@@ -343,43 +331,44 @@ internal sealed class ButtplugOutputTarget : AsyncAbstractOutputTarget
 
     private async Task ScanAsync(ButtplugClient client, CancellationToken token)
     {
-        void CleanupSemaphores()
+        var scanTask = default(Task);
+        var cancellationSource = default(CancellationTokenSource);
+        while (!token.IsCancellationRequested)
         {
-            _startScanSemaphore?.Dispose();
-            _endScanSemaphore?.Dispose();
-
-            _startScanSemaphore = null;
-            _endScanSemaphore = null;
-        }
-
-        await client.StopScanningAsync(token);
-
-        CleanupSemaphores();
-        _startScanSemaphore = new SemaphoreSlim(1, 1);
-        _endScanSemaphore = new SemaphoreSlim(0, 1);
-
-        try
-        {
-            while (!token.IsCancellationRequested)
+            await _scanSemaphore.WaitAsync(token);
+            if (scanTask?.IsCompleted == false)
             {
-                await _startScanSemaphore.WaitAsync(token);
-                await client.StartScanningAsync(token);
+                cancellationSource?.Cancel();
+                cancellationSource?.Dispose();
+                cancellationSource = null;
+            }
+            else
+            {
+                cancellationSource = CancellationTokenSource.CreateLinkedTokenSource(token);
+                cancellationSource.CancelAfter(TimeSpan.FromSeconds(5));
 
-                IsScanBusy = true;
-                await _endScanSemaphore.WaitAsync(token);
-                IsScanBusy = false;
-
-                if (client.IsScanning)
-                    await client.StopScanningAsync(token);
+                scanTask = DoScanAsync();
             }
         }
-        catch (OperationCanceledException) { }
-        finally
-        {
-            IsScanBusy = false;
-        }
 
-        CleanupSemaphores();
+        async Task DoScanAsync()
+        {
+            try
+            {
+                IsScanBusy = true;
+
+                await client.StartScanningAsync(token);
+
+                try { await Task.Delay(TimeSpan.FromSeconds(30), cancellationSource.Token); }
+                catch { }
+
+                await client.StopScanningAsync(token);
+            }
+            finally
+            {
+                IsScanBusy = false;
+            }
+        }
     }
 
     public override void HandleSettings(JObject settings, SettingsAction action)
@@ -445,6 +434,14 @@ internal sealed class ButtplugOutputTarget : AsyncAbstractOutputTarget
 
         DeviceSettings.Remove(settings);
         NotifyOfPropertyChange(nameof(AvailableActuatorIndices));
+    }
+
+    protected override void Dispose(bool disposing)
+    {
+        base.Dispose(disposing);
+
+        _scanSemaphore?.Dispose();
+        _scanSemaphore = null;
     }
 }
 

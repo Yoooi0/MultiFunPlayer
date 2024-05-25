@@ -23,8 +23,8 @@
   </ItemGroup>
     
   <ItemGroup>
-    <PackageReference Include="Buttplug.Net" Version="0.1.0-ci0081" />
-    <PackageReference Include="Buttplug.Net.NewtonsoftJson" Version="0.1.0-ci0081" />
+    <PackageReference Include="Buttplug.Net" Version="0.1.0-ci0092" />
+    <PackageReference Include="Buttplug.Net.NewtonsoftJson" Version="0.1.0-ci0092" />
     <PackageReference Include="ConfigureAwait.Fody" Version="3.*">
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
