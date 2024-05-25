@@ -236,8 +236,8 @@ public static class WebSocketExtensions
 {
     public static async Task<byte[]> ReceiveAsync(this ClientWebSocket client, CancellationToken token)
     {
-        using var memoryOwner = MemoryPool<byte>.Shared.Rent(1024);
         await using var memoryStream = new MemoryStream();
+        using var memoryOwner = MemoryPool<byte>.Shared.Rent(1024);
 
         var readMemory = memoryOwner.Memory;
         var result = default(ValueWebSocketReceiveResult);
