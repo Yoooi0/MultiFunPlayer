@@ -42,7 +42,11 @@ internal abstract class AbstractMediaSource : Screen, IMediaSource, IHandle<IMed
         RegisterActions(shortcutManager);
     }
 
-    protected void PublishMessage(object message) => _eventAggregator.Publish(message);
+    protected void PublishMessage(object message)
+    {
+        Logger.Trace("Publishing message \"{0}\"", message);
+        _eventAggregator.Publish(message);
+    }
 
     public async virtual Task ConnectAsync(ConnectionType connectionType)
     {
