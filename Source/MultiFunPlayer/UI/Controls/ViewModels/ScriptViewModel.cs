@@ -1160,7 +1160,6 @@ internal sealed class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDispo
         {
             CheckFileExists = true,
             CheckPathExists = true,
-            InitialDirectory = Directory.Exists(MediaResource?.Source) ? MediaResource.Source : string.Empty,
             Filter = "Funscript files (*.funscript)|*.funscript"
         };
 
