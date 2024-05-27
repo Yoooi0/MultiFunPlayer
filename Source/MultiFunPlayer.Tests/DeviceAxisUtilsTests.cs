@@ -1,4 +1,4 @@
-using MultiFunPlayer.Common;
+﻿using MultiFunPlayer.Common;
 
 namespace MultiFunPlayer.Tests;
 
@@ -79,5 +79,11 @@ public class DeviceAxisUtilsTests
     {
         var matchingNames = DeviceAxisUtils.FindNamesMatchingAxis(axis, scriptNames, mediaName);
         Assert.Equal(expectedNames, matchingNames);
+
+        var items = scriptNames.Select(n => new FindNamesMatchingAxisItem(n));
+        var matchingItems = DeviceAxisUtils.FindNamesMatchingAxis(axis, items, x => x.Name, mediaName);
+        Assert.Equal(expectedNames.Select(n => new FindNamesMatchingAxisItem(n)), matchingItems);
     }
+
+    private record FindNamesMatchingAxisItem(string Name);
 }

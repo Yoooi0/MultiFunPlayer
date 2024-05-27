@@ -1,4 +1,4 @@
-using System.Collections.Immutable;
+﻿using System.Collections.Immutable;
 using System.IO;
 
 namespace MultiFunPlayer.Common;
@@ -72,6 +72,13 @@ public static class DeviceAxisUtils
                     yield return scriptName;
             }
         }
+    }
+
+    public static IEnumerable<T> FindNamesMatchingAxis<T>(DeviceAxis axis, IEnumerable<T> items, Func<T, string> nameSelector, string mediaName)
+    {
+        var nameLookup = items.ToDictionary(i => nameSelector(i), i => i);
+        var matchingNames = FindNamesMatchingAxis(axis, nameLookup.Keys, mediaName);
+        return matchingNames.Select(n => nameLookup[n]);
     }
 
     public static string GetBaseNameWithExtension(string fileName)
