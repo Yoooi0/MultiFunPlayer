@@ -6,7 +6,7 @@ public enum MediaResourcePathType
     File
 }
 
-public sealed record MediaResourceInfo(MediaResourcePathType PathType, string ModifiedPath, string OriginalPath, string Source, string Name)
+public sealed record MediaResourceInfo(MediaResourcePathType PathType, string ModifiedPath, string OriginalPath, string Source, string Name, object Context)
 {
     public bool IsFile => PathType == MediaResourcePathType.File;
     public bool IsUrl => PathType == MediaResourcePathType.Url;

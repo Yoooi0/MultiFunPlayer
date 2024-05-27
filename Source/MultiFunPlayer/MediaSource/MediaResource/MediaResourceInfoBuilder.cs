@@ -5,6 +5,7 @@ namespace MultiFunPlayer.MediaSource.MediaResource;
 
 internal sealed class MediaResourceInfoBuilder(string originalPath)
 {
+    private object _context;
     private string _modifiedPath;
 
     public MediaResourceInfo Build()
@@ -20,7 +21,7 @@ internal sealed class MediaResourceInfoBuilder(string originalPath)
     }
 
     private MediaResourceInfo Build(MediaResourcePathType pathType, string name, string source)
-        => new(pathType, _modifiedPath, originalPath, source, name);
+        => new(pathType, _modifiedPath, originalPath, source, name, _context);
 
     private bool TryParseUri(string path, out MediaResourceInfo result)
     {
@@ -75,6 +76,7 @@ internal sealed class MediaResourceInfoBuilder(string originalPath)
         return true;
     }
 
+    public void WithContext(object context) => _context = context;
     public void WithModifiers(IEnumerable<IMediaPathModifier> mediaPathModifiers)
     {
         if (originalPath == null)

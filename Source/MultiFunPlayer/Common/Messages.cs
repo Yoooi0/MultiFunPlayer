@@ -16,7 +16,7 @@ internal sealed record WindowCreatedMessage();
 public sealed record MediaSpeedChangedMessage(double Speed);
 public sealed record MediaPositionChangedMessage(TimeSpan? Position, bool ForceSeek = false);
 public sealed record MediaPlayingChangedMessage(bool IsPlaying);
-public sealed record MediaPathChangedMessage(string Path, bool ReloadScripts = true);
+public sealed record MediaPathChangedMessage(string Path, bool ReloadScripts = true, object Context = null);
 public sealed record MediaDurationChangedMessage(TimeSpan? Duration);
 
 public sealed record PostScriptSearchMessage(MediaResourceInfo MediaResource, Dictionary<DeviceAxis, IScriptResource> Scripts);
