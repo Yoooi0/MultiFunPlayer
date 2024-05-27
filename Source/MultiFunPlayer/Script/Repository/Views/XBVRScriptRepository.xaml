@@ -27,11 +27,11 @@
             <TextBlock DockPanel.Dock="Left"
                        Margin="0 0 10 0"
                        VerticalAlignment="Center"
-                       Text="Video match type:"/>
+                       Text="Local match type:"/>
 
             <ComboBox DockPanel.Dock="Left"
-                      ItemsSource="{Binding Source={ui:EnumBindingSource {x:Type repository:XBVRVideoMatchType}}}"
-                      SelectedItem="{Binding VideoMatchType}"
+                      ItemsSource="{Binding Source={ui:EnumBindingSource {x:Type repository:XBVRLocalMatchType}}}"
+                      SelectedItem="{Binding LocalMatchType}"
                       ToolTip="{Binding SelectedItem, RelativeSource={RelativeSource Self}, Converter={StaticResource DescriptionConverter}}"/>
         </DockPanel>
 
@@ -39,11 +39,11 @@
             <TextBlock DockPanel.Dock="Left"
                        Margin="0 0 10 0"
                        VerticalAlignment="Center"
-                       Text="Script match type:"/>
+                       Text="Dms match type:"/>
 
             <ComboBox DockPanel.Dock="Left"
-                      ItemsSource="{Binding Source={ui:EnumBindingSource {x:Type repository:XBVRScriptMatchType}}}"
-                      SelectedItem="{Binding ScriptMatchType}"
+                      ItemsSource="{Binding Source={ui:EnumBindingSource {x:Type repository:XBVRDmsMatchType}}}"
+                      SelectedItem="{Binding DmsMatchType}"
                       ToolTip="{Binding SelectedItem, RelativeSource={RelativeSource Self}, Converter={StaticResource DescriptionConverter}}"/>
         </DockPanel>
     </StackPanel>
