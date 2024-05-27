@@ -1,4 +1,4 @@
-﻿using System.Collections.Immutable;
+using System.Collections.Immutable;
 using System.IO;
 
 namespace MultiFunPlayer.Common;
@@ -34,7 +34,13 @@ public static class DeviceAxisUtils
 
     public static IEnumerable<DeviceAxis> FindAxesMatchingName(string scriptName, string mediaName) => FindAxesMatchingName(DeviceAxis.All, scriptName, mediaName);
     public static IEnumerable<DeviceAxis> FindAxesMatchingName(IEnumerable<DeviceAxis> axes, string scriptName, string mediaName)
-        => FindAxesMatchingName(axes, scriptName, IsUnnamedScript(scriptName, mediaName));
+    { 
+        var scriptBaseName = GetBaseNameWithExtension(scriptName);
+        if (!IsUnnamedScript(scriptBaseName, mediaName))
+            return [];
+
+        return FindAxesMatchingName(axes, scriptName, IsUnnamedScript(scriptName, mediaName));
+    }
 
     public static IEnumerable<DeviceAxis> FindAxesMatchingName(string scriptName, bool isUnnamedScript) => FindAxesMatchingName(DeviceAxis.All, scriptName, isUnnamedScript);
     public static IEnumerable<DeviceAxis> FindAxesMatchingName(IEnumerable<DeviceAxis> axes, string scriptName, bool isUnnamedScript)
@@ -55,6 +61,10 @@ public static class DeviceAxisUtils
         {
             foreach (var scriptName in scriptNames)
             {
+                var scriptBaseName = GetBaseNameWithExtension(scriptName);
+                if (!IsUnnamedScript(scriptBaseName, mediaName))
+                    continue;
+
                 var scriptWithoutExtension = Path.GetFileNameWithoutExtension(scriptName);
                 if (funscriptName == "*" && IsUnnamedScript(scriptName, mediaName))
                     yield return scriptName;
