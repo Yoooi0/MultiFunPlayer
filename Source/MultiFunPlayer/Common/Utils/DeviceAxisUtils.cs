@@ -34,7 +34,7 @@ public static class DeviceAxisUtils
 
     public static IEnumerable<DeviceAxis> FindAxesMatchingName(string scriptName, string mediaName) => FindAxesMatchingName(DeviceAxis.All, scriptName, mediaName);
     public static IEnumerable<DeviceAxis> FindAxesMatchingName(IEnumerable<DeviceAxis> axes, string scriptName, string mediaName)
-    { 
+    {
         var scriptBaseName = GetBaseNameWithExtension(scriptName);
         if (!IsUnnamedScript(scriptBaseName, mediaName))
             return [];
