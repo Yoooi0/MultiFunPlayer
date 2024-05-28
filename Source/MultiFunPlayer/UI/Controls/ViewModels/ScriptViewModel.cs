@@ -533,6 +533,7 @@ internal sealed class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDispo
     {
         var builder = new MediaResourceInfoBuilder(message.Path);
         builder.WithModifiers(MediaPathModifiers);
+        builder.WithContext(message.Context);
 
         var resource = builder.Build();
         if (resource == null)
