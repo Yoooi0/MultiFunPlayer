@@ -14,40 +14,39 @@
              mc:Ignorable="d">
     <StackPanel Margin="20">
         <DockPanel Margin="0 0 0 20" LastChildFill="False">
-            <TextBlock DockPanel.Dock="Left"
-                       Margin="0 0 10 0"
-                       VerticalAlignment="Center"
-                       Text="Endpoint:"/>
+            <StackPanel DockPanel.Dock="Left" Orientation="Horizontal">
+                <TextBlock Margin="0 0 10 0"
+                           VerticalAlignment="Center"
+                           Text="Endpoint:"/>
 
-            <controls:UriBox DockPanel.Dock="Left"
-                             AvailableSchemes="http https"
-                             ShowPathAndQuery="False"
-                             Uri="{Binding ServerBaseUri}"/>
+                <controls:UriBox DockPanel.Dock="Left"
+                                 AvailableSchemes="http https"
+                                 ShowPathAndQuery="False"
+                                 Uri="{Binding ServerBaseUri}"/>
+            </StackPanel>
+
+            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                <TextBlock Margin="0 0 10 0"
+                           VerticalAlignment="Center"
+                           Text="Api key:"/>
+
+                <TextBox MinWidth="150"
+                         MaxWidth="408"
+                         material:HintAssist.Hint="(optional)"
+                         material:TextFieldAssist.HasClearButton="True"
+                         Text="{Binding ApiKey}"/>
+            </StackPanel>
         </DockPanel>
-
 
         <DockPanel LastChildFill="False">
             <TextBlock DockPanel.Dock="Left"
                        Margin="0 0 10 0"
                        VerticalAlignment="Center"
-                       Text="Api key:"/>
-
-            <TextBox MinWidth="150"
-                     MaxWidth="408"
-                     material:HintAssist.Hint="(optional)"
-                     material:TextFieldAssist.HasClearButton="True"
-                     Text="{Binding ApiKey}"/>
-        </DockPanel>
-
-        <DockPanel LastChildFill="False">
-            <TextBlock DockPanel.Dock="Left"
-                       Margin="0 0 10 0"
-                       VerticalAlignment="Center"
-                       Text="Video match type:"/>
+                       Text="Local match type:"/>
 
             <ComboBox DockPanel.Dock="Left"
-                      ItemsSource="{Binding Source={ui:EnumBindingSource {x:Type repository:StashVideoMatchType}}}"
-                      SelectedItem="{Binding VideoMatchType}"
+                      ItemsSource="{Binding Source={ui:EnumBindingSource {x:Type repository:StashLocalMatchType}}}"
+                      SelectedItem="{Binding LocalMatchType}"
                       ToolTip="{Binding SelectedItem, RelativeSource={RelativeSource Self}, Converter={StaticResource DescriptionConverter}}"/>
         </DockPanel>
 
@@ -56,12 +55,34 @@
             <TextBlock DockPanel.Dock="Left"
                        Margin="0 0 10 0"
                        VerticalAlignment="Center"
-                       Text="Script match axis:"/>
+                       Text="Dms match type:"/>
+
             <ComboBox DockPanel.Dock="Left"
-                      ItemsSource="{Binding Source={x:Static common:DeviceAxis.All}}"
-                      SelectedItem="{Binding ScriptMatchAxis}"
-                      Width="50"
-                      Margin="0 0 10 0"/>
+                      ItemsSource="{Binding Source={ui:EnumBindingSource {x:Type repository:StashDmsMatchType}}}"
+                      SelectedItem="{Binding DmsMatchType}"
+                      ToolTip="{Binding SelectedItem, RelativeSource={RelativeSource Self}, Converter={StaticResource DescriptionConverter}}"/>
+
+            <StackPanel Orientation="Horizontal">
+                <StackPanel.Resources>
+                    <Style TargetType="{x:Type StackPanel}">
+                        <Setter Property="Visibility" Value="Collapsed"/>
+
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding DmsMatchType}" Value="MatchToAxis">
+                                <DataTrigger.Setters>
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                </DataTrigger.Setters>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </StackPanel.Resources>
+
+                <Label Margin="15 0 5 0" Content="Axis:"/>
+                <ComboBox DockPanel.Dock="Left"
+                          ItemsSource="{Binding Source={x:Static common:DeviceAxis.All}}"
+                          SelectedItem="{Binding DmsMatchAxis}"
+                          Width="50"/>
+            </StackPanel>
         </DockPanel>
     </StackPanel>
 </UserControl>
