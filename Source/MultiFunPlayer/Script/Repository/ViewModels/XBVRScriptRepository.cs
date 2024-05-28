@@ -1,4 +1,4 @@
-﻿using MultiFunPlayer.Common;
+using MultiFunPlayer.Common;
 using MultiFunPlayer.MediaSource.MediaResource;
 using Newtonsoft.Json;
 using NLog;
@@ -36,7 +36,7 @@ internal sealed class XBVRScriptRepository : AbstractScriptRepository
         var uri = new Uri(ServerBaseUri, $"/api/scene/{sceneId}");
         var response = await client.GetStringAsync(uri, token);
 
-        Logger.Trace("Received XBVR scene content \"{0}\"", response);
+        Logger.Trace("Received scene content \"{0}\"", response);
         var metadata = JsonConvert.DeserializeObject<SceneMetadata>(response);
         if (metadata?.Files == null || metadata.Files.Count == 0)
             return result;
@@ -45,7 +45,6 @@ internal sealed class XBVRScriptRepository : AbstractScriptRepository
         if (currentFile == null)
             return result;
 
-        Logger.Debug("Trying to match scripts for video file [Path: {0}, Filename: {1}]", currentFile.Path, currentFile.Filename);
         if (!TryMatchLocal(currentFile, axes, result, localRepository))
             await TryMatchDms(metadata, currentFile, axes, result, client, token);
 
@@ -118,6 +117,8 @@ internal sealed class XBVRScriptRepository : AbstractScriptRepository
 
         if (LocalMatchType == XBVRLocalMatchType.MatchToCurrentFile)
         {
+            Logger.Trace("Trying to match scripts to current file using local repository [Source: {0}, Name: {1}]", currentFile.Filename, currentFile.Path);
+
             var searchResult = localRepository.SearchForScripts(currentFile.Filename, currentFile.Path, axes);
             result.Merge(searchResult);
         }
@@ -135,12 +136,16 @@ internal sealed class XBVRScriptRepository : AbstractScriptRepository
 
         if (DmsMatchType == XBVRDmsMatchType.MatchToCurrentFile)
         {
+            Logger.Trace("Trying to match scripts to current file using dms [Source: {0}, Name: {1}]", currentFile.Filename, currentFile.Path);
+
             foreach (var axis in axes)
                 foreach (var matchedScript in DeviceAxisUtils.FindNamesMatchingAxis(axis, scriptFiles, s => s.Filename, currentFile.Filename))
                     AddToResult(resultFiles, axis, matchedScript);
         }
         else if (DmsMatchType == XBVRDmsMatchType.MatchSelectedOnly)
         {
+            Logger.Trace("Trying to match selected scripts using dms");
+
             foreach (var scriptFile in scriptFiles.Where(f => f.IsSelected))
                 foreach (var axis in DeviceAxisUtils.FindAxesMatchingName(axes, scriptFile.Filename))
                     AddToResult(resultFiles, axis, scriptFile);
