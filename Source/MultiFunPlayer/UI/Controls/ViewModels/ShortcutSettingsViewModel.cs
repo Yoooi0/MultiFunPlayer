@@ -224,7 +224,7 @@ internal sealed class ShortcutSettingsViewModel : Screen, IHandle<SettingsMessag
              || !message.Settings.TryGetObject(out var settings, "Shortcut"))
                 return;
 
-            settings.Merge(JObject.FromObject(this), new JsonMergeSettings() { MergeArrayHandling = MergeArrayHandling.Replace });
+            settings.MergeAll(JObject.FromObject(this));
         }
         else if (message.Action == SettingsAction.Loading)
         {

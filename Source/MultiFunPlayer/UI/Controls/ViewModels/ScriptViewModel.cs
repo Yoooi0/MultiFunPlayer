@@ -657,7 +657,7 @@ internal sealed class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDispo
              || !message.Settings.TryGetObject(out var settings, "Script"))
                 return;
 
-            settings.Merge(JObject.FromObject(this), new JsonMergeSettings() { MergeArrayHandling = MergeArrayHandling.Replace });
+            settings.MergeAll(JObject.FromObject(this));
         }
         else if (message.Action == SettingsAction.Loading)
         {

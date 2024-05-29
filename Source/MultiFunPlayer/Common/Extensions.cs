@@ -107,6 +107,15 @@ public static class JsonExtensions
             return Type.GetType(valueTypeName);
         return Type.GetType($"{valueTypeName}, {assemblyName}");
     }
+
+    private static readonly JsonMergeSettings MergeAllSettings = new()
+    {
+        MergeArrayHandling = MergeArrayHandling.Replace,
+        MergeNullValueHandling = MergeNullValueHandling.Merge
+    };
+
+    public static void MergeAll(this JContainer container, object content)
+        => container.Merge(content, MergeAllSettings);
 }
 
 public static class TaskExtensions

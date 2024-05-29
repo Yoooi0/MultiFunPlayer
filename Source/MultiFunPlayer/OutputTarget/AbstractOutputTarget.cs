@@ -163,7 +163,7 @@ internal abstract class AbstractOutputTarget : Screen, IOutputTarget
                  || !settings.TryGetObject(out var contextSettings, "UpdateContextSettings", context.GetType().Name))
                     continue;
 
-                contextSettings.Merge(JObject.FromObject(context), new JsonMergeSettings() { MergeArrayHandling = MergeArrayHandling.Replace });
+                contextSettings.MergeAll(JObject.FromObject(context));
             }
         }
         else if (action == SettingsAction.Loading)
