@@ -9,9 +9,9 @@
              x:ClassModifier="internal"
              mc:Ignorable="d">
     <material:Card material:ShadowAssist.ShadowDepth="Depth2">
-        <DockPanel>
+        <DockPanel Margin="5">
             <material:Card DockPanel.Dock="Top"
-                           Margin="5"
+                           Margin="0 0 0 5"
                            ClipContent="False"
                            Visibility="{Binding EnablePreview, Converter={StaticResource BooleanToVisibilityConverter}, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}">
                 <material:Card.Background>
