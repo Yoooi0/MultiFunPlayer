@@ -1,4 +1,4 @@
-using Buttplug;
+﻿using Buttplug;
 using Buttplug.NewtonsoftJson;
 using MultiFunPlayer.Common;
 using MultiFunPlayer.Shortcut;
@@ -341,15 +341,11 @@ internal sealed class ButtplugOutputTarget : AsyncAbstractOutputTarget
             await _scanSemaphore.WaitAsync(token);
             if (scanTask?.IsCompleted == false)
             {
-                cancellationSource?.Cancel();
-                cancellationSource?.Dispose();
-                cancellationSource = null;
+                try { cancellationSource?.Cancel(); }
+                catch { }
             }
             else
             {
-                cancellationSource = CancellationTokenSource.CreateLinkedTokenSource(token);
-                cancellationSource.CancelAfter(TimeSpan.FromSeconds(5));
-
                 scanTask = DoScanAsync();
             }
         }
@@ -358,18 +354,26 @@ internal sealed class ButtplugOutputTarget : AsyncAbstractOutputTarget
         {
             try
             {
+                cancellationSource = new CancellationTokenSource();
+                cancellationSource.CancelAfter(TimeSpan.FromSeconds(30));
+
                 IsScanBusy = true;
 
+                Logger.Debug("Starting device scan");
                 await client.StartScanningAsync(token);
 
-                try { await Task.Delay(TimeSpan.FromSeconds(30), cancellationSource.Token); }
+                try { await cancellationSource.Token.WaitHandle.WaitOneAsync(token); }
                 catch { }
 
+                Logger.Debug("Stopping device scan");
                 await client.StopScanningAsync(token);
             }
             finally
             {
                 IsScanBusy = false;
+
+                cancellationSource?.Dispose();
+                cancellationSource = null;
             }
         }
     }
