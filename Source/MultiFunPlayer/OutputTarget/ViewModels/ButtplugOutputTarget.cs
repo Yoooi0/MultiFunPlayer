@@ -1,4 +1,4 @@
-﻿using Buttplug;
+using Buttplug;
 using Buttplug.NewtonsoftJson;
 using MultiFunPlayer.Common;
 using MultiFunPlayer.Shortcut;
@@ -69,7 +69,7 @@ internal sealed class ButtplugOutputTarget : AsyncAbstractOutputTarget
 
         AvailableDevices.CollectionChanged += (s, e) => DeviceSettings.Refresh();
 
-        _scanSemaphore = new SemaphoreSlim(1, 1);
+        _scanSemaphore = new SemaphoreSlim(0, 1);
     }
 
     protected override IUpdateContext RegisterUpdateContext(DeviceAxisUpdateType updateType) => updateType switch
@@ -143,6 +143,9 @@ internal sealed class ButtplugOutputTarget : AsyncAbstractOutputTarget
         try
         {
             EventAggregator.Publish(new SyncRequestMessage());
+            if (_scanSemaphore.CurrentCount == 0)
+                _scanSemaphore.Release();
+
             using var cancellationSource = CancellationTokenSource.CreateLinkedTokenSource(token);
             var task = await Task.WhenAny(FixedUpdateAsync(client, cancellationSource.Token), PolledUpdateAsync(client, cancellationSource.Token), ScanAsync(client, cancellationSource.Token));
             cancellationSource.Cancel();
