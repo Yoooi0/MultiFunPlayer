@@ -116,6 +116,17 @@ internal sealed partial class KeyframesHeatmapToolTip : UserControl
        DependencyProperty.Register(nameof(EnablePreview), typeof(bool),
            typeof(KeyframesHeatmapToolTip), new FrameworkPropertyMetadata(false));
 
+    [DoNotNotify]
+    public DeviceAxis PreviewAxis
+    {
+        get => (DeviceAxis)GetValue(PreviewAxisProperty);
+        set => SetValue(PreviewAxisProperty, value);
+    }
+
+    public static readonly DependencyProperty PreviewAxisProperty =
+       DependencyProperty.Register(nameof(PreviewAxis), typeof(DeviceAxis),
+           typeof(KeyframesHeatmapToolTip), new FrameworkPropertyMetadata(null));
+
     public KeyframesHeatmapToolTip()
     {
         InitializeComponent();
