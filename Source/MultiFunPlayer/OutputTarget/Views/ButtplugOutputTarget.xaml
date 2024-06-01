@@ -442,7 +442,7 @@
                                       material:TextFieldAssist.HasClearButton="True"
                                       IsEnabled="{Binding SelectedActuatorType, Converter={StaticResource InvertedNullableToBooleanConverter}}"/>
 
-                            <Button Style="{StaticResource MaterialDesignFlatButton}"
+                            <Button Style="{StaticResource MaterialDesignIconButton}"
                                     Width="24"
                                     Height="24"
                                     Padding="0"
@@ -451,7 +451,12 @@
                                     Foreground="{DynamicResource MaterialDesignSuccessBrush}"
                                     IsEnabled="{Binding CanAddSelected}"
                                     ToolTip="Add">
-                                <material:PackIcon Kind="Plus"/>
+                                <Button.Background>
+                                    <SolidColorBrush Opacity="0.16" Color="{DynamicResource MaterialDesignSuccessColor}"/>
+                                </Button.Background>
+                                <material:PackIcon Width="20"
+                                                   Height="20"
+                                                   Kind="Plus"/>
                             </Button>
                         </StackPanel>
                     </StackPanel>
