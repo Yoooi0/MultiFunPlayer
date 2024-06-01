@@ -536,7 +536,7 @@ internal sealed class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDispo
         var resource = builder.Build();
         if (resource == null)
         {
-            Logger.Info("Received {0} [Path: \"1\"]", message?.Path);
+            Logger.Info("Received {0} [Path: \"{1}\"]", message?.Path);
         }
         else if (!resource.IsModified)
         {
