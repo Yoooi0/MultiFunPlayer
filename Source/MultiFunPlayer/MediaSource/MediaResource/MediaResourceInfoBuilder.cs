@@ -1,4 +1,4 @@
-using MultiFunPlayer.MediaSource.MediaResource.Modifier;
+﻿using MultiFunPlayer.MediaSource.MediaResource.Modifier;
 using System.IO;
 
 namespace MultiFunPlayer.MediaSource.MediaResource;
@@ -82,9 +82,8 @@ internal sealed class MediaResourceInfoBuilder(string originalPath)
         if (originalPath == null)
             return;
 
-        var modifiedPath = originalPath;
-        var modifier = mediaPathModifiers.FirstOrDefault(m => m.Process(ref modifiedPath));
-        if (modifier != null)
+        var modifiedPath = mediaPathModifiers.Aggregate(originalPath, (s, m) => m.Process(s));
+        if (!ReferenceEquals(modifiedPath, originalPath))
             _modifiedPath = modifiedPath;
     }
 }

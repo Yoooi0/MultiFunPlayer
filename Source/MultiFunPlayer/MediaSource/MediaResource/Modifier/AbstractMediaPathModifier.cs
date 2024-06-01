@@ -1,4 +1,4 @@
-﻿using Stylet;
+using Stylet;
 using System.ComponentModel;
 using System.Reflection;
 
@@ -9,7 +9,7 @@ internal abstract class AbstractMediaPathModifier : PropertyChangedBase, IMediaP
     public string Name { get; init; }
     public abstract string Description { get; }
 
-    public abstract bool Process(ref string path);
+    public abstract string Process(string path);
 
     protected AbstractMediaPathModifier()
     {

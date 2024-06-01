@@ -17,38 +17,27 @@ internal sealed class FindReplaceMediaPathModifier : AbstractMediaPathModifier
     [JsonProperty] public bool MatchCase { get; set; } = true;
     [JsonProperty] public bool UseRegularExpressions { get; set; } = false;
 
-    public override bool Process(ref string path)
+    public override string Process(string path)
     {
-        if (UseRegularExpressions)
+        if (path == null)
+            return path;
+
+        try
         {
-            if (path == null || Find == null || Replace == null)
-                return false;
-
-            try
+            var replaced = UseRegularExpressions switch
             {
-                var replaced = Regex.Replace(path, Find, Replace, MatchCase ? RegexOptions.None : RegexOptions.IgnoreCase);
-                if (ReferenceEquals(replaced, path))
-                    return false;
+                true when Find != null && Replace != null => Regex.Replace(path, Find, Replace, MatchCase ? RegexOptions.None : RegexOptions.IgnoreCase),
+                false when !string.IsNullOrEmpty(Find) => path.Replace(Find, Replace, MatchCase ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase),
+                _ => path
+            };
 
-                path = replaced;
-            }
-            catch
-            {
-                return false;
-            }
+            if (ReferenceEquals(replaced, path))
+                return path;
+
+            return replaced;
         }
-        else
-        {
-            if (path == null || string.IsNullOrEmpty(Find))
-                return false;
+        catch { }
 
-            var replaced = path.Replace(Find, Replace, MatchCase ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase);
-            if (string.Equals(replaced, path, StringComparison.Ordinal))
-                return false;
-
-            path = replaced;
-        }
-
-        return true;
+        return path;
     }
 }
