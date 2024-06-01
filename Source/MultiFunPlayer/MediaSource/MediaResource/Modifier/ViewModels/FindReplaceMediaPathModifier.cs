@@ -9,9 +9,6 @@ namespace MultiFunPlayer.MediaSource.MediaResource.Modifier.ViewModels;
 [JsonObject(MemberSerialization = MemberSerialization.OptIn)]
 internal sealed class FindReplaceMediaPathModifier : AbstractMediaPathModifier
 {
-    [DependsOn(nameof(Find))]
-    public override string Description => Find?.Length > 50 ? $"{Find[..50]}..." : Find;
-
     [JsonProperty] public string Find { get; set; } = string.Empty;
     [JsonProperty] public string Replace { get; set; } = string.Empty;
     [JsonProperty] public bool MatchCase { get; set; } = true;

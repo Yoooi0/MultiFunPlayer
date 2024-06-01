@@ -24,6 +24,7 @@ using Microsoft.Win32;
 using MultiFunPlayer.Script;
 using MultiFunPlayer.Script.Repository;
 using MultiFunPlayer.Shortcut;
+using MultiFunPlayer.UI.Dialogs.ViewModels;
 
 namespace MultiFunPlayer.UI.Controls.ViewModels;
 
@@ -53,7 +54,6 @@ internal sealed class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDispo
     public ObservableConcurrentDictionaryView<DeviceAxis, AxisModel, ChapterCollection> AxisChapters { get; }
     public ObservableConcurrentDictionaryView<DeviceAxis, AxisModel, BookmarkCollection> AxisBookmarks { get; }
 
-    public Dictionary<string, Type> MediaPathModifierTypes { get; }
     public MediaLoopSegment MediaLoopSegment { get; }
 
     public IScriptRepositoryManager ScriptRepositoryManager { get; }
@@ -90,8 +90,6 @@ internal sealed class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDispo
 
         AxisModels = new ObservableConcurrentDictionary<DeviceAxis, AxisModel>(DeviceAxis.All.ToDictionary(a => a, a => new AxisModel(a)));
         MediaPathModifiers = [];
-        MediaPathModifierTypes = ReflectionUtils.FindImplementations<IMediaPathModifier>()
-                                                .ToDictionary(t => t.GetCustomAttribute<DisplayNameAttribute>(inherit: false).DisplayName, t => t);
 
         MediaLoopSegment = new MediaLoopSegment();
         SyncSettings = new SyncSettings();
@@ -1300,39 +1298,10 @@ internal sealed class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDispo
     #endregion
 
     #region MediaResource
-    public async void OnMediaPathModifierConfigure(object sender, RoutedEventArgs e)
+    public async void OnOpenMediaPathModifiersDialog(object sender, RoutedEventArgs e)
     {
-        if (sender is not FrameworkElement element || element.DataContext is not IMediaPathModifier modifier)
-            return;
-
-        _ = await DialogHost.Show(modifier, "MediaPathModifierDialog");
-
-        if (MediaResource != null)
-            Handle(new MediaPathChangedMessage(MediaResource.OriginalPath));
-    }
-
-    public void OnMediaPathModifierAdd(object sender, RoutedEventArgs e)
-    {
-        if (sender is not FrameworkElement element || element.DataContext is not KeyValuePair<string, Type> pair)
-            return;
-
-        var (_, type) = pair;
-        var modifier = (IMediaPathModifier)Activator.CreateInstance(type);
-        MediaPathModifiers.Add(modifier);
-
-        if (MediaResource != null)
-            Handle(new MediaPathChangedMessage(MediaResource.OriginalPath));
-    }
-
-    public void OnMediaPathModifierRemove(object sender, RoutedEventArgs e)
-    {
-        if (sender is not FrameworkElement element || element.DataContext is not IMediaPathModifier modifier)
-            return;
-
-        MediaPathModifiers.Remove(modifier);
-
-        if (MediaResource != null)
-            Handle(new MediaPathChangedMessage(MediaResource.OriginalPath));
+        await DialogHelper.ShowAsync(new MediaPathModifiersDialog(MediaPathModifiers), "RootDialog");
+        Handle(new MediaPathChangedMessage(MediaResource?.OriginalPath));
     }
 
     public void OnMapCurrentMediaPathToFile(object sender, RoutedEventArgs e)

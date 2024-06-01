@@ -1,0 +1,140 @@
+﻿<UserControl x:Class="MultiFunPlayer.UI.Dialogs.Views.MediaPathModifiersDialog"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:material="http://materialdesigninxaml.net/winfx/xaml/themes"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:s="https://github.com/canton7/Stylet"
+             d:DesignHeight="450"
+             d:DesignWidth="800"
+             x:ClassModifier="internal"
+             mc:Ignorable="d">
+    <Grid Width="500"
+          MaxHeight="600"
+          Margin="20">
+        <TextBlock Margin="0 -12 -15 0"
+                   HorizontalAlignment="Left"
+                   VerticalAlignment="Top"
+                   FontSize="14"
+                   FontWeight="Bold"
+                   Text="Media path modifiers"
+                   Typography.Capitals="AllSmallCaps"/>
+
+        <Button DockPanel.Dock="Top"
+                Style="{StaticResource MaterialDesignFlatButton}"
+                Width="24"
+                Height="24"
+                Margin="0 -15 -15 0"
+                Padding="0"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Top"
+                material:RippleAssist.Feedback="{DynamicResource MaterialDesignBody}"
+                Command="{x:Static material:DialogHost.CloseDialogCommand}"
+                Foreground="{DynamicResource MaterialDesignBody}">
+            <material:PackIcon Width="20"
+                               Height="20"
+                               Kind="Close"/>
+        </Button>
+        <DockPanel Margin="0 20 0 0" LastChildFill="True">
+            <material:PopupBox DockPanel.Dock="Bottom"
+                               Style="{StaticResource MaterialDesignMultiFloatingActionPopupBox}"
+                               Width="32"
+                               Height="32"
+                               HorizontalAlignment="Center">
+
+                <material:PopupBox.ToggleContent>
+                    <material:PackIcon Width="22"
+                                       Height="22"
+                                       HorizontalAlignment="Center"
+                                       VerticalAlignment="Center"
+                                       Kind="Plus"/>
+                </material:PopupBox.ToggleContent>
+
+                <material:Card>
+                    <ItemsControl ItemsSource="{Binding MediaPathModifierTypes}" Margin="10">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <VirtualizingStackPanel/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Button Style="{StaticResource MaterialDesignRaisedButton}"
+                                        Height="20"
+                                        Margin="5"
+                                        Padding="10 0 10 0"
+                                        Click="{s:Action OnAdd}"
+                                        Content="{Binding Key}"/>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </material:Card>
+            </material:PopupBox>
+
+            <ItemsControl DockPanel.Dock="Bottom"
+                          ItemsSource="{Binding MediaPathModifiers}"
+                          Margin="0 0 0 5"
+                          Visibility="{Binding MediaPathModifiers.Count, Converter={StaticResource NotZeroToVisibilityConverter}}">
+                <ItemsControl.Template>
+                    <ControlTemplate>
+                        <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Visible">
+                            <ItemsPresenter/>
+                        </ScrollViewer>
+                    </ControlTemplate>
+                </ItemsControl.Template>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <material:Card Margin="5">
+                            <Grid>
+                                <StackPanel Margin="0 2 2 0"
+                                            HorizontalAlignment="Right"
+                                            VerticalAlignment="Top"
+                                            Panel.ZIndex="1"
+                                            Orientation="Horizontal">
+
+                                    <Button Style="{StaticResource MaterialDesignFlatButton}"
+                                            Width="20"
+                                            Height="20"
+                                            Padding="0"
+                                            Click="{s:Action OnMoveUp}"
+                                            ToolTip="Move up">
+                                        <material:PackIcon Width="16"
+                                                           Height="16"
+                                                           Kind="ArrowUp"/>
+                                    </Button>
+
+                                    <Button Style="{StaticResource MaterialDesignFlatButton}"
+                                            Width="20"
+                                            Height="20"
+                                            Padding="0"
+                                            Click="{s:Action OnMoveDown}"
+                                            ToolTip="Move down">
+                                        <material:PackIcon Width="16"
+                                                           Height="16"
+                                                           Kind="ArrowDown"/>
+                                    </Button>
+
+                                    <Button Style="{StaticResource MaterialDesignFlatButton}"
+                                            Width="20"
+                                            Height="20"
+                                            Padding="0"
+                                            material:RippleAssist.Feedback="{DynamicResource MaterialDesignErrorBrush}"
+                                            Click="{s:Action OnRemove}"
+                                            Foreground="{DynamicResource MaterialDesignErrorBrush}"
+                                            ToolTip="Remove">
+                                        <material:PackIcon Width="16"
+                                                           Height="16"
+                                                           Kind="Delete"/>
+                                    </Button>
+                                </StackPanel>
+
+                                <ContentControl s:View.Model="{Binding}" Margin="10"/>
+                            </Grid>
+                        </material:Card>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </DockPanel>
+    </Grid>
+</UserControl>
