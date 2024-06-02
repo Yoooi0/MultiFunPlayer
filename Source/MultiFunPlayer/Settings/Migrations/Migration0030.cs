@@ -9,8 +9,18 @@ internal sealed class Migration0030 : AbstractSettingsMigration
 
     protected override void InternalMigrate(JObject settings)
     {
-        foreach (var funscriptNames in SelectArrays(settings, "$.Devices[?(@.IsDefault == false)].Axes[?(@.Name == 'L0')].FunscriptNames"))
-            if (!funscriptNames.ToObject<List<string>>().Contains("raw"))
-                AddTokenToContainer("raw", funscriptNames);
+        EditPropertiesByPath(settings, "$.Devices[?(@.IsDefault == false)].Axes[?(@.Name == 'L0')].FunscriptNames", v =>
+        {
+            var funscriptNames = v.ToObject<List<string>>();
+            if (funscriptNames.Contains("raw"))
+                return v;
+
+            var unnamedIndex = funscriptNames.IndexOf("*");
+            if (unnamedIndex < 0)
+                return v;
+
+            funscriptNames.Insert(unnamedIndex, "raw");
+            return JArray.FromObject(funscriptNames);
+        });
     }
 }
