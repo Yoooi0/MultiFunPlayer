@@ -1,4 +1,4 @@
-using MultiFunPlayer.Common;
+﻿using MultiFunPlayer.Common;
 using MultiFunPlayer.MediaSource.MediaResource;
 using Newtonsoft.Json;
 using NLog;
@@ -24,31 +24,73 @@ internal sealed class XBVRScriptRepository : AbstractScriptRepository
         if (ServerBaseUri == null)
             return [];
 
-        Logger.Trace("Searching for ids in \"{0}\"", mediaResource.Path);
-        var (sceneId, fileId) = await TryGetIds(mediaResource);
+        var client = default(HttpClient);
+        try
+        {
+            Logger.Trace("Searching for ids in \"{0}\"", mediaResource.Path);
+            var (sceneId, fileId) = await TryGetIds(mediaResource);
 
-        Logger.Debug("Found ids [SceneId: \"{0}\", FileId: \"{1}\"]", sceneId, fileId);
-        if (sceneId == null || fileId == null)
-            return [];
+            Logger.Debug("Found ids [SceneId: \"{0}\", FileId: \"{1}\"]", sceneId, fileId);
+            if (fileId != null && sceneId == null)
+            {
+                Logger.Debug("Trying to reverse lookup SceneId from FileId");
 
-        using var client = NetUtils.CreateHttpClient();
-        var result = new Dictionary<DeviceAxis, IScriptResource>();
-        var uri = new Uri(ServerBaseUri, $"/api/scene/{sceneId}");
-        var response = await client.GetStringAsync(uri, token);
+                var fileMetadata = await GetFileMetadataAsync(fileId);
+                if (fileMetadata?.Type == "video")
+                    sceneId = fileMetadata?.SceneId;
 
-        Logger.Trace("Received scene content \"{0}\"", response);
-        var metadata = JsonConvert.DeserializeObject<SceneMetadata>(response);
-        if (metadata?.Files == null || metadata.Files.Count == 0)
+                Logger.Trace("Set SceneId to \"{0}\"", sceneId);
+            }
+
+            if (sceneId is null or 0 || fileId is null or 0)
+                return [];
+
+            var sceneMetadata = await GetSceneMetadataAsync(sceneId);
+            if (sceneMetadata?.Files == null || sceneMetadata.Files.Count == 0)
+                return [];
+
+            var currentFile = sceneMetadata.Files.Find(f => f.Id == fileId);
+            if (currentFile == null)
+                return [];
+
+            var result = new Dictionary<DeviceAxis, IScriptResource>();
+            if (!TryMatchLocal(currentFile, axes, result, localRepository))
+                await TryMatchDms(sceneMetadata, currentFile, axes, result, client, token);
+
             return result;
+        }
+        finally
+        {
+            client?.Dispose();
+        }
 
-        var currentFile = metadata.Files.Find(f => f.Id == fileId);
-        if (currentFile == null)
-            return result;
+        async Task<SceneMetadata> GetSceneMetadataAsync(int? sceneId)
+        {
+            if (sceneId is null or <= 0)
+                return null;
 
-        if (!TryMatchLocal(currentFile, axes, result, localRepository))
-            await TryMatchDms(metadata, currentFile, axes, result, client, token);
+            client ??= NetUtils.CreateHttpClient();
 
-        return result;
+            var uri = new Uri(ServerBaseUri, $"/api/scene/{sceneId}");
+            var response = await client.GetStringAsync(uri, token);
+
+            Logger.Trace("Received scene content \"{0}\"", response);
+            return JsonConvert.DeserializeObject<SceneMetadata>(response);
+        }
+
+        async Task<FileMetadata> GetFileMetadataAsync(int? fileId)
+        {
+            if (fileId is null or <= 0)
+                return null;
+
+            client ??= NetUtils.CreateHttpClient();
+
+            var uri = new Uri(ServerBaseUri, $"/api/files/file/{fileId}");
+            var response = await client.GetStringAsync(uri, token);
+
+            Logger.Trace("Received file content \"{0}\"", response);
+            return JsonConvert.DeserializeObject<FileMetadata>(response);
+        }
     }
 
     private async ValueTask<(int? SceneId, int? FileId)> TryGetIds(MediaResourceInfo mediaResource)
@@ -180,6 +222,7 @@ internal sealed class XBVRScriptRepository : AbstractScriptRepository
 
     private sealed record SceneMetadata([JsonProperty("file")] List<SceneFile> Files);
     private sealed record SceneFile(int Id, string Path, string Filename, string Type, [JsonProperty("is_selected_script")] bool IsSelected);
+    private sealed record FileMetadata(int Id, [JsonProperty("scene_id")] int SceneId, string Type);
 }
 
 internal enum XBVRLocalMatchType
