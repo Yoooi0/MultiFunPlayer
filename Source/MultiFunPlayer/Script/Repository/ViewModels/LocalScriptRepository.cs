@@ -54,6 +54,9 @@ internal sealed class LocalScriptRepository(IEventAggregator eventAggregator) : 
         }
 
         Logger.Debug("Found {0} scripts matching \"{1}\"", foundScripts.Count, mediaName);
+        if (foundScripts.Count == 0)
+            return [];
+
         Logger.Debug("Maching scripts to axes {list}", axes);
 
         var searchResult = new Dictionary<DeviceAxis, IScriptResource>();
