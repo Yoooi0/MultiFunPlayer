@@ -871,6 +871,8 @@ internal sealed class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDispo
 
         if (script != null)
             Logger.Info("Set {0} script to [Name: \"{1}\", Source: \"{2}\"]", axis, script.Name, script.Source);
+        else
+            Logger.Debug("Reset {0} script", axis);
 
         _eventAggregator.Publish(new ScriptChangedMessage(axis, script));
 
