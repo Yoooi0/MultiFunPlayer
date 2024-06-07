@@ -862,6 +862,14 @@ internal sealed class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDispo
     private void SetScript(DeviceAxis axis, IScriptResource script)
     {
         var model = AxisModels[axis];
+        var settings = AxisSettings[axis];
+        if (settings.LockScript && model.Script != null)
+        {
+            Logger.Debug("Ignoring {0} script [Name: \"{1}\", Source: \"{2}\"] because it is locked to [Name: \"{3}\", Source: \"{4}\"]",
+                axis, script?.Name, script?.Source, model.Script?.Name, model.Script?.Source);
+            return;
+        }
+
         var state = AxisStates[axis];
         lock (state)
         {
@@ -1172,6 +1180,12 @@ internal sealed class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDispo
 
     public void OnAxisClear(DeviceAxis axis) => ResetAxes(axis);
     public void OnAxisReload(DeviceAxis axis) => ReloadAxes(axis);
+
+    public void OnAxisToggleLock(DeviceAxis axis)
+    {
+        var settings = AxisSettings[axis];
+        settings.LockScript = !settings.LockScript;
+    }
 
     public void SetAxisTransition(DeviceAxis axis, double value, double duration, bool offset = false)
     {
@@ -1550,6 +1564,16 @@ internal sealed class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDispo
             s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All), axis => { if (axis != null) ResetSync(true, axis); });
 
         s.RegisterAction("Axis::SyncAll", () => ResetSync(true, null));
+        #endregion
+
+        #region Axis::Lock
+        s.RegisterAction<DeviceAxis, bool>("Axis::Lock::Set",
+            s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All),
+            s => s.WithLabel("Lock axis"),
+            (axis, enabled) => UpdateSettings(axis, s => s.LockScript = enabled));
+
+        s.RegisterAction<DeviceAxis>("Axis::Lock::Toggle",
+            s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All), axis => UpdateSettings(axis, s => s.LockScript = !s.LockScript));
         #endregion
 
         #region Axis::Bypass::All
@@ -2149,6 +2173,7 @@ internal sealed class AxisSettings : PropertyChangedBase
     [JsonProperty] public bool InvertValue { get; set; } = false;
     [JsonProperty] public double Offset { get; set; } = 0;
     [JsonProperty] public double ScriptScale { get; set; } = 1;
+    [JsonProperty] public bool LockScript { get; set; } = false;
     [JsonProperty] public bool BypassScript { get; set; } = false;
     [JsonProperty] public bool BypassMotionProvider { get; set; } = false;
     [JsonProperty] public bool BypassTransition { get; set; } = false;

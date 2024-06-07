@@ -742,6 +742,24 @@
                                                               Header="Reload"
                                                               Icon="{material:PackIcon Kind=Reload}"
                                                               IsEnabled="{Binding DataContext.MediaResource, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}, Converter={StaticResource InvertedNullableToBooleanConverter}}"/>
+
+                                                    <MenuItem Command="{s:Action OnAxisToggleLock}" CommandParameter="{Binding Key}">
+                                                        <MenuItem.Resources>
+                                                            <Style BasedOn="{StaticResource MaterialDesignMenuItem}" TargetType="{x:Type MenuItem}">
+                                                                <Setter Property="Icon" Value="{material:PackIcon Kind=LockOpenVariantOutline}"/>
+                                                                <Setter Property="Header" Value="Lock"/>
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding Value.Settings.LockScript}" Value="True">
+                                                                        <DataTrigger.Setters>
+                                                                            <Setter Property="Icon" Value="{material:PackIcon Kind=Lock}"/>
+                                                                            <Setter Property="Header" Value="Unlock"/>
+                                                                            <Setter Property="Foreground" Value="{DynamicResource MaterialDesignErrorBrush}"/>
+                                                                        </DataTrigger.Setters>
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </MenuItem.Resources>
+                                                    </MenuItem>
                                                 </MenuItem>
                                             </Menu>
 
