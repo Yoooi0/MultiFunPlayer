@@ -334,51 +334,28 @@
                                         </TextBlock>
                                     </MenuItem.Icon>
 
-                                    <MenuItem Padding="8"
-                                              Command="{s:Action ClearMediaLoop}"
-                                              Header="Clear">
+                                    <MenuItem Command="{s:Action ClearMediaLoop}"
+                                              Header="Clear"
+                                              Icon="{material:PackIcon Kind=WindowClose}">
                                         <MenuItem.IsEnabled>
                                             <MultiBinding Converter="{StaticResource BooleanOrConverter}">
                                                 <Binding Converter="{StaticResource InvertedNullableToBooleanConverter}" Path="MediaLoopSegment.StartPosition"/>
                                                 <Binding Converter="{StaticResource InvertedNullableToBooleanConverter}" Path="MediaLoopSegment.EndPosition"/>
                                             </MultiBinding>
                                         </MenuItem.IsEnabled>
-                                        <MenuItem.Icon>
-                                            <material:PackIcon Width="16"
-                                                               Height="16"
-                                                               Kind="WindowClose"/>
-                                        </MenuItem.Icon>
                                     </MenuItem>
 
-                                    <MenuItem Padding="8"
-                                              Command="{s:Action SetMediaLoopStartFromMediaPosition}"
-                                              Header="Set start">
-                                        <MenuItem.Icon>
-                                            <material:PackIcon Width="16"
-                                                               Height="16"
-                                                               Kind="ContainStart"/>
-                                        </MenuItem.Icon>
-                                    </MenuItem>
+                                    <MenuItem Command="{s:Action SetMediaLoopStartFromMediaPosition}"
+                                              Header="Set start"
+                                              Icon="{material:PackIcon Kind=ContainStart}"/>
 
-                                    <MenuItem Padding="8"
-                                              Command="{s:Action SetMediaLoopEndFromMediaPosition}"
-                                              Header="Set end">
-                                        <MenuItem.Icon>
-                                            <material:PackIcon Width="16"
-                                                               Height="16"
-                                                               Kind="ContainEnd"/>
-                                        </MenuItem.Icon>
-                                    </MenuItem>
+                                    <MenuItem Command="{s:Action SetMediaLoopEndFromMediaPosition}"
+                                              Header="Set end"
+                                              Icon="{material:PackIcon Kind=ContainEnd}"/>
 
-                                    <MenuItem Padding="8"
-                                              Command="{s:Action SetMediaLoopFromCurrentChapter}"
-                                              Header="Repeat chapter">
-                                        <MenuItem.Icon>
-                                            <material:PackIcon Width="16"
-                                                               Height="16"
-                                                               Kind="Contain"/>
-                                        </MenuItem.Icon>
-                                    </MenuItem>
+                                    <MenuItem Command="{s:Action SetMediaLoopFromCurrentChapter}"
+                                              Header="Repeat chapter"
+                                              Icon="{material:PackIcon Kind=Contain}"/>
                                 </MenuItem>
                             </Menu>
                         </StackPanel>
@@ -437,16 +414,21 @@
                     <MenuItem Header="Show script range"
                               IsCheckable="True"
                               IsChecked="{Binding HeatmapShowRange}"/>
+
                     <MenuItem Header="Enable script preview"
                               IsCheckable="True"
                               IsChecked="{Binding HeatmapEnablePreview}"/>
+
                     <MenuItem Header="Combine script heat"
                               IsCheckable="True"
                               IsChecked="{Binding HeatmapCombineHeat}"/>
+
                     <MenuItem Header="Invert Y"
                               IsCheckable="True"
                               IsChecked="{Binding HeatmapInvertY}"/>
+
                     <Separator/>
+
                     <MenuItem Header="Quality" IsEnabled="False"/>
                     <MenuItem material:RippleAssist.IsDisabled="True">
                         <MenuItem.Icon>
@@ -463,6 +445,7 @@
                             </DataTemplate>
                         </MenuItem.HeaderTemplate>
                     </MenuItem>
+
                     <Separator/>
                 </ContextMenu>
             </controls:KeyframesHeatmap.ContextMenu>
@@ -736,78 +719,29 @@
                                                                            Kind="File"/>
                                                     </MenuItem.Icon>
 
-                                                    <MenuItem Padding="8"
-                                                              Command="{s:Action OnAxisOpenFolder}"
+                                                    <MenuItem Command="{s:Action OnAxisOpenFolder}"
                                                               CommandParameter="{Binding Key}"
-                                                              IsEnabled="{Binding Value.Script, Converter={StaticResource InvertedNullableToBooleanConverter}}">
-                                                        <MenuItem.Header>
-                                                            <DockPanel LastChildFill="True">
-                                                                <Border DockPanel.Dock="Left"
-                                                                        Width="36"
-                                                                        Height="36">
-                                                                    <material:PackIcon Width="16"
-                                                                                       Height="16"
-                                                                                       Kind="FolderOpen"/>
-                                                                </Border>
+                                                              Header="Open folder"
+                                                              Icon="{material:PackIcon Kind=FolderOpen}"
+                                                              IsEnabled="{Binding Value.Script, Converter={StaticResource InvertedNullableToBooleanConverter}}"/>
 
-                                                                <TextBlock DockPanel.Dock="Right" Text="Open folder"/>
-                                                            </DockPanel>
-                                                        </MenuItem.Header>
-                                                    </MenuItem>
-                                                    <MenuItem Padding="8"
-                                                              Command="{s:Action OnAxisLoad}"
+                                                    <MenuItem Command="{s:Action OnAxisLoad}"
                                                               CommandParameter="{Binding Key}"
-                                                              IsEnabled="{Binding DataContext.MediaResource, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}, Converter={StaticResource InvertedNullableToBooleanConverter}}">
-                                                        <MenuItem.Header>
-                                                            <DockPanel LastChildFill="True">
-                                                                <Border DockPanel.Dock="Left"
-                                                                        Width="36"
-                                                                        Height="36">
-                                                                    <material:PackIcon Width="16"
-                                                                                       Height="16"
-                                                                                       Kind="FileDownload"/>
-                                                                </Border>
+                                                              Header="Load"
+                                                              Icon="{material:PackIcon Kind=FileDownload}"
+                                                              IsEnabled="{Binding DataContext.MediaResource, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}, Converter={StaticResource InvertedNullableToBooleanConverter}}"/>
 
-                                                                <TextBlock DockPanel.Dock="Right" Text="Load"/>
-                                                            </DockPanel>
-                                                        </MenuItem.Header>
-                                                    </MenuItem>
-                                                    <MenuItem Padding="8"
-                                                              Command="{s:Action OnAxisClear}"
+                                                    <MenuItem Command="{s:Action OnAxisClear}"
                                                               CommandParameter="{Binding Key}"
-                                                              IsEnabled="{Binding Value.Script, Converter={StaticResource InvertedNullableToBooleanConverter}}">
-                                                        <MenuItem.Header>
-                                                            <DockPanel LastChildFill="True">
-                                                                <Border DockPanel.Dock="Left"
-                                                                        Width="36"
-                                                                        Height="36">
-                                                                    <material:PackIcon Width="16"
-                                                                                       Height="16"
-                                                                                       Kind="Close"/>
-                                                                </Border>
+                                                              Header="Clear"
+                                                              Icon="{material:PackIcon Kind=Close}"
+                                                              IsEnabled="{Binding Value.Script, Converter={StaticResource InvertedNullableToBooleanConverter}}"/>
 
-                                                                <TextBlock DockPanel.Dock="Right" Text="Clear"/>
-                                                            </DockPanel>
-                                                        </MenuItem.Header>
-                                                    </MenuItem>
-                                                    <MenuItem Padding="8"
-                                                              Command="{s:Action OnAxisReload}"
+                                                    <MenuItem Command="{s:Action OnAxisReload}"
                                                               CommandParameter="{Binding Key}"
-                                                              IsEnabled="{Binding DataContext.MediaResource, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}, Converter={StaticResource InvertedNullableToBooleanConverter}}">
-                                                        <MenuItem.Header>
-                                                            <DockPanel LastChildFill="True">
-                                                                <Border DockPanel.Dock="Left"
-                                                                        Width="36"
-                                                                        Height="36">
-                                                                    <material:PackIcon Width="16"
-                                                                                       Height="16"
-                                                                                       Kind="Reload"/>
-                                                                </Border>
-
-                                                                <TextBlock DockPanel.Dock="Right" Text="Reload"/>
-                                                            </DockPanel>
-                                                        </MenuItem.Header>
-                                                    </MenuItem>
+                                                              Header="Reload"
+                                                              Icon="{material:PackIcon Kind=Reload}"
+                                                              IsEnabled="{Binding DataContext.MediaResource, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}, Converter={StaticResource InvertedNullableToBooleanConverter}}"/>
                                                 </MenuItem>
                                             </Menu>
 
