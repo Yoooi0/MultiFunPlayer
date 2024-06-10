@@ -1,0 +1,63 @@
+﻿<UserControl x:Class="MultiFunPlayer.UI.Dialogs.Views.MessageBoxDialog"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:material="http://materialdesigninxaml.net/winfx/xaml/themes"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             d:DesignHeight="450"
+             d:DesignWidth="800"
+             x:ClassModifier="internal"
+             mc:Ignorable="d">
+    <DockPanel MinWidth="150"
+               MaxWidth="600"
+               Margin="15">
+        <TextBlock DockPanel.Dock="Top"
+                   Margin="0 0 0 20"
+                   VerticalAlignment="Center"
+                   Text="{Binding Message}"
+                   TextAlignment="Center"
+                   TextWrapping="Wrap"/>
+
+        <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
+            <Button DockPanel.Dock="Left"
+                    Style="{StaticResource MaterialDesignFlatButton}"
+                    Width="80"
+                    material:RippleAssist.Feedback="{DynamicResource MaterialDesignSuccessBrush}"
+                    Command="{x:Static material:DialogHost.CloseDialogCommand}"
+                    CommandParameter="{x:Static MessageBoxResult.OK}"
+                    Content="Ok"
+                    Foreground="{DynamicResource MaterialDesignSuccessBrush}"
+                    Visibility="{Binding IsOkVisible, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+
+            <Button DockPanel.Dock="Left"
+                    Style="{StaticResource MaterialDesignFlatButton}"
+                    Width="80"
+                    material:RippleAssist.Feedback="{DynamicResource MaterialDesignSuccessBrush}"
+                    Command="{x:Static material:DialogHost.CloseDialogCommand}"
+                    CommandParameter="{x:Static MessageBoxResult.Yes}"
+                    Content="Yes"
+                    Foreground="{DynamicResource MaterialDesignSuccessBrush}"
+                    Visibility="{Binding IsYesVisible, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+
+            <Button DockPanel.Dock="Left"
+                    Style="{StaticResource MaterialDesignFlatButton}"
+                    Width="80"
+                    material:RippleAssist.Feedback="{DynamicResource MaterialDesignErrorBrush}"
+                    Command="{x:Static material:DialogHost.CloseDialogCommand}"
+                    CommandParameter="{x:Static MessageBoxResult.No}"
+                    Content="No"
+                    Foreground="{DynamicResource MaterialDesignErrorBrush}"
+                    Visibility="{Binding IsNoVisible, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+
+            <Button DockPanel.Dock="Left"
+                    Style="{StaticResource MaterialDesignFlatButton}"
+                    Width="80"
+                    material:RippleAssist.Feedback="{DynamicResource MaterialDesignWarningBrush}"
+                    Command="{x:Static material:DialogHost.CloseDialogCommand}"
+                    CommandParameter="{x:Static MessageBoxResult.Cancel}"
+                    Content="Cancel"
+                    Foreground="{DynamicResource MaterialDesignWarningBrush}"
+                    Visibility="{Binding IsCancelVisible, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+        </StackPanel>
+    </DockPanel>
+</UserControl>

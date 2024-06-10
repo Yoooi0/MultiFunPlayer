@@ -1,7 +1,8 @@
-using Microsoft.Win32;
+﻿using Microsoft.Win32;
 using MultiFunPlayer.Common;
 using MultiFunPlayer.Shortcut;
 using MultiFunPlayer.UI;
+using MultiFunPlayer.UI.Dialogs.ViewModels;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NLog;
@@ -11,6 +12,7 @@ using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.IO.Pipes;
+using System.Windows;
 
 namespace MultiFunPlayer.MediaSource.ViewModels;
 
@@ -30,7 +32,7 @@ internal sealed class MpvMediaSource(IShortcutManager shortcutManager, IEventAgg
     public string Arguments { get; set; } = "--keep-open --pause";
     public bool AutoStartEnabled { get; set; } = true;
 
-    protected override ValueTask<bool> OnConnectingAsync(ConnectionType connectionType)
+    protected override async ValueTask<bool> OnConnectingAsync(ConnectionType connectionType)
     {
         if (connectionType != ConnectionType.AutoConnect)
             Logger.Info("Connecting to {0} at \"{1}\" [Type: {2}]", Name, PipeName, connectionType);
@@ -52,12 +54,21 @@ internal sealed class MpvMediaSource(IShortcutManager shortcutManager, IEventAgg
                     Executable = new FileInfo(path);
 
             if (Executable?.Exists == true)
+            {
                 Logger.Debug("Found existing mpv executable in \"{0}\"", Executable.FullName);
+            }
             else
-                throw new MediaSourceException("Could not find mpv executable! Set path to mpv.exe or download latest release from settings.");
+            {
+                var result = (MessageBoxResult)await DialogHelper.ShowAsync(new MessageBoxDialog("Mpv executable not found!\nWould you like to download it now?", MessageBoxButton.YesNo), "RootDialog");
+                if (result != MessageBoxResult.Yes)
+                    throw new MediaSourceException("Could not find mpv executable! Set path to mpv.exe manually or download latest release from settings.");
+
+                _ = Task.Run(OnDownloadExecutable);
+                return false;
+            }
         }
 
-        return ValueTask.FromResult(true);
+        return true;
     }
 
     protected override async Task RunAsync(ConnectionType connectionType, CancellationToken token)
