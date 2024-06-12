@@ -1,7 +1,6 @@
 ﻿using MultiFunPlayer.Common;
 using Newtonsoft.Json.Linq;
 using NLog;
-using NLog.Config;
 using Stylet;
 using System.Diagnostics;
 using System.Windows;

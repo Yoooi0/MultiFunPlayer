@@ -1,4 +1,4 @@
-﻿using MultiFunPlayer.Common;
+using MultiFunPlayer.Common;
 using Stylet;
 using System.Diagnostics;
 using System.IO;
@@ -12,7 +12,6 @@ using NLog;
 using System.Runtime.CompilerServices;
 using MultiFunPlayer.Input;
 using MultiFunPlayer.MotionProvider;
-using MaterialDesignThemes.Wpf;
 using System.Reflection;
 using MultiFunPlayer.MediaSource.MediaResource;
 using MultiFunPlayer.MediaSource.MediaResource.Modifier;
