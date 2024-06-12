@@ -97,7 +97,7 @@ internal sealed class EmbyMediaSource(IShortcutManager shortcutManager, IEventAg
 
             task.ThrowIfFaulted();
         }
-        catch (OperationCanceledException e) when (e.InnerException is not TimeoutException) { }
+        catch (OperationCanceledException) { }
         catch (Exception e)
         {
             Logger.Error(e, $"{Name} failed with exception");
@@ -178,7 +178,8 @@ internal sealed class EmbyMediaSource(IShortcutManager shortcutManager, IEventAg
                 lastItem = item;
             }
         }
-        catch (OperationCanceledException e) when (e.InnerException is not TimeoutException) { }
+        catch (OperationCanceledException e) when (e.InnerException is TimeoutException t) { t.Throw(); }
+        catch (OperationCanceledException) { }
     }
 
     private async Task WriteAsync(HttpClient client, CancellationToken token)
@@ -208,6 +209,7 @@ internal sealed class EmbyMediaSource(IShortcutManager shortcutManager, IEventAg
                 _ = await client.PostAsync(uri, null, token);
             }
         }
+        catch (OperationCanceledException e) when (e.InnerException is TimeoutException t) { t.Throw(); }
         catch (OperationCanceledException) { }
     }
 

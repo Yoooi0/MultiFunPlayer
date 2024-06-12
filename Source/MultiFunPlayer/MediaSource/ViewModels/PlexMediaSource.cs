@@ -1,4 +1,4 @@
-using MultiFunPlayer.Common;
+﻿using MultiFunPlayer.Common;
 using MultiFunPlayer.UI;
 using NLog;
 using Stylet;
@@ -262,7 +262,8 @@ internal sealed class PlexMediaSource(IShortcutManager shortcutManager, IEventAg
                 PublishMessage(new MediaPlayingChangedMessage(false));
             }
         }
-        catch (OperationCanceledException e) when (e.InnerException is not TimeoutException) { }
+        catch (OperationCanceledException e) when (e.InnerException is TimeoutException t) { t.Throw(); }
+        catch (OperationCanceledException) { }
     }
 
     private async Task WriteAsync(HttpClient httpClient, CancellationToken token)
@@ -314,7 +315,8 @@ internal sealed class PlexMediaSource(IShortcutManager shortcutManager, IEventAg
                 }
             }
         }
-        catch (OperationCanceledException e) when (e.InnerException is not TimeoutException) { }
+        catch (OperationCanceledException e) when (e.InnerException is TimeoutException t) { t.Throw(); }
+        catch (OperationCanceledException) { }
     }
 
     public bool CanRefreshClients => !IsRefreshBusy && IsDisconnected && ServerBaseUri != null && !string.IsNullOrWhiteSpace(PlexToken);

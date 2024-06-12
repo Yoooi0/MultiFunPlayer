@@ -69,7 +69,7 @@ internal sealed class MpcMediaSource(IShortcutManager shortcutManager, IEventAgg
 
             task.ThrowIfFaulted();
         }
-        catch (OperationCanceledException e) when (e.InnerException is not TimeoutException) { }
+        catch (OperationCanceledException) { }
         catch (Exception e)
         {
             Logger.Error(e, $"{Name} failed with exception");
@@ -145,7 +145,8 @@ internal sealed class MpcMediaSource(IShortcutManager shortcutManager, IEventAgg
                 }
             }
         }
-        catch (OperationCanceledException e) when (e.InnerException is not TimeoutException) { }
+        catch (OperationCanceledException e) when (e.InnerException is TimeoutException t) { t.Throw(); }
+        catch (OperationCanceledException) { }
     }
 
     private async Task WriteAsync(HttpClient client, CancellationToken token)
@@ -183,7 +184,8 @@ internal sealed class MpcMediaSource(IShortcutManager shortcutManager, IEventAgg
                 response.EnsureSuccessStatusCode();
             }
         }
-        catch (OperationCanceledException e) when (e.InnerException is not TimeoutException) { }
+        catch (OperationCanceledException e) when (e.InnerException is TimeoutException t) { t.Throw(); }
+        catch (OperationCanceledException) { }
     }
 
     public override void HandleSettings(JObject settings, SettingsAction action)
