@@ -1,4 +1,5 @@
-﻿using Microsoft.Win32;
+﻿using MaterialDesignThemes.Wpf;
+using Microsoft.Win32;
 using MultiFunPlayer.Common;
 using MultiFunPlayer.Input;
 using MultiFunPlayer.Input.RawInput;
@@ -53,6 +54,8 @@ internal sealed class Bootstrapper : Bootstrapper<RootViewModel>
 
     protected override void ConfigureIoC(IStyletIoCBuilder builder)
     {
+        builder.Bind<ISnackbarMessageQueue>().To<SnackbarMessageQueue>().InSingletonScope();
+
         builder.Bind<JsonConverter>().ToAllImplementations();
 
         builder.Bind<OutputTargetViewModel>().ToSelf().InSingletonScope();
@@ -213,7 +216,7 @@ internal sealed class Bootstrapper : Bootstrapper<RootViewModel>
         var eventAggregator = Container.Get<IEventAggregator>();
         eventAggregator.Publish(new SettingsMessage(settings, SettingsAction.Loading));
 
-        DialogHelper.Initialize(Container.Get<IViewManager>(), Container.Get<SettingsViewModel>());
+        DialogHelper.Initialize(Container);
 
         base.Launch();
     }

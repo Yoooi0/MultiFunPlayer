@@ -1,3 +1,4 @@
+﻿using MaterialDesignThemes.Wpf;
 using MultiFunPlayer.Common;
 using MultiFunPlayer.UI;
 using MultiFunPlayer.UI.Controls.ViewModels;
@@ -25,6 +26,7 @@ internal sealed class RootViewModel : Conductor<IScreen>.Collection.AllActive, I
     [Inject] public SettingsViewModel Settings { get; set; }
     [Inject] public PluginViewModel Plugin { get; set; }
     [Inject] public InformationViewModel Information { get; set; }
+    [Inject] public ISnackbarMessageQueue SnackbarMessageQueue { get; set; }
 
     public bool DisablePopup { get; set; }
 

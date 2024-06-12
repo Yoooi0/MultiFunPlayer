@@ -4,6 +4,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:ui="clr-namespace:MultiFunPlayer.UI"
+             xmlns:vm="clr-namespace:MultiFunPlayer.UI.Controls.ViewModels"
              d:DesignHeight="450"
              d:DesignWidth="800"
              x:ClassModifier="internal"
@@ -49,18 +50,20 @@
                            VerticalAlignment="Center"
                            Text="App Orientation:"/>
 
-                <ComboBox ItemsSource="{Binding Source={ui:EnumBindingSource {x:Type Orientation}}}" SelectedItem="{Binding AppOrientation}"/>
+                <ComboBox DockPanel.Dock="Left"
+                          ItemsSource="{Binding Source={ui:EnumBindingSource {x:Type Orientation}}}"
+                          SelectedItem="{Binding AppOrientation}"/>
             </DockPanel>
 
             <DockPanel DockPanel.Dock="Top" LastChildFill="False">
                 <TextBlock DockPanel.Dock="Left"
                            Margin="0 0 10 0"
                            VerticalAlignment="Center"
-                           Text="Show error dialogs:"/>
+                           Text="Show errors as:"/>
 
-                <CheckBox DockPanel.Dock="Left"
-                          Margin="0 0 10 0"
-                          IsChecked="{Binding ShowErrorDialogs}"/>
+                <ComboBox DockPanel.Dock="Left"
+                          ItemsSource="{Binding Source={ui:EnumBindingSource {x:Type vm:ErrorDisplayType}}}"
+                          SelectedItem="{Binding ErrorDisplayType}"/>
             </DockPanel>
 
             <DockPanel DockPanel.Dock="Top" LastChildFill="False">

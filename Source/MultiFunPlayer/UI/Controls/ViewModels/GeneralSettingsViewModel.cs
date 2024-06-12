@@ -8,6 +8,13 @@ using System.Windows.Controls;
 
 namespace MultiFunPlayer.UI.Controls.ViewModels;
 
+internal enum ErrorDisplayType
+{
+    None,
+    Dialog,
+    Snackbar
+}
+
 internal sealed class GeneralSettingsViewModel : Screen, IHandle<SettingsMessage>, IHandle<WindowCreatedMessage>
 {
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
@@ -20,7 +27,7 @@ internal sealed class GeneralSettingsViewModel : Screen, IHandle<SettingsMessage
     public bool EnableUILogging { get; set; } = false;
     public bool AllowWindowResize { get; set; } = false;
     public bool AlwaysOnTop { get; set; } = false;
-    public bool ShowErrorDialogs { get; set; } = true;
+    public ErrorDisplayType ErrorDisplayType { get; set; } = ErrorDisplayType.Snackbar;
     public Orientation AppOrientation { get; set; } = Orientation.Vertical;
     public bool RememberWindowLocation { get; set; } = false;
 
@@ -104,7 +111,7 @@ internal sealed class GeneralSettingsViewModel : Screen, IHandle<SettingsMessage
         if (message.Action == SettingsAction.Saving)
         {
             settings[nameof(AlwaysOnTop)] = AlwaysOnTop;
-            settings[nameof(ShowErrorDialogs)] = ShowErrorDialogs;
+            settings[nameof(ErrorDisplayType)] = JToken.FromObject(ErrorDisplayType);
             settings["LogLevel"] = JToken.FromObject(SelectedLogLevel ?? LogLevel.Info);
             settings[nameof(EnableUILogging)] = EnableUILogging;
             settings[nameof(AllowWindowResize)] = AllowWindowResize;
@@ -115,8 +122,8 @@ internal sealed class GeneralSettingsViewModel : Screen, IHandle<SettingsMessage
         {
             if (settings.TryGetValue<bool>(nameof(AlwaysOnTop), out var alwaysOnTop))
                 AlwaysOnTop = alwaysOnTop;
-            if (settings.TryGetValue<bool>(nameof(ShowErrorDialogs), out var showErrorDialogs))
-                ShowErrorDialogs = showErrorDialogs;
+            if (settings.TryGetValue<ErrorDisplayType>(nameof(ErrorDisplayType), out var errorDisplayType))
+                ErrorDisplayType = errorDisplayType;
             if (settings.TryGetValue<LogLevel>("LogLevel", out var logLevel))
                 SelectedLogLevel = logLevel;
             if (settings.TryGetValue<bool>(nameof(EnableUILogging), out var enableUILogging))
