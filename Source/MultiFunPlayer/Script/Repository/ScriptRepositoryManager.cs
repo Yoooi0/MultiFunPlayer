@@ -5,7 +5,15 @@ using PropertyChanged;
 using Stylet;
 using System.ComponentModel;
 
-namespace MultiFunPlayer.Script.Repository.ViewModels;
+namespace MultiFunPlayer.Script.Repository;
+
+internal interface IScriptRepositoryManager
+{
+    IReadOnlyCollection<IScriptRepository> Repositories { get; }
+
+    void BeginSearchForScripts(MediaResourceInfo mediaResource, IEnumerable<DeviceAxis> axes, Action<Dictionary<DeviceAxis, IScriptResource>> callback, CancellationToken token);
+    Task<Dictionary<DeviceAxis, IScriptResource>> SearchForScriptsAsync(MediaResourceInfo mediaResource, IEnumerable<DeviceAxis> axes, CancellationToken token);
+}
 
 internal sealed class ScriptRepositoryManager : Screen, IScriptRepositoryManager, IHandle<SettingsMessage>
 {
@@ -14,18 +22,18 @@ internal sealed class ScriptRepositoryManager : Screen, IScriptRepositoryManager
     private readonly IEventAggregator _eventAggregator;
     private readonly ILocalScriptRepository _localRepository;
 
-    public ObservableConcurrentCollection<ScriptRepositoryModel> Repositories { get; }
+    public IReadOnlyCollection<IScriptRepository> Repositories { get; }
 
     public ScriptRepositoryManager(IEnumerable<IScriptRepository> repositories, IEventAggregator eventAggregator)
     {
         _eventAggregator = eventAggregator;
         _eventAggregator.Subscribe(this);
 
-        _localRepository = repositories.First(r => r.GetType().IsAssignableTo(typeof(ILocalScriptRepository))) as ILocalScriptRepository;
-        Repositories = new(repositories.Select(r => new ScriptRepositoryModel(r)));
+        _localRepository = repositories.Single(r => r.GetType().IsAssignableTo(typeof(ILocalScriptRepository))) as ILocalScriptRepository;
+        Repositories = [.. repositories];
 
-        foreach (var model in Repositories)
-            model.PropertyChanged += OnModelPropertyChanged;
+        foreach (var repository in Repositories)
+            repository.PropertyChanged += OnRepositoryPropertyChanged;
     }
 
     public void BeginSearchForScripts(MediaResourceInfo mediaResource, IEnumerable<DeviceAxis> axes, Action<Dictionary<DeviceAxis, IScriptResource>> callback, CancellationToken token)
@@ -42,12 +50,11 @@ internal sealed class ScriptRepositoryManager : Screen, IScriptRepositoryManager
             return result;
 
         Logger.Info("Trying to match scripts to media [Name: \"{0}\", Source: \"{1}\"]", mediaResource.Name, mediaResource.Source);
-        foreach (var model in Repositories)
+        foreach (var repository in Repositories)
         {
-            if (!model.Enabled)
+            if (!repository.Enabled)
                 continue;
 
-            var repository = model.Repository;
             try
             {
                 Logger.Debug("Searching for scripts in {0} repository", repository.Name);
@@ -59,16 +66,16 @@ internal sealed class ScriptRepositoryManager : Screen, IScriptRepositoryManager
             }
         }
 
-        foreach(var (axis, resource) in result)
+        foreach (var (axis, resource) in result)
             Logger.Info("Matched {0} script to [Name: \"{1}\", Source: \"{2}\"]", axis, resource?.Name, resource?.Source);
 
         return result;
     }
 
     [SuppressPropertyChangedWarnings]
-    private void OnModelPropertyChanged(object sender, PropertyChangedEventArgs e)
+    private void OnRepositoryPropertyChanged(object sender, PropertyChangedEventArgs e)
     {
-        if (e.PropertyName == nameof(ScriptRepositoryModel.Enabled))
+        if (e.PropertyName == nameof(IScriptRepository.Enabled))
             _eventAggregator.Publish(new ReloadScriptsRequestMessage());
     }
 
@@ -80,15 +87,13 @@ internal sealed class ScriptRepositoryManager : Screen, IScriptRepositoryManager
              || !message.Settings.TryGetObject(out var settings, "Script", "Repositories"))
                 return;
 
-            foreach (var model in Repositories)
+            foreach (var repository in Repositories)
             {
-                var repository = model.Repository;
                 if (!settings.EnsureContainsObjects(repository.Name)
                  || !settings.TryGetObject(out var repositorySettings, repository.Name))
                     continue;
 
                 repository.HandleSettings(repositorySettings, message.Action);
-                repositorySettings[nameof(ScriptRepositoryModel.Enabled)] = model.Enabled;
             }
         }
         else if (message.Action == SettingsAction.Loading)
@@ -96,25 +101,13 @@ internal sealed class ScriptRepositoryManager : Screen, IScriptRepositoryManager
             if (!message.Settings.TryGetObject(out var settings, "Script", "Repositories"))
                 return;
 
-            foreach (var model in Repositories)
+            foreach (var repository in Repositories)
             {
-                var repository = model.Repository;
                 if (!settings.TryGetObject(out var repositorySettings, repository.Name))
                     continue;
 
-                if (repositorySettings.TryGetValue<bool>(nameof(ScriptRepositoryModel.Enabled), out var enabled))
-                    model.Enabled = enabled;
-
-                repositorySettings.Remove(nameof(ScriptRepositoryModel.Enabled));
                 repository.HandleSettings(repositorySettings, message.Action);
             }
         }
     }
-}
-
-internal class ScriptRepositoryModel(IScriptRepository repository) : PropertyChangedBase
-{
-    public IScriptRepository Repository { get; } = repository;
-    public bool Enabled { get; set; } = repository.GetType() == typeof(LocalScriptRepository);
-    public bool CanToggleEnabled { get; } = repository.GetType() != typeof(LocalScriptRepository);
 }

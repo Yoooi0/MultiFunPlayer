@@ -20,6 +20,7 @@ internal sealed class LocalScriptRepository(IEventAggregator eventAggregator) : 
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
     [JsonProperty] public ObservableConcurrentCollection<ScriptLibrary> ScriptLibraries { get; } = [];
+    [JsonProperty] public new bool Enabled { get; set; } = true;
 
     public override ValueTask<Dictionary<DeviceAxis, IScriptResource>> SearchForScriptsAsync(
         MediaResourceInfo mediaResource, IEnumerable<DeviceAxis> axes, ILocalScriptRepository localRepository, CancellationToken token)
@@ -155,6 +156,8 @@ internal sealed class LocalScriptRepository(IEventAggregator eventAggregator) : 
         }
         else if (action == SettingsAction.Loading)
         {
+            if (settings.TryGetValue<bool>(nameof(Enabled), out var enabled))
+                Enabled = enabled;
             if (settings.TryGetValue<List<ScriptLibrary>>(nameof(ScriptLibraries), out var scriptLibraries))
                 ScriptLibraries.SetFrom(scriptLibraries);
         }

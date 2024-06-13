@@ -1,5 +1,6 @@
 ﻿using MultiFunPlayer.Common;
 using MultiFunPlayer.MediaSource.MediaResource;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Stylet;
 using System.ComponentModel;
@@ -7,9 +8,10 @@ using System.Reflection;
 
 namespace MultiFunPlayer.Script.Repository;
 
-internal interface IScriptRepository
+internal interface IScriptRepository : INotifyPropertyChanged
 {
     string Name { get; }
+    bool Enabled { get; }
 
     void HandleSettings(JObject settings, SettingsAction action);
 
@@ -22,9 +24,11 @@ internal interface ILocalScriptRepository
     Dictionary<DeviceAxis, IScriptResource> SearchForScripts(string mediaName, string mediaSource, IEnumerable<DeviceAxis> axes);
 }
 
+[JsonObject(MemberSerialization.OptIn)]
 internal abstract class AbstractScriptRepository : Screen, IScriptRepository
 {
     public string Name { get; }
+    [JsonProperty] public bool Enabled { get; set; }
 
     protected AbstractScriptRepository()
     {

@@ -200,43 +200,11 @@
 
                             <Button Style="{StaticResource MaterialDesignToolBarButton}"
                                     Padding="8"
-                                    Command="{x:Static material:DialogHost.OpenDialogCommand}"
+                                    Click="{s:Action OnOpenScriptRepositoryManagerDialog}"
                                     ToolTip="Script repositories">
                                 <material:PackIcon Width="19"
                                                    Height="19"
                                                    Kind="DatabaseSearch"/>
-
-                                <Button.CommandParameter>
-                                    <Grid s:View.ActionTarget="{Binding}"
-                                          MinWidth="100"
-                                          Margin="20">
-                                        <TextBlock Margin="0 -12 -15 0"
-                                                   HorizontalAlignment="Left"
-                                                   VerticalAlignment="Top"
-                                                   FontSize="14"
-                                                   FontWeight="Bold"
-                                                   Text="Script repositories"
-                                                   Typography.Capitals="AllSmallCaps"/>
-
-                                        <Button DockPanel.Dock="Top"
-                                                Style="{StaticResource MaterialDesignFlatButton}"
-                                                Width="24"
-                                                Height="24"
-                                                Margin="0 -15 -15 0"
-                                                Padding="0"
-                                                HorizontalAlignment="Right"
-                                                VerticalAlignment="Top"
-                                                material:RippleAssist.Feedback="{DynamicResource MaterialDesignBody}"
-                                                Command="{x:Static material:DialogHost.CloseDialogCommand}"
-                                                Foreground="{DynamicResource MaterialDesignBody}">
-                                            <material:PackIcon Width="20"
-                                                               Height="20"
-                                                               Kind="Close"/>
-                                        </Button>
-
-                                        <ContentControl s:View.Model="{Binding ScriptRepositoryManager}" Margin="0 20 0 0"/>
-                                    </Grid>
-                                </Button.CommandParameter>
                             </Button>
 
                             <Button Style="{StaticResource MaterialDesignToolBarButton}"

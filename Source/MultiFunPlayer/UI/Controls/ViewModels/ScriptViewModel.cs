@@ -1,4 +1,4 @@
-using MultiFunPlayer.Common;
+﻿using MultiFunPlayer.Common;
 using Stylet;
 using System.Diagnostics;
 using System.IO;
@@ -1313,6 +1313,9 @@ internal sealed class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDispo
     #endregion
 
     #region MediaResource
+    public async void OnOpenScriptRepositoryManagerDialog(object sender, RoutedEventArgs e)
+        => await DialogHelper.ShowAsync(new ScriptRepositoryManagerDialog(ScriptRepositoryManager), "RootDialog");
+
     public async void OnOpenMediaPathModifiersDialog(object sender, RoutedEventArgs e)
     {
         await DialogHelper.ShowAsync(new MediaPathModifiersDialog(MediaPathModifiers), "RootDialog");
