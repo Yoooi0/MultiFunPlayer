@@ -30,8 +30,7 @@
                            VerticalAlignment="Center"
                            Text="Api key:"/>
 
-                <TextBox MinWidth="150"
-                         MaxWidth="408"
+                <TextBox Width="150"
                          material:HintAssist.Hint="(optional)"
                          material:TextFieldAssist.HasClearButton="True"
                          Text="{Binding ApiKey}"/>
