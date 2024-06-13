@@ -51,8 +51,9 @@ internal sealed class StashScriptRepository : AbstractScriptRepository
 
         Logger.Trace("Sending query \"{0}\"", query);
         var response = await client.SendAsync(request, token);
-        var content = await response.Content.ReadAsStringAsync(token);
+        response.EnsureSuccessStatusCode();
 
+        var content = await response.Content.ReadAsStringAsync(token);
         Logger.Trace("Received query response \"{0}\"", content);
 
         var queryRespone = JsonConvert.DeserializeObject<QueryResponse>(content);
