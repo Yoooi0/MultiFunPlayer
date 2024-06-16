@@ -39,8 +39,10 @@ internal sealed class ScriptRepositoryManager : Screen, IScriptRepositoryManager
     public void BeginSearchForScripts(MediaResourceInfo mediaResource, IEnumerable<DeviceAxis> axes, Action<Dictionary<DeviceAxis, IScriptResource>> callback, CancellationToken token)
         => Task.Run(async () =>
         {
+            _eventAggregator.Publish(new PreScriptSearchMessage(mediaResource));
             var result = await SearchForScriptsAsync(mediaResource, axes, token);
             callback(result);
+            _eventAggregator.Publish(new PostScriptSearchMessage(mediaResource, result));
         }, token);
 
     public async Task<Dictionary<DeviceAxis, IScriptResource>> SearchForScriptsAsync(MediaResourceInfo mediaResource, IEnumerable<DeviceAxis> axes, CancellationToken token)

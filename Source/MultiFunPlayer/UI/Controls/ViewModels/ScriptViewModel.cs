@@ -924,7 +924,6 @@ internal sealed class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDispo
                     SetScript(axis, resource);
 
                 UpdateLinkScriptFor(axesWithLinkPriority);
-                _eventAggregator.Publish(new PostScriptSearchMessage(MediaResource, scripts));
             }, _cancellationSource.Token);
     }
 
