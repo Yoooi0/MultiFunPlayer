@@ -1,4 +1,4 @@
-using MultiFunPlayer.Common;
+﻿using MultiFunPlayer.Common;
 using MultiFunPlayer.Shortcut;
 using MultiFunPlayer.UI;
 using Newtonsoft.Json;
@@ -17,7 +17,7 @@ namespace MultiFunPlayer.OutputTarget.ViewModels;
 internal sealed class TheHandyOutputTarget(int instanceIndex, IEventAggregator eventAggregator, IDeviceAxisValueProvider valueProvider)
     : AsyncAbstractOutputTarget(instanceIndex, eventAggregator, valueProvider)
 {
-    private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
+    protected override Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
     public string ConnectionKey { get; set; } = null;
     public DeviceAxis SourceAxis { get; set; } = null;
@@ -25,7 +25,7 @@ internal sealed class TheHandyOutputTarget(int instanceIndex, IEventAggregator e
     public override ConnectionStatus Status { get; protected set; }
     public bool IsConnected => Status == ConnectionStatus.Connected;
     public bool IsDisconnected => Status == ConnectionStatus.Disconnected;
-    public bool IsConnectBusy => Status == ConnectionStatus.Connecting || Status == ConnectionStatus.Disconnecting;
+    public bool IsConnectBusy => Status is ConnectionStatus.Connecting or ConnectionStatus.Disconnecting;
     public bool CanToggleConnect => !IsConnectBusy && SourceAxis != null;
 
     protected override IUpdateContext RegisterUpdateContext(DeviceAxisUpdateType updateType) => updateType switch
@@ -42,44 +42,54 @@ internal sealed class TheHandyOutputTarget(int instanceIndex, IEventAggregator e
         EventAggregator.Publish(new SyncRequestMessage(SourceAxis));
     }
 
-    protected override async Task RunAsync(CancellationToken token)
+    protected override ValueTask<bool> OnConnectingAsync(ConnectionType connectionType)
+    {
+        if (connectionType != ConnectionType.AutoConnect)
+            Logger.Info("Connecting to {0} at \"{1}\" [Type: {2}]", Identifier, ConnectionKey, connectionType);
+
+        if (string.IsNullOrWhiteSpace(ConnectionKey))
+            throw new OutputTargetException("Invalid connection key");
+        if (SourceAxis == null)
+            throw new OutputTargetException("Source axis not selected");
+
+        return ValueTask.FromResult(true);
+    }
+
+    protected override async Task RunAsync(ConnectionType connectionType, CancellationToken token)
     {
         using var client = NetUtils.CreateHttpClient();
 
         try
         {
-            Logger.Info("Connecting to {0} at \"{1}\"", Identifier, ConnectionKey);
-
-            if (string.IsNullOrWhiteSpace(ConnectionKey))
-                throw new Exception("Invalid connection key");
-            if (SourceAxis == null)
-                throw new Exception("Source axis not selected");
-
             client.DefaultRequestHeaders.Add("Accept", "application/json");
             client.DefaultRequestHeaders.Add("X-Connection-Key", ConnectionKey);
 
             {
                 var response = await ApiGetAsync(client, "connected", token);
                 if (!response.TryGetValue<bool>("connected", out var connected) || !connected)
-                    throw new Exception("Device is not connected");
+                    throw new OutputTargetException("Device is not connected");
             }
 
             {
                 var response = await ApiGetAsync(client, "info", token);
                 if (!response.TryGetValue<int>("fwStatus", out var firmwareStatus) || firmwareStatus == 1)
-                    throw new Exception("Out of date firmware version, update required");
+                    throw new OutputTargetException("Out of date firmware version, update required");
             }
 
             {
                 var response = await ApiPutAsync(client, "mode", "{ \"mode\": 2 }", token);
                 if (!response.TryGetValue<int>("result", out var result) || result == -1)
-                    throw new Exception($"Unable to set HDSP device mode [Response: {response.ToString(Formatting.None)}]");
+                    throw new OutputTargetException($"Unable to set HDSP device mode [Response: {response.ToString(Formatting.None)}]");
             }
         }
-        catch (Exception e)
+        catch (Exception e) when (connectionType != ConnectionType.AutoConnect)
         {
-            Logger.Error(e, "Error when connecting to the device");
-            _ = DialogHelper.ShowErrorAsync(e, "Error when connecting to the device", "RootDialog");
+            Logger.Error(e, "Error when connecting to {0}", Name);
+            _ = DialogHelper.ShowErrorAsync(e, $"Error when connecting to {Name}", "RootDialog");
+            return;
+        }
+        catch
+        {
             return;
         }
 
@@ -138,7 +148,7 @@ internal sealed class TheHandyOutputTarget(int instanceIndex, IEventAggregator e
 
         Logger.Trace("{0} api response [Content: {1}]", Identifier, response.ToString(Formatting.None));
         if (response.TryGetObject(out var error, "error"))
-            throw new Exception($"Api call failed: {error.ToString(Formatting.None)}");
+            throw new OutputTargetException($"Api call failed: {error.ToString(Formatting.None)}");
 
         return response;
     }
@@ -199,26 +209,5 @@ internal sealed class TheHandyOutputTarget(int instanceIndex, IEventAggregator e
         base.UnregisterActions(s);
         s.UnregisterAction($"{Identifier}::ConnectionKey::Set");
         s.UnregisterAction($"{Identifier}::SourceAxis::Set");
-    }
-
-    public override async ValueTask<bool> CanConnectAsync(CancellationToken token)
-    {
-        try
-        {
-            if (string.IsNullOrWhiteSpace(ConnectionKey))
-                return false;
-
-            using var client = NetUtils.CreateHttpClient();
-
-            client.DefaultRequestHeaders.Add("Accept", "application/json");
-            client.DefaultRequestHeaders.Add("X-Connection-Key", ConnectionKey);
-
-            var response = await ApiGetAsync(client, "connected", token);
-            return response.TryGetValue<bool>("connected", out var connected) && connected;
-        }
-        catch
-        {
-            return false;
-        }
     }
 }

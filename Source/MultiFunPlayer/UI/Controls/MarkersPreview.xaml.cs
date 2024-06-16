@@ -304,7 +304,8 @@ internal sealed class ChapterModel
     public double CanvasMultiplier { get; init; }
     public double CanvasLeft => Math.Floor(StartPosition * CanvasMultiplier);
     public double CanvasRight => Math.Floor(EndPosition * CanvasMultiplier);
-    public double CanvasLength => CanvasRight - CanvasLeft;
+    public double CanvasWidth => CanvasRight - CanvasLeft;
+    public double CanvasMiddleWidth => Math.Max(0, CanvasWidth - 12);
 }
 
 internal sealed class BookmarkModel

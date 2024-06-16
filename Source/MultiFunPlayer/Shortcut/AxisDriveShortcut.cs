@@ -1,12 +1,11 @@
 using MultiFunPlayer.Input;
 using System.ComponentModel;
-using System.Text;
 
 namespace MultiFunPlayer.Shortcut;
 
 [DisplayName("Axis Drive")]
-internal sealed class AxisDriveShortcut(IShortcutActionResolver actionResolver, IAxisInputGestureDescriptor gesture)
-    : AbstractShortcut<IAxisInputGesture, IAxisInputGestureData>(actionResolver, gesture)
+internal sealed class AxisDriveShortcut(IShortcutActionRunner actionRunner, IAxisInputGestureDescriptor gesture)
+    : AbstractShortcut<IAxisInputGesture, IAxisInputGestureData>(actionRunner, gesture)
 {
     public AxisDriveShortcutMode DriveMode { get; set; } = AxisDriveShortcutMode.Relative;
     public bool Invert { get; set; } = false;

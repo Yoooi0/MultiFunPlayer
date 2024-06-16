@@ -22,7 +22,8 @@
                                            InterpolationType="{Binding ToolTipInterpolationType, Mode=OneWay, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}"
                                            Keyframes="{Binding ToolTipKeyframes, Mode=OneWay, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}"
                                            Position="{Binding Position, Mode=OneWay, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}"
-                                           PositionOffset="{Binding ToolTipPositionOffset, Mode=OneWay, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}"/>
+                                           PositionOffset="{Binding ToolTipPositionOffset, Mode=OneWay, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}"
+                                           PreviewAxis="{Binding SelectedAxis, Mode=OneWay, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}"/>
         </local:AutoClosingPopup>
 
         <material:Card material:ShadowAssist.ShadowDepth="Depth1" ClipContent="False">

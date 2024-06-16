@@ -1,12 +1,11 @@
 ﻿using MultiFunPlayer.Input;
 using System.ComponentModel;
-using System.Text;
 
 namespace MultiFunPlayer.Shortcut;
 
 [DisplayName("Button Press")]
-internal sealed class ButtonPressShortcut(IShortcutActionResolver actionResolver, ISimpleInputGestureDescriptor gesture)
-    : AbstractShortcut<ISimpleInputGesture, ISimpleInputGestureData>(actionResolver, gesture)
+internal sealed class ButtonPressShortcut(IShortcutActionRunner actionRunner, ISimpleInputGestureDescriptor gesture)
+    : AbstractShortcut<ISimpleInputGesture, ISimpleInputGestureData>(actionRunner, gesture)
 {
     private bool _lastPressed;
 

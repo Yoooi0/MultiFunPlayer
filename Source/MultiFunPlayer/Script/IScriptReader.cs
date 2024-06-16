@@ -21,6 +21,9 @@ public interface IScriptReader
 
 public sealed class ScriptReaderResult
 {
+    public string Name { get; }
+    public string Source { get; }
+
     public IScriptResource Resource { get; }
     public Dictionary<DeviceAxis, IScriptResource> Resources { get; }
 
@@ -28,12 +31,18 @@ public sealed class ScriptReaderResult
     public bool IsMultiAxis => Resources?.Count > 0;
 
     private ScriptReaderResult() { }
-    private ScriptReaderResult(IScriptResource resource) => Resource = resource;
-    private ScriptReaderResult(Dictionary<DeviceAxis, IScriptResource> resources) => Resources = resources;
+    private ScriptReaderResult(string name, string source)
+    {
+        Name = name;
+        Source = source;
+    }
+
+    private ScriptReaderResult(string name, string source, IScriptResource resource) : this(name, source) => Resource = resource;
+    private ScriptReaderResult(string name, string source, Dictionary<DeviceAxis, IScriptResource> resources) : this(name, source) => Resources = resources;
 
     public static ScriptReaderResult FromFailure() => new();
-    public static ScriptReaderResult FromSuccess(IScriptResource resource) => new(resource);
-    public static ScriptReaderResult FromSuccess(Dictionary<DeviceAxis, IScriptResource> resources) => new(resources);
+    public static ScriptReaderResult FromSuccess(string name, string source, IScriptResource resource) => new(name, source, resource);
+    public static ScriptReaderResult FromSuccess(string name, string source, Dictionary<DeviceAxis, IScriptResource> resources) => new(name, source, resources);
 }
 
 public abstract class AbstractScriptReader : IScriptReader
@@ -88,7 +97,7 @@ public sealed class FunscriptReader : AbstractTextScriptReader
 
         var resource = CreateResource(script.Actions);
         if (!hasAxes)
-            return ScriptReaderResult.FromSuccess(resource);
+            return ScriptReaderResult.FromSuccess(name, source, resource);
 
         var resources = new Dictionary<DeviceAxis, IScriptResource>();
         if (hasActions && DeviceAxis.TryParse("L0", out var strokeAxis))
@@ -102,7 +111,7 @@ public sealed class FunscriptReader : AbstractTextScriptReader
             resources[axis] = CreateResource(scriptAxis.Actions);
         }
 
-        return ScriptReaderResult.FromSuccess(resources);
+        return ScriptReaderResult.FromSuccess(name, source, resources);
 
         IScriptResource CreateResource(List<Action> actions) => new ScriptResource()
         {
@@ -199,7 +208,7 @@ public sealed class CsvReader : AbstractTextScriptReader
         if (keyframes.Count == 0)
             return ScriptReaderResult.FromFailure();
 
-        return ScriptReaderResult.FromSuccess(new ScriptResource()
+        return ScriptReaderResult.FromSuccess(name, source, new ScriptResource()
         {
             Name = name,
             Source = source,

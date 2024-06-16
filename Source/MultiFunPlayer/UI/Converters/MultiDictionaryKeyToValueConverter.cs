@@ -1,5 +1,4 @@
 ﻿using System.Globalization;
-using System.Reflection;
 using System.Windows.Data;
 
 namespace MultiFunPlayer.UI.Converters;

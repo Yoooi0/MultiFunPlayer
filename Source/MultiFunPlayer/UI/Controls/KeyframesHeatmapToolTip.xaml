@@ -9,9 +9,9 @@
              x:ClassModifier="internal"
              mc:Ignorable="d">
     <material:Card material:ShadowAssist.ShadowDepth="Depth2">
-        <DockPanel>
+        <DockPanel Margin="5">
             <material:Card DockPanel.Dock="Top"
-                           Margin="5"
+                           Margin="0 0 0 5"
                            ClipContent="False"
                            Visibility="{Binding EnablePreview, Converter={StaticResource BooleanToVisibilityConverter}, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}">
                 <material:Card.Background>
@@ -60,9 +60,13 @@
                 </Canvas>
             </material:Card>
 
-            <TextBlock DockPanel.Dock="Top"
-                       Text="{Binding PositionTime, StringFormat={}{0:hh\\:mm\\:ss\\.fff}, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}"
-                       TextAlignment="Center"/>
+            <Grid DockPanel.Dock="Top">
+                <TextBlock Text="{Binding PreviewAxis, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}"
+                           TextAlignment="Left"
+                           Visibility="{Binding EnablePreview, Converter={StaticResource BooleanToVisibilityConverter}, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}"/>
+
+                <TextBlock Text="{Binding PositionTime, StringFormat={}{0:hh\\:mm\\:ss\\.fff}, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}" TextAlignment="Center"/>
+            </Grid>
         </DockPanel>
     </material:Card>
 </UserControl>

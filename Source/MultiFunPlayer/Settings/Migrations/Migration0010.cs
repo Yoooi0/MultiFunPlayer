@@ -1,30 +1,16 @@
-﻿using MultiFunPlayer.Common;
-using Newtonsoft.Json.Linq;
+﻿using Newtonsoft.Json.Linq;
 using NLog;
 
 namespace MultiFunPlayer.Settings.Migrations;
 
-internal sealed class Migration0010 : AbstractConfigMigration
+internal sealed class Migration0010 : AbstractSettingsMigration
 {
-    private readonly Logger Logger = LogManager.GetCurrentClassLogger();
+    protected override Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
-    public override void Migrate(JObject settings)
+    protected override void InternalMigrate(JObject settings)
     {
-        if (settings.TryGetObject(out var mediaSourceSettings, "MediaSource"))
-            MigrateMediaSourceItems(mediaSourceSettings);
-
-        base.Migrate(settings);
-    }
-
-    private void MigrateMediaSourceItems(JObject settings)
-    {
-        Logger.Info("Migrating MediaSource items");
-
-        if (!settings.ContainsKey("Items"))
-        {
-            var items = new[] { "DeoVR", "HereSphere", "Internal", "MPC-HC", "MPV", "Whirligig" };
-            settings["Items"] = JArray.FromObject(items);
-            Logger.Info("Enabled all MediaSource items");
-        }
+        var items = new string[] { "DeoVR", "HereSphere", "Internal", "MPC-HC", "MPV", "Whirligig" };
+        if (TrySelectObject(settings, "$.MediaSource", out var mediaSource))
+            AddPropertyByName(mediaSource, "Items", JArray.FromObject(items));
     }
 }

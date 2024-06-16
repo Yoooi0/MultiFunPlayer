@@ -1,4 +1,4 @@
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System.Buffers;
 using System.Collections;
@@ -11,16 +11,15 @@ using System.Net.Sockets;
 using System.Net.WebSockets;
 using System.Runtime.CompilerServices;
 using System.Runtime.ExceptionServices;
-using System.Threading;
 
 namespace MultiFunPlayer.Common;
 
 internal static class ConnectableExtensions
 {
     public static Task WaitForIdle(this IConnectable connectable, CancellationToken token)
-        => connectable.WaitForStatus(new[] { ConnectionStatus.Connected, ConnectionStatus.Disconnected }, token);
+        => connectable.WaitForStatus([ConnectionStatus.Connected, ConnectionStatus.Disconnected], token);
     public static Task WaitForDisconnect(this IConnectable connectable, CancellationToken token)
-        => connectable.WaitForStatus(new[] { ConnectionStatus.Disconnected }, token);
+        => connectable.WaitForStatus([ConnectionStatus.Disconnected], token);
 }
 
 public static class JsonExtensions
@@ -109,85 +108,18 @@ public static class JsonExtensions
         return Type.GetType($"{valueTypeName}, {assemblyName}");
     }
 
-    public static bool RenameProperty(this JObject o, string oldName, string newName)
+    private static readonly JsonMergeSettings MergeAllSettings = new()
     {
-        if (string.Equals(oldName, newName))
-            return true;
+        MergeArrayHandling = MergeArrayHandling.Replace,
+        MergeNullValueHandling = MergeNullValueHandling.Merge
+    };
 
-        if (!o.ContainsKey(oldName))
-            return false;
-
-        var p = o.Property(oldName);
-        p.Replace(new JProperty(newName, p.Value));
-
-        return true;
-    }
+    public static void MergeAll(this JContainer container, object content)
+        => container.Merge(content, MergeAllSettings);
 }
 
 public static class TaskExtensions
 {
-    public static Task WithCancellation(this Task task, CancellationToken cancellationToken)
-    {
-        static async Task DoWaitAsync(Task task, CancellationToken cancellationToken)
-        {
-            var tcs = new TaskCompletionSource();
-            await using var registration = cancellationToken.Register(() => tcs.TrySetCanceled(cancellationToken), useSynchronizationContext: false);
-            await await Task.WhenAny(task, tcs.Task);
-        }
-
-        if (!cancellationToken.CanBeCanceled)
-            return task;
-        if (cancellationToken.IsCancellationRequested)
-            return Task.FromCanceled(cancellationToken);
-        return DoWaitAsync(task, cancellationToken);
-    }
-
-    public static Task<TResult> WithCancellation<TResult>(this Task<TResult> task, CancellationToken cancellationToken)
-    {
-        static async Task<T> DoWaitAsync<T>(Task<T> task, CancellationToken cancellationToken)
-        {
-            var tcs = new TaskCompletionSource<T>();
-            await using var registration = cancellationToken.Register(() => tcs.TrySetCanceled(cancellationToken), useSynchronizationContext: false);
-            return await await Task.WhenAny(task, tcs.Task);
-        }
-
-        if (!cancellationToken.CanBeCanceled)
-            return task;
-        if (cancellationToken.IsCancellationRequested)
-            return Task.FromCanceled<TResult>(cancellationToken);
-        return DoWaitAsync(task, cancellationToken);
-    }
-
-    public static Task WithCancellation(this Task task, int millisecondsDelay)
-    {
-        static async Task DoWaitAsync(Task task, int millisecondsDelay)
-        {
-            var tcs = new TaskCompletionSource();
-            using var cancellationSource = new CancellationTokenSource(millisecondsDelay);
-            await using var registration = cancellationSource.Token.Register(() => tcs.TrySetCanceled(), useSynchronizationContext: false);
-
-            try { await await Task.WhenAny(task, tcs.Task); }
-            catch (OperationCanceledException) when (tcs.Task.IsCanceled) { throw new TimeoutException(); }
-        }
-
-        return DoWaitAsync(task, millisecondsDelay);
-    }
-
-    public static Task<TResult> WithCancellation<TResult>(this Task<TResult> task, int millisecondsDelay)
-    {
-        static async Task<T> DoWaitAsync<T>(Task<T> task, int millisecondsDelay)
-        {
-            var tcs = new TaskCompletionSource<T>();
-            using var cancellationSource = new CancellationTokenSource(millisecondsDelay);
-            await using var registration = cancellationSource.Token.Register(() => tcs.TrySetCanceled(), useSynchronizationContext: false);
-
-            try { return await await Task.WhenAny(task, tcs.Task); }
-            catch (OperationCanceledException) when (tcs.Task.IsCanceled) { throw new TimeoutException(); }
-        }
-
-        return DoWaitAsync(task, millisecondsDelay);
-    }
-
     public static void ThrowIfFaulted(this Task task)
     {
         var e = task.Exception;
@@ -218,7 +150,7 @@ public static class IOExtensions
                 return action.Invoke(directory);
         } catch { }
 
-        return Enumerable.Empty<T>();
+        return [];
     }
 
     public static IEnumerable<DirectoryInfo> SafeEnumerateDirectories(this DirectoryInfo directory) => directory.SafeEnumerateDirectories("*");
@@ -294,41 +226,18 @@ public static class CollectionExtensions
 
 public static class StreamExtensions
 {
-    public static async Task<byte[]> ReadBytesAsync(this NetworkStream stream, int count, CancellationToken token)
+    public static async Task<byte[]> ReadExactlyAsync(this Stream stream, int count, CancellationToken token)
     {
-        using var memoryOwner = MemoryPool<byte>.Shared.Rent(1024);
-        await using var memoryStream = new MemoryStream();
-
-        var readMemory = memoryOwner.Memory;
-        while (memoryStream.Position < count)
-        {
-            var remaining = Math.Min(count - (int)memoryStream.Position, readMemory.Length);
-            var read = await stream.ReadAsync(readMemory[..remaining], token);
-            if (read == 0)
-                break;
-
-            await memoryStream.WriteAsync(readMemory[..read], token);
-        }
-
-        return memoryStream.ToArray();
+        var buffer = new byte[count];
+        await stream.ReadExactlyAsync(buffer, token);
+        return buffer;
     }
 
-    public static byte[] ReadBytes(this NetworkStream stream, int count)
+    public static byte[] ReadExactly(this Stream stream, int count)
     {
-        using var memoryStream = new MemoryStream();
-        var readBuffer = ArrayPool<byte>.Shared.Rent(1024);
-
-        while (memoryStream.Position < count)
-        {
-            var remaining = Math.Min(count - (int)memoryStream.Position, readBuffer.Length);
-            var read = stream.Read(readBuffer.AsSpan(0, remaining));
-            if (read == 0)
-                break;
-
-            memoryStream.Write(readBuffer.AsSpan(0, read));
-        }
-
-        return memoryStream.ToArray();
+        var buffer = new byte[count];
+        stream.ReadExactly(buffer);
+        return buffer;
     }
 }
 
@@ -336,8 +245,8 @@ public static class WebSocketExtensions
 {
     public static async Task<byte[]> ReceiveAsync(this ClientWebSocket client, CancellationToken token)
     {
-        using var memoryOwner = MemoryPool<byte>.Shared.Rent(1024);
         await using var memoryStream = new MemoryStream();
+        using var memoryOwner = MemoryPool<byte>.Shared.Rent(1024);
 
         var readMemory = memoryOwner.Memory;
         var result = default(ValueWebSocketReceiveResult);
@@ -483,15 +392,15 @@ public static class StopwatchExtensions
 public static class WaitHandleExtensions
 {
     public static bool WaitOne(this WaitHandle handle, CancellationToken cancellationToken)
-        => ThrowIfCancellationRequested(WaitHandle.WaitAny(new[] { handle, cancellationToken.WaitHandle }) == 0, cancellationToken);
+        => ThrowIfCancellationRequested(WaitHandle.WaitAny([handle, cancellationToken.WaitHandle]) == 0, cancellationToken);
     public static bool WaitOne(this WaitHandle handle, int millisecondsTimeout, CancellationToken cancellationToken)
-        => ThrowIfCancellationRequested(WaitHandle.WaitAny(new[] { handle, cancellationToken.WaitHandle }, millisecondsTimeout) == 0, cancellationToken);
+        => ThrowIfCancellationRequested(WaitHandle.WaitAny([handle, cancellationToken.WaitHandle], millisecondsTimeout) == 0, cancellationToken);
     public static bool WaitOne(this WaitHandle handle, TimeSpan timeout, CancellationToken cancellationToken)
-        => ThrowIfCancellationRequested(WaitHandle.WaitAny(new[] { handle, cancellationToken.WaitHandle }, timeout) == 0, cancellationToken);
+        => ThrowIfCancellationRequested(WaitHandle.WaitAny([handle, cancellationToken.WaitHandle], timeout) == 0, cancellationToken);
     public static bool WaitOne(this WaitHandle handle, int millisecondsTimeout, bool exitContext, CancellationToken cancellationToken)
-        => ThrowIfCancellationRequested(WaitHandle.WaitAny(new[] { handle, cancellationToken.WaitHandle }, millisecondsTimeout, exitContext) == 0, cancellationToken);
+        => ThrowIfCancellationRequested(WaitHandle.WaitAny([handle, cancellationToken.WaitHandle], millisecondsTimeout, exitContext) == 0, cancellationToken);
     public static bool WaitOne(this WaitHandle handle, TimeSpan timeout, bool exitContext, CancellationToken cancellationToken)
-        => ThrowIfCancellationRequested(WaitHandle.WaitAny(new[] { handle, cancellationToken.WaitHandle }, timeout, exitContext) == 0, cancellationToken);
+        => ThrowIfCancellationRequested(WaitHandle.WaitAny([handle, cancellationToken.WaitHandle], timeout, exitContext) == 0, cancellationToken);
 
     private static bool ThrowIfCancellationRequested(bool result, CancellationToken cancellationToken)
     {

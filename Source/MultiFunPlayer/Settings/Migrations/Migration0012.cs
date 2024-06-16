@@ -1,29 +1,16 @@
-﻿using MultiFunPlayer.Common;
-using Newtonsoft.Json.Linq;
+﻿using Newtonsoft.Json.Linq;
 using NLog;
 
 namespace MultiFunPlayer.Settings.Migrations;
 
-internal sealed class Migration0012 : AbstractConfigMigration
+internal sealed class Migration0012 : AbstractSettingsMigration
 {
-    private readonly Logger Logger = LogManager.GetCurrentClassLogger();
+    protected override Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
-    public override void Migrate(JObject settings)
+    protected override void InternalMigrate(JObject settings)
     {
-        if (settings.TryGetObject(out var shortcutSettings, "Shortcuts"))
-            MigrateFloatActionSettings(shortcutSettings);
-
-        base.Migrate(settings);
-    }
-
-    private void MigrateFloatActionSettings(JObject settings)
-    {
-        Logger.Info("Migrating action settings");
-
-        foreach (var token in settings.SelectTokens("$.Bindings[*].Actions[*].Settings[?(@.$type == 'System.Single, System.Private.CoreLib')]"))
-        {
-            token["$type"] = "System.Double, System.Private.CoreLib";
-            Logger.Info("Migrated setting type from \"System.Single\" to \"System.Double\"");
-        }
+        SetPropertiesByPath(settings,
+            "$.Shortcuts.Bindings[*].Actions[*].Settings[?(@.$type == 'System.Single, System.Private.CoreLib')].$type",
+            "System.Double, System.Private.CoreLib");
     }
 }

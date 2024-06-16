@@ -15,13 +15,14 @@ public abstract class PluginBase : PropertyChangedBase
 {
     private readonly MessageProxy _messageProxy;
     private readonly FrozenDictionary<Type, bool> _asyncHandlerOverrides;
-    internal CancellationTokenSource _internalCancellationSource;
 
+    internal CancellationTokenSource InternalCancellationSource;
     internal event EventHandler<Exception> OnInternalException;
 
     [Inject] internal IDeviceAxisValueProvider DeviceAxisValueProvider { get; set; }
     [Inject] internal IEventAggregator EventAggregator { get; set; }
     [Inject] internal IShortcutManager ShortcutManager { get; set; }
+    [Inject] internal IShortcutActionRunner ShortcutActionRunner { get; set; }
     [Inject] internal IPropertyManager PropertyManager { get; set; }
 
     protected Logger Logger { get; }
@@ -43,22 +44,59 @@ public abstract class PluginBase : PropertyChangedBase
     #endregion
 
     #region Shortcut
-    protected void InvokeAction(string actionName, params object[] arguments)
-        => ShortcutManager.Invoke(actionName, arguments);
 
-    protected void InvokeAction(string actionName)
-        => ShortcutManager.Invoke(actionName);
-    protected void InvokeAction<T0>(string actionName, T0 arg0)
-        => ShortcutManager.Invoke(actionName, arg0);
-    protected void InvokeAction<T0, T1>(string actionName, T0 arg0, T1 arg1)
-        => ShortcutManager.Invoke(actionName, arg0, arg1);
-    protected void InvokeAction<T0, T1, T2>(string actionName, T0 arg0, T1 arg1, T2 arg2)
-        => ShortcutManager.Invoke(actionName, arg0, arg1, arg2);
-    protected void InvokeAction<T0, T1, T2, T3>(string actionName, T0 arg0, T1 arg1, T2 arg2, T3 arg3)
-        => ShortcutManager.Invoke(actionName, arg0, arg1, arg2, arg3);
-    protected void InvokeAction<T0, T1, T2, T3, T4>(string actionName, T0 arg0, T1 arg1, T2 arg2, T3 arg3, T4 arg4)
-        => ShortcutManager.Invoke(actionName, arg0, arg1, arg2, arg3, arg4);
+    protected void InvokeAction(string actionName, bool invokeDirectly = false)
+        => ShortcutActionRunner.Invoke(actionName, invokeDirectly);
+    protected void InvokeAction<T0>(string actionName, T0 arg0, bool invokeDirectly = false)
+        => ShortcutActionRunner.Invoke(actionName, arg0, invokeDirectly);
+    protected void InvokeAction<T0, T1>(string actionName, T0 arg0, T1 arg1, bool invokeDirectly = false)
+        => ShortcutActionRunner.Invoke(actionName, arg0, arg1, invokeDirectly);
+    protected void InvokeAction<T0, T1, T2>(string actionName, T0 arg0, T1 arg1, T2 arg2, bool invokeDirectly = false)
+        => ShortcutActionRunner.Invoke(actionName, arg0, arg1, arg2, invokeDirectly);
+    protected void InvokeAction<T0, T1, T2, T3>(string actionName, T0 arg0, T1 arg1, T2 arg2, T3 arg3, bool invokeDirectly = false)
+        => ShortcutActionRunner.Invoke(actionName, arg0, arg1, arg2, arg3, invokeDirectly);
+    protected void InvokeAction<T0, T1, T2, T3, T4>(string actionName, T0 arg0, T1 arg1, T2 arg2, T3 arg3, T4 arg4, bool invokeDirectly = false)
+        => ShortcutActionRunner.Invoke(actionName, arg0, arg1, arg2, arg3, arg4, invokeDirectly);
 
+    protected ValueTask InvokeActionAsync(string actionName, bool invokeDirectly = false)
+        => ShortcutActionRunner.InvokeAsync(actionName, invokeDirectly);
+    protected ValueTask InvokeActionAsync<T0>(string actionName, T0 arg0, bool invokeDirectly = false)
+        => ShortcutActionRunner.InvokeAsync(actionName, arg0, invokeDirectly);
+    protected ValueTask InvokeActionAsync<T0, T1>(string actionName, T0 arg0, T1 arg1, bool invokeDirectly = false)
+        => ShortcutActionRunner.InvokeAsync(actionName, arg0, arg1, invokeDirectly);
+    protected ValueTask InvokeActionAsync<T0, T1, T2>(string actionName, T0 arg0, T1 arg1, T2 arg2, bool invokeDirectly = false)
+        => ShortcutActionRunner.InvokeAsync(actionName, arg0, arg1, arg2, invokeDirectly);
+    protected ValueTask InvokeActionAsync<T0, T1, T2, T3>(string actionName, T0 arg0, T1 arg1, T2 arg2, T3 arg3, bool invokeDirectly = false)
+        => ShortcutActionRunner.InvokeAsync(actionName, arg0, arg1, arg2, arg3, invokeDirectly);
+    protected ValueTask InvokeActionAsync<T0, T1, T2, T3, T4>(string actionName, T0 arg0, T1 arg1, T2 arg2, T3 arg3, T4 arg4, bool invokeDirectly = false)
+        => ShortcutActionRunner.InvokeAsync(actionName, arg0, arg1, arg2, arg3, arg4, invokeDirectly);
+
+    protected void RegisterAction(string actionName, Func<ValueTask> action)
+        => ShortcutManager.RegisterAction(actionName, action);
+    protected void RegisterAction<T0>(string actionName, Func<IShortcutSettingBuilder<T0>, IShortcutSettingBuilder<T0>> settings0, Func<T0, ValueTask> action)
+        => ShortcutManager.RegisterAction(actionName, settings0, action);
+    protected void RegisterAction<T0, T1>(string actionName, Func<IShortcutSettingBuilder<T0>, IShortcutSettingBuilder<T0>> settings0, Func<IShortcutSettingBuilder<T1>, IShortcutSettingBuilder<T1>> settings1, Func<T0, T1, ValueTask> action)
+        => ShortcutManager.RegisterAction(actionName, settings0, settings1, action);
+    protected void RegisterAction<T0, T1, T2>(string actionName, Func<IShortcutSettingBuilder<T0>, IShortcutSettingBuilder<T0>> settings0, Func<IShortcutSettingBuilder<T1>, IShortcutSettingBuilder<T1>> settings1, Func<IShortcutSettingBuilder<T2>, IShortcutSettingBuilder<T2>> settings2, Func<T0, T1, T2, ValueTask> action)
+        => ShortcutManager.RegisterAction(actionName, settings0, settings1, settings2, action);
+    protected void RegisterAction<T0, T1, T2, T3>(string actionName, Func<IShortcutSettingBuilder<T0>, IShortcutSettingBuilder<T0>> settings0, Func<IShortcutSettingBuilder<T1>, IShortcutSettingBuilder<T1>> settings1, Func<IShortcutSettingBuilder<T2>, IShortcutSettingBuilder<T2>> settings2, Func<IShortcutSettingBuilder<T3>, IShortcutSettingBuilder<T3>> settings3, Func<T0, T1, T2, T3, ValueTask> action)
+        => ShortcutManager.RegisterAction(actionName, settings0, settings1, settings2, settings3, action);
+    protected void RegisterAction<T0, T1, T2, T3, T4>(string actionName, Func<IShortcutSettingBuilder<T0>, IShortcutSettingBuilder<T0>> settings0, Func<IShortcutSettingBuilder<T1>, IShortcutSettingBuilder<T1>> settings1, Func<IShortcutSettingBuilder<T2>, IShortcutSettingBuilder<T2>> settings2, Func<IShortcutSettingBuilder<T3>, IShortcutSettingBuilder<T3>> settings3, Func<IShortcutSettingBuilder<T4>, IShortcutSettingBuilder<T4>> settings4, Func<T0, T1, T2, T3, T4, ValueTask> action)
+        => ShortcutManager.RegisterAction(actionName, settings0, settings1, settings2, settings3, settings4, action);
+
+    protected void RegisterAction<TD>(string actionName, Func<TD, ValueTask> action) where TD : IInputGestureData
+        => ShortcutManager.RegisterAction(actionName, action);
+    protected void RegisterAction<TD, T0>(string actionName, Func<IShortcutSettingBuilder<T0>, IShortcutSettingBuilder<T0>> settings0, Func<TD, T0, ValueTask> action) where TD : IInputGestureData
+        => ShortcutManager.RegisterAction(actionName, settings0, action);
+    protected void RegisterAction<TD, T0, T1>(string actionName, Func<IShortcutSettingBuilder<T0>, IShortcutSettingBuilder<T0>> settings0, Func<IShortcutSettingBuilder<T1>, IShortcutSettingBuilder<T1>> settings1, Func<TD, T0, T1, ValueTask> action) where TD : IInputGestureData
+        => ShortcutManager.RegisterAction(actionName, settings0, settings1, action);
+    protected void RegisterAction<TD, T0, T1, T2>(string actionName, Func<IShortcutSettingBuilder<T0>, IShortcutSettingBuilder<T0>> settings0, Func<IShortcutSettingBuilder<T1>, IShortcutSettingBuilder<T1>> settings1, Func<IShortcutSettingBuilder<T2>, IShortcutSettingBuilder<T2>> settings2, Func<TD, T0, T1, T2, ValueTask> action) where TD : IInputGestureData
+        => ShortcutManager.RegisterAction(actionName, settings0, settings1, settings2, action);
+    protected void RegisterAction<TD, T0, T1, T2, T3>(string actionName, Func<IShortcutSettingBuilder<T0>, IShortcutSettingBuilder<T0>> settings0, Func<IShortcutSettingBuilder<T1>, IShortcutSettingBuilder<T1>> settings1, Func<IShortcutSettingBuilder<T2>, IShortcutSettingBuilder<T2>> settings2, Func<IShortcutSettingBuilder<T3>, IShortcutSettingBuilder<T3>> settings3, Func<TD, T0, T1, T2, T3, ValueTask> action) where TD : IInputGestureData
+        => ShortcutManager.RegisterAction(actionName, settings0, settings1, settings2, settings3, action);
+
+    protected void RegisterAction(string actionName, Action action)
+        => ShortcutManager.RegisterAction(actionName, action);
     protected void RegisterAction<T0>(string actionName, Func<IShortcutSettingBuilder<T0>, IShortcutSettingBuilder<T0>> settings0, Action<T0> action)
         => ShortcutManager.RegisterAction(actionName, settings0, action);
     protected void RegisterAction<T0, T1>(string actionName, Func<IShortcutSettingBuilder<T0>, IShortcutSettingBuilder<T0>> settings0, Func<IShortcutSettingBuilder<T1>, IShortcutSettingBuilder<T1>> settings1, Action<T0, T1> action)
@@ -154,7 +192,7 @@ public abstract class PluginBase : PropertyChangedBase
 
         if (_asyncHandlerOverrides.TryGetValue(e.GetType(), out var overridden) && overridden)
         {
-            var token = _internalCancellationSource.Token;
+            var token = InternalCancellationSource.Token;
             _ = Task.Run(async () =>
             {
                 try
@@ -189,7 +227,7 @@ public abstract class PluginBase : PropertyChangedBase
 
     internal void InternalInitialize(CancellationToken cancellationToken)
     {
-        _internalCancellationSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        InternalCancellationSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         EventAggregator.Subscribe(_messageProxy);
     }
 
@@ -200,9 +238,9 @@ public abstract class PluginBase : PropertyChangedBase
     {
         EventAggregator.Unsubscribe(_messageProxy);
 
-        _internalCancellationSource?.Cancel();
-        _internalCancellationSource?.Dispose();
-        _internalCancellationSource = null;
+        InternalCancellationSource?.Cancel();
+        InternalCancellationSource?.Dispose();
+        InternalCancellationSource = null;
 
         Dispose(disposing: true);
         GC.SuppressFinalize(this);
@@ -225,13 +263,13 @@ public abstract class SyncPluginBase : PluginBase
         void HandleInternalException(object _, Exception e)
         {
             if (Interlocked.CompareExchange(ref internalException, e, null) == null)
-                _internalCancellationSource.Cancel();
+                InternalCancellationSource.Cancel();
         }
 
         try
         {
             OnInternalException += HandleInternalException;
-            Execute(_internalCancellationSource.Token);
+            Execute(InternalCancellationSource.Token);
         }
         catch (OperationCanceledException) when (internalException != null) { internalException.Throw(); }
         catch (Exception e) when (internalException != null) { throw new AggregateException(internalException, e); }
@@ -260,13 +298,13 @@ public abstract class AsyncPluginBase : PluginBase
         void HandleInternalException(object _, Exception e)
         {
             if (Interlocked.CompareExchange(ref internalException, e, null) == null)
-                _internalCancellationSource.Cancel();
+                InternalCancellationSource.Cancel();
         }
 
         try
         {
             OnInternalException += HandleInternalException;
-            await ExecuteAsync(_internalCancellationSource.Token);
+            await ExecuteAsync(InternalCancellationSource.Token);
         }
         catch (OperationCanceledException) when (internalException != null) { internalException.Throw(); }
         catch (Exception e) when (internalException != null) { throw new AggregateException(internalException, e); }

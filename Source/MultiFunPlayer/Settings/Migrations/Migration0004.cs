@@ -1,53 +1,18 @@
-﻿using MultiFunPlayer.Common;
-using Newtonsoft.Json.Linq;
+﻿using Newtonsoft.Json.Linq;
 using NLog;
+using System.Text.RegularExpressions;
 
 namespace MultiFunPlayer.Settings.Migrations;
 
-internal sealed class Migration0004 : AbstractConfigMigration
+internal sealed class Migration0004 : AbstractSettingsMigration
 {
-    private readonly Logger Logger = LogManager.GetCurrentClassLogger();
+    protected override Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
-    public override void Migrate(JObject settings)
+    protected override void InternalMigrate(JObject settings)
     {
-        if (settings.TryGetObject(out var shortcutSettings, "Shortcuts"))
-            MigrateOutputTargetBindings(shortcutSettings);
-
-        base.Migrate(settings);
-    }
-
-    private void MigrateOutputTargetBindings(JObject settings)
-    {
-        Logger.Info("Migrating OutputTarget Bindings");
-
-        var prefixes = new List<string>()
-        {
-            "Buttplug.io::", "Network::", "Pipe::", "Serial::"
-        };
-
-        if (!settings.ContainsKey("Bindings"))
-            return;
-
-        var bindings = settings["Bindings"].OfType<JObject>();
-        foreach (var binding in bindings)
-        {
-            if (!binding.ContainsKey("Actions"))
-                continue;
-
-            var actions = binding["Actions"].OfType<JObject>();
-            foreach (var action in actions)
-            {
-                if (!action.ContainsKey("Descriptor"))
-                    continue;
-
-                var descriptor = action["Descriptor"].ToString();
-                var prefix = prefixes.Find(p => descriptor.StartsWith(p));
-                if (prefix == null)
-                    continue;
-
-                action["Descriptor"] = $"{prefix[..^2]}/0::{descriptor[prefix.Length..]}";
-                Logger.Info("Migrated action from \"{0}\" to \"{1}\"", descriptor, action["Descriptor"].ToString());
-            }
-        }
+        var regex = new Regex(@"^(Buttplug\.io|Network|Pipe|Serial)::");
+        EditPropertiesByPath(settings, "$.Shortcuts.Bindings[*].Actions[*].Descriptor",
+            v => regex.IsMatch(v.ToString()),
+            v => regex.Replace(v.ToString(), "$1/0::"));
     }
 }

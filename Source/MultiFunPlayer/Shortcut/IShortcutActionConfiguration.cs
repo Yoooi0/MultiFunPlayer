@@ -64,14 +64,18 @@ internal sealed class ShortcutActionConfiguration : PropertyChangedBase, IShortc
 
         if (!typeMatches)
         {
-            Logger.Warn($"Action \"{Name}\" setting type mismatch! [\"{settingType}\" != \"{valueType}\"]");
+            Logger.Warn("Action \"{0}\" setting type mismatch! [\"{1}\" != \"{2}\"]", Name, settingType, valueType);
         }
         else
         {
             if (setting.Value is INotifyPropertyChanged oldPropertyChanged)
                 oldPropertyChanged.PropertyChanged -= OnSettingPropertyChanged;
 
-            setting.Value = value;
+            var coercedValue = setting.TemplateContext?.CoerceValue(value) ?? value;
+            if (!Equals(coercedValue, value))
+                Logger.Warn("Action \"{0}\" setting value coerced from \"{1}\" to \"{2}\"", Name, value, coercedValue);
+
+            setting.Value = coercedValue;
             if (setting.Value is INotifyPropertyChanged newPropertyChanged)
                 newPropertyChanged.PropertyChanged += OnSettingPropertyChanged;
         }

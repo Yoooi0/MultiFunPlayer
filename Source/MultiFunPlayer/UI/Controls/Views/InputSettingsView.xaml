@@ -1,0 +1,139 @@
+﻿<UserControl x:Class="MultiFunPlayer.UI.Controls.Views.InputSettingsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:material="http://materialdesigninxaml.net/winfx/xaml/themes"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:metro="http://metro.mahapps.com/winfx/xaml/controls"
+             xmlns:rawinput="clr-namespace:MultiFunPlayer.Input.RawInput"
+             xmlns:xinput="clr-namespace:MultiFunPlayer.Input.XInput"
+             d:DesignHeight="450"
+             d:DesignWidth="800"
+             x:ClassModifier="internal"
+             mc:Ignorable="d">
+    <UserControl.Resources>
+        <DataTemplate DataType="{x:Type xinput:XInputProcessorSettings}">
+            <DockPanel>
+                <DockPanel DockPanel.Dock="Top">
+                    <TextBlock DockPanel.Dock="Left"
+                               Margin="0 0 5 0"
+                               VerticalAlignment="Center"
+                               Text="RightThumb dead zone:"/>
+                    <metro:NumericUpDown DockPanel.Dock="Right"
+                                         Interval="0.01"
+                                         Maximum="1"
+                                         Minimum="0"
+                                         StringFormat="P2"
+                                         Value="{Binding RightThumbDeadZone}"/>
+                </DockPanel>
+
+                <DockPanel DockPanel.Dock="Top">
+                    <TextBlock DockPanel.Dock="Left"
+                               Margin="0 0 5 0"
+                               VerticalAlignment="Center"
+                               Text="LeftThumb dead zone:"/>
+                    <metro:NumericUpDown Interval="0.01"
+                                         Maximum="1"
+                                         Minimum="0"
+                                         StringFormat="P2"
+                                         Value="{Binding LeftThumbDeadZone}"/>
+                </DockPanel>
+
+                <DockPanel DockPanel.Dock="Top">
+                    <TextBlock DockPanel.Dock="Left"
+                               Margin="0 0 5 0"
+                               VerticalAlignment="Center"
+                               Text="Trigger dead zone:"/>
+                    <metro:NumericUpDown Interval="0.01"
+                                         Maximum="1"
+                                         Minimum="0"
+                                         StringFormat="P2"
+                                         Value="{Binding TriggerDeadZone}"/>
+                </DockPanel>
+            </DockPanel>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type rawinput:RawInputProcessorSettings}">
+            <DockPanel>
+                <DockPanel DockPanel.Dock="Top">
+                    <TextBlock DockPanel.Dock="Left"
+                               Margin="0 0 5 0"
+                               VerticalAlignment="Center"
+                               Text="Mouse zone width:"/>
+                    <metro:NumericUpDown DockPanel.Dock="Right"
+                                         Minimum="1"
+                                         StringFormat="{}{0}px"
+                                         Value="{Binding VirtualMouseWidth}"/>
+                </DockPanel>
+
+                <DockPanel DockPanel.Dock="Top">
+                    <TextBlock DockPanel.Dock="Left"
+                               Margin="0 0 5 0"
+                               VerticalAlignment="Center"
+                               Text="Mouse zone height:"/>
+                    <metro:NumericUpDown DockPanel.Dock="Right"
+                                         Minimum="1"
+                                         StringFormat="{}{0}px"
+                                         Value="{Binding VirtualMouseHeight}"/>
+                </DockPanel>
+
+                <DockPanel DockPanel.Dock="Top">
+                    <TextBlock DockPanel.Dock="Left"
+                               Margin="0 0 5 0"
+                               VerticalAlignment="Center"
+                               Text="Wheel zone width:"/>
+                    <metro:NumericUpDown DockPanel.Dock="Right"
+                                         Minimum="1"
+                                         StringFormat="{}{0}steps"
+                                         Value="{Binding VirtualWheelWidth}"/>
+                </DockPanel>
+
+                <DockPanel DockPanel.Dock="Top">
+                    <TextBlock DockPanel.Dock="Left"
+                               Margin="0 0 5 0"
+                               VerticalAlignment="Center"
+                               Text="Wheel zone height:"/>
+                    <metro:NumericUpDown DockPanel.Dock="Right"
+                                         Minimum="1"
+                                         StringFormat="{}{0}steps"
+                                         Value="{Binding VirtualWheelHeight}"/>
+                </DockPanel>
+
+                <DockPanel DockPanel.Dock="Top">
+                    <TextBlock DockPanel.Dock="Left"
+                               Margin="0 0 5 0"
+                               VerticalAlignment="Center"
+                               Text="Mouse axis update rate:"/>
+                    <metro:NumericUpDown DockPanel.Dock="Right"
+                                         Maximum="1000"
+                                         Minimum="30"
+                                         StringFormat="{}{0}hz"
+                                         Value="{Binding MaximumMouseAxisUpdateRate}"/>
+                </DockPanel>
+            </DockPanel>
+        </DataTemplate>
+    </UserControl.Resources>
+
+    <Grid Margin="20">
+        <material:Card material:ShadowAssist.ShadowDepth="Depth1">
+            <TabControl Style="{StaticResource MaterialDesignTabControl}"
+                        ItemsSource="{Binding Items}"
+                        SelectedItem="{Binding ActiveItem}"
+                        TabStripPlacement="Left">
+                <TabControl.ItemTemplate>
+                    <DataTemplate>
+                        <StackPanel Width="100">
+                            <TextBlock HorizontalAlignment="Center" Text="{Binding Name}"/>
+                        </StackPanel>
+                    </DataTemplate>
+                </TabControl.ItemTemplate>
+                <TabControl.ContentTemplate>
+                    <DataTemplate>
+                        <Border BorderBrush="{DynamicResource PrimaryHueMidBrush}" BorderThickness="1 0 0 0">
+                            <ContentControl Margin="20" Content="{Binding}"/>
+                        </Border>
+                    </DataTemplate>
+                </TabControl.ContentTemplate>
+            </TabControl>
+        </material:Card>
+    </Grid>
+</UserControl>

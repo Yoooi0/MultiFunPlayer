@@ -4,8 +4,8 @@ namespace MultiFunPlayer.Shortcut;
 
 internal interface IShortcutAction
 {
-    void Invoke(params object[] arguments);
-    void Invoke(IShortcutActionConfiguration actionConfiguration, IInputGestureData gestureData);
+    ValueTask Invoke(params object[] arguments);
+    ValueTask Invoke(IShortcutActionConfiguration actionConfiguration, IInputGestureData gestureData);
     bool AcceptsGestureData(Type gestureDataType);
 }
 
@@ -18,16 +18,16 @@ internal abstract class AbstractShortcutAction : IShortcutAction
         _arguments ??= GetType().GetGenericArguments().AsReadOnly();
     }
 
-    public abstract void Invoke(params object[] arguments);
+    public abstract ValueTask Invoke(params object[] arguments);
 
-    public void Invoke(IShortcutActionConfiguration actionConfiguration, IInputGestureData gestureData)
+    public ValueTask Invoke(IShortcutActionConfiguration actionConfiguration, IInputGestureData gestureData)
     {
         if (_arguments.Count == 0)
-            Invoke();
+            return Invoke();
         else if (_arguments[0].IsAssignableTo(typeof(IInputGestureData)))
-            Invoke(actionConfiguration.GetActionParams(gestureData));
+            return Invoke(actionConfiguration.GetActionParams(gestureData));
         else
-            Invoke(actionConfiguration.GetActionParams());
+            return Invoke(actionConfiguration.GetActionParams());
     }
 
     public bool AcceptsGestureData(Type gestureDataType)
@@ -52,68 +52,74 @@ internal abstract class AbstractShortcutAction : IShortcutAction
     }
 }
 
-internal sealed class ShortcutAction(Action action) : AbstractShortcutAction
+internal sealed class ShortcutAction(Func<ValueTask> action) : AbstractShortcutAction
 {
-    public override void Invoke(params object[] arguments)
+    public override ValueTask Invoke(params object[] arguments)
     {
         if (arguments == null || arguments.Length == 0)
-            Invoke();
+            return Invoke();
+        return ValueTask.CompletedTask;
     }
 
-    public void Invoke() => action.Invoke();
+    public ValueTask Invoke() => action.Invoke();
 }
 
-internal sealed class ShortcutAction<T0>(Action<T0> action) : AbstractShortcutAction
+internal sealed class ShortcutAction<T0>(Func<T0, ValueTask> action) : AbstractShortcutAction
 {
-    public override void Invoke(params object[] arguments)
+    public override ValueTask Invoke(params object[] arguments)
     {
         if (arguments?.Length == 1 && GetArgument<T0>(arguments[0], out var arg0))
-            Invoke(arg0);
+            return Invoke(arg0);
+        return ValueTask.CompletedTask;
     }
 
-    public void Invoke(T0 arg0) => action.Invoke(arg0);
+    public ValueTask Invoke(T0 arg0) => action.Invoke(arg0);
 }
 
-internal sealed class ShortcutAction<T0, T1>(Action<T0, T1> action) : AbstractShortcutAction
+internal sealed class ShortcutAction<T0, T1>(Func<T0, T1, ValueTask> action) : AbstractShortcutAction
 {
-    public override void Invoke(params object[] arguments)
+    public override ValueTask Invoke(params object[] arguments)
     {
         if (arguments?.Length == 2 && GetArgument<T0>(arguments[0], out var arg0) && GetArgument<T1>(arguments[1], out var arg1))
-            Invoke(arg0, arg1);
+            return Invoke(arg0, arg1);
+        return ValueTask.CompletedTask;
     }
 
-    public void Invoke(T0 arg0, T1 arg1) => action.Invoke(arg0, arg1);
+    public ValueTask Invoke(T0 arg0, T1 arg1) => action.Invoke(arg0, arg1);
 }
 
-internal sealed class ShortcutAction<T0, T1, T2>(Action<T0, T1, T2> action) : AbstractShortcutAction
+internal sealed class ShortcutAction<T0, T1, T2>(Func<T0, T1, T2, ValueTask> action) : AbstractShortcutAction
 {
-    public override void Invoke(params object[] arguments)
+    public override ValueTask Invoke(params object[] arguments)
     {
         if (arguments?.Length == 3 && GetArgument<T0>(arguments[0], out var arg0) && GetArgument<T1>(arguments[1], out var arg1) && GetArgument<T2>(arguments[2], out var arg2))
-            Invoke(arg0, arg1, arg2);
+            return Invoke(arg0, arg1, arg2);
+        return ValueTask.CompletedTask;
     }
 
-    public void Invoke(T0 arg0, T1 arg1, T2 arg2) => action.Invoke(arg0, arg1, arg2);
+    public ValueTask Invoke(T0 arg0, T1 arg1, T2 arg2) => action.Invoke(arg0, arg1, arg2);
 }
 
-internal sealed class ShortcutAction<T0, T1, T2, T3>(Action<T0, T1, T2, T3> action) : AbstractShortcutAction
+internal sealed class ShortcutAction<T0, T1, T2, T3>(Func<T0, T1, T2, T3, ValueTask> action) : AbstractShortcutAction
 {
-    public override void Invoke(params object[] arguments)
+    public override ValueTask Invoke(params object[] arguments)
     {
         if (arguments?.Length == 4 && GetArgument<T0>(arguments[0], out var arg0) && GetArgument<T1>(arguments[1], out var arg1) && GetArgument<T2>(arguments[2], out var arg2) && GetArgument<T3>(arguments[3], out var arg3))
-            Invoke(arg0, arg1, arg2, arg3);
+            return Invoke(arg0, arg1, arg2, arg3);
+        return ValueTask.CompletedTask;
     }
 
-    public void Invoke(T0 arg0, T1 arg1, T2 arg2, T3 arg3) => action.Invoke(arg0, arg1, arg2, arg3);
+    public ValueTask Invoke(T0 arg0, T1 arg1, T2 arg2, T3 arg3) => action.Invoke(arg0, arg1, arg2, arg3);
 }
 
-internal sealed class ShortcutAction<T0, T1, T2, T3, T4>(Action<T0, T1, T2, T3, T4> action) : AbstractShortcutAction
+internal sealed class ShortcutAction<T0, T1, T2, T3, T4>(Func<T0, T1, T2, T3, T4, ValueTask> action) : AbstractShortcutAction
 {
-    public override void Invoke(params object[] arguments)
+    public override ValueTask Invoke(params object[] arguments)
     {
         if (arguments?.Length == 5 && GetArgument<T0>(arguments[0], out var arg0) && GetArgument<T1>(arguments[1], out var arg1) && GetArgument<T2>(arguments[2], out var arg2) && GetArgument<T3>(arguments[3], out var arg3) && GetArgument<T4>(arguments[4], out var arg4))
-            Invoke(arg0, arg1, arg2, arg3, arg4);
+            return Invoke(arg0, arg1, arg2, arg3, arg4);
+        return ValueTask.CompletedTask;
     }
 
-    public void Invoke(T0 arg0, T1 arg1, T2 arg2, T3 arg3, T4 arg4) => action.Invoke(arg0, arg1, arg2, arg3, arg4);
+    public ValueTask Invoke(T0 arg0, T1 arg1, T2 arg2, T3 arg3, T4 arg4) => action.Invoke(arg0, arg1, arg2, arg3, arg4);
 }

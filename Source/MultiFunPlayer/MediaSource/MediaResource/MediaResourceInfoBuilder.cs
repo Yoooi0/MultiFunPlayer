@@ -5,6 +5,7 @@ namespace MultiFunPlayer.MediaSource.MediaResource;
 
 internal sealed class MediaResourceInfoBuilder(string originalPath)
 {
+    private object _context;
     private string _modifiedPath;
 
     public MediaResourceInfo Build()
@@ -19,14 +20,8 @@ internal sealed class MediaResourceInfoBuilder(string originalPath)
         return null;
     }
 
-    private MediaResourceInfo Build(MediaResourcePathType pathType, string name, string source) => new()
-    {
-        ModifiedPath = _modifiedPath,
-        OriginalPath = originalPath,
-        PathType = pathType,
-        Name = name,
-        Source = source
-    };
+    private MediaResourceInfo Build(MediaResourcePathType pathType, string name, string source)
+        => new(pathType, _modifiedPath, originalPath, source, name, _context);
 
     private bool TryParseUri(string path, out MediaResourceInfo result)
     {
@@ -37,8 +32,10 @@ internal sealed class MediaResourceInfoBuilder(string originalPath)
             if (!Uri.TryCreate(path, UriKind.RelativeOrAbsolute, out var uri))
                 return false;
 
-            if (!uri.IsAbsoluteUri || uri.IsFile)
+            if (!uri.IsAbsoluteUri)
                 return false;
+            if (uri.IsFile)
+                return TryParsePath(uri.LocalPath, out result);
 
             var name = Path.GetFileName(uri.LocalPath);
             if (string.IsNullOrWhiteSpace(name))
@@ -79,14 +76,14 @@ internal sealed class MediaResourceInfoBuilder(string originalPath)
         return true;
     }
 
+    public void WithContext(object context) => _context = context;
     public void WithModifiers(IEnumerable<IMediaPathModifier> mediaPathModifiers)
     {
         if (originalPath == null)
             return;
 
-        var modifiedPath = originalPath;
-        var modifier = mediaPathModifiers.FirstOrDefault(m => m.Process(ref modifiedPath));
-        if (modifier != null)
+        var modifiedPath = mediaPathModifiers.Aggregate(originalPath, (s, m) => m.Process(s));
+        if (!ReferenceEquals(modifiedPath, originalPath))
             _modifiedPath = modifiedPath;
     }
 }

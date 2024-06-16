@@ -1,4 +1,4 @@
-using MultiFunPlayer.Common;
+﻿using MultiFunPlayer.Common;
 using MultiFunPlayer.Shortcut;
 using MultiFunPlayer.UI;
 using Newtonsoft.Json.Linq;
@@ -14,12 +14,12 @@ namespace MultiFunPlayer.OutputTarget.ViewModels;
 internal sealed class WebSocketOutputTarget(int instanceIndex, IEventAggregator eventAggregator, IDeviceAxisValueProvider valueProvider)
     : AsyncAbstractOutputTarget(instanceIndex, eventAggregator, valueProvider)
 {
-    private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
+    protected override Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
     public override ConnectionStatus Status { get; protected set; }
     public bool IsConnected => Status == ConnectionStatus.Connected;
     public bool IsDisconnected => Status == ConnectionStatus.Disconnected;
-    public bool IsConnectBusy => Status == ConnectionStatus.Connecting || Status == ConnectionStatus.Disconnecting;
+    public bool IsConnectBusy => Status is ConnectionStatus.Connecting or ConnectionStatus.Disconnecting;
     public bool CanToggleConnect => !IsConnectBusy;
 
     public DeviceAxisUpdateType UpdateType { get; set; } = DeviceAxisUpdateType.FixedUpdate;
@@ -34,21 +34,37 @@ internal sealed class WebSocketOutputTarget(int instanceIndex, IEventAggregator 
         _ => null,
     };
 
-    protected override async Task RunAsync(CancellationToken token)
+    protected override ValueTask<bool> OnConnectingAsync(ConnectionType connectionType)
+    {
+        if (connectionType != ConnectionType.AutoConnect)
+            Logger.Info("Connecting to {0} at \"{1}\" [Type: {2}]", Identifier, Uri, connectionType);
+
+        if (Uri == null)
+            throw new OutputTargetException("Uri cannot be null");
+
+        return ValueTask.FromResult(true);
+    }
+
+    protected override async Task RunAsync(ConnectionType connectionType, CancellationToken token)
     {
         using var client = new ClientWebSocket();
 
         try
         {
-            Logger.Info("Connecting to {0} at \"{1}\"", Identifier, Uri.ToString());
-            await client.ConnectAsync(Uri, token)
-                        .WithCancellation(1000);
+            using var cancellationSource = CancellationTokenSource.CreateLinkedTokenSource(token);
+            cancellationSource.CancelAfter(500);
+            await client.ConnectAsync(Uri, cancellationSource.Token);
+
             Status = ConnectionStatus.Connected;
         }
-        catch (Exception e)
+        catch (Exception e) when (connectionType != ConnectionType.AutoConnect)
         {
-            Logger.Error(e, "Error when connecting to websocket");
-            _ = DialogHelper.ShowErrorAsync(e, "Error when connecting to websocket", "RootDialog");
+            Logger.Error(e, "Error when connecting to {0} at \"{1}\"", Name, Uri);
+            _ = DialogHelper.ShowErrorAsync(e, $"Error when connecting to {Name}", "RootDialog");
+            return;
+        }
+        catch
+        {
             return;
         }
 
@@ -68,6 +84,9 @@ internal sealed class WebSocketOutputTarget(int instanceIndex, IEventAggregator 
             Logger.Error(e, $"{Identifier} failed with exception");
             _ = DialogHelper.ShowErrorAsync(e, $"{Identifier} failed with exception", "RootDialog");
         }
+
+        try { await client.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, null, CancellationToken.None); }
+        catch { }
     }
 
     private async Task WriteAsync(ClientWebSocket client, CancellationToken token)
@@ -111,7 +130,7 @@ internal sealed class WebSocketOutputTarget(int instanceIndex, IEventAggregator 
                     if (snapshot.KeyframeFrom == null || snapshot.KeyframeTo == null)
                         return;
 
-                    var value = MathUtils.Lerp(settings.Minimum / 100, settings.Maximum / 100, snapshot.KeyframeTo.Value);
+                    var value = MathUtils.Lerp(settings.Minimum, settings.Maximum, snapshot.KeyframeTo.Value);
                     var duration = snapshot.Duration;
 
                     var command = DeviceAxis.ToString(axis, value, duration * 1000);
@@ -176,23 +195,5 @@ internal sealed class WebSocketOutputTarget(int instanceIndex, IEventAggregator 
     {
         base.UnregisterActions(s);
         s.UnregisterAction($"{Identifier}::Uri::Set");
-    }
-
-    public override async ValueTask<bool> CanConnectAsync(CancellationToken token)
-    {
-        try
-        {
-            using var client = new ClientWebSocket();
-            await client.ConnectAsync(Uri, token)
-                        .WithCancellation(250);
-
-            await client.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, null, token);
-
-            return true;
-        }
-        catch
-        {
-            return false;
-        }
     }
 }

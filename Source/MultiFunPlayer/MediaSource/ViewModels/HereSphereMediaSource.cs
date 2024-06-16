@@ -18,41 +18,57 @@ namespace MultiFunPlayer.MediaSource.ViewModels;
 [DisplayName("HereSphere")]
 internal sealed class HereSphereMediaSource(IShortcutManager shortcutManager, IEventAggregator eventAggregator) : AbstractMediaSource(shortcutManager, eventAggregator)
 {
-    private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
+    protected override Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
     public override ConnectionStatus Status { get; protected set; }
     public bool IsConnected => Status == ConnectionStatus.Connected;
     public bool IsDisconnected => Status == ConnectionStatus.Disconnected;
-    public bool IsConnectBusy => Status == ConnectionStatus.Connecting || Status == ConnectionStatus.Disconnecting;
+    public bool IsConnectBusy => Status is ConnectionStatus.Connecting or ConnectionStatus.Disconnecting;
     public bool CanToggleConnect => !IsConnectBusy;
 
     public EndPoint Endpoint { get; set; } = new IPEndPoint(IPAddress.Loopback, 23554);
 
-    protected override async Task RunAsync(CancellationToken token)
+    protected override ValueTask<bool> OnConnectingAsync(ConnectionType connectionType)
     {
+        if (connectionType != ConnectionType.AutoConnect)
+            Logger.Info("Connecting to {0} at \"{1}\" [Type: {2}]", Name, Endpoint?.ToUriString(), connectionType);
+
+        if (Endpoint == null)
+            throw new MediaSourceException("Endpoint cannot be null");
+        if (Endpoint.IsLocalhost())
+            if (!Process.GetProcesses().Any(p => Regex.IsMatch(p.ProcessName, "(?i)heresphere")))
+                throw new MediaSourceException($"Could not find a running {Name} process");
+
+        return ValueTask.FromResult(true);
+    }
+
+    protected override async Task RunAsync(ConnectionType connectionType, CancellationToken token)
+    {
+        using var client = new TcpClient();
+
         try
         {
-            Logger.Info("Connecting to {0} at \"{1}\"", Name, Endpoint.ToUriString());
-            if (Endpoint == null)
-                throw new Exception("Endpoint cannot be null.");
+            using var cancellationSource = CancellationTokenSource.CreateLinkedTokenSource(token);
+            cancellationSource.CancelAfter(500);
 
-            if (Endpoint.IsLocalhost())
-                if (!Process.GetProcesses().Any(p => Regex.IsMatch(p.ProcessName, "(?i)heresphere")))
-                    throw new Exception($"Could not find a running {Name} process.");
-
-            using var client = new TcpClient();
-            {
-                using var timeoutCancellationSource = new CancellationTokenSource(5000);
-                using var connectCancellationSource = CancellationTokenSource.CreateLinkedTokenSource(token, timeoutCancellationSource.Token);
-
-                await client.ConnectAsync(Endpoint, connectCancellationSource.Token);
-            }
-
-            await using var stream = client.GetStream();
+            await client.ConnectAsync(Endpoint, cancellationSource.Token);
 
             Status = ConnectionStatus.Connected;
-            ClearPendingMessages();
+        }
+        catch (Exception e) when (connectionType != ConnectionType.AutoConnect)
+        {
+            Logger.Error(e, "Error when connecting to {0} at \"{1}\"", Name, Endpoint?.ToUriString());
+            _ = DialogHelper.ShowErrorAsync(e, $"Error when connecting to {Name}", "RootDialog");
+            return;
+        }
+        catch
+        {
+            return;
+        }
 
+        try
+        {
+            await using var stream = client.GetStream();
             using var cancellationSource = CancellationTokenSource.CreateLinkedTokenSource(token);
             var task = await Task.WhenAny(ReadAsync(client, stream, cancellationSource.Token), WriteAsync(client, stream, cancellationSource.Token));
             cancellationSource.Cancel();
@@ -81,10 +97,7 @@ internal sealed class HereSphereMediaSource(IShortcutManager shortcutManager, IE
             var playerState = default(PlayerState);
             while (!token.IsCancellationRequested && client.Connected)
             {
-                var lengthBuffer = await stream.ReadBytesAsync(4, token);
-                if (lengthBuffer.Length < 4)
-                    continue;
-
+                var lengthBuffer = await stream.ReadExactlyAsync(4, token);
                 var length = BitConverter.ToInt32(lengthBuffer, 0);
                 if (length <= 0)
                 {
@@ -102,7 +115,7 @@ internal sealed class HereSphereMediaSource(IShortcutManager shortcutManager, IE
 
                 playerState ??= new PlayerState();
 
-                var dataBuffer = await stream.ReadBytesAsync(length, token);
+                var dataBuffer = await stream.ReadExactlyAsync(length, token);
                 try
                 {
                     var json = Encoding.UTF8.GetString(dataBuffer);
@@ -221,35 +234,6 @@ internal sealed class HereSphereMediaSource(IShortcutManager shortcutManager, IE
         {
             if (settings.TryGetValue<EndPoint>(nameof(Endpoint), out var endpoint))
                 Endpoint = endpoint;
-        }
-    }
-
-    public override async ValueTask<bool> CanConnectAsync(CancellationToken token)
-    {
-        try
-        {
-            if (Endpoint == null)
-                return false;
-
-            if (Endpoint.IsLocalhost())
-                if (!Process.GetProcesses().Any(p => Regex.IsMatch(p.ProcessName, "(?i)heresphere")))
-                    return false;
-
-            using var client = new TcpClient();
-            {
-                using var timeoutCancellationSource = new CancellationTokenSource(2500);
-                using var connectCancellationSource = CancellationTokenSource.CreateLinkedTokenSource(token, timeoutCancellationSource.Token);
-
-                await client.ConnectAsync(Endpoint, connectCancellationSource.Token);
-            }
-
-            await using var stream = client.GetStream();
-
-            return client.Connected;
-        }
-        catch
-        {
-            return false;
         }
     }
 

@@ -1,4 +1,4 @@
-using MultiFunPlayer.Common;
+﻿using MultiFunPlayer.Common;
 using MultiFunPlayer.Shortcut;
 using MultiFunPlayer.UI;
 using Newtonsoft.Json.Linq;
@@ -15,12 +15,12 @@ namespace MultiFunPlayer.OutputTarget.ViewModels;
 internal sealed class TcpOutputTarget(int instanceIndex, IEventAggregator eventAggregator, IDeviceAxisValueProvider valueProvider)
     : ThreadAbstractOutputTarget(instanceIndex, eventAggregator, valueProvider)
 {
-    private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
+    protected override Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
     public override ConnectionStatus Status { get; protected set; }
     public bool IsConnected => Status == ConnectionStatus.Connected;
     public bool IsDisconnected => Status == ConnectionStatus.Disconnected;
-    public bool IsConnectBusy => Status == ConnectionStatus.Connecting || Status == ConnectionStatus.Disconnecting;
+    public bool IsConnectBusy => Status is ConnectionStatus.Connecting or ConnectionStatus.Disconnecting;
     public bool CanToggleConnect => !IsConnectBusy;
 
     public DeviceAxisUpdateType UpdateType { get; set; } = DeviceAxisUpdateType.FixedUpdate;
@@ -35,20 +35,35 @@ internal sealed class TcpOutputTarget(int instanceIndex, IEventAggregator eventA
         _ => null,
     };
 
-    protected override void Run(CancellationToken token)
+    protected override ValueTask<bool> OnConnectingAsync(ConnectionType connectionType)
+    {
+        if (connectionType != ConnectionType.AutoConnect)
+            Logger.Info("Connecting to {0} at \"{1}\" [Type: {2}]", Identifier, Endpoint?.ToUriString(), connectionType);
+
+        if (Endpoint == null)
+            throw new OutputTargetException("Endpoint cannot be null");
+
+        return ValueTask.FromResult(true);
+    }
+
+    protected override void Run(ConnectionType connectionType, CancellationToken token)
     {
         using var client = new TcpClient();
 
         try
         {
-            Logger.Info("Connecting to {0} at \"{1}\"", Identifier, $"tcp://{Endpoint.ToUriString()}");
             client.Connect(Endpoint);
+            client.NoDelay = true;
             Status = ConnectionStatus.Connected;
         }
-        catch (Exception e)
+        catch (Exception e) when (connectionType != ConnectionType.AutoConnect)
         {
-            Logger.Error(e, "Error when connecting to server");
-            _ = DialogHelper.ShowErrorAsync(e, "Error when connecting to server", "RootDialog");
+            Logger.Error(e, "Error when connecting to {0} at \"{1}\"", Name, Endpoint?.ToUriString());
+            _ = DialogHelper.ShowErrorAsync(e, $"Error when connecting to {Name}", "RootDialog");
+            return;
+        }
+        catch
+        {
             return;
         }
 
@@ -69,7 +84,7 @@ internal sealed class TcpOutputTarget(int instanceIndex, IEventAggregator eventA
 
                     if (client.Connected && client.Available > 0)
                     {
-                        var message = Encoding.UTF8.GetString(stream.ReadBytes(client.Available));
+                        var message = Encoding.UTF8.GetString(stream.ReadExactly(client.Available));
                         Logger.Debug("Received \"{0}\" from \"{1}\"", message, $"tcp://{Endpoint.ToUriString()}");
                     }
 
@@ -100,7 +115,7 @@ internal sealed class TcpOutputTarget(int instanceIndex, IEventAggregator eventA
                     if (snapshot.KeyframeFrom == null || snapshot.KeyframeTo == null)
                         return;
 
-                    var value = MathUtils.Lerp(settings.Minimum / 100, settings.Maximum / 100, snapshot.KeyframeTo.Value);
+                    var value = MathUtils.Lerp(settings.Minimum, settings.Maximum, snapshot.KeyframeTo.Value);
                     var duration = snapshot.Duration;
 
                     var command = DeviceAxis.ToString(axis, value, duration * 1000);
@@ -156,20 +171,5 @@ internal sealed class TcpOutputTarget(int instanceIndex, IEventAggregator eventA
     {
         base.UnregisterActions(s);
         s.UnregisterAction($"{Identifier}::Endpoint::Set");
-    }
-
-    public override async ValueTask<bool> CanConnectAsync(CancellationToken token)
-    {
-        try
-        {
-            using var client = new TcpClient();
-            await client.ConnectAsync(Endpoint, token);
-            client.GetStream();
-            return true;
-        }
-        catch
-        {
-            return false;
-        }
     }
 }

@@ -1,7 +1,9 @@
-using MultiFunPlayer.Common;
+﻿using MultiFunPlayer.Common;
 using MultiFunPlayer.Input;
 using MultiFunPlayer.Shortcut;
+using MultiFunPlayer.UI;
 using Newtonsoft.Json.Linq;
+using NLog;
 using PropertyChanged;
 using Stylet;
 using System.ComponentModel;
@@ -13,6 +15,7 @@ namespace MultiFunPlayer.OutputTarget;
 
 internal abstract class AbstractOutputTarget : Screen, IOutputTarget
 {
+    protected abstract Logger Logger { get; }
     private readonly IDeviceAxisValueProvider _valueProvider;
 
     public string Name { get; init; }
@@ -48,10 +51,36 @@ internal abstract class AbstractOutputTarget : Screen, IOutputTarget
     protected abstract void RegisterUpdateContexts();
     protected abstract IUpdateContext RegisterUpdateContext(DeviceAxisUpdateType updateType);
 
-    public abstract Task ConnectAsync();
+    public async Task ConnectAsync(ConnectionType connectionType)
+    {
+        if (Status != ConnectionStatus.Disconnected)
+            return;
+
+        Status = ConnectionStatus.Connecting;
+        if (connectionType == ConnectionType.AutoConnect)
+            await Task.Delay(250);
+
+        try
+        {
+            if (await OnConnectingAsync(connectionType))
+            {
+                Run(connectionType);
+                return;
+            }
+        }
+        catch (Exception e) when (connectionType != ConnectionType.AutoConnect)
+        {
+            Logger.Error(e, "Error when connecting to {0}", Name);
+            _ = DialogHelper.ShowErrorAsync(e, $"Error when connecting to {Name}", "RootDialog");
+        }
+        catch { }
+
+        await DisconnectAsync();
+    }
+
     public async Task DisconnectAsync()
     {
-        if (Status == ConnectionStatus.Disconnected || Status == ConnectionStatus.Disconnecting)
+        if (Status is ConnectionStatus.Disconnected or ConnectionStatus.Disconnecting)
             return;
 
         Status = ConnectionStatus.Disconnecting;
@@ -60,22 +89,9 @@ internal abstract class AbstractOutputTarget : Screen, IOutputTarget
         Status = ConnectionStatus.Disconnected;
     }
 
-    protected abstract ValueTask<bool> OnConnectingAsync();
+    protected abstract void Run(ConnectionType connectionType);
+    protected abstract ValueTask<bool> OnConnectingAsync(ConnectionType connectionType);
     protected abstract ValueTask OnDisconnectingAsync();
-
-    public async virtual ValueTask<bool> CanConnectAsync(CancellationToken token) => await ValueTask.FromResult(false);
-    public async virtual ValueTask<bool> CanConnectAsyncWithStatus(CancellationToken token)
-    {
-        if (Status != ConnectionStatus.Disconnected)
-            return await ValueTask.FromResult(false);
-
-        Status = ConnectionStatus.Connecting;
-        await Task.Delay(100, token);
-        var result = await CanConnectAsync(token);
-        Status = ConnectionStatus.Disconnected;
-
-        return result;
-    }
 
     public async Task WaitForStatus(IEnumerable<ConnectionStatus> statuses, CancellationToken token)
     {
@@ -117,7 +133,7 @@ internal abstract class AbstractOutputTarget : Screen, IOutputTarget
                 value = coerceValue(value);
 
             var settings = AxisSettings[axis];
-            values[axis] = MathUtils.Lerp(settings.Minimum / 100, settings.Maximum / 100, value);
+            values[axis] = MathUtils.Lerp(settings.Minimum, settings.Maximum, value);
         }
     }
 
@@ -141,9 +157,14 @@ internal abstract class AbstractOutputTarget : Screen, IOutputTarget
             settings[nameof(AutoConnectEnabled)] = AutoConnectEnabled;
             settings[nameof(AxisSettings)] = JObject.FromObject(AxisSettings);
 
-            //TODO: move to separate object per update type
             foreach (var (_, context) in UpdateContexts)
-                settings.Merge(JObject.FromObject(context), new JsonMergeSettings() { MergeArrayHandling = MergeArrayHandling.Replace });
+            {
+                if (!settings.EnsureContainsObjects("UpdateContextSettings", context.GetType().Name)
+                 || !settings.TryGetObject(out var contextSettings, "UpdateContextSettings", context.GetType().Name))
+                    continue;
+
+                contextSettings.MergeAll(JObject.FromObject(context));
+            }
         }
         else if (action == SettingsAction.Loading)
         {
@@ -153,9 +174,13 @@ internal abstract class AbstractOutputTarget : Screen, IOutputTarget
                 foreach (var (axis, axisSettingsToken) in axisSettingsMap)
                     axisSettingsToken.Populate(AxisSettings[axis]);
 
-            //TODO: move to separate object per update type
             foreach (var (_, context) in UpdateContexts)
-                settings.Populate(context);
+            {
+                if (!settings.TryGetObject(out var contextSettings, "UpdateContextSettings", context.GetType().Name))
+                    continue;
+
+                contextSettings.Populate(context);
+            }
         }
     }
 
@@ -167,21 +192,21 @@ internal abstract class AbstractOutputTarget : Screen, IOutputTarget
                 callback(AxisSettings[axis]);
         }
 
-        static void SetMinimum(DeviceAxisSettings settings, double newMinimum, double minimumLimit) => settings.Minimum = MathUtils.ClampSafe(newMinimum, minimumLimit, settings.Maximum - 1);
-        static void SetMaximum(DeviceAxisSettings settings, double newMaximum, double maximumLimit) => settings.Maximum = MathUtils.ClampSafe(newMaximum, settings.Minimum + 1, maximumLimit);
+        static void SetMinimum(DeviceAxisSettings settings, double newMinimum, double minimumLimit) => settings.Minimum = MathUtils.ClampSafe(newMinimum, minimumLimit, settings.Maximum - 0.01);
+        static void SetMaximum(DeviceAxisSettings settings, double newMaximum, double maximumLimit) => settings.Maximum = MathUtils.ClampSafe(newMaximum, settings.Minimum + 0.01, maximumLimit);
 
         static void SetMiddle(DeviceAxisSettings settings, IAxisInputGestureData data, double minimumLimit, double maximumLimit)
         {
             var size = (settings.Maximum - settings.Minimum) / 2;
-            var newMiddle = data.ApplyTo((settings.Maximum + settings.Minimum) / 2, 100);
+            var newMiddle = data.ApplyTo((settings.Maximum + settings.Minimum) / 2);
 
             if (newMiddle + size > maximumLimit)
                 newMiddle = maximumLimit - size;
             else if (newMiddle - size < minimumLimit)
                 newMiddle = minimumLimit + size;
 
-            settings.Minimum = MathUtils.ClampSafe(newMiddle - size, minimumLimit, maximumLimit - 1);
-            settings.Maximum = MathUtils.ClampSafe(newMiddle + size, minimumLimit + 1, maximumLimit);
+            settings.Minimum = MathUtils.ClampSafe(newMiddle - size, minimumLimit, maximumLimit - 0.01);
+            settings.Maximum = MathUtils.ClampSafe(newMiddle + size, minimumLimit + 0.01, maximumLimit);
         }
 
         static void OffsetMiddle(DeviceAxisSettings settings, double offset, double minimumLimit, double maximumLimit)
@@ -191,21 +216,21 @@ internal abstract class AbstractOutputTarget : Screen, IOutputTarget
             else if (offset < 0 && settings.Minimum + offset < minimumLimit)
                 offset = Math.Max(offset, minimumLimit - settings.Minimum);
 
-            settings.Minimum = MathUtils.ClampSafe(settings.Minimum + offset, minimumLimit, maximumLimit - 1);
-            settings.Maximum = MathUtils.ClampSafe(settings.Maximum + offset, minimumLimit + 1, maximumLimit);
+            settings.Minimum = MathUtils.ClampSafe(settings.Minimum + offset, minimumLimit, maximumLimit - 0.01);
+            settings.Maximum = MathUtils.ClampSafe(settings.Maximum + offset, minimumLimit + 0.01, maximumLimit);
         }
 
         static void SetSize(DeviceAxisSettings settings, IAxisInputGestureData data, double minimumLimit, double maximumLimit)
         {
             var middle = (settings.Maximum + settings.Minimum) / 2;
-            var newRange = data.ApplyTo(settings.Maximum - settings.Minimum, 100);
+            var newRange = data.ApplyTo(settings.Maximum - settings.Minimum);
             SetMiddleAndRange(settings, middle, newRange, minimumLimit, maximumLimit);
         }
 
         static void OffsetSize(DeviceAxisSettings settings, double offset, double minimumLimit, double maximumLimit)
         {
-            var middle = (settings.Maximum + settings.Minimum) / 2d;
-            var newRange = MathUtils.ClampSafe(settings.Maximum - settings.Minimum + offset, 1, maximumLimit - minimumLimit);
+            var middle = (settings.Maximum + settings.Minimum) / 2;
+            var newRange = MathUtils.ClampSafe(settings.Maximum - settings.Minimum + offset, 0.01, maximumLimit - minimumLimit);
             SetMiddleAndRange(settings, middle, newRange, minimumLimit, maximumLimit);
         }
 
@@ -219,8 +244,8 @@ internal abstract class AbstractOutputTarget : Screen, IOutputTarget
             if (newMinimum < minimumLimit)
                 newMaximum += minimumLimit - newMinimum;
 
-            settings.Minimum = MathUtils.ClampSafe(newMinimum, minimumLimit, maximumLimit - 1);
-            settings.Maximum = MathUtils.ClampSafe(newMaximum, minimumLimit + 1, maximumLimit);
+            settings.Minimum = MathUtils.ClampSafe(newMinimum, minimumLimit, maximumLimit - 0.01);
+            settings.Maximum = MathUtils.ClampSafe(newMaximum, minimumLimit + 0.01, maximumLimit);
         }
 
         #region AutoConnectEnabled
@@ -229,78 +254,78 @@ internal abstract class AbstractOutputTarget : Screen, IOutputTarget
         #endregion
 
         #region Axis::Range::Minimum
-        s.RegisterAction<DeviceAxis, int, double>($"{Identifier}::Axis::Range::Minimum::Offset",
+        s.RegisterAction<DeviceAxis, double, double>($"{Identifier}::Axis::Range::Minimum::Offset",
             s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All),
-            s => s.WithLabel("Value offset").WithStringFormat("{}{0}%"),
-            s => s.WithDefaultValue(0).WithLabel("Value limit").WithStringFormat("{}{0}%"),
+            s => s.WithLabel("Value offset").AsNumericUpDown(-1, 1, 0.01, "{0:P0}"),
+            s => s.WithDefaultValue(0).WithLabel("Value limit").AsNumericUpDown(0, 1, 0.01, "{0:P0}"),
             (axis, offset, limit) => UpdateSettings(axis, s => SetMinimum(s, s.Minimum + offset, limit)));
 
-        s.RegisterAction<DeviceAxis, int>($"{Identifier}::Axis::Range::Minimum::Set",
+        s.RegisterAction<DeviceAxis, double>($"{Identifier}::Axis::Range::Minimum::Set",
             s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All),
-            s => s.WithLabel("Value").WithStringFormat("{}{0}%"),
+            s => s.WithLabel("Value").AsNumericUpDown(0, 1, 0.01, "{0:P0}"),
             (axis, value) => UpdateSettings(axis, s => SetMinimum(s, value, 0)));
 
         s.RegisterAction<IAxisInputGestureData, DeviceAxis, double>($"{Identifier}::Axis::Range::Minimum::Drive",
             s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All),
-            s => s.WithDefaultValue(0).WithLabel("Value limit").WithStringFormat("{}{0}%"),
-            (data, axis, limit) => UpdateSettings(axis, s => SetMinimum(s, data.ApplyTo(s.Minimum, 100), limit)));
+            s => s.WithDefaultValue(0).WithLabel("Value limit").AsNumericUpDown(0, 1, 0.01, "{0:P0}"),
+            (data, axis, limit) => UpdateSettings(axis, s => SetMinimum(s, data.ApplyTo(s.Minimum), limit)));
         #endregion
 
         #region Axis::Range::Maximum
-        s.RegisterAction<DeviceAxis, int, double>($"{Identifier}::Axis::Range::Maximum::Offset",
+        s.RegisterAction<DeviceAxis, double, double>($"{Identifier}::Axis::Range::Maximum::Offset",
             s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All),
-            s => s.WithLabel("Value offset").WithStringFormat("{}{0}%"),
-            s => s.WithDefaultValue(100).WithLabel("Value limit").WithStringFormat("{}{0}%"),
+            s => s.WithLabel("Value offset").AsNumericUpDown(-1, 1, 0.01, "{0:P0}"),
+            s => s.WithDefaultValue(1).WithLabel("Value limit").AsNumericUpDown(0, 1, 0.01, "{0:P0}"),
             (axis, offset, limit) => UpdateSettings(axis, s => SetMaximum(s, s.Maximum + offset, limit)));
 
-        s.RegisterAction<DeviceAxis, int>($"{Identifier}::Axis::Range::Maximum::Set",
+        s.RegisterAction<DeviceAxis, double>($"{Identifier}::Axis::Range::Maximum::Set",
             s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All),
-            s => s.WithLabel("Value").WithStringFormat("{}{0}%"),
-            (axis, value) => UpdateSettings(axis, s => SetMaximum(s, value, 100)));
+            s => s.WithLabel("Value").AsNumericUpDown(0, 1, 0.01, "{0:P0}"),
+            (axis, value) => UpdateSettings(axis, s => SetMaximum(s, value, 1)));
 
         s.RegisterAction<IAxisInputGestureData, DeviceAxis, double>($"{Identifier}::Axis::Range::Maximum::Drive",
             s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All),
-            s => s.WithDefaultValue(100).WithLabel("Value limit").WithStringFormat("{}{0}%"),
-            (gesture, axis, limit) => UpdateSettings(axis, s => SetMaximum(s, gesture.ApplyTo(s.Maximum, 100), limit)));
+            s => s.WithDefaultValue(1).WithLabel("Value limit").AsNumericUpDown(0, 1, 0.01, "{0:P0}"),
+            (gesture, axis, limit) => UpdateSettings(axis, s => SetMaximum(s, gesture.ApplyTo(s.Maximum), limit)));
         #endregion
 
         #region Axis::Range::Middle
-        s.RegisterAction<DeviceAxis, int, double, double>($"{Identifier}::Axis::Range::Middle::Offset",
+        s.RegisterAction<DeviceAxis, double, double, double>($"{Identifier}::Axis::Range::Middle::Offset",
             s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All),
-            s => s.WithLabel("Value offset").WithStringFormat("{}{0}%"),
-            s => s.WithDefaultValue(0).WithLabel("Minimum limit").WithStringFormat("{}{0}%"),
-            s => s.WithDefaultValue(100).WithLabel("Maximium limit").WithStringFormat("{}{0}%"),
+            s => s.WithLabel("Value offset").AsNumericUpDown(-1, 1, 0.01, "{0:P0}"),
+            s => s.WithDefaultValue(0).WithLabel("Minimum limit").AsNumericUpDown(0, 1, 0.01, "{0:P0}"),
+            s => s.WithDefaultValue(1).WithLabel("Maximium limit").AsNumericUpDown(0, 1, 0.01, "{0:P0}"),
             (axis, offset, minimumLimit, maximumLimit) => UpdateSettings(axis, s => OffsetMiddle(s, offset, minimumLimit, maximumLimit)));
 
-        s.RegisterAction<DeviceAxis, int>($"{Identifier}::Axis::Range::Middle::Set",
+        s.RegisterAction<DeviceAxis, double>($"{Identifier}::Axis::Range::Middle::Set",
             s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All),
-            s => s.WithLabel("Value").WithStringFormat("{}{0}%"),
-            (axis, value) => UpdateSettings(axis, s => OffsetMiddle(s, value - (s.Maximum - s.Minimum) / 2, 0, 100)));
+            s => s.WithLabel("Value").AsNumericUpDown(0, 1, 0.01, "{0:P0}"),
+            (axis, value) => UpdateSettings(axis, s => OffsetMiddle(s, value - (s.Maximum - s.Minimum) / 2, 0, 1)));
 
         s.RegisterAction<IAxisInputGestureData, DeviceAxis, double, double>($"{Identifier}::Axis::Range::Middle::Drive",
             s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All),
-            s => s.WithDefaultValue(0).WithLabel("Minimum limit").WithStringFormat("{}{0}%"),
-            s => s.WithDefaultValue(100).WithLabel("Maximium limit").WithStringFormat("{}{0}%"),
+            s => s.WithDefaultValue(0).WithLabel("Minimum limit").AsNumericUpDown(0, 1, 0.01, "{0:P0}"),
+            s => s.WithDefaultValue(1).WithLabel("Maximium limit").AsNumericUpDown(0, 1, 0.01, "{0:P0}"),
             (data, axis, minimumLimit, maximumLimit) => UpdateSettings(axis, s => SetMiddle(s, data, minimumLimit, maximumLimit)));
         #endregion
 
         #region Axis::Range::Size
-        s.RegisterAction<DeviceAxis, int, double, double>($"{Identifier}::Axis::Range::Size::Offset",
+        s.RegisterAction<DeviceAxis, double, double, double>($"{Identifier}::Axis::Range::Size::Offset",
             s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All),
-            s => s.WithLabel("Value offset").WithStringFormat("{}{0}%"),
-            s => s.WithDefaultValue(0).WithLabel("Minimum limit").WithStringFormat("{}{0}%"),
-            s => s.WithDefaultValue(100).WithLabel("Maximium limit").WithStringFormat("{}{0}%"),
+            s => s.WithLabel("Value offset").AsNumericUpDown(-1, 1, 0.01, "{0:P0}"),
+            s => s.WithDefaultValue(0).WithLabel("Minimum limit").AsNumericUpDown(0, 1, 0.01, "{0:P0}"),
+            s => s.WithDefaultValue(1).WithLabel("Maximium limit").AsNumericUpDown(0, 1, 0.01, "{0:P0}"),
             (axis, offset, minimumLimit, maximumLimit) => UpdateSettings(axis, s => OffsetSize(s, offset, minimumLimit, maximumLimit)));
 
-        s.RegisterAction<DeviceAxis, int>($"{Identifier}::Axis::Range::Size::Set",
+        s.RegisterAction<DeviceAxis, double>($"{Identifier}::Axis::Range::Size::Set",
             s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All),
-            s => s.WithLabel("Value").WithStringFormat("{}{0}%"),
-            (axis, value) => UpdateSettings(axis, s => OffsetSize(s, value - (s.Maximum - s.Minimum), 0, 100)));
+            s => s.WithLabel("Value").AsNumericUpDown(0, 1, 0.01, "{0:P0}"),
+            (axis, value) => UpdateSettings(axis, s => OffsetSize(s, value - (s.Maximum - s.Minimum), 0, 1)));
 
         s.RegisterAction<IAxisInputGestureData, DeviceAxis, double, double>($"{Identifier}::Axis::Range::Size::Drive",
             s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All),
-            s => s.WithDefaultValue(0).WithLabel("Minimum limit").WithStringFormat("{}{0}%"),
-            s => s.WithDefaultValue(100).WithLabel("Maximium limit").WithStringFormat("{}{0}%"),
+            s => s.WithDefaultValue(0).WithLabel("Minimum limit").AsNumericUpDown(0, 1, 0.01, "{0:P0}"),
+            s => s.WithDefaultValue(1).WithLabel("Maximium limit").AsNumericUpDown(0, 1, 0.01, "{0:P0}"),
             (data, axis, minimumLimit, maximumLimit) => UpdateSettings(axis, s => SetSize(s, data, minimumLimit, maximumLimit)));
         #endregion
     }
@@ -337,15 +362,11 @@ internal abstract class AbstractOutputTarget : Screen, IOutputTarget
     }
 }
 
-internal abstract class ThreadAbstractOutputTarget : AbstractOutputTarget
+internal abstract class ThreadAbstractOutputTarget(int instanceIndex, IEventAggregator eventAggregator, IDeviceAxisValueProvider valueProvider)
+    : AbstractOutputTarget(instanceIndex, eventAggregator, valueProvider)
 {
     private CancellationTokenSource _cancellationSource;
     private Thread _thread;
-
-    protected ThreadAbstractOutputTarget(int instanceIndex, IEventAggregator eventAggregator, IDeviceAxisValueProvider valueProvider)
-        : base(instanceIndex, eventAggregator, valueProvider) { }
-
-    protected abstract void Run(CancellationToken token);
 
     protected sealed override void RegisterUpdateContexts()
     {
@@ -364,40 +385,31 @@ internal abstract class ThreadAbstractOutputTarget : AbstractOutputTarget
         }
     }
 
-    public override async Task ConnectAsync()
-    {
-        if (Status != ConnectionStatus.Disconnected)
-            return;
-
-        Status = ConnectionStatus.Connecting;
-        if (!await OnConnectingAsync())
-            await DisconnectAsync();
-    }
-
-    protected override ValueTask<bool> OnConnectingAsync()
+    protected abstract void Run(ConnectionType connectionType, CancellationToken token);
+    protected sealed override void Run(ConnectionType connectionType)
     {
         _cancellationSource = new CancellationTokenSource();
         _thread = new Thread(() =>
         {
-            Run(_cancellationSource.Token);
+            Run(connectionType, _cancellationSource.Token);
             _ = DisconnectAsync();
         })
         {
             IsBackground = true
         };
         _thread.Start();
-
-        return ValueTask.FromResult(true);
     }
 
     private int _isDisconnectingFlag;
-    protected override ValueTask OnDisconnectingAsync()
+    protected async override ValueTask OnDisconnectingAsync()
     {
         if (Interlocked.CompareExchange(ref _isDisconnectingFlag, 1, 0) != 0)
-            return ValueTask.CompletedTask;
+            return;
 
         _cancellationSource?.Cancel();
-        _thread?.Join();
+
+        if (_thread != null)
+            await Task.Run(() => _thread.Join());
 
         _cancellationSource?.Dispose();
 
@@ -405,7 +417,7 @@ internal abstract class ThreadAbstractOutputTarget : AbstractOutputTarget
         _thread = null;
 
         Interlocked.Decrement(ref _isDisconnectingFlag);
-        return ValueTask.CompletedTask;
+        return;
     }
 
     protected void FixedUpdate(Func<bool> condition, Action<ThreadFixedUpdateContext, double> body)
@@ -489,15 +501,11 @@ internal abstract class ThreadAbstractOutputTarget : AbstractOutputTarget
     }
 }
 
-internal abstract class AsyncAbstractOutputTarget : AbstractOutputTarget
+internal abstract class AsyncAbstractOutputTarget(int instanceIndex, IEventAggregator eventAggregator, IDeviceAxisValueProvider valueProvider)
+    : AbstractOutputTarget(instanceIndex, eventAggregator, valueProvider)
 {
     private CancellationTokenSource _cancellationSource;
     private Task _task;
-
-    protected AsyncAbstractOutputTarget(int instanceIndex, IEventAggregator eventAggregator, IDeviceAxisValueProvider valueProvider)
-        : base(instanceIndex, eventAggregator, valueProvider) { }
-
-    protected abstract Task RunAsync(CancellationToken token);
 
     protected sealed override void RegisterUpdateContexts()
     {
@@ -516,27 +524,18 @@ internal abstract class AsyncAbstractOutputTarget : AbstractOutputTarget
         }
     }
 
-    public override async Task ConnectAsync()
-    {
-        if (Status != ConnectionStatus.Disconnected)
-            return;
-
-        Status = ConnectionStatus.Connecting;
-        if (!await OnConnectingAsync())
-            await DisconnectAsync();
-    }
-
-    protected override ValueTask<bool> OnConnectingAsync()
+    protected abstract Task RunAsync(ConnectionType connectionType, CancellationToken token);
+    protected sealed override void Run(ConnectionType connectionType)
     {
         _cancellationSource = new CancellationTokenSource();
-        _task = Task.Factory.StartNew(() => RunAsync(_cancellationSource.Token),
-            _cancellationSource.Token,
-            TaskCreationOptions.LongRunning,
-            TaskScheduler.Default)
-            .Unwrap();
-        _ = _task.ContinueWith(_ => DisconnectAsync()).Unwrap();
+        _task = Task.Run(async () =>
+        {
+            if (connectionType == ConnectionType.AutoConnect)
+                await Task.Delay(250);
 
-        return ValueTask.FromResult(true);
+            try { await RunAsync(connectionType, _cancellationSource.Token); }
+            finally { _ = Task.Run(DisconnectAsync); }
+        });
     }
 
     private int _isDisconnectingFlag;
@@ -645,4 +644,11 @@ internal abstract class AsyncAbstractOutputTarget : AbstractOutputTarget
             EndSnapshotPolling();
         }
     }
+}
+
+internal sealed class OutputTargetException : Exception
+{
+    public OutputTargetException() { }
+    public OutputTargetException(string message) : base(message) { }
+    public OutputTargetException(string message, Exception innerException) : base(message, innerException) { }
 }

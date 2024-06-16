@@ -1,5 +1,6 @@
 using MultiFunPlayer.Common;
 using MultiFunPlayer.Script;
+using MultiFunPlayer.Script.Repository;
 using MultiFunPlayer.Shortcut;
 using MultiFunPlayer.UI;
 using Newtonsoft.Json.Linq;
@@ -15,9 +16,9 @@ using System.Windows;
 namespace MultiFunPlayer.MediaSource.ViewModels;
 
 [DisplayName("Internal")]
-internal sealed class InternalMediaSource(IShortcutManager shortcutManager, IEventAggregator eventAggregator) : AbstractMediaSource(shortcutManager, eventAggregator)
+internal sealed class InternalMediaSource(ILocalScriptRepository localRepository, IShortcutManager shortcutManager, IEventAggregator eventAggregator) : AbstractMediaSource(shortcutManager, eventAggregator)
 {
-    private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
+    protected override Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
     private readonly object _playlistLock = new();
 
@@ -30,7 +31,7 @@ internal sealed class InternalMediaSource(IShortcutManager shortcutManager, IEve
     public override ConnectionStatus Status { get; protected set; }
     public bool IsConnected => Status == ConnectionStatus.Connected;
     public bool IsDisconnected => Status == ConnectionStatus.Disconnected;
-    public bool IsConnectBusy => Status == ConnectionStatus.Connecting || Status == ConnectionStatus.Disconnecting;
+    public bool IsConnectBusy => Status is ConnectionStatus.Connecting or ConnectionStatus.Disconnecting;
     public bool CanToggleConnect => !IsConnectBusy;
 
     public int PlaylistIndex { get; set; } = 0;
@@ -38,22 +39,40 @@ internal sealed class InternalMediaSource(IShortcutManager shortcutManager, IEve
 
     public bool IsShuffling { get; set; } = false;
     public bool IsLooping { get; set; } = false;
+    public bool LoadAdditionalScripts { get; set; } = false;
 
-    protected override async Task RunAsync(CancellationToken token)
+    protected override ValueTask<bool> OnConnectingAsync(ConnectionType connectionType)
+    {
+        if (connectionType != ConnectionType.AutoConnect)
+            Logger.Info("Connecting to {0} [Type: {1}]", Name, connectionType);
+
+        return ValueTask.FromResult(true);
+    }
+
+    protected override async Task RunAsync(ConnectionType connectionType, CancellationToken token)
     {
         try
         {
-            Logger.Info("Connecting to {0}", Name);
-
             await Task.Delay(250, token);
             PlayIndex(-1);
             SetIsPlaying(false);
             SetSpeed(1);
 
-            ClearPendingMessages();
-
             Status = ConnectionStatus.Connected;
+        }
+        catch (Exception e) when (connectionType != ConnectionType.AutoConnect)
+        {
+            Logger.Error(e, "Error when connecting to {0}", Name);
+            _ = DialogHelper.ShowErrorAsync(e, $"Error when connecting to {Name}", "RootDialog");
+            return;
+        }
+        catch
+        {
+            return;
+        }
 
+        try
+        {
             var lastTicks = Stopwatch.GetTimestamp();
             using var timer = new PeriodicTimer(TimeSpan.FromMilliseconds(100));
             while (!token.IsCancellationRequested && await timer.WaitForNextTickAsync(token))
@@ -138,7 +157,6 @@ internal sealed class InternalMediaSource(IShortcutManager shortcutManager, IEve
 
         PlayIndex(-1);
         SetIsPlaying(false);
-        ClearPendingMessages();
     }
 
     private bool? CheckIndexAndRefresh(int index)
@@ -268,58 +286,78 @@ internal sealed class InternalMediaSource(IShortcutManager shortcutManager, IEve
     private void SetCurrentItem(PlaylistItem item)
     {
         _currentItem = item;
-        if (Status != ConnectionStatus.Connected && Status != ConnectionStatus.Disconnecting)
+        if (Status is not ConnectionStatus.Connected and not ConnectionStatus.Disconnecting)
             return;
 
-        PublishMessage(new ChangeScriptMessage(DeviceAxis.All, null));
-        var result = item == null ? null : FunscriptReader.Default.FromFileInfo(item.AsFileInfo());
-        if (result?.IsSuccess != true)
+        if (item == null)
         {
-            SetDuration(double.NaN);
-            SetPosition(double.NaN);
+            ResetState();
             return;
         }
 
-        if (result.IsMultiAxis)
+        var result = new Dictionary<DeviceAxis, IScriptResource>();
+        if (LoadAdditionalScripts)
         {
-            PublishMessage(new ChangeScriptMessage(result.Resources));
-            SetDuration(result.Resources.Values.Max(s => s.Keyframes[^1].Position));
+            var scriptName = DeviceAxisUtils.GetBaseNameWithExtension(item.Name);
+            result.Merge(localRepository.SearchForScripts(scriptName, Path.GetDirectoryName(item.FullName), DeviceAxis.All));
         }
         else
         {
-            var axes = DeviceAxisUtils.FindAxesMatchingName(item.Name, true);
-            PublishMessage(new ChangeScriptMessage(axes, result.Resource));
-            SetDuration(result.Resource.Keyframes[^1].Position);
+            var readerResult = FunscriptReader.Default.FromFileInfo(item.AsFileInfo());
+            if (readerResult.IsSuccess)
+            {
+                if (readerResult.IsMultiAxis)
+                    result.Merge(readerResult.Resources);
+                else
+                    result.Merge(DeviceAxisUtils.FindAxesMatchingName(item.Name, true).ToDictionary(a => a, _ => readerResult.Resource));
+            }
         }
 
+        if (result.Count == 0)
+        {
+            ResetState();
+            return;
+        }
+
+        SetDuration(result.Values.Max(s => s.Keyframes[^1].Position));
         SetPosition(0, forceSeek: true);
+
+        result.Merge(DeviceAxis.All.Except(result.Keys).ToDictionary(a => a, _ => default(IScriptResource)));
+        PublishMessage(new ChangeScriptMessage(result));
+
+        void ResetState()
+        {
+            SetDuration(double.NaN);
+            SetPosition(double.NaN);
+            PublishMessage(new ChangeScriptMessage(DeviceAxis.All, null));
+        }
     }
 
     private void SetDuration(double duration)
     {
         _duration = duration;
-        if (Status == ConnectionStatus.Connected || Status == ConnectionStatus.Disconnecting)
+        if (Status is ConnectionStatus.Connected or ConnectionStatus.Disconnecting)
             PublishMessage(new MediaDurationChangedMessage(double.IsFinite(duration) ? TimeSpan.FromSeconds(duration) : null));
     }
 
     private void SetPosition(double position, bool forceSeek = false)
     {
         _position = position;
-        if (Status == ConnectionStatus.Connected || Status == ConnectionStatus.Disconnecting)
+        if (Status is ConnectionStatus.Connected or ConnectionStatus.Disconnecting)
             PublishMessage(new MediaPositionChangedMessage(double.IsFinite(position) ? TimeSpan.FromSeconds(position) : null, forceSeek));
     }
 
     private void SetSpeed(double speed)
     {
         _speed = speed;
-        if (Status == ConnectionStatus.Connected || Status == ConnectionStatus.Disconnecting)
+        if (Status is ConnectionStatus.Connected or ConnectionStatus.Disconnecting)
             PublishMessage(new MediaSpeedChangedMessage(speed));
     }
 
     private void SetIsPlaying(bool isPlaying)
     {
         _isPlaying = isPlaying;
-        if (Status == ConnectionStatus.Connected || Status == ConnectionStatus.Disconnecting)
+        if (Status is ConnectionStatus.Connected or ConnectionStatus.Disconnecting)
             PublishMessage(new MediaPlayingChangedMessage(isPlaying));
     }
 
@@ -371,8 +409,6 @@ internal sealed class InternalMediaSource(IShortcutManager shortcutManager, IEve
         }
     }
 
-    public override async ValueTask<bool> CanConnectAsync(CancellationToken token) => await ValueTask.FromResult(true);
-
     protected override void RegisterActions(IShortcutManager s)
     {
         base.RegisterActions(s);
@@ -397,7 +433,9 @@ internal sealed class InternalMediaSource(IShortcutManager shortcutManager, IEve
         s.RegisterAction($"{Name}::Playlist::Clear", () => WhenConnected(ClearPlaylist));
         s.RegisterAction($"{Name}::Playlist::Prev", () => WhenConnected(PlayPrevious));
         s.RegisterAction($"{Name}::Playlist::Next", () => WhenConnected(PlayNext));
-        s.RegisterAction<int>($"{Name}::Playlist::PlayByIndex", s => s.WithLabel("Index"), index => WhenConnected(() => WriteMessage(new PlayScriptAtIndexMessage(index))));
+        s.RegisterAction<int>($"{Name}::Playlist::PlayByIndex",
+            s => s.WithLabel("Index").AsNumericUpDown(minimum: 0),
+            index => WhenConnected(() => WriteMessage(new PlayScriptAtIndexMessage(index))));
         s.RegisterAction<string>($"{Name}::Playlist::PlayByName", s => s.WithLabel("File name/path"), name => WhenConnected(() =>
         {
             var playlist = ScriptPlaylist;
@@ -457,6 +495,9 @@ internal sealed class InternalMediaSource(IShortcutManager shortcutManager, IEve
             IsLooping = false;
     }
 
+    public void OnLoadAdditionalScriptsChanged()
+        => SetCurrentItem(_currentItem);
+
     private sealed record PlayScriptAtIndexMessage(int Index) : IMediaSourceControlMessage;
     private sealed record PlayScriptWithOffsetMessage(int Offset) : IMediaSourceControlMessage;
 
@@ -472,7 +513,7 @@ internal sealed class InternalMediaSource(IShortcutManager shortcutManager, IEve
 
             if (SourceFile.Exists)
                 _items = File.ReadAllLines(SourceFile.FullName)
-                             .Select(p => { try { return new PlaylistItem(p); } catch { return null; } })
+                             .Select(PlaylistItem.CreateFromPath)
                              .NotNull()
                              .Where(f => string.Equals(f.Extension, ".funscript", StringComparison.OrdinalIgnoreCase))
                              .ToList();
@@ -482,7 +523,7 @@ internal sealed class InternalMediaSource(IShortcutManager shortcutManager, IEve
 
         public Playlist(IEnumerable<string> files)
         {
-            _items = files.Select(p => { try { return new PlaylistItem(p); } catch { return null; } })
+            _items = files.Select(PlaylistItem.CreateFromPath)
                           .NotNull()
                           .Where(f => string.Equals(f.Extension, ".funscript", StringComparison.OrdinalIgnoreCase))
                           .ToList();
@@ -530,9 +571,11 @@ internal sealed class InternalMediaSource(IShortcutManager shortcutManager, IEve
         public event PropertyChangedEventHandler PropertyChanged;
     }
 
-    internal sealed class PlaylistItem(string path) : PropertyChangedBase
+    internal sealed class PlaylistItem : PropertyChangedBase
     {
-        private readonly FileInfo _source = new(path);
+        private readonly FileInfo _source;
+
+        private PlaylistItem(string path) => _source = new(path);
 
         public string Name => _source.Name;
         public string FullName => _source.FullName;
@@ -547,6 +590,12 @@ internal sealed class InternalMediaSource(IShortcutManager shortcutManager, IEve
             if (before ^ after)
                 NotifyOfPropertyChange(nameof(Exists));
             return this;
+        }
+
+        public static PlaylistItem CreateFromPath(string path)
+        {
+            try { return new PlaylistItem(path); }
+            catch { return null; }
         }
     }
 }

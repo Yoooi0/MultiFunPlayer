@@ -93,10 +93,10 @@ internal sealed class ThemeSettingsViewModel : Screen, IHandle<SettingsMessage>
         AutoUpdateSolidColorBrush("MaterialDesignPrimaryCheckerboxBrush");
         AutoUpdateSolidColorBrush("MaterialDesignSecondaryCheckerboxBrush");
 
-        AutoUpdateSolidColorBrush("MaterialDesignBodyDisabled");
+        AutoUpdateSolidColorBrush("MaterialDesignBodyDisabledBrush");
 
-        AutoUpdateSolidColorBrush("MaterialDesignCardBackgroundHover");
-        AutoUpdateSolidColorBrush("MaterialDesignCardBackgroundSelected");
+        AutoUpdateSolidColorBrush("MaterialDesignCardBackgroundHoverBrush");
+        AutoUpdateSolidColorBrush("MaterialDesignCardBackgroundSelectedBrush");
 
         var invertedLight = IsDarkTheme ? theme.PrimaryDark : theme.PrimaryLight;
         var invertedDark = IsDarkTheme ? theme.PrimaryLight : theme.PrimaryDark;

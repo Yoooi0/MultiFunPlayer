@@ -1,4 +1,4 @@
-using MultiFunPlayer.Common;
+﻿using MultiFunPlayer.Common;
 using MultiFunPlayer.Shortcut;
 using MultiFunPlayer.UI;
 using Newtonsoft.Json;
@@ -13,7 +13,7 @@ namespace MultiFunPlayer.MediaSource.ViewModels;
 [DisplayName("Jellyfin")]
 internal sealed class JellyfinMediaSource(IShortcutManager shortcutManager, IEventAggregator eventAggregator) : AbstractMediaSource(shortcutManager, eventAggregator)
 {
-    private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
+    protected override Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
     private CancellationTokenSource _refreshCancellationSource = new();
     private JellyfinSession _currentSession;
@@ -21,7 +21,7 @@ internal sealed class JellyfinMediaSource(IShortcutManager shortcutManager, IEve
     public override ConnectionStatus Status { get; protected set; }
     public bool IsConnected => Status == ConnectionStatus.Connected;
     public bool IsDisconnected => Status == ConnectionStatus.Disconnected;
-    public bool IsConnectBusy => Status == ConnectionStatus.Connecting || Status == ConnectionStatus.Disconnecting;
+    public bool IsConnectBusy => Status is ConnectionStatus.Connecting or ConnectionStatus.Disconnecting;
     public bool CanToggleConnect => !IsConnectBusy;
 
     public Uri ServerBaseUri { get; set; } = new Uri("http://127.0.0.1:8096");
@@ -31,7 +31,14 @@ internal sealed class JellyfinMediaSource(IShortcutManager shortcutManager, IEve
     public ObservableConcurrentCollection<JellyfinDevice> Devices { get; set; } = [];
 
     public bool CanChangeDevice => IsDisconnected && !IsRefreshBusy && !string.IsNullOrEmpty(ApiKey) && Devices.Count != 0;
-    public void OnSelectedDeviceChanged() => SelectedDeviceId = SelectedDevice?.Id;
+    public void OnSelectedDeviceChanged()
+    {
+        SelectedDeviceId = SelectedDevice?.Id;
+        if (SelectedDeviceId == null)
+            return;
+
+        Logger.Debug("Selected {0}", SelectedDevice);
+    }
 
     protected override void OnInitialActivate()
     {
@@ -39,36 +46,51 @@ internal sealed class JellyfinMediaSource(IShortcutManager shortcutManager, IEve
         _ = RefreshDevices();
     }
 
-    protected override async ValueTask<bool> OnConnectingAsync()
+    protected override async ValueTask<bool> OnConnectingAsync(ConnectionType connectionType)
     {
+        if (connectionType != ConnectionType.AutoConnect)
+            Logger.Info("Connecting to {0} at \"{1}\" [Type: {2}]", Name, ServerBaseUri, connectionType);
+
+        if (ServerBaseUri == null)
+            throw new MediaSourceException("Endpoint cannot be null");
+        if (string.IsNullOrEmpty(ApiKey))
+            throw new MediaSourceException("Api key cannot be empty");
+
         if (SelectedDeviceId == null)
             return false;
         if (SelectedDevice == null)
             await RefreshDevices();
 
-        return SelectedDevice != null && await base.OnConnectingAsync();
+        return SelectedDevice != null;
     }
 
-    protected override async Task RunAsync(CancellationToken token)
+    protected override async Task RunAsync(ConnectionType connectionType, CancellationToken token)
     {
+        using var client = NetUtils.CreateHttpClient();
+
         try
         {
-            Logger.Info("Connecting to {0} at \"{1}\"", Name, ServerBaseUri);
-            if (ServerBaseUri == null)
-                throw new Exception("Endpoint cannot be null.");
-            if (string.IsNullOrEmpty(ApiKey))
-                throw new Exception("Api key cannot be empty.");
-
-            using var client = NetUtils.CreateHttpClient();
             client.Timeout = TimeSpan.FromMilliseconds(1000);
 
             var uri = new Uri(ServerBaseUri, "/System/Ping");
-            var response = await UnwrapTimeout(() => client.GetAsync(uri, token));
+            var response = await client.GetAsync(uri, token);
             response.EnsureSuccessStatusCode();
 
             Status = ConnectionStatus.Connected;
-            ClearPendingMessages();
+        }
+        catch (Exception e) when (connectionType != ConnectionType.AutoConnect)
+        {
+            Logger.Error(e, "Error when connecting to {0} at \"{1}\"", Name, ServerBaseUri);
+            _ = DialogHelper.ShowErrorAsync(e, $"Error when connecting to {Name}", "RootDialog");
+            return;
+        }
+        catch
+        {
+            return;
+        }
 
+        try
+        {
             using var cancellationSource = CancellationTokenSource.CreateLinkedTokenSource(token);
             var task = await Task.WhenAny(ReadAsync(client, cancellationSource.Token), WriteAsync(client, cancellationSource.Token));
             cancellationSource.Cancel();
@@ -95,14 +117,14 @@ internal sealed class JellyfinMediaSource(IShortcutManager shortcutManager, IEve
         {
             var lastState = default(PlayState);
             var lastItem = default(PlayItem);
-            while (!token.IsCancellationRequested)
+            using var timer = new PeriodicTimer(TimeSpan.FromMilliseconds(500));
+            while (await timer.WaitForNextTickAsync(token) && !token.IsCancellationRequested)
             {
-                await Task.Delay(500, token);
                 if (SelectedDeviceId == null)
                     continue;
 
-                var sessionsUri = new Uri(ServerBaseUri, $"/Sessions?api_key={ApiKey}&DeviceId={SelectedDeviceId}");
-                var response = await UnwrapTimeout(() => client.GetAsync(sessionsUri, token));
+                var sessionsUri = new Uri(ServerBaseUri, $"/Sessions?ApiKey={ApiKey}&DeviceId={SelectedDeviceId}");
+                var response = await client.GetAsync(sessionsUri, token);
                 if (response == null)
                     continue;
 
@@ -153,6 +175,7 @@ internal sealed class JellyfinMediaSource(IShortcutManager shortcutManager, IEve
                 lastItem = item;
             }
         }
+        catch (OperationCanceledException e) when (e.InnerException is TimeoutException t) { t.Throw(); }
         catch (OperationCanceledException) { }
     }
 
@@ -171,8 +194,8 @@ internal sealed class JellyfinMediaSource(IShortcutManager shortcutManager, IEve
                 var baseUri = new Uri(ServerBaseUri, $"/Sessions/{_currentSession.Id}/Playing/");
                 var uri = message switch
                 {
-                    MediaPlayPauseMessage playPauseMessage => new Uri(baseUri, $"{(playPauseMessage.ShouldBePlaying ? "Unpause" : "Pause")}?api_key={ApiKey}"),
-                    MediaSeekMessage seekMessage => new Uri(baseUri, $"Seek?api_key={ApiKey}&SeekPositionTicks={(long)(seekMessage.Position.TotalMilliseconds * 10000)}"),
+                    MediaPlayPauseMessage playPauseMessage => new Uri(baseUri, $"{(playPauseMessage.ShouldBePlaying ? "Unpause" : "Pause")}?ApiKey={ApiKey}"),
+                    MediaSeekMessage seekMessage => new Uri(baseUri, $"Seek?ApiKey={ApiKey}&SeekPositionTicks={(long)(seekMessage.Position.TotalMilliseconds * 10000)}"),
                     _ => null
                 };
 
@@ -183,6 +206,7 @@ internal sealed class JellyfinMediaSource(IShortcutManager shortcutManager, IEve
                 _ = await client.PostAsync(uri, null, token);
             }
         }
+        catch (OperationCanceledException e) when (e.InnerException is TimeoutException t) { t.Throw(); }
         catch (OperationCanceledException) { }
     }
 
@@ -206,11 +230,11 @@ internal sealed class JellyfinMediaSource(IShortcutManager shortcutManager, IEve
             token.ThrowIfCancellationRequested();
 
             IsRefreshBusy = true;
-            await DoRefreshClients(token);
+            await DoRefreshDevices(token);
         }
         catch (Exception e)
         {
-            Logger.Warn(e, $"{Name} client refresh failed with exception");
+            Logger.Warn(e, $"{Name} device refresh failed with exception");
         }
         finally
         {
@@ -218,20 +242,47 @@ internal sealed class JellyfinMediaSource(IShortcutManager shortcutManager, IEve
             IsRefreshBusy = false;
         }
 
-        async Task DoRefreshClients(CancellationToken token)
+        async Task DoRefreshDevices(CancellationToken token)
         {
             await Task.Delay(250, token);
+            Logger.Debug("Refreshing devices");
 
             using var client = NetUtils.CreateHttpClient();
             client.Timeout = TimeSpan.FromMilliseconds(5000);
 
-            var uri = new Uri(ServerBaseUri, $"/Devices?api_key={ApiKey}");
-            var response = await UnwrapTimeout(() => client.GetAsync(uri, token));
+            var uri = new Uri(ServerBaseUri, $"/Devices?ApiKey={ApiKey}");
+            var response = await client.GetAsync(uri, token);
+            response.EnsureSuccessStatusCode();
+
             var content = await response.Content.ReadAsStringAsync(token);
+            Logger.Trace(() => $"Received \"{content}\" from \"{Name}\"");
 
             var o = JObject.Parse(content);
-            var currentDevices = o["Items"].ToObject<List<JellyfinDevice>>();
+            foreach (var device in o["Items"].OfType<JObject>())
+            {
+                if (!device.TryGetValue<string>("Id", out var id) || string.IsNullOrWhiteSpace(id))
+                    continue;
 
+                try
+                {
+                    uri = new Uri(ServerBaseUri, $"/Devices/Options?ApiKey={ApiKey}&id={id}");
+                    response = await client.GetAsync(uri, token);
+                    response.EnsureSuccessStatusCode();
+
+                    content = await response.Content.ReadAsStringAsync(token);
+                    Logger.Trace(() => $"Received \"{content}\" from \"{Name}\"");
+
+                    var options = JObject.Parse(content);
+                    if (options.TryGetValue<string>("CustomName", out var customName) && !string.IsNullOrWhiteSpace(customName))
+                        device["Name"] = customName;
+                }
+                catch (Exception e)
+                {
+                    Logger.Warn(e, $"Failed to read custom name for device \"{id}\"");
+                }
+            }
+
+            var currentDevices = o["Items"].ToObject<List<JellyfinDevice>>();
             var lastSelectedMachineIdentifier = SelectedDeviceId;
             Devices.RemoveRange(Devices.Except(currentDevices).ToList());
             Devices.AddRange(currentDevices.Except(Devices).ToList());
@@ -270,52 +321,6 @@ internal sealed class JellyfinMediaSource(IShortcutManager shortcutManager, IEve
         }
     }
 
-    public override async ValueTask<bool> CanConnectAsync(CancellationToken token)
-    {
-        try
-        {
-            if (ServerBaseUri == null)
-                return false;
-
-            using var client = NetUtils.CreateHttpClient();
-            client.Timeout = TimeSpan.FromMilliseconds(500);
-
-            var uri = new Uri(ServerBaseUri, "/System/Ping");
-            var response = await UnwrapTimeout(() => client.GetAsync(uri, token));
-            response.EnsureSuccessStatusCode();
-
-            return true;
-        }
-        catch
-        {
-            return false;
-        }
-    }
-
-    private async Task<HttpResponseMessage> UnwrapTimeout(Func<Task<HttpResponseMessage>> action)
-    {
-        //https://github.com/dotnet/runtime/issues/21965
-
-        try
-        {
-            return await action();
-        }
-        catch (Exception e)
-        {
-            if (e is OperationCanceledException operationCanceledException)
-            {
-                var innerException = operationCanceledException.InnerException;
-                if (innerException is TimeoutException)
-                    innerException.Throw();
-
-                operationCanceledException.Throw();
-            }
-
-            e.Throw();
-            return null;
-        }
-    }
-
     protected override void RegisterActions(IShortcutManager s)
     {
         base.RegisterActions(s);
@@ -326,6 +331,24 @@ internal sealed class JellyfinMediaSource(IShortcutManager shortcutManager, IEve
             if (Uri.TryCreate(serverBaseUri, UriKind.Absolute, out var uri))
                 ServerBaseUri = uri;
         });
+        #endregion
+
+        #region ApiKey
+        s.RegisterAction<string>($"{Name}::ApiKey::Set", s => s.WithLabel("Api key"), apiKey => ApiKey = apiKey);
+        #endregion
+
+        #region SelectedDevice
+        s.RegisterAction<string>($"{Name}::Device::SetByName", s => s.WithLabel("Name"), name => {
+            var devcie = Devices.FirstOrDefault(p => string.Equals(p.Name, name, StringComparison.Ordinal));
+            if (devcie == null)
+                return;
+
+            SelectDeviceById(devcie.Id);
+        });
+        #endregion
+
+        #region RefreshDevices
+        s.RegisterAction($"{Name}::RefreshDevices", async () => { if (CanRefreshDevices) await RefreshDevices(); });
         #endregion
     }
 
@@ -338,23 +361,13 @@ internal sealed class JellyfinMediaSource(IShortcutManager shortcutManager, IEve
         base.Dispose(disposing);
     }
 
-    internal sealed record class JellyfinDevice()
+    internal sealed record JellyfinDevice(string Name, string Id, string AppName, string AppVersion)
     {
-        public string Name { get; init; }
-        public string Id { get; init; }
-        public string AppName { get; init; }
-        public string AppVersion { get; init; }
+        public bool Equals(JellyfinDevice other) => string.Equals(Id, other?.Id, StringComparison.Ordinal);
+        public override int GetHashCode() => Id.GetHashCode();
     }
 
-    internal sealed record class JellyfinSession()
-    {
-        public string Id { get; init; }
-        [JsonProperty("PlayState")]
-        public PlayState State { get; init; }
-        [JsonProperty("NowPlayingItem")]
-        public PlayItem Item { get; init; }
-    }
-
-    internal sealed record class PlayState(long PositionTicks, bool IsPaused);
-    internal sealed record class PlayItem(long RunTimeTicks, string Path);
+    internal sealed record JellyfinSession(string Id, [JsonProperty("PlayState")] PlayState State, [JsonProperty("NowPlayingItem")] PlayItem Item);
+    internal sealed record PlayState(long PositionTicks, bool IsPaused);
+    internal sealed record PlayItem(long RunTimeTicks, string Path);
 }

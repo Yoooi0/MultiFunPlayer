@@ -27,14 +27,14 @@ internal sealed class PatternMotionProvider(DeviceAxis target, IEventAggregator 
 
     public override void Update(double deltaTime)
     {
-        Value = MathUtils.Map(Calculate(Pattern, _time), 0, 1, Minimum / 100, Maximum / 100);
+        Value = MathUtils.Map(Calculate(), 0, 1, Minimum, Maximum);
         _time += Speed * deltaTime;
     }
 
-    private double Calculate(PatternType pattern, double time)
+    private double Calculate()
     {
-        var t = MathUtils.Clamp01(time % 4 / 4);
-        switch (pattern)
+        var t = MathUtils.Clamp01(_time % 4 / 4);
+        switch (Pattern)
         {
             case PatternType.Triangle: return Math.Abs(Math.Abs(t * 2 - 1.5) - 1);
             case PatternType.Sine: return -Math.Sin(t * Math.PI * 2) / 2 + 0.5;

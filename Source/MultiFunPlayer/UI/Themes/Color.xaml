@@ -63,16 +63,16 @@
                      po:Freeze="True"
                      Color="{StaticResource MaterialDesignSecondaryCheckerboxColor}"/>
 
-    <SolidColorBrush x:Key="MaterialDesignBodyDisabled"
+    <SolidColorBrush x:Key="MaterialDesignBodyDisabledBrush"
                      po:Freeze="True"
-                     Color="{StaticResource MaterialDesignBodyDisabled}"/>
+                     Color="{StaticResource MaterialDesignBodyDisabledColor}"/>
 
-    <SolidColorBrush x:Key="MaterialDesignCardBackgroundHover"
+    <SolidColorBrush x:Key="MaterialDesignCardBackgroundHoverBrush"
                      po:Freeze="True"
-                     Color="{StaticResource MaterialDesignCardBackgroundHover}"/>
-    <SolidColorBrush x:Key="MaterialDesignCardBackgroundSelected"
+                     Color="{StaticResource MaterialDesignCardBackgroundHoverColor}"/>
+    <SolidColorBrush x:Key="MaterialDesignCardBackgroundSelectedBrush"
                      po:Freeze="True"
-                     Color="{StaticResource MaterialDesignCardBackgroundSelected}"/>
+                     Color="{StaticResource MaterialDesignCardBackgroundSelectedColor}"/>
 
     <SolidColorBrush x:Key="HighlightBrush" Color="{DynamicResource Primary700}"/>
     <SolidColorBrush x:Key="AccentBaseColorBrush" Color="{DynamicResource Primary600}"/>

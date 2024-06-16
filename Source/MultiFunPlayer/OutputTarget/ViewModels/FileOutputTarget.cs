@@ -1,4 +1,4 @@
-using Microsoft.Win32;
+﻿using Microsoft.Win32;
 using MultiFunPlayer.Common;
 using MultiFunPlayer.Script;
 using MultiFunPlayer.UI;
@@ -14,12 +14,12 @@ namespace MultiFunPlayer.OutputTarget.ViewModels;
 internal sealed class FileOutputTarget(int instanceIndex, IEventAggregator eventAggregator, IDeviceAxisValueProvider valueProvider)
     : ThreadAbstractOutputTarget(instanceIndex, eventAggregator, valueProvider)
 {
-    private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
+    protected override Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
     public override ConnectionStatus Status { get; protected set; }
     public bool IsConnected => Status == ConnectionStatus.Connected;
     public bool IsDisconnected => Status == ConnectionStatus.Disconnected;
-    public bool IsConnectBusy => Status == ConnectionStatus.Connecting || Status == ConnectionStatus.Disconnecting;
+    public bool IsConnectBusy => Status is ConnectionStatus.Connecting or ConnectionStatus.Disconnecting;
     public bool CanToggleConnect => !IsConnectBusy;
 
     public DirectoryInfo OutputDirectory { get; set; } = null;
@@ -31,19 +31,28 @@ internal sealed class FileOutputTarget(int instanceIndex, IEventAggregator event
         _ => null,
     };
 
-    protected override void Run(CancellationToken token)
+    protected override ValueTask<bool> OnConnectingAsync(ConnectionType connectionType)
     {
+        if (connectionType != ConnectionType.AutoConnect)
+            Logger.Info("Connecting to {0} [Type: {1}]", Identifier, connectionType);
+
+        if (!AxisSettings.Values.Any(x => x.Enabled))
+            throw new OutputTargetException("At least one axis must be enabled");
+        if (OutputDirectory?.AsRefreshed().Exists != true)
+            throw new DirectoryNotFoundException("Output directory does not exist");
+
+        return ValueTask.FromResult(true);
+    }
+
+    protected override void Run(ConnectionType connectionType, CancellationToken token)
+    {
+        if (connectionType == ConnectionType.AutoConnect)
+            return;
+
         var writers = new Dictionary<DeviceAxis, IScriptWriter>();
 
         try
         {
-            Logger.Info("Connecting to {0}", Identifier);
-            if (!AxisSettings.Values.Any(x => x.Enabled))
-                throw new Exception("At least one axis must be enabled");
-
-            if (OutputDirectory?.AsRefreshed().Exists != true)
-                throw new DirectoryNotFoundException("Output directory does not exist");
-
             var baseFileName = $"MultiFunPlayer_{DateTime.Now:yyyyMMddTHHmmss}";
             foreach (var axis in AxisSettings.Where(x => x.Value.Enabled).Select(x => x.Key))
             {
@@ -59,8 +68,8 @@ internal sealed class FileOutputTarget(int instanceIndex, IEventAggregator event
         }
         catch (Exception e)
         {
-            Logger.Error(e, "Error when initializing writers");
-            _ = DialogHelper.ShowErrorAsync(e, "Error when initializing writers", "RootDialog");
+            Logger.Error(e, "Error when connecting to {0}", Name);
+            _ = DialogHelper.ShowErrorAsync(e, $"Error when connecting to {Name}", "RootDialog");
             return;
         }
 
@@ -125,6 +134,4 @@ internal sealed class FileOutputTarget(int instanceIndex, IEventAggregator event
                 ScriptType = scriptType;
         }
     }
-
-    public override async ValueTask<bool> CanConnectAsync(CancellationToken token) => await ValueTask.FromResult(false);
 }

@@ -53,7 +53,7 @@ internal sealed class PluginViewModel : Screen, IDisposable
         container.Dispose();
         Containers.Remove(fileInfo);
 
-        UnregisterActions(_shortcutManager, container);
+        container.UnregisterActions(_shortcutManager);
     }
 
     private void AddContainer(FileInfo fileInfo)
@@ -71,19 +71,7 @@ internal sealed class PluginViewModel : Screen, IDisposable
         Containers.Add(fileInfo, container);
         container.Compile();
 
-        RegisterActions(_shortcutManager, container);
-    }
-
-    private void RegisterActions(IShortcutManager s, PluginContainer container)
-    {
-        s.RegisterAction($"Plugin::{container.Name}::Start", () => container.Start());
-        s.RegisterAction($"Plugin::{container.Name}::Stop", () => container.Stop());
-    }
-
-    private void UnregisterActions(IShortcutManager s, PluginContainer container)
-    {
-        s.UnregisterAction($"Plugin::{container.Name}::Start");
-        s.UnregisterAction($"Plugin::{container.Name}::Stop");
+        container.RegisterActions(_shortcutManager);
     }
 
     private void Dispose(bool disposing)

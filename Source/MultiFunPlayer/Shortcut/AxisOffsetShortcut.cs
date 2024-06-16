@@ -1,13 +1,12 @@
 ﻿using MultiFunPlayer.Common;
 using MultiFunPlayer.Input;
 using System.ComponentModel;
-using System.Text;
 
 namespace MultiFunPlayer.Shortcut;
 
 [DisplayName("Axis Offset")]
-internal sealed class AxisOffsetShortcut(IShortcutActionResolver actionResolver, IAxisInputGestureDescriptor gesture)
-    : AbstractShortcut<IAxisInputGesture, IAxisInputGestureData>(actionResolver, gesture)
+internal sealed class AxisOffsetShortcut(IShortcutActionRunner actionRunner, IAxisInputGestureDescriptor gesture)
+    : AbstractShortcut<IAxisInputGesture, IAxisInputGestureData>(actionRunner, gesture)
 {
     private const double DeltaTime = 0.1;
     private double _offset;

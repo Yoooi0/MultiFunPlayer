@@ -1,27 +1,16 @@
-﻿using MultiFunPlayer.Common;
-using Newtonsoft.Json.Linq;
+﻿using Newtonsoft.Json.Linq;
 using NLog;
 
 namespace MultiFunPlayer.Settings.Migrations;
 
-internal sealed class Migration0003 : AbstractConfigMigration
+internal sealed class Migration0003 : AbstractSettingsMigration
 {
-    private readonly Logger Logger = LogManager.GetCurrentClassLogger();
+    protected override Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
-    public override void Migrate(JObject settings)
+    protected override void InternalMigrate(JObject settings)
     {
-        if (settings.TryGetObject(out var outputTargetSettings, "OutputTarget"))
-        {
-            MigrateOutputTargets(outputTargetSettings);
-            MigrateActiveOutputTarget(outputTargetSettings);
-        }
-
-        base.Migrate(settings);
-    }
-
-    private void MigrateOutputTargets(JObject settings)
-    {
-        Logger.Info("Migrating OutputTargets");
+        if (!TryGetValue<JObject>(settings, "OutputTarget", out var outputTargets))
+            return;
 
         var nameToTypeMap = new Dictionary<string, string>()
         {
@@ -31,33 +20,22 @@ internal sealed class Migration0003 : AbstractConfigMigration
             ["Serial"] = "MultiFunPlayer.OutputTarget.ViewModels.SerialOutputTargetViewModel, MultiFunPlayer"
         };
 
-        var items = new List<JObject>();
-        foreach (var (name, type) in nameToTypeMap)
+        AddPropertyByName(outputTargets, "Items", new JArray());
+
+        var items = GetValue<JArray>(outputTargets, "Items");
+        foreach (var property in GetProperties(outputTargets, nameToTypeMap.Keys))
         {
-            if (!settings.ContainsKey(name))
-                continue;
+            var outputTarget = property.Value as JObject;
+            AddPropertiesByName(outputTarget, new Dictionary<string, JToken>()
+            {
+                ["$type"] = nameToTypeMap[property.Name],
+                ["$index"] = 0
+            });
 
-            var o = settings[name] as JObject;
-
-            settings.Remove(name);
-            o["$type"] = type;
-            o["$index"] = 0;
-
-            items.Add(o);
-            Logger.Info($"Moved \"{name}\" to \"Items\"");
+            AddTokenToContainer(outputTarget, items);
+            RemoveProperty(property);
         }
 
-        settings["Items"] = JArray.FromObject(items);
-    }
-
-    private void MigrateActiveOutputTarget(JObject settings)
-    {
-        Logger.Info("Migrating OutputTarget ActiveItem");
-        if (!settings.ContainsKey("ActiveItem"))
-            return;
-
-        var activeItem = settings["ActiveItem"].ToString();
-        Logger.Info($"Migrated ActiveItem from \"{activeItem}\" to \"{activeItem}/0\"");
-        settings["ActiveItem"] = $"{activeItem}/0";
+        EditPropertyByName(outputTargets, "ActiveItem", v => $"{v}/0");
     }
 }

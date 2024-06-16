@@ -1,7 +1,8 @@
-using MultiFunPlayer.Common;
+﻿using MultiFunPlayer.Common;
 using MultiFunPlayer.Input;
 using MultiFunPlayer.Settings;
 using NLog;
+using Stylet;
 
 namespace MultiFunPlayer.Shortcut;
 
@@ -30,6 +31,19 @@ internal interface IShortcutManager : IShortcutActionResolver, IDisposable
     bool RemoveShortcut(IShortcut shortcut);
     void ClearShortcuts();
 
+    void RegisterAction(string actionName, Func<ValueTask> action);
+    void RegisterAction<T0>(string actionName, Func<IShortcutSettingBuilder<T0>, IShortcutSettingBuilder<T0>> settings0, Func<T0, ValueTask> action);
+    void RegisterAction<T0, T1>(string actionName, Func<IShortcutSettingBuilder<T0>, IShortcutSettingBuilder<T0>> settings0, Func<IShortcutSettingBuilder<T1>, IShortcutSettingBuilder<T1>> settings1, Func<T0, T1, ValueTask> action);
+    void RegisterAction<T0, T1, T2>(string actionName, Func<IShortcutSettingBuilder<T0>, IShortcutSettingBuilder<T0>> settings0, Func<IShortcutSettingBuilder<T1>, IShortcutSettingBuilder<T1>> settings1, Func<IShortcutSettingBuilder<T2>, IShortcutSettingBuilder<T2>> settings2, Func<T0, T1, T2, ValueTask> action);
+    void RegisterAction<T0, T1, T2, T3>(string actionName, Func<IShortcutSettingBuilder<T0>, IShortcutSettingBuilder<T0>> settings0, Func<IShortcutSettingBuilder<T1>, IShortcutSettingBuilder<T1>> settings1, Func<IShortcutSettingBuilder<T2>, IShortcutSettingBuilder<T2>> settings2, Func<IShortcutSettingBuilder<T3>, IShortcutSettingBuilder<T3>> settings3, Func<T0, T1, T2, T3, ValueTask> action);
+    void RegisterAction<T0, T1, T2, T3, T4>(string actionName, Func<IShortcutSettingBuilder<T0>, IShortcutSettingBuilder<T0>> settings0, Func<IShortcutSettingBuilder<T1>, IShortcutSettingBuilder<T1>> settings1, Func<IShortcutSettingBuilder<T2>, IShortcutSettingBuilder<T2>> settings2, Func<IShortcutSettingBuilder<T3>, IShortcutSettingBuilder<T3>> settings3, Func<IShortcutSettingBuilder<T4>, IShortcutSettingBuilder<T4>> settings4, Func<T0, T1, T2, T3, T4, ValueTask> action);
+
+    void RegisterAction<TD>(string actionName, Func<TD, ValueTask> action) where TD : IInputGestureData;
+    void RegisterAction<TD, T0>(string actionName, Func<IShortcutSettingBuilder<T0>, IShortcutSettingBuilder<T0>> settings0, Func<TD, T0, ValueTask> action) where TD : IInputGestureData;
+    void RegisterAction<TD, T0, T1>(string actionName, Func<IShortcutSettingBuilder<T0>, IShortcutSettingBuilder<T0>> settings0, Func<IShortcutSettingBuilder<T1>, IShortcutSettingBuilder<T1>> settings1, Func<TD, T0, T1, ValueTask> action) where TD : IInputGestureData;
+    void RegisterAction<TD, T0, T1, T2>(string actionName, Func<IShortcutSettingBuilder<T0>, IShortcutSettingBuilder<T0>> settings0, Func<IShortcutSettingBuilder<T1>, IShortcutSettingBuilder<T1>> settings1, Func<IShortcutSettingBuilder<T2>, IShortcutSettingBuilder<T2>> settings2, Func<TD, T0, T1, T2, ValueTask> action) where TD : IInputGestureData;
+    void RegisterAction<TD, T0, T1, T2, T3>(string actionName, Func<IShortcutSettingBuilder<T0>, IShortcutSettingBuilder<T0>> settings0, Func<IShortcutSettingBuilder<T1>, IShortcutSettingBuilder<T1>> settings1, Func<IShortcutSettingBuilder<T2>, IShortcutSettingBuilder<T2>> settings2, Func<IShortcutSettingBuilder<T3>, IShortcutSettingBuilder<T3>> settings3, Func<TD, T0, T1, T2, T3, ValueTask> action) where TD : IInputGestureData;
+
     void RegisterAction(string actionName, Action action);
     void RegisterAction<T0>(string actionName, Func<IShortcutSettingBuilder<T0>, IShortcutSettingBuilder<T0>> settings0, Action<T0> action);
     void RegisterAction<T0, T1>(string actionName, Func<IShortcutSettingBuilder<T0>, IShortcutSettingBuilder<T0>> settings0, Func<IShortcutSettingBuilder<T1>, IShortcutSettingBuilder<T1>> settings1, Action<T0, T1> action);
@@ -47,22 +61,12 @@ internal interface IShortcutManager : IShortcutActionResolver, IDisposable
 
     bool ActionAcceptsGestureData(string actionName, Type gestureDataType);
     IShortcutActionConfiguration CreateShortcutActionConfigurationInstance(string actionName);
-
-    void Invoke(string actionName, params object[] arguments);
-    void Invoke(IShortcutActionConfiguration actionConfiguration, IInputGestureData gestureData);
-    void Invoke(string actionName);
-    void Invoke<T0>(string actionName, T0 arg0);
-    void Invoke<T0, T1>(string actionName, T0 arg0, T1 arg1);
-    void Invoke<T0, T1, T2>(string actionName, T0 arg0, T1 arg1, T2 arg2);
-    void Invoke<T0, T1, T2, T3>(string actionName, T0 arg0, T1 arg1, T2 arg2, T3 arg3);
-    void Invoke<T0, T1, T2, T3, T4>(string actionName, T0 arg0, T1 arg1, T2 arg2, T3 arg3, T4 arg4);
 }
 
-internal sealed class ShortcutManager : IShortcutManager
+internal sealed class ShortcutManager : IShortcutManager, IHandle<IInputGesture>
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-    private readonly IInputProcessorManager _inputManager;
     private readonly ObservableConcurrentCollection<string> _availableActions;
     private readonly Dictionary<string, IShortcutAction> _actions;
     private readonly Dictionary<string, IShortcutActionConfigurationBuilder> _actionConfigurationBuilders;
@@ -72,15 +76,14 @@ internal sealed class ShortcutManager : IShortcutManager
     public IReadOnlyObservableConcurrentCollection<string> AvailableActions => _availableActions;
     public IReadOnlyObservableConcurrentCollection<IShortcut> Shortcuts => _shortcuts;
 
-    public ShortcutManager(IInputProcessorManager inputManager)
+    public ShortcutManager(IEventAggregator eventAggregator)
     {
+        eventAggregator.Subscribe(this, IInputProcessor.EventAggregatorChannelName);
+
         _availableActions = [];
         _actions = [];
         _actionConfigurationBuilders = [];
         _shortcuts = [];
-
-        _inputManager = inputManager;
-        _inputManager.OnGesture += HandleGesture;
     }
 
     public IShortcutActionConfiguration BindAction(IShortcut shortcut, string actionName)
@@ -147,7 +150,7 @@ internal sealed class ShortcutManager : IShortcutManager
     public bool TryGetAction(string actionName, out IShortcutAction action)
         => _actions.TryGetValue(actionName, out action);
 
-    public void RegisterAction(string actionName, Action action)
+    public void RegisterAction(string actionName, Func<ValueTask> action)
     {
         _actions.Add(actionName, new ShortcutAction(action));
         _actionConfigurationBuilders.Add(actionName, new ShortcutActionConfigurationBuilder(actionName));
@@ -156,7 +159,7 @@ internal sealed class ShortcutManager : IShortcutManager
         Logger.Trace("Registered \"{0}\" action", actionName);
     }
 
-    public void RegisterAction<T0>(string actionName, Func<IShortcutSettingBuilder<T0>, IShortcutSettingBuilder<T0>> builder0, Action<T0> action)
+    public void RegisterAction<T0>(string actionName, Func<IShortcutSettingBuilder<T0>, IShortcutSettingBuilder<T0>> builder0, Func<T0, ValueTask> action)
     {
         _actions.Add(actionName, new ShortcutAction<T0>(action));
         _actionConfigurationBuilders.Add(actionName, new ShortcutActionConfigurationBuilder(actionName, builder0(new ShortcutSettingBuilder<T0>())));
@@ -165,7 +168,7 @@ internal sealed class ShortcutManager : IShortcutManager
         Logger.Trace("Registered \"{0}\" action", actionName);
     }
 
-    public void RegisterAction<T0, T1>(string actionName, Func<IShortcutSettingBuilder<T0>, IShortcutSettingBuilder<T0>> builder0, Func<IShortcutSettingBuilder<T1>, IShortcutSettingBuilder<T1>> builder1, Action<T0, T1> action)
+    public void RegisterAction<T0, T1>(string actionName, Func<IShortcutSettingBuilder<T0>, IShortcutSettingBuilder<T0>> builder0, Func<IShortcutSettingBuilder<T1>, IShortcutSettingBuilder<T1>> builder1, Func<T0, T1, ValueTask> action)
     {
         _actions.Add(actionName, new ShortcutAction<T0, T1>(action));
         _actionConfigurationBuilders.Add(actionName, new ShortcutActionConfigurationBuilder(actionName, builder0(new ShortcutSettingBuilder<T0>()), builder1(new ShortcutSettingBuilder<T1>())));
@@ -174,7 +177,7 @@ internal sealed class ShortcutManager : IShortcutManager
         Logger.Trace("Registered \"{0}\" action", actionName);
     }
 
-    public void RegisterAction<T0, T1, T2>(string actionName, Func<IShortcutSettingBuilder<T0>, IShortcutSettingBuilder<T0>> builder0, Func<IShortcutSettingBuilder<T1>, IShortcutSettingBuilder<T1>> builder1, Func<IShortcutSettingBuilder<T2>, IShortcutSettingBuilder<T2>> builder2, Action<T0, T1, T2> action)
+    public void RegisterAction<T0, T1, T2>(string actionName, Func<IShortcutSettingBuilder<T0>, IShortcutSettingBuilder<T0>> builder0, Func<IShortcutSettingBuilder<T1>, IShortcutSettingBuilder<T1>> builder1, Func<IShortcutSettingBuilder<T2>, IShortcutSettingBuilder<T2>> builder2, Func<T0, T1, T2, ValueTask> action)
     {
         _actions.Add(actionName, new ShortcutAction<T0, T1, T2>(action));
         _actionConfigurationBuilders.Add(actionName, new ShortcutActionConfigurationBuilder(actionName, builder0(new ShortcutSettingBuilder<T0>()), builder1(new ShortcutSettingBuilder<T1>()), builder2(new ShortcutSettingBuilder<T2>())));
@@ -183,7 +186,7 @@ internal sealed class ShortcutManager : IShortcutManager
         Logger.Trace("Registered \"{0}\" action", actionName);
     }
 
-    public void RegisterAction<T0, T1, T2, T3>(string actionName, Func<IShortcutSettingBuilder<T0>, IShortcutSettingBuilder<T0>> builder0, Func<IShortcutSettingBuilder<T1>, IShortcutSettingBuilder<T1>> builder1, Func<IShortcutSettingBuilder<T2>, IShortcutSettingBuilder<T2>> builder2, Func<IShortcutSettingBuilder<T3>, IShortcutSettingBuilder<T3>> builder3, Action<T0, T1, T2, T3> action)
+    public void RegisterAction<T0, T1, T2, T3>(string actionName, Func<IShortcutSettingBuilder<T0>, IShortcutSettingBuilder<T0>> builder0, Func<IShortcutSettingBuilder<T1>, IShortcutSettingBuilder<T1>> builder1, Func<IShortcutSettingBuilder<T2>, IShortcutSettingBuilder<T2>> builder2, Func<IShortcutSettingBuilder<T3>, IShortcutSettingBuilder<T3>> builder3, Func<T0, T1, T2, T3, ValueTask> action)
     {
         _actions.Add(actionName, new ShortcutAction<T0, T1, T2, T3>(action));
         _actionConfigurationBuilders.Add(actionName, new ShortcutActionConfigurationBuilder(actionName, builder0(new ShortcutSettingBuilder<T0>()), builder1(new ShortcutSettingBuilder<T1>()), builder2(new ShortcutSettingBuilder<T2>()), builder3(new ShortcutSettingBuilder<T3>())));
@@ -192,7 +195,7 @@ internal sealed class ShortcutManager : IShortcutManager
         Logger.Trace("Registered \"{0}\" action", actionName);
     }
 
-    public void RegisterAction<T0, T1, T2, T3, T4>(string actionName, Func<IShortcutSettingBuilder<T0>, IShortcutSettingBuilder<T0>> builder0, Func<IShortcutSettingBuilder<T1>, IShortcutSettingBuilder<T1>> builder1, Func<IShortcutSettingBuilder<T2>, IShortcutSettingBuilder<T2>> builder2, Func<IShortcutSettingBuilder<T3>, IShortcutSettingBuilder<T3>> builder3, Func<IShortcutSettingBuilder<T4>, IShortcutSettingBuilder<T4>> builder4, Action<T0, T1, T2, T3, T4> action)
+    public void RegisterAction<T0, T1, T2, T3, T4>(string actionName, Func<IShortcutSettingBuilder<T0>, IShortcutSettingBuilder<T0>> builder0, Func<IShortcutSettingBuilder<T1>, IShortcutSettingBuilder<T1>> builder1, Func<IShortcutSettingBuilder<T2>, IShortcutSettingBuilder<T2>> builder2, Func<IShortcutSettingBuilder<T3>, IShortcutSettingBuilder<T3>> builder3, Func<IShortcutSettingBuilder<T4>, IShortcutSettingBuilder<T4>> builder4, Func<T0, T1, T2, T3, T4, ValueTask> action)
     {
         _actions.Add(actionName, new ShortcutAction<T0, T1, T2, T3, T4>(action));
         _actionConfigurationBuilders.Add(actionName, new ShortcutActionConfigurationBuilder(actionName, builder0(new ShortcutSettingBuilder<T0>()), builder1(new ShortcutSettingBuilder<T1>()), builder2(new ShortcutSettingBuilder<T2>()), builder3(new ShortcutSettingBuilder<T3>()), builder4(new ShortcutSettingBuilder<T4>())));
@@ -201,7 +204,7 @@ internal sealed class ShortcutManager : IShortcutManager
         Logger.Trace("Registered \"{0}\" action", actionName);
     }
 
-    public void RegisterAction<TD>(string actionName, Action<TD> action) where TD : IInputGestureData
+    public void RegisterAction<TD>(string actionName, Func<TD, ValueTask> action) where TD : IInputGestureData
     {
         _actions.Add(actionName, new ShortcutAction<TD>(action));
         _actionConfigurationBuilders.Add(actionName, new ShortcutActionConfigurationBuilder(actionName));
@@ -210,7 +213,7 @@ internal sealed class ShortcutManager : IShortcutManager
         Logger.Trace("Registered \"{0}\" action", actionName);
     }
 
-    public void RegisterAction<TD, T0>(string actionName, Func<IShortcutSettingBuilder<T0>, IShortcutSettingBuilder<T0>> builder0, Action<TD, T0> action) where TD : IInputGestureData
+    public void RegisterAction<TD, T0>(string actionName, Func<IShortcutSettingBuilder<T0>, IShortcutSettingBuilder<T0>> builder0, Func<TD, T0, ValueTask> action) where TD : IInputGestureData
     {
         _actions.Add(actionName, new ShortcutAction<TD, T0>(action));
         _actionConfigurationBuilders.Add(actionName, new ShortcutActionConfigurationBuilder(actionName, builder0(new ShortcutSettingBuilder<T0>())));
@@ -219,7 +222,7 @@ internal sealed class ShortcutManager : IShortcutManager
         Logger.Trace("Registered \"{0}\" action", actionName);
     }
 
-    public void RegisterAction<TD, T0, T1>(string actionName, Func<IShortcutSettingBuilder<T0>, IShortcutSettingBuilder<T0>> builder0, Func<IShortcutSettingBuilder<T1>, IShortcutSettingBuilder<T1>> builder1, Action<TD, T0, T1> action) where TD : IInputGestureData
+    public void RegisterAction<TD, T0, T1>(string actionName, Func<IShortcutSettingBuilder<T0>, IShortcutSettingBuilder<T0>> builder0, Func<IShortcutSettingBuilder<T1>, IShortcutSettingBuilder<T1>> builder1, Func<TD, T0, T1, ValueTask> action) where TD : IInputGestureData
     {
         _actions.Add(actionName, new ShortcutAction<TD, T0, T1>(action));
         _actionConfigurationBuilders.Add(actionName, new ShortcutActionConfigurationBuilder(actionName, builder0(new ShortcutSettingBuilder<T0>()), builder1(new ShortcutSettingBuilder<T1>())));
@@ -228,7 +231,7 @@ internal sealed class ShortcutManager : IShortcutManager
         Logger.Trace("Registered \"{0}\" action", actionName);
     }
 
-    public void RegisterAction<TD, T0, T1, T2>(string actionName, Func<IShortcutSettingBuilder<T0>, IShortcutSettingBuilder<T0>> builder0, Func<IShortcutSettingBuilder<T1>, IShortcutSettingBuilder<T1>> builder1, Func<IShortcutSettingBuilder<T2>, IShortcutSettingBuilder<T2>> builder2, Action<TD, T0, T1, T2> action) where TD : IInputGestureData
+    public void RegisterAction<TD, T0, T1, T2>(string actionName, Func<IShortcutSettingBuilder<T0>, IShortcutSettingBuilder<T0>> builder0, Func<IShortcutSettingBuilder<T1>, IShortcutSettingBuilder<T1>> builder1, Func<IShortcutSettingBuilder<T2>, IShortcutSettingBuilder<T2>> builder2, Func<TD, T0, T1, T2, ValueTask> action) where TD : IInputGestureData
     {
         _actions.Add(actionName, new ShortcutAction<TD, T0, T1, T2>(action));
         _actionConfigurationBuilders.Add(actionName, new ShortcutActionConfigurationBuilder(actionName, builder0(new ShortcutSettingBuilder<T0>()), builder1(new ShortcutSettingBuilder<T1>()), builder2(new ShortcutSettingBuilder<T2>())));
@@ -237,13 +240,79 @@ internal sealed class ShortcutManager : IShortcutManager
         Logger.Trace("Registered \"{0}\" action", actionName);
     }
 
-    public void RegisterAction<TD, T0, T1, T2, T3>(string actionName, Func<IShortcutSettingBuilder<T0>, IShortcutSettingBuilder<T0>> builder0, Func<IShortcutSettingBuilder<T1>, IShortcutSettingBuilder<T1>> builder1, Func<IShortcutSettingBuilder<T2>, IShortcutSettingBuilder<T2>> builder2, Func<IShortcutSettingBuilder<T3>, IShortcutSettingBuilder<T3>> builder3, Action<TD, T0, T1, T2, T3> action) where TD : IInputGestureData
+    public void RegisterAction<TD, T0, T1, T2, T3>(string actionName, Func<IShortcutSettingBuilder<T0>, IShortcutSettingBuilder<T0>> builder0, Func<IShortcutSettingBuilder<T1>, IShortcutSettingBuilder<T1>> builder1, Func<IShortcutSettingBuilder<T2>, IShortcutSettingBuilder<T2>> builder2, Func<IShortcutSettingBuilder<T3>, IShortcutSettingBuilder<T3>> builder3, Func<TD, T0, T1, T2, T3, ValueTask> action) where TD : IInputGestureData
     {
         _actions.Add(actionName, new ShortcutAction<TD, T0, T1, T2, T3>(action));
         _actionConfigurationBuilders.Add(actionName, new ShortcutActionConfigurationBuilder(actionName, builder0(new ShortcutSettingBuilder<T0>()), builder1(new ShortcutSettingBuilder<T1>()), builder2(new ShortcutSettingBuilder<T2>()), builder3(new ShortcutSettingBuilder<T3>())));
 
         _availableActions.Add(actionName);
         Logger.Trace("Registered \"{0}\" action", actionName);
+    }
+
+    public void RegisterAction(string actionName, Action action)
+    {
+        RegisterAction(actionName, ActionAsValueTask);
+        ValueTask ActionAsValueTask() { action(); return ValueTask.CompletedTask; }
+    }
+
+    public void RegisterAction<T0>(string actionName, Func<IShortcutSettingBuilder<T0>, IShortcutSettingBuilder<T0>> settings0, Action<T0> action)
+    {
+        RegisterAction(actionName, settings0, ActionAsValueTask);
+        ValueTask ActionAsValueTask(T0 arg0) { action(arg0); return ValueTask.CompletedTask; }
+    }
+
+    public void RegisterAction<T0, T1>(string actionName, Func<IShortcutSettingBuilder<T0>, IShortcutSettingBuilder<T0>> settings0, Func<IShortcutSettingBuilder<T1>, IShortcutSettingBuilder<T1>> settings1, Action<T0, T1> action)
+    {
+        RegisterAction(actionName, settings0, settings1, ActionAsValueTask);
+        ValueTask ActionAsValueTask(T0 arg0, T1 arg1) { action(arg0, arg1); return ValueTask.CompletedTask; }
+    }
+
+    public void RegisterAction<T0, T1, T2>(string actionName, Func<IShortcutSettingBuilder<T0>, IShortcutSettingBuilder<T0>> settings0, Func<IShortcutSettingBuilder<T1>, IShortcutSettingBuilder<T1>> settings1, Func<IShortcutSettingBuilder<T2>, IShortcutSettingBuilder<T2>> settings2, Action<T0, T1, T2> action)
+    {
+        RegisterAction(actionName, settings0, settings1, settings2, ActionAsValueTask);
+        ValueTask ActionAsValueTask(T0 arg0, T1 arg1, T2 arg2) { action(arg0, arg1, arg2); return ValueTask.CompletedTask; }
+    }
+
+    public void RegisterAction<T0, T1, T2, T3>(string actionName, Func<IShortcutSettingBuilder<T0>, IShortcutSettingBuilder<T0>> settings0, Func<IShortcutSettingBuilder<T1>, IShortcutSettingBuilder<T1>> settings1, Func<IShortcutSettingBuilder<T2>, IShortcutSettingBuilder<T2>> settings2, Func<IShortcutSettingBuilder<T3>, IShortcutSettingBuilder<T3>> settings3, Action<T0, T1, T2, T3> action)
+    {
+        RegisterAction(actionName, settings0, settings1, settings2, settings3, ActionAsValueTask);
+        ValueTask ActionAsValueTask(T0 arg0, T1 arg1, T2 arg2, T3 arg3) { action(arg0, arg1, arg2, arg3); return ValueTask.CompletedTask; }
+    }
+
+    public void RegisterAction<T0, T1, T2, T3, T4>(string actionName, Func<IShortcutSettingBuilder<T0>, IShortcutSettingBuilder<T0>> settings0, Func<IShortcutSettingBuilder<T1>, IShortcutSettingBuilder<T1>> settings1, Func<IShortcutSettingBuilder<T2>, IShortcutSettingBuilder<T2>> settings2, Func<IShortcutSettingBuilder<T3>, IShortcutSettingBuilder<T3>> settings3, Func<IShortcutSettingBuilder<T4>, IShortcutSettingBuilder<T4>> settings4, Action<T0, T1, T2, T3, T4> action)
+    {
+        RegisterAction(actionName, settings0, settings1, settings2, settings3, settings4, ActionAsValueTask);
+        ValueTask ActionAsValueTask(T0 arg0, T1 arg1, T2 arg2, T3 arg3, T4 arg4) { action(arg0, arg1, arg2, arg3, arg4); return ValueTask.CompletedTask; }
+    }
+
+    public void RegisterAction<TD>(string actionName, Action<TD> action) where TD : IInputGestureData
+    {
+        RegisterAction<TD>(actionName, ActionAsValueTask);
+        ValueTask ActionAsValueTask(TD argD) { action(argD); return ValueTask.CompletedTask; }
+    }
+
+    public void RegisterAction<TD, T0>(string actionName, Func<IShortcutSettingBuilder<T0>, IShortcutSettingBuilder<T0>> settings0, Action<TD, T0> action) where TD : IInputGestureData
+    {
+        RegisterAction<TD, T0>(actionName, settings0, ActionAsValueTask);
+        ValueTask ActionAsValueTask(TD argD, T0 arg0) { action(argD, arg0); return ValueTask.CompletedTask; }
+    }
+
+    public void RegisterAction<TD, T0, T1>(string actionName, Func<IShortcutSettingBuilder<T0>, IShortcutSettingBuilder<T0>> settings0, Func<IShortcutSettingBuilder<T1>, IShortcutSettingBuilder<T1>> settings1, Action<TD, T0, T1> action) where TD : IInputGestureData
+    {
+        RegisterAction<TD, T0, T1>(actionName, settings0, settings1, ActionAsValueTask);
+        ValueTask ActionAsValueTask(TD argD, T0 arg0, T1 arg1) { action(argD, arg0, arg1); return ValueTask.CompletedTask; }
+    }
+
+    public void RegisterAction<TD, T0, T1, T2>(string actionName, Func<IShortcutSettingBuilder<T0>, IShortcutSettingBuilder<T0>> settings0, Func<IShortcutSettingBuilder<T1>, IShortcutSettingBuilder<T1>> settings1, Func<IShortcutSettingBuilder<T2>, IShortcutSettingBuilder<T2>> settings2, Action<TD, T0, T1, T2> action) where TD : IInputGestureData
+    {
+        RegisterAction<TD, T0, T1, T2>(actionName, settings0, settings1, settings2, ActionAsValueTask);
+        ValueTask ActionAsValueTask(TD argD, T0 arg0, T1 arg1, T2 arg2) { action(argD, arg0, arg1, arg2); return ValueTask.CompletedTask; }
+    }
+
+    public void RegisterAction<TD, T0, T1, T2, T3>(string actionName, Func<IShortcutSettingBuilder<T0>, IShortcutSettingBuilder<T0>> settings0, Func<IShortcutSettingBuilder<T1>, IShortcutSettingBuilder<T1>> settings1, Func<IShortcutSettingBuilder<T2>, IShortcutSettingBuilder<T2>> settings2, Func<IShortcutSettingBuilder<T3>, IShortcutSettingBuilder<T3>> settings3, Action<TD, T0, T1, T2, T3> action) where TD : IInputGestureData
+    {
+        RegisterAction<TD, T0, T1, T2, T3>(actionName, settings0, settings1, settings2, settings3, ActionAsValueTask);
+        ValueTask ActionAsValueTask(TD argD, T0 arg0, T1 arg1, T2 arg2, T3 arg3) { action(argD, arg0, arg1, arg2, arg3); return ValueTask.CompletedTask; }
     }
 
     public void UnregisterAction(string actionName)
@@ -257,7 +326,7 @@ internal sealed class ShortcutManager : IShortcutManager
         _availableActions.Remove(actionName);
 
         foreach (var shortcut in _shortcuts)
-            foreach (var configuration in shortcut.Configurations.Where(a => actionName.Equals(a.Name)).ToList())
+            foreach (var configuration in shortcut.Configurations.Where(a => actionName.Equals(a.Name, StringComparison.Ordinal)).ToList())
                 shortcut.Configurations.Remove(configuration);
 
         Logger.Trace("Unregistered \"{0}\" action", actionName);
@@ -279,63 +348,7 @@ internal sealed class ShortcutManager : IShortcutManager
         return builder.Build();
     }
 
-    public void Invoke(string actionName, params object[] arguments)
-    {
-        Logger.Trace("Invoking \"{name}\" action [Arguments: \"{arguments}\"]", actionName, arguments);
-        if (TryGetAction(actionName, out var action))
-            action.Invoke(arguments);
-    }
-
-    public void Invoke(IShortcutActionConfiguration actionConfiguration, IInputGestureData gestureData)
-    {
-        Logger.Trace(() => $"Invoking \"{actionConfiguration.Name}\" action [Configuration: \"{string.Join(", ", actionConfiguration.Settings.Select(s => s.ToString()))}\", Gesture: {gestureData}]");
-        if (TryGetAction(actionConfiguration.Name, out var action))
-            action.Invoke(actionConfiguration, gestureData);
-    }
-
-    public void Invoke(string actionName)
-    {
-        Logger.Trace("Invoking \"{0}\" action", actionName);
-        if (TryGetAction(actionName, out var action) && action is ShortcutAction concreteAction)
-            concreteAction.Invoke();
-    }
-
-    public void Invoke<T0>(string actionName, T0 arg0)
-    {
-        Logger.Trace("Invoking \"{0}\" action [Arguments: \"{1}\"]", actionName, arg0);
-        if (TryGetAction(actionName, out var action) && action is ShortcutAction<T0> concreteAction)
-            concreteAction.Invoke(arg0);
-    }
-
-    public void Invoke<T0, T1>(string actionName, T0 arg0, T1 arg1)
-    {
-        Logger.Trace("Invoking \"{0}\" action [Arguments: \"{1}, {2}\"]", actionName, arg0, arg1);
-        if (TryGetAction(actionName, out var action) && action is ShortcutAction<T0, T1> concreteAction)
-            concreteAction.Invoke(arg0, arg1);
-    }
-
-    public void Invoke<T0, T1, T2>(string actionName, T0 arg0, T1 arg1, T2 arg2)
-    {
-        Logger.Trace("Invoking \"{0}\" action [Arguments: \"{1}, {2}, {3}\"]", actionName, arg0, arg1, arg2);
-        if (TryGetAction(actionName, out var action) && action is ShortcutAction<T0, T1, T2> concreteAction)
-            concreteAction.Invoke(arg0, arg1, arg2);
-    }
-
-    public void Invoke<T0, T1, T2, T3>(string actionName, T0 arg0, T1 arg1, T2 arg2, T3 arg3)
-    {
-        Logger.Trace("Invoking \"{0}\" action [Arguments: \"{1}, {2}, {3}, {4}\"]", actionName, arg0, arg1, arg2, arg3);
-        if (TryGetAction(actionName, out var action) && action is ShortcutAction<T0, T1, T2, T3> concreteAction)
-            concreteAction.Invoke(arg0, arg1, arg2, arg3);
-    }
-
-    public void Invoke<T0, T1, T2, T3, T4>(string actionName, T0 arg0, T1 arg1, T2 arg2, T3 arg3, T4 arg4)
-    {
-        Logger.Trace("Invoking \"{0}\" action [Arguments: \"{1}, {2}, {3}, {4}, {5}\"]", actionName, arg0, arg1, arg2, arg3, arg4);
-        if (TryGetAction(actionName, out var action) && action is ShortcutAction<T0, T1, T2, T3, T4> concreteAction)
-            concreteAction.Invoke(arg0, arg1, arg2, arg3, arg4);
-    }
-
-    private void HandleGesture(object sender, IInputGesture gesture)
+    public void Handle(IInputGesture gesture)
     {
         if (!HandleGestures)
             return;
@@ -346,8 +359,6 @@ internal sealed class ShortcutManager : IShortcutManager
 
     private void Dispose(bool disposing)
     {
-        _inputManager.OnGesture -= HandleGesture;
-
         foreach(var shortcut in _shortcuts)
             shortcut.Dispose();
     }

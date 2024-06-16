@@ -1,13 +1,19 @@
-using MultiFunPlayer.Common;
+﻿using MultiFunPlayer.Common;
 using Newtonsoft.Json.Linq;
 using NLog;
-using NLog.Config;
 using Stylet;
 using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
 
 namespace MultiFunPlayer.UI.Controls.ViewModels;
+
+internal enum ErrorDisplayType
+{
+    None,
+    Dialog,
+    Snackbar
+}
 
 internal sealed class GeneralSettingsViewModel : Screen, IHandle<SettingsMessage>, IHandle<WindowCreatedMessage>
 {
@@ -21,7 +27,7 @@ internal sealed class GeneralSettingsViewModel : Screen, IHandle<SettingsMessage
     public bool EnableUILogging { get; set; } = false;
     public bool AllowWindowResize { get; set; } = false;
     public bool AlwaysOnTop { get; set; } = false;
-    public bool ShowErrorDialogs { get; set; } = true;
+    public ErrorDisplayType ErrorDisplayType { get; set; } = ErrorDisplayType.Snackbar;
     public Orientation AppOrientation { get; set; } = Orientation.Vertical;
     public bool RememberWindowLocation { get; set; } = false;
 
@@ -83,17 +89,17 @@ internal sealed class GeneralSettingsViewModel : Screen, IHandle<SettingsMessage
 
     public void OnSelectedLogLevelChanged()
     {
-        static LoggingRule GetRuleWithTarget(string targetName)
-            => LogManager.Configuration.LoggingRules.FirstOrDefault(r => r.Targets.Any(t => string.Equals(t.Name, targetName, StringComparison.OrdinalIgnoreCase)));
-
         if (SelectedLogLevel == null)
             return;
 
         Logger.Info("Changing log level to \"{0}\"", SelectedLogLevel.Name);
 
-        GetRuleWithTarget("file")?.SetLoggingLevels(SelectedLogLevel, LogLevel.Fatal);
+        LogManager.Configuration.FindRuleByName("application")?.SetLoggingLevels(SelectedLogLevel, LogLevel.Fatal);
         if (Debugger.IsAttached)
-            GetRuleWithTarget("debug")?.SetLoggingLevels(LogLevel.FromOrdinal(Math.Min(SelectedLogLevel.Ordinal, 1)), LogLevel.Fatal);
+        {
+            var debugLogLevel = LogLevel.FromOrdinal(Math.Min(SelectedLogLevel.Ordinal, 1));
+            LogManager.Configuration.FindRuleByName("debug")?.SetLoggingLevels(debugLogLevel, LogLevel.Fatal);
+        }
 
         LogManager.ReconfigExistingLoggers();
     }
@@ -105,7 +111,7 @@ internal sealed class GeneralSettingsViewModel : Screen, IHandle<SettingsMessage
         if (message.Action == SettingsAction.Saving)
         {
             settings[nameof(AlwaysOnTop)] = AlwaysOnTop;
-            settings[nameof(ShowErrorDialogs)] = ShowErrorDialogs;
+            settings[nameof(ErrorDisplayType)] = JToken.FromObject(ErrorDisplayType);
             settings["LogLevel"] = JToken.FromObject(SelectedLogLevel ?? LogLevel.Info);
             settings[nameof(EnableUILogging)] = EnableUILogging;
             settings[nameof(AllowWindowResize)] = AllowWindowResize;
@@ -116,8 +122,8 @@ internal sealed class GeneralSettingsViewModel : Screen, IHandle<SettingsMessage
         {
             if (settings.TryGetValue<bool>(nameof(AlwaysOnTop), out var alwaysOnTop))
                 AlwaysOnTop = alwaysOnTop;
-            if (settings.TryGetValue<bool>(nameof(ShowErrorDialogs), out var showErrorDialogs))
-                ShowErrorDialogs = showErrorDialogs;
+            if (settings.TryGetValue<ErrorDisplayType>(nameof(ErrorDisplayType), out var errorDisplayType))
+                ErrorDisplayType = errorDisplayType;
             if (settings.TryGetValue<LogLevel>("LogLevel", out var logLevel))
                 SelectedLogLevel = logLevel;
             if (settings.TryGetValue<bool>(nameof(EnableUILogging), out var enableUILogging))

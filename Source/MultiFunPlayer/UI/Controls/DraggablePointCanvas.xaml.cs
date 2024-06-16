@@ -1,4 +1,4 @@
-using MultiFunPlayer.Common;
+﻿using MultiFunPlayer.Common;
 using PropertyChanged;
 using System.Collections.Specialized;
 using System.ComponentModel;
@@ -35,6 +35,18 @@ public sealed partial class DraggablePointCanvas : UserControl
             typeof(DraggablePointCanvas), new FrameworkPropertyMetadata(null,
                 FrameworkPropertyMetadataOptions.BindsTwoWayByDefault,
                     new PropertyChangedCallback(OnPointsPropertyChanged)));
+
+    [DoNotNotify]
+    public bool IsTilingEnabled
+    {
+        get => (bool)GetValue(IsTilingEnabledProperty);
+        set => SetValue(IsTilingEnabledProperty, value);
+    }
+
+    public static readonly DependencyProperty IsTilingEnabledProperty =
+        DependencyProperty.Register(nameof(IsTilingEnabled), typeof(bool),
+            typeof(DraggablePointCanvas), new FrameworkPropertyMetadata(false,
+                new PropertyChangedCallback(OnIsTilingEnabledPropertyChanged)));
 
     [DoNotNotify]
     public double ScrubberPosition
@@ -107,6 +119,16 @@ public sealed partial class DraggablePointCanvas : UserControl
             newCollection.CollectionChanged += @this.OnPointsCollectionChanged;
 
         @this.SynchronizeElementsFromPoints();
+        @this.PropertyChanged?.Invoke(@this, new PropertyChangedEventArgs(e.Property.Name));
+    }
+
+    [SuppressPropertyChangedWarnings]
+    private static void OnIsTilingEnabledPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        if (d is not DraggablePointCanvas @this)
+            return;
+
+        @this.RefreshLine();
         @this.PropertyChanged?.Invoke(@this, new PropertyChangedEventArgs(e.Property.Name));
     }
 
@@ -328,14 +350,34 @@ public sealed partial class DraggablePointCanvas : UserControl
         if (Points == null || Points.Count == 0 || ActualWidth == 0 || ActualHeight == 0)
             return;
 
-        _keyframes = new KeyframeCollection(Points.Count + 2)
+        if (IsTilingEnabled && Points.Count != 1)
         {
-            { ToCanvasX(Viewport.Left), ToCanvasY(Points[0].Y) }
-        };
+            const int minimumTilePointCount = 3;
 
-        foreach (var point in Points)
-            _keyframes.Add(ToCanvasX(point.X), ToCanvasY(point.Y));
-        _keyframes.Add(ToCanvasX(Viewport.Right), ToCanvasY(Points[^1].Y));
+            var tileCount = Math.Ceiling((double)minimumTilePointCount / Points.Count);
+            _keyframes = new KeyframeCollection(Points.Count + minimumTilePointCount * 2);
+            for(var i = tileCount; i >= 1; i--)
+                foreach (var point in Points.TakeLast(minimumTilePointCount))
+                    _keyframes.Add(ToCanvasX(point.X - i * Viewport.Width), ToCanvasY(point.Y));
+
+            foreach (var point in Points)
+                _keyframes.Add(ToCanvasX(point.X), ToCanvasY(point.Y));
+
+            for (var i = 1; i <= tileCount; i++)
+                foreach (var point in Points.Take(minimumTilePointCount))
+                    _keyframes.Add(ToCanvasX(point.X + i * Viewport.Width), ToCanvasY(point.Y));
+        }
+        else
+        {
+            _keyframes = new KeyframeCollection(Points.Count + 2)
+            {
+                { ToCanvasX(Viewport.Left), ToCanvasY(Points[0].Y) }
+            };
+
+            foreach (var point in Points)
+                _keyframes.Add(ToCanvasX(point.X), ToCanvasY(point.Y));
+            _keyframes.Add(ToCanvasX(Viewport.Right), ToCanvasY(Points[^1].Y));
+        }
 
         if (InterpolationType == InterpolationType.Linear)
         {
@@ -343,12 +385,21 @@ public sealed partial class DraggablePointCanvas : UserControl
         }
         else
         {
-            var step = Viewport.Width / InterpolationPointCount;
+            var index = 0;
+            var from = ToCanvasX(Viewport.Left);
+            var to = ToCanvasX(Viewport.Right);
             var interpolatedPoints = new List<Point>(InterpolationPointCount);
 
-            for (var i = 0; i < _keyframes.Count - 1; i++)
-                for (var x = _keyframes[i].Position; x < _keyframes[i + 1].Position; x += step)
-                    interpolatedPoints.Add(new Point(x, Math.Clamp(_keyframes.Interpolate(i, x, InterpolationType), 0, ActualHeight)));
+            for (var i = 0; i < InterpolationPointCount; i++)
+            {
+                var x = MathUtils.Lerp(from, to, i / (InterpolationPointCount - 1d));
+                index = _keyframes.AdvanceIndex(index, x);
+                if (!_keyframes.ValidateIndex(index + 1))
+                    break;
+
+                var y = Math.Clamp(_keyframes.Interpolate(index, x, InterpolationType), 0, ActualHeight);
+                interpolatedPoints.Add(new Point(x, y));
+            }
 
             LinePoints = new PointCollection(interpolatedPoints);
         }
@@ -372,7 +423,7 @@ public sealed partial class DraggablePointCanvas : UserControl
             return;
 
         var y = Math.Clamp(_keyframes.Interpolate(index, x, InterpolationType), 0, ActualHeight);
-        (Scrubber.Data as EllipseGeometry).Center = new Point(x, y);
+        ((EllipseGeometry)Scrubber.Data).Center = new Point(x, y);
 
         bool CanRefresh()
         {
@@ -387,12 +438,12 @@ public sealed partial class DraggablePointCanvas : UserControl
     }
 
     public Point FromCanvas(Point point) => new(FromCanvasX(point.X), FromCanvasY(point.Y));
-    public double FromCanvasX(double x) => MathUtils.Map(x, 0, ActualWidth, Viewport.Left, Viewport.Right);
-    public double FromCanvasY(double y) => MathUtils.Map(y, 0, ActualHeight, Viewport.Bottom, Viewport.Top);
+    public double FromCanvasX(double x) => x / ActualWidth * Viewport.Width;
+    public double FromCanvasY(double y) => y / ActualHeight * Viewport.Height;
 
     public Point ToCanvas(Point point) => new(ToCanvasX(point.X), ToCanvasY(point.Y));
-    public double ToCanvasX(double x) => MathUtils.Map(x, Viewport.Left, Viewport.Right, 0, ActualWidth);
-    public double ToCanvasY(double y) => MathUtils.Map(y, Viewport.Bottom, Viewport.Top, 0, ActualHeight);
+    public double ToCanvasX(double x) => x / Viewport.Width * ActualWidth;
+    public double ToCanvasY(double y) => y / Viewport.Height * ActualHeight;
 
     private void SynchronizePopup(Point position)
     {

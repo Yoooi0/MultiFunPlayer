@@ -1,51 +1,34 @@
-﻿using MultiFunPlayer.Common;
-using Newtonsoft.Json.Linq;
+﻿using Newtonsoft.Json.Linq;
 using NLog;
+using System.Text.RegularExpressions;
 
 namespace MultiFunPlayer.Settings.Migrations;
 
-internal sealed class Migration0015 : AbstractConfigMigration
+internal sealed class Migration0015 : AbstractSettingsMigration
 {
-    private readonly Logger Logger = LogManager.GetCurrentClassLogger();
+    protected override Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
-    public override void Migrate(JObject settings)
+    protected override void InternalMigrate(JObject settings)
     {
-        MigrateBypassAxisSettings(settings);
-
-        if (settings.TryGetObject(out var shortcutSettings, "Shortcuts"))
-            MigrateBypassActions(shortcutSettings);
-
-        base.Migrate(settings);
-    }
-
-    private void MigrateBypassAxisSettings(JObject settings)
-    {
-        Logger.Info("Migrating bypass settings");
-
-        foreach (var axisSettings in settings.SelectTokens("$.Script.AxisSettings.*").OfType<JObject>())
+        foreach (var axisSettings in SelectObjects(settings, "$.Script.AxisSettings.*"))
         {
-            if (!axisSettings.TryGetValue<bool>("Bypass", out var bypass))
+            if (!TryGetProperty(axisSettings, "Bypass", out var bypass))
                 continue;
 
-            axisSettings.Remove("Bypass");
-            axisSettings.Add("BypassScript", JToken.FromObject(bypass));
-            axisSettings.Add("BypassMotionProvider", JToken.FromObject(bypass));
-            axisSettings.Add("BypassTransition", JToken.FromObject(bypass));
+            AddPropertiesByName(axisSettings, new Dictionary<string, JToken>()
+            {
+                ["BypassScript"] = bypass.Value,
+                ["BypassMotionProvider"] = bypass.Value,
+                ["BypassTransition"] = bypass.Value
+            });
 
-            Logger.Info($"Migrated \"Bypass={bypass}\" to \"BypassScript={bypass}\", \"BypassMotionProvider={bypass}\", \"BypassTransition={bypass}\"");
+            RemoveProperty(bypass);
         }
-    }
 
-    private void MigrateBypassActions(JObject settings)
-    {
-        Logger.Info("Migrating bypass actions");
-        foreach (var action in settings.SelectTokens("$.Bindings[*].Actions[?(@.Descriptor =~ /Axis::Bypass::.*/i)]").OfType<JObject>())
+        foreach (var action in SelectObjects(settings, "$.Shortcuts.Bindings[*].Actions[?(@.Descriptor =~ /Axis::Bypass::.*/i)]"))
         {
-            var oldDescriptor = action["Descriptor"].ToString();
-            var newDescriptor = oldDescriptor.Replace("Axis::Bypass::", "Axis::Bypass::All::");
-
-            action["Descriptor"] = newDescriptor;
-            Logger.Info("Migrated action descriptor from \"{0}\" to \"{1}\"", oldDescriptor, newDescriptor);
+            EditPropertyByName(action, "Descriptor",
+                v => Regex.Replace(v.ToString(), "^Axis::Bypass::", "Axis::Bypass::All::"));
         }
     }
 }

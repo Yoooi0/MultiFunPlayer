@@ -1,4 +1,4 @@
-using Microsoft.Win32;
+﻿using Microsoft.Win32;
 using MultiFunPlayer.Common;
 using MultiFunPlayer.Input;
 using MultiFunPlayer.Input.TCode;
@@ -16,17 +16,17 @@ using System.Text.RegularExpressions;
 namespace MultiFunPlayer.OutputTarget.ViewModels;
 
 [DisplayName("Serial")]
-internal sealed class SerialOutputTarget(int instanceIndex, IEventAggregator eventAggregator, IDeviceAxisValueProvider valueProvider, IInputProcessorManager inputManager)
+internal sealed class SerialOutputTarget(int instanceIndex, IEventAggregator eventAggregator, IDeviceAxisValueProvider valueProvider, IInputProcessorFactory inputProcessorFactory)
     : ThreadAbstractOutputTarget(instanceIndex, eventAggregator, valueProvider)
 {
-    private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
+    protected override Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
     private CancellationTokenSource _refreshCancellationSource = new();
 
     public override ConnectionStatus Status { get; protected set; }
     public bool IsConnected => Status == ConnectionStatus.Connected;
     public bool IsDisconnected => Status == ConnectionStatus.Disconnected;
-    public bool IsConnectBusy => Status == ConnectionStatus.Connecting || Status == ConnectionStatus.Disconnecting;
+    public bool IsConnectBusy => Status is ConnectionStatus.Connecting or ConnectionStatus.Disconnecting;
     public bool CanToggleConnect => !IsConnectBusy && !IsRefreshBusy && SelectedSerialPortDeviceId != null;
 
     public DeviceAxisUpdateType UpdateType { get; set; } = DeviceAxisUpdateType.FixedUpdate;
@@ -135,37 +135,55 @@ internal sealed class SerialOutputTarget(int instanceIndex, IEventAggregator eve
 
     public void OnSelectedSerialPortChanged() => SelectedSerialPortDeviceId = SelectedSerialPort?.DeviceID;
 
-    protected override async ValueTask<bool> OnConnectingAsync()
+    protected override async ValueTask<bool> OnConnectingAsync(ConnectionType connectionType)
     {
+        if (connectionType != ConnectionType.AutoConnect)
+            Logger.Info("Connecting to {0} at \"{1}\" [Type: {2}]", Identifier, SelectedSerialPortDeviceId, connectionType);
+
         if (SelectedSerialPortDeviceId == null)
             return false;
         if (SelectedSerialPort == null)
             await RefreshPorts();
 
-        return SelectedSerialPort != null && await base.OnConnectingAsync();
+        return SelectedSerialPort != null;
     }
 
-    protected override void Run(CancellationToken token)
+    protected override void Run(ConnectionType connectionType, CancellationToken token)
     {
         var serialPort = default(SerialPort);
 
         try
         {
-            Logger.Info("Connecting to {0} at \"{1}\"", Identifier, SelectedSerialPortDeviceId);
+            serialPort = new()
+            {
+                PortName = SelectedSerialPort.PortName,
+                BaudRate = BaudRate,
+                Parity = Parity,
+                StopBits = StopBits,
+                DataBits = DataBits,
+                Handshake = Handshake,
+                DtrEnable = DtrEnable,
+                RtsEnable = RtsEnable,
+                ReadTimeout = ReadTimeout,
+                WriteTimeout = WriteTimeout,
+                WriteBufferSize = WriteBufferSize,
+                ReadBufferSize = ReadBufferSize,
+            };
 
-            serialPort = CreateSerialPort();
             serialPort.Open();
-            serialPort.ReadExisting();
             Status = ConnectionStatus.Connected;
         }
         catch (Exception e)
         {
-            Logger.Error(e, "Error when opening serial port");
-
-            try { serialPort?.Close(); }
+            try { serialPort?.Dispose(); }
             catch { }
 
-            _ = Execute.OnUIThreadAsync(() => _ = DialogHelper.ShowErrorAsync(e, "Error when opening serial port", "RootDialog"));
+            if (connectionType != ConnectionType.AutoConnect)
+            {
+                Logger.Error(e, "Error when connecting to {0} at \"{1}\"", Name, SelectedSerialPortDeviceId);
+                _ = DialogHelper.ShowErrorAsync(e, $"Error when connecting to {Name}", "RootDialog");
+            }
+
             return;
         }
 
@@ -173,8 +191,7 @@ internal sealed class SerialOutputTarget(int instanceIndex, IEventAggregator eve
         {
             EventAggregator.Publish(new SyncRequestMessage());
 
-            using var _ = inputManager.Register<TCodeInputProcessor>(out var tcodeInputProcessor);
-            var receiveBuffer = new SplittingStringBuffer('\n');
+            using var tcodeInputProcessor = inputProcessorFactory.GetInputProcessor<TCodeInputProcessor>();
             if (UpdateType == DeviceAxisUpdateType.FixedUpdate)
             {
                 var currentValues = DeviceAxis.All.ToDictionary(a => a, _ => double.NaN);
@@ -214,7 +231,7 @@ internal sealed class SerialOutputTarget(int instanceIndex, IEventAggregator eve
                     if (snapshot.KeyframeFrom == null || snapshot.KeyframeTo == null)
                         return;
 
-                    var value = MathUtils.Lerp(settings.Minimum / 100, settings.Maximum / 100, snapshot.KeyframeTo.Value);
+                    var value = MathUtils.Lerp(settings.Minimum, settings.Maximum, snapshot.KeyframeTo.Value);
                     var duration = snapshot.Duration;
 
                     var command = DeviceAxis.ToString(axis, value, duration * 1000);
@@ -240,13 +257,10 @@ internal sealed class SerialOutputTarget(int instanceIndex, IEventAggregator eve
             {
                 var receivedString = serialPort.ReadExisting();
                 Logger.Debug("Received \"{0}\" from \"{1}\"", receivedString, SelectedSerialPortDeviceId);
-
-                receiveBuffer.Push(receivedString);
-                foreach (var command in receiveBuffer.Consume())
-                    tcodeInputProcessor.Parse(command);
+                tcodeInputProcessor.Parse(receivedString);
             }
         }
-        catch (Exception e) when (e is TimeoutException || e is IOException)
+        catch (Exception e) when (e is TimeoutException or IOException)
         {
             Logger.Error(e, $"{Identifier} failed with exception");
             _ = DialogHelper.ShowErrorAsync(e, $"{Identifier} failed with exception", "RootDialog");
@@ -313,27 +327,6 @@ internal sealed class SerialOutputTarget(int instanceIndex, IEventAggregator eve
         s.UnregisterAction($"{Identifier}::SerialPort::Set");
     }
 
-    public override async ValueTask<bool> CanConnectAsync(CancellationToken token)
-    {
-        try
-        {
-            await RefreshPorts();
-            if (SelectedSerialPort == null)
-                return false;
-
-            using var serialPort = CreateSerialPort();
-            serialPort.Open();
-            serialPort.ReadExisting();
-            serialPort.Close();
-
-            return true;
-        }
-        catch
-        {
-            return false;
-        }
-    }
-
     protected override void Dispose(bool disposing)
     {
         _refreshCancellationSource?.Cancel();
@@ -342,22 +335,6 @@ internal sealed class SerialOutputTarget(int instanceIndex, IEventAggregator eve
 
         base.Dispose(disposing);
     }
-
-    private SerialPort CreateSerialPort() => new()
-    {
-        PortName = SelectedSerialPort.PortName,
-        BaudRate = BaudRate,
-        Parity = Parity,
-        StopBits = StopBits,
-        DataBits = DataBits,
-        Handshake = Handshake,
-        DtrEnable = DtrEnable,
-        RtsEnable = RtsEnable,
-        ReadTimeout = ReadTimeout,
-        WriteTimeout = WriteTimeout,
-        WriteBufferSize = WriteBufferSize,
-        ReadBufferSize = ReadBufferSize,
-    };
 
     public sealed class SerialPortInfo
     {

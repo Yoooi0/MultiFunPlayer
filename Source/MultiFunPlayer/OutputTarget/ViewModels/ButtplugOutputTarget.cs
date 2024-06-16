@@ -1,4 +1,4 @@
-using Buttplug;
+﻿using Buttplug;
 using Buttplug.NewtonsoftJson;
 using MultiFunPlayer.Common;
 using MultiFunPlayer.Shortcut;
@@ -10,7 +10,6 @@ using PropertyChanged;
 using Stylet;
 using System.ComponentModel;
 using System.Net;
-using System.Net.WebSockets;
 using System.Windows;
 
 namespace MultiFunPlayer.OutputTarget.ViewModels;
@@ -18,15 +17,14 @@ namespace MultiFunPlayer.OutputTarget.ViewModels;
 [DisplayName("Buttplug.io")]
 internal sealed class ButtplugOutputTarget : AsyncAbstractOutputTarget
 {
-    private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
+    protected override Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
-    private SemaphoreSlim _startScanSemaphore;
-    private SemaphoreSlim _endScanSemaphore;
+    private SemaphoreSlim _scanSemaphore;
 
     public override ConnectionStatus Status { get; protected set; }
     public bool IsConnected => Status == ConnectionStatus.Connected;
     public bool IsDisconnected => Status == ConnectionStatus.Disconnected;
-    public bool IsConnectBusy => Status == ConnectionStatus.Connecting || Status == ConnectionStatus.Disconnecting;
+    public bool IsConnectBusy => Status is ConnectionStatus.Connecting or ConnectionStatus.Disconnecting;
     public bool CanToggleConnect => !IsConnectBusy;
 
     public EndPoint Endpoint { get; set; } = new IPEndPoint(IPAddress.Loopback, 12345);
@@ -70,6 +68,8 @@ internal sealed class ButtplugOutputTarget : AsyncAbstractOutputTarget
         DeviceSettings = [];
 
         AvailableDevices.CollectionChanged += (s, e) => DeviceSettings.Refresh();
+
+        _scanSemaphore = new SemaphoreSlim(0, 1);
     }
 
     protected override IUpdateContext RegisterUpdateContext(DeviceAxisUpdateType updateType) => updateType switch
@@ -81,15 +81,20 @@ internal sealed class ButtplugOutputTarget : AsyncAbstractOutputTarget
 
     public bool IsScanBusy { get; set; }
     public bool CanScan => IsConnected;
-    public void ToggleScan()
+    public void ToggleScan() => _scanSemaphore.Release();
+
+    protected override ValueTask<bool> OnConnectingAsync(ConnectionType connectionType)
     {
-        if (IsScanBusy && _endScanSemaphore?.CurrentCount == 0)
-            _endScanSemaphore.Release();
-        else if (_startScanSemaphore?.CurrentCount == 0)
-            _startScanSemaphore.Release();
+        if (connectionType != ConnectionType.AutoConnect)
+            Logger.Info("Connecting to {0} at \"{1}\" [Type: {2}]", Identifier, Endpoint?.ToUriString(), connectionType);
+
+        if (Endpoint == null)
+            throw new OutputTargetException("Endpoint cannot be null");
+
+        return ValueTask.FromResult(true);
     }
 
-    protected override async Task RunAsync(CancellationToken token)
+    protected override async Task RunAsync(ConnectionType connectionType, CancellationToken token)
     {
         void OnDeviceRemoved(ButtplugDevice device)
         {
@@ -118,33 +123,31 @@ internal sealed class ButtplugOutputTarget : AsyncAbstractOutputTarget
         client.DeviceAdded += (_, device) => OnDeviceAdded(device);
         client.DeviceRemoved += (_, device) => OnDeviceRemoved(device);
         client.UnhandledException += (_, exception) => Logger.Debug(exception);
-        client.ScanningFinished += (_, _) =>
-        {
-            if (IsScanBusy && _endScanSemaphore?.CurrentCount == 0)
-                _endScanSemaphore.Release();
-        };
 
         try
         {
-            Logger.Info("Connecting to {0} at \"{1}\"", Identifier, $"ws://{Endpoint.ToUriString()}");
             await client.ConnectAsync(new Uri($"ws://{Endpoint.ToUriString()}"), token);
             Status = ConnectionStatus.Connected;
         }
-        catch (Exception e)
+        catch (Exception e) when (connectionType != ConnectionType.AutoConnect)
         {
-            Logger.Error(e, "Error when connecting to server");
-
-            _ = DialogHelper.ShowErrorAsync(e, "Error when connecting to server", "RootDialog");
+            Logger.Error(e, "Error when connecting to {0} at \"{1}\"", Name, Endpoint?.ToUriString());
+            _ = DialogHelper.ShowErrorAsync(e, $"Error when connecting to {Name}", "RootDialog");
+            return;
+        }
+        catch
+        {
             return;
         }
 
         try
         {
-            _ = ScanAsync(client, token);
-
             EventAggregator.Publish(new SyncRequestMessage());
+            if (_scanSemaphore.CurrentCount == 0)
+                _scanSemaphore.Release();
+
             using var cancellationSource = CancellationTokenSource.CreateLinkedTokenSource(token);
-            var task = await Task.WhenAny(FixedUpdateAsync(client, cancellationSource.Token), PolledUpdateAsync(client, cancellationSource.Token));
+            var task = await Task.WhenAny(FixedUpdateAsync(client, cancellationSource.Token), PolledUpdateAsync(client, cancellationSource.Token), ScanAsync(client, cancellationSource.Token));
             cancellationSource.Cancel();
 
             task.ThrowIfFaulted();
@@ -285,7 +288,7 @@ internal sealed class ButtplugOutputTarget : AsyncAbstractOutputTarget
                 return Task.CompletedTask;
 
             var axisSettings = AxisSettings[s.SourceAxis];
-            var value = MathUtils.Lerp(axisSettings.Minimum / 100, axisSettings.Maximum / 100, snapshot.KeyframeTo.Value);
+            var value = MathUtils.Lerp(axisSettings.Minimum, axisSettings.Maximum, snapshot.KeyframeTo.Value);
             if (a is ButtplugDeviceLinearActuator linearActuator)
             {
                 var duration = (uint)Math.Floor(snapshot.Duration * 1000 + 0.75);
@@ -317,7 +320,7 @@ internal sealed class ButtplugOutputTarget : AsyncAbstractOutputTarget
                 var deviceIndex = indexGroup.Key;
                 var device = GetDeviceByNameAndIndex(deviceName, deviceIndex);
                 if (device == null)
-                    return Enumerable.Empty<Task>();
+                    return [];
 
                 return indexGroup.GroupBy(m => m.ActuatorType).SelectMany(typeGroup => typeGroup.Select(s =>
                 {
@@ -331,43 +334,48 @@ internal sealed class ButtplugOutputTarget : AsyncAbstractOutputTarget
 
     private async Task ScanAsync(ButtplugClient client, CancellationToken token)
     {
-        void CleanupSemaphores()
+        var scanTask = default(Task);
+        var cancellationSource = default(CancellationTokenSource);
+        while (!token.IsCancellationRequested)
         {
-            _startScanSemaphore?.Dispose();
-            _endScanSemaphore?.Dispose();
-
-            _startScanSemaphore = null;
-            _endScanSemaphore = null;
-        }
-
-        await client.StopScanningAsync(token);
-
-        CleanupSemaphores();
-        _startScanSemaphore = new SemaphoreSlim(1, 1);
-        _endScanSemaphore = new SemaphoreSlim(0, 1);
-
-        try
-        {
-            while (!token.IsCancellationRequested)
+            await _scanSemaphore.WaitAsync(token);
+            if (scanTask?.IsCompleted == false)
             {
-                await _startScanSemaphore.WaitAsync(token);
-                await client.StartScanningAsync(token);
-
-                IsScanBusy = true;
-                await _endScanSemaphore.WaitAsync(token);
-                IsScanBusy = false;
-
-                if (client.IsScanning)
-                    await client.StopScanningAsync(token);
+                try { cancellationSource?.Cancel(); }
+                catch { }
+            }
+            else
+            {
+                scanTask = DoScanAsync();
             }
         }
-        catch (OperationCanceledException) { }
-        finally
-        {
-            IsScanBusy = false;
-        }
 
-        CleanupSemaphores();
+        async Task DoScanAsync()
+        {
+            try
+            {
+                cancellationSource = new CancellationTokenSource();
+                cancellationSource.CancelAfter(TimeSpan.FromSeconds(30));
+
+                IsScanBusy = true;
+
+                Logger.Debug("Starting device scan");
+                await client.StartScanningAsync(token);
+
+                try { await cancellationSource.Token.WaitHandle.WaitOneAsync(token); }
+                catch { }
+
+                Logger.Debug("Stopping device scan");
+                await client.StopScanningAsync(token);
+            }
+            finally
+            {
+                IsScanBusy = false;
+
+                cancellationSource?.Dispose();
+                cancellationSource = null;
+            }
+        }
     }
 
     public override void HandleSettings(JObject settings, SettingsAction action)
@@ -408,22 +416,6 @@ internal sealed class ButtplugOutputTarget : AsyncAbstractOutputTarget
         s.UnregisterAction($"{Identifier}::Endpoint::Set");
     }
 
-    public override async ValueTask<bool> CanConnectAsync(CancellationToken token)
-    {
-        try
-        {
-            using var client = new ClientWebSocket();
-            await client.ConnectAsync(new Uri($"ws://{Endpoint.ToUriString()}"), token);
-            var result = client.State == WebSocketState.Open;
-            await client.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, null, token);
-            return result;
-        }
-        catch
-        {
-            return false;
-        }
-    }
-
     public void OnSettingsAdd()
     {
         DeviceSettings.Add(new()
@@ -449,6 +441,14 @@ internal sealed class ButtplugOutputTarget : AsyncAbstractOutputTarget
 
         DeviceSettings.Remove(settings);
         NotifyOfPropertyChange(nameof(AvailableActuatorIndices));
+    }
+
+    protected override void Dispose(bool disposing)
+    {
+        base.Dispose(disposing);
+
+        _scanSemaphore?.Dispose();
+        _scanSemaphore = null;
     }
 }
 

@@ -20,7 +20,7 @@ public sealed partial class UriBox : UserControl
     private int _guardUpdateDepth;
     private bool IsUpdating => _guardUpdateDepth > 0;
 
-    public string[] AvailableSchemesList { get; private set; } = null;
+    public IReadOnlyList<string> AvailableSchemesList { get; private set; } = null;
 
     [DoNotNotify]
     public string AvailableSchemes

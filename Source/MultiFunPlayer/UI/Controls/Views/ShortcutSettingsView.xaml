@@ -477,36 +477,9 @@
                     </DockPanel>
 
                     <DockPanel DockPanel.Dock="Top"
+                               Height="35"
                                IsEnabled="{Binding SelectedShortcutType, Converter={StaticResource InvertedNullableToBooleanConverter}}"
                                LastChildFill="True">
-                        <material:PopupBox DockPanel.Dock="Right"
-                                           Style="{StaticResource MaterialDesignToolBarPopupBox}"
-                                           Width="32"
-                                           Height="32"
-                                           VerticalAlignment="Center"
-                                           PlacementMode="BottomAndAlignRightEdges"
-                                           StaysOpen="True"
-                                           ToolTip="Filter">
-                            <material:PopupBox.ToggleContent>
-                                <material:PackIcon Width="24"
-                                                   Height="24"
-                                                   Kind="FormatListBulleted"/>
-                            </material:PopupBox.ToggleContent>
-                            <Grid Width="150" Margin="10">
-                                <StackPanel>
-                                    <StackPanel>
-                                        <CheckBox Content="Keyboard keys" IsChecked="{Binding IsKeyboardKeysGestureEnabled}"/>
-                                        <CheckBox Content="Mouse axis" IsChecked="{Binding IsMouseAxisGestureEnabled}"/>
-                                        <CheckBox Content="Mouse button" IsChecked="{Binding IsMouseButtonGestureEnabled}"/>
-                                        <CheckBox Content="Gamepad axis" IsChecked="{Binding IsGamepadAxisGestureEnabled}"/>
-                                        <CheckBox Content="Gamepad button" IsChecked="{Binding IsGamepadButtonGestureEnabled}"/>
-                                        <CheckBox Content="TCode axis" IsChecked="{Binding IsTCodeAxisGestureEnabled}"/>
-                                        <CheckBox Content="TCode button" IsChecked="{Binding IsTCodeButtonGestureEnabled}"/>
-                                    </StackPanel>
-                                </StackPanel>
-                            </Grid>
-                        </material:PopupBox>
-
                         <Button DockPanel.Dock="Right"
                                 Style="{StaticResource MaterialDesignFlatButton}"
                                 Width="32"
@@ -530,10 +503,15 @@
 
                         <ComboBox ItemsSource="{Binding CapturedGestures}"
                                   SelectedItem="{Binding SelectedCapturedGesture}"
-                                  Height="33"
                                   Margin="0 0 10 0"
+                                  Padding="0 5"
                                   material:TextFieldAssist.HasClearButton="True"
                                   IsEnabled="{Binding CapturedGestures.Count, Mode=OneWay, Converter={StaticResource NotZeroConverter}}">
+                            <material:HintAssist.Hint>
+                                <TextBlock Text="{Binding CapturedGestures.Count, StringFormat='Captured {0} gestures'}"
+                                           Typography.Capitals="AllSmallCaps"
+                                           Visibility="{Binding CapturedGestures.Count, Converter={StaticResource NotZeroToVisibilityConverter}}"/>
+                            </material:HintAssist.Hint>
                             <ComboBox.ItemContainerStyle>
                                 <Style BasedOn="{StaticResource MaterialDesignComboBoxItemStyle}" TargetType="{x:Type ComboBoxItem}">
                                     <Setter Property="Padding" Value="5"/>
@@ -808,10 +786,10 @@
                                                 </DataTrigger>
 
                                                 <Trigger Property="UIElement.IsMouseOver" Value="True">
-                                                    <Setter TargetName="Container" Property="Panel.Background" Value="{DynamicResource MaterialDesignCardBackgroundHover}"/>
+                                                    <Setter TargetName="Container" Property="Panel.Background" Value="{DynamicResource MaterialDesignCardBackgroundHoverBrush}"/>
                                                 </Trigger>
                                                 <Trigger Property="IsSelected" Value="True">
-                                                    <Setter TargetName="Container" Property="Background" Value="{DynamicResource MaterialDesignCardBackgroundSelected}"/>
+                                                    <Setter TargetName="Container" Property="Background" Value="{DynamicResource MaterialDesignCardBackgroundSelectedBrush}"/>
                                                     <Setter TargetName="Container" Property="material:ShadowAssist.ShadowDepth" Value="Depth2"/>
                                                 </Trigger>
                                             </ControlTemplate.Triggers>

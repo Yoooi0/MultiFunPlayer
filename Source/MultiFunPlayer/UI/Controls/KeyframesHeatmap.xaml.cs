@@ -1,4 +1,4 @@
-using MultiFunPlayer.Common;
+﻿using MultiFunPlayer.Common;
 using MultiFunPlayer.UI.Controls.ViewModels;
 using PropertyChanged;
 using System.Collections.Specialized;
@@ -269,6 +269,7 @@ internal sealed partial class KeyframesHeatmap : UserControl
         base.OnMouseWheel(e);
 
         _selectedAxisIndex = Math.Clamp(_selectedAxisIndex - Math.Sign(e.Delta), 0, DeviceAxis.All.Length - 1);
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(SelectedAxis)));
 
         Refresh();
         if (ToolTipIsOpen)

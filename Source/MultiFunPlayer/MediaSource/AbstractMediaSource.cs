@@ -1,6 +1,8 @@
-using MultiFunPlayer.Common;
+﻿using MultiFunPlayer.Common;
 using MultiFunPlayer.Shortcut;
+using MultiFunPlayer.UI;
 using Newtonsoft.Json.Linq;
+using NLog;
 using PropertyChanged;
 using Stylet;
 using System.ComponentModel;
@@ -11,6 +13,8 @@ namespace MultiFunPlayer.MediaSource;
 
 internal abstract class AbstractMediaSource : Screen, IMediaSource, IHandle<IMediaSourceControlMessage>
 {
+    protected abstract Logger Logger { get; }
+
     private readonly Channel<IMediaSourceControlMessage> _messageChannel;
     private readonly IEventAggregator _eventAggregator;
     private CancellationTokenSource _cancellationSource;
@@ -38,36 +42,42 @@ internal abstract class AbstractMediaSource : Screen, IMediaSource, IHandle<IMed
         RegisterActions(shortcutManager);
     }
 
-    protected abstract Task RunAsync(CancellationToken token);
+    protected void PublishMessage(object message)
+    {
+        Logger.Trace("Publishing message \"{0}\"", message);
+        _eventAggregator.Publish(message);
+    }
 
-    protected void PublishMessage(object message) => _eventAggregator.Publish(message);
-
-    public async virtual Task ConnectAsync()
+    public async virtual Task ConnectAsync(ConnectionType connectionType)
     {
         if (Status != ConnectionStatus.Disconnected)
             return;
 
         Status = ConnectionStatus.Connecting;
-        if (!await OnConnectingAsync())
-            await DisconnectAsync();
+        if (connectionType == ConnectionType.AutoConnect)
+            await Task.Delay(250);
+
+        try
+        {
+            if (await OnConnectingAsync(connectionType))
+            {
+                Run(connectionType);
+                return;
+            }
+        }
+        catch (Exception e) when (connectionType != ConnectionType.AutoConnect)
+        {
+            Logger.Error(e, "Error when connecting to {0}", Name);
+            _ = DialogHelper.ShowErrorAsync(e, $"Error when connecting to {Name}", "RootDialog");
+        }
+        catch { }
+
+        await DisconnectAsync();
     }
 
-    protected virtual async ValueTask<bool> OnConnectingAsync()
+    public async Task DisconnectAsync()
     {
-        _cancellationSource = new CancellationTokenSource();
-        _task = Task.Factory.StartNew(() => RunAsync(_cancellationSource.Token),
-            _cancellationSource.Token,
-            TaskCreationOptions.LongRunning,
-            TaskScheduler.Default)
-            .Unwrap();
-        _ = _task.ContinueWith(_ => DisconnectAsync()).Unwrap();
-
-        return await ValueTask.FromResult(true);
-    }
-
-    public async virtual Task DisconnectAsync()
-    {
-        if (Status == ConnectionStatus.Disconnected || Status == ConnectionStatus.Disconnecting)
+        if (Status is ConnectionStatus.Disconnected or ConnectionStatus.Disconnecting)
             return;
 
         Status = ConnectionStatus.Disconnecting;
@@ -76,8 +86,25 @@ internal abstract class AbstractMediaSource : Screen, IMediaSource, IHandle<IMed
         Status = ConnectionStatus.Disconnected;
     }
 
+    protected abstract Task RunAsync(ConnectionType connectionType, CancellationToken token);
+    protected void Run(ConnectionType connectionType)
+    {
+        _cancellationSource = new CancellationTokenSource();
+        _task = Task.Run(async () =>
+        {
+            while (_messageChannel.Reader.TryRead(out _)) ;
+
+            try { await RunAsync(connectionType, _cancellationSource.Token); }
+            finally { _ = Task.Run(DisconnectAsync); }
+
+            while (_messageChannel.Reader.TryRead(out _)) ;
+        });
+    }
+
+    protected abstract ValueTask<bool> OnConnectingAsync(ConnectionType connectionType);
+
     private int _isDisconnectingFlag;
-    protected virtual async ValueTask OnDisconnectingAsync()
+    protected async ValueTask OnDisconnectingAsync()
     {
         if (Interlocked.CompareExchange(ref _isDisconnectingFlag, 1, 0) != 0)
             return;
@@ -91,20 +118,6 @@ internal abstract class AbstractMediaSource : Screen, IMediaSource, IHandle<IMed
         _task = null;
 
         Interlocked.Decrement(ref _isDisconnectingFlag);
-    }
-
-    public async virtual ValueTask<bool> CanConnectAsync(CancellationToken token) => await ValueTask.FromResult(false);
-    public async virtual ValueTask<bool> CanConnectAsyncWithStatus(CancellationToken token)
-    {
-        if (Status != ConnectionStatus.Disconnected)
-            return await ValueTask.FromResult(false);
-
-        Status = ConnectionStatus.Connecting;
-        await Task.Delay(100, token);
-        var result = await CanConnectAsync(token);
-        Status = ConnectionStatus.Disconnected;
-
-        return result;
     }
 
     public async Task WaitForStatus(IEnumerable<ConnectionStatus> statuses, CancellationToken token)
@@ -151,11 +164,6 @@ internal abstract class AbstractMediaSource : Screen, IMediaSource, IHandle<IMed
         #endregion
     }
 
-    protected void ClearPendingMessages()
-    {
-        while (_messageChannel.Reader.TryRead(out _)) ;
-    }
-
     protected async ValueTask WaitForMessageAsync(CancellationToken token)
         => await _messageChannel.Reader.WaitToReadAsync(token);
 
@@ -187,4 +195,11 @@ internal abstract class AbstractMediaSource : Screen, IMediaSource, IHandle<IMed
         Dispose(disposing: true);
         GC.SuppressFinalize(this);
     }
+}
+
+internal sealed class MediaSourceException : Exception
+{
+    public MediaSourceException() { }
+    public MediaSourceException(string message) : base(message) { }
+    public MediaSourceException(string message, Exception innerException) : base(message, innerException) { }
 }

@@ -1,42 +1,30 @@
 ﻿using MultiFunPlayer.Common;
-using MultiFunPlayer.UI.Controls.ViewModels;
 using Newtonsoft.Json.Linq;
 using NLog;
 
 namespace MultiFunPlayer.Settings.Migrations;
 
-internal sealed class Migration0009 : AbstractConfigMigration
+internal sealed class Migration0009 : AbstractSettingsMigration
 {
-    private readonly Logger Logger = LogManager.GetCurrentClassLogger();
+    protected override Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
-    public override void Migrate(JObject settings)
+    protected override void InternalMigrate(JObject settings)
     {
-        if (!settings.TryGetValue("Devices", out var _))
-            MigrateDevices(settings);
+        var defaultDevices = DeviceSettings.DefaultDevices.ToList();
 
-        base.Migrate(settings);
-    }
+        AddPropertyByName(settings, "Devices", JArray.FromObject(defaultDevices), out var devices);
+        if (!TryGetValue<JToken>(settings, "SelectedDevice", out var selectedDevice) || string.IsNullOrWhiteSpace(selectedDevice.ToObject<string>()))
+            selectedDevice = defaultDevices[^1].Name;
 
-    private void MigrateDevices(JObject settings)
-    {
-        Logger.Info("Migrating Devices");
+        SetPropertyByName(settings, "SelectedDevice", selectedDevice, addIfMissing: true);
 
-        var devices = DeviceSettingsViewModel.DefaultDevices.ToList();
-        if (!settings.TryGetValue<string>("SelectedDevice", out var selectedDevice) || string.IsNullOrWhiteSpace(selectedDevice))
-            selectedDevice = devices[^1].Name;
-
-        var device = devices.Find(d => string.Equals(d.Name, selectedDevice, StringComparison.OrdinalIgnoreCase)) ?? devices[^1];
+        var device = defaultDevices.Find(d => string.Equals(d.Name, selectedDevice.ToObject<string>(), StringComparison.OrdinalIgnoreCase)) ?? defaultDevices[^1];
         var migratedName = $"{device.Name} (migrated)";
         var migratedDevice = device.Clone(migratedName);
 
         foreach (var axis in migratedDevice.Axes)
             axis.Enabled = true;
 
-        Logger.Info("Created device \"{0}\"", migratedName);
-        devices.Add(migratedDevice);
-        selectedDevice = migratedName;
-
-        settings["Devices"] = JArray.FromObject(devices);
-        settings["SelectedDevice"] = selectedDevice;
+        AddTokenToContainer(JObject.FromObject(migratedDevice), devices.Value as JArray);
     }
 }

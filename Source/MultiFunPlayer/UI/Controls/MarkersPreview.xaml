@@ -121,7 +121,7 @@
                               MouseLeave="{s:Action OnChapterMouseLeave}">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="6"/>
-                                <ColumnDefinition Width="{Binding CanvasLength, Converter={StaticResource MathAddConverter}, ConverterParameter=-12}"/>
+                                <ColumnDefinition Width="{Binding CanvasMiddleWidth}"/>
                                 <ColumnDefinition Width="6"/>
                             </Grid.ColumnDefinitions>
 

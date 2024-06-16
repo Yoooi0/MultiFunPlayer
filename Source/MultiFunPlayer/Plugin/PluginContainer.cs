@@ -1,5 +1,6 @@
-using MultiFunPlayer.Common;
+﻿using MultiFunPlayer.Common;
 using MultiFunPlayer.Settings;
+using MultiFunPlayer.Shortcut;
 using NLog;
 using Stylet;
 using System.IO;
@@ -35,8 +36,8 @@ internal sealed class PluginContainer(FileInfo pluginFile) : PropertyChangedBase
 
     public bool CanStart => State == PluginState.Idle || State == PluginState.RanToCompletion || (State == PluginState.Faulted && Exception is not PluginCompileException);
     public bool CanStop => State == PluginState.Running;
-    public bool CanCompile => State == PluginState.Idle || State == PluginState.Faulted || State == PluginState.RanToCompletion;
-    public bool IsBusy => State != PluginState.Idle && State != PluginState.RanToCompletion && State != PluginState.Running;
+    public bool CanCompile => State is PluginState.Idle or PluginState.Faulted or PluginState.RanToCompletion;
+    public bool IsBusy => State is not PluginState.Idle and not PluginState.RanToCompletion and not PluginState.Running;
 
     public void Start()
     {
@@ -170,6 +171,18 @@ internal sealed class PluginContainer(FileInfo pluginFile) : PropertyChangedBase
             HandleSettings(SettingsAction.Loading);
             NotifyOfPropertyChange(nameof(SettingsView));
         }
+    }
+
+    public void RegisterActions(IShortcutManager s)
+    {
+        s.RegisterAction($"Plugin::{Name}::Start", Start);
+        s.RegisterAction($"Plugin::{Name}::Stop", Stop);
+    }
+
+    public void UnregisterActions(IShortcutManager s)
+    {
+        s.UnregisterAction($"Plugin::{Name}::Start");
+        s.UnregisterAction($"Plugin::{Name}::Stop");
     }
 
     public void HandleSettings(SettingsAction action)

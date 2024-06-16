@@ -1,13 +1,12 @@
 ﻿using MultiFunPlayer.Input;
 using System.ComponentModel;
 using System.Diagnostics;
-using System.Text;
 
 namespace MultiFunPlayer.Shortcut;
 
 [DisplayName("Axis Threshold")]
-internal sealed class AxisThresholdShortcut(IShortcutActionResolver actionResolver, IAxisInputGestureDescriptor gesture)
-    : AbstractShortcut<IAxisInputGesture, ISimpleInputGestureData>(actionResolver, gesture)
+internal sealed class AxisThresholdShortcut(IShortcutActionRunner actionRunner, IAxisInputGestureDescriptor gesture)
+    : AbstractShortcut<IAxisInputGesture, ISimpleInputGestureData>(actionRunner, gesture)
 {
     public double Threshold { get; set; } = 0.5;
     public AxisThresholdTriggerMode TriggerMode { get; set; } = AxisThresholdTriggerMode.Rising;

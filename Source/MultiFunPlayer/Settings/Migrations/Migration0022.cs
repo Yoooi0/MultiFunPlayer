@@ -1,32 +1,18 @@
-﻿using MultiFunPlayer.Common;
-using Newtonsoft.Json.Linq;
+﻿using Newtonsoft.Json.Linq;
 using NLog;
 
 namespace MultiFunPlayer.Settings.Migrations;
 
-internal sealed class Migration0022 : AbstractConfigMigration
+internal sealed class Migration0022 : AbstractSettingsMigration
 {
-    private readonly Logger Logger = LogManager.GetCurrentClassLogger();
+    protected override Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
-    public override void Migrate(JObject settings)
+    protected override void InternalMigrate(JObject settings)
     {
-        if (settings.TryGetObject(out var scriptSettings, "Script"))
-            MigrateScriptLibraryProperty(scriptSettings);
-
-        base.Migrate(settings);
-    }
-
-    private void MigrateScriptLibraryProperty(JObject settings)
-    {
-        Logger.Info("Migrating ScriptLibraries property");
-        if (!settings.ContainsKey("ScriptLibraries"))
+        if (!TrySelectProperty(settings, "$.Script.ScriptLibraries", out var scriptLibraries))
             return;
 
-        var property = settings.Property("ScriptLibraries");
-        property.Remove();
-
-        settings.EnsureContainsObjects("Repositories", "Local", "ScriptLibraries");
-        settings["Repositories"]["Local"]["ScriptLibraries"] = property.Value;
-        Logger.Info("Moved ScriptLibraries property from \"Script.ScriptLibraries\" to \"Script.Repositories.Local.ScriptLibraries\"");
+        var localRepository = CreateChildObjects(settings, "Script", "Repositories", "Local");
+        MoveProperty(scriptLibraries, localRepository, replace: true);
     }
 }

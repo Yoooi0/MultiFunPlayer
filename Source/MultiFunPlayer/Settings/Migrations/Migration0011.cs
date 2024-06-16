@@ -1,88 +1,55 @@
-﻿using MultiFunPlayer.Common;
-using Newtonsoft.Json.Linq;
+﻿using Newtonsoft.Json.Linq;
 using NLog;
+using System.Text.RegularExpressions;
 
 namespace MultiFunPlayer.Settings.Migrations;
 
-internal sealed class Migration0011 : AbstractConfigMigration
+internal sealed class Migration0011 : AbstractSettingsMigration
 {
-    private readonly Logger Logger = LogManager.GetCurrentClassLogger();
+    protected override Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
-    public override void Migrate(JObject settings)
+    protected override void InternalMigrate(JObject settings)
     {
-        if (settings.TryGetObject(out var outputTargetSettings, "OutputTarget"))
+        var prefixMap = new Dictionary<string, string>();
+        foreach (var outputTarget in SelectObjects(settings, "$.OutputTarget.Items[?(@.$type =~ /.*NetworkOutputTargetViewModel.*/i)]"))
         {
-            if (settings.TryGetObject(out var shortcutSettings, "Shortcuts"))
-                MigrateNetworkOutputTargetActions(shortcutSettings, outputTargetSettings);
+            if (!TryGetValue<JValue>(outputTarget, "$index", out var index) || !TryGetValue<JValue>(outputTarget, "Protocol", out var protocol))
+                continue;
 
-            MigrateOutputTargetActiveItem(outputTargetSettings);
-            MigrateNetworkOutputTargets(outputTargetSettings);
+            prefixMap.Add($"Network/{index.ToObject<int>()}",
+                          $"{protocol.ToObject<string>().ToUpper()}/{index.ToObject<int>()}");
         }
 
-        base.Migrate(settings);
-    }
-
-    private void MigrateNetworkOutputTargetActions(JObject shortcutSettings, JObject outputTargetSettings)
-    {
-        Logger.Info("Migrating OutputTarget Actions");
-
-        var descriptorPrefixMap = new Dictionary<string, string>();
-        foreach (var outputTarget in outputTargetSettings.SelectTokens("$.Items[?(@.$type =~ /.*NetworkOutputTargetViewModel.*/i)]").OfType<JObject>())
+        foreach (var action in SelectObjects(settings, "$.Shortcuts.Bindings[*].Actions[?(@.Descriptor =~ /Network\\/\\d+::.*/i)]"))
         {
-            var index = outputTarget["$index"].ToObject<int>();
-            var protocol = outputTarget["Protocol"].ToString();
-
-            descriptorPrefixMap.Add($"Network/{index}", $"{protocol.ToUpper()}/{index}");
+            EditPropertyByName(action, "Descriptor",
+                v => Regex.Replace(v.ToString(), "(^.+?)::", m => $"{prefixMap[m.Groups[1].Value]}::"));
         }
 
-        foreach (var action in shortcutSettings.SelectTokens("$.Bindings[*].Actions[?(@.Descriptor =~ /Network\\/\\d+::*/i)]").OfType<JObject>())
+        if (TrySelectProperty(settings, "$.OutputTarget.ActiveItem", out var activeItem))
         {
-            var oldDescriptor = action["Descriptor"].ToString();
-
-            var descriptorPrefix = oldDescriptor.Split("::")[0];
-            var newDescriptor = oldDescriptor.Replace(descriptorPrefix, descriptorPrefixMap[descriptorPrefix]);
-
-            action["Descriptor"] = newDescriptor;
-            Logger.Info("Migrated action descriptor from \"{0}\" to \"{1}\"", oldDescriptor, newDescriptor);
+            var value = activeItem.Value.ToObject<string>();
+            if (value.StartsWith("Network"))
+            {
+                var index = int.Parse(value.Split('/')[1]);
+                if (TrySelectObject(settings, $"$.OutputTarget.Items[?(@.$type =~ /.*NetworkOutputTargetViewModel.*/i && @.$index == {index})]", out var outputTarget)
+                 && TryGetValue<JValue>(outputTarget, "Protocol", out var protocol))
+                {
+                    SetProperty(activeItem, $"{protocol.ToObject<string>().ToUpper()}/{index}");
+                }
+            }
         }
-    }
 
-    private void MigrateOutputTargetActiveItem(JObject settings)
-    {
-        Logger.Info("Migrating OutputTarget ActiveItem");
-        if (!settings.ContainsKey("ActiveItem"))
-            return;
-
-        var activeItem = settings["ActiveItem"].ToString();
-        if (!activeItem.StartsWith("Network"))
-            return;
-
-        var index = int.Parse(activeItem.Split('/')[1]);
-        if (settings.SelectToken($"$.Items[?(@.$type =~ /.*NetworkOutputTargetViewModel.*/i && @.$index == {index})]") is JObject outputTarget)
+        foreach (var outputTarget in SelectObjects(settings, "$.OutputTarget.Items[?(@.$type =~ /.*NetworkOutputTargetViewModel.*/i)]"))
         {
-            var newActiveItem = $"{outputTarget["Protocol"].ToString().ToUpper()}/{index}";
-            settings["ActiveItem"] = newActiveItem;
-            Logger.Info("Migrated ActiveItem from \"{0}\" to \"{1}\"", activeItem, newActiveItem);
-        }
-    }
+            if (!TryGetValue<JValue>(outputTarget, "$index", out var index) || !TryGetValue<JValue>(outputTarget, "Protocol", out var protocol))
+                continue;
 
-    private void MigrateNetworkOutputTargets(JObject settings)
-    {
-        Logger.Info("Migrating Network OutputTarget");
+            RemovePropertyByName(outputTarget, "Protocol");
+            EditPropertyByName(outputTarget, "$type",
+                v => v.ToObject<string>().Replace("Network", protocol.ToObject<string>()));
 
-        foreach (var outputTarget in settings.SelectTokens("$.Items[?(@.$type =~ /.*NetworkOutputTargetViewModel.*/i)]").OfType<JObject>())
-        {
-            var type = outputTarget["$type"].ToString();
-            var protocol = outputTarget["Protocol"].ToString();
-            outputTarget.Remove("Protocol");
-
-            var newType = type.Replace("Network", protocol);
-            outputTarget["$type"] = newType;
-            Logger.Info("Migrated OutputTarget from \"{0}\" to \"{1}\"", type, newType);
-
-            var sendDirtyValuesOnly = protocol == "Tcp";
-            outputTarget["SendDirtyValuesOnly"] = sendDirtyValuesOnly;
-            Logger.Info("Migrated SendDirtyValuesOnly to \"{0}\"", sendDirtyValuesOnly);
+            SetPropertyByName(outputTarget, "SendDirtyValuesOnly", protocol.ToObject<string>() == "Tcp", addIfMissing: true);
         }
     }
 }

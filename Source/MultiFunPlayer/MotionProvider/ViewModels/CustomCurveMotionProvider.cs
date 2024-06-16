@@ -1,4 +1,4 @@
-using MultiFunPlayer.Common;
+﻿using MultiFunPlayer.Common;
 using MultiFunPlayer.Shortcut;
 using Newtonsoft.Json;
 using PropertyChanged;
@@ -78,16 +78,38 @@ internal sealed class CustomCurveMotionProvider : AbstractMotionProvider
         var needsRefresh = Interlocked.CompareExchange(ref _pendingRefreshFlag, 0, 1) == 1;
         if (needsRefresh)
         {
-            var newKeyframes = new KeyframeCollection(Points.Count + 2)
+            if (IsLooping && Points.Count != 1)
             {
-                { Viewport.Left, Points[0].Y }
-            };
+                const int minimumTilePointCount = 3;
 
-            foreach (var point in Points)
-                newKeyframes.Add(point.X, point.Y);
-            newKeyframes.Add(Viewport.Right, Points[^1].Y);
+                var tileCount = Math.Ceiling((double)minimumTilePointCount / Points.Count);
+                var newKeyframes = new KeyframeCollection(Points.Count + minimumTilePointCount * 2);
+                for (var i = tileCount; i >= 1; i--)
+                    foreach (var point in Points.TakeLast(minimumTilePointCount))
+                        newKeyframes.Add(point.X - i * Viewport.Width, point.Y);
 
-            _keyframes = newKeyframes;
+                foreach (var point in Points)
+                    newKeyframes.Add(point.X, point.Y);
+
+                for (var i = 1; i <= tileCount; i++)
+                    foreach (var point in Points.Take(minimumTilePointCount))
+                        newKeyframes.Add(point.X + i * Viewport.Width, point.Y);
+
+                _keyframes = newKeyframes;
+            }
+            else
+            {
+                var newKeyframes = new KeyframeCollection(Points.Count + 2)
+                {
+                    { Viewport.Left, Points[0].Y }
+                };
+
+                foreach (var point in Points)
+                    newKeyframes.Add(point.X, point.Y);
+                newKeyframes.Add(Viewport.Right, Points[^1].Y);
+
+                _keyframes = newKeyframes;
+            }
         }
 
         if (_keyframes == null)
@@ -120,7 +142,7 @@ internal sealed class CustomCurveMotionProvider : AbstractMotionProvider
                 return;
 
             var newValue = MathUtils.Clamp01(_keyframes.Interpolate(_index, Time, InterpolationType));
-            Value = MathUtils.Map(newValue, 0, 1, Minimum / 100, Maximum / 100);
+            Value = MathUtils.Map(newValue, 0, 1, Minimum, Maximum);
             Time += Speed * deltaTime;
         }
     }
@@ -158,7 +180,7 @@ internal sealed class CustomCurveMotionProvider : AbstractMotionProvider
         #region CustomCurveMotionProvider::Duration
         s.RegisterAction<DeviceAxis, double>($"MotionProvider::{name}::Duration::Set",
             s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All),
-            s => s.WithLabel("Duration").WithStringFormat("{}{0}s"),
+            s => s.WithLabel("Duration").AsNumericUpDown(1, 60, 1, "{0:F2}s"),
             (axis, duration) => UpdateProperty(axis, p => p.Duration = duration));
         #endregion
 

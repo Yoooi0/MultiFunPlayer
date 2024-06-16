@@ -12,6 +12,7 @@ internal sealed class MediaSourceViewModel : Conductor<IMediaSource>.Collection.
     private CancellationTokenSource _cancellationSource;
     private IMediaSource _currentSource;
     private SemaphoreSlim _semaphore;
+    private SemaphoreSlim _scanIntervalSemaphore;
 
     public IReadOnlyList<IMediaSource> AvailableSources { get; }
 
@@ -28,6 +29,7 @@ internal sealed class MediaSourceViewModel : Conductor<IMediaSource>.Collection.
         _currentSource = null;
         _semaphore = new SemaphoreSlim(1, 1);
         _cancellationSource = new CancellationTokenSource();
+        _scanIntervalSemaphore = new SemaphoreSlim(0);
 
         RegisterActions(shortcutManager);
     }
@@ -59,15 +61,7 @@ internal sealed class MediaSourceViewModel : Conductor<IMediaSource>.Collection.
     protected override void OnViewLoaded()
     {
         base.OnViewLoaded();
-
-        if (_task != null)
-            return;
-
-        _task = Task.Factory.StartNew(() => ScanAsync(_cancellationSource.Token),
-            _cancellationSource.Token,
-            TaskCreationOptions.LongRunning,
-            TaskScheduler.Default)
-            .Unwrap();
+        _task ??= Task.Run(() => ScanAsync(_cancellationSource.Token));
     }
 
     public void Handle(SettingsMessage message)
@@ -124,19 +118,18 @@ internal sealed class MediaSourceViewModel : Conductor<IMediaSource>.Collection.
         var token = _cancellationSource.Token;
         await _semaphore.WaitAsync(token);
         if (_currentSource == source)
-            await ToggleConnectCurrentSourceAsync(token);
+        {
+            if (_currentSource?.Status == ConnectionStatus.Connected)
+                await DisconnectCurrentSourceAsync(token);
+            else if (_currentSource?.Status == ConnectionStatus.Disconnected)
+                await ConnectAsync(_currentSource, ConnectionType.Manual, token);
+        }
         else if (_currentSource != source)
+        {
             await ConnectAndSetAsCurrentSourceAsync(source, token);
+        }
 
         _semaphore.Release();
-    }
-
-    private async Task ToggleConnectCurrentSourceAsync(CancellationToken token)
-    {
-        if (_currentSource?.Status == ConnectionStatus.Connected)
-            await DisconnectCurrentSourceAsync(token);
-        else if (_currentSource?.Status == ConnectionStatus.Disconnected)
-            await ConnectAsync(_currentSource, token);
     }
 
     private async Task ConnectAndSetAsCurrentSourceAsync(IMediaSource source, CancellationToken token)
@@ -145,7 +138,7 @@ internal sealed class MediaSourceViewModel : Conductor<IMediaSource>.Collection.
             await DisconnectCurrentSourceAsync(token);
 
         if (source != null)
-            await ConnectAsync(source, token);
+            await ConnectAsync(source, ConnectionType.Manual, token);
 
         if (source == null || source.Status == ConnectionStatus.Connected)
             _currentSource = source;
@@ -157,14 +150,16 @@ internal sealed class MediaSourceViewModel : Conductor<IMediaSource>.Collection.
         _currentSource = null;
     }
 
-    private async Task ConnectAsync(IMediaSource source, CancellationToken token)
+    private async Task ConnectAsync(IMediaSource source, ConnectionType connectionType, CancellationToken token)
     {
-        await source.ConnectAsync();
+        _scanIntervalSemaphore.Release();
+        await source.ConnectAsync(connectionType);
         await source.WaitForIdle(token);
     }
 
     private async Task DisconnectAsync(IMediaSource source, CancellationToken token)
     {
+        _scanIntervalSemaphore.Release();
         await source.DisconnectAsync();
         await source.WaitForDisconnect(token);
     }
@@ -176,6 +171,29 @@ internal sealed class MediaSourceViewModel : Conductor<IMediaSource>.Collection.
             await Task.Delay(ScanDelay, token);
             while (!token.IsCancellationRequested)
             {
+                if (_currentSource == null)
+                {
+                    foreach (var source in Items.ToList())
+                    {
+                        if (_currentSource != null)
+                            break;
+
+                        if (!source.AutoConnectEnabled)
+                            continue;
+
+                        await _semaphore.WaitAsync(token);
+                        if (_currentSource == null)
+                        {
+                            await ConnectAsync(source, ConnectionType.AutoConnect, token);
+
+                            if (source.Status == ConnectionStatus.Connected)
+                                _currentSource = source;
+                        }
+
+                        _semaphore.Release();
+                    }
+                }
+
                 if (_currentSource != null)
                 {
                     await _currentSource.WaitForDisconnect(token);
@@ -185,31 +203,7 @@ internal sealed class MediaSourceViewModel : Conductor<IMediaSource>.Collection.
                     _semaphore.Release();
                 }
 
-                foreach (var source in Items.ToList())
-                {
-                    if (_currentSource != null)
-                        break;
-
-                    if (!source.AutoConnectEnabled)
-                        continue;
-
-                    await _semaphore.WaitAsync(token);
-                    if (await source.CanConnectAsyncWithStatus(token))
-                    {
-                        if (_currentSource == null)
-                        {
-                            await source.ConnectAsync();
-                            await source.WaitForIdle(token);
-
-                            if (source.Status == ConnectionStatus.Connected)
-                                _currentSource = source;
-                        }
-                    }
-
-                    _semaphore.Release();
-                }
-
-                await Task.Delay(ScanInterval, token);
+                while (await _scanIntervalSemaphore.WaitAsync(ScanInterval, token));
             }
         }
         catch (OperationCanceledException) { }
@@ -221,7 +215,7 @@ internal sealed class MediaSourceViewModel : Conductor<IMediaSource>.Collection.
         foreach (var source in AvailableSources)
         {
             s.RegisterAction($"{source.Name}::Connection::Toggle", async () => await ToggleConnectAsync(source));
-            s.RegisterAction($"{source.Name}::Connection::Connect",async () =>
+            s.RegisterAction($"{source.Name}::Connection::Connect", async () =>
             {
                 await _semaphore.WaitAsync(token);
                 if (_currentSource != source)
@@ -247,11 +241,13 @@ internal sealed class MediaSourceViewModel : Conductor<IMediaSource>.Collection.
         _semaphore?.Dispose();
         _currentSource?.Dispose();
         _cancellationSource?.Dispose();
+        _scanIntervalSemaphore?.Dispose();
 
         _task = null;
         _semaphore = null;
         _currentSource = null;
         _cancellationSource = null;
+        _scanIntervalSemaphore = null;
     }
 
     public void Dispose()

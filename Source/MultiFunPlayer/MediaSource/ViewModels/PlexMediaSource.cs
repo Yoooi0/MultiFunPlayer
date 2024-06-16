@@ -15,7 +15,7 @@ namespace MultiFunPlayer.MediaSource.ViewModels;
 [DisplayName("Plex")]
 internal sealed class PlexMediaSource(IShortcutManager shortcutManager, IEventAggregator eventAggregator) : AbstractMediaSource(shortcutManager, eventAggregator)
 {
-    private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
+    protected override Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
     private CancellationTokenSource _refreshCancellationSource = new();
     private XmlNode _currentTimeline;
@@ -24,7 +24,7 @@ internal sealed class PlexMediaSource(IShortcutManager shortcutManager, IEventAg
     public override ConnectionStatus Status { get; protected set; }
     public bool IsConnected => Status == ConnectionStatus.Connected;
     public bool IsDisconnected => Status == ConnectionStatus.Disconnected;
-    public bool IsConnectBusy => Status == ConnectionStatus.Connecting || Status == ConnectionStatus.Disconnecting;
+    public bool IsConnectBusy => Status is ConnectionStatus.Connecting or ConnectionStatus.Disconnecting;
     public bool CanToggleConnect => !IsConnectBusy && SelectedClient != null && !string.IsNullOrWhiteSpace(PlexToken);
 
     public ObservableConcurrentCollection<PlexClient> Clients { get; } = [];
@@ -50,32 +50,50 @@ internal sealed class PlexMediaSource(IShortcutManager shortcutManager, IEventAg
         _ = RefreshClients();
     }
 
-    protected override async ValueTask<bool> OnConnectingAsync()
+    protected override async ValueTask<bool> OnConnectingAsync(ConnectionType connectionType)
     {
+        if (connectionType != ConnectionType.AutoConnect)
+            Logger.Info("Connecting to {0} at \"{1}\" [Type: {2}]", Name, ServerBaseUri, connectionType);
+
+        if (ServerBaseUri == null)
+            throw new MediaSourceException("Endpoint cannot be null");
+        if (string.IsNullOrEmpty(PlexToken))
+            throw new MediaSourceException("Plex token cannot be empty");
+
         if (SelectedClientMachineIdentifier == null)
             return false;
         if (SelectedClient == null)
             await RefreshClients();
 
-        return SelectedClient != null && await base.OnConnectingAsync();
+        return SelectedClient != null;
     }
 
-    protected override async Task RunAsync(CancellationToken token)
+    protected override async Task RunAsync(ConnectionType connectionType, CancellationToken token)
     {
+        using var client = NetUtils.CreateHttpClient();
+
         try
         {
-            Logger.Info("Connecting to {0} at \"{1}\"", Name, ServerBaseUri);
-            if (ServerBaseUri == null)
-                throw new Exception("Endpoint cannot be null.");
-            if (string.IsNullOrEmpty(PlexToken))
-                throw new Exception("Plex token cannot be empty.");
+            client.Timeout = TimeSpan.FromMilliseconds(500);
+            var message = new HttpRequestMessage(HttpMethod.Head, new Uri(ServerBaseUri, "/clients"));
+            AddDefaultHeaders(message.Headers);
 
-            var client = NetUtils.CreateHttpClient();
-            client.Timeout = TimeSpan.FromMilliseconds(5000);
-
-            await Task.Delay(250, token);
+            _ = await client.SendAsync(message, token);
             Status = ConnectionStatus.Connected;
+        }
+        catch (Exception e) when (connectionType != ConnectionType.AutoConnect)
+        {
+            Logger.Error(e, "Error when connecting to {0} at \"{1}\"", Name, ServerBaseUri);
+            _ = DialogHelper.ShowErrorAsync(e, $"Error when connecting to {Name}", "RootDialog");
+            return;
+        }
+        catch
+        {
+            return;
+        }
 
+        try
+        {
             using var cancellationSource = CancellationTokenSource.CreateLinkedTokenSource(token);
             var task = await Task.WhenAny(ReadAsync(client, cancellationSource.Token), WriteAsync(client, cancellationSource.Token));
             cancellationSource.Cancel();
@@ -105,7 +123,7 @@ internal sealed class PlexMediaSource(IShortcutManager shortcutManager, IEventAg
             var lastMetadataUri = default(Uri);
             var basePollUri = new Uri(ServerBaseUri, "/player/timeline/poll");
 
-            var timer = new PeriodicTimer(TimeSpan.FromMilliseconds(500));
+            using var timer = new PeriodicTimer(TimeSpan.FromMilliseconds(500));
             while (await timer.WaitForNextTickAsync(token) && !token.IsCancellationRequested)
             {
                 _currentTimeline = await GetCurrentTimelineAsync();
@@ -150,7 +168,7 @@ internal sealed class PlexMediaSource(IShortcutManager shortcutManager, IEventAg
                 document.Load(await response.Content.ReadAsStreamAsync(token));
 
                 var root = document.DocumentElement;
-                Logger.Trace(() => string.Format("Received \"{0}\" from \"{1}\"", root.OuterXml, Name));
+                Logger.Trace(() => $"Received \"{root.OuterXml}\" from \"{Name}\"");
 
                 if (!root.HasChildNodes)
                     return false;
@@ -189,15 +207,15 @@ internal sealed class PlexMediaSource(IShortcutManager shortcutManager, IEventAg
                 document.Load(await response.Content.ReadAsStreamAsync(token));
 
                 var root = document.DocumentElement;
-                Logger.Trace(() => string.Format("Received \"{0}\" from \"{1}\"", root.OuterXml, Name));
+                Logger.Trace(() => $"Received \"{root.OuterXml}\" from \"{Name}\"");
 
                 if (!root.HasChildNodes)
                     return null;
 
                 return root.ChildNodes
                            .OfType<XmlNode>()
-                           .Where(n => string.Equals(n.Name, "Timeline", StringComparison.OrdinalIgnoreCase))
-                           .Where(n => !string.Equals(n.Attributes["type"]?.Value, "photo", StringComparison.OrdinalIgnoreCase))
+                           .Where(n => string.Equals(n.Name, "Timeline", StringComparison.OrdinalIgnoreCase)
+                                   && !string.Equals(n.Attributes["type"]?.Value, "photo", StringComparison.OrdinalIgnoreCase))
                            .FirstOrDefault(n => !string.Equals(n.Attributes["state"]?.Value, "stopped", StringComparison.OrdinalIgnoreCase));
 
                 async Task<HttpResponseMessage> WriteTimelineCommandAsync()
@@ -233,7 +251,7 @@ internal sealed class PlexMediaSource(IShortcutManager shortcutManager, IEventAg
                 message.Headers.TryAddWithoutValidation("X-Plex-Target-Client-Identifier", SelectedClient.MachineIdentifier);
                 AddDefaultHeaders(message.Headers);
 
-                return await UnwrapTimeout(() => httpClient.SendAsync(message, token));
+                return await httpClient.SendAsync(message, token);
             }
 
             void ResetState()
@@ -244,6 +262,7 @@ internal sealed class PlexMediaSource(IShortcutManager shortcutManager, IEventAg
                 PublishMessage(new MediaPlayingChangedMessage(false));
             }
         }
+        catch (OperationCanceledException e) when (e.InnerException is TimeoutException t) { t.Throw(); }
         catch (OperationCanceledException) { }
     }
 
@@ -285,7 +304,7 @@ internal sealed class PlexMediaSource(IShortcutManager shortcutManager, IEventAg
 
                 try
                 {
-                    _ = await UnwrapTimeout(() => httpClient.SendAsync(requestMessage, messageCancellationSource.Token));
+                    _ = await httpClient.SendAsync(requestMessage, messageCancellationSource.Token);
                 }
                 catch (OperationCanceledException) when (messageCancellationSource.IsCancellationRequested && !token.IsCancellationRequested) { }
                 finally
@@ -296,6 +315,7 @@ internal sealed class PlexMediaSource(IShortcutManager shortcutManager, IEventAg
                 }
             }
         }
+        catch (OperationCanceledException e) when (e.InnerException is TimeoutException t) { t.Throw(); }
         catch (OperationCanceledException) { }
     }
 
@@ -332,6 +352,7 @@ internal sealed class PlexMediaSource(IShortcutManager shortcutManager, IEventAg
         async Task DoRefreshClients(CancellationToken token)
         {
             await Task.Delay(250, token);
+            Logger.Debug("Refreshing clients");
 
             using var client = NetUtils.CreateHttpClient();
             client.Timeout = TimeSpan.FromMilliseconds(5000);
@@ -346,6 +367,8 @@ internal sealed class PlexMediaSource(IShortcutManager shortcutManager, IEventAg
             document.Load(await response.Content.ReadAsStreamAsync(token));
 
             var root = document.DocumentElement;
+            Logger.Trace(() => $"Received \"{root.OuterXml}\" from \"{Name}\"");
+
             if (!root.HasChildNodes)
                 return;
 
@@ -430,6 +453,10 @@ internal sealed class PlexMediaSource(IShortcutManager shortcutManager, IEventAg
             SelectClientByMachineIdentifier(client.MachineIdentifier);
         });
         #endregion
+
+        #region RefreshClients
+        s.RegisterAction($"{Name}::RefreshClients", async () => { if (CanRefreshClients) await RefreshClients(); });
+        #endregion
     }
 
     private void AddDefaultHeaders(HttpRequestHeaders headers)
@@ -447,45 +474,6 @@ internal sealed class PlexMediaSource(IShortcutManager shortcutManager, IEventAg
         headers.TryAddWithoutValidation("X-Plex-Token", PlexToken);
     }
 
-    public override async ValueTask<bool> CanConnectAsync(CancellationToken token)
-    {
-        if (ServerBaseUri == null)
-            return false;
-
-        using var client = NetUtils.CreateHttpClient();
-        client.Timeout = TimeSpan.FromMilliseconds(5000);
-
-        var message = new HttpRequestMessage(HttpMethod.Head, new Uri(ServerBaseUri, "/clients"));
-        AddDefaultHeaders(message.Headers);
-
-        var response = await client.SendAsync(message, token);
-        return response.IsSuccessStatusCode;
-    }
-
-    private async Task<HttpResponseMessage> UnwrapTimeout(Func<Task<HttpResponseMessage>> action)
-    {
-        //https://github.com/dotnet/runtime/issues/21965
-
-        try
-        {
-            return await action();
-        }
-        catch (Exception e)
-        {
-            if (e is OperationCanceledException operationCanceledException)
-            {
-                var innerException = operationCanceledException.InnerException;
-                if (innerException is TimeoutException)
-                    innerException.Throw();
-
-                operationCanceledException.Throw();
-            }
-
-            e.Throw();
-            return null;
-        }
-    }
-
     protected override void Dispose(bool disposing)
     {
         _refreshCancellationSource?.Cancel();
@@ -495,6 +483,10 @@ internal sealed class PlexMediaSource(IShortcutManager shortcutManager, IEventAg
         base.Dispose(disposing);
     }
 
-    internal sealed record class PlexClient(string Name, string Host, string Address, int Port, string MachineIdentifier, string Version, string Protocol,
-                                     string Product, string DeviceClass, int ProtocolVersion, string ProtocolCapabilities);
+    internal sealed record PlexClient(string Name, string Host, string Address, int Port, string MachineIdentifier, string Version, string Protocol,
+                                     string Product, string DeviceClass, int ProtocolVersion, string ProtocolCapabilities)
+    {
+        public bool Equals(PlexClient other) => string.Equals(MachineIdentifier, other?.MachineIdentifier, StringComparison.Ordinal);
+        public override int GetHashCode() => MachineIdentifier.GetHashCode();
+    }
 }

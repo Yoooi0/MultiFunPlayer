@@ -1,47 +1,25 @@
-﻿using MultiFunPlayer.Common;
-using Newtonsoft.Json.Linq;
+﻿using Newtonsoft.Json.Linq;
 using NLog;
 
 namespace MultiFunPlayer.Settings.Migrations;
 
-internal sealed class Migration0017 : AbstractConfigMigration
+internal sealed class Migration0017 : AbstractSettingsMigration
 {
-    private readonly Logger Logger = LogManager.GetCurrentClassLogger();
+    protected override Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
-    public override void Migrate(JObject settings)
+    protected override void InternalMigrate(JObject settings)
     {
-        if (settings.TryGetObject(out var outputTargetSettings, "OutputTarget"))
-            MigrateFileOutputSettings(outputTargetSettings);
-
-        base.Migrate(settings);
-    }
-
-    private void MigrateFileOutputSettings(JObject settings)
-    {
-        Logger.Info("Migrating FileOutputTarget");
-
-        foreach (var output in settings.SelectTokens("$.Items[?(@.$type =~ /.*FileOutputTargetViewModel.*/)]").OfType<JObject>())
+        foreach (var output in SelectObjects(settings, "$.OutputTarget.Items[?(@.$type =~ /.*FileOutputTargetViewModel.*/i)]"))
         {
-            if (!output.ContainsKey("EnabledAxes") || !output.ContainsKey("AxisSettings"))
-                continue;
+            if (!TryGetValue<JArray>(output, "EnabledAxes", out var enabledAxes)
+             || !TryGetValue<JObject>(output, "AxisSettings", out var axisSettings))
+             continue;
 
-            if (output["EnabledAxes"] is not JArray enabledAxesToken
-             || output["AxisSettings"] is not JObject axisSettingsToken)
-                continue;
+            var enabledAxesValues = enabledAxes.ToObject<List<string>>() ?? [];
+            foreach (var property in axisSettings.Properties())
+                SetPropertyByName(property.Value as JObject, "Enabled", enabledAxesValues.Contains(property.Name), addIfMissing: true);
 
-            var enabledAxes = enabledAxesToken.ToObject<List<string>>();
-            if (enabledAxes == null || enabledAxes.Count == 0)
-                continue;
-
-            foreach (var (axisName, settingsToken) in axisSettingsToken)
-            {
-                var enabled = enabledAxes.Contains(axisName);
-                (settingsToken as JObject)["Enabled"] = enabled;
-                Logger.Info($"Set \"{axisName}\" axis settings as \"Enabled={enabled}\"");
-            }
-
-            output.Remove("EnabledAxes");
-            Logger.Info("Removed \"EnabledAxes\" property");
+            RemovePropertyByName(output, "EnabledAxes");
         }
     }
 }

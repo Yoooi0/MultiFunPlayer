@@ -149,46 +149,50 @@
     <material:DialogHost DialogTheme="Inherit"
                          Identifier="RootDialog"
                          UseLayoutRounding="True">
-        <ScrollViewer Focusable="False"
-                      HorizontalScrollBarVisibility="Disabled"
-                      VerticalScrollBarVisibility="Auto">
-            <ScrollViewer.Style>
-                <Style BasedOn="{StaticResource WindowScrollViewer}" TargetType="{x:Type ScrollViewer}">
-                    <Setter Property="Content">
-                        <Setter.Value>
-                            <StackPanel Margin="10" Orientation="Vertical">
-                                <ContentControl s:View.Model="{Binding MediaSource}"/>
-                                <ContentControl s:View.Model="{Binding Script}"/>
-                                <ContentControl s:View.Model="{Binding OutputTarget}"/>
-                            </StackPanel>
-                        </Setter.Value>
-                    </Setter>
-                    <Style.Triggers>
-                        <DataTrigger Binding="{Binding DataContext.Settings.General.AppOrientation, RelativeSource={RelativeSource AncestorType={x:Type controls:MaterialWindow}}}" Value="Horizontal">
-                            <Setter Property="Content">
-                                <Setter.Value>
-                                    <Grid>
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="600"/>
-                                            <ColumnDefinition Width="600"/>
-                                        </Grid.ColumnDefinitions>
+        <Grid>
+            <ScrollViewer Focusable="False"
+                          HorizontalScrollBarVisibility="Disabled"
+                          VerticalScrollBarVisibility="Auto">
+                <ScrollViewer.Style>
+                    <Style BasedOn="{StaticResource WindowScrollViewer}" TargetType="{x:Type ScrollViewer}">
+                        <Setter Property="Content">
+                            <Setter.Value>
+                                <StackPanel Margin="10" Orientation="Vertical">
+                                    <ContentControl s:View.Model="{Binding MediaSource}"/>
+                                    <ContentControl s:View.Model="{Binding Script}"/>
+                                    <ContentControl s:View.Model="{Binding OutputTarget}"/>
+                                </StackPanel>
+                            </Setter.Value>
+                        </Setter>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding DataContext.Settings.General.AppOrientation, RelativeSource={RelativeSource AncestorType={x:Type controls:MaterialWindow}}}" Value="Horizontal">
+                                <Setter Property="Content">
+                                    <Setter.Value>
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="600"/>
+                                                <ColumnDefinition Width="600"/>
+                                            </Grid.ColumnDefinitions>
 
-                                        <StackPanel Grid.Column="0"
-                                                    Margin="10"
-                                                    Orientation="Vertical">
-                                            <ContentControl s:View.Model="{Binding MediaSource}"/>
-                                            <ContentControl s:View.Model="{Binding OutputTarget}"/>
-                                        </StackPanel>
-                                        <ContentControl s:View.Model="{Binding Script}"
-                                                        Grid.Column="1"
-                                                        Margin="10"/>
-                                    </Grid>
-                                </Setter.Value>
-                            </Setter>
-                        </DataTrigger>
-                    </Style.Triggers>
-                </Style>
-            </ScrollViewer.Style>
-        </ScrollViewer>
+                                            <StackPanel Grid.Column="0"
+                                                        Margin="10"
+                                                        Orientation="Vertical">
+                                                <ContentControl s:View.Model="{Binding MediaSource}"/>
+                                                <ContentControl s:View.Model="{Binding OutputTarget}"/>
+                                            </StackPanel>
+                                            <ContentControl s:View.Model="{Binding Script}"
+                                                            Grid.Column="1"
+                                                            Margin="10"/>
+                                        </Grid>
+                                    </Setter.Value>
+                                </Setter>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </ScrollViewer.Style>
+            </ScrollViewer>
+
+            <material:Snackbar MessageQueue="{Binding SnackbarMessageQueue}"/>
+        </Grid>
     </material:DialogHost>
 </controls:MaterialWindow>

@@ -1,4 +1,4 @@
-using Microsoft.CodeAnalysis;
+﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Emit;
@@ -100,12 +100,7 @@ internal static class PluginCompiler
             SingleWriter = false
         });
 
-        _compileTask ??= Task.Factory.StartNew(DoCompile,
-            default,
-            TaskCreationOptions.LongRunning,
-            TaskScheduler.Default)
-            .Unwrap();
-
+        _compileTask ??= Task.Run(DoCompile);
         _compileQueue.Writer.TryWrite(() =>
         {
             Logger.Debug("Compiling plugin [File: {0}]", pluginFile.FullName);
@@ -182,9 +177,9 @@ internal static class PluginCompiler
                                           .ToList();
 
             if (pluginClasses.Count == 0)
-                return PluginCompilationResult.FromFailure(new Exception("Unable to find base Plugin class"));
+                return PluginCompilationResult.FromFailure(new PluginCompileException("Unable to find base Plugin class"));
             if (pluginClasses.Count > 1)
-                return PluginCompilationResult.FromFailure(new Exception("Found more than one base Plugin class"));
+                return PluginCompilationResult.FromFailure(new PluginCompileException("Found more than one base Plugin class"));
 
             var assemblyName = $"Plugin_{Path.GetFileNameWithoutExtension(pluginFile.Name)}";
             var encoded = CSharpSyntaxTree.Create(
@@ -203,7 +198,7 @@ internal static class PluginCompiler
 
             var compilation = CSharpCompilation.Create(
                 assemblyName,
-                syntaxTrees: new[] { encoded },
+                syntaxTrees: [encoded],
                 references: references,
                 options: compilationOptions
             );

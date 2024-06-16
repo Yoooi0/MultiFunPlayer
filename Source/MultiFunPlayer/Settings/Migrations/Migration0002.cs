@@ -1,41 +1,19 @@
-﻿using MultiFunPlayer.Common;
-using Newtonsoft.Json.Linq;
+﻿using Newtonsoft.Json.Linq;
 using NLog;
 
 namespace MultiFunPlayer.Settings.Migrations;
 
-internal sealed class Migration0002 : AbstractConfigMigration
+internal sealed class Migration0002 : AbstractSettingsMigration
 {
-    private readonly Logger Logger = LogManager.GetCurrentClassLogger();
+    protected override Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
-    public override void Migrate(JObject settings)
+    protected override void InternalMigrate(JObject settings)
     {
-        if (settings.TryGetObject(out var logBlacklistSettings, "LogBlacklist"))
-            MigrateLogBlacklist(logBlacklistSettings);
-
-        base.Migrate(settings);
-    }
-
-    private void MigrateLogBlacklist(JObject settings)
-    {
-        Logger.Info("Migrating LogBlacklist");
-        var filterMap = new Dictionary<string, string>()
+        RenamePropertiesByPaths(settings, new Dictionary<string, string>()
         {
-            ["MultiFunPlayer.Common.Input.RawInput.*"] = "MultiFunPlayer.Input.RawInput.*",
-            ["MultiFunPlayer.Common.Input.XInput.*"] = "MultiFunPlayer.Input.XInput.*",
-            ["MultiFunPlayer.ViewModels.ShortcutViewModel"] = "MultiFunPlayer.UI.Controls.ViewModels.ShortcutViewModel"
-        };
-
-        foreach (var (from, to) in filterMap)
-        {
-            if (!settings.ContainsKey(from))
-                continue;
-
-            var value = settings[from];
-            settings.Remove(from);
-            settings.Add(to, value);
-
-            Logger.Info("Migrated from \"{0}\" to \"{1}\"", from, to);
-        }
+            ["$.LogBlacklist.['MultiFunPlayer.Common.Input.RawInput.*']"] = "MultiFunPlayer.Input.RawInput.*",
+            ["$.LogBlacklist.['MultiFunPlayer.Common.Input.XInput.*']"] = "MultiFunPlayer.Input.XInput.*",
+            ["$.LogBlacklist.['MultiFunPlayer.ViewModels.ShortcutViewModel']"] = "MultiFunPlayer.UI.Controls.ViewModels.ShortcutViewModel"
+        }, selectMultiple: false);
     }
 }

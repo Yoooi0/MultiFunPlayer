@@ -1,31 +1,17 @@
-﻿using MultiFunPlayer.Common;
-using Newtonsoft.Json.Linq;
+﻿using Newtonsoft.Json.Linq;
 using NLog;
 
 namespace MultiFunPlayer.Settings.Migrations;
 
-internal sealed class Migration0023 : AbstractConfigMigration
+internal sealed class Migration0023 : AbstractSettingsMigration
 {
-    private readonly Logger Logger = LogManager.GetCurrentClassLogger();
+    protected override Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
-    public override void Migrate(JObject settings)
+    protected override void InternalMigrate(JObject settings)
     {
-        if (settings.TryGetObject(out var scriptSettings, "Script"))
-            MigrateLocalRepository(scriptSettings);
-
-        base.Migrate(settings);
-    }
-
-    private void MigrateLocalRepository(JObject settings)
-    {
-        Logger.Info("Migrating local script repository Enabled property");
-        if (!settings.TryGetObject(out var localRepository, "Repositories", "Local"))
+        if (!TrySelectObject(settings, "$.Script.Repositories.Local", out var localRepository))
             return;
 
-        if (!localRepository.ContainsKey("Enabled"))
-            return;
-
-        localRepository["Enabled"] = true;
-        Logger.Info("Forced local script repository Enabled property to \"true\"");
+        SetPropertyByName(localRepository, "Enabled", true, addIfMissing: true);
     }
 }

@@ -128,7 +128,7 @@ public sealed class NonReloadingTabControl : TabControl
             CreateChildContentPresenter(item);
 
         foreach (ContentPresenter child in _itemsHolderPanel.Children)
-            child.Visibility = (child.Tag as TabItem).IsSelected ? Visibility.Visible : Visibility.Collapsed;
+            child.Visibility = ((TabItem)child.Tag).IsSelected ? Visibility.Visible : Visibility.Collapsed;
     }
 
     private ContentPresenter CreateChildContentPresenter(object item)
@@ -157,8 +157,8 @@ public sealed class NonReloadingTabControl : TabControl
 
     private ContentPresenter FindChildContentPresenter(object data)
     {
-        if (data is TabItem)
-            data = (data as TabItem).Content;
+        if (data is TabItem item)
+            data = item.Content;
 
         if (data == null)
             return null;

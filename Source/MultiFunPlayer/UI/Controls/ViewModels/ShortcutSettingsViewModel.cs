@@ -1,8 +1,5 @@
-using MultiFunPlayer.Common;
+﻿using MultiFunPlayer.Common;
 using MultiFunPlayer.Input;
-using MultiFunPlayer.Input.RawInput;
-using MultiFunPlayer.Input.TCode;
-using MultiFunPlayer.Input.XInput;
 using MultiFunPlayer.Shortcut;
 using MultiFunPlayer.UI.Dialogs.ViewModels;
 using Newtonsoft.Json;
@@ -18,12 +15,12 @@ using System.Windows.Data;
 namespace MultiFunPlayer.UI.Controls.ViewModels;
 
 [JsonObject(MemberSerialization = MemberSerialization.OptIn)]
-internal sealed class ShortcutSettingsViewModel : Screen, IHandle<SettingsMessage>, IDisposable
+internal sealed class ShortcutSettingsViewModel : Screen, IHandle<SettingsMessage>, IHandle<IInputGesture>
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-    private readonly IInputProcessorManager _inputManager;
     private readonly IShortcutManager _shortcutManager;
+    private readonly IShortcutFactory _shortcutFactory;
     private readonly Channel<IInputGesture> _gestureChannel;
 
     public string ActionsFilter { get; set; }
@@ -41,28 +38,18 @@ internal sealed class ShortcutSettingsViewModel : Screen, IHandle<SettingsMessag
     public IReadOnlyCollection<Type> ShortcutTypes { get; }
     public Type SelectedShortcutType { get; set; }
 
-    [JsonProperty] public bool IsKeyboardKeysGestureEnabled { get; set; } = true;
-    [JsonProperty] public bool IsMouseAxisGestureEnabled { get; set; } = true;
-    [JsonProperty] public bool IsMouseButtonGestureEnabled { get; set; } = true;
-    [JsonProperty] public bool IsGamepadAxisGestureEnabled { get; set; } = true;
-    [JsonProperty] public bool IsGamepadButtonGestureEnabled { get; set; } = true;
-    [JsonProperty] public bool IsTCodeButtonGestureEnabled { get; set; } = true;
-    [JsonProperty] public bool IsTCodeAxisGestureEnabled { get; set; } = true;
-
-    public ShortcutSettingsViewModel(IInputProcessorManager inputManager, IShortcutManager shortcutManager, IEventAggregator eventAggregator)
+    public ShortcutSettingsViewModel(IShortcutManager shortcutManager, IShortcutFactory shortcutFactory, IEventAggregator eventAggregator)
     {
         DisplayName = "Shortcut";
-        _inputManager = inputManager;
         _shortcutManager = shortcutManager;
+        _shortcutFactory = shortcutFactory;
 
         Logger.Debug($"Initialized with {shortcutManager.AvailableActions.Count} available actions");
 
-        eventAggregator.Subscribe(this);
+        eventAggregator.Subscribe(this, [EventAggregator.DefaultChannel, IInputProcessor.EventAggregatorChannelName]);
 
         CapturedGestures = [];
-        ShortcutTypes = ReflectionUtils.FindImplementations<IShortcut>()
-                                       .OrderBy(x => x.GetCustomAttribute<DisplayNameAttribute>().DisplayName)
-                                       .ToList();
+        ShortcutTypes = [.. ReflectionUtils.FindImplementations<IShortcut>().OrderBy(x => x.GetCustomAttribute<DisplayNameAttribute>().DisplayName)];
 
         AvailableActionsView = CollectionViewSource.GetDefaultView(AvailableActions);
         AvailableActionsView.Filter = o =>
@@ -85,7 +72,6 @@ internal sealed class ShortcutSettingsViewModel : Screen, IHandle<SettingsMessag
             return true;
         };
 
-        _inputManager.OnGesture += HandleGesture;
         _gestureChannel = Channel.CreateUnbounded<IInputGesture>(new UnboundedChannelOptions()
         {
             SingleReader = true,
@@ -94,7 +80,7 @@ internal sealed class ShortcutSettingsViewModel : Screen, IHandle<SettingsMessag
 
         PropertyChanged += (s, e) =>
         {
-            if (e.PropertyName == nameof(ActionsFilter) || e.PropertyName == nameof(SelectedShortcut))
+            if (e.PropertyName is nameof(ActionsFilter) or nameof(SelectedShortcut))
                 AvailableActionsView.Refresh();
         };
 
@@ -104,24 +90,10 @@ internal sealed class ShortcutSettingsViewModel : Screen, IHandle<SettingsMessag
     protected override void OnActivate() => _shortcutManager.HandleGestures = false;
     protected override void OnDeactivate() => _shortcutManager.HandleGestures = true;
 
-    private void HandleGesture(object sender, IInputGesture gesture)
+    public void Handle(IInputGesture gesture)
     {
-        if (!IsCapturingGestures)
-            return;
-
-        switch (gesture)
-        {
-            case KeyboardGesture when !IsKeyboardKeysGestureEnabled:
-            case MouseAxisGesture when !IsMouseAxisGestureEnabled:
-            case MouseButtonGesture when !IsMouseButtonGestureEnabled:
-            case GamepadAxisGesture when !IsGamepadAxisGestureEnabled:
-            case GamepadButtonGesture when !IsGamepadButtonGestureEnabled:
-            case TCodeButtonGesture when !IsTCodeButtonGestureEnabled:
-            case TCodeAxisGesture when !IsTCodeAxisGestureEnabled:
-                return;
-        }
-
-        _gestureChannel.Writer.TryWrite(gesture);
+        if (IsCapturingGestures)
+            _gestureChannel.Writer.TryWrite(gesture);
     }
 
     public async void CaptureGestures(object sender, RoutedEventArgs e)
@@ -132,13 +104,7 @@ internal sealed class ShortcutSettingsViewModel : Screen, IHandle<SettingsMessag
         if (SelectedShortcutType == null)
             return;
 
-        if (!IsKeyboardKeysGestureEnabled && !IsMouseAxisGestureEnabled
-        && !IsMouseButtonGestureEnabled && !IsGamepadAxisGestureEnabled
-        && !IsGamepadButtonGestureEnabled && !IsTCodeButtonGestureEnabled
-        && !IsTCodeAxisGestureEnabled)
-            return;
-
-        using var captureCancellationSource = new CancellationTokenSource(2000);
+        using var captureCancellationSource = new CancellationTokenSource(5000);
         var token = captureCancellationSource.Token;
 
         while (_gestureChannel.Reader.TryRead(out var _)) ;
@@ -153,7 +119,10 @@ internal sealed class ShortcutSettingsViewModel : Screen, IHandle<SettingsMessag
                 _ = await _gestureChannel.Reader.WaitToReadAsync(token);
                 var gesture = await _gestureChannel.Reader.ReadAsync(token);
                 if (IShortcut.AcceptsGesture(SelectedShortcutType, gesture) && !CapturedGestures.Contains(gesture.Descriptor))
+                {
                     CapturedGestures.Add(gesture.Descriptor);
+                    captureCancellationSource.CancelAfter(5000);
+                }
             } while (!token.IsCancellationRequested);
         }
         catch (OperationCanceledException) { }
@@ -168,7 +137,7 @@ internal sealed class ShortcutSettingsViewModel : Screen, IHandle<SettingsMessag
         if (SelectedCapturedGesture == null)
             return;
 
-        var shortcut = (IShortcut)Activator.CreateInstance(SelectedShortcutType, [_shortcutManager,  SelectedCapturedGesture]);
+        var shortcut = _shortcutFactory.CreateShortcut(SelectedShortcutType, SelectedCapturedGesture);
         SelectedShortcut = _shortcutManager.AddShortcut(shortcut);
     }
 
@@ -255,25 +224,12 @@ internal sealed class ShortcutSettingsViewModel : Screen, IHandle<SettingsMessag
              || !message.Settings.TryGetObject(out var settings, "Shortcut"))
                 return;
 
-            settings.Merge(JObject.FromObject(this), new JsonMergeSettings() { MergeArrayHandling = MergeArrayHandling.Replace });
+            settings.MergeAll(JObject.FromObject(this));
         }
         else if (message.Action == SettingsAction.Loading)
         {
             if (!message.Settings.TryGetObject(out var settings, "Shortcut"))
                 return;
-
-            if (settings.TryGetValue<bool>(nameof(IsKeyboardKeysGestureEnabled), out var isKeyboardKeysGestureEnabled))
-                IsKeyboardKeysGestureEnabled = isKeyboardKeysGestureEnabled;
-            if (settings.TryGetValue<bool>(nameof(IsMouseAxisGestureEnabled), out var isMouseAxisGestureEnabled))
-                IsMouseAxisGestureEnabled = isMouseAxisGestureEnabled;
-            if (settings.TryGetValue<bool>(nameof(IsMouseButtonGestureEnabled), out var isMouseButtonGestureEnabled))
-                IsMouseButtonGestureEnabled = isMouseButtonGestureEnabled;
-            if (settings.TryGetValue<bool>(nameof(IsGamepadAxisGestureEnabled), out var isGamepadAxisGestureEnabled))
-                IsGamepadAxisGestureEnabled = isGamepadAxisGestureEnabled;
-            if (settings.TryGetValue<bool>(nameof(IsGamepadButtonGestureEnabled), out var isGamepadButtonGestureEnabled))
-                IsGamepadButtonGestureEnabled = isGamepadButtonGestureEnabled;
-            if (settings.TryGetValue<bool>(nameof(IsTCodeButtonGestureEnabled), out var isTCodeButtonGestureEnabled))
-                IsTCodeButtonGestureEnabled = isTCodeButtonGestureEnabled;
 
             if (settings.TryGetValue<List<IShortcut>>(nameof(Shortcuts), new JsonSerializerSettings() { TypeNameHandling = TypeNameHandling.Objects }, out var shortcuts))
             {
@@ -304,16 +260,5 @@ internal sealed class ShortcutSettingsViewModel : Screen, IHandle<SettingsMessag
             s => s.WithLabel("Target shortcut name"),
             shortcutName => UpdateSettings(shortcutName, s => s.Enabled = !s.Enabled));
         #endregion
-    }
-
-    private void Dispose(bool disposing)
-    {
-        _inputManager.OnGesture -= HandleGesture;
-    }
-
-    public void Dispose()
-    {
-        Dispose(disposing: true);
-        GC.SuppressFinalize(this);
     }
 }

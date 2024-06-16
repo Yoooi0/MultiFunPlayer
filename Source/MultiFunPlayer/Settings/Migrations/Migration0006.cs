@@ -1,89 +1,35 @@
-﻿using MultiFunPlayer.Common;
-using Newtonsoft.Json.Linq;
+﻿using Newtonsoft.Json.Linq;
 using NLog;
 
 namespace MultiFunPlayer.Settings.Migrations;
 
-internal sealed class Migration0006 : AbstractConfigMigration
+internal sealed class Migration0006 : AbstractSettingsMigration
 {
-    private readonly Logger Logger = LogManager.GetCurrentClassLogger();
+    protected override Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
-    public override void Migrate(JObject settings)
+    protected override void InternalMigrate(JObject settings)
     {
-        if (settings.TryGetObject(out var axisSettings, "Script", "AxisSettings"))
-            MigrateSmartLimitSettings(axisSettings);
+        foreach (var action in SelectObjects(settings, "$.Shortcuts.Bindings[*].Actions[?(@.Descriptor =~ /Axis::SmartLimitEnabled::Set.*/i)]"))
+        {
+            SetPropertyByName(action, "Descriptor", "Axis::SmartLimitInputAxis::Set");
 
-        if (settings.TryGetObject(out var shortcutSettings, "Shortcuts"))
-            MigrateSmartLimitActions(shortcutSettings);
+            EditPropertiesByPaths(action, new Dictionary<string, Func<JToken, JToken>>()
+            {
+                ["$.Settings[1].$type"] = _ => "MultiFunPlayer.Common.DeviceAxis, MultiFunPlayer",
+                ["$.Settings[1].Value"] = v => v.ToObject<bool>() ? "L0" : null
+            }, selectMultiple: false);
+        }
 
-        base.Migrate(settings);
-    }
-
-    private void MigrateSmartLimitSettings(JObject settings)
-    {
-        Logger.Info("Migrating Smart Limit Settings");
+        foreach (var action in SelectObjects(settings, "$.Shortcuts.Bindings[*].Actions[?(@.Descriptor =~ /Axis::SmartLimitEnabled::Toggle.*/i)]"))
+            RemoveToken(action);
 
         var defaultPoints = new string[] { "25,100", "90,0" };
-        foreach (var (axis, child) in settings)
+        foreach (var axisSettings in SelectObjects(settings, "$.Script.AxisSettings.*"))
         {
-            if (child is not JObject axisSettings)
-                continue;
+            SetPropertyByName(axisSettings, "SmartLimitPoints", JArray.FromObject(defaultPoints), addIfMissing: true);
 
-            if (axisSettings.ContainsKey("SmartLimitEnabled"))
-            {
-                var oldValue = axisSettings["SmartLimitEnabled"].ToObject<bool>();
-                var newValue = oldValue ? "L0" : null;
-
-                if (!axisSettings.ContainsKey("SmartLimitInputAxis"))
-                    axisSettings.Add("SmartLimitInputAxis", newValue);
-
-                axisSettings.Remove("SmartLimitEnabled");
-                Logger.Info("Migrated {0} setting from \"SmartLimitEnabled={1}\" to \"SmartLimitInputAxis={1}\"", axis, oldValue, newValue);
-            }
-
-            if (!axisSettings.ContainsKey("SmartLimitPoints"))
-            {
-                axisSettings.Add("SmartLimitPoints", JArray.FromObject(defaultPoints));
-                Logger.Info("Added \"SmartLimitPoints\" to {0} settings", axis);
-            }
-        }
-    }
-
-    private void MigrateSmartLimitActions(JObject settings)
-    {
-        Logger.Info("Migrating Smart Limit Actions");
-        foreach (var action in settings.SelectTokens("$.Bindings[*].Actions[?(@.Descriptor =~ /Axis::SmartLimitEnabled::Set.*/i)]").OfType<JObject>())
-        {
-            const string newDescriptor = "Axis::SmartLimitInputAxis::Set";
-            var oldDescriptor = action["Descriptor"].ToString();
-
-            action["Descriptor"] = newDescriptor;
-            Logger.Info("Migrated action descriptor from \"{0}\" to \"{1}\"", oldDescriptor, newDescriptor);
-
-            if (action.ContainsKey("Settings"))
-            {
-                var axisSettings = action["Settings"] as JArray;
-                var oldSetting = axisSettings[1] as JObject;
-                var oldValue = oldSetting["Value"].ToObject<bool>();
-                var newValue = oldValue ? "L0" : null;
-
-                var newSetting = new JObject();
-                newSetting.AddTypeProperty(typeof(DeviceAxis));
-                newSetting["Value"] = oldValue ? "L0" : null;
-
-                axisSettings.RemoveAt(1);
-                axisSettings.Add(newSetting);
-
-                Logger.Info("Migrated action setting from \"{0}\" to \"{1}\"", oldValue, newValue);
-            }
-        }
-
-        foreach (var action in settings.SelectTokens("$.Bindings[*].Actions[?(@.Descriptor =~ /Axis::SmartLimitEnabled::Toggle.*/i)]").ToList())
-        {
-            var parent = action.Parent as JArray;
-            parent.Remove(action);
-
-            Logger.Info("Removed \"Axis::SmartLimitEnabled::Toggle\" action");
+            if (RemovePropertyByName(axisSettings, "SmartLimitEnabled", out var property))
+                AddPropertyByName(axisSettings, "SmartLimitInputAxis", property.Value.ToObject<bool>() ? "L0" : null);
         }
     }
 }
