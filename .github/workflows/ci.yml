@@ -57,9 +57,9 @@ jobs:
       with:
           fetch-depth: 0
     - name: Setup GitHub Pages
-      uses: actions/configure-pages@v3
+      uses: actions/configure-pages@v5
     - name: Setup node
-      uses: actions/setup-node@v3
+      uses: actions/setup-node@v4
       with:
         node-version: 21
         cache: npm
@@ -71,12 +71,12 @@ jobs:
       run: npm run build
       working-directory: ./Docs
     - name: Upload GitHub Pages artifact
-      uses: actions/upload-pages-artifact@v1
+      uses: actions/upload-pages-artifact@v3
       with:
         path: ./Docs/build
     - name: Deploy to GitHub Pages
       id: deployment
-      uses: actions/deploy-pages@v2
+      uses: actions/deploy-pages@v4
   
   build:
     runs-on: windows-latest
@@ -95,12 +95,12 @@ jobs:
       with:
         dotnet-version: '8.0.x'
     - name: Setup GitVersion
-      uses: gittools/actions/gitversion/setup@v0.11
+      uses: gittools/actions/gitversion/setup@v1.1.1
       with:
         versionSpec: '5.x'
     - name: Determine version
       id:   gitversion
-      uses: gittools/actions/gitversion/execute@v0.11
+      uses: gittools/actions/gitversion/execute@v1.1.1
     - name: Install dependencies
       run: dotnet restore
     - name: Test ${{ matrix.build_type }}
