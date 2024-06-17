@@ -6,8 +6,6 @@ namespace MultiFunPlayer.Settings.Migrations;
 
 internal sealed class Migration0007 : AbstractSettingsMigration
 {
-    protected override Logger Logger { get; } = LogManager.GetCurrentClassLogger();
-
     protected override void InternalMigrate(JObject settings)
     {
         RenamePropertiesByPaths(settings, new Dictionary<string, string>()

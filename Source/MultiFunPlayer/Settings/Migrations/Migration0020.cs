@@ -5,8 +5,6 @@ namespace MultiFunPlayer.Settings.Migrations;
 
 internal sealed class Migration0020 : AbstractSettingsMigration
 {
-    protected override Logger Logger { get; } = LogManager.GetCurrentClassLogger();
-
     protected override void InternalMigrate(JObject settings)
     {
         ModifyPropertiesByPath(settings, "$.Shortcuts.Bindings[?(@.Gesture.$type =~ /.*GamepadButtonGestureDescriptor.*/i)].Gesture.Button", property =>

@@ -6,8 +6,6 @@ namespace MultiFunPlayer.Settings.Migrations;
 
 internal sealed class Migration0005 : AbstractSettingsMigration
 {
-    protected override Logger Logger { get; } = LogManager.GetCurrentClassLogger();
-
     protected override void InternalMigrate(JObject settings)
     {
         EditPropertiesByPath(settings, "$.Script.VideoPathModifiers[*].$type",

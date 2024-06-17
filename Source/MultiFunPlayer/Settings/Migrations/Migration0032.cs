@@ -6,8 +6,6 @@ namespace MultiFunPlayer.Settings.Migrations;
 
 internal sealed class Migration0032 : AbstractSettingsMigration
 {
-    protected override Logger Logger { get; } = LogManager.GetCurrentClassLogger();
-
     protected override void InternalMigrate(JObject settings)
     {
         if (!TryGetValue<JValue>(settings, "SelectedDevice", out var selectedDeviceName)
