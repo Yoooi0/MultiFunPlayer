@@ -15,11 +15,7 @@ internal sealed class Migration0030 : AbstractSettingsMigration
             if (funscriptNames.Contains("raw"))
                 return v;
 
-            var unnamedIndex = funscriptNames.IndexOf("*");
-            if (unnamedIndex < 0)
-                return v;
-
-            funscriptNames.Insert(unnamedIndex, "raw");
+            funscriptNames.Add("raw");
             return JArray.FromObject(funscriptNames);
         });
     }
