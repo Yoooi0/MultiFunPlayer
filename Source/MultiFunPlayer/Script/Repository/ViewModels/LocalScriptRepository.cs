@@ -15,12 +15,19 @@ namespace MultiFunPlayer.Script.Repository.ViewModels;
 
 [DisplayName("Local")]
 [JsonObject(MemberSerialization.OptIn)]
-internal sealed class LocalScriptRepository(IEventAggregator eventAggregator) : AbstractScriptRepository, ILocalScriptRepository
+internal sealed class LocalScriptRepository : AbstractScriptRepository, ILocalScriptRepository
 {
+    private readonly IEventAggregator _eventAggregator;
+
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
     [JsonProperty] public ObservableConcurrentCollection<ScriptLibrary> ScriptLibraries { get; } = [];
-    [JsonProperty] public new bool Enabled { get; set; } = true;
+
+    public LocalScriptRepository(IEventAggregator eventAggregator)
+    {
+        _eventAggregator = eventAggregator;
+        Enabled = true;
+    }
 
     public override ValueTask<Dictionary<DeviceAxis, IScriptResource>> SearchForScriptsAsync(
         MediaResourceInfo mediaResource, IEnumerable<DeviceAxis> axes, ILocalScriptRepository localRepository, CancellationToken token)
@@ -127,7 +134,7 @@ internal sealed class LocalScriptRepository(IEventAggregator eventAggregator) : 
         var directory = new DirectoryInfo(dialog.FolderName);
         ScriptLibraries.Add(new ScriptLibrary(directory));
 
-        eventAggregator.Publish(new ReloadScriptsRequestMessage());
+        _eventAggregator.Publish(new ReloadScriptsRequestMessage());
     }
 
     public void OnLibraryDelete(object sender, RoutedEventArgs e)
@@ -137,7 +144,7 @@ internal sealed class LocalScriptRepository(IEventAggregator eventAggregator) : 
 
         ScriptLibraries.Remove(library);
 
-        eventAggregator.Publish(new ReloadScriptsRequestMessage());
+        _eventAggregator.Publish(new ReloadScriptsRequestMessage());
     }
 
     public void OnLibraryOpenFolder(object sender, RoutedEventArgs e)
