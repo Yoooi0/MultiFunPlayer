@@ -1354,6 +1354,12 @@ internal sealed class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDispo
                 callback(AxisSettings[axis]);
         }
 
+        void UpdateAllSettings(Action<AxisSettings> callback)
+        {
+            foreach(var axis in DeviceAxis.All)
+                UpdateSettings(axis, callback);
+        }
+
         #region Media::PlayPause
         s.RegisterAction<bool>("Media::PlayPause::Set",
             s => s.WithLabel("Play"), play =>
@@ -1575,6 +1581,12 @@ internal sealed class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDispo
 
         s.RegisterAction<DeviceAxis>("Axis::Lock::Toggle",
             s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All), axis => UpdateSettings(axis, s => s.LockScript = !s.LockScript));
+
+        s.RegisterAction<bool>("Axis::LockAll::Set",
+            s => s.WithLabel("Lock axes"),
+            enabled => UpdateAllSettings(s => s.LockScript = enabled));
+
+        s.RegisterAction("Axis::LockAll::Toggle", () => UpdateAllSettings(s => s.LockScript = !s.LockScript));
         #endregion
 
         #region Axis::Bypass::All
