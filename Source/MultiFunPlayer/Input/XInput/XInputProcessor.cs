@@ -1,4 +1,4 @@
-using MultiFunPlayer.Common;
+﻿using MultiFunPlayer.Common;
 using Newtonsoft.Json;
 using NLog;
 using Stylet;
@@ -106,12 +106,13 @@ internal sealed class XInputProcessor : AbstractInputProcessor
         {
             if (current == last)
                 return;
-            if (Math.Abs(current) < deadZone && Math.Abs(last) < deadZone)
-                return;
 
             var currentValue = UnLerpShort(current, deadZone);
             var lastValue = UnLerpShort(last, deadZone);
             var delta = Math.Clamp(currentValue - lastValue, -1, 1);
+            if (delta == 0)
+                return;
+
             PublishGesture(GamepadAxisGesture.Create(userIndex, axis, currentValue, delta, elapsed));
 
             static double UnLerpShort(short value, double deadZone) => 0.5 + value switch
