@@ -6,8 +6,6 @@ namespace MultiFunPlayer.Settings.Migrations;
 
 internal sealed class Migration0011 : AbstractSettingsMigration
 {
-    protected override Logger Logger { get; } = LogManager.GetCurrentClassLogger();
-
     protected override void InternalMigrate(JObject settings)
     {
         var prefixMap = new Dictionary<string, string>();

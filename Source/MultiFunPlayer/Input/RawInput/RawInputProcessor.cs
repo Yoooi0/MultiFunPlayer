@@ -1,6 +1,7 @@
 ﻿using Linearstar.Windows.RawInput;
 using Linearstar.Windows.RawInput.Native;
 using MultiFunPlayer.Common;
+using Newtonsoft.Json;
 using NLog;
 using Stylet;
 using System.ComponentModel;
@@ -14,11 +15,11 @@ namespace MultiFunPlayer.Input.RawInput;
 [DisplayName("RawInput")]
 internal sealed class RawInputProcessorSettings : AbstractInputProcessorSettings
 {
-    public int VirtualMouseWidth { get; set; } = 500;
-    public int VirtualMouseHeight { get; set; } = 500;
-    public int VirtualWheelWidth { get; set; } = 10;
-    public int VirtualWheelHeight { get; set; } = 20;
-    public int MaximumMouseAxisUpdateRate { get; set; } = 125;
+    [JsonProperty] public int VirtualMouseWidth { get; set; } = 500;
+    [JsonProperty] public int VirtualMouseHeight { get; set; } = 500;
+    [JsonProperty] public int VirtualWheelWidth { get; set; } = 10;
+    [JsonProperty] public int VirtualWheelHeight { get; set; } = 20;
+    [JsonProperty] public int MaximumMouseAxisUpdateRate { get; set; } = 125;
 }
 
 internal sealed class RawInputProcessor : AbstractInputProcessor, IHandle<WindowCreatedMessage>

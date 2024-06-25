@@ -5,8 +5,6 @@ namespace MultiFunPlayer.Settings.Migrations;
 
 internal sealed class Migration0036 : AbstractSettingsMigration
 {
-    protected override Logger Logger { get; } = LogManager.GetCurrentClassLogger();
-
     protected override void InternalMigrate(JObject settings)
     {
         EditPropertiesByPaths(settings, [

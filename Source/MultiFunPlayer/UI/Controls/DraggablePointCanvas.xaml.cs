@@ -350,7 +350,7 @@ public sealed partial class DraggablePointCanvas : UserControl
         if (Points == null || Points.Count == 0 || ActualWidth == 0 || ActualHeight == 0)
             return;
 
-        if (IsTilingEnabled && Points.Count != 1)
+        if (IsTilingEnabled && Points.Count > 1)
         {
             const int minimumTilePointCount = 3;
 
@@ -382,6 +382,26 @@ public sealed partial class DraggablePointCanvas : UserControl
         if (InterpolationType == InterpolationType.Linear)
         {
             LinePoints = new PointCollection(_keyframes.Select(k => new Point(k.Position, k.Value)));
+            if (IsTilingEnabled && Points.Count > 1)
+            {
+                while (LinePoints.Count > 1 && LinePoints[0].X < 0 && LinePoints[1].X < 0)
+                    LinePoints.RemoveAt(0);
+
+                if (LinePoints.Count > 1 && LinePoints[0].X < 0 && LinePoints[1].X >= 0)
+                {
+                    var t = MathUtils.UnLerp(LinePoints[0].X, LinePoints[1].X, 0);
+                    LinePoints[0] = new Point(0, MathUtils.Lerp(LinePoints[0].Y, LinePoints[1].Y, t));
+                }
+
+                while (LinePoints.Count > 1 && LinePoints[^2].X > ActualWidth && LinePoints[^1].X > ActualWidth)
+                    LinePoints.RemoveAt(LinePoints.Count - 1);
+
+                if (LinePoints.Count > 1 && LinePoints[^2].X <= ActualWidth && LinePoints[^1].X > ActualWidth)
+                {
+                    var t = MathUtils.UnLerp(LinePoints[^2].X, LinePoints[^1].X, ActualWidth);
+                    LinePoints[^1] = new Point(ActualWidth, MathUtils.Lerp(LinePoints[^2].Y, LinePoints[^1].Y, t));
+                }
+            }
         }
         else
         {

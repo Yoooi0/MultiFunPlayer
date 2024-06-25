@@ -5,8 +5,6 @@ namespace MultiFunPlayer.Settings.Migrations;
 
 internal sealed class Migration0017 : AbstractSettingsMigration
 {
-    protected override Logger Logger { get; } = LogManager.GetCurrentClassLogger();
-
     protected override void InternalMigrate(JObject settings)
     {
         foreach (var output in SelectObjects(settings, "$.OutputTarget.Items[?(@.$type =~ /.*FileOutputTargetViewModel.*/i)]"))

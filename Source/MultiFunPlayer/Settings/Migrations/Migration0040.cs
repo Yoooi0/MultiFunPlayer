@@ -5,11 +5,9 @@ namespace MultiFunPlayer.Settings.Migrations;
 
 internal sealed class Migration0040 : AbstractSettingsMigration
 {
-    protected override Logger Logger { get; } = LogManager.GetCurrentClassLogger();
-
     protected override void InternalMigrate(JObject settings)
     {
-        EditPropertiesByPath(settings, "$.Devices[*].Axes[?(@.Name == 'L0')].FunscriptNames", v =>
+        EditPropertiesByPath(settings, "$.Devices[?(@.IsDefault == false)].Axes[?(@.Name == 'L0')].FunscriptNames", v =>
         {
             var funscriptNames = v.ToObject<List<string>>();
 

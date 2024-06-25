@@ -5,8 +5,6 @@ namespace MultiFunPlayer.Settings.Migrations;
 
 internal sealed class Migration0030 : AbstractSettingsMigration
 {
-    protected override Logger Logger { get; } = LogManager.GetCurrentClassLogger();
-
     protected override void InternalMigrate(JObject settings)
     {
         EditPropertiesByPath(settings, "$.Devices[?(@.IsDefault == false)].Axes[?(@.Name == 'L0')].FunscriptNames", v =>
@@ -15,11 +13,7 @@ internal sealed class Migration0030 : AbstractSettingsMigration
             if (funscriptNames.Contains("raw"))
                 return v;
 
-            var unnamedIndex = funscriptNames.IndexOf("*");
-            if (unnamedIndex < 0)
-                return v;
-
-            funscriptNames.Insert(unnamedIndex, "raw");
+            funscriptNames.Add("raw");
             return JArray.FromObject(funscriptNames);
         });
     }

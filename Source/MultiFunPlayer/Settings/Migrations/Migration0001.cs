@@ -8,8 +8,6 @@ namespace MultiFunPlayer.Settings.Migrations;
 
 internal sealed class Migration0001 : AbstractSettingsMigration
 {
-    protected override Logger Logger { get; } = LogManager.GetCurrentClassLogger();
-
     protected override void InternalMigrate(JObject settings)
     {
         if (TrySelectObject(settings, "$.OutputTarget.Serial", out var serial)

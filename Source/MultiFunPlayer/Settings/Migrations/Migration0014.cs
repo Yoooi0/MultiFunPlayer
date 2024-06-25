@@ -5,8 +5,6 @@ namespace MultiFunPlayer.Settings.Migrations;
 
 internal sealed class Migration0014 : AbstractSettingsMigration
 {
-    protected override Logger Logger { get; } = LogManager.GetCurrentClassLogger();
-
     protected override void InternalMigrate(JObject settings)
     {
         foreach (var deviceSettings in SelectObjects(settings, "$.OutputTarget.Items[?(@.$type =~ /.*ButtplugOutputTargetViewModel.*/)].DeviceSettings[*]"))
