@@ -122,7 +122,23 @@ internal sealed class HereSphereMediaSource(IShortcutManager shortcutManager, IE
                     var document = JObject.Parse(json);
                     Logger.Trace("Received \"{0}\" from \"{1}\"", json, Name);
 
-                    if (document.TryGetValue("path", out var pathToken) && pathToken.TryToObject<string>(out var path))
+                    if (document.TryGetValue("resource", out var resourceToken) && resourceToken.TryToObject<string>(out var resource))
+                    {
+                        if (string.IsNullOrWhiteSpace(resource))
+                            resource = null;
+
+                        if (resource != playerState.Path)
+                        {
+                            var context = default(HereSphereMediaResourceContext);
+                            if (document.TryGetValue("identifier", out var identifierToken) && identifierToken.TryToObject<string>(out var identifier))
+                                if (Uri.TryCreate(identifier, UriKind.Absolute, out var sceneUri))
+                                    context = new HereSphereMediaResourceContext(sceneUri);
+
+                            PublishMessage(new MediaPathChangedMessage(resource, Context: context));
+                            playerState.Path = resource;
+                        }
+                    }
+                    else if (document.TryGetValue("path", out var pathToken) && pathToken.TryToObject<string>(out var path))
                     {
                         if (string.IsNullOrWhiteSpace(path))
                             path = null;
@@ -259,3 +275,5 @@ internal sealed class HereSphereMediaSource(IShortcutManager shortcutManager, IE
         [JsonProperty("duration")] public double? Duration { get; set; }
     }
 }
+
+internal sealed record HereSphereMediaResourceContext(Uri SceneUri);
