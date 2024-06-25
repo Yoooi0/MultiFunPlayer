@@ -43,6 +43,8 @@ public class MediaResourceInfoTests
         ["http://in.ter.net"],
         ["http://in.ter.net/"],
         ["http://in.ter.net/subfolder/"],
+        ["file:///C:/folder/"],
+        [@"C:\folder\"],
     ];
 
     [Theory]
