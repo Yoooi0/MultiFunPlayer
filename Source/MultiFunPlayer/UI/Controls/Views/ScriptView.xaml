@@ -971,6 +971,7 @@
                                                                                     IsSnapToTickEnabled="True"
                                                                                     Maximum="1"
                                                                                     Minimum="0"
+                                                                                    SmallChange="0.01"
                                                                                     TickFrequency="0.01"
                                                                                     Value="{Binding Value.Settings.MotionProviderBlend}"/>
 
@@ -1541,6 +1542,7 @@
                                                     IsSnapToTickEnabled="True"
                                                     Maximum="4"
                                                     Minimum="0.01"
+                                                    SmallChange="0.01"
                                                     TickFrequency="0.01"
                                                     ValueChanged="{s:Action OnScriptScaleSliderValueChanged}"
                                                     Value="{Binding Value.Settings.ScriptScale}"/>
