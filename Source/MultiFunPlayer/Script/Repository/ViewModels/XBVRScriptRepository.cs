@@ -1,4 +1,4 @@
-﻿using MultiFunPlayer.Common;
+using MultiFunPlayer.Common;
 using MultiFunPlayer.MediaSource.MediaResource;
 using Newtonsoft.Json;
 using NLog;
@@ -229,16 +229,16 @@ internal enum XBVRLocalMatchType
 {
     [Description("Don't match scripts using local repository")]
     None,
-    [Description("Match scripts based on currently playing XBVR file using local repository")]
+    [Description("Match scripts based on currently playing XBVR file name using local repository")]
     MatchToCurrentFile
 }
 
 internal enum XBVRDmsMatchType
 {
-    [Description("Don't match scripts using XBVR dms")]
+    [Description("Don't match scripts using XBVR")]
     None,
-    [Description("Match scripts based on currently playing XBVR file using XBVR dms")]
+    [Description("Match scripts attached to XBVR scene based on currently playing XBVR file name")]
     MatchToCurrentFile,
-    [Description("Match only scripts selected in XBVR using XBVR dms")]
-    MatchSelectedOnly
+    [Description("Match only scripts selected in XBVR scene")]
+    MatchSelectedOnly,
 }

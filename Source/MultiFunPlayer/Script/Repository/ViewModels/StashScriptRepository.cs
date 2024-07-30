@@ -173,14 +173,14 @@ internal enum StashLocalMatchType
 {
     [Description("Don't match scripts using local repository")]
     None,
-    [Description("Match scripts based on currently playing Stash file using local repository")]
+    [Description("Match scripts based on currently playing Stash file name using local repository")]
     MatchToCurrentFile
 }
 
 internal enum StashDmsMatchType
 {
-    [Description("Don't match scripts using Stash dms")]
+    [Description("Don't match scripts using Stash")]
     None,
-    [Description("Match scene script to selected axis using Stash dms")]
+    [Description("Match Stash scene script to selected axis")]
     MatchToAxis
 }
