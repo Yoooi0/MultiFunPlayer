@@ -38,7 +38,6 @@ internal class AsyncPolledUpdateContext : AbstractPolledUpdateContext;
 [JsonObject(MemberSerialization = MemberSerialization.OptIn)]
 internal abstract class AbstractFixedUpdateContext : PropertyChangedBase, IUpdateContext
 {
-    private DoubleCollection _updateIntervalTicks;
     private double _statsTime;
     private int _statsCount;
     private int _statsJitter = int.MinValue;
@@ -49,20 +48,6 @@ internal abstract class AbstractFixedUpdateContext : PropertyChangedBase, IUpdat
     public int MaximumUpdateInterval { get; init; } = 33;
     public int AverageUpdateRate { get; private set; }
     public int UpdateRateJitter { get; private set; }
-    public DoubleCollection UpdateIntervalTicks
-    {
-        get
-        {
-            if (_updateIntervalTicks == null)
-            {
-                _updateIntervalTicks = [];
-                for (var i = MaximumUpdateInterval; i >= MinimumUpdateInterval; i--)
-                    _updateIntervalTicks.Add(i);
-            }
-
-            return _updateIntervalTicks;
-        }
-    }
 
     public void UpdateStats(double elapsed)
     {
