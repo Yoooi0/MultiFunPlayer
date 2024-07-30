@@ -1,4 +1,4 @@
-﻿using MultiFunPlayer.Common;
+using MultiFunPlayer.Common;
 using Stylet;
 using System.Diagnostics;
 using System.IO;
@@ -24,6 +24,7 @@ using MultiFunPlayer.Script;
 using MultiFunPlayer.Script.Repository;
 using MultiFunPlayer.Shortcut;
 using MultiFunPlayer.UI.Dialogs.ViewModels;
+using System.Text.RegularExpressions;
 
 namespace MultiFunPlayer.UI.Controls.ViewModels;
 
@@ -2216,6 +2217,11 @@ internal sealed class AxisSettings : PropertyChangedBase
                 SelectedMotionProvider = providerName;
 
             UpdateMotionProviderWithoutScript = true;
+        }
+        else if (Regex.IsMatch(axis.Name, @"^V\d$"))
+        {
+            AutoHomeDelay = 0;
+            AutoHomeDuration = 1;
         }
     }
 }
