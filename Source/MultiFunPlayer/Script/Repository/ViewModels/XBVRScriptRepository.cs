@@ -244,7 +244,7 @@ internal enum XBVRLocalMatchType
 internal enum XBVRDmsMatchType
 {
     [Description("Don't match scripts using XBVR")]
-    None, 
+    None,
     [Description("Match all scripts attached to XBVR scene, for each axis only use the first matched script")]
     MatchAllUseFirst,
     [Description("Match scripts attached to XBVR scene based on currently playing XBVR file name")]

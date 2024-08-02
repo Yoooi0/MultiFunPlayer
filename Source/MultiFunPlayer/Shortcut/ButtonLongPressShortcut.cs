@@ -36,7 +36,7 @@ internal sealed class ButtonLongPressShortcut(IShortcutActionRunner actionRunner
                 if (duration < MinimumHoldDuration)
                     return;
                 if (MaximumHoldDuration > MinimumHoldDuration && duration > MaximumHoldDuration)
-                return;
+                    return;
 
                 Invoke(SimpleInputGestureData.Default);
             }
