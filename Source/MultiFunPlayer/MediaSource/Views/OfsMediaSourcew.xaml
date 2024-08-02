@@ -92,6 +92,7 @@
 
                 <controls:UriBox DockPanel.Dock="Left"
                                  VerticalAlignment="Center"
+                                 CanEditPathAndQuery="False"
                                  Scheme="ws"
                                  Uri="{Binding Uri}"/>
             </DockPanel>

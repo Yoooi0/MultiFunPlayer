@@ -38,12 +38,26 @@
                                                   Visibility="{Binding AvailableSchemesList, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource NullVisibilityConverter}}"/>
 
                                         <TextBlock VerticalAlignment="Center"
+                                                   Foreground="{DynamicResource MaterialDesignBodyDisabledBrush}"
                                                    Text="{Binding Scheme, RelativeSource={RelativeSource TemplatedParent}}"
                                                    Visibility="{Binding AvailableSchemesList, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource InvertedNullVisibilityConverter}}"/>
 
                                         <TextBlock Margin="5 0 5 2"
                                                    VerticalAlignment="Center"
-                                                   Text="://"/>
+                                                   Text="://">
+                                            <TextBlock.Resources>
+                                                <Style BasedOn="{StaticResource MaterialDesignTextBlock}" TargetType="{x:Type TextBlock}">
+                                                    <Setter Property="Foreground" Value="{DynamicResource MaterialDesignBodyDisabledBrush}"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding AvailableSchemesList, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource InvertedNullableToBooleanConverter}}" Value="True">
+                                                            <DataTrigger.Setters>
+                                                                <Setter Property="Foreground" Value="{DynamicResource MaterialDesignBody}"/>
+                                                            </DataTrigger.Setters>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Resources>
+                                        </TextBlock>
 
                                         <TextBox Height="24"
                                                  MinWidth="40"
@@ -55,19 +69,35 @@
                                                  IsTabStop="True"
                                                  Text="{Binding HostOrIPAddress, RelativeSource={RelativeSource TemplatedParent}}"/>
 
-                                        <TextBlock Margin="5 0 5 2"
-                                                   VerticalAlignment="Center"
-                                                   Text=":"/>
+                                        <StackPanel Orientation="Horizontal" Visibility="{Binding ShowPort, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                            <TextBlock Margin="5 0 5 2"
+                                                       VerticalAlignment="Center"
+                                                       Text=":">
+                                                <TextBlock.Resources>
+                                                    <Style BasedOn="{StaticResource MaterialDesignTextBlock}" TargetType="{x:Type TextBlock}">
+                                                        <Setter Property="Foreground" Value="{DynamicResource MaterialDesignBodyDisabledBrush}"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding CanEditPort, RelativeSource={RelativeSource TemplatedParent}}" Value="True">
+                                                                <DataTrigger.Setters>
+                                                                    <Setter Property="Foreground" Value="{DynamicResource MaterialDesignBody}"/>
+                                                                </DataTrigger.Setters>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Resources>
+                                            </TextBlock>
 
-                                        <TextBox Height="24"
-                                                 MinWidth="20"
-                                                 VerticalAlignment="Center"
-                                                 material:HintAssist.HelperText="port"
-                                                 material:TextFieldAssist.DecorationVisibility="Collapsed"
-                                                 material:ValidationAssist.Suppress="True"
-                                                 BorderBrush="Transparent"
-                                                 IsTabStop="True"
-                                                 Text="{Binding Port, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource PortToStringConverter}}"/>
+                                            <TextBox Height="24"
+                                                     MinWidth="20"
+                                                     VerticalAlignment="Center"
+                                                     material:HintAssist.HelperText="port"
+                                                     material:TextFieldAssist.DecorationVisibility="Collapsed"
+                                                     material:ValidationAssist.Suppress="True"
+                                                     BorderBrush="Transparent"
+                                                     IsEnabled="{Binding CanEditPort, RelativeSource={RelativeSource TemplatedParent}}"
+                                                     IsTabStop="True"
+                                                     Text="{Binding Port, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource PortToStringConverter}}"/>
+                                        </StackPanel>
 
                                         <TextBox Height="24"
                                                  MinWidth="20"
@@ -77,6 +107,7 @@
                                                  material:TextFieldAssist.DecorationVisibility="Collapsed"
                                                  material:ValidationAssist.Suppress="True"
                                                  BorderBrush="Transparent"
+                                                 IsEnabled="{Binding CanEditPathAndQuery, RelativeSource={RelativeSource TemplatedParent}}"
                                                  IsTabStop="True"
                                                  Text="{Binding PathAndQuery, RelativeSource={RelativeSource TemplatedParent}}"
                                                  Visibility="{Binding ShowPathAndQuery, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource BooleanToVisibilityConverter}}"/>

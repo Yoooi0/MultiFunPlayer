@@ -170,6 +170,17 @@ public sealed partial class UriBox : UserControl
     }
 
     [DoNotNotify]
+    public bool ShowPort
+    {
+        get => (bool)GetValue(ShowPortProperty);
+        set => SetValue(ShowPortProperty, value);
+    }
+
+    public static readonly DependencyProperty ShowPortProperty =
+        DependencyProperty.Register(nameof(ShowPort), typeof(bool),
+            typeof(UriBox), new FrameworkPropertyMetadata(true));
+
+    [DoNotNotify]
     public bool ShowPathAndQuery
     {
         get => (bool)GetValue(ShowPathAndQueryProperty);
@@ -178,6 +189,28 @@ public sealed partial class UriBox : UserControl
 
     public static readonly DependencyProperty ShowPathAndQueryProperty =
         DependencyProperty.Register(nameof(ShowPathAndQuery), typeof(bool),
+            typeof(UriBox), new FrameworkPropertyMetadata(true));
+
+    [DoNotNotify]
+    public bool CanEditPort
+    {
+        get => (bool)GetValue(CanEditPortProperty);
+        set => SetValue(CanEditPortProperty, value);
+    }
+
+    public static readonly DependencyProperty CanEditPortProperty =
+        DependencyProperty.Register(nameof(CanEditPort), typeof(bool),
+            typeof(UriBox), new FrameworkPropertyMetadata(true));
+
+    [DoNotNotify]
+    public bool CanEditPathAndQuery
+    {
+        get => (bool)GetValue(CanEditPathAndQueryProperty);
+        set => SetValue(CanEditPathAndQueryProperty, value);
+    }
+
+    public static readonly DependencyProperty CanEditPathAndQueryProperty =
+        DependencyProperty.Register(nameof(CanEditPathAndQuery), typeof(bool),
             typeof(UriBox), new FrameworkPropertyMetadata(true));
 
     [DoNotNotify]
