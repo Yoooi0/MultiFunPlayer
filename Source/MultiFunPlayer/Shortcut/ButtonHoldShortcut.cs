@@ -1,15 +1,15 @@
-using MultiFunPlayer.Input;
+﻿using MultiFunPlayer.Input;
 using System.ComponentModel;
 
 namespace MultiFunPlayer.Shortcut;
 
-[DisplayName("Button Long Press")]
-internal sealed class ButtonLongPressShortcut(IShortcutActionRunner actionRunner, ISimpleInputGestureDescriptor gesture)
+[DisplayName("Button Hold")]
+internal sealed class ButtonHoldShortcut(IShortcutActionRunner actionRunner, ISimpleInputGestureDescriptor gesture)
     : AbstractShortcut<ISimpleInputGesture, ISimpleInputGestureData>(actionRunner, gesture)
 {
     public int MinimumHoldDuration { get; set; } = 1000;
     public int MaximumHoldDuration { get; set; } = -1;
-    public ButtonLongPressInvokeType InvokeType { get; set; } = ButtonLongPressInvokeType.OnRelease;
+    public ButtonHoldInvokeType InvokeType { get; set; } = ButtonHoldInvokeType.OnRelease;
 
     private int _pressTime;
 
@@ -19,7 +19,7 @@ internal sealed class ButtonLongPressShortcut(IShortcutActionRunner actionRunner
         {
             _pressTime = Environment.TickCount;
 
-            if (InvokeType == ButtonLongPressInvokeType.WhileHolding)
+            if (InvokeType == ButtonHoldInvokeType.WhileHolding)
                 Delay(MinimumHoldDuration, () => Invoke(SimpleInputGestureData.Default));
         }
         else if (!gesture.State && _pressTime > 0)
@@ -27,11 +27,11 @@ internal sealed class ButtonLongPressShortcut(IShortcutActionRunner actionRunner
             var duration = Environment.TickCount - _pressTime;
             _pressTime = 0;
 
-            if (InvokeType == ButtonLongPressInvokeType.WhileHolding)
+            if (InvokeType == ButtonHoldInvokeType.WhileHolding)
             {
                 CancelDelay();
             }
-            else if (InvokeType == ButtonLongPressInvokeType.OnRelease)
+            else if (InvokeType == ButtonHoldInvokeType.OnRelease)
             {
                 if (duration < MinimumHoldDuration)
                     return;
@@ -44,7 +44,7 @@ internal sealed class ButtonLongPressShortcut(IShortcutActionRunner actionRunner
     }
 }
 
-internal enum ButtonLongPressInvokeType
+internal enum ButtonHoldInvokeType
 {
     OnRelease,
     WhileHolding

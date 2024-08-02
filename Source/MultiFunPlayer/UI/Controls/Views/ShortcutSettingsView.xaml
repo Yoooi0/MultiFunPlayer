@@ -51,7 +51,7 @@
             </DockPanel>
         </DataTemplate>
 
-        <DataTemplate DataType="{x:Type shortcut:ButtonLongPressShortcut}">
+        <DataTemplate DataType="{x:Type shortcut:ButtonHoldShortcut}">
             <DockPanel LastChildFill="False">
                 <DockPanel DockPanel.Dock="Top" LastChildFill="False">
                     <TextBlock DockPanel.Dock="Left"
@@ -105,7 +105,7 @@
                                Text="Invoke type:"/>
 
                     <ComboBox DockPanel.Dock="Left"
-                              ItemsSource="{Binding Source={ui:EnumBindingSource {x:Type shortcut:ButtonLongPressInvokeType}}}"
+                              ItemsSource="{Binding Source={ui:EnumBindingSource {x:Type shortcut:ButtonHoldInvokeType}}}"
                               SelectedItem="{Binding InvokeType}"/>
                 </DockPanel>
             </DockPanel>
