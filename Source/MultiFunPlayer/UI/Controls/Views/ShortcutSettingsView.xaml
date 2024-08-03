@@ -513,8 +513,9 @@
                                 Margin="0"
                                 Padding="0"
                                 VerticalAlignment="Center"
-                                material:ButtonProgressAssist.IsIndeterminate="True"
                                 material:ButtonProgressAssist.IsIndicatorVisible="{Binding IsCapturingGestures}"
+                                material:ButtonProgressAssist.Value="{Binding GestureCaptureProgressPercent}"
+                                material:TransitionAssist.DisableTransitions="True"
                                 Click="{s:Action CaptureGestures}"
                                 ToolTip="Start capturing">
                             <material:PackIcon Width="28"

@@ -7,6 +7,7 @@ using Newtonsoft.Json.Linq;
 using NLog;
 using Stylet;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Reflection;
 using System.Threading.Channels;
 using System.Windows;
@@ -32,6 +33,7 @@ internal sealed class ShortcutSettingsViewModel : Screen, IHandle<SettingsMessag
     public IShortcut SelectedShortcut { get; set; }
 
     public bool IsCapturingGestures { get; private set; }
+    public double GestureCaptureProgressPercent { get; private set; }
     public ObservableConcurrentCollection<IInputGestureDescriptor> CapturedGestures { get; }
     public IInputGestureDescriptor SelectedCapturedGesture { get; set; }
 
@@ -104,30 +106,52 @@ internal sealed class ShortcutSettingsViewModel : Screen, IHandle<SettingsMessag
         if (SelectedShortcutType == null)
             return;
 
-        using var captureCancellationSource = new CancellationTokenSource(5000);
+        var captureDuration = TimeSpan.FromSeconds(5);
+        using var captureCancellationSource = new CancellationTokenSource(captureDuration);
         var token = captureCancellationSource.Token;
 
         while (_gestureChannel.Reader.TryRead(out var _)) ;
         CapturedGestures.Clear();
 
         IsCapturingGestures = true;
+        GestureCaptureProgressPercent = 0;
 
-        try
-        {
-            do
-            {
-                _ = await _gestureChannel.Reader.WaitToReadAsync(token);
-                var gesture = await _gestureChannel.Reader.ReadAsync(token);
-                if (IShortcut.AcceptsGesture(SelectedShortcutType, gesture) && !CapturedGestures.Contains(gesture.Descriptor))
-                {
-                    CapturedGestures.Add(gesture.Descriptor);
-                    captureCancellationSource.CancelAfter(5000);
-                }
-            } while (!token.IsCancellationRequested);
-        }
-        catch (OperationCanceledException) { }
+        var captureEndTime = CurrentTime() + captureDuration;
+        _ = UpdateCaptureProgress();
+        await CaptureGestures();
 
+        GestureCaptureProgressPercent = 100;
         IsCapturingGestures = false;
+
+        async Task UpdateCaptureProgress()
+        {
+            while (!token.IsCancellationRequested)
+            {
+                GestureCaptureProgressPercent = 100 * MathUtils.Clamp01((captureEndTime - CurrentTime()) / captureDuration);
+                await Task.Delay(100, token);
+            }
+        }
+
+        async Task CaptureGestures()
+        {
+            try
+            {
+                while (!token.IsCancellationRequested)
+                {
+                    _ = await _gestureChannel.Reader.WaitToReadAsync(token);
+                    var gesture = await _gestureChannel.Reader.ReadAsync(token);
+                    if (IShortcut.AcceptsGesture(SelectedShortcutType, gesture) && !CapturedGestures.Contains(gesture.Descriptor))
+                    {
+                        CapturedGestures.Add(gesture.Descriptor);
+                        captureCancellationSource.CancelAfter(captureDuration);
+                        captureEndTime = CurrentTime() + captureDuration;
+                    }
+                }
+            }
+            catch (OperationCanceledException) { }
+        }
+
+        static TimeSpan CurrentTime() => TimeSpan.FromSeconds(Stopwatch.GetTimestamp() / (double)Stopwatch.Frequency);
     }
 
     public void AddShortcut(object sender, RoutedEventArgs e)
