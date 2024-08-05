@@ -77,12 +77,12 @@ internal class AsyncFixedUpdateContext : AbstractFixedUpdateContext;
 
 internal sealed class TCodeThreadFixedUpdateContext : ThreadFixedUpdateContext
 {
-    [JsonProperty] public bool OffloadElapsedTime { get; set; } = true;
+    [JsonProperty] public bool OffloadElapsedTime { get; set; } = false;
     [JsonProperty] public bool SendDirtyValuesOnly { get; set; } = true;
 }
 
 internal sealed class TCodeAsyncFixedUpdateContext : AsyncFixedUpdateContext
 {
-    [JsonProperty] public bool OffloadElapsedTime { get; set; } = true;
+    [JsonProperty] public bool OffloadElapsedTime { get; set; } = false;
     [JsonProperty] public bool SendDirtyValuesOnly { get; set; } = true;
 }
