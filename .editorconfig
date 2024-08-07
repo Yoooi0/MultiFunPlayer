@@ -9,18 +9,21 @@ indent_style = space
 indent_size = 2
 tab_width = 2
 end_of_line = crlf
+trim_trailing_whitespace = true
 
 # XML config files
 [*.{props,targets,ruleset,config,nuspec,resx,vsixmanifest,vsct}]
 indent_size = 2
 tab_width = 2
 end_of_line = crlf
+trim_trailing_whitespace = true
 
 # YML files
 [*.yml]
 indent_size = 2
 tab_width = 2
 end_of_line = crlf
+trim_trailing_whitespace = true
 
 # C# files
 [*.cs]
@@ -47,6 +50,7 @@ indent_size = 4
 indent_style = space
 tab_width = 4
 charset = utf-8-bom
+trim_trailing_whitespace = true
 
 # New line preferences
 end_of_line = crlf
