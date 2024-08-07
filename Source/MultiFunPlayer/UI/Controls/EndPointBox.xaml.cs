@@ -14,6 +14,7 @@ public sealed partial class EndPointBox : UserControl
 {
     [OnChangedMethod(nameof(UpdateEndPoint))]
     public string HostOrIPAddress { get; set; }
+
     [OnChangedMethod(nameof(UpdateEndPoint))]
     public int Port { get; set; }
 
