@@ -12,6 +12,12 @@
     <UserControl.Resources>
         <converters:PortToStringConverter x:Key="PortToStringConverter"/>
         <Style TargetType="{x:Type local:UriBox}">
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding Uri, RelativeSource={RelativeSource Self}, Converter={StaticResource NullableToBooleanConverter}}" Value="True">
+                    <Setter Property="material:ValidationAssist.HasError" Value="True"/>
+                </DataTrigger>
+            </Style.Triggers>
+            <Setter Property="material:ValidationAssist.HasError" Value="False"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="{x:Type local:UriBox}">
@@ -26,7 +32,7 @@
                                         KeyboardNavigation.TabNavigation="Local"
                                         SnapsToDevicePixels="True">
                                     <DockPanel LastChildFill="True">
-                                        <ComboBox ItemsSource="{Binding AvailableSchemesList, RelativeSource={RelativeSource TemplatedParent}}"
+                                        <ComboBox ItemsSource="{Binding AvailableSchemes, RelativeSource={RelativeSource TemplatedParent}}"
                                                   SelectedItem="{Binding Scheme, RelativeSource={RelativeSource TemplatedParent}}"
                                                   MinWidth="35"
                                                   VerticalAlignment="Center"
@@ -35,12 +41,12 @@
                                                   material:ValidationAssist.Suppress="True"
                                                   BorderThickness="0"
                                                   IsTabStop="True"
-                                                  Visibility="{Binding AvailableSchemesList, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource NullVisibilityConverter}}"/>
+                                                  Visibility="{Binding AvailableSchemes, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource NullVisibilityConverter}}"/>
 
                                         <TextBlock VerticalAlignment="Center"
                                                    Foreground="{DynamicResource MaterialDesignBodyDisabledBrush}"
                                                    Text="{Binding Scheme, RelativeSource={RelativeSource TemplatedParent}}"
-                                                   Visibility="{Binding AvailableSchemesList, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource InvertedNullVisibilityConverter}}"/>
+                                                   Visibility="{Binding AvailableSchemes, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource InvertedNullVisibilityConverter}}"/>
 
                                         <TextBlock Margin="5 0 5 2"
                                                    VerticalAlignment="Center"
@@ -49,7 +55,7 @@
                                                 <Style BasedOn="{StaticResource MaterialDesignTextBlock}" TargetType="{x:Type TextBlock}">
                                                     <Setter Property="Foreground" Value="{DynamicResource MaterialDesignBodyDisabledBrush}"/>
                                                     <Style.Triggers>
-                                                        <DataTrigger Binding="{Binding AvailableSchemesList, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource InvertedNullableToBooleanConverter}}" Value="True">
+                                                        <DataTrigger Binding="{Binding AvailableSchemes, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource InvertedNullableToBooleanConverter}}" Value="True">
                                                             <DataTrigger.Setters>
                                                                 <Setter Property="Foreground" Value="{DynamicResource MaterialDesignBody}"/>
                                                             </DataTrigger.Setters>
@@ -129,6 +135,14 @@
                             </Trigger>
                             <Trigger Property="IsKeyboardFocusWithin" Value="True">
                                 <Setter TargetName="Underline" Property="IsActive" Value="True"/>
+                            </Trigger>
+                            <Trigger Property="material:ValidationAssist.HasError" Value="true">
+                                <Setter TargetName="Base" Property="BorderBrush" Value="{DynamicResource MaterialDesignErrorBrush}"/>
+                                <Setter TargetName="Underline" Property="Background" Value="{DynamicResource MaterialDesignErrorBrush}"/>
+                            </Trigger>
+                            <Trigger Property="Validation.HasError" Value="true">
+                                <Setter TargetName="Base" Property="BorderBrush" Value="{DynamicResource MaterialDesignErrorBrush}"/>
+                                <Setter TargetName="Underline" Property="Background" Value="{DynamicResource MaterialDesignErrorBrush}"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>

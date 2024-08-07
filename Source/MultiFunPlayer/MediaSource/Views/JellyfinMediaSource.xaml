@@ -86,7 +86,7 @@
 
                     <controls:UriBox DockPanel.Dock="Left"
                                      HorizontalAlignment="Left"
-                                     AvailableSchemes="http https"
+                                     Schemes="http https"
                                      ShowPathAndQuery="False"
                                      Uri="{Binding ServerBaseUri}"/>
                 </DockPanel>

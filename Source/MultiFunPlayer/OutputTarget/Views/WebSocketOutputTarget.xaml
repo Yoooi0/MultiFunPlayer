@@ -141,7 +141,7 @@
 
                     <controls:UriBox DockPanel.Dock="Left"
                                      VerticalAlignment="Center"
-                                     AvailableSchemes="ws wss"
+                                     Schemes="ws wss"
                                      ShowPathAndQuery="True"
                                      Uri="{Binding Uri}"/>
                 </DockPanel>
