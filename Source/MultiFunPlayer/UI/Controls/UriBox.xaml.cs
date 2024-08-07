@@ -14,7 +14,9 @@ public sealed partial class UriBox : UserControl
 {
     private int _isUpdating;
 
-    public IReadOnlyList<string> AvailableSchemes { get; private set; } = null;
+    public IReadOnlyList<string> AvailableSchemes { get; private set; } = [];
+
+    public bool IsSingleScheme => AvailableSchemes.Count <= 1;
 
     [OnChangedMethod(nameof(UpdateUri))]
     public string Scheme { get; set; }
@@ -131,7 +133,7 @@ public sealed partial class UriBox : UserControl
     {
         if (string.IsNullOrEmpty(Schemes))
         {
-            AvailableSchemes = null;
+            AvailableSchemes = [];
             Scheme = null;
         }
         else

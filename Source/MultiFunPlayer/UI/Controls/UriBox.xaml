@@ -41,12 +41,18 @@
                                                   material:ValidationAssist.Suppress="True"
                                                   BorderThickness="0"
                                                   IsTabStop="True"
-                                                  Visibility="{Binding AvailableSchemes, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource NullVisibilityConverter}}"/>
+                                                  Visibility="{Binding IsSingleScheme, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource InvertedBooleanToVisibilityConverter}}"/>
 
-                                        <TextBlock VerticalAlignment="Center"
-                                                   Foreground="{DynamicResource MaterialDesignBodyDisabledBrush}"
-                                                   Text="{Binding Scheme, RelativeSource={RelativeSource TemplatedParent}}"
-                                                   Visibility="{Binding AvailableSchemes, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource InvertedNullVisibilityConverter}}"/>
+                                        <TextBox MinWidth="35"
+                                                 VerticalAlignment="Center"
+                                                 material:HintAssist.HelperText="scheme"
+                                                 material:TextFieldAssist.DecorationVisibility="Collapsed"
+                                                 material:ValidationAssist.Suppress="True"
+                                                 BorderBrush="Transparent"
+                                                 IsEnabled="False"
+                                                 Text="{Binding Scheme, RelativeSource={RelativeSource TemplatedParent}}"
+                                                 TextAlignment="Right"
+                                                 Visibility="{Binding IsSingleScheme, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource BooleanToVisibilityConverter}}"/>
 
                                         <TextBlock Margin="5 0 5 2"
                                                    VerticalAlignment="Center"
@@ -55,7 +61,7 @@
                                                 <Style BasedOn="{StaticResource MaterialDesignTextBlock}" TargetType="{x:Type TextBlock}">
                                                     <Setter Property="Foreground" Value="{DynamicResource MaterialDesignBodyDisabledBrush}"/>
                                                     <Style.Triggers>
-                                                        <DataTrigger Binding="{Binding AvailableSchemes, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource InvertedNullableToBooleanConverter}}" Value="True">
+                                                        <DataTrigger Binding="{Binding IsSingleScheme, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource BooleanToVisibilityConverter}}" Value="True">
                                                             <DataTrigger.Setters>
                                                                 <Setter Property="Foreground" Value="{DynamicResource MaterialDesignBody}"/>
                                                             </DataTrigger.Setters>
