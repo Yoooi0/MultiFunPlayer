@@ -1,4 +1,4 @@
-using MultiFunPlayer.Common;
+﻿using MultiFunPlayer.Common;
 using Stylet;
 using System.Diagnostics;
 using System.IO;
@@ -302,8 +302,7 @@ internal sealed class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDispo
                     if (settings.BypassTransition)
                         return false;
 
-                    state.ExternalTransition.Update(deltaTime);
-                    context.TransitionValue = state.ExternalTransition.GetValue();
+                    context.TransitionValue = state.ExternalTransition.Update(deltaTime);
                     return context.IsTransitionDirty;
                 }
             }
@@ -2044,21 +2043,22 @@ internal sealed class AxisValueTransition
 
     public AxisValueTransition() => _initialized = false;
 
-    public bool Update(double deltaTime)
+    public double Update(double deltaTime)
     {
         if (!_initialized)
-            return false;
+            return double.NaN;
         if (_time >= 0 && _time >= _duration)
-            return false;
+            return double.NaN;
 
-        _time = _time < 0 ? deltaTime : _time + deltaTime;
-        return true;
-    }
+        var nextTime = _time < 0 ? deltaTime : _time + deltaTime;
+        var isEnd = _time < _duration && nextTime >= _duration;
+        _time = nextTime;
 
-    public double GetValue()
-    {
-        if (_duration < 0.00001)
+        if (isEnd)
+        {
+            _initialized = false;
             return _toValue;
+        }
 
         var t = MathUtils.Clamp01(_time / _duration);
         return MathUtils.Lerp(_fromValue, _toValue, t);
