@@ -282,7 +282,7 @@ internal static class PluginCompiler
 
                 PluginBase CreatePluginInstance()
                 {
-                    var instance = Activator.CreateInstance(pluginType, new[] { settings }) as PluginBase;
+                    var instance = Activator.CreateInstance(pluginType, [settings]) as PluginBase;
                     Container.BuildUp(instance);
                     return instance;
                 }
