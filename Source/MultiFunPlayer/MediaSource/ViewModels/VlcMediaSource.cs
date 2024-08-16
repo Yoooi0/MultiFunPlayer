@@ -9,7 +9,6 @@ using System.Globalization;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
-using System.Security.Cryptography;
 using System.Text;
 using System.Xml.Linq;
 using System.Xml.XPath;
@@ -234,23 +233,8 @@ internal sealed class VlcMediaSource(IShortcutManager shortcutManager, IEventAgg
         if (action == SettingsAction.Saving)
         {
             settings[nameof(Endpoint)] = Endpoint?.ToUriString();
-
-            try
-            {
-                if (!string.IsNullOrWhiteSpace(Password))
-                {
-                    var encryptedPassword = Convert.ToBase64String(ProtectedData.Protect(Encoding.UTF8.GetBytes(Password), null, DataProtectionScope.CurrentUser));
-                    settings[nameof(Password)] = JToken.FromObject(encryptedPassword);
-                }
-                else
-                {
-                    settings[nameof(Password)] = null;
-                }
-            }
-            catch (Exception e)
-            {
-                Logger.Warn(e, "Failed to encrypt password to settings");
-            }
+            settings[nameof(Password)] = JToken.FromObject(ProtectedStringUtils.Protect(Password,
+                e => Logger.Warn(e, "Failed to encrypt password")));
         }
         else if (action == SettingsAction.Loading)
         {
@@ -258,16 +242,8 @@ internal sealed class VlcMediaSource(IShortcutManager shortcutManager, IEventAgg
                 Endpoint = endpoint;
 
             if (settings.TryGetValue<string>(nameof(Password), out var encryptedPassword))
-            {
-                try
-                {
-                    Password = Encoding.UTF8.GetString(ProtectedData.Unprotect(Convert.FromBase64String(encryptedPassword), null, DataProtectionScope.CurrentUser));
-                }
-                catch (Exception e)
-                {
-                    Logger.Warn(e, "Failed to decrypt password from settings");
-                }
-            }
+                Password = ProtectedStringUtils.Unprotect(encryptedPassword,
+                    e => Logger.Warn(e, "Failed to decrypt password"));
         }
     }
 
