@@ -165,10 +165,16 @@ public sealed partial class UriBox : UserControl
     {
         GuardUpdate(() =>
         {
-            Scheme = Uri?.Scheme;
+            if (!IsSingleScheme && Schemes.Contains(Uri?.Scheme, StringComparison.OrdinalIgnoreCase))
+                Scheme = Uri?.Scheme;
+
             HostOrIPAddress = Uri?.Host;
-            Port = Uri?.Port ?? 0;
-            PathAndQuery = Uri?.PathAndQuery;
+
+            if (CanEditPort)
+                Port = Uri?.Port ?? 0;
+
+            if (CanEditPathAndQuery)
+                PathAndQuery = Uri?.PathAndQuery;
         });
     }
 }
