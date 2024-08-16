@@ -448,6 +448,16 @@
                                                 <Setter Property="Foreground" Value="{DynamicResource MaterialDesignErrorBrush}"/>
                                                 <Setter Property="FontWeight" Value="Black"/>
                                             </DataTrigger>
+                                            <DataTrigger Value="True">
+                                                <Setter Property="Foreground" Value="{DynamicResource MaterialDesignErrorBrush}"/>
+                                                <Setter Property="FontWeight" Value="Black"/>
+                                                <DataTrigger.Binding>
+                                                    <MultiBinding Converter="{StaticResource BooleanAndConverter}">
+                                                        <Binding Path="Value.Settings.LockScript"/>
+                                                        <Binding Converter="{StaticResource InvertedNullableToBooleanConverter}" Path="Value.Script"/>
+                                                    </MultiBinding>
+                                                </DataTrigger.Binding>
+                                            </DataTrigger>
                                         </Style.Triggers>
                                     </Style>
                                 </TextBlock.Resources>
