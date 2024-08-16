@@ -27,6 +27,7 @@ using StyletIoC;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
+using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
@@ -261,7 +262,7 @@ internal sealed class Bootstrapper : Bootstrapper<RootViewModel>
             };
 
             settings.Converters.Add(new StringEnumConverter());
-            foreach (var converter in converterFactory())
+            foreach (var converter in converterFactory().Where(t => t.GetType().GetCustomAttribute<GlobalJsonConverterAttribute>() != null))
                 settings.Converters.Add(converter);
 
             settings.Error += (s, e) =>

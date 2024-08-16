@@ -4,6 +4,7 @@ using System.Net;
 
 namespace MultiFunPlayer.Settings.Converters;
 
+[GlobalJsonConverter]
 internal sealed class EndPointConverter : JsonConverter<EndPoint>
 {
     public override EndPoint ReadJson(JsonReader reader, Type objectType, EndPoint existingValue, bool hasExistingValue, JsonSerializer serializer)

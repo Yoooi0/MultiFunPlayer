@@ -5,6 +5,7 @@ using System.Globalization;
 
 namespace MultiFunPlayer.Settings.Converters;
 
+[GlobalJsonConverter]
 internal sealed class DeviceAxisConverter : JsonConverter<DeviceAxis>
 {
     public override DeviceAxis ReadJson(JsonReader reader, Type objectType, DeviceAxis existingValue, bool hasExistingValue, JsonSerializer serializer)

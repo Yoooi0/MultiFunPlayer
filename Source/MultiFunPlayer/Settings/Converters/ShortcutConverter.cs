@@ -6,6 +6,7 @@ using Newtonsoft.Json.Linq;
 
 namespace MultiFunPlayer.Settings.Converters;
 
+[GlobalJsonConverter]
 internal sealed class ShortcutConverter(IShortcutFactory shortcutFactory) : JsonConverter<IShortcut>
 {
     public override bool CanWrite => false;

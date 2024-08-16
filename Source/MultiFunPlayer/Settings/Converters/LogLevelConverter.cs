@@ -3,6 +3,7 @@ using NLog;
 
 namespace MultiFunPlayer.Settings.Converters;
 
+[GlobalJsonConverter]
 internal sealed class LogLevelConverter : JsonConverter<LogLevel>
 {
     public override LogLevel ReadJson(JsonReader reader, Type objectType, LogLevel existingValue, bool hasExistingValue, JsonSerializer serializer)

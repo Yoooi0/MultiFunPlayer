@@ -4,6 +4,7 @@ using Newtonsoft.Json.Linq;
 
 namespace MultiFunPlayer.Settings.Converters;
 
+[GlobalJsonConverter]
 internal sealed class TypedValueConverter : JsonConverter<TypedValue>
 {
     public override TypedValue ReadJson(JsonReader reader, Type objectType, TypedValue existingValue, bool hasExistingValue, JsonSerializer serializer)
