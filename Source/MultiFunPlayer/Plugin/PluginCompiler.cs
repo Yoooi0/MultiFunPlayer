@@ -73,7 +73,7 @@ internal static class PluginCompiler
     private static Task _compileTask;
 
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
-    private static Regex ReferenceRegex { get; } = new Regex(@"^//#r\s+""(?<type>name|file):(?<value>.+?)""", RegexOptions.Compiled | RegexOptions.Multiline);
+    private static Regex ReferenceRegex { get; } = new Regex(@"^//#r\s+""(?<value>.+?)""\s*$", RegexOptions.Compiled | RegexOptions.Multiline);
 
     private static IContainer Container { get; set; }
     private static IViewManager ViewManager { get; set; }
@@ -130,23 +130,9 @@ internal static class PluginCompiler
         try
         {
             var references = ReferenceCache.ToList();
-
+            
             var pluginSource = File.ReadAllText(pluginFile.FullName);
-            foreach(var match in ReferenceRegex.Matches(pluginSource).NotNull())
-            {
-                var type = match.Groups["type"].Value;
-                var value = match.Groups["value"].Value;
-
-                var reference = type switch
-                {
-                    "name" => MetadataReference.CreateFromFile(Assembly.Load(value).Location),
-                    "file" => MetadataReference.CreateFromFile(value),
-                    _ => null
-                };
-
-                if (reference != null)
-                    references.Add(reference);
-            }
+            AddReferencesFromPluginSource(pluginFile, pluginSource, references);
 
             var validPluginBaseClasses = new List<string>()
             {
@@ -292,6 +278,39 @@ internal static class PluginCompiler
         {
             Logger.Error(e, "Plugin compiler failed with exception");
             return PluginCompilationResult.FromFailure(context, new PluginCompileException("Plugin compiler failed with exception", e));
+        }
+    }
+
+    private static void AddReferencesFromPluginSource(FileInfo pluginFile, string pluginSource, List<MetadataReference> references)
+    {
+        foreach (var match in ReferenceRegex.Matches(pluginSource).NotNull().Where(m => m.Success))
+        {
+            var value = match.Groups["value"].Value;
+            var result = TryAddByName(value, references)
+                      || TryAddByPath(Path.Join(pluginFile.DirectoryName, value), references)
+                      || TryAddByPath(value, references);
+
+            if (!result)
+                Logger.Warn("Failed to load assembly \"{0}\" for plugin \"{1}\"", value, pluginFile.Name);
+        }
+
+        static bool TryAddByPath(string path, List<MetadataReference> references)
+        {
+            if (!File.Exists(path))
+                return false;
+
+            try { references.Add(MetadataReference.CreateFromFile(path)); }
+            catch { return false; }
+
+            return true;
+        }
+
+        static bool TryAddByName(string assemblyName, List<MetadataReference> references)
+        {
+            try { references.Add(MetadataReference.CreateFromFile(Assembly.Load(assemblyName).Location)); }
+            catch { return false; }
+
+            return true;
         }
     }
 
