@@ -69,6 +69,8 @@ internal sealed class PluginCompilationResult : IDisposable
 
 internal static class PluginCompiler
 {
+    private readonly static IReadOnlyCollection<string> ValidPluginBaseClasses = [nameof(SyncPluginBase), nameof(AsyncPluginBase)];
+
     private static Channel<Action> _compileQueue;
     private static Task _compileTask;
 
@@ -134,12 +136,6 @@ internal static class PluginCompiler
             var pluginSource = File.ReadAllText(pluginFile.FullName);
             AddReferencesFromPluginSource(pluginFile, pluginSource, references);
 
-            var validPluginBaseClasses = new List<string>()
-            {
-                nameof(SyncPluginBase),
-                nameof(AsyncPluginBase)
-            };
-
             var sourcePath = pluginFile.FullName;
             var pdbPath = Path.ChangeExtension(sourcePath, ".pdb");
 
@@ -159,7 +155,7 @@ internal static class PluginCompiler
             var pluginClasses = syntaxTree.GetRoot()
                                           .DescendantNodes()
                                           .OfType<ClassDeclarationSyntax>()
-                                          .Where(s => s.BaseList.Types.Any(x => validPluginBaseClasses.Contains(x.ToString())))
+                                          .Where(s => s.BaseList.Types.Any(x => ValidPluginBaseClasses.Contains(x.ToString())))
                                           .ToList();
 
             if (pluginClasses.Count == 0)
