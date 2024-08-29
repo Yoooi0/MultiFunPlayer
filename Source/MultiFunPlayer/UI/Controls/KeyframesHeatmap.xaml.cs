@@ -1,4 +1,4 @@
-﻿using MultiFunPlayer.Common;
+using MultiFunPlayer.Common;
 using MultiFunPlayer.UI.Controls.ViewModels;
 using PropertyChanged;
 using System.Collections.Specialized;
@@ -371,7 +371,7 @@ internal sealed partial class KeyframesHeatmap : UserControl
                 var dy = next.Value - prev.Value;
                 var adx = Math.Abs(dx);
                 var ady = Math.Abs(dy);
-                if (ady < 0.001 || adx < 0.001 || Math.Atan2(ady, adx) * 180 / MathF.PI < 5)
+                if (ady < 0.001 || Math.Atan2(ady, adx) * 180 / MathF.PI < 5)
                     continue;
 
                 var startBucket = (int)Math.Floor(prev.Position / bucketSize);
