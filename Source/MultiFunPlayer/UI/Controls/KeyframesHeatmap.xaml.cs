@@ -1,4 +1,4 @@
-using MultiFunPlayer.Common;
+﻿using MultiFunPlayer.Common;
 using MultiFunPlayer.UI.Controls.ViewModels;
 using PropertyChanged;
 using System.Collections.Specialized;
@@ -347,9 +347,9 @@ internal sealed partial class KeyframesHeatmap : UserControl
                 var heat = MathUtils.Clamp01(buckets[i].Heat * normalizationFactor);
                 var color = heat < 0.001 ? Color.FromRgb(0, 0, 0) : _colors[(int)Math.Round(heat * (_colors.Length - 1))];
 
-                AddStop(color, i * bucketSize / Duration);
+                AddStop(color, i / (BucketCount - 1d));
                 if (i < BucketCount - 1)
-                    AddStop(color, (i + 1) * bucketSize / Duration);
+                    AddStop(color, (i + 1) / (BucketCount - 1d));
             }
         }
 
