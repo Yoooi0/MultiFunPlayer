@@ -1,4 +1,4 @@
-﻿using MultiFunPlayer.Common;
+using MultiFunPlayer.Common;
 using MultiFunPlayer.Shortcut;
 using MultiFunPlayer.UI;
 using Newtonsoft.Json.Linq;
@@ -119,7 +119,9 @@ internal sealed class VlcMediaSource(IShortcutManager shortcutManager, IEventAgg
                 var lastPlaylistId = _playerState.PlaylistId;
                 if (playlistId < 0)
                 {
-                    ResetState();
+                    if (_playerState.PlaylistId != null)
+                        ResetState();
+
                     continue;
                 }
 
