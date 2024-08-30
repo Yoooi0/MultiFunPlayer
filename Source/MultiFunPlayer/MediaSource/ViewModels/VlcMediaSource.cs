@@ -1,4 +1,4 @@
-using MultiFunPlayer.Common;
+﻿using MultiFunPlayer.Common;
 using MultiFunPlayer.Shortcut;
 using MultiFunPlayer.UI;
 using Newtonsoft.Json.Linq;
@@ -19,8 +19,6 @@ namespace MultiFunPlayer.MediaSource.ViewModels;
 internal sealed class VlcMediaSource(IShortcutManager shortcutManager, IEventAggregator eventAggregator) : AbstractMediaSource(shortcutManager, eventAggregator)
 {
     protected override Logger Logger { get; } = LogManager.GetCurrentClassLogger();
-
-    private PlayerState _playerState;
 
     public override ConnectionStatus Status { get; protected set; }
     public bool IsConnected => Status == ConnectionStatus.Connected;
@@ -70,8 +68,6 @@ internal sealed class VlcMediaSource(IShortcutManager shortcutManager, IEventAgg
 
         try
         {
-            _playerState = new PlayerState();
-
             using var cancellationSource = CancellationTokenSource.CreateLinkedTokenSource(token);
             var task = await Task.WhenAny(ReadAsync(client, cancellationSource.Token), WriteAsync(client, cancellationSource.Token));
             cancellationSource.Cancel();
@@ -96,6 +92,7 @@ internal sealed class VlcMediaSource(IShortcutManager shortcutManager, IEventAgg
     {
         var statusUri = new Uri($"http://{Endpoint.ToUriString()}/requests/status.xml");
         var playlistUri = new Uri($"http://{Endpoint.ToUriString()}/requests/playlist.xml");
+        var playerState = new PlayerState();
 
         try
         {
@@ -116,10 +113,10 @@ internal sealed class VlcMediaSource(IShortcutManager shortcutManager, IEventAgg
                 if (!int.TryParse(statusDocument.Root.Element("currentplid")?.Value, out var playlistId))
                     continue;
 
-                var lastPlaylistId = _playerState.PlaylistId;
+                var lastPlaylistId = playerState.PlaylistId;
                 if (playlistId < 0)
                 {
-                    if (_playerState.PlaylistId != null)
+                    if (playerState.PlaylistId != null)
                         ResetState();
 
                     continue;
@@ -153,31 +150,31 @@ internal sealed class VlcMediaSource(IShortcutManager shortcutManager, IEventAgg
                     else
                         PublishMessage(new MediaPathChangedMessage(Uri.UnescapeDataString(path)));
 
-                    _playerState.PlaylistId = playlistId;
+                    playerState.PlaylistId = playlistId;
                 }
 
-                if (statusDocument.Root.Element("state")?.Value is string state && state != _playerState.State)
+                if (statusDocument.Root.Element("state")?.Value is string state && state != playerState.State)
                 {
                     PublishMessage(new MediaPlayingChangedMessage(string.Equals(state, "playing", StringComparison.OrdinalIgnoreCase)));
-                    _playerState.State = state;
+                    playerState.State = state;
                 }
 
-                if (int.TryParse(statusDocument.Root.Element("length")?.Value, out var duration) && duration >= 0 && duration != _playerState.Duration)
+                if (int.TryParse(statusDocument.Root.Element("length")?.Value, out var duration) && duration >= 0 && duration != playerState.Duration)
                 {
                     PublishMessage(new MediaDurationChangedMessage(TimeSpan.FromSeconds(duration)));
-                    _playerState.Duration = duration;
+                    playerState.Duration = duration;
                 }
 
-                if (double.TryParse(statusDocument.Root.Element("position")?.Value?.Replace(',', '.'), NumberStyles.Any, NumberFormatInfo.InvariantInfo, out var position) && position >= 0 && position != _playerState.Position && _playerState.Duration != null)
+                if (double.TryParse(statusDocument.Root.Element("position")?.Value?.Replace(',', '.'), NumberStyles.Any, NumberFormatInfo.InvariantInfo, out var position) && position >= 0 && position != playerState.Position && playerState.Duration != null)
                 {
-                    PublishMessage(new MediaPositionChangedMessage(TimeSpan.FromSeconds(position * (double)_playerState.Duration)));
-                    _playerState.Position = position;
+                    PublishMessage(new MediaPositionChangedMessage(TimeSpan.FromSeconds(position * (double)playerState.Duration)));
+                    playerState.Position = position;
                 }
 
-                if (double.TryParse(statusDocument.Root.Element("rate")?.Value?.Replace(',', '.'), NumberStyles.Any, NumberFormatInfo.InvariantInfo, out var speed) && speed > 0 && speed != _playerState.Speed)
+                if (double.TryParse(statusDocument.Root.Element("rate")?.Value?.Replace(',', '.'), NumberStyles.Any, NumberFormatInfo.InvariantInfo, out var speed) && speed > 0 && speed != playerState.Speed)
                 {
                     PublishMessage(new MediaSpeedChangedMessage(speed));
-                    _playerState.Speed = speed;
+                    playerState.Speed = speed;
                 }
             }
         }
@@ -186,7 +183,7 @@ internal sealed class VlcMediaSource(IShortcutManager shortcutManager, IEventAgg
 
         void ResetState()
         {
-            _playerState = new PlayerState();
+            playerState = new PlayerState();
 
             PublishMessage(new MediaPathChangedMessage(null));
             PublishMessage(new MediaPlayingChangedMessage(false));
@@ -195,7 +192,7 @@ internal sealed class VlcMediaSource(IShortcutManager shortcutManager, IEventAgg
 
     private async Task WriteAsync(HttpClient client, CancellationToken token)
     {
-        var uriBase = $"http://{Endpoint.ToUriString()}/requests/status.xml";
+        var statusUri = $"http://{Endpoint.ToUriString()}/requests/status.xml";
 
         try
         {
@@ -204,20 +201,11 @@ internal sealed class VlcMediaSource(IShortcutManager shortcutManager, IEventAgg
                 await WaitForMessageAsync(token);
                 var message = await ReadMessageAsync(token);
 
-                var isPlaying = string.Equals(_playerState?.State, "playing", StringComparison.OrdinalIgnoreCase);
-                var uriArguments = message switch
-                {
-                    MediaPlayPauseMessage playPauseMessage when isPlaying != playPauseMessage.ShouldBePlaying => "pl_pause",
-                    MediaSeekMessage seekMessage => $"seek&val={(int)seekMessage.Position.TotalSeconds}",
-                    MediaChangePathMessage changePathMessage => string.IsNullOrWhiteSpace(changePathMessage.Path) ? "pl_stop" : $"in_play&input={Uri.EscapeDataString(changePathMessage.Path)}",
-                    MediaChangeSpeedMessage changeSpeedMessage => $"rate&val={changeSpeedMessage.Speed.ToString("F4").Replace(',', '.')}",
-                    _ => null
-                };
-
+                var uriArguments = await GetUriArguments(message);
                 if (uriArguments == null)
                     continue;
 
-                var requestUri = new Uri($"{uriBase}?command={uriArguments}");
+                var requestUri = new Uri($"{statusUri}?command={uriArguments}");
                 Logger.Trace("Sending \"{0}\" to \"{1}\"", uriArguments, Name);
 
                 var response = await client.GetAsync(requestUri, token);
@@ -226,6 +214,37 @@ internal sealed class VlcMediaSource(IShortcutManager shortcutManager, IEventAgg
         }
         catch (OperationCanceledException e) when (e.InnerException is TimeoutException t) { t.Throw(); }
         catch (OperationCanceledException) { }
+
+        async ValueTask<string> GetUriArguments(IMediaSourceControlMessage message)
+        {
+            if (message is MediaPlayPauseMessage playPauseMessage)
+            {
+                var statusResponse = await client.GetAsync(statusUri, token);
+                if (statusResponse == null)
+                    return null;
+
+                statusResponse.EnsureSuccessStatusCode();
+                var statusMessage = await statusResponse.Content.ReadAsStringAsync(token);
+
+                Logger.Trace("Received \"{0}\" from \"{1}\"", statusMessage, Name);
+                var statusDocument = XDocument.Parse(statusMessage);
+
+                if (statusDocument.Root.Element("state")?.Value is not string state)
+                    return null;
+
+                var isPlaying = string.Equals(state, "playing", StringComparison.OrdinalIgnoreCase);
+                if (isPlaying != playPauseMessage.ShouldBePlaying)
+                    return "pl_pause";
+            }
+
+            return message switch
+            {
+                MediaSeekMessage seekMessage => $"seek&val={(int)seekMessage.Position.TotalSeconds}",
+                MediaChangePathMessage changePathMessage => string.IsNullOrWhiteSpace(changePathMessage.Path) ? "pl_stop" : $"in_play&input={Uri.EscapeDataString(changePathMessage.Path)}",
+                MediaChangeSpeedMessage changeSpeedMessage => $"rate&val={changeSpeedMessage.Speed.ToString("F4").Replace(',', '.')}",
+                _ => null
+            };
+        }
     }
 
     public override void HandleSettings(JObject settings, SettingsAction action)
