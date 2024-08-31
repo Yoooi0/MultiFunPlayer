@@ -5,13 +5,11 @@ using Newtonsoft.Json.Linq;
 using NLog;
 using Stylet;
 using System.ComponentModel;
-using System.Globalization;
+using System.Diagnostics;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
-using System.Xml.Linq;
-using System.Xml.XPath;
 
 namespace MultiFunPlayer.MediaSource.ViewModels;
 
@@ -43,15 +41,28 @@ internal sealed class VlcMediaSource(IShortcutManager shortcutManager, IEventAgg
     protected override async Task RunAsync(ConnectionType connectionType, CancellationToken token)
     {
         using var client = NetUtils.CreateHttpClient();
+        var version = -1;
 
         try
         {
             client.Timeout = TimeSpan.FromMilliseconds(500);
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", Convert.ToBase64String(Encoding.UTF8.GetBytes($":{Password}")));
 
-            var uri = new Uri($"http://{Endpoint.ToUriString()}/requests/status.xml");
+            var uri = new Uri($"http://{Endpoint.ToUriString()}/requests/status.json");
             var response = await client.GetAsync(uri, token);
             response.EnsureSuccessStatusCode();
+
+            var message = await response.Content.ReadAsStringAsync(token);
+            var document = JObject.Parse(message);
+
+            if (!document.TryGetValue("apiversion", out version))
+            {
+                Logger.Trace("Unable to determine version from \"{0}\"", message);
+                throw new MediaSourceException("Unable to determine VLC version");
+            }
+
+            if (version is not (3 or 4))
+                throw new MediaSourceException($"Unsupported VLC version \"{version}\"");
 
             Status = ConnectionStatus.Connected;
         }
@@ -69,7 +80,7 @@ internal sealed class VlcMediaSource(IShortcutManager shortcutManager, IEventAgg
         try
         {
             using var cancellationSource = CancellationTokenSource.CreateLinkedTokenSource(token);
-            var task = await Task.WhenAny(ReadAsync(client, cancellationSource.Token), WriteAsync(client, cancellationSource.Token));
+            var task = await Task.WhenAny(ReadAsync(client, version, cancellationSource.Token), WriteAsync(client, version, cancellationSource.Token));
             cancellationSource.Cancel();
 
             task.ThrowIfFaulted();
@@ -88,10 +99,10 @@ internal sealed class VlcMediaSource(IShortcutManager shortcutManager, IEventAgg
         PublishMessage(new MediaPlayingChangedMessage(false));
     }
 
-    private async Task ReadAsync(HttpClient client, CancellationToken token)
+    private async Task ReadAsync(HttpClient client, int version, CancellationToken token)
     {
-        var statusUri = new Uri($"http://{Endpoint.ToUriString()}/requests/status.xml");
-        var playlistUri = new Uri($"http://{Endpoint.ToUriString()}/requests/playlist.xml");
+        var statusUri = new Uri($"http://{Endpoint.ToUriString()}/requests/status.json");
+        var playlistUri = new Uri($"http://{Endpoint.ToUriString()}/requests/playlist.json");
         var playerState = new PlayerState();
 
         try
@@ -108,21 +119,29 @@ internal sealed class VlcMediaSource(IShortcutManager shortcutManager, IEventAgg
                 var statusMessage = await statusResponse.Content.ReadAsStringAsync(token);
 
                 Logger.Trace("Received \"{0}\" from \"{1}\"", statusMessage, Name);
-                var statusDocument = XDocument.Parse(statusMessage);
+                var statusDocument = JObject.Parse(statusMessage);
 
-                if (!int.TryParse(statusDocument.Root.Element("currentplid")?.Value, out var playlistId))
+                if (!statusDocument.TryGetValue<int>("currentplid", out var playlistId))
                     continue;
 
-                var lastPlaylistId = playerState.PlaylistId;
-                if (playlistId < 0)
+                bool ShouldResetState()
                 {
-                    if (playerState.PlaylistId != null)
-                        ResetState();
+                    if (version == 3 && playlistId < 0)
+                        return true;
 
+                    if (version == 4 && statusDocument.TryGetValue<string>("state", out var state) && string.Equals(state, "stopped", StringComparison.OrdinalIgnoreCase))
+                        return true;
+
+                    return false;
+                }
+
+                if (ShouldResetState())
+                {
+                    ResetState();
                     continue;
                 }
 
-                if (playlistId != lastPlaylistId)
+                if (playlistId != playerState.PlaylistId)
                 {
                     var playlistResponse = await client.GetAsync(playlistUri, token);
                     if (playlistResponse == null)
@@ -133,11 +152,14 @@ internal sealed class VlcMediaSource(IShortcutManager shortcutManager, IEventAgg
 
                     Logger.Trace("Received \"{0}\" from \"{1}\"", playlistMessage, Name);
 
-                    var playlistDocument = XDocument.Parse(playlistMessage);
-                    var element = playlistDocument.XPathSelectElement($".//leaf[@id={playlistId}]");
-                    var path = element?.Attribute("uri")?.Value;
+                    var playlistDocument = JToken.Parse(playlistMessage);
+                    if (playlistDocument.SelectToken("$..[?(@.type == 'leaf' && @.current == 'current')]") is not JObject playlistItem)
+                    {
+                        ResetState();
+                        continue;
+                    }
 
-                    if (string.IsNullOrWhiteSpace(path))
+                    if (!playlistItem.TryGetValue<string>("uri", out var path) || string.IsNullOrWhiteSpace(path))
                     {
                         ResetState();
                         continue;
@@ -153,28 +175,36 @@ internal sealed class VlcMediaSource(IShortcutManager shortcutManager, IEventAgg
                     playerState.PlaylistId = playlistId;
                 }
 
-                if (statusDocument.Root.Element("state")?.Value is string state && state != playerState.State)
+                if (statusDocument.TryGetValue<string>("state", out var state) && state != playerState.State)
                 {
                     PublishMessage(new MediaPlayingChangedMessage(string.Equals(state, "playing", StringComparison.OrdinalIgnoreCase)));
                     playerState.State = state;
                 }
 
-                if (int.TryParse(statusDocument.Root.Element("length")?.Value, out var duration) && duration >= 0 && duration != playerState.Duration)
+                if (statusDocument.TryGetValue<int>("length", out var duration) && duration >= 0 && duration != playerState.Duration)
                 {
                     PublishMessage(new MediaDurationChangedMessage(TimeSpan.FromSeconds(duration)));
                     playerState.Duration = duration;
                 }
 
-                if (double.TryParse(statusDocument.Root.Element("position")?.Value?.Replace(',', '.'), NumberStyles.Any, NumberFormatInfo.InvariantInfo, out var position) && position >= 0 && position != playerState.Position && playerState.Duration != null)
-                {
-                    PublishMessage(new MediaPositionChangedMessage(TimeSpan.FromSeconds(position * (double)playerState.Duration)));
-                    playerState.Position = position;
-                }
-
-                if (double.TryParse(statusDocument.Root.Element("rate")?.Value?.Replace(',', '.'), NumberStyles.Any, NumberFormatInfo.InvariantInfo, out var speed) && speed > 0 && speed != playerState.Speed)
+                if (statusDocument.TryGetValue<double>("rate", out var speed) && speed > 0 && speed != playerState.Speed)
                 {
                     PublishMessage(new MediaSpeedChangedMessage(speed));
                     playerState.Speed = speed;
+                }
+
+                var position = version switch
+                {
+                    3 when statusDocument.TryGetValue<double>("position", out var positionPercent) && playerState.Duration != null => positionPercent * (double)playerState.Duration,
+                    4 when statusDocument.TryGetValue<double>("time", out var time) => time,
+                    not (3 or 4) => throw new UnreachableException(),
+                    _ => -1
+                };
+
+                if (position >= 0 && position != playerState.Position)
+                {
+                    PublishMessage(new MediaPositionChangedMessage(TimeSpan.FromSeconds(position)));
+                    playerState.Position = position;
                 }
             }
         }
@@ -183,6 +213,9 @@ internal sealed class VlcMediaSource(IShortcutManager shortcutManager, IEventAgg
 
         void ResetState()
         {
+            if (playerState.PlaylistId == null)
+                return;
+
             playerState = new PlayerState();
 
             PublishMessage(new MediaPathChangedMessage(null));
@@ -190,9 +223,9 @@ internal sealed class VlcMediaSource(IShortcutManager shortcutManager, IEventAgg
         }
     }
 
-    private async Task WriteAsync(HttpClient client, CancellationToken token)
+    private async Task WriteAsync(HttpClient client, int version, CancellationToken token)
     {
-        var statusUri = $"http://{Endpoint.ToUriString()}/requests/status.xml";
+        var statusUri = $"http://{Endpoint.ToUriString()}/requests/status.json";
 
         try
         {
@@ -227,9 +260,9 @@ internal sealed class VlcMediaSource(IShortcutManager shortcutManager, IEventAgg
                 var statusMessage = await statusResponse.Content.ReadAsStringAsync(token);
 
                 Logger.Trace("Received \"{0}\" from \"{1}\"", statusMessage, Name);
-                var statusDocument = XDocument.Parse(statusMessage);
+                var statusDocument = JObject.Parse(statusMessage);
 
-                if (statusDocument.Root.Element("state")?.Value is not string state)
+                if (!statusDocument.TryGetValue<string>("state", out var state))
                     return null;
 
                 var isPlaying = string.Equals(state, "playing", StringComparison.OrdinalIgnoreCase);
