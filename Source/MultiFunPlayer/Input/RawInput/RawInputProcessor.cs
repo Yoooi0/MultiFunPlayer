@@ -6,6 +6,7 @@ using NLog;
 using Stylet;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Interop;
@@ -71,9 +72,30 @@ internal sealed class RawInputProcessor : AbstractInputProcessor, IHandle<Window
         return IntPtr.Zero;
     }
 
+    [DllImport("user32.dll", SetLastError = true)]
+    public static extern uint MapVirtualKey(uint uCode, uint uMapType);
+
     public void ParseKeyboardGestures(RawInputKeyboardData data)
     {
-        var key = KeyInterop.KeyFromVirtualKey(data.Keyboard.VirutalKey);
+        const uint MAPVK_VSC_TO_VK_EX = 0x03;
+        const int VK_SHIFT = 0x10;
+        const int VK_CONTROL = 0x11;
+        const int VK_MENU = 0x12;
+
+        var scanCode = data.Keyboard.ScanCode;
+        var virtualKey = data.Keyboard.VirutalKey;
+        if (scanCode == 0xff || virtualKey >= 0xff)
+            return;
+
+        if (data.Keyboard.Flags.HasFlag(RawKeyboardFlags.KeyE0))
+            scanCode |= 0xe000;
+        if (data.Keyboard.Flags.HasFlag(RawKeyboardFlags.KeyE1))
+            scanCode |= 0xe100;
+
+        if (virtualKey is VK_SHIFT or VK_CONTROL or VK_MENU)
+            virtualKey = (int)MapVirtualKey((uint)scanCode, MAPVK_VSC_TO_VK_EX);
+
+        var key = KeyInterop.KeyFromVirtualKey(virtualKey);
         var pressed = (data.Keyboard.Flags & RawKeyboardFlags.Up) == 0;
 
         if (pressed)
