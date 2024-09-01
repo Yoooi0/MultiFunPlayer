@@ -43,6 +43,9 @@ dotnet_diagnostic.CA1822.severity = none
 # SYSLIB1045: Convert to 'GeneratedRegexAttribute'.
 dotnet_diagnostic.SYSLIB1045.severity = silent
 
+# SYSLIB1054: Use 'LibraryImportAttribute' instead of 'DllImportAttribute' to generate P/Invoke marshalling code at compile time
+dotnet_diagnostic.SYSLIB1054.severity = silent
+
 #### Core EditorConfig Options ####
 
 # Indentation and spacing
