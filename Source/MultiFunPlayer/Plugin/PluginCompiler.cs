@@ -132,7 +132,7 @@ internal static class PluginCompiler
         try
         {
             var references = ReferenceCache.ToList();
-            
+
             var pluginSource = File.ReadAllText(pluginFile.FullName);
             AddReferencesFromPluginSource(pluginFile, pluginSource, references);
 

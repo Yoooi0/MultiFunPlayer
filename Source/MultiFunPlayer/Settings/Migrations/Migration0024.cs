@@ -1,6 +1,5 @@
 ﻿using MultiFunPlayer.Common;
 using Newtonsoft.Json.Linq;
-using NLog;
 
 namespace MultiFunPlayer.Settings.Migrations;
 

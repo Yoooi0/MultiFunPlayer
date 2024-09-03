@@ -1,7 +1,6 @@
 ﻿using MultiFunPlayer.Common;
 using Newtonsoft.Json;
 using Stylet;
-using System.Windows.Media;
 
 namespace MultiFunPlayer.OutputTarget;
 
