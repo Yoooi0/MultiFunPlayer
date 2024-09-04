@@ -267,7 +267,7 @@ internal sealed class Bootstrapper : Bootstrapper<RootViewModel>
 
             settings.Error += (s, e) =>
             {
-                if (e.ErrorContext.Error is JsonSerializationException or JsonReaderException)
+                if (e.ErrorContext.Error is JsonSerializationException or JsonReaderException or JsonWriterException)
                 {
                     logger.Warn(e.ErrorContext.Error);
                     e.ErrorContext.Handled = true;
