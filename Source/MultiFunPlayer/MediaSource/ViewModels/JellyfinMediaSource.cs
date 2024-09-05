@@ -307,17 +307,21 @@ internal sealed class JellyfinMediaSource(IShortcutManager shortcutManager, IEve
         if (action == SettingsAction.Saving)
         {
             settings[nameof(ServerBaseUri)] = ServerBaseUri?.ToString();
-            settings[nameof(ApiKey)] = ApiKey;
             settings[nameof(SelectedDevice)] = SelectedDeviceId;
+
+            settings[nameof(ApiKey)] = ProtectedStringUtils.Protect(ApiKey,
+                e => Logger.Warn(e, "Failed to encrypt \"{0}\"", nameof(ApiKey)));
         }
         else if (action == SettingsAction.Loading)
         {
             if (settings.TryGetValue<string>(nameof(SelectedDevice), out var deviceId))
                 SelectDeviceById(deviceId);
-            if (settings.TryGetValue<string>(nameof(ApiKey), out var apiKey))
-                ApiKey = apiKey;
             if (settings.TryGetValue<Uri>(nameof(ServerBaseUri), out var serverBaseUri))
                 ServerBaseUri = serverBaseUri;
+
+            if (settings.TryGetValue<string>(nameof(ApiKey), out var encryptedApiKey))
+                ApiKey = ProtectedStringUtils.Unprotect(encryptedApiKey,
+                    e => Logger.Warn(e, "Failed to decrypt \"{0}\"", nameof(ApiKey)));
         }
     }
 

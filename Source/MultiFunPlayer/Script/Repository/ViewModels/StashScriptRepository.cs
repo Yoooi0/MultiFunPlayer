@@ -1,5 +1,6 @@
 ﻿using MultiFunPlayer.Common;
 using MultiFunPlayer.MediaSource.MediaResource;
+using MultiFunPlayer.Settings.Converters;
 using Newtonsoft.Json;
 using NLog;
 using System.ComponentModel;
@@ -17,7 +18,7 @@ internal sealed class StashScriptRepository : AbstractScriptRepository
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
     [JsonProperty] public Uri ServerBaseUri { get; set; } = new Uri("http://127.0.0.1:9999");
-    [JsonProperty] public string ApiKey { get; set; } = null;
+    [JsonProperty][JsonConverter(typeof(ProtectedStringConverter))] public string ApiKey { get; set; } = null;
     [JsonProperty] public StashLocalMatchType LocalMatchType { get; set; } = StashLocalMatchType.MatchToCurrentFile;
     [JsonProperty] public StashDmsMatchType DmsMatchType { get; set; } = StashDmsMatchType.MatchToAxis;
     [JsonProperty] public DeviceAxis DmsMatchAxis { get; set; } = DeviceAxis.All.FirstOrDefault();

@@ -411,9 +411,11 @@ internal sealed class PlexMediaSource(IShortcutManager shortcutManager, IEventAg
         if (action == SettingsAction.Saving)
         {
             settings[nameof(ServerBaseUri)] = JToken.FromObject(ServerBaseUri);
-            settings[nameof(PlexToken)] = PlexToken;
             settings[nameof(ClientIdentifier)] = ClientIdentifier;
             settings[nameof(SelectedClient)] = SelectedClientMachineIdentifier;
+
+            settings[nameof(PlexToken)] = ProtectedStringUtils.Protect(PlexToken,
+                e => Logger.Warn(e, "Failed to encrypt \"{0}\"", nameof(PlexToken)));
         }
         else if (action == SettingsAction.Loading)
         {
@@ -425,6 +427,10 @@ internal sealed class PlexMediaSource(IShortcutManager shortcutManager, IEventAg
                 PlexToken = plexToken;
             if (settings.TryGetValue<string>(nameof(ClientIdentifier), out var clientIdentifier))
                 ClientIdentifier = clientIdentifier;
+
+            if (settings.TryGetValue<string>(nameof(PlexToken), out var encryptedPlexToken))
+                PlexToken = ProtectedStringUtils.Unprotect(encryptedPlexToken,
+                    e => Logger.Warn(e, "Failed to decrypt \"{0}\"", nameof(PlexToken)));
         }
     }
 
