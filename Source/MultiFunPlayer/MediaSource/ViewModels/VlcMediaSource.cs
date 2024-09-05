@@ -287,8 +287,8 @@ internal sealed class VlcMediaSource(IShortcutManager shortcutManager, IEventAgg
         if (action == SettingsAction.Saving)
         {
             settings[nameof(Endpoint)] = Endpoint?.ToUriString();
-            settings[nameof(Password)] = JToken.FromObject(ProtectedStringUtils.Protect(Password,
-                e => Logger.Warn(e, "Failed to encrypt password")));
+            settings[nameof(Password)] = ProtectedStringUtils.Protect(Password,
+                e => Logger.Warn(e, "Failed to encrypt \"{0}\"", nameof(Password)));
         }
         else if (action == SettingsAction.Loading)
         {
@@ -297,7 +297,7 @@ internal sealed class VlcMediaSource(IShortcutManager shortcutManager, IEventAgg
 
             if (settings.TryGetValue<string>(nameof(Password), out var encryptedPassword))
                 Password = ProtectedStringUtils.Unprotect(encryptedPassword,
-                    e => Logger.Warn(e, "Failed to decrypt password"));
+                    e => Logger.Warn(e, "Failed to decrypt \"{0}\"", nameof(Password)));
         }
     }
 
