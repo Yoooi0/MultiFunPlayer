@@ -1,4 +1,4 @@
-﻿using PropertyChanged;
+using PropertyChanged;
 using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
@@ -164,7 +164,7 @@ public sealed partial class UriBox : UserControl
     {
         GuardUpdate(() =>
         {
-            if (!IsSingleScheme && Schemes.Contains(Uri?.Scheme, StringComparison.OrdinalIgnoreCase))
+            if (!IsSingleScheme && AvailableSchemes.Contains(Uri?.Scheme, StringComparer.OrdinalIgnoreCase))
                 Scheme = Uri?.Scheme;
 
             HostOrIPAddress = Uri?.Host;
