@@ -51,7 +51,7 @@
             </DockPanel>
         </DataTemplate>
 
-        <DataTemplate DataType="{x:Type shortcut:ButtonLongPressShortcut}">
+        <DataTemplate DataType="{x:Type shortcut:ButtonHoldShortcut}">
             <DockPanel LastChildFill="False">
                 <DockPanel DockPanel.Dock="Top" LastChildFill="False">
                     <TextBlock DockPanel.Dock="Left"
@@ -81,6 +81,32 @@
                                          Minimum="-1"
                                          StringFormat="{}{0}ms"
                                          Value="{Binding MaximumHoldDuration}"/>
+
+                    <DockPanel.Resources>
+                        <Style TargetType="{x:Type DockPanel}">
+                            <Setter Property="IsEnabled" Value="True"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding InvokeType}" Value="WhileHolding">
+                                    <DataTrigger.Setters>
+                                        <Setter Property="IsEnabled" Value="False"/>
+                                    </DataTrigger.Setters>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </DockPanel.Resources>
+                </DockPanel>
+
+
+                <DockPanel DockPanel.Dock="Top" LastChildFill="False">
+                    <TextBlock DockPanel.Dock="Left"
+                               Margin="0 0 10 0"
+                               VerticalAlignment="Center"
+                               FontSize="12"
+                               Text="Invoke type:"/>
+
+                    <ComboBox DockPanel.Dock="Left"
+                              ItemsSource="{Binding Source={ui:EnumBindingSource {x:Type shortcut:ButtonHoldInvokeType}}}"
+                              SelectedItem="{Binding InvokeType}"/>
                 </DockPanel>
             </DockPanel>
         </DataTemplate>
@@ -487,8 +513,9 @@
                                 Margin="0"
                                 Padding="0"
                                 VerticalAlignment="Center"
-                                material:ButtonProgressAssist.IsIndeterminate="True"
                                 material:ButtonProgressAssist.IsIndicatorVisible="{Binding IsCapturingGestures}"
+                                material:ButtonProgressAssist.Value="{Binding GestureCaptureProgressPercent}"
+                                material:TransitionAssist.DisableTransitions="True"
                                 Click="{s:Action CaptureGestures}"
                                 ToolTip="Start capturing">
                             <material:PackIcon Width="28"

@@ -1,5 +1,4 @@
 ﻿using Newtonsoft.Json.Linq;
-using NLog;
 using System.Text.RegularExpressions;
 
 namespace MultiFunPlayer.Settings.Migrations;

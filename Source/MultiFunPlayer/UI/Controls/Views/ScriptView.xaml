@@ -448,6 +448,16 @@
                                                 <Setter Property="Foreground" Value="{DynamicResource MaterialDesignErrorBrush}"/>
                                                 <Setter Property="FontWeight" Value="Black"/>
                                             </DataTrigger>
+                                            <DataTrigger Value="True">
+                                                <Setter Property="Foreground" Value="{DynamicResource MaterialDesignErrorBrush}"/>
+                                                <Setter Property="FontWeight" Value="Black"/>
+                                                <DataTrigger.Binding>
+                                                    <MultiBinding Converter="{StaticResource BooleanAndConverter}">
+                                                        <Binding Path="Value.Settings.LockScript"/>
+                                                        <Binding Converter="{StaticResource InvertedNullableToBooleanConverter}" Path="Value.Script"/>
+                                                    </MultiBinding>
+                                                </DataTrigger.Binding>
+                                            </DataTrigger>
                                         </Style.Triggers>
                                     </Style>
                                 </TextBlock.Resources>
@@ -971,6 +981,7 @@
                                                                                     IsSnapToTickEnabled="True"
                                                                                     Maximum="1"
                                                                                     Minimum="0"
+                                                                                    SmallChange="0.01"
                                                                                     TickFrequency="0.01"
                                                                                     Value="{Binding Value.Settings.MotionProviderBlend}"/>
 
@@ -1541,6 +1552,7 @@
                                                     IsSnapToTickEnabled="True"
                                                     Maximum="4"
                                                     Minimum="0.01"
+                                                    SmallChange="0.01"
                                                     TickFrequency="0.01"
                                                     ValueChanged="{s:Action OnScriptScaleSliderValueChanged}"
                                                     Value="{Binding Value.Settings.ScriptScale}"/>

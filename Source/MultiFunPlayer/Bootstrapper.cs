@@ -27,6 +27,7 @@ using StyletIoC;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
+using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
@@ -131,7 +132,12 @@ internal sealed class Bootstrapper : Bootstrapper<RootViewModel>
 
         Logger.Info("Environment [OSVersion: {0}, CLRVersion: {1}]", Environment.OSVersion, Environment.Version);
         Logger.Info("Assembly [Version: {0}+{1}]", GitVersionInformation.SemVer, GitVersionInformation.FullBuildMetaData);
-        Logger.Info("Config [Version: {0}]", settings.TryGetValue<int>("ConfigVersion", out var version) ? version : -1);
+
+        if (Logger.IsTraceEnabled)
+            Logger.Trace(() => $"Config [{settings}]");
+        else
+            Logger.Info("Config [Version: {0}]", settings.TryGetValue<int>("ConfigVersion", out var version) ? version : -1);
+
         Logger.Info("Timer [IsHighResolution: {0}, Frequency: {1}]", Stopwatch.IsHighResolution, Stopwatch.Frequency);
         Logger.Info("Set working directory to \"{0}\"", workingDirectory);
     }
@@ -256,12 +262,12 @@ internal sealed class Bootstrapper : Bootstrapper<RootViewModel>
             };
 
             settings.Converters.Add(new StringEnumConverter());
-            foreach (var converter in converterFactory())
+            foreach (var converter in converterFactory().Where(t => t.GetType().GetCustomAttribute<GlobalJsonConverterAttribute>() != null))
                 settings.Converters.Add(converter);
 
             settings.Error += (s, e) =>
             {
-                if (e.ErrorContext.Error is JsonSerializationException or JsonReaderException)
+                if (e.ErrorContext.Error is JsonSerializationException or JsonReaderException or JsonWriterException)
                 {
                     logger.Warn(e.ErrorContext.Error);
                     e.ErrorContext.Handled = true;

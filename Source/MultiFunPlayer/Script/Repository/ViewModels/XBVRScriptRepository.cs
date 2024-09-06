@@ -16,7 +16,7 @@ internal sealed class XBVRScriptRepository : AbstractScriptRepository
 
     [JsonProperty] public Uri ServerBaseUri { get; set; } = new Uri("http://127.0.0.1:9999");
     [JsonProperty] public XBVRLocalMatchType LocalMatchType { get; set; } = XBVRLocalMatchType.MatchToCurrentFile;
-    [JsonProperty] public XBVRDmsMatchType DmsMatchType { get; set; } = XBVRDmsMatchType.MatchToCurrentFile;
+    [JsonProperty] public XBVRDmsMatchType DmsMatchType { get; set; } = XBVRDmsMatchType.MatchAllUseFirst;
 
     public override async ValueTask<Dictionary<DeviceAxis, IScriptResource>> SearchForScriptsAsync(
         MediaResourceInfo mediaResource, IEnumerable<DeviceAxis> axes, ILocalScriptRepository localRepository, CancellationToken token)
@@ -192,6 +192,14 @@ internal sealed class XBVRScriptRepository : AbstractScriptRepository
                 foreach (var axis in DeviceAxisUtils.FindAxesMatchingName(axes, scriptFile.Filename))
                     AddToResult(resultFiles, axis, scriptFile);
         }
+        else if (DmsMatchType == XBVRDmsMatchType.MatchAllUseFirst)
+        {
+            Logger.Trace("Trying to match all scripts using dms");
+
+            foreach (var scriptFile in scriptFiles)
+                foreach (var axis in DeviceAxisUtils.FindAxesMatchingName(axes, scriptFile.Filename))
+                    AddToResult(resultFiles, axis, scriptFile);
+        }
 
         foreach (var (axis, scriptFile) in resultFiles)
         {
@@ -229,16 +237,18 @@ internal enum XBVRLocalMatchType
 {
     [Description("Don't match scripts using local repository")]
     None,
-    [Description("Match scripts based on currently playing XBVR file using local repository")]
+    [Description("Match scripts based on currently playing XBVR file name using local repository")]
     MatchToCurrentFile
 }
 
 internal enum XBVRDmsMatchType
 {
-    [Description("Don't match scripts using XBVR dms")]
+    [Description("Don't match scripts using XBVR")]
     None,
-    [Description("Match scripts based on currently playing XBVR file using XBVR dms")]
+    [Description("Match all scripts attached to XBVR scene, for each axis only use the first matched script")]
+    MatchAllUseFirst,
+    [Description("Match scripts attached to XBVR scene based on currently playing XBVR file name")]
     MatchToCurrentFile,
-    [Description("Match only scripts selected in XBVR using XBVR dms")]
-    MatchSelectedOnly
+    [Description("Match only scripts selected in XBVR scene")]
+    MatchSelectedOnly,
 }

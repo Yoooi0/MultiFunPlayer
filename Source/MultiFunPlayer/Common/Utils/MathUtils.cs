@@ -1,6 +1,9 @@
-using System.Runtime.CompilerServices;
+﻿using System.Runtime.CompilerServices;
+using System.Windows;
 
+#pragma warning disable IDE0130 // Namespace does not match folder structure
 namespace MultiFunPlayer.Common;
+#pragma warning restore IDE0130 // Namespace does not match folder structure
 
 public static class MathUtils
 {
@@ -126,20 +129,20 @@ public static class Interpolation
     }
 
     [MethodImpl(MethodImplOptions.AggressiveOptimization)]
-    public static double Linear<T>(IList<T> points, Func<T, double> getX, Func<T, double> getY, double x)
+    public static double Linear(IList<Point> points, double x)
     {
-        if (x < getX(points[0]))
-            return getY(points[0]);
+        if (x < points[0].X)
+            return points[0].Y;
 
         for (int i = 0, j = 1; j < points.Count; i = j++)
         {
-            var x0 = getX(points[i]);
-            var x1 = getX(points[j]);
+            var x0 = points[i].X;
+            var x1 = points[j].X;
             if (x >= x0 && x < x1)
-                return Linear(x0, getY(points[i]), x1, getY(points[j]), x);
+                return Linear(x0, points[i].Y, x1, points[j].Y, x);
         }
 
-        return getY(points[^1]);
+        return points[^1].Y;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveOptimization)]

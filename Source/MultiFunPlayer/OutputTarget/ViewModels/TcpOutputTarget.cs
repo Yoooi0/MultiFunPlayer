@@ -48,12 +48,33 @@ internal sealed class TcpOutputTarget(int instanceIndex, IEventAggregator eventA
 
     protected override void Run(ConnectionType connectionType, CancellationToken token)
     {
-        using var client = new TcpClient();
+        using var client = new TcpClient()
+        {
+            NoDelay = true,
+        };
 
         try
         {
-            client.Connect(Endpoint);
-            client.NoDelay = true;
+            if (connectionType == ConnectionType.Manual)
+            {
+                client.Connect(Endpoint);
+            }
+            else if (connectionType == ConnectionType.AutoConnect)
+            {
+                var asyncResult = Endpoint switch
+                {
+                    IPEndPoint ipEndPoint => client.BeginConnect(ipEndPoint.Address, ipEndPoint.Port, null, null),
+                    DnsEndPoint dnsEndPoint => client.BeginConnect(dnsEndPoint.Host, dnsEndPoint.Port, null, null),
+                    _ => throw new NotSupportedException()
+                };
+
+                using var waitHandle = asyncResult.AsyncWaitHandle;
+                if (!waitHandle.WaitOne(500))
+                    throw new TimeoutException();
+
+                client.EndConnect(asyncResult);
+            }
+
             Status = ConnectionStatus.Connected;
         }
         catch (Exception e) when (connectionType != ConnectionType.AutoConnect)

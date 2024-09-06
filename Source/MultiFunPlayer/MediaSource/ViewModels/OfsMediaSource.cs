@@ -1,4 +1,4 @@
-using MultiFunPlayer.Common;
+﻿using MultiFunPlayer.Common;
 using MultiFunPlayer.Script;
 using MultiFunPlayer.Shortcut;
 using MultiFunPlayer.UI;
@@ -45,7 +45,9 @@ internal sealed class OfsMediaSource(IShortcutManager shortcutManager, IEventAgg
         try
         {
             using var cancellationSource = CancellationTokenSource.CreateLinkedTokenSource(token);
-            cancellationSource.CancelAfter(500);
+            if (connectionType == ConnectionType.AutoConnect)
+                cancellationSource.CancelAfter(500);
+
             await client.ConnectAsync(Uri, cancellationSource.Token);
 
             Status = ConnectionStatus.Connected;

@@ -80,6 +80,6 @@ internal sealed partial class SmartLimitPreview : UserControl
             return;
 
         var x = Math.Clamp(Input, 0, 100);
-        Output = Interpolation.Linear(Points, p => p.X, p => p.Y, x);
+        Output = Interpolation.Linear(Points, x);
     }
 }

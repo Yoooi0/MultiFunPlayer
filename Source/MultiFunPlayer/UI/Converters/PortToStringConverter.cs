@@ -7,7 +7,12 @@ namespace MultiFunPlayer.UI.Converters;
 public sealed class PortToStringConverter : IValueConverter
 {
     public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
-        => value is not int port ? null : port.ToString();
+        => value switch
+        {
+            int port when port == 0 => "",
+            int port => port.ToString(),
+            _ => null
+        };
 
     public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
     {

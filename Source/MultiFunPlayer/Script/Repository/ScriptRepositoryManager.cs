@@ -4,6 +4,7 @@ using NLog;
 using PropertyChanged;
 using Stylet;
 using System.ComponentModel;
+using System.Reflection;
 
 namespace MultiFunPlayer.Script.Repository;
 
@@ -30,7 +31,7 @@ internal sealed class ScriptRepositoryManager : Screen, IScriptRepositoryManager
         _eventAggregator.Subscribe(this);
 
         _localRepository = repositories.Single(r => r.GetType().IsAssignableTo(typeof(ILocalScriptRepository))) as ILocalScriptRepository;
-        Repositories = [.. repositories];
+        Repositories = [.. repositories.OrderBy(r => r.GetType().GetCustomAttribute<DisplayIndexAttribute>()?.Index ?? int.MaxValue)];
 
         foreach (var repository in Repositories)
             repository.PropertyChanged += OnRepositoryPropertyChanged;

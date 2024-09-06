@@ -1,5 +1,4 @@
 ﻿using Newtonsoft.Json.Linq;
-using NLog;
 
 namespace MultiFunPlayer.Settings.Migrations;
 
@@ -14,6 +13,10 @@ internal sealed class Migration0038 : AbstractSettingsMigration
         }, selectMultiple: false);
 
         EditPropertyByPath(settings, "$.Script.Repositories.XBVR.LocalMatchType", _ => "MatchToCurrentFile");
-        EditPropertyByPath(settings, "$.Script.Repositories.XBVR.DmsMatchType", v => v.Value<string>() == "MatchSelectedOnly" ? v : "MatchToCurrentFile");
+        EditPropertyByPath(settings, "$.Script.Repositories.XBVR.DmsMatchType", v => v.Value<string>() switch
+        {
+            "MatchSelectedOnly" => v,
+            _ => "MatchAllUseFirst"
+        });
     }
 }

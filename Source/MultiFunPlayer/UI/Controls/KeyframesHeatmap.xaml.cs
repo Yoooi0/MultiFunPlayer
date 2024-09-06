@@ -309,18 +309,19 @@ internal sealed partial class KeyframesHeatmap : UserControl
         if (Keyframes == null || Keyframes.Count == 0 || !double.IsFinite(Duration) || Duration <= 0 || ActualWidth < 1 || ActualHeight < 1)
             return;
 
-        var bucketSize = Duration / BucketCount;
-        var buckets = _buckets.AsSpan(0, (int)Math.Floor(Duration / bucketSize));
+        var buckets = _buckets.AsSpan(0, BucketCount);
 
-        for (var i = 0; i < buckets.Length; i++)
+        for (var i = 0; i < BucketCount; i++)
             buckets[i].Clear();
 
-        UpdateHeat(buckets, bucketSize);
-        UpdateRange(buckets, bucketSize);
+        UpdateHeat(buckets);
+        UpdateRange(buckets);
     }
 
-    private void UpdateHeat(Span<HeatmapBucket> buckets, double bucketSize)
+    private void UpdateHeat(Span<HeatmapBucket> buckets)
     {
+        var bucketSize = Duration / BucketCount;
+
         if (!CombineHeat)
         {
             if (SelectedAxis != null && Keyframes.TryGetValue(SelectedAxis, out var keyframes))
@@ -334,21 +335,21 @@ internal sealed partial class KeyframesHeatmap : UserControl
 
         AddStop(Color.FromRgb(0, 0, 0), 0);
 
-        var maxHeat = buckets.Length > 0 ? buckets[0].Heat : 0;
-        for (var i = 1; i < buckets.Length; i++)
+        var maxHeat = BucketCount > 0 ? buckets[0].Heat : 0;
+        for (var i = 1; i < BucketCount; i++)
             maxHeat = Math.Max(maxHeat, buckets[i].Heat);
 
         var normalizationFactor = 1d / maxHeat;
         if (double.IsFinite(normalizationFactor))
         {
-            for (var i = 0; i < buckets.Length; i++)
+            for (var i = 0; i < BucketCount; i++)
             {
                 var heat = MathUtils.Clamp01(buckets[i].Heat * normalizationFactor);
                 var color = heat < 0.001 ? Color.FromRgb(0, 0, 0) : _colors[(int)Math.Round(heat * (_colors.Length - 1))];
 
-                AddStop(color, i * bucketSize / Duration);
-                if (i < buckets.Length - 1)
-                    AddStop(color, (i + 1) * bucketSize / Duration);
+                AddStop(color, i / (BucketCount - 1d));
+                if (i < BucketCount - 1)
+                    AddStop(color, (i + 1) / (BucketCount - 1d));
             }
         }
 
@@ -370,13 +371,13 @@ internal sealed partial class KeyframesHeatmap : UserControl
                 var dy = next.Value - prev.Value;
                 var adx = Math.Abs(dx);
                 var ady = Math.Abs(dy);
-                if (ady < 0.001 || adx < 0.001 || Math.Atan2(ady, adx) * 180 / MathF.PI < 5)
+                if (ady < 0.001 || Math.Atan2(ady, adx) * 180 / MathF.PI < 5)
                     continue;
 
                 var startBucket = (int)Math.Floor(prev.Position / bucketSize);
                 var endBucket = (int)Math.Floor(next.Position / bucketSize);
 
-                for (var index = startBucket; index < buckets.Length && index <= endBucket; index++)
+                for (var index = startBucket; index < BucketCount && index <= endBucket; index++)
                 {
                     var positionFrom = Math.Max(index * bucketSize, prev.Position);
                     var positionTo = Math.Min((index + 1) * bucketSize, next.Position);
@@ -387,13 +388,13 @@ internal sealed partial class KeyframesHeatmap : UserControl
         }
     }
 
-    private void UpdateRange(Span<HeatmapBucket> buckets, double bucketSize)
+    private void UpdateRange(Span<HeatmapBucket> buckets)
     {
         void AddPoint(double x, double y)
             => Points.Add(new Point(double.IsFinite(x) ? x : 0, double.IsFinite(y) ? y : 0));
 
         void AddPointForBucket(int index, double value)
-            => AddPoint(index * bucketSize / Duration * ActualWidth, MathUtils.Clamp01(!InvertY ? 1 - value : value) * ActualHeight);
+            => AddPoint(index / (BucketCount - 1d) * ActualWidth, MathUtils.Clamp01(!InvertY ? 1 - value : value) * ActualHeight);
 
         if (!ShowRange || !Keyframes.TryGetValue(SelectedAxis, out var keyframes) || keyframes == null || keyframes.Count < 2)
         {
@@ -404,6 +405,7 @@ internal sealed partial class KeyframesHeatmap : UserControl
         }
         else
         {
+            var bucketSize = Duration / BucketCount;
             for (int i = 0, j = 1; j < keyframes.Count; i = j++)
             {
                 var prev = keyframes[i];
@@ -411,7 +413,7 @@ internal sealed partial class KeyframesHeatmap : UserControl
 
                 var startBucket = (int)Math.Floor(prev.Position / bucketSize);
                 var endBucket = (int)Math.Floor(next.Position / bucketSize);
-                for (var index = startBucket; index < buckets.Length && index <= endBucket; index++)
+                for (var index = startBucket; index < BucketCount && index <= endBucket; index++)
                 {
                     var positionFrom = Math.Max(index * bucketSize, prev.Position);
                     var positionTo = Math.Min((index + 1) * bucketSize, next.Position);
@@ -422,10 +424,10 @@ internal sealed partial class KeyframesHeatmap : UserControl
                 }
             }
 
-            for (var i = 0; i < buckets.Length; i++)
+            for (var i = 0; i < BucketCount; i++)
                 AddPointForBucket(i, buckets[i].HasRange ? buckets[i].RangeMax : SelectedAxis.DefaultValue);
 
-            for (var i = buckets.Length - 1; i >= 0; i--)
+            for (var i = BucketCount - 1; i >= 0; i--)
                 AddPointForBucket(i, buckets[i].HasRange ? buckets[i].RangeMin : SelectedAxis.DefaultValue);
         }
     }

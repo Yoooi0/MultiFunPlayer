@@ -49,7 +49,8 @@ internal sealed class DeoVRMediaSource(IShortcutManager shortcutManager, IEventA
         try
         {
             using var cancellationSource = CancellationTokenSource.CreateLinkedTokenSource(token);
-            cancellationSource.CancelAfter(500);
+            if (connectionType == ConnectionType.AutoConnect)
+                cancellationSource.CancelAfter(500);
 
             await client.ConnectAsync(Endpoint, cancellationSource.Token);
 

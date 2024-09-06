@@ -24,6 +24,7 @@ using MultiFunPlayer.Script;
 using MultiFunPlayer.Script.Repository;
 using MultiFunPlayer.Shortcut;
 using MultiFunPlayer.UI.Dialogs.ViewModels;
+using System.Text.RegularExpressions;
 
 namespace MultiFunPlayer.UI.Controls.ViewModels;
 
@@ -301,8 +302,7 @@ internal sealed class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDispo
                     if (settings.BypassTransition)
                         return false;
 
-                    state.ExternalTransition.Update(deltaTime);
-                    context.TransitionValue = state.ExternalTransition.GetValue();
+                    context.TransitionValue = state.ExternalTransition.Update(deltaTime);
                     return context.IsTransitionDirty;
                 }
             }
@@ -453,7 +453,7 @@ internal sealed class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDispo
                         if (!double.IsFinite(x))
                             return false;
 
-                        var factor = Interpolation.Linear(settings.SmartLimitPoints, p => p.X, p => p.Y, x) / 100;
+                        var factor = Interpolation.Linear(settings.SmartLimitPoints, x) / 100;
 
                         context.Value = settings.SmartLimitMode switch
                         {
@@ -2043,21 +2043,22 @@ internal sealed class AxisValueTransition
 
     public AxisValueTransition() => _initialized = false;
 
-    public bool Update(double deltaTime)
+    public double Update(double deltaTime)
     {
         if (!_initialized)
-            return false;
+            return double.NaN;
         if (_time >= 0 && _time >= _duration)
-            return false;
+            return double.NaN;
 
-        _time = _time < 0 ? deltaTime : _time + deltaTime;
-        return true;
-    }
+        var nextTime = _time < 0 ? deltaTime : _time + deltaTime;
+        var isEnd = _time < _duration && nextTime >= _duration;
+        _time = nextTime;
 
-    public double GetValue()
-    {
-        if (_duration < 0.00001)
+        if (isEnd)
+        {
+            _initialized = false;
             return _toValue;
+        }
 
         var t = MathUtils.Clamp01(_time / _duration);
         return MathUtils.Lerp(_fromValue, _toValue, t);
@@ -2216,6 +2217,11 @@ internal sealed class AxisSettings : PropertyChangedBase
                 SelectedMotionProvider = providerName;
 
             UpdateMotionProviderWithoutScript = true;
+        }
+        else if (Regex.IsMatch(axis.Name, @"^V\d$"))
+        {
+            AutoHomeDelay = 0;
+            AutoHomeDuration = 1;
         }
     }
 }

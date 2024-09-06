@@ -46,7 +46,7 @@
                         Maximum="{Binding MaximumUpdateInterval}"
                         Minimum="{Binding MinimumUpdateInterval}"
                         Orientation="Horizontal"
-                        Ticks="{Binding UpdateIntervalTicks}"
+                        TickFrequency="1"
                         Value="{Binding UpdateInterval, Mode=TwoWay}"/>
             </DockPanel>
 
@@ -126,7 +126,7 @@
                         Maximum="{Binding MaximumUpdateInterval}"
                         Minimum="{Binding MinimumUpdateInterval}"
                         Orientation="Horizontal"
-                        Ticks="{Binding UpdateIntervalTicks}"
+                        TickFrequency="1"
                         Value="{Binding UpdateInterval, Mode=TwoWay}"/>
             </DockPanel>
 
@@ -176,7 +176,7 @@
                         Maximum="{Binding MaximumUpdateInterval}"
                         Minimum="{Binding MinimumUpdateInterval}"
                         Orientation="Horizontal"
-                        Ticks="{Binding UpdateIntervalTicks}"
+                        TickFrequency="1"
                         Value="{Binding UpdateInterval, Mode=TwoWay}"/>
             </DockPanel>
 
@@ -316,7 +316,7 @@
                         Maximum="{Binding MaximumUpdateInterval}"
                         Minimum="{Binding MinimumUpdateInterval}"
                         Orientation="Horizontal"
-                        Ticks="{Binding UpdateIntervalTicks}"
+                        TickFrequency="1"
                         Value="{Binding UpdateInterval, Mode=TwoWay}"/>
             </DockPanel>
 

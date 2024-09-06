@@ -3,6 +3,7 @@ using System.IO;
 
 namespace MultiFunPlayer.Settings.Converters;
 
+[GlobalJsonConverter]
 internal sealed class FileSystemInfoConverter : JsonConverter
 {
     public override bool CanConvert(Type objectType)

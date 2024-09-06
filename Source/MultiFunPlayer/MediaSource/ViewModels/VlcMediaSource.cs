@@ -5,14 +5,11 @@ using Newtonsoft.Json.Linq;
 using NLog;
 using Stylet;
 using System.ComponentModel;
-using System.Globalization;
+using System.Diagnostics;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
-using System.Security.Cryptography;
 using System.Text;
-using System.Xml.Linq;
-using System.Xml.XPath;
 
 namespace MultiFunPlayer.MediaSource.ViewModels;
 
@@ -20,8 +17,6 @@ namespace MultiFunPlayer.MediaSource.ViewModels;
 internal sealed class VlcMediaSource(IShortcutManager shortcutManager, IEventAggregator eventAggregator) : AbstractMediaSource(shortcutManager, eventAggregator)
 {
     protected override Logger Logger { get; } = LogManager.GetCurrentClassLogger();
-
-    private PlayerState _playerState;
 
     public override ConnectionStatus Status { get; protected set; }
     public bool IsConnected => Status == ConnectionStatus.Connected;
@@ -46,15 +41,28 @@ internal sealed class VlcMediaSource(IShortcutManager shortcutManager, IEventAgg
     protected override async Task RunAsync(ConnectionType connectionType, CancellationToken token)
     {
         using var client = NetUtils.CreateHttpClient();
+        var version = -1;
 
         try
         {
             client.Timeout = TimeSpan.FromMilliseconds(500);
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", Convert.ToBase64String(Encoding.UTF8.GetBytes($":{Password}")));
 
-            var uri = new Uri($"http://{Endpoint.ToUriString()}/requests/status.xml");
+            var uri = new Uri($"http://{Endpoint.ToUriString()}/requests/status.json");
             var response = await client.GetAsync(uri, token);
             response.EnsureSuccessStatusCode();
+
+            var message = await response.Content.ReadAsStringAsync(token);
+            var document = JObject.Parse(message);
+
+            if (!document.TryGetValue("apiversion", out version))
+            {
+                Logger.Trace("Unable to determine version from \"{0}\"", message);
+                throw new MediaSourceException("Unable to determine VLC version");
+            }
+
+            if (version is not (3 or 4))
+                throw new MediaSourceException($"Unsupported VLC version \"{version}\"");
 
             Status = ConnectionStatus.Connected;
         }
@@ -71,10 +79,8 @@ internal sealed class VlcMediaSource(IShortcutManager shortcutManager, IEventAgg
 
         try
         {
-            _playerState = new PlayerState();
-
             using var cancellationSource = CancellationTokenSource.CreateLinkedTokenSource(token);
-            var task = await Task.WhenAny(ReadAsync(client, cancellationSource.Token), WriteAsync(client, cancellationSource.Token));
+            var task = await Task.WhenAny(ReadAsync(client, version, cancellationSource.Token), WriteAsync(client, version, cancellationSource.Token));
             cancellationSource.Cancel();
 
             task.ThrowIfFaulted();
@@ -93,10 +99,11 @@ internal sealed class VlcMediaSource(IShortcutManager shortcutManager, IEventAgg
         PublishMessage(new MediaPlayingChangedMessage(false));
     }
 
-    private async Task ReadAsync(HttpClient client, CancellationToken token)
+    private async Task ReadAsync(HttpClient client, int version, CancellationToken token)
     {
-        var statusUri = new Uri($"http://{Endpoint.ToUriString()}/requests/status.xml");
-        var playlistUri = new Uri($"http://{Endpoint.ToUriString()}/requests/playlist.xml");
+        var statusUri = new Uri($"http://{Endpoint.ToUriString()}/requests/status.json");
+        var playlistUri = new Uri($"http://{Endpoint.ToUriString()}/requests/playlist.json");
+        var playerState = new PlayerState();
 
         try
         {
@@ -112,19 +119,29 @@ internal sealed class VlcMediaSource(IShortcutManager shortcutManager, IEventAgg
                 var statusMessage = await statusResponse.Content.ReadAsStringAsync(token);
 
                 Logger.Trace("Received \"{0}\" from \"{1}\"", statusMessage, Name);
-                var statusDocument = XDocument.Parse(statusMessage);
+                var statusDocument = JObject.Parse(statusMessage);
 
-                if (!int.TryParse(statusDocument.Root.Element("currentplid")?.Value, out var playlistId))
+                if (!statusDocument.TryGetValue<int>("currentplid", out var playlistId))
                     continue;
 
-                var lastPlaylistId = _playerState.PlaylistId;
-                if (playlistId < 0)
+                bool ShouldResetState()
+                {
+                    if (version == 3 && playlistId < 0)
+                        return true;
+
+                    if (version == 4 && statusDocument.TryGetValue<string>("state", out var state) && string.Equals(state, "stopped", StringComparison.OrdinalIgnoreCase))
+                        return true;
+
+                    return false;
+                }
+
+                if (ShouldResetState())
                 {
                     ResetState();
                     continue;
                 }
 
-                if (playlistId != lastPlaylistId)
+                if (playlistId != playerState.PlaylistId)
                 {
                     var playlistResponse = await client.GetAsync(playlistUri, token);
                     if (playlistResponse == null)
@@ -135,11 +152,14 @@ internal sealed class VlcMediaSource(IShortcutManager shortcutManager, IEventAgg
 
                     Logger.Trace("Received \"{0}\" from \"{1}\"", playlistMessage, Name);
 
-                    var playlistDocument = XDocument.Parse(playlistMessage);
-                    var element = playlistDocument.XPathSelectElement($".//leaf[@id={playlistId}]");
-                    var path = element?.Attribute("uri")?.Value;
+                    var playlistDocument = JToken.Parse(playlistMessage);
+                    if (playlistDocument.SelectToken("$..[?(@.type == 'leaf' && @.current == 'current')]") is not JObject playlistItem)
+                    {
+                        ResetState();
+                        continue;
+                    }
 
-                    if (string.IsNullOrWhiteSpace(path))
+                    if (!playlistItem.TryGetValue<string>("uri", out var path) || string.IsNullOrWhiteSpace(path))
                     {
                         ResetState();
                         continue;
@@ -152,31 +172,39 @@ internal sealed class VlcMediaSource(IShortcutManager shortcutManager, IEventAgg
                     else
                         PublishMessage(new MediaPathChangedMessage(Uri.UnescapeDataString(path)));
 
-                    _playerState.PlaylistId = playlistId;
+                    playerState.PlaylistId = playlistId;
                 }
 
-                if (statusDocument.Root.Element("state")?.Value is string state && state != _playerState.State)
+                if (statusDocument.TryGetValue<string>("state", out var state) && state != playerState.State)
                 {
                     PublishMessage(new MediaPlayingChangedMessage(string.Equals(state, "playing", StringComparison.OrdinalIgnoreCase)));
-                    _playerState.State = state;
+                    playerState.State = state;
                 }
 
-                if (int.TryParse(statusDocument.Root.Element("length")?.Value, out var duration) && duration >= 0 && duration != _playerState.Duration)
+                if (statusDocument.TryGetValue<int>("length", out var duration) && duration >= 0 && duration != playerState.Duration)
                 {
                     PublishMessage(new MediaDurationChangedMessage(TimeSpan.FromSeconds(duration)));
-                    _playerState.Duration = duration;
+                    playerState.Duration = duration;
                 }
 
-                if (double.TryParse(statusDocument.Root.Element("position")?.Value?.Replace(',', '.'), NumberStyles.Any, NumberFormatInfo.InvariantInfo, out var position) && position >= 0 && position != _playerState.Position && _playerState.Duration != null)
-                {
-                    PublishMessage(new MediaPositionChangedMessage(TimeSpan.FromSeconds(position * (double)_playerState.Duration)));
-                    _playerState.Position = position;
-                }
-
-                if (double.TryParse(statusDocument.Root.Element("rate")?.Value?.Replace(',', '.'), NumberStyles.Any, NumberFormatInfo.InvariantInfo, out var speed) && speed > 0 && speed != _playerState.Speed)
+                if (statusDocument.TryGetValue<double>("rate", out var speed) && speed > 0 && speed != playerState.Speed)
                 {
                     PublishMessage(new MediaSpeedChangedMessage(speed));
-                    _playerState.Speed = speed;
+                    playerState.Speed = speed;
+                }
+
+                var position = version switch
+                {
+                    3 when statusDocument.TryGetValue<double>("position", out var positionPercent) && playerState.Duration != null => positionPercent * (double)playerState.Duration,
+                    4 when statusDocument.TryGetValue<double>("time", out var time) => time,
+                    not (3 or 4) => throw new UnreachableException(),
+                    _ => -1
+                };
+
+                if (position >= 0 && position != playerState.Position)
+                {
+                    PublishMessage(new MediaPositionChangedMessage(TimeSpan.FromSeconds(position)));
+                    playerState.Position = position;
                 }
             }
         }
@@ -185,16 +213,19 @@ internal sealed class VlcMediaSource(IShortcutManager shortcutManager, IEventAgg
 
         void ResetState()
         {
-            _playerState = new PlayerState();
+            if (playerState.PlaylistId == null)
+                return;
+
+            playerState = new PlayerState();
 
             PublishMessage(new MediaPathChangedMessage(null));
             PublishMessage(new MediaPlayingChangedMessage(false));
         }
     }
 
-    private async Task WriteAsync(HttpClient client, CancellationToken token)
+    private async Task WriteAsync(HttpClient client, int version, CancellationToken token)
     {
-        var uriBase = $"http://{Endpoint.ToUriString()}/requests/status.xml";
+        var statusUri = $"http://{Endpoint.ToUriString()}/requests/status.json";
 
         try
         {
@@ -203,20 +234,11 @@ internal sealed class VlcMediaSource(IShortcutManager shortcutManager, IEventAgg
                 await WaitForMessageAsync(token);
                 var message = await ReadMessageAsync(token);
 
-                var isPlaying = string.Equals(_playerState?.State, "playing", StringComparison.OrdinalIgnoreCase);
-                var uriArguments = message switch
-                {
-                    MediaPlayPauseMessage playPauseMessage when isPlaying != playPauseMessage.ShouldBePlaying => "pl_pause",
-                    MediaSeekMessage seekMessage => $"seek&val={(int)seekMessage.Position.TotalSeconds}",
-                    MediaChangePathMessage changePathMessage => string.IsNullOrWhiteSpace(changePathMessage.Path) ? "pl_stop" : $"in_play&input={Uri.EscapeDataString(changePathMessage.Path)}",
-                    MediaChangeSpeedMessage changeSpeedMessage => $"rate&val={changeSpeedMessage.Speed.ToString("F4").Replace(',', '.')}",
-                    _ => null
-                };
-
+                var uriArguments = await GetUriArguments(message);
                 if (uriArguments == null)
                     continue;
 
-                var requestUri = new Uri($"{uriBase}?command={uriArguments}");
+                var requestUri = new Uri($"{statusUri}?command={uriArguments}");
                 Logger.Trace("Sending \"{0}\" to \"{1}\"", uriArguments, Name);
 
                 var response = await client.GetAsync(requestUri, token);
@@ -225,6 +247,37 @@ internal sealed class VlcMediaSource(IShortcutManager shortcutManager, IEventAgg
         }
         catch (OperationCanceledException e) when (e.InnerException is TimeoutException t) { t.Throw(); }
         catch (OperationCanceledException) { }
+
+        async ValueTask<string> GetUriArguments(IMediaSourceControlMessage message)
+        {
+            if (message is MediaPlayPauseMessage playPauseMessage)
+            {
+                var statusResponse = await client.GetAsync(statusUri, token);
+                if (statusResponse == null)
+                    return null;
+
+                statusResponse.EnsureSuccessStatusCode();
+                var statusMessage = await statusResponse.Content.ReadAsStringAsync(token);
+
+                Logger.Trace("Received \"{0}\" from \"{1}\"", statusMessage, Name);
+                var statusDocument = JObject.Parse(statusMessage);
+
+                if (!statusDocument.TryGetValue<string>("state", out var state))
+                    return null;
+
+                var isPlaying = string.Equals(state, "playing", StringComparison.OrdinalIgnoreCase);
+                if (isPlaying != playPauseMessage.ShouldBePlaying)
+                    return "pl_pause";
+            }
+
+            return message switch
+            {
+                MediaSeekMessage seekMessage => $"seek&val={(int)seekMessage.Position.TotalSeconds}",
+                MediaChangePathMessage changePathMessage => string.IsNullOrWhiteSpace(changePathMessage.Path) ? "pl_stop" : $"in_play&input={Uri.EscapeDataString(changePathMessage.Path)}",
+                MediaChangeSpeedMessage changeSpeedMessage => $"rate&val={changeSpeedMessage.Speed.ToString("F4").Replace(',', '.')}",
+                _ => null
+            };
+        }
     }
 
     public override void HandleSettings(JObject settings, SettingsAction action)
@@ -234,23 +287,8 @@ internal sealed class VlcMediaSource(IShortcutManager shortcutManager, IEventAgg
         if (action == SettingsAction.Saving)
         {
             settings[nameof(Endpoint)] = Endpoint?.ToUriString();
-
-            try
-            {
-                if (!string.IsNullOrWhiteSpace(Password))
-                {
-                    var encryptedPassword = Convert.ToBase64String(ProtectedData.Protect(Encoding.UTF8.GetBytes(Password), null, DataProtectionScope.CurrentUser));
-                    settings[nameof(Password)] = JToken.FromObject(encryptedPassword);
-                }
-                else
-                {
-                    settings[nameof(Password)] = null;
-                }
-            }
-            catch (Exception e)
-            {
-                Logger.Warn(e, "Failed to encrypt password to settings");
-            }
+            settings[nameof(Password)] = ProtectedStringUtils.Protect(Password,
+                e => Logger.Warn(e, "Failed to encrypt \"{0}\"", nameof(Password)));
         }
         else if (action == SettingsAction.Loading)
         {
@@ -258,16 +296,8 @@ internal sealed class VlcMediaSource(IShortcutManager shortcutManager, IEventAgg
                 Endpoint = endpoint;
 
             if (settings.TryGetValue<string>(nameof(Password), out var encryptedPassword))
-            {
-                try
-                {
-                    Password = Encoding.UTF8.GetString(ProtectedData.Unprotect(Convert.FromBase64String(encryptedPassword), null, DataProtectionScope.CurrentUser));
-                }
-                catch (Exception e)
-                {
-                    Logger.Warn(e, "Failed to decrypt password from settings");
-                }
-            }
+                Password = ProtectedStringUtils.Unprotect(encryptedPassword,
+                    e => Logger.Warn(e, "Failed to decrypt \"{0}\"", nameof(Password)));
         }
     }
 

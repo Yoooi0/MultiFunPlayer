@@ -20,7 +20,7 @@
                            Text="Endpoint:"/>
 
                 <controls:UriBox DockPanel.Dock="Left"
-                                 AvailableSchemes="http https"
+                                 Schemes="http https"
                                  ShowPathAndQuery="False"
                                  Uri="{Binding ServerBaseUri}"/>
             </StackPanel>

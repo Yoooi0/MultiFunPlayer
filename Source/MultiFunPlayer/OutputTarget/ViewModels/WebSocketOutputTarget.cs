@@ -52,7 +52,9 @@ internal sealed class WebSocketOutputTarget(int instanceIndex, IEventAggregator 
         try
         {
             using var cancellationSource = CancellationTokenSource.CreateLinkedTokenSource(token);
-            cancellationSource.CancelAfter(500);
+            if (connectionType == ConnectionType.AutoConnect)
+                cancellationSource.CancelAfter(500);
+
             await client.ConnectAsync(Uri, cancellationSource.Token);
 
             Status = ConnectionStatus.Connected;

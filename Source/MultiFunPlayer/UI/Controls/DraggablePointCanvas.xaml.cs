@@ -459,11 +459,11 @@ public sealed partial class DraggablePointCanvas : UserControl
 
     public Point FromCanvas(Point point) => new(FromCanvasX(point.X), FromCanvasY(point.Y));
     public double FromCanvasX(double x) => x / ActualWidth * Viewport.Width;
-    public double FromCanvasY(double y) => y / ActualHeight * Viewport.Height;
+    public double FromCanvasY(double y) => (1 - y / ActualHeight) * Viewport.Height;
 
     public Point ToCanvas(Point point) => new(ToCanvasX(point.X), ToCanvasY(point.Y));
     public double ToCanvasX(double x) => x / Viewport.Width * ActualWidth;
-    public double ToCanvasY(double y) => y / Viewport.Height * ActualHeight;
+    public double ToCanvasY(double y) => (1 - y / Viewport.Height) * ActualHeight;
 
     private void SynchronizePopup(Point position)
     {

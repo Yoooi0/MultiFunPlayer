@@ -47,7 +47,7 @@
                        Text="Range:"/>
 
             <metro:RangeSlider DockPanel.Dock="Right"
-                               Style="{StaticResource MaterialDesignRangeSlider}"
+                               Style="{StaticResource MaterialDesignCompactRangeSlider}"
                                HorizontalAlignment="Stretch"
                                AutoToolTipPlacement="TopLeft"
                                AutoToolTipPrecision="2"

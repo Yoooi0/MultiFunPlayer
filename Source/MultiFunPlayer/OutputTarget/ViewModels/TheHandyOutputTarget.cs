@@ -179,15 +179,19 @@ internal sealed class TheHandyOutputTarget(int instanceIndex, IEventAggregator e
 
         if (action == SettingsAction.Saving)
         {
-            settings[nameof(ConnectionKey)] = ConnectionKey;
             settings[nameof(SourceAxis)] = SourceAxis != null ? JToken.FromObject(SourceAxis) : null;
+
+            settings[nameof(ConnectionKey)] = ProtectedStringUtils.Protect(ConnectionKey,
+                e => Logger.Warn(e, "Failed to encrypt \"{0}\"", nameof(ConnectionKey)));
         }
         else if (action == SettingsAction.Loading)
         {
-            if (settings.TryGetValue<string>(nameof(ConnectionKey), out var connectionKey))
-                ConnectionKey = connectionKey;
             if (settings.TryGetValue<DeviceAxis>(nameof(SourceAxis), out var sourceAxis))
                 SourceAxis = sourceAxis;
+
+            if (settings.TryGetValue<string>(nameof(ConnectionKey), out var encryptedConnectionKey))
+                ConnectionKey = ProtectedStringUtils.Unprotect(encryptedConnectionKey,
+                    e => Logger.Warn(e, "Failed to decrypt \"{0}\"", nameof(ConnectionKey)));
         }
     }
 
