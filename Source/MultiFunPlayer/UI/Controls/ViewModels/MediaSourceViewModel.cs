@@ -24,7 +24,7 @@ internal sealed class MediaSourceViewModel : Conductor<IMediaSource>.Collection.
     {
         eventAggregator.Subscribe(this);
 
-        AvailableSources = new List<IMediaSource>(sources);
+        AvailableSources = [.. sources];
 
         _currentSource = null;
         _semaphore = new SemaphoreSlim(1, 1);
