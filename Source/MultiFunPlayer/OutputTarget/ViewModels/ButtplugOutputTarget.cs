@@ -1,4 +1,4 @@
-﻿using Buttplug;
+using Buttplug;
 using Buttplug.NewtonsoftJson;
 using MultiFunPlayer.Common;
 using MultiFunPlayer.Shortcut;
@@ -17,8 +17,6 @@ namespace MultiFunPlayer.OutputTarget.ViewModels;
 [DisplayName("Buttplug.io")]
 internal sealed class ButtplugOutputTarget : AsyncAbstractOutputTarget
 {
-    protected override Logger Logger { get; } = LogManager.GetCurrentClassLogger();
-
     private SemaphoreSlim _scanSemaphore;
 
     public override ConnectionStatus Status { get; protected set; }

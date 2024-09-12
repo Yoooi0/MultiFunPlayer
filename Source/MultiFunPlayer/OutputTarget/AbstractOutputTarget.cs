@@ -15,7 +15,7 @@ namespace MultiFunPlayer.OutputTarget;
 
 internal abstract class AbstractOutputTarget : Screen, IOutputTarget
 {
-    protected abstract Logger Logger { get; }
+    protected Logger Logger { get; }
     private readonly IDeviceAxisValueProvider _valueProvider;
 
     public string Name { get; init; }
@@ -42,6 +42,8 @@ internal abstract class AbstractOutputTarget : Screen, IOutputTarget
             eventAggregator.Subscribe(handler);
 
         Name = GetType().GetCustomAttribute<DisplayNameAttribute>(inherit: false).DisplayName;
+        Logger = LogManager.GetLogger(GetType().FullName);
+
         AxisSettings = new ObservableConcurrentDictionary<DeviceAxis, DeviceAxisSettings>(DeviceAxis.All.ToDictionary(a => a, _ => new DeviceAxisSettings()));
         UpdateContexts = [];
 

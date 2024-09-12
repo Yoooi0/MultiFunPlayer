@@ -13,8 +13,6 @@ namespace MultiFunPlayer.MediaSource.ViewModels;
 [DisplayName("Jellyfin")]
 internal sealed class JellyfinMediaSource(IShortcutManager shortcutManager, IEventAggregator eventAggregator) : AbstractMediaSource(shortcutManager, eventAggregator)
 {
-    protected override Logger Logger { get; } = LogManager.GetCurrentClassLogger();
-
     private CancellationTokenSource _refreshCancellationSource = new();
     private JellyfinSession _currentSession;
 

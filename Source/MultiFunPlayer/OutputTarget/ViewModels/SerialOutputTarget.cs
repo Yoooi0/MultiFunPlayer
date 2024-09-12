@@ -19,8 +19,6 @@ namespace MultiFunPlayer.OutputTarget.ViewModels;
 internal sealed class SerialOutputTarget(int instanceIndex, IEventAggregator eventAggregator, IDeviceAxisValueProvider valueProvider, IInputProcessorFactory inputProcessorFactory)
     : ThreadAbstractOutputTarget(instanceIndex, eventAggregator, valueProvider)
 {
-    protected override Logger Logger { get; } = LogManager.GetCurrentClassLogger();
-
     private CancellationTokenSource _refreshCancellationSource = new();
 
     public override ConnectionStatus Status { get; protected set; }

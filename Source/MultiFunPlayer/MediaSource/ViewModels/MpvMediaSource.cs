@@ -19,7 +19,6 @@ namespace MultiFunPlayer.MediaSource.ViewModels;
 [DisplayName("MPV")]
 internal sealed class MpvMediaSource(IShortcutManager shortcutManager, IEventAggregator eventAggregator) : AbstractMediaSource(shortcutManager, eventAggregator)
 {
-    protected override Logger Logger { get; } = LogManager.GetCurrentClassLogger();
     private static string PipeName { get; } = "multifunplayer-mpv";
 
     public override ConnectionStatus Status { get; protected set; }

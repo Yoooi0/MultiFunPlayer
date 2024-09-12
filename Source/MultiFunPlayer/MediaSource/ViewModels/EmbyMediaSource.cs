@@ -13,8 +13,6 @@ namespace MultiFunPlayer.MediaSource.ViewModels;
 [DisplayName("Emby")]
 internal sealed class EmbyMediaSource(IShortcutManager shortcutManager, IEventAggregator eventAggregator) : AbstractMediaSource(shortcutManager, eventAggregator)
 {
-    protected override Logger Logger { get; } = LogManager.GetCurrentClassLogger();
-
     private CancellationTokenSource _refreshCancellationSource = new();
     private EmbySession _currentSession;
 

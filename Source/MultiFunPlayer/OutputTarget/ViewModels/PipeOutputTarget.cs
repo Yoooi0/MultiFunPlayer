@@ -14,8 +14,6 @@ namespace MultiFunPlayer.OutputTarget.ViewModels;
 internal sealed class PipeOutputTarget(int instanceIndex, IEventAggregator eventAggregator, IDeviceAxisValueProvider valueProvider)
     : ThreadAbstractOutputTarget(instanceIndex, eventAggregator, valueProvider)
 {
-    protected override Logger Logger { get; } = LogManager.GetCurrentClassLogger();
-
     public override ConnectionStatus Status { get; protected set; }
     public bool IsConnected => Status == ConnectionStatus.Connected;
     public bool IsDisconnected => Status == ConnectionStatus.Disconnected;
