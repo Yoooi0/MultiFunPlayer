@@ -369,7 +369,7 @@ internal sealed class JellyfinMediaSource(IShortcutManager shortcutManager, IEve
         public override int GetHashCode() => Id.GetHashCode();
     }
 
-    internal sealed record JellyfinSession(string Id, [JsonProperty("PlayState")] PlayState State, [JsonProperty("NowPlayingItem")] PlayItem Item);
-    internal sealed record PlayState(long PositionTicks, bool IsPaused);
-    internal sealed record PlayItem(long RunTimeTicks, string Path);
+    private sealed record JellyfinSession(string Id, [property: JsonProperty("PlayState")] PlayState State, [property: JsonProperty("NowPlayingItem")] PlayItem Item);
+    private sealed record PlayState(long PositionTicks, bool IsPaused);
+    private sealed record PlayItem(long RunTimeTicks, string Path);
 }
