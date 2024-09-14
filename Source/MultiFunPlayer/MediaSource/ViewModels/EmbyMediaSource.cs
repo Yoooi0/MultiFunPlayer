@@ -123,13 +123,11 @@ internal sealed class EmbyMediaSource(IShortcutManager shortcutManager, IEventAg
 
                 var sessionsUri = new Uri(ServerBaseUri, $"/Sessions?api_key={ApiKey}&DeviceId={SelectedDeviceId}");
                 var response = await client.GetAsync(sessionsUri, token);
-                if (response == null)
-                    continue;
-
                 response.EnsureSuccessStatusCode();
-                var message = await response.Content.ReadAsStringAsync(token);
 
+                var message = await response.Content.ReadAsStringAsync(token);
                 Logger.Trace("Received \"{0}\" from \"{1}\"", message, Name);
+
                 try
                 {
                     var o = JArray.Parse(message).Children<JObject>().FirstOrDefault();

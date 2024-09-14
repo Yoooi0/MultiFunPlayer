@@ -94,15 +94,12 @@ internal sealed class MpcMediaSource(IShortcutManager shortcutManager, IEventAgg
                 await Task.Delay(200, token);
 
                 var response = await client.GetAsync(variablesUri, token);
-                if (response == null)
-                    continue;
-
                 response.EnsureSuccessStatusCode();
+
                 var message = await response.Content.ReadAsStringAsync(token);
-
                 Logger.Trace("Received \"{0}\" from \"{1}\"", message, Name);
-                var variables = variableRegex.Matches(message).NotNull().ToDictionary(m => m.Groups["name"].Value, m => m.Groups["value"].Value);
 
+                var variables = variableRegex.Matches(message).NotNull().ToDictionary(m => m.Groups["name"].Value, m => m.Groups["value"].Value);
                 if (variables.TryGetValue("state", out var stateString) && int.TryParse(stateString, out var state) && state != playerState.State)
                 {
                     PublishMessage(new MediaPlayingChangedMessage(state == 2));
