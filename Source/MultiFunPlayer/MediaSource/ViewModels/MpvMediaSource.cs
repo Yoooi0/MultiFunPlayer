@@ -154,13 +154,13 @@ internal sealed class MpvMediaSource(IShortcutManager shortcutManager, IEventAgg
             while (!token.IsCancellationRequested && client.IsConnected)
             {
                 var message = await reader.ReadLineAsync(token);
+                Logger.Trace("Received \"{0}\" from \"{1}\"", message, Name);
+
                 if (message == null)
                     continue;
 
                 try
                 {
-                    Logger.Trace("Received \"{0}\" from \"{1}\"", message, Name);
-
                     var document = JObject.Parse(message);
                     if (!document.TryGetValue<string>("event", out var eventType))
                         continue;
