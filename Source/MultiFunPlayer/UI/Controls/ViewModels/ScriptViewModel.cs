@@ -1757,7 +1757,7 @@ internal sealed class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDispo
 
         s.RegisterAction<DeviceAxis, double>("Axis::SpeedLimitSecondsPerUnit::Offset",
             s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All),
-            s => s.WithLabel("Value offset").AsNumericUpDown(minimum: 0, stringFormat: "{0:F3} s/unit"),
+            s => s.WithLabel("Value offset").AsNumericUpDown(stringFormat: "{0:F3} s/unit"),
             (axis, offset) => UpdateSettings(axis, s => s.SpeedLimitUnitsPerSecond = Math.Max(0, s.SpeedLimitUnitsPerSecond + SecondsPerUnitToUnitsPerSecond(offset))));
 
         s.RegisterAction<DeviceAxis, double>("Axis::SpeedLimitSecondsPerUnit::Set",
@@ -1769,7 +1769,7 @@ internal sealed class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDispo
         #region Axis::SpeedLimitUnitsPerSecond
         s.RegisterAction<DeviceAxis, double>("Axis::SpeedLimitUnitsPerSecond::Offset",
             s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All),
-            s => s.WithLabel("Value offset").AsNumericUpDown(minimum: 0, stringFormat: "{0:F2} units/s"),
+            s => s.WithLabel("Value offset").AsNumericUpDown(stringFormat: "{0:F2} units/s"),
             (axis, offset) => UpdateSettings(axis, s => s.SpeedLimitUnitsPerSecond = Math.Max(0, s.SpeedLimitUnitsPerSecond + offset)));
 
         s.RegisterAction<DeviceAxis, double>("Axis::SpeedLimitUnitsPerSecond::Set",
