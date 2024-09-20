@@ -1,4 +1,4 @@
-using MultiFunPlayer.Common;
+﻿using MultiFunPlayer.Common;
 using MultiFunPlayer.Shortcut;
 using MultiFunPlayer.UI;
 using Newtonsoft.Json.Linq;
@@ -179,10 +179,16 @@ internal sealed class VlcMediaSource(IShortcutManager shortcutManager, IEventAgg
                     playerState.State = state;
                 }
 
-                if (statusDocument.TryGetValue<int>("length", out var duration) && duration >= 0 && duration != playerState.Duration)
+                if (statusDocument.TryGetValue<double>("length", out var duration))
                 {
-                    PublishMessage(new MediaDurationChangedMessage(TimeSpan.FromSeconds(duration)));
-                    playerState.Duration = duration;
+                    if (version == 3 && statusDocument.TryGetValue<double>("position", out var positionPercent) && statusDocument.TryGetValue<double>("time", out var time))
+                        duration = Math.Round(Math.Max(Math.Max(playerState.Duration ?? -1, duration), time / positionPercent), 3);
+
+                    if (duration >= 0 && duration != playerState.Duration)
+                    {
+                        PublishMessage(new MediaDurationChangedMessage(TimeSpan.FromSeconds(duration)));
+                        playerState.Duration = duration;
+                    }
                 }
 
                 if (statusDocument.TryGetValue<double>("rate", out var speed) && speed > 0 && speed != playerState.Speed)
@@ -294,7 +300,7 @@ internal sealed class VlcMediaSource(IShortcutManager shortcutManager, IEventAgg
         public double? Position { get; set; }
         public double? Speed { get; set; }
         public string State { get; set; }
-        public int? Duration { get; set; }
+        public double? Duration { get; set; }
         public int? PlaylistId { get; set; }
     }
 }
