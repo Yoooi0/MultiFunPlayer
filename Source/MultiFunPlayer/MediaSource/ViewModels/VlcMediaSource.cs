@@ -1,4 +1,4 @@
-﻿using MultiFunPlayer.Common;
+using MultiFunPlayer.Common;
 using MultiFunPlayer.Shortcut;
 using MultiFunPlayer.UI;
 using Newtonsoft.Json.Linq;
@@ -232,7 +232,15 @@ internal sealed class VlcMediaSource(IShortcutManager shortcutManager, IEventAgg
                 await WaitForMessageAsync(token);
                 var message = await ReadMessageAsync(token);
 
-                var uriArguments = await GetUriArguments(message);
+                var uriArguments = message switch
+                {
+                    MediaPlayPauseMessage playPauseMessage => playPauseMessage.ShouldBePlaying ? "pl_forceresume" : "pl_forcepause",
+                    MediaSeekMessage seekMessage => $"seek&val={(int)seekMessage.Position.TotalSeconds}",
+                    MediaChangePathMessage changePathMessage => string.IsNullOrWhiteSpace(changePathMessage.Path) ? "pl_stop" : $"in_play&input={Uri.EscapeDataString(changePathMessage.Path)}",
+                    MediaChangeSpeedMessage changeSpeedMessage => $"rate&val={changeSpeedMessage.Speed.ToString("F4").Replace(',', '.')}",
+                    _ => null
+                };
+
                 if (uriArguments == null)
                     continue;
 
@@ -245,37 +253,6 @@ internal sealed class VlcMediaSource(IShortcutManager shortcutManager, IEventAgg
         }
         catch (OperationCanceledException e) when (e.InnerException is TimeoutException t) { t.Throw(); }
         catch (OperationCanceledException) { }
-
-        async ValueTask<string> GetUriArguments(IMediaSourceControlMessage message)
-        {
-            if (message is MediaPlayPauseMessage playPauseMessage)
-            {
-                var statusResponse = await client.GetAsync(statusUri, token);
-                if (statusResponse == null)
-                    return null;
-
-                statusResponse.EnsureSuccessStatusCode();
-                var statusMessage = await statusResponse.Content.ReadAsStringAsync(token);
-
-                Logger.Trace("Received \"{0}\" from \"{1}\"", statusMessage, Name);
-                var statusDocument = JObject.Parse(statusMessage);
-
-                if (!statusDocument.TryGetValue<string>("state", out var state))
-                    return null;
-
-                var isPlaying = string.Equals(state, "playing", StringComparison.OrdinalIgnoreCase);
-                if (isPlaying != playPauseMessage.ShouldBePlaying)
-                    return "pl_pause";
-            }
-
-            return message switch
-            {
-                MediaSeekMessage seekMessage => $"seek&val={(int)seekMessage.Position.TotalSeconds}",
-                MediaChangePathMessage changePathMessage => string.IsNullOrWhiteSpace(changePathMessage.Path) ? "pl_stop" : $"in_play&input={Uri.EscapeDataString(changePathMessage.Path)}",
-                MediaChangeSpeedMessage changeSpeedMessage => $"rate&val={changeSpeedMessage.Speed.ToString("F4").Replace(',', '.')}",
-                _ => null
-            };
-        }
     }
 
     public override void HandleSettings(JObject settings, SettingsAction action)
