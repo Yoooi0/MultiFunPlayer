@@ -122,16 +122,13 @@ internal sealed class VlcMediaSource(IShortcutManager shortcutManager, IEventAgg
                 if (!statusDocument.TryGetValue<int>("currentplid", out var playlistId))
                     continue;
 
-                bool ShouldResetState()
+                bool ShouldResetState() => version switch
                 {
-                    if (version == 3 && playlistId < 0)
-                        return true;
-
-                    if (version == 4 && statusDocument.TryGetValue<string>("state", out var state) && string.Equals(state, "stopped", StringComparison.OrdinalIgnoreCase))
-                        return true;
-
-                    return false;
-                }
+                    3 when playlistId < 0 => true,
+                    4 when statusDocument.TryGetValue<string>("state", out var state) && string.Equals(state, "stopped", StringComparison.OrdinalIgnoreCase) => true,
+                    not (3 or 4) => throw new UnreachableException(),
+                    _ => false
+                };
 
                 if (ShouldResetState())
                 {
