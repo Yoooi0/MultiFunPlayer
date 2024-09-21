@@ -366,8 +366,9 @@ internal sealed class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDispo
                     }
 
                     if (double.IsFinite(context.TransitionValue))
-                        if (context.Invalid && settings.SelectedMotionProvider == null)
-                            context.Value = context.TransitionValue;
+                        if (settings.BypassScript || context.Invalid)
+                            if (settings.BypassMotionProvider || settings.SelectedMotionProvider == null)
+                                context.Value = context.TransitionValue;
 
                     if (settings.InvertValue)
                         context.Value = 1 - context.Value;
