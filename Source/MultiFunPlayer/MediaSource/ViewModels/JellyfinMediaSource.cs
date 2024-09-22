@@ -13,8 +13,6 @@ namespace MultiFunPlayer.MediaSource.ViewModels;
 [DisplayName("Jellyfin")]
 internal sealed class JellyfinMediaSource(IShortcutManager shortcutManager, IEventAggregator eventAggregator) : AbstractMediaSource(shortcutManager, eventAggregator)
 {
-    protected override Logger Logger { get; } = LogManager.GetCurrentClassLogger();
-
     private CancellationTokenSource _refreshCancellationSource = new();
     private JellyfinSession _currentSession;
 
@@ -125,13 +123,11 @@ internal sealed class JellyfinMediaSource(IShortcutManager shortcutManager, IEve
 
                 var sessionsUri = new Uri(ServerBaseUri, $"/Sessions?ApiKey={ApiKey}&DeviceId={SelectedDeviceId}");
                 var response = await client.GetAsync(sessionsUri, token);
-                if (response == null)
-                    continue;
-
                 response.EnsureSuccessStatusCode();
-                var message = await response.Content.ReadAsStringAsync(token);
 
+                var message = await response.Content.ReadAsStringAsync(token);
                 Logger.Trace("Received \"{0}\" from \"{1}\"", message, Name);
+
                 try
                 {
                     var o = JArray.Parse(message).Children<JObject>().FirstOrDefault();
@@ -371,7 +367,7 @@ internal sealed class JellyfinMediaSource(IShortcutManager shortcutManager, IEve
         public override int GetHashCode() => Id.GetHashCode();
     }
 
-    internal sealed record JellyfinSession(string Id, [JsonProperty("PlayState")] PlayState State, [JsonProperty("NowPlayingItem")] PlayItem Item);
-    internal sealed record PlayState(long PositionTicks, bool IsPaused);
-    internal sealed record PlayItem(long RunTimeTicks, string Path);
+    private sealed record JellyfinSession(string Id, [property: JsonProperty("PlayState")] PlayState State, [property: JsonProperty("NowPlayingItem")] PlayItem Item);
+    private sealed record PlayState(long PositionTicks, bool IsPaused);
+    private sealed record PlayItem(long RunTimeTicks, string Path);
 }

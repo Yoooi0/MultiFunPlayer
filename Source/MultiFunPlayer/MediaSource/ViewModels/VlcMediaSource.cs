@@ -16,8 +16,6 @@ namespace MultiFunPlayer.MediaSource.ViewModels;
 [DisplayName("VLC")]
 internal sealed class VlcMediaSource(IShortcutManager shortcutManager, IEventAggregator eventAggregator) : AbstractMediaSource(shortcutManager, eventAggregator)
 {
-    protected override Logger Logger { get; } = LogManager.GetCurrentClassLogger();
-
     public override ConnectionStatus Status { get; protected set; }
     public bool IsConnected => Status == ConnectionStatus.Connected;
     public bool IsDisconnected => Status == ConnectionStatus.Disconnected;
@@ -124,16 +122,13 @@ internal sealed class VlcMediaSource(IShortcutManager shortcutManager, IEventAgg
                 if (!statusDocument.TryGetValue<int>("currentplid", out var playlistId))
                     continue;
 
-                bool ShouldResetState()
+                bool ShouldResetState() => version switch
                 {
-                    if (version == 3 && playlistId < 0)
-                        return true;
-
-                    if (version == 4 && statusDocument.TryGetValue<string>("state", out var state) && string.Equals(state, "stopped", StringComparison.OrdinalIgnoreCase))
-                        return true;
-
-                    return false;
-                }
+                    3 when playlistId < 0 => true,
+                    4 when statusDocument.TryGetValue<string>("state", out var state) && string.Equals(state, "stopped", StringComparison.OrdinalIgnoreCase) => true,
+                    not (3 or 4) => throw new UnreachableException(),
+                    _ => false
+                };
 
                 if (ShouldResetState())
                 {
@@ -181,10 +176,16 @@ internal sealed class VlcMediaSource(IShortcutManager shortcutManager, IEventAgg
                     playerState.State = state;
                 }
 
-                if (statusDocument.TryGetValue<int>("length", out var duration) && duration >= 0 && duration != playerState.Duration)
+                if (statusDocument.TryGetValue<double>("length", out var duration))
                 {
-                    PublishMessage(new MediaDurationChangedMessage(TimeSpan.FromSeconds(duration)));
-                    playerState.Duration = duration;
+                    if (version == 3 && statusDocument.TryGetValue<double>("position", out var positionPercent) && statusDocument.TryGetValue<double>("time", out var time))
+                        duration = Math.Round(Math.Max(Math.Max(playerState.Duration ?? -1, duration), time / positionPercent), 3);
+
+                    if (duration >= 0 && duration != playerState.Duration)
+                    {
+                        PublishMessage(new MediaDurationChangedMessage(TimeSpan.FromSeconds(duration)));
+                        playerState.Duration = duration;
+                    }
                 }
 
                 if (statusDocument.TryGetValue<double>("rate", out var speed) && speed > 0 && speed != playerState.Speed)
@@ -234,7 +235,15 @@ internal sealed class VlcMediaSource(IShortcutManager shortcutManager, IEventAgg
                 await WaitForMessageAsync(token);
                 var message = await ReadMessageAsync(token);
 
-                var uriArguments = await GetUriArguments(message);
+                var uriArguments = message switch
+                {
+                    MediaPlayPauseMessage playPauseMessage => playPauseMessage.ShouldBePlaying ? "pl_forceresume" : "pl_forcepause",
+                    MediaSeekMessage seekMessage => $"seek&val={(int)seekMessage.Position.TotalSeconds}",
+                    MediaChangePathMessage changePathMessage => string.IsNullOrWhiteSpace(changePathMessage.Path) ? "pl_stop" : $"in_play&input={Uri.EscapeDataString(changePathMessage.Path)}",
+                    MediaChangeSpeedMessage changeSpeedMessage => $"rate&val={changeSpeedMessage.Speed.ToString("F4").Replace(',', '.')}",
+                    _ => null
+                };
+
                 if (uriArguments == null)
                     continue;
 
@@ -247,37 +256,6 @@ internal sealed class VlcMediaSource(IShortcutManager shortcutManager, IEventAgg
         }
         catch (OperationCanceledException e) when (e.InnerException is TimeoutException t) { t.Throw(); }
         catch (OperationCanceledException) { }
-
-        async ValueTask<string> GetUriArguments(IMediaSourceControlMessage message)
-        {
-            if (message is MediaPlayPauseMessage playPauseMessage)
-            {
-                var statusResponse = await client.GetAsync(statusUri, token);
-                if (statusResponse == null)
-                    return null;
-
-                statusResponse.EnsureSuccessStatusCode();
-                var statusMessage = await statusResponse.Content.ReadAsStringAsync(token);
-
-                Logger.Trace("Received \"{0}\" from \"{1}\"", statusMessage, Name);
-                var statusDocument = JObject.Parse(statusMessage);
-
-                if (!statusDocument.TryGetValue<string>("state", out var state))
-                    return null;
-
-                var isPlaying = string.Equals(state, "playing", StringComparison.OrdinalIgnoreCase);
-                if (isPlaying != playPauseMessage.ShouldBePlaying)
-                    return "pl_pause";
-            }
-
-            return message switch
-            {
-                MediaSeekMessage seekMessage => $"seek&val={(int)seekMessage.Position.TotalSeconds}",
-                MediaChangePathMessage changePathMessage => string.IsNullOrWhiteSpace(changePathMessage.Path) ? "pl_stop" : $"in_play&input={Uri.EscapeDataString(changePathMessage.Path)}",
-                MediaChangeSpeedMessage changeSpeedMessage => $"rate&val={changeSpeedMessage.Speed.ToString("F4").Replace(',', '.')}",
-                _ => null
-            };
-        }
     }
 
     public override void HandleSettings(JObject settings, SettingsAction action)
@@ -319,7 +297,7 @@ internal sealed class VlcMediaSource(IShortcutManager shortcutManager, IEventAgg
         public double? Position { get; set; }
         public double? Speed { get; set; }
         public string State { get; set; }
-        public int? Duration { get; set; }
+        public double? Duration { get; set; }
         public int? PlaylistId { get; set; }
     }
 }

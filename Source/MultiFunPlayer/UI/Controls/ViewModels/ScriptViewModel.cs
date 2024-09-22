@@ -366,8 +366,9 @@ internal sealed class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDispo
                     }
 
                     if (double.IsFinite(context.TransitionValue))
-                        if (context.Invalid && settings.SelectedMotionProvider == null)
-                            context.Value = context.TransitionValue;
+                        if (settings.BypassScript || context.Invalid)
+                            if (settings.BypassMotionProvider || settings.SelectedMotionProvider == null)
+                                context.Value = context.TransitionValue;
 
                     if (settings.InvertValue)
                         context.Value = 1 - context.Value;
@@ -1752,30 +1753,30 @@ internal sealed class ScriptViewModel : Screen, IDeviceAxisValueProvider, IDispo
         #endregion
 
         #region Axis::SpeedLimitSecondsPerUnit
-        static double SecondsPerUnitToUnitsPerSecond(double secondsPerUnit)
-            => secondsPerUnit == 0 ? double.PositiveInfinity : double.IsInfinity(secondsPerUnit) ? 0 : 1 / secondsPerUnit;
+        static double InvertSpeedUnits(double value) => value <= 0 ? double.PositiveInfinity : double.IsInfinity(value) ? 0 : 1 / value;
+        static double NormalizeSpeedUnits(double value) => Math.Round(Math.Max(0, value), 2);
 
         s.RegisterAction<DeviceAxis, double>("Axis::SpeedLimitSecondsPerUnit::Offset",
             s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All),
-            s => s.WithLabel("Value offset").AsNumericUpDown(minimum: 0, stringFormat: "{0:F3} s/unit"),
-            (axis, offset) => UpdateSettings(axis, s => s.SpeedLimitUnitsPerSecond = Math.Max(0, s.SpeedLimitUnitsPerSecond + SecondsPerUnitToUnitsPerSecond(offset))));
+            s => s.WithLabel("Value offset").AsNumericUpDown(stringFormat: "{0:F3} s/unit"),
+            (axis, offset) => UpdateSettings(axis, s => s.SpeedLimitUnitsPerSecond = NormalizeSpeedUnits(InvertSpeedUnits(InvertSpeedUnits(s.SpeedLimitUnitsPerSecond) + offset))));
 
         s.RegisterAction<DeviceAxis, double>("Axis::SpeedLimitSecondsPerUnit::Set",
             s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All),
             s => s.WithLabel("Value").AsNumericUpDown(minimum: 0, stringFormat: "{0:F3} s/unit"),
-            (axis, value) => UpdateSettings(axis, s => s.SpeedLimitUnitsPerSecond = Math.Max(0, SecondsPerUnitToUnitsPerSecond(value))));
+            (axis, value) => UpdateSettings(axis, s => s.SpeedLimitUnitsPerSecond = NormalizeSpeedUnits(InvertSpeedUnits(value))));
         #endregion
 
         #region Axis::SpeedLimitUnitsPerSecond
         s.RegisterAction<DeviceAxis, double>("Axis::SpeedLimitUnitsPerSecond::Offset",
             s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All),
-            s => s.WithLabel("Value offset").AsNumericUpDown(minimum: 0, stringFormat: "{0:F2} units/s"),
-            (axis, offset) => UpdateSettings(axis, s => s.SpeedLimitUnitsPerSecond = Math.Max(0, s.SpeedLimitUnitsPerSecond + offset)));
+            s => s.WithLabel("Value offset").AsNumericUpDown(stringFormat: "{0:F2} units/s"),
+            (axis, offset) => UpdateSettings(axis, s => s.SpeedLimitUnitsPerSecond = NormalizeSpeedUnits(s.SpeedLimitUnitsPerSecond + offset)));
 
         s.RegisterAction<DeviceAxis, double>("Axis::SpeedLimitUnitsPerSecond::Set",
             s => s.WithLabel("Target axis").WithItemsSource(DeviceAxis.All),
             s => s.WithLabel("Value").AsNumericUpDown(minimum: 0, stringFormat: "{0:F2} units/s"),
-            (axis, value) => UpdateSettings(axis, s => s.SpeedLimitUnitsPerSecond = Math.Max(0, value)));
+            (axis, value) => UpdateSettings(axis, s => s.SpeedLimitUnitsPerSecond = NormalizeSpeedUnits(value)));
         #endregion
 
         #region Axis::AutoHomeEnabled

@@ -18,8 +18,6 @@ namespace MultiFunPlayer.MediaSource.ViewModels;
 [DisplayName("DeoVR")]
 internal sealed class DeoVRMediaSource(IShortcutManager shortcutManager, IEventAggregator eventAggregator) : AbstractMediaSource(shortcutManager, eventAggregator)
 {
-    protected override Logger Logger { get; } = LogManager.GetCurrentClassLogger();
-
     public override ConnectionStatus Status { get; protected set; }
     public bool IsConnected => Status == ConnectionStatus.Connected;
     public bool IsDisconnected => Status == ConnectionStatus.Disconnected;
@@ -118,12 +116,12 @@ internal sealed class DeoVRMediaSource(IShortcutManager shortcutManager, IEventA
                 playerState ??= new PlayerState();
 
                 var dataBuffer = await stream.ReadExactlyAsync(length, token);
+                var data = Encoding.UTF8.GetString(dataBuffer);
+                Logger.Trace("Received \"{0}\" from \"{1}\"", data, Name);
+
                 try
                 {
-                    var json = Encoding.UTF8.GetString(dataBuffer);
-                    var document = JObject.Parse(json);
-                    Logger.Trace("Received \"{0}\" from \"{1}\"", json, Name);
-
+                    var document = JObject.Parse(data);
                     if (document.TryGetValue("path", out var pathToken) && pathToken.TryToObject<string>(out var path))
                     {
                         if (string.IsNullOrWhiteSpace(path))

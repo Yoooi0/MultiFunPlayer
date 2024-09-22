@@ -15,8 +15,6 @@ namespace MultiFunPlayer.MediaSource.ViewModels;
 [DisplayName("Plex")]
 internal sealed class PlexMediaSource(IShortcutManager shortcutManager, IEventAggregator eventAggregator) : AbstractMediaSource(shortcutManager, eventAggregator)
 {
-    protected override Logger Logger { get; } = LogManager.GetCurrentClassLogger();
-
     private CancellationTokenSource _refreshCancellationSource = new();
     private XmlNode _currentTimeline;
     private long _commandId;

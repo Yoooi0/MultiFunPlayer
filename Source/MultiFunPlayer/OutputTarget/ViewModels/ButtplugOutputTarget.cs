@@ -17,8 +17,6 @@ namespace MultiFunPlayer.OutputTarget.ViewModels;
 [DisplayName("Buttplug.io")]
 internal sealed class ButtplugOutputTarget : AsyncAbstractOutputTarget
 {
-    protected override Logger Logger { get; } = LogManager.GetCurrentClassLogger();
-
     private SemaphoreSlim _scanSemaphore;
 
     public override ConnectionStatus Status { get; protected set; }
@@ -126,7 +124,11 @@ internal sealed class ButtplugOutputTarget : AsyncAbstractOutputTarget
 
         try
         {
-            await client.ConnectAsync(new Uri($"ws://{Endpoint.ToUriString()}"), token);
+            using var cancellationSource = CancellationTokenSource.CreateLinkedTokenSource(token);
+            if (connectionType == ConnectionType.AutoConnect)
+                cancellationSource.CancelAfter(500);
+
+            await client.ConnectAsync(new Uri($"ws://{Endpoint.ToUriString()}"), cancellationSource.Token);
             Status = ConnectionStatus.Connected;
         }
         catch (Exception e) when (connectionType != ConnectionType.AutoConnect)

@@ -13,7 +13,7 @@ namespace MultiFunPlayer.MediaSource;
 
 internal abstract class AbstractMediaSource : Screen, IMediaSource, IHandle<IMediaSourceControlMessage>
 {
-    protected abstract Logger Logger { get; }
+    protected Logger Logger { get; }
 
     private readonly Channel<IMediaSourceControlMessage> _messageChannel;
     private readonly IEventAggregator _eventAggregator;
@@ -38,6 +38,7 @@ internal abstract class AbstractMediaSource : Screen, IMediaSource, IHandle<IMed
         _eventAggregator.Subscribe(this);
 
         Name = GetType().GetCustomAttribute<DisplayNameAttribute>(inherit: false).DisplayName;
+        Logger = LogManager.GetLogger(GetType().FullName);
 
         RegisterActions(shortcutManager);
     }

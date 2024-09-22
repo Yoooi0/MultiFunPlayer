@@ -22,30 +22,29 @@ namespace MultiFunPlayer.Plugin;
 internal sealed class PluginCompilationResult : IDisposable
 {
     public Exception Exception { get; private set; }
-    public AssemblyLoadContext Context { get; private set; }
     public PluginSettingsBase Settings { get; private set; }
     public UIElement SettingsView { get; private set; }
 
     private Func<PluginBase> PluginFactory { get; set; }
+    private PluginAssemblyLoadContext Context { get; set; }
 
     public bool Success => Exception == null;
 
     private PluginCompilationResult() { }
 
-    public static PluginCompilationResult FromFailure(Exception e) => new() { Exception = e };
-    public static PluginCompilationResult FromFailure(AssemblyLoadContext context, Exception e)
+    public static PluginCompilationResult FromFailure(PluginAssemblyLoadContext context, Exception e)
     {
 #pragma warning disable IDE0059 // Unnecessary assignment of a value
-        context?.Unload();
+        context?.Dispose();
         context = null;
 #pragma warning restore IDE0059 // Unnecessary assignment of a value
 
         return new() { Exception = e };
     }
 
-    public static PluginCompilationResult FromSuccess(AssemblyLoadContext context, Func<PluginBase> pluginFactory)
+    public static PluginCompilationResult FromSuccess(PluginAssemblyLoadContext context, Func<PluginBase> pluginFactory)
         => new() { Context = context, PluginFactory = pluginFactory };
-    public static PluginCompilationResult FromSuccess(AssemblyLoadContext context, Func<PluginBase> pluginFactory, PluginSettingsBase settings, UIElement settingsView)
+    public static PluginCompilationResult FromSuccess(PluginAssemblyLoadContext context, Func<PluginBase> pluginFactory, PluginSettingsBase settings, UIElement settingsView)
         => new() { Context = context, PluginFactory = pluginFactory, Settings = settings, SettingsView = settingsView };
 
     public PluginBase CreatePluginInstance() => PluginFactory?.Invoke();
@@ -56,7 +55,7 @@ internal sealed class PluginCompilationResult : IDisposable
         SettingsView = null;
         Settings = null;
 
-        Context?.Unload();
+        Context?.Dispose();
         Context = null;
     }
 
@@ -86,7 +85,7 @@ internal static class PluginCompiler
         get
         {
             _referenceCache ??= [.. AppDomain.CurrentDomain.GetAssemblies()
-                .Select(a => !string.IsNullOrWhiteSpace(a.Location) ? AssemblyMetadata.CreateFromFile(a.Location).GetReference() : null)
+                .Select(a => !string.IsNullOrWhiteSpace(a.Location) ? AssemblyMetadata.CreateFromFile(a.Location).GetReference(filePath: a.Location) : null)
                 .NotNull()];
 
             return _referenceCache;
@@ -128,13 +127,13 @@ internal static class PluginCompiler
     [MethodImpl(MethodImplOptions.NoInlining)]
     private static PluginCompilationResult InternalCompile(FileInfo pluginFile)
     {
-        var context = default(CollectibleAssemblyLoadContext);
+        var context = new PluginAssemblyLoadContext();
         try
         {
             var references = ReferenceCache.ToList();
 
             var pluginSource = File.ReadAllText(pluginFile.FullName);
-            AddReferencesFromPluginSource(pluginFile, pluginSource, references);
+            LoadPluginReferences(pluginFile, pluginSource, context, references);
 
             var sourcePath = pluginFile.FullName;
             var pdbPath = Path.ChangeExtension(sourcePath, ".pdb");
@@ -159,9 +158,9 @@ internal static class PluginCompiler
                                           .ToList();
 
             if (pluginClasses.Count == 0)
-                return PluginCompilationResult.FromFailure(new PluginCompileException("Unable to find base Plugin class"));
+                return PluginCompilationResult.FromFailure(context, new PluginCompileException("Unable to find base Plugin class"));
             if (pluginClasses.Count > 1)
-                return PluginCompilationResult.FromFailure(new PluginCompileException("Found more than one base Plugin class"));
+                return PluginCompilationResult.FromFailure(context, new PluginCompileException("Found more than one base Plugin class"));
 
             var assemblyName = $"Plugin_{Path.GetFileNameWithoutExtension(pluginFile.Name)}";
             var encoded = CSharpSyntaxTree.Create(
@@ -208,13 +207,12 @@ internal static class PluginCompiler
             if (!emitResult.Success)
             {
                 var diagnostics = emitResult.Diagnostics.Where(diagnostic => diagnostic.IsWarningAsError || diagnostic.Severity == DiagnosticSeverity.Error);
-                return PluginCompilationResult.FromFailure(new PluginCompileException("Plugin failed to compile due to errors", diagnostics));
+                return PluginCompilationResult.FromFailure(context, new PluginCompileException("Plugin failed to compile due to errors", diagnostics));
             }
 
             peStream.Seek(0, SeekOrigin.Begin);
             pdbStream.Seek(0, SeekOrigin.Begin);
 
-            context = new CollectibleAssemblyLoadContext();
             var assembly = context.LoadFromStream(peStream, pdbStream);
             var pluginType = Array.Find(assembly.GetExportedTypes(), t => t.IsAssignableTo(typeof(PluginBase)));
 
@@ -277,33 +275,25 @@ internal static class PluginCompiler
         }
     }
 
-    private static void AddReferencesFromPluginSource(FileInfo pluginFile, string pluginSource, List<MetadataReference> references)
+    private static void LoadPluginReferences(FileInfo pluginFile, string pluginSource, PluginAssemblyLoadContext context, List<MetadataReference> references)
     {
         foreach (var match in ReferenceRegex.Matches(pluginSource).NotNull().Where(m => m.Success))
         {
-            var value = match.Groups["value"].Value;
-            var result = TryAddByName(value, references)
-                      || TryAddByPath(Path.Join(pluginFile.DirectoryName, value), references)
-                      || TryAddByPath(value, references);
+            var reference = match.Groups["value"].Value;
+            var added = TryAddByName(reference)
+                     || TryAddByPath(Path.Join(pluginFile.DirectoryName, reference))
+                     || TryAddByPath(reference);
 
-            if (!result)
-                Logger.Warn("Failed to load assembly \"{0}\" for plugin \"{1}\"", value, pluginFile.Name);
+            if (!added)
+                Logger.Warn("Failed to load assembly \"{0}\" for plugin \"{1}\"", reference, pluginFile.Name);
         }
 
-        static bool TryAddByPath(string path, List<MetadataReference> references)
+        bool TryAddByPath(string path) => File.Exists(path) && TryAddReference(() => context.LoadAndGetReferenceFromAssemblyPath(path));
+        bool TryAddByName(string assemblyName) => TryAddReference(() => context.LoadAndGetReferenceFromAssemblyName(new AssemblyName(assemblyName)));
+
+        bool TryAddReference(Func<MetadataReference> referenceFactory)
         {
-            if (!File.Exists(path))
-                return false;
-
-            try { references.Add(MetadataReference.CreateFromFile(path)); }
-            catch { return false; }
-
-            return true;
-        }
-
-        static bool TryAddByName(string assemblyName, List<MetadataReference> references)
-        {
-            try { references.Add(MetadataReference.CreateFromFile(Assembly.Load(assemblyName).Location)); }
+            try { references.Add(referenceFactory()); }
             catch { return false; }
 
             return true;
@@ -315,13 +305,37 @@ internal static class PluginCompiler
         Container = container;
         ViewManager = container.Get<IViewManager>();
     }
+}
 
-    private sealed class CollectibleAssemblyLoadContext : AssemblyLoadContext
+internal sealed class PluginAssemblyLoadContext() : AssemblyLoadContext(isCollectible: true), IDisposable
+{
+    private readonly List<AssemblyMetadata> _assemblyMetadata = [];
+
+    protected override Assembly Load(AssemblyName assemblyName) => null;
+
+    public MetadataReference LoadAndGetReferenceFromAssemblyPath(string path) => GetReference(LoadFromAssemblyPath(path));
+    public MetadataReference LoadAndGetReferenceFromAssemblyName(AssemblyName assemblyName) => GetReference(LoadFromAssemblyName(assemblyName));
+
+    private PortableExecutableReference GetReference(Assembly assembly)
     {
-        public CollectibleAssemblyLoadContext()
-            : base(isCollectible: true) { }
+        var assemblyMetadata = AssemblyMetadata.CreateFromFile(assembly.Location);
+        _assemblyMetadata.Add(assemblyMetadata);
+        return assemblyMetadata.GetReference(filePath: assembly.Location);
+    }
 
-        protected override Assembly Load(AssemblyName assemblyName) => null;
+    private void Dispose(bool disposing)
+    {
+        foreach (var metadata in _assemblyMetadata)
+            metadata.Dispose();
+
+        _assemblyMetadata.Clear();
+        Unload();
+    }
+
+    public void Dispose()
+    {
+        Dispose(disposing: true);
+        GC.SuppressFinalize(this);
     }
 }
 

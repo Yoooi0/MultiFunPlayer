@@ -16,8 +16,6 @@ namespace MultiFunPlayer.MediaSource.ViewModels;
 [DisplayName("OFS")]
 internal sealed class OfsMediaSource(IShortcutManager shortcutManager, IEventAggregator eventAggregator) : AbstractMediaSource(shortcutManager, eventAggregator)
 {
-    protected override Logger Logger { get; } = LogManager.GetCurrentClassLogger();
-
     public override ConnectionStatus Status { get; protected set; }
     public bool IsConnected => Status == ConnectionStatus.Connected;
     public bool IsDisconnected => Status == ConnectionStatus.Disconnected;
@@ -95,13 +93,13 @@ internal sealed class OfsMediaSource(IShortcutManager shortcutManager, IEventAgg
             while (!token.IsCancellationRequested && client.State == WebSocketState.Open)
             {
                 var message = Encoding.UTF8.GetString(await client.ReceiveAsync(token));
+                Logger.Trace("Received \"{0}\" from \"{1}\"", message, Name);
+
                 if (message == null)
                     continue;
 
                 try
                 {
-                    Logger.Trace("Received \"{0}\" from \"{1}\"", message, Name);
-
                     var document = JObject.Parse(message);
                     if (!document.TryGetValue<string>("type", out var type) || !string.Equals(type, "event", StringComparison.OrdinalIgnoreCase))
                         continue;

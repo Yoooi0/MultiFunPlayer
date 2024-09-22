@@ -17,8 +17,6 @@ namespace MultiFunPlayer.OutputTarget.ViewModels;
 internal sealed class TheHandyOutputTarget(int instanceIndex, IEventAggregator eventAggregator, IDeviceAxisValueProvider valueProvider)
     : AsyncAbstractOutputTarget(instanceIndex, eventAggregator, valueProvider)
 {
-    protected override Logger Logger { get; } = LogManager.GetCurrentClassLogger();
-
     public string ConnectionKey { get; set; } = null;
     public DeviceAxis SourceAxis { get; set; } = null;
 

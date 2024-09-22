@@ -13,8 +13,6 @@ namespace MultiFunPlayer.MediaSource.ViewModels;
 [DisplayName("Emby")]
 internal sealed class EmbyMediaSource(IShortcutManager shortcutManager, IEventAggregator eventAggregator) : AbstractMediaSource(shortcutManager, eventAggregator)
 {
-    protected override Logger Logger { get; } = LogManager.GetCurrentClassLogger();
-
     private CancellationTokenSource _refreshCancellationSource = new();
     private EmbySession _currentSession;
 
@@ -125,13 +123,11 @@ internal sealed class EmbyMediaSource(IShortcutManager shortcutManager, IEventAg
 
                 var sessionsUri = new Uri(ServerBaseUri, $"/Sessions?api_key={ApiKey}&DeviceId={SelectedDeviceId}");
                 var response = await client.GetAsync(sessionsUri, token);
-                if (response == null)
-                    continue;
-
                 response.EnsureSuccessStatusCode();
-                var message = await response.Content.ReadAsStringAsync(token);
 
+                var message = await response.Content.ReadAsStringAsync(token);
                 Logger.Trace("Received \"{0}\" from \"{1}\"", message, Name);
+
                 try
                 {
                     var o = JArray.Parse(message).Children<JObject>().FirstOrDefault();
@@ -368,13 +364,13 @@ internal sealed class EmbyMediaSource(IShortcutManager shortcutManager, IEventAg
         base.Dispose(disposing);
     }
 
-    internal sealed record EmbyDevice(string Name, [JsonProperty("ReportedDeviceId")] string Id, string AppName, string AppVersion)
+    internal sealed record EmbyDevice(string Name, [property: JsonProperty("ReportedDeviceId")] string Id, string AppName, string AppVersion)
     {
         public bool Equals(EmbyDevice other) => string.Equals(Id, other?.Id, StringComparison.Ordinal);
         public override int GetHashCode() => Id.GetHashCode();
     }
 
-    internal sealed record EmbySession(string Id, [JsonProperty("PlayState")] PlayState State, [JsonProperty("NowPlayingItem")] PlayItem Item);
-    internal sealed record PlayState(long PositionTicks, bool IsPaused, double PlaybackRate);
-    internal sealed record PlayItem(long RunTimeTicks, string Path);
+    private sealed record EmbySession(string Id, [property: JsonProperty("PlayState")] PlayState State, [property: JsonProperty("NowPlayingItem")] PlayItem Item);
+    private sealed record PlayState(long PositionTicks, bool IsPaused, double PlaybackRate);
+    private sealed record PlayItem(long RunTimeTicks, string Path);
 }

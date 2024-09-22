@@ -18,8 +18,6 @@ namespace MultiFunPlayer.MediaSource.ViewModels;
 [DisplayName("HereSphere")]
 internal sealed class HereSphereMediaSource(IShortcutManager shortcutManager, IEventAggregator eventAggregator) : AbstractMediaSource(shortcutManager, eventAggregator)
 {
-    protected override Logger Logger { get; } = LogManager.GetCurrentClassLogger();
-
     public override ConnectionStatus Status { get; protected set; }
     public bool IsConnected => Status == ConnectionStatus.Connected;
     public bool IsDisconnected => Status == ConnectionStatus.Disconnected;
@@ -117,12 +115,12 @@ internal sealed class HereSphereMediaSource(IShortcutManager shortcutManager, IE
                 playerState ??= new PlayerState();
 
                 var dataBuffer = await stream.ReadExactlyAsync(length, token);
+                var data = Encoding.UTF8.GetString(dataBuffer);
+                Logger.Trace("Received \"{0}\" from \"{1}\"", data, Name);
+
                 try
                 {
-                    var json = Encoding.UTF8.GetString(dataBuffer);
-                    var document = JObject.Parse(json);
-                    Logger.Trace("Received \"{0}\" from \"{1}\"", json, Name);
-
+                    var document = JObject.Parse(data);
                     if (document.TryGetValue("resource", out var resourceToken) && resourceToken.TryToObject<string>(out var resource))
                     {
                         if (string.IsNullOrWhiteSpace(resource))

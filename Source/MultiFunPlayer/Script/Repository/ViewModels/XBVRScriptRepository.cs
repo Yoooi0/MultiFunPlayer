@@ -228,9 +228,9 @@ internal sealed class XBVRScriptRepository : AbstractScriptRepository
         }
     }
 
-    private sealed record SceneMetadata([JsonProperty("file")] List<SceneFile> Files);
-    private sealed record SceneFile(int Id, string Path, string Filename, string Type, [JsonProperty("is_selected_script")] bool IsSelected);
-    private sealed record FileMetadata(int Id, [JsonProperty("scene_id")] int SceneId, string Type);
+    private sealed record SceneMetadata([property: JsonProperty("file")] List<SceneFile> Files);
+    private sealed record SceneFile(int Id, string Path, string Filename, string Type, [property: JsonProperty("is_selected_script")] bool IsSelected);
+    private sealed record FileMetadata(int Id, [property: JsonProperty("scene_id")] int SceneId, string Type);
 }
 
 internal enum XBVRLocalMatchType
