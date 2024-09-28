@@ -3,6 +3,7 @@ using System.Collections.Frozen;
 using System.Collections.Immutable;
 using System.ComponentModel;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace MultiFunPlayer.Common;
 
@@ -63,9 +64,11 @@ public sealed class DeviceAxis
         _outputMaximum = (int)(Math.Pow(10, device.OutputPrecision) - 1);
         _outputFormat = CompositeFormat.Parse($"{{0:{new string('0', device.OutputPrecision)}}}");
 
-        All = device.Axes.Where(s => s.Enabled)
+        All = device.Axes.Where(s => s.Enabled && Regex.IsMatch(s.Name, "^[A-Z][0-9]$"))
+                         .DistinctBy(s => s.Name, StringComparer.OrdinalIgnoreCase)
                          .Select(s => new DeviceAxis(s))
                          .ToImmutableArray();
+
         _axisNameMap = All.ToFrozenDictionary(a => a.Name, a => a);
     }
 }
