@@ -31,33 +31,44 @@ internal sealed class XBVRScriptRepository : AbstractScriptRepository
             var (sceneId, fileId) = await TryGetIds(mediaResource);
 
             Logger.Debug("Found ids [SceneId: \"{0}\", FileId: \"{1}\"]", sceneId, fileId);
+            var currentFile = default(FileMetadata);
             if (fileId != null && sceneId == null)
             {
                 Logger.Debug("Trying to reverse lookup SceneId from FileId");
 
-                var fileMetadata = await GetFileMetadataAsync(fileId);
-                if (fileMetadata?.Type == "video")
-                    sceneId = fileMetadata?.SceneId;
+                currentFile = await GetFileMetadataAsync(fileId);
+                if (currentFile?.Type == "video")
+                    sceneId = currentFile?.SceneId;
 
                 Logger.Trace("Set SceneId to \"{0}\"", sceneId);
             }
 
-            if (sceneId is null or 0 || fileId is null or 0)
-                return [];
-
-            var sceneMetadata = await GetSceneMetadataAsync(sceneId);
-            if (sceneMetadata?.Files == null || sceneMetadata.Files.Count == 0)
-                return [];
-
-            var currentFile = sceneMetadata.Files.Find(f => f.Id == fileId);
-            if (currentFile == null)
+            if (sceneId is null or 0 && fileId is null or 0)
                 return [];
 
             var result = new Dictionary<DeviceAxis, IScriptResource>();
-            if (!TryMatchLocal(currentFile, axes, result, localRepository))
-                await TryMatchDms(sceneMetadata, currentFile, axes, result, client, token);
+            if (sceneId is null or 0 && fileId is not (null or 0))
+            {
+                // unmatched file
+                if (currentFile == null)
+                    return [];
 
-            return result;
+                _ = TryMatchLocal(currentFile, axes, result, localRepository);
+                return result;
+            }
+            else
+            {
+                var sceneMetadata = await GetSceneMetadataAsync(sceneId);
+
+                currentFile ??= sceneMetadata?.Files?.Find(f => f.Id == fileId);
+                if (currentFile == null)
+                    return [];
+
+                if (!TryMatchLocal(currentFile, axes, result, localRepository))
+                    await TryMatchDms(sceneMetadata, currentFile, axes, result, client, token);
+
+                return result;
+            }
         }
         finally
         {
@@ -152,7 +163,7 @@ internal sealed class XBVRScriptRepository : AbstractScriptRepository
         }
     }
 
-    private bool TryMatchLocal(SceneFile currentFile, IEnumerable<DeviceAxis> axes, Dictionary<DeviceAxis, IScriptResource> result, ILocalScriptRepository localRepository)
+    private bool TryMatchLocal(FileMetadata currentFile, IEnumerable<DeviceAxis> axes, Dictionary<DeviceAxis, IScriptResource> result, ILocalScriptRepository localRepository)
     {
         if (LocalMatchType == XBVRLocalMatchType.None)
             return false;
@@ -168,12 +179,12 @@ internal sealed class XBVRScriptRepository : AbstractScriptRepository
         return result.Count > 0;
     }
 
-    private async Task<bool> TryMatchDms(SceneMetadata metadata, SceneFile currentFile, IEnumerable<DeviceAxis> axes, Dictionary<DeviceAxis, IScriptResource> result, HttpClient client, CancellationToken token)
+    private async Task<bool> TryMatchDms(SceneMetadata metadata, FileMetadata currentFile, IEnumerable<DeviceAxis> axes, Dictionary<DeviceAxis, IScriptResource> result, HttpClient client, CancellationToken token)
     {
         if (DmsMatchType == XBVRDmsMatchType.None)
             return false;
 
-        var resultFiles = new Dictionary<DeviceAxis, SceneFile>();
+        var resultFiles = new Dictionary<DeviceAxis, FileMetadata>();
         var scriptFiles = metadata.Files.Where(f => f.Type == "script");
 
         if (DmsMatchType == XBVRDmsMatchType.MatchToCurrentFile)
@@ -219,18 +230,17 @@ internal sealed class XBVRScriptRepository : AbstractScriptRepository
 
         return result.Count > 0;
 
-        static void AddToResult(IDictionary<DeviceAxis, SceneFile> result, DeviceAxis axis, SceneFile resource)
+        static void AddToResult(IDictionary<DeviceAxis, FileMetadata> result, DeviceAxis axis, FileMetadata file)
         {
-            if (result.TryAdd(axis, resource))
-                Logger.Debug("Matched {0} script to [Path: \"{1}\", Filename: \"{2}\"]", axis, resource?.Path, resource?.Filename);
+            if (result.TryAdd(axis, file))
+                Logger.Debug("Matched {0} script to [Path: \"{1}\", Filename: \"{2}\"]", axis, file?.Path, file?.Filename);
             else
-                Logger.Debug("Ignoring {0} script [Path: \"{1}\", Filename: \"{2}\"] because {0} is already matched to a script", axis, resource?.Path, resource?.Filename);
+                Logger.Debug("Ignoring {0} script [Path: \"{1}\", Filename: \"{2}\"] because {0} is already matched to a script", axis, file?.Path, file?.Filename);
         }
     }
 
-    private sealed record SceneMetadata([property: JsonProperty("file")] List<SceneFile> Files);
-    private sealed record SceneFile(int Id, string Path, string Filename, string Type, [property: JsonProperty("is_selected_script")] bool IsSelected);
-    private sealed record FileMetadata(int Id, [property: JsonProperty("scene_id")] int SceneId, string Type);
+    private sealed record SceneMetadata([property: JsonProperty("file")] List<FileMetadata> Files);
+    private sealed record FileMetadata(int Id, [property: JsonProperty("scene_id")] int SceneId, string Path, string Filename, string Type, [property: JsonProperty("is_selected_script")] bool IsSelected);
 }
 
 internal enum XBVRLocalMatchType
