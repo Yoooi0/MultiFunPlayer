@@ -64,8 +64,10 @@ public sealed class DeviceAxis
         _outputFormat = CompositeFormat.Parse($"{{0:{new string('0', device.OutputPrecision)}}}");
 
         All = device.Axes.Where(s => s.Enabled)
+                         .DistinctBy(s => s.Name, StringComparer.OrdinalIgnoreCase)
                          .Select(s => new DeviceAxis(s))
                          .ToImmutableArray();
+
         _axisNameMap = All.ToFrozenDictionary(a => a.Name, a => a);
     }
 }
