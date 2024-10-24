@@ -136,7 +136,8 @@ internal sealed class VlcMediaSource(IShortcutManager shortcutManager, IEventAgg
                     continue;
                 }
 
-                if (playlistId != playerState.PlaylistId)
+                var playlistIdChanged = playlistId != playerState.PlaylistId;
+                if (playlistIdChanged)
                 {
                     var playlistResponse = await client.GetAsync(playlistUri, token);
                     if (playlistResponse == null)
@@ -178,7 +179,7 @@ internal sealed class VlcMediaSource(IShortcutManager shortcutManager, IEventAgg
 
                 if (statusDocument.TryGetValue<double>("length", out var duration))
                 {
-                    if (version == 3 && statusDocument.TryGetValue<double>("position", out var positionPercent) && statusDocument.TryGetValue<double>("time", out var time))
+                    if (version == 3 && !playlistIdChanged && statusDocument.TryGetValue<double>("position", out var positionPercent) && statusDocument.TryGetValue<double>("time", out var time))
                         duration = Math.Round(Math.Max(Math.Max(playerState.Duration ?? -1, duration), time / positionPercent), 3);
 
                     if (duration >= 0 && duration != playerState.Duration)
