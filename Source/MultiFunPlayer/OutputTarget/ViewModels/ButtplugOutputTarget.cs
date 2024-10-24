@@ -352,6 +352,7 @@ internal sealed class ButtplugOutputTarget : AsyncAbstractOutputTarget
             }
         }
 
+        void OnScanningFinished(object sender, EventArgs e) => cancellationSource.Cancel();
         async Task DoScanAsync()
         {
             try
@@ -362,6 +363,8 @@ internal sealed class ButtplugOutputTarget : AsyncAbstractOutputTarget
                 IsScanBusy = true;
 
                 Logger.Debug("Starting device scan");
+
+                client.ScanningFinished += OnScanningFinished;
                 await client.StartScanningAsync(token);
 
                 try { await cancellationSource.Token.WaitHandle.WaitOneAsync(token); }
@@ -372,6 +375,7 @@ internal sealed class ButtplugOutputTarget : AsyncAbstractOutputTarget
             }
             finally
             {
+                client.ScanningFinished -= OnScanningFinished;
                 IsScanBusy = false;
 
                 cancellationSource?.Dispose();
