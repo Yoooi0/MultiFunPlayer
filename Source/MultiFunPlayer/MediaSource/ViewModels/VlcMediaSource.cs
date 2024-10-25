@@ -110,10 +110,8 @@ internal sealed class VlcMediaSource(IShortcutManager shortcutManager, IEventAgg
                 await Task.Delay(200, token);
 
                 var statusResponse = await client.GetAsync(statusUri, token);
-                if (statusResponse == null)
-                    continue;
-
                 statusResponse.EnsureSuccessStatusCode();
+
                 var statusMessage = await statusResponse.Content.ReadAsStringAsync(token);
 
                 Logger.Trace("Received \"{0}\" from \"{1}\"", statusMessage, Name);
@@ -140,10 +138,8 @@ internal sealed class VlcMediaSource(IShortcutManager shortcutManager, IEventAgg
                 if (playlistIdChanged)
                 {
                     var playlistResponse = await client.GetAsync(playlistUri, token);
-                    if (playlistResponse == null)
-                        continue;
-
                     playlistResponse.EnsureSuccessStatusCode();
+
                     var playlistMessage = await playlistResponse.Content.ReadAsStringAsync(token);
 
                     Logger.Trace("Received \"{0}\" from \"{1}\"", playlistMessage, Name);

@@ -340,15 +340,15 @@ internal sealed class SerialOutputTarget(int instanceIndex, IEventAggregator eve
 
         private SerialPortInfo() { }
 
-        public string Caption { get; private set; }
-        public string ClassGuid { get; private set; }
-        public string Description { get; private set; }
-        public string DeviceID { get; private set; }
-        public string Manufacturer { get; private set; }
-        public string Name { get; private set; }
-        public string PNPClass { get; private set; }
-        public string PNPDeviceID { get; private set; }
-        public string PortName { get; private set; }
+        public string Caption { get; init; }
+        public string ClassGuid { get; init; }
+        public string Description { get; init; }
+        public string DeviceID { get; init; }
+        public string Manufacturer { get; init; }
+        public string Name { get; init; }
+        public string PNPClass { get; init; }
+        public string PNPDeviceID { get; init; }
+        public string PortName { get; init; }
 
         public static SerialPortInfo FromManagementObject(ManagementObject o)
         {

@@ -11,10 +11,6 @@
              d:DesignWidth="800"
              x:ClassModifier="internal"
              mc:Ignorable="d">
-    <UserControl.Resources>
-        <converters:FileSystemInfoToStringConverter x:Key="FileSystemInfoToStringConverter"/>
-        <converters:UriToStringConverter x:Key="UriToStringConverter"/>
-    </UserControl.Resources>
     <Expander Style="{StaticResource MaterialDesignToolBarExpander}"
               material:ExpanderAssist.HorizontalHeaderPadding="0 0 6 0"
               Background="{DynamicResource MaterialDesignToolBarBackground}"

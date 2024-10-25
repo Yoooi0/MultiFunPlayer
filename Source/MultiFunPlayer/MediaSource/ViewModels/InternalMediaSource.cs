@@ -385,8 +385,8 @@ internal sealed class InternalMediaSource(ILocalScriptRepository localRepository
 
             settings[nameof(ScriptPlaylist)] = ScriptPlaylist switch
             {
-                Playlist { SourceFile: not null } => JToken.FromObject(ScriptPlaylist.SourceFile.FullName),
-                Playlist { Count: > 0 } => JArray.FromObject(ScriptPlaylist.Select(x => x.AsFileInfo())),
+                { SourceFile: not null } => JToken.FromObject(ScriptPlaylist.SourceFile.FullName),
+                { Count: > 0 } => JArray.FromObject(ScriptPlaylist.Select(x => x.AsFileInfo())),
                 _ => null,
             };
         }

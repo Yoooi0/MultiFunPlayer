@@ -382,7 +382,7 @@ internal sealed class PlexMediaSource(IShortcutManager shortcutManager, IEventAg
                 DeviceClass: n.Attributes["deviceClass"].Value,
                 ProtocolVersion: int.TryParse(n.Attributes["protocolVersion"].Value, out var protocolVersion) ? protocolVersion : 1,
                 ProtocolCapabilities: n.Attributes["protocolCapabilities"].Value
-            ));
+            )).ToList();
 
             var lastSelectedMachineIdentifier = SelectedClientMachineIdentifier;
             Clients.RemoveRange(Clients.Except(currentClients).ToList());

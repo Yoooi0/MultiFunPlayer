@@ -23,9 +23,9 @@ public class DeviceAxisUtilsTests
     }
 
     public static IEnumerable<object[]> ScriptNameAndExpectedAxes => [
-        ["name.funscript", new DeviceAxis[] { DeviceAxis.Parse("L0") }],
-        ["name.pitch.funscript", new DeviceAxis[] { DeviceAxis.Parse("R2") }],
-        ["name.unknown.funscript", new DeviceAxis[] { DeviceAxis.Parse("L0") }],
+        ["name.funscript", new[] { DeviceAxis.Parse("L0") }],
+        ["name.pitch.funscript", new[] { DeviceAxis.Parse("R2") }],
+        ["name.unknown.funscript", new[] { DeviceAxis.Parse("L0") }],
     ];
 
     [Theory]
@@ -37,9 +37,9 @@ public class DeviceAxisUtilsTests
     }
 
     public static IEnumerable<object[]> ScriptNameMediaNameAndExpectedAxes => [
-        ["name.funscript", "name.mp4", new DeviceAxis[] { DeviceAxis.Parse("L0") }],
+        ["name.funscript", "name.mp4", new[] { DeviceAxis.Parse("L0") }],
         ["name.funscript", "other.mp4", Array.Empty<DeviceAxis>()],
-        ["name.pitch.funscript", "name.mp4", new DeviceAxis[] { DeviceAxis.Parse("R2") }],
+        ["name.pitch.funscript", "name.mp4", new[] { DeviceAxis.Parse("R2") }],
         ["name.pitch.funscript", "other.mp4", Array.Empty<DeviceAxis>()],
         ["name.unknown.funscript", "name.mp4", Array.Empty<DeviceAxis>()],
     ];
@@ -67,10 +67,10 @@ public class DeviceAxisUtilsTests
     }
 
     public static IEnumerable<object[]> DeviceAxisScriptNamesMediaNameAndExpectedNames => [
-        [DeviceAxis.Parse("L0"), new string[] { "name.funscript", "name.raw.funscript", "name.unknown.funscript" }, "name.mp4", new string[] { "name.raw.funscript", "name.funscript" }],
-        [DeviceAxis.Parse("L0"), new string[] { "name.funscript", }, "other.mp4", Array.Empty<string>()],
-        [DeviceAxis.Parse("R2"), new string[] { "name.pitch.funscript", "other.pitch.funscript" }, "name.mp4", new string[] { "name.pitch.funscript" }],
-        [DeviceAxis.Parse("L0"), new string[] { "name.unknown.funscript" }, "name.mp4", Array.Empty<string>()],
+        [DeviceAxis.Parse("L0"), new[] { "name.funscript", "name.raw.funscript", "name.unknown.funscript" }, "name.mp4", new[] { "name.raw.funscript", "name.funscript" }],
+        [DeviceAxis.Parse("L0"), new[] { "name.funscript", }, "other.mp4", Array.Empty<string>()],
+        [DeviceAxis.Parse("R2"), new[] { "name.pitch.funscript", "other.pitch.funscript" }, "name.mp4", new[] { "name.pitch.funscript" }],
+        [DeviceAxis.Parse("L0"), new[] { "name.unknown.funscript" }, "name.mp4", Array.Empty<string>()],
     ];
 
     [Theory]

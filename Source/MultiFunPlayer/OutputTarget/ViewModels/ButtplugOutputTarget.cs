@@ -43,11 +43,8 @@ internal sealed class ButtplugOutputTarget : AsyncAbstractOutputTarget
             var actuators = SelectedDevice.GetActuators(SelectedActuatorType.Value);
             var indices = actuators.Select(a => a.Index);
             var usedIndices = GetSettingsForDevice(SelectedDevice).Where(s => s.ActuatorType == SelectedActuatorType.Value).Select(s => s.ActuatorIndex);
-            var allowedIndices = indices.Except(usedIndices);
-            if (!allowedIndices.Any())
-                return null;
-
-            return [.. allowedIndices];
+            var allowedIndices = indices.Except(usedIndices).ToList();
+            return allowedIndices.Count == 0 ? null : allowedIndices;
         }
     }
 
@@ -215,7 +212,7 @@ internal sealed class ButtplugOutputTarget : AsyncAbstractOutputTarget
             }
 
             var dirtySettings = DeviceSettings.Where(CheckDirtyAndUpdate);
-            var tasks = GetDeviceTasks(currentValues, elapsed * 1000, dirtySettings, token);
+            var tasks = GetDeviceTasks(currentValues, elapsed * 1000, dirtySettings, token).ToList();
 
             try
             {
@@ -236,7 +233,7 @@ internal sealed class ButtplugOutputTarget : AsyncAbstractOutputTarget
             Logger.Trace("Begin PolledUpdate [Axis: {0}, Index From: {1}, Index To: {2}, Duration: {3}, Elapsed: {4}]", axis, snapshot.IndexFrom, snapshot.IndexTo, snapshot.Duration, elapsed);
 
             var settings = DeviceSettings.Where(x => x.SourceAxis == axis && x.UpdateType == DeviceAxisUpdateType.PolledUpdate);
-            var tasks = GetDeviceTasks(snapshot, settings, token);
+            var tasks = GetDeviceTasks(snapshot, settings, token).ToList();
 
             try
             {

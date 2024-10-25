@@ -142,8 +142,10 @@ internal sealed class OfsMediaSource(IShortcutManager shortcutManager, IEventAgg
                                     break;
 
                                 var axes = DeviceAxisUtils.FindAxesMatchingName(name);
-                                if (axes.Any())
-                                    PublishMessage(new ChangeScriptMessage(axes.ToDictionary(a => a, _ => readerResult.Resource)));
+                                if (!axes.Any())
+                                    break;
+
+                                PublishMessage(new ChangeScriptMessage(axes.ToDictionary(a => a, _ => readerResult.Resource)));
                             }
 
                             break;

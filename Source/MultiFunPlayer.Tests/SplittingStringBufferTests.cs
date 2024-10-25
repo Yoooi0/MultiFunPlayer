@@ -5,17 +5,17 @@ namespace MultiFunPlayer.Tests;
 public class SplittingStringBufferTests
 {
     public static IEnumerable<object[]> SeparatorInputAndExpectedOutputs => [
-        ['|', "a|b|", new string[]{ "a", "b" }],
-        ['|', "a|b||", new string[]{ "a", "b", "" }],
-        ['|', "a||b", new string[]{ "a", "" }],
-        ['|', "|a|b", new string[]{ "", "a" }],
-        ['|', "||a|b", new string[]{ "", "", "a" }],
-        ['|', "|a|b|", new string[]{ "", "a", "b" }],
-        ['|', "||a||b||", new string[]{ "", "", "a", "", "b", "" }],
-        ['|', "a|bbbbbbbbbbbbbbbbbbbb", new string[] { "a" }],
-        ['|', "aaaaaaaaaaaaaaaaaaaa|b", new string[] { "aaaaaaaaaaaaaaaaaaaa" }],
-        ['|', "a|bbbbbbbbbbbbbbbbbbbb|", new string[] { "a", "bbbbbbbbbbbbbbbbbbbb" }],
-        ['|', "aaaaaaaaaaaaaaaaaaaa|b|", new string[] { "aaaaaaaaaaaaaaaaaaaa", "b" }],
+        ['|', "a|b|", new[] { "a", "b" }],
+        ['|', "a|b||", new[] { "a", "b", "" }],
+        ['|', "a||b", new[] { "a", "" }],
+        ['|', "|a|b", new[] { "", "a" }],
+        ['|', "||a|b", new[] { "", "", "a" }],
+        ['|', "|a|b|", new[] { "", "a", "b" }],
+        ['|', "||a||b||", new[] { "", "", "a", "", "b", "" }],
+        ['|', "a|bbbbbbbbbbbbbbbbbbbb", new[] { "a" }],
+        ['|', "aaaaaaaaaaaaaaaaaaaa|b", new[] { "aaaaaaaaaaaaaaaaaaaa" }],
+        ['|', "a|bbbbbbbbbbbbbbbbbbbb|", new[] { "a", "bbbbbbbbbbbbbbbbbbbb" }],
+        ['|', "aaaaaaaaaaaaaaaaaaaa|b|", new[] { "aaaaaaaaaaaaaaaaaaaa", "b" }],
     ];
 
     [Theory]
@@ -30,12 +30,12 @@ public class SplittingStringBufferTests
     }
 
     public static IEnumerable<object[]> SeparatorInputsAndExpectedOutputs => [
-        ['|', new string[] { "a|", "b|" }, new string[][] { ["a"] , ["b"] }],
-        ['|', new string[] { "a||", "b|" }, new string[][] { ["a", ""], ["b"] }],
-        ['|', new string[] { "a", "|", "bbbbbbbbbbbbbbbbbbbb", "|" }, new string[][] { [], ["a"], [], ["bbbbbbbbbbbbbbbbbbbb"] }],
-        ['|', new string[] { "aaaaaaaaaaaaaaaaaaaa", "|", "b", "|" }, new string[][] { [], ["aaaaaaaaaaaaaaaaaaaa"], [], ["b"] }],
-        ['|', new string[] { "a", "|", "bbbbbbbbbbbbbbbbbbbb" }, new string[][] { [], ["a"], [] }],
-        ['|', new string[] { "aaaaaaaaaaaaaaaaaaaa", "|", "b" }, new string[][] { [], ["aaaaaaaaaaaaaaaaaaaa"], [] }],
+        ['|', new[] { "a|", "b|" }, new string[][] { ["a"] , ["b"] }],
+        ['|', new[] { "a||", "b|" }, new string[][] { ["a", ""], ["b"] }],
+        ['|', new[] { "a", "|", "bbbbbbbbbbbbbbbbbbbb", "|" }, new string[][] { [], ["a"], [], ["bbbbbbbbbbbbbbbbbbbb"] }],
+        ['|', new[] { "aaaaaaaaaaaaaaaaaaaa", "|", "b", "|" }, new string[][] { [], ["aaaaaaaaaaaaaaaaaaaa"], [], ["b"] }],
+        ['|', new[] { "a", "|", "bbbbbbbbbbbbbbbbbbbb" }, new string[][] { [], ["a"], [] }],
+        ['|', new[] { "aaaaaaaaaaaaaaaaaaaa", "|", "b" }, new string[][] { [], ["aaaaaaaaaaaaaaaaaaaa"], [] }],
     ];
 
     [Theory]

@@ -41,7 +41,7 @@ internal sealed class MpvMediaSource(IShortcutManager shortcutManager, IEventAgg
             Logger.Debug("Mpv executable not found, searching in known paths");
 
             var processPath = Path.GetDirectoryName(Environment.ProcessPath);
-            var paths = new string[]
+            var paths = new[]
             {
                 Path.Join(processPath, "mpv.exe"),
                 Path.Join(processPath, "Bin", "mpv.exe"),

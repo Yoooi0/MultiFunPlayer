@@ -15,9 +15,8 @@
     <UserControl.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
-                <ResourceDictionary Source="UpdateContextTemplates.xaml"/>
+                <ResourceDictionary Source="UpdateContextTemplates.xaml" />
             </ResourceDictionary.MergedDictionaries>
-            <converters:UriToStringConverter x:Key="UriToStringConverter"/>
             <converters:MultiDictionaryKeyToValueConverter x:Key="MultiDictionaryKeyToValueConverter"/>
             <converters:AutoToolTipValueToPercentConverter x:Key="AutoToolTipValueToPercentConverter"/>
         </ResourceDictionary>

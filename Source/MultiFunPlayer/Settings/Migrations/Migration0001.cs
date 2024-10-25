@@ -1,6 +1,5 @@
 ﻿using Microsoft.Win32;
 using Newtonsoft.Json.Linq;
-using NLog;
 using System.Management;
 using System.Text.RegularExpressions;
 

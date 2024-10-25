@@ -20,7 +20,7 @@ internal sealed class Migration0006 : AbstractSettingsMigration
         foreach (var action in SelectObjects(settings, "$.Shortcuts.Bindings[*].Actions[?(@.Descriptor =~ /Axis::SmartLimitEnabled::Toggle.*/i)]"))
             RemoveToken(action);
 
-        var defaultPoints = new string[] { "25,100", "90,0" };
+        var defaultPoints = new[] { "25,100", "90,0" };
         foreach (var axisSettings in SelectObjects(settings, "$.Script.AxisSettings.*"))
         {
             SetPropertyByName(axisSettings, "SmartLimitPoints", JArray.FromObject(defaultPoints), addIfMissing: true);
