@@ -9,7 +9,7 @@ public sealed class PortToStringConverter : IValueConverter
     public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         => value switch
         {
-            int port when port == 0 => "",
+            int and 0 => "",
             int port => port.ToString(),
             _ => null
         };

@@ -251,31 +251,14 @@ internal sealed class JellyfinMediaSource(IShortcutManager shortcutManager, IEve
             response.EnsureSuccessStatusCode();
 
             var content = await response.Content.ReadAsStringAsync(token);
-            Logger.Trace(() => $"Received \"{content}\" from \"{Name}\"");
+            Logger.Trace("Received \"{0}\" from \"{1}\"", content, Name);
 
             var o = JObject.Parse(content);
             foreach (var device in o["Items"].OfType<JObject>())
             {
-                if (!device.TryGetValue<string>("Id", out var id) || string.IsNullOrWhiteSpace(id))
-                    continue;
-
-                try
-                {
-                    uri = new Uri(ServerBaseUri, $"/Devices/Options?ApiKey={ApiKey}&id={id}");
-                    response = await client.GetAsync(uri, token);
-                    response.EnsureSuccessStatusCode();
-
-                    content = await response.Content.ReadAsStringAsync(token);
-                    Logger.Trace(() => $"Received \"{content}\" from \"{Name}\"");
-
-                    var options = JObject.Parse(content);
-                    if (options.TryGetValue<string>("CustomName", out var customName) && !string.IsNullOrWhiteSpace(customName))
-                        device["Name"] = customName;
-                }
-                catch (Exception e)
-                {
-                    Logger.Warn(e, $"Failed to read custom name for device \"{id}\"");
-                }
+                var customName = await TryGetCustomName(device);
+                if (customName != null)
+                    device["Name"] = customName;
             }
 
             var currentDevices = o["Items"].ToObject<List<JellyfinDevice>>();
@@ -286,6 +269,35 @@ internal sealed class JellyfinMediaSource(IShortcutManager shortcutManager, IEve
             SelectDeviceById(lastSelectedMachineIdentifier);
 
             await Task.Delay(250, token);
+
+            async ValueTask<string> TryGetCustomName(JObject device)
+            {
+                if (device.TryGetValue<string>("CustomName", out var customName) && !string.IsNullOrWhiteSpace(customName))
+                    return customName;
+
+                if (!device.TryGetValue<string>("Id", out var id) || string.IsNullOrWhiteSpace(id))
+                    return null;
+
+                try
+                {
+                    uri = new Uri(ServerBaseUri, $"/Devices/Options?ApiKey={ApiKey}&id={id}");
+                    response = await client.GetAsync(uri, token);
+                    response.EnsureSuccessStatusCode();
+
+                    content = await response.Content.ReadAsStringAsync(token);
+                    Logger.Trace("Received \"{0}\" from \"{1}\"", content, Name);
+
+                    var options = JObject.Parse(content);
+                    if (options.TryGetValue<string>("CustomName", out customName) && !string.IsNullOrWhiteSpace(customName))
+                        return customName;
+                }
+                catch (Exception e)
+                {
+                    Logger.Warn(e, $"Failed to read custom name for device \"{id}\"");
+                }
+
+                return null;
+            }
         }
     }
 

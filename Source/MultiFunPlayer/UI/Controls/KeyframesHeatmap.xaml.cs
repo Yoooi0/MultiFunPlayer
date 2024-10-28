@@ -291,7 +291,7 @@ internal sealed partial class KeyframesHeatmap : UserControl
             var y = Mouse.GetPosition(this).Y;
             ToolTipHorizontalOffset = x - (EnablePreview ? 100 : 40);
             ToolTipVerticalOffset = y - (EnablePreview ? 100 : 40);
-            ToolTipPositionOffset = x / (double)ActualWidth * Duration;
+            ToolTipPositionOffset = x / ActualWidth * Duration;
         }
     }
 

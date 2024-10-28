@@ -15,7 +15,7 @@ internal abstract class AbstractShortcutAction : IShortcutAction
 
     protected AbstractShortcutAction()
     {
-        _arguments ??= GetType().GetGenericArguments().AsReadOnly();
+        _arguments = GetType().GetGenericArguments().AsReadOnly();
     }
 
     public abstract ValueTask Invoke(params object[] arguments);

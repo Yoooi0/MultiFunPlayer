@@ -13,7 +13,7 @@ internal sealed class DecodeMediaPathModifier : AbstractMediaPathModifier
     public override string Process(string path)
     {
         if (path == null)
-            return path;
+            return null;
 
         try
         {

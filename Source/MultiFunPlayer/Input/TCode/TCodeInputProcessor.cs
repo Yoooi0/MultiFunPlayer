@@ -1,4 +1,4 @@
-using MultiFunPlayer.Common;
+﻿using MultiFunPlayer.Common;
 using NLog;
 using Stylet;
 using System.Text.RegularExpressions;
@@ -23,13 +23,13 @@ internal sealed class TCodeInputProcessor(IEventAggregator eventAggregator) : Ab
     private void ParseCommand(string command)
     {
         Logger.Trace("Parsing {0}", command);
-        foreach (var match in Regex.Matches(command, "#(?<button>.+?):(?<state>0|1)").OfType<Match>().Where(m => m.Success))
+        foreach (var match in Regex.Matches(command, "#(?<button>.+?):(?<state>0|1)").Where(m => m.Success))
             CreateButtonGesture(match);
 
-        foreach (var match in Regex.Matches(command, @"@(?<axis>.+?):(?<value>\d{1,5})").OfType<Match>().Where(m => m.Success))
+        foreach (var match in Regex.Matches(command, @"@(?<axis>.+?):(?<value>\d{1,5})").Where(m => m.Success))
             CreateAxisGesture(_unsignedAxisStates, match, ushort.MinValue, ushort.MaxValue);
 
-        foreach (var match in Regex.Matches(command, @"\$(?<axis>.+?):(?<value>-?\d{1,5})").OfType<Match>().Where(m => m.Success))
+        foreach (var match in Regex.Matches(command, @"\$(?<axis>.+?):(?<value>-?\d{1,5})").Where(m => m.Success))
             CreateAxisGesture(_signedAxisStates, match, short.MinValue, short.MaxValue);
 
         void CreateButtonGesture(Match match)

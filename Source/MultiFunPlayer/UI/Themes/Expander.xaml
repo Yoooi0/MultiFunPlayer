@@ -25,7 +25,6 @@
                                               Foreground="{TemplateBinding Foreground}"
                                               IsChecked="{Binding Path=IsExpanded, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}"
                                               IsTabStop="False"
-                                              Opacity="0.87"
                                               TextElement.FontSize="{TemplateBinding material:ExpanderAssist.HeaderFontSize}">
                                     <ToggleButton.Style>
                                         <Style TargetType="{x:Type ToggleButton}">
@@ -65,9 +64,8 @@
                                                                                                        Height="36"
                                                                                                        HorizontalAlignment="Center"
                                                                                                        VerticalAlignment="Center"
-                                                                                                       Foreground="{Binding RelativeSource={RelativeSource AncestorType={x:Type FrameworkElement}}, Path=(TextElement.Foreground)}"
+                                                                                                       Foreground="{DynamicResource MaterialDesignBody}"
                                                                                                        Kind="ChevronDown"
-                                                                                                       Opacity="0.38"
                                                                                                        RenderTransformOrigin="0.5 0.5">
                                                                                         <material:PackIcon.RenderTransform>
                                                                                             <RotateTransform x:Name="ExpandPathRotateTransform"/>

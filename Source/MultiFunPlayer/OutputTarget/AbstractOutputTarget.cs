@@ -419,7 +419,6 @@ internal abstract class ThreadAbstractOutputTarget(int instanceIndex, IEventAggr
         _thread = null;
 
         Interlocked.Decrement(ref _isDisconnectingFlag);
-        return;
     }
 
     protected void FixedUpdate(Func<bool> condition, Action<ThreadFixedUpdateContext, double> body)

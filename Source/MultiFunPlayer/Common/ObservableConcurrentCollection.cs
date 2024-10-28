@@ -182,7 +182,7 @@ public sealed class ObservableConcurrentCollection<T> : IList<T>, IReadOnlyObser
     public bool Contains(T item) { lock (SyncRoot) { return _items.Contains(item); } }
     public int IndexOf(T item) { lock (SyncRoot) { return _items.IndexOf(item); } }
 
-    IEnumerator IEnumerable.GetEnumerator() => ((IList<T>)this).GetEnumerator();
+    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
     public IEnumerator<T> GetEnumerator() { lock (SyncRoot) { return _items.ToList().GetEnumerator(); } }
 
     bool IList.Contains(object value) => value is T x && Contains(x);

@@ -21,8 +21,8 @@ internal sealed class AxisDriveShortcut(IShortcutActionRunner actionRunner, IAxi
             AxisDriveShortcutMode.Relative => Relative(),
             AxisDriveShortcutMode.RelativeNegativeOnly when gesture.Delta < 0 => Relative(),
             AxisDriveShortcutMode.RelativePositiveOnly when gesture.Delta > 0 => Relative(),
-            AxisDriveShortcutMode.RelativeJoystick when gesture.Value < 0.5 && gesture.Delta < 0 => Relative(),
-            AxisDriveShortcutMode.RelativeJoystick when gesture.Value > 0.5 && gesture.Delta > 0 => Relative(),
+            AxisDriveShortcutMode.RelativeJoystick when gesture is { Value: < 0.5, Delta: < 0 } => Relative(),
+            AxisDriveShortcutMode.RelativeJoystick when gesture is { Value: > 0.5, Delta: > 0 } => Relative(),
             _ => null
         });
     }

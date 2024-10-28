@@ -24,7 +24,6 @@ internal sealed class MotionProviderManager : IMotionProviderManager, IHandle<Se
 {
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
-    private readonly IEventAggregator _eventAggregator;
     private readonly Dictionary<Type, string> _motionProviderNames;
     private readonly Dictionary<DeviceAxis, Dictionary<string, IMotionProvider>> _motionProviders;
     private readonly Dictionary<DeviceAxis, double> _values;
@@ -33,8 +32,7 @@ internal sealed class MotionProviderManager : IMotionProviderManager, IHandle<Se
 
     public MotionProviderManager(IEventAggregator eventAggregator, IMotionProviderFactory motionProviderFactory)
     {
-        _eventAggregator = eventAggregator;
-        _eventAggregator.Subscribe(this);
+        eventAggregator.Subscribe(this);
 
         var motionProviderTypes = ReflectionUtils.FindImplementations<IMotionProvider>();
         _motionProviderNames = motionProviderTypes.ToDictionary(t => t,

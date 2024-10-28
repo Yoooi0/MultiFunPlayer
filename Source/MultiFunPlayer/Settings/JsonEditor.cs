@@ -521,7 +521,7 @@ internal class JsonEditor
     public JObject CreateChildObjects(JObject o, params string[] propertyNames)
     {
         bool hasNext;
-        var it = ((IEnumerable<string>)propertyNames).GetEnumerator();
+        using var it = propertyNames.AsEnumerable().GetEnumerator();
         while ((hasNext = it.MoveNext()) && o.ContainsKey(it.Current))
             o = GetValue<JObject>(o, it.Current);
 
