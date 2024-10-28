@@ -256,8 +256,27 @@ internal sealed class JellyfinMediaSource(IShortcutManager shortcutManager, IEve
             var o = JObject.Parse(content);
             foreach (var device in o["Items"].OfType<JObject>())
             {
+                var customName = await TryGetCustomName(device);
+                if (customName != null)
+                    device["Name"] = customName;
+            }
+
+            var currentDevices = o["Items"].ToObject<List<JellyfinDevice>>();
+            var lastSelectedMachineIdentifier = SelectedDeviceId;
+            Devices.RemoveRange(Devices.Except(currentDevices).ToList());
+            Devices.AddRange(currentDevices.Except(Devices).ToList());
+
+            SelectDeviceById(lastSelectedMachineIdentifier);
+
+            await Task.Delay(250, token);
+
+            async ValueTask<string> TryGetCustomName(JObject device)
+            {
+                if (device.TryGetValue<string>("CustomName", out var customName) && !string.IsNullOrWhiteSpace(customName))
+                    return customName;
+
                 if (!device.TryGetValue<string>("Id", out var id) || string.IsNullOrWhiteSpace(id))
-                    continue;
+                    return null;
 
                 try
                 {
@@ -269,23 +288,16 @@ internal sealed class JellyfinMediaSource(IShortcutManager shortcutManager, IEve
                     Logger.Trace(() => $"Received \"{content}\" from \"{Name}\"");
 
                     var options = JObject.Parse(content);
-                    if (options.TryGetValue<string>("CustomName", out var customName) && !string.IsNullOrWhiteSpace(customName))
-                        device["Name"] = customName;
+                    if (options.TryGetValue<string>("CustomName", out customName) && !string.IsNullOrWhiteSpace(customName))
+                        return customName;
                 }
                 catch (Exception e)
                 {
                     Logger.Warn(e, $"Failed to read custom name for device \"{id}\"");
                 }
+
+                return null;
             }
-
-            var currentDevices = o["Items"].ToObject<List<JellyfinDevice>>();
-            var lastSelectedMachineIdentifier = SelectedDeviceId;
-            Devices.RemoveRange(Devices.Except(currentDevices).ToList());
-            Devices.AddRange(currentDevices.Except(Devices).ToList());
-
-            SelectDeviceById(lastSelectedMachineIdentifier);
-
-            await Task.Delay(250, token);
         }
     }
 
