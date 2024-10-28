@@ -105,10 +105,9 @@ internal sealed class VlcMediaSource(IShortcutManager shortcutManager, IEventAgg
 
         try
         {
-            while (!token.IsCancellationRequested)
+            using var timer = new PeriodicTimer(TimeSpan.FromMilliseconds(200));
+            while (await timer.WaitForNextTickAsync(token) && !token.IsCancellationRequested)
             {
-                await Task.Delay(200, token);
-
                 var statusResponse = await client.GetAsync(statusUri, token);
                 statusResponse.EnsureSuccessStatusCode();
 
