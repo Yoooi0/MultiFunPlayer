@@ -251,7 +251,7 @@ internal sealed class JellyfinMediaSource(IShortcutManager shortcutManager, IEve
             response.EnsureSuccessStatusCode();
 
             var content = await response.Content.ReadAsStringAsync(token);
-            Logger.Trace(() => $"Received \"{content}\" from \"{Name}\"");
+            Logger.Trace("Received \"{0}\" from \"{1}\"", content, Name);
 
             var o = JObject.Parse(content);
             foreach (var device in o["Items"].OfType<JObject>())
@@ -285,7 +285,7 @@ internal sealed class JellyfinMediaSource(IShortcutManager shortcutManager, IEve
                     response.EnsureSuccessStatusCode();
 
                     content = await response.Content.ReadAsStringAsync(token);
-                    Logger.Trace(() => $"Received \"{content}\" from \"{Name}\"");
+                    Logger.Trace("Received \"{0}\" from \"{1}\"", content, Name);
 
                     var options = JObject.Parse(content);
                     if (options.TryGetValue<string>("CustomName", out customName) && !string.IsNullOrWhiteSpace(customName))

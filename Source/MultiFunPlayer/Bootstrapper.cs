@@ -1,4 +1,4 @@
-﻿using MaterialDesignThemes.Wpf;
+using MaterialDesignThemes.Wpf;
 using Microsoft.Win32;
 using MultiFunPlayer.Common;
 using MultiFunPlayer.Input;
@@ -134,7 +134,7 @@ internal sealed class Bootstrapper : Bootstrapper<RootViewModel>
         Logger.Info("Assembly [Version: {0}+{1}]", GitVersionInformation.SemVer, GitVersionInformation.FullBuildMetaData);
 
         if (Logger.IsTraceEnabled)
-            Logger.Trace(() => $"Config [{settings}]");
+            Logger.Trace("Config [{0}]", settings);
         else
             Logger.Info("Config [Version: {0}]", settings.TryGetValue<int>("ConfigVersion", out var version) ? version : -1);
 
