@@ -49,11 +49,11 @@ internal sealed class PotPlayerMediaSource(IShortcutManager shortcutManager, IEv
         try
         {
             process = Process.GetProcesses().FirstOrDefault(p => Regex.IsMatch(p.ProcessName, "(?i)(?>potplayer)"));
-            if (AutoStartEnabled)
+            if (process == null && AutoStartEnabled)
             {
                 var programPath = GetInstallationPath();
                 Logger.Debug("Starting process \"{0}\"", programPath);
-                process ??= Process.Start(programPath);
+                process = Process.Start(programPath);
             }
 
             if (process == null)
