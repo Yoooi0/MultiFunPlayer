@@ -123,7 +123,7 @@ internal sealed class EmbyMediaSource(IShortcutManager shortcutManager, IEventAg
                 if (SelectedDeviceId == null)
                     continue;
 
-                var sessionsUri = new Uri(ServerBaseUri, $"/Sessions?api_key={ApiKey}&DeviceId={SelectedDeviceId}");
+                var sessionsUri = new Uri(ServerBaseUri, $"/Sessions?api_key={ApiKey}&InternalDeviceId={SelectedDeviceId}");
                 var response = await client.GetAsync(sessionsUri, token);
                 if (response == null)
                     continue;
