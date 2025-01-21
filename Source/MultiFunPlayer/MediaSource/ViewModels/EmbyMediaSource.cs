@@ -134,7 +134,9 @@ internal sealed class EmbyMediaSource(IShortcutManager shortcutManager, IEventAg
                 Logger.Trace("Received \"{0}\" from \"{1}\"", message, Name);
                 try
                 {
-                    var o = JArray.Parse(message).Children<JObject>().FirstOrDefault();
+                    var o = JArray.Parse(message).Children<JObject>()
+                            .Where(obj => !String.IsNullOrWhiteSpace(obj?.ToObject<EmbySession>().Item?.Path))
+                            .FirstOrDefault();
                     _currentSession = o?.ToObject<EmbySession>();
                 }
                 catch (JsonException)
