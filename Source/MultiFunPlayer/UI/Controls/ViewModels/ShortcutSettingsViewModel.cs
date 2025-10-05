@@ -151,7 +151,7 @@ internal sealed class ShortcutSettingsViewModel : Screen, IHandle<SettingsMessag
             catch (OperationCanceledException) { }
         }
 
-        static TimeSpan CurrentTime() => TimeSpan.FromSeconds(Stopwatch.GetTimestamp() / (double)Stopwatch.Frequency);
+        static TimeSpan CurrentTime() => TimeSpan.FromMilliseconds(Environment.TickCount64);
     }
 
     public void AddShortcut(object sender, RoutedEventArgs e)
